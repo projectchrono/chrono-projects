@@ -148,11 +148,19 @@ int main(int argc, char* argv[])
       cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
 
       double run_time = 0;
+      double contact_time = 0;
+      double collision_time = 0;
+      double update_time = 0;
+      double solver_time = 0;
       int num_contacts = 0;
 
       for (int i = 0; i < num_steps_measure; i++) {
         msystem->DoStepDynamics(time_step);
         run_time += msystem->GetTimerStep();
+        update_time += msystem->GetTimerUpdate();
+        solver_time += msystem->GetTimerLcp();
+        contact_time += msystem->GetTimerProcessContact();
+        collision_time += msystem->GetTimerCollision();
         num_contacts += msystem->GetNcontacts();
       }
 
@@ -162,6 +170,10 @@ int main(int argc, char* argv[])
       cout << "Number of steps:       " << num_steps_measure << endl;
       cout << "Average num. contacts: " << (1.0 * num_contacts) / num_steps_measure << endl;
       cout << "Simulation time:       " << run_time << endl;
+      cout << "   Collision detection:       " << collision_time << endl;
+      cout << "   Contact force calculation: " << contact_time << endl;
+      cout << "   Update:                    " << update_time << endl;
+      cout << "   Solver:                    " << solver_time << endl;
     }
 
     break;
