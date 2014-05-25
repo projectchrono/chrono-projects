@@ -61,6 +61,7 @@ SET(DEMOS
     test_utils
     test_collision
     test_scaling
+    test_timing
 )
 
 MESSAGE(STATUS "Executable programs...")
