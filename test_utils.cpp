@@ -2,12 +2,12 @@
 #include <vector>
 #include <cmath>
 
-#include "ChSystemParallel.h"
-#include "ChLcpSystemDescriptorParallel.h"
+#include "chrono_parallel/ChSystemParallel.h"
+#include "chrono_parallel/ChLcpSystemDescriptorParallel.h"
 
-#include "utils/input_output.h"
-#include "utils/samplers.h"
-#include "utils/generators.h"
+#include "chrono_utils/ChUtilsInputOutput.h"
+#include "chrono_utils/ChUtilsSamplers.h"
+#include "chrono_utils/ChUtilsGenerators.h"
 
 using namespace chrono;
 using namespace geometry;

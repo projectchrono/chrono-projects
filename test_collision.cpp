@@ -5,10 +5,16 @@
 
 #include "geometry/ChCTriangleMeshConnected.h"
 
-#include "ChSystemParallel.h"
-#include "ChLcpSystemDescriptorParallel.h"
+#include "chrono_parallel/ChSystemParallel.h"
+#include "chrono_parallel/ChLcpSystemDescriptorParallel.h"
+#include "chrono_parallel/collision/ChCNarrowphaseRUtils.h"
 
-#include "collision/ChCNarrowphaseRUtils.h"
+#include "chrono_utils/ChUtilsCreators.h"
+#include "chrono_utils/ChUtilsInputOutput.h"
+
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#include "chrono_utils/opengl/ChOpenGL.h"
+#endif
 
 using namespace chrono;
 using namespace geometry;
@@ -27,7 +33,7 @@ int counter = 0;
 
 void writeContactInfo(ChParallelDataManager* data_container)
 {
-	int    ncontacts = data_container->number_of_rigid_rigid;
+	int    ncontacts = data_container->num_contacts;
 
 	real3* pt1 = data_container->host_data.cpta_rigid_rigid.data();
 	real3* pt2 = data_container->host_data.cptb_rigid_rigid.data();

@@ -2,11 +2,16 @@
 #include <vector>
 #include <cmath>
 
-#include "ChSystemParallel.h"
-#include "ChLcpSystemDescriptorParallel.h"
+#include "chrono_parallel/ChSystemParallel.h"
+#include "chrono_parallel/ChLcpSystemDescriptorParallel.h"
 
-#include "utils/input_output.h"
-#include "utils/generators.h"
+#include "chrono_utils/ChUtilsCreators.h"
+#include "chrono_utils/ChUtilsGenerators.h"
+#include "chrono_utils/ChUtilsInputOutput.h"
+
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#include "chrono_utils/opengl/ChOpenGL.h"
+#endif
 
 using namespace chrono;
 

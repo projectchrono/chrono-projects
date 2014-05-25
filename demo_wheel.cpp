@@ -2,12 +2,19 @@
 #include <vector>
 #include <cmath>
 
-#include "ChSystemParallel.h"
-#include "ChLcpSystemDescriptorParallel.h"
+#include "chrono_parallel/ChSystemParallel.h"
+#include "chrono_parallel/ChLcpSystemDescriptorParallel.h"
 
-#include "utils/input_output.h"
-#include "utils/creators.h"
-#include "utils/generators.h"
+#include "chrono_utils/ChUtilsCreators.h"
+#include "chrono_utils/ChUtilsGenerators.h"
+#include "chrono_utils/ChUtilsInputOutput.h"
+
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#include "chrono_utils/opengl/ChOpenGL.h"
+#endif
+
+// Define this to save the data when using the OpenGL code
+//#define SAVE_DATA
 
 using namespace chrono;
 

@@ -1,12 +1,16 @@
 #--------------------------------------------------------------
 # Additional include paths (for ChronoEngine_Utils)
-INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}")
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}
+                    ${CMAKE_BINARY_DIR}
+                    ${FREEGLUT_INC_PATH}
+                    ${GLM_INCLUDE_DIRS})
 
-# Libraries (ChronoEngine, ChronoEngine_Parallel, and chronoEngine_Utils)
+# Libraries
 SET(LIBRARIES
     ${CHRONO_LIB}
     ChronoEngine_Parallel
     ChronoEngine_Utils
+    ChronoEngine_Utils_OpenGL
 )
 
 #--------------------------------------------------------------
@@ -57,8 +61,6 @@ SET(DEMOS
     test_utils
     test_collision
     test_scaling
-    mixerDEM
-    mixerDVI
 )
 
 MESSAGE(STATUS "Executable programs...")
