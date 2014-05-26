@@ -25,7 +25,7 @@ int threads = 8;
 double gravity = -9.81;
 double time_step = 1e-4;
 int num_steps_settle = std::ceil(3 / time_step);
-int num_steps_measure = std::ceil(1 / time_step);
+int num_steps_measure = 1000;
 
 int max_iteration = 50;
 
@@ -108,6 +108,8 @@ int main(int argc, char* argv[])
   msystem->SetParallelThreadNumber(threads);
   omp_set_num_threads(threads);
 
+  msystem->DoThreadTuning(false);
+
   // Set gravitational acceleration
   msystem->Set_G_acc(ChVector<>(0, 0, gravity));
 
@@ -150,6 +152,8 @@ int main(int argc, char* argv[])
       double run_time = 0;
       double contact_time = 0;
       double collision_time = 0;
+      double collision_broad_time = 0;
+      double collision_narrow_time = 0;
       double update_time = 0;
       double solver_time = 0;
       int num_contacts = 0;
@@ -161,6 +165,8 @@ int main(int argc, char* argv[])
         solver_time += msystem->GetTimerLcp();
         contact_time += msystem->GetTimerProcessContact();
         collision_time += msystem->GetTimerCollision();
+        collision_broad_time += msystem->GetTimerCollisionBroad();
+        collision_narrow_time += msystem->GetTimerCollisionNarrow();
         num_contacts += msystem->GetNcontacts();
       }
 
@@ -168,12 +174,16 @@ int main(int argc, char* argv[])
       cout << "Number of threads:     " << threads << endl;
       cout << "Number of bodies:      " << msystem->Get_bodylist()->size() << endl;
       cout << "Number of steps:       " << num_steps_measure << endl;
+      cout << endl;
       cout << "Average num. contacts: " << (1.0 * num_contacts) / num_steps_measure << endl;
+      cout << endl;
       cout << "Simulation time:       " << run_time << endl;
       cout << "   Collision detection:       " << collision_time << endl;
-      cout << "   Contact force calculation: " << contact_time << endl;
+      cout << "      Broad phase:                 " << collision_broad_time << endl;
+      cout << "      Narrow phase:                " << collision_narrow_time << endl;
       cout << "   Update:                    " << update_time << endl;
       cout << "   Solver:                    " << solver_time << endl;
+      cout << "      Contact force calculation:   " << contact_time << endl;
     }
 
     break;
