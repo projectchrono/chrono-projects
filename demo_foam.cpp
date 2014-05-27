@@ -29,7 +29,7 @@ int threads = 8;
 
 // Simulation parameters
 double gravity = 9.81;
-double time_step = 1e-4;
+double time_step = 2e-5;
 double time_end = 5;
 
 int max_iteration = 20;
@@ -37,14 +37,15 @@ int max_iteration = 20;
 // Output
 const char* out_folder = "../FOAM/POVRAY";
 double out_fps = 50;
+ChStreamOutAsciiFile out_file("../FOAM/timing.txt");
 
 // Parameters for the granular material
 int        Id_g = 1;
-double     r_g = 0.05;
+double     r_g = 0.01;
 double     rho_g = 2000;
 
-float      Y_g = 5e6;
-float      mu_g = 0.3;
+float      Y_g = 2e7;
+float      mu_g = 0.2;
 float      alpha_g = 0.4;
 float      cohesion_g = 300;
 
@@ -65,6 +66,7 @@ utils::Generator*  gen;
 
 double     initVel = 5;         // initial particle velocity in negative X direction
 
+int maxNumParticles = 10000;
 
 // =======================================================================
 
@@ -80,7 +82,7 @@ int SpawnParticles()
 	gen->createObjectsCylinderX(utils::POISSON_DISK,
 	                     dist,
 	                     ChVector<>(9, 0, 3),
-	                     0.5, 0,
+	                     0.2, 0,
 	                     ChVector<>(-initVel, 0, 0));
 	cout << "  total bodies: " << gen->getTotalNumBodies() << endl;
 
@@ -100,6 +102,8 @@ int main(int argc, char* argv[])
 		threads = max_threads;
 	msystem->SetParallelThreadNumber(threads);
 	omp_set_num_threads(threads);
+
+  msystem->DoThreadTuning(false);
 
 	// Set gravitational acceleration
 	msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
@@ -152,7 +156,7 @@ int main(int argc, char* argv[])
 	// Number of steps
 	int num_steps = std::ceil(time_end / time_step);
 	int out_steps = std::ceil((1 / time_step) / out_fps);
-	int gen_steps = std::ceil(2 * r_g / initVel / time_step);
+	int gen_steps = std::ceil(3 * r_g / initVel / time_step);
 
 	// Perform the simulation
 	double time = 0;
@@ -161,7 +165,9 @@ int main(int argc, char* argv[])
 	double exec_time = 0;
 
 	while (time < time_end) {
-		if (sim_frame % gen_steps == 0) {
+    int numParticles = msystem->Get_bodylist()->size() - 1;
+
+		if (numParticles < maxNumParticles && sim_frame % gen_steps == 0) {
 			SpawnParticles();
 		}
 
@@ -174,7 +180,14 @@ int main(int argc, char* argv[])
 			cout << "                                   Sim frame:      " << sim_frame << endl;
 			cout << "                                   Time:           " << time << endl;
 			cout << "                                   Execution time: " << exec_time << endl;
-			cout << "                                   Num. bodies:    " << msystem->Get_bodylist()->size() << endl;
+			cout << "                                   Num. bodies:    " << numParticles << endl;
+
+      out_file << sim_frame << "  "
+               << time << "  "
+               << exec_time << "  "
+               << numParticles << "  "
+               << msystem->GetNcontacts()
+               << "\n";
 
 			out_frame++;
 		}
