@@ -9,7 +9,7 @@
 #include "chrono_utils/ChUtilsInputOutput.h"
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
-#include "chrono_utils/opengl/ChOpenGL.h"
+#include "chrono_utils/opengl/ChOpenGLWindow.h"
 #endif
 
 // Define this to save the data when using the OpenGL code
