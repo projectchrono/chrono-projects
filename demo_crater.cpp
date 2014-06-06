@@ -59,18 +59,32 @@ int threads = 8;
 
 // Simulation parameters
 double gravity = 9.81;
-double time_step = 1e-5;
+
 double time_settling_min = 0.1;
 double time_settling_max = 0.8;
 double time_dropping = 0.06;
 
+#ifdef DEM
+double time_step = 1e-5;
 int max_iteration = 20;
+#else
+double time_step = 2e-5;
+int max_iteration = 1000;
+#endif
 
 // Output
-const char* out_folder = "../CRATER/POVRAY";
-const char* height_file = "../CRATER/height.dat";
-const char* checkpoint_file = "../CRATER/settled.dat";
-double out_fps = 1200;
+#ifdef DEM
+const char* out_folder = "../CRATER_DEM/POVRAY";
+const char* height_file = "../CRATER_DEM/height.dat";
+const char* checkpoint_file = "../CRATER_DEM/settled.dat";
+#else
+const char* out_folder = "../CRATER_DVI/POVRAY";
+const char* height_file = "../CRATER_DVI/height.dat";
+const char* checkpoint_file = "../CRATER_DVI/settled.dat";
+#endif
+
+int out_fps_settling = 120;
+int out_fps_dropping = 1200;
 
 // Parameters for the granular material
 int        Id_g = 1;
@@ -332,18 +346,22 @@ int main(int argc, char* argv[])
 
 
   // Depending on problem type:
-  // - Select end simulation times
+  // - Select end simulation time
+  // - Select output FPS
   // - Create granular material and container
   // - Create falling ball
   double time_end;
+  int out_fps;
   ChBody* ball;
 
   if (problem == SETTLING) {
     time_end = time_settling_max;
+    out_fps = out_fps_settling;
 
     CreateObjects(msystem);
   } else {
     time_end = time_dropping;
+    out_fps = out_fps_dropping;
 
     // Create the granular material and the container from the checkpoint file.
     cout << "Read checkpoint data from " << checkpoint_file;
@@ -360,7 +378,7 @@ int main(int argc, char* argv[])
 
   // Number of steps
   int num_steps = std::ceil(time_end / time_step);
-  int out_steps = std::ceil((1 / time_step) / out_fps);
+  int out_steps = std::ceil((1.0 / time_step) / out_fps);
 
   // Zero velocity level for settling check
   // (fraction of a grain radius per second)
