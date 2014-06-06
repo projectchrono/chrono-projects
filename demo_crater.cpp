@@ -42,7 +42,7 @@ using std::endl;
 // -----------------------------------------------------------------------------
 
 // Comment the following line to use DVI contact
-#define DEM
+////#define DEM
 
 enum ProblemType {
   SETTLING,
@@ -122,8 +122,10 @@ float      mu_c = 0.3;
 float      alpha_c = 0.6;
 
 // Number of layers and height of one layer for generator domain
-int        numLayers = 10;
-double     layerHeight = 1e-2;
+////int        numLayers = 10;
+////double     layerHeight = 1e-2;
+int        numLayers = 1;
+double     layerHeight = 3e-3;
 
 // Drop height (above surface of settled granular material)
 double h = 5e-2;
@@ -303,8 +305,10 @@ int main(int argc, char* argv[])
 {
   // Create system
 #ifdef DEM
+  cout << "Create DEM system" << endl;
   ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
 #else
+  cout << "Create DVI system" << endl;
   ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
 #endif
 
@@ -314,6 +318,7 @@ int main(int argc, char* argv[])
     threads = max_threads;
   msystem->SetParallelThreadNumber(threads);
   omp_set_num_threads(threads);
+  cout << "Using " << threads << " threads" << endl;
 
   // Set gravitational acceleration
   msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
@@ -338,7 +343,7 @@ int main(int argc, char* argv[])
   ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetContactRecoverySpeed(1);
   ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetSolverType(APGDRS);
 
-  ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->SetCollisionEnvelope(0.01);
+  ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->SetCollisionEnvelope(0.05 * r_g);
 #endif
 
   ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->setBinsPerAxis(I3(10, 10, 10));
@@ -358,6 +363,7 @@ int main(int argc, char* argv[])
     time_end = time_settling_max;
     out_fps = out_fps_settling;
 
+    cout << "Create granular material" << endl;
     CreateObjects(msystem);
   } else {
     time_end = time_dropping;
@@ -390,6 +396,7 @@ int main(int argc, char* argv[])
   int out_frame = 0;
   int next_out_frame = 0;
   double exec_time = 0;
+  int num_contacts = 0;
   ChStreamOutAsciiFile hfile(height_file);
 
   while (time < time_end) {
@@ -398,19 +405,21 @@ int main(int argc, char* argv[])
       sprintf(filename, "%s/data_%03d.dat", out_folder, out_frame);
       utils::WriteShapesPovray(msystem, filename);
 
-      cout << " --------------------------------- Output frame:   " << out_frame << endl;
-      cout << "                                   Sim frame:      " << sim_frame << endl;
-      cout << "                                   Time:           " << time << endl;
-      cout << "                                   Lowest point:   " << FindLowest(msystem) << endl;
-      cout << "                                   Execution time: " << exec_time << endl;
+      cout << "------------ Output frame:   " << out_frame << endl;
+      cout << "             Sim frame:      " << sim_frame << endl;
+      cout << "             Time:           " << time << endl;
+      cout << "             Lowest point:   " << FindLowest(msystem) << endl;
+      cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
+      cout << "             Execution time: " << exec_time << endl;
 
       if (problem == DROPPING) {
         hfile << time << "  " << ball->GetPos().z << "\n";
-        cout << "                                   Ball height:    " << ball->GetPos().z << endl;
+        cout << "             Ball height:    " << ball->GetPos().z << endl;
       }
 
       out_frame++;
       next_out_frame += out_steps;
+      num_contacts = 0;
     }
 
     if (problem == SETTLING && time > time_settling_min && CheckSettled(msystem, zero_v)) {
@@ -423,17 +432,21 @@ int main(int argc, char* argv[])
     time += time_step;
     sim_frame++;
     exec_time += msystem->GetTimerStep();
+    num_contacts += msystem->GetNcontacts();
   }
 
   // Create a checkpoint from the last state
-  if (problem == SETTLING)
+  if (problem == SETTLING) {
+    cout << "Write checkpoint data to " << checkpoint_file;
     utils::WriteCheckpoint(msystem, checkpoint_file);
+    cout << "  done.  Wrote " << msystem->Get_bodylist()->size() << " bodies." << endl;
+  }
 
   // Final stats
   cout << "==================================" << endl;
-  cout << "Number of bodies: " << msystem->Get_bodylist()->size() << endl;
-  cout << "Lowest position: " << FindLowest(msystem) << endl;
-  cout << "Simulation time: " << exec_time << endl;
+  cout << "Number of bodies:  " << msystem->Get_bodylist()->size() << endl;
+  cout << "Lowest position:   " << FindLowest(msystem) << endl;
+  cout << "Simulation time:   " << exec_time << endl;
   cout << "Number of threads: " << threads << endl;
 
   return 0;
