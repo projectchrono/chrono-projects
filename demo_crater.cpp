@@ -36,6 +36,7 @@
 using namespace chrono;
 
 using std::cout;
+using std::flush;
 using std::endl;
 
 // -----------------------------------------------------------------------------
@@ -424,6 +425,14 @@ int main(int argc, char* argv[])
 
       sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
 
+      // Create a checkpoint from the current state.
+      if (problem == SETTLING) {
+        cout << "             Write checkpoint data " << std::flush;
+        utils::WriteCheckpoint(msystem, checkpoint_file);
+        cout << msystem->Get_bodylist()->size() << " bodies" << endl;
+      }
+
+      // Save current projectile height.
       if (problem == DROPPING) {
         hfile << time << "  " << ball->GetPos().z << "\n";
         cout << "             Ball height:    " << ball->GetPos().z << endl;
