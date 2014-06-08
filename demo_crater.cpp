@@ -19,6 +19,7 @@
 // frictional contact.
 //
 // The global reference frame has Z up.
+// All units SI.
 // =============================================================================
 
 #include <stdio.h>
@@ -55,7 +56,8 @@ ProblemType problem = SETTLING;
 // Global problem definitions
 // -----------------------------------------------------------------------------
 
-int threads = 8;
+// Desired number of OpenMP threads (will be clamped to maximum available)
+int threads = 100;
 
 // Simulation parameters
 double gravity = 9.81;
@@ -69,17 +71,24 @@ double time_step = 1e-5;
 int max_iteration = 20;
 #else
 double time_step = 2e-5;
-int max_iteration = 1000;
+int max_iteration_normal = 30;
+int max_iteration_sliding = 20;
+int max_iteration_spinning = 0;
+float contact_recovery_speed = 0.1;
 #endif
+
+int max_iteration_bilateral = 0;
 
 // Output
 #ifdef DEM
 const char* out_folder = "../CRATER_DEM/POVRAY";
 const char* height_file = "../CRATER_DEM/height.dat";
+const char* stats_file = "../CRATER_DEM/stats.dat";
 const char* checkpoint_file = "../CRATER_DEM/settled.dat";
 #else
 const char* out_folder = "../CRATER_DVI/POVRAY";
 const char* height_file = "../CRATER_DVI/height.dat";
+const char* stats_file = "../CRATER_DVI/stats.dat";
 const char* checkpoint_file = "../CRATER_DVI/settled.dat";
 #endif
 
@@ -324,23 +333,23 @@ int main(int argc, char* argv[])
   msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
 
   // Edit system settings
-  msystem->SetMaxiter(max_iteration);
-  msystem->SetIterLCPmaxItersSpeed(max_iteration);
   msystem->SetTol(1e-3);
   msystem->SetTolSpeeds(1e-3);
   msystem->SetStep(time_step);
-  msystem->SetMaxPenetrationRecoverySpeed(1e9);
 
 #ifdef DEM
+  ((ChLcpSolverParallelDEM*) msystem->GetLcpSolverSpeed())->SetMaxIterationBilateral(max_iteration_bilateral);
+  ((ChLcpSolverParallelDEM*) msystem->GetLcpSolverSpeed())->SetTolerance(1e-3);
+
   ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->ChangeNarrowphase(new ChCNarrowphaseR);
 #else
-  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationNormal(max_iteration / 2);
-  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationSliding(max_iteration / 2);
-  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationSpinning(0);
-  //((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationBilateral(max_iteration/3);
+  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationNormal(max_iteration_normal);
+  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationSliding(max_iteration_sliding);
+  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationSpinning(max_iteration_spinning);
+  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationBilateral(max_iteration_bilateral);
   ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetTolerance(1e-3);
   ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetCompliance(0);
-  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetContactRecoverySpeed(1);
+  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetContactRecoverySpeed(contact_recovery_speed);
   ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetSolverType(APGDRS);
 
   ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->SetCollisionEnvelope(0.05 * r_g);
@@ -397,12 +406,13 @@ int main(int argc, char* argv[])
   int next_out_frame = 0;
   double exec_time = 0;
   int num_contacts = 0;
+  ChStreamOutAsciiFile sfile(stats_file);
   ChStreamOutAsciiFile hfile(height_file);
 
   while (time < time_end) {
     if (sim_frame == next_out_frame) {
       char filename[100];
-      sprintf(filename, "%s/data_%03d.dat", out_folder, out_frame);
+      sprintf(filename, "%s/data_%03d.dat", out_folder, out_frame + 1);
       utils::WriteShapesPovray(msystem, filename);
 
       cout << "------------ Output frame:   " << out_frame << endl;
@@ -411,6 +421,8 @@ int main(int argc, char* argv[])
       cout << "             Lowest point:   " << FindLowest(msystem) << endl;
       cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
       cout << "             Execution time: " << exec_time << endl;
+
+      sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
 
       if (problem == DROPPING) {
         hfile << time << "  " << ball->GetPos().z << "\n";
