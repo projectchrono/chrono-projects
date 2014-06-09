@@ -60,6 +60,9 @@ ProblemType problem = SETTLING;
 // Desired number of OpenMP threads (will be clamped to maximum available)
 int threads = 100;
 
+// Perform dynamic tuning of number of threads?
+bool thread_tuning = false;
+
 // Simulation parameters
 double gravity = 9.81;
 
@@ -71,7 +74,7 @@ double time_dropping = 0.06;
 double time_step = 1e-5;
 int max_iteration = 20;
 #else
-double time_step = 2e-5;
+double time_step = 1e-4;
 int max_iteration_normal = 30;
 int max_iteration_sliding = 20;
 int max_iteration_spinning = 0;
@@ -95,6 +98,8 @@ const char* checkpoint_file = "../CRATER_DVI/settled.dat";
 
 int out_fps_settling = 120;
 int out_fps_dropping = 1200;
+
+int timing_frame = 10;   // output detailed step timing at this frame
 
 // Parameters for the granular material
 int        Id_g = 1;
@@ -138,7 +143,7 @@ int        numLayers = 1;
 double     layerHeight = 3e-3;
 
 // Drop height (above surface of settled granular material)
-double h = 5e-2;
+double h = 10e-2;
 
 // -----------------------------------------------------------------------------
 // Create the dynamic objects:
@@ -330,6 +335,8 @@ int main(int argc, char* argv[])
   omp_set_num_threads(threads);
   cout << "Using " << threads << " threads" << endl;
 
+  msystem->DoThreadTuning(thread_tuning);
+
   // Set gravitational acceleration
   msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
 
@@ -356,8 +363,8 @@ int main(int argc, char* argv[])
   ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->SetCollisionEnvelope(0.05 * r_g);
 #endif
 
+  ////((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->setBinsPerAxis(I3(50, 50, 50));
   ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->setBinsPerAxis(I3(10, 10, 10));
-  ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->setBodyPerBin(100, 50);
 
 
   // Depending on problem type:
@@ -427,7 +434,7 @@ int main(int argc, char* argv[])
 
       // Create a checkpoint from the current state.
       if (problem == SETTLING) {
-        cout << "             Write checkpoint data " << std::flush;
+        cout << "             Write checkpoint data " << flush;
         utils::WriteCheckpoint(msystem, checkpoint_file);
         cout << msystem->Get_bodylist()->size() << " bodies" << endl;
       }
@@ -454,6 +461,10 @@ int main(int argc, char* argv[])
     sim_frame++;
     exec_time += msystem->GetTimerStep();
     num_contacts += msystem->GetNcontacts();
+
+    // If requested, output detailed timing information for this step
+    if (sim_frame == timing_frame)
+      msystem->gpu_data_manager->system_timer.PrintReport();
   }
 
   // Create a checkpoint from the last state
