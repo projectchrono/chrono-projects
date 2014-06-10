@@ -464,7 +464,7 @@ int main(int argc, char* argv[])
 
     // If requested, output detailed timing information for this step
     if (sim_frame == timing_frame)
-      msystem->gpu_data_manager->system_timer.PrintReport();
+      msystem->PrintStepStats();
   }
 
   // Create a checkpoint from the last state
