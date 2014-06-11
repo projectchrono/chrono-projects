@@ -52,6 +52,7 @@ ENDIF()
 
 SET(DEMOS
     demo_crater
+    demo_massflow
     demo_foam
     demo_soilbin
     demo_wheel
