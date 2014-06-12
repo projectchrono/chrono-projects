@@ -169,9 +169,9 @@ ChBody* CreateMechanism(ChSystemParallel* system)
   slot->SetBodyFixed(true);
 
   slot->GetCollisionModel()->ClearModel();
-  utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(thickness*0.5,width*0.5,height*0.5), ChVector<>(0,0,0));
-  utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(3*height*0.5,width*0.5,height),      ChVector<>(0,width,0.5*height));
-  utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(3*height*0.5,width*0.5,height),      ChVector<>(0,-width,0.5*height));
+  utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(thickness/2, width/2, height/2), ChVector<>(0, 0, 0));
+  utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(3*height/2, thickness/2, height), ChVector<>(0,  width/2+thickness/2, height/2));
+  utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(3*height/2, thickness/2, height), ChVector<>(0, -width/2-thickness/2, height/2));
   slot->GetCollisionModel()->BuildModel();
 
   system->AddBody(slot);
