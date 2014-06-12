@@ -9,7 +9,7 @@
 // http://projectchrono.org/license-chrono.txt.
 //
 // =============================================================================
-// Author: Daniel Melanz
+// Authors: Daniel Melanz, Radu Serban
 // =============================================================================
 //
 // ChronoParallel demo program for mass flow rate studies.
@@ -68,6 +68,7 @@ double gravity = 981; // gravity, cm/s^2
 
 double time_settling_min = 0.1;
 double time_settling_max = 1.0;
+double time_dropping_max = 3.0;
 
 #ifdef DEM
 double time_step = 1e-5;
@@ -85,18 +86,18 @@ int max_iteration_bilateral = 0;
 // Output
 #ifdef DEM
 const char* out_folder = "../MASSFLOW_DEM/POVRAY";
-const char* height_file = "../MASSFLOW_DEM/height.dat";
+const char* flow_file = "../MASSFLOW_DEM/flow.dat";
 const char* stats_file = "../MASSFLOW_DEM/stats.dat";
 const char* checkpoint_file = "../MASSFLOW_DEM/settled.dat";
 #else
 const char* out_folder = "../MASSFLOW_DVI/POVRAY";
-const char* height_file = "../MASSFLOW_DVI/height.dat";
+const char* flow_file = "../MASSFLOW_DVI/flow.dat";
 const char* stats_file = "../MASSFLOW_DVI/stats.dat";
 const char* checkpoint_file = "../MASSFLOW_DVI/settled.dat";
 #endif
 
-int out_fps_settling = 120;
-int out_fps_dropping = 1200;
+int out_fps_settling = 60;
+int out_fps_dropping = 120;
 
 int timing_frame = -1;   // output detailed step timing at this frame
 
@@ -128,6 +129,8 @@ double delta = sqrt(thickness*thickness/8);
 
 double speed = 0.15;       // speed of the angled insert, cm/s
 double gap = 0.2;          // size of gap, cm
+
+double time_opening = gap / speed;
 
 
 // -----------------------------------------------------------------------------
@@ -191,7 +194,7 @@ ChBody* CreateMechanism(ChSystemParallel* system)
   insert->SetBodyFixed(true);
 
   insert->GetCollisionModel()->ClearModel();
-  utils::AddBoxGeometry(insert.get_ptr(), ChVector<>(thickness*0.5,width*0.5,height_insert*0.5),  ChVector<>(0,0,0));
+  utils::AddBoxGeometry(insert.get_ptr(), ChVector<>(thickness*0.5,width*0.5,height_insert*0.5));
   insert->GetCollisionModel()->BuildModel();
 
   system->AddBody(insert);
@@ -229,23 +232,20 @@ void CreateParticles(ChSystemParallel* system)
   utils::Generator gen(system);
 
   utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
-  #ifdef DEM
-    m1->setDefaultMaterialDEM(mat_g);
-  #else
-    m1->setDefaultMaterialDVI(mat_g);
-  #endif
+#ifdef DEM
+  m1->setDefaultMaterialDEM(mat_g);
+#else
+  m1->setDefaultMaterialDVI(mat_g);
+#endif
   m1->setDefaultDensity(rho_g);
   m1->setDefaultSize(r_g);
 
   gen.setBodyIdentifier(1);
 
-  double r = 1.01 * r_g;
-  //gen.createObjectsBox(utils::POISSON_DISK, 2 * r, ChVector<>(-0.25*height, 0, 1.8*height), ChVector<>(0.25*height, 0.5*width, 0.8*height), ChVector<>(0, 0, -1));
-  //gen.createObjectsBox(utils::POISSON_DISK, 2 * r, ChVector<>(-0.25*height, 0, 1.01*height), ChVector<>(0.25*height, 0.5*width, 0.01*height), ChVector<>(0, 0, -1));
-
   ChVector<> hdims(0.45 * height, 0.45 * width, 0);
   ChVector<> center(-0.5 * height, 0, height);
   ChVector<> vel(0, 0, 0);
+  double r = 1.01 * r_g;
 
   while (gen.getTotalNumBodies() < desired_num_particles) {
     gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims, vel);
@@ -257,17 +257,44 @@ void CreateParticles(ChSystemParallel* system)
 
 
 // -----------------------------------------------------------------------------
-// Find the number of particles whose height is below a specified value.
+// Find and return the body with specified identifier.
 // -----------------------------------------------------------------------------
-int getNumParticlesBelowValue(ChSystemParallel* sys, double value)
+ChBody* FindBodyById(ChSystemParallel* sys, int id)
 {
-  int numBelowZero = 0;
+  for (int i = 0; i < sys->GetNumBodies(); ++i) {
+    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
+    if (body->GetIdentifier() == id)
+      return body;
+  }
+
+  return NULL;
+}
+
+
+// -----------------------------------------------------------------------------
+// Find the number of particles whose height is below and above, respectively,
+// the specified value.
+// -----------------------------------------------------------------------------
+int GetNumParticlesBelowHeight(ChSystemParallel* sys, double value)
+{
+  int count = 0;
   for (int i = 0; i < sys->GetNumBodies(); ++i) {
     ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
     if (body->GetIdentifier() > 0 && body->GetPos().z < value)
-      numBelowZero++;
+      count++;
   }
-  return numBelowZero;
+  return count;
+}
+
+int GetNumParticlesAboveHeight(ChSystemParallel* sys, double value)
+{
+  int count = 0;
+  for (int i = 0; i < sys->GetNumBodies(); ++i) {
+    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
+    if (body->GetIdentifier() > 0 && body->GetPos().z > value)
+      count++;
+  }
+  return count;
 }
 
 
@@ -340,16 +367,28 @@ int main(int argc, char* argv[])
   ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->SetCollisionEnvelope(0.05 * r_g);
 #endif
 
-  ////((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->setBinsPerAxis(I3(50, 50, 50));
   ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->setBinsPerAxis(I3(10, 10, 10));
 
-  // Create bodies
-  ChBody* insert = CreateMechanism(msystem);
-  CreateParticles(msystem);
+  // Set simulation duration and create bodies (depending on problem type).
+  double time_end;
+  int out_fps;
+  ChBody* insert;
 
-  // Simulation length
-  double time_end = 20.0;
-  int out_fps = 60;
+  switch (problem) {
+  case SETTLING:
+    time_end = time_settling_max;
+    out_fps = out_fps_settling;
+    insert = CreateMechanism(msystem);
+    CreateParticles(msystem);
+    break;
+
+  case DROPPING:
+    time_end = time_dropping_max;
+    out_fps = out_fps_dropping;
+    utils::ReadCheckpoint(msystem, checkpoint_file);
+    insert = FindBodyById(msystem, 0);
+    break;
+  }
 
   // Number of steps
   int num_steps = std::ceil(time_end / time_step);
@@ -366,30 +405,10 @@ int main(int argc, char* argv[])
   double exec_time = 0;
   int num_contacts = 0;
   ChStreamOutAsciiFile sfile(stats_file);
-  ChStreamOutAsciiFile hfile(height_file);
-  int currentStage = 1;
+  ChStreamOutAsciiFile ffile(flow_file);
 
-  while (time < time_end && currentStage <= 3) {
-
-    // Switch between the direct shear stages
-    switch(currentStage) {
-      case 1:
-        // Stage 1: Fill
-        if((time > time_settling_min && CheckSettled(msystem, zero_v)) || time > time_settling_max) 
-          currentStage = 2;
-        break;
-      case 2:
-        // Stage 2: Open
-        insert->SetPos(insert->GetPos()-ChVector<>(speed*time_step,0,0));
-        if(insert->GetPos().x <= -0.5*height-delta-gap) currentStage = 3;
-        break;
-      case 3:
-        // Stage 3: Pour
-        if(CheckSettled(msystem, zero_v)) currentStage = 4;
-        break;
-    }
-
-    // output data
+  while (time < time_end) {
+    // Output data
     if (sim_frame == next_out_frame) {
       char filename[100];
       sprintf(filename, "%s/data_%03d.dat", out_folder, out_frame + 1);
@@ -398,37 +417,56 @@ int main(int argc, char* argv[])
       cout << "------------ Output frame:   " << out_frame << endl;
       cout << "             Sim frame:      " << sim_frame << endl;
       cout << "             Time:           " << time << endl;
-      cout << "             Stage:          " << currentStage << endl;
       cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
       cout << "             Execution time: " << exec_time << endl;
 
       sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
-/*
-      // Create a checkpoint from the current state.
-      if (problem == SETTLING) {
-        cout << "             Write checkpoint data " << flush;
-        utils::WriteCheckpoint(msystem, checkpoint_file);
-        cout << msystem->Get_bodylist()->size() << " bodies" << endl;
-      }
-*/
-      // Save current projectile height.
-      if (currentStage != 1) {
-        int numBelow = getNumParticlesBelowValue(msystem, 0);
-        hfile << time << "  " << numBelow << "\n";
-        cout << "             Flow:           " << numBelow << endl;
+
+      switch (problem) {
+      case SETTLING:
+        {
+          // Create a checkpoint from the current state.
+          cout << "             Write checkpoint data " << flush;
+          utils::WriteCheckpoint(msystem, checkpoint_file);
+          cout << msystem->Get_bodylist()->size() << " bodies" << endl;
+        }
+        break;
+      case DROPPING:
+        {
+          // Save current number of dropped particles.
+          double opening = insert->GetPos().x + 0.5 * height + delta;
+          int count = GetNumParticlesBelowHeight(msystem, 0);
+          ffile << time << "  " << -opening << "  " << count << "\n";
+          cout << "             Gap:            " << -opening << endl;
+          cout << "             Flow:           " << count << endl;
+        }
+        break;
       }
 
       out_frame++;
       next_out_frame += out_steps;
       num_contacts = 0;
     }
-/*
+
+    // Check for early termination
     if (problem == SETTLING && time > time_settling_min && CheckSettled(msystem, zero_v)) {
       cout << "Granular material settled...  time = " << time << endl;
       break;
     }
-*/
+
+    if (problem == DROPPING && time > time_opening && GetNumParticlesAboveHeight(msystem, -1.4 * height) == 0) {
+      cout << "Granular material exhausted... time = " << time << endl;
+      break;
+    }
+
+    // Advance system state by one step.
     msystem->DoStepDynamics(time_step);
+
+    // Open the gate until it reaches the specified gap distance.
+    if (problem == DROPPING && time < time_opening) {
+        insert->SetPos(ChVector<>(-0.5 * height - delta - time * speed, 0, 0.5 * height - delta));
+        insert->SetPos_dt(ChVector<>(-speed, 0, 0));
+    }
 
     time += time_step;
     sim_frame++;
@@ -438,16 +476,15 @@ int main(int argc, char* argv[])
     // If requested, output detailed timing information for this step
     if (sim_frame == timing_frame)
       msystem->PrintStepStats();
-
   }
-/*
+
   // Create a checkpoint from the last state
   if (problem == SETTLING) {
     cout << "Write checkpoint data to " << checkpoint_file;
     utils::WriteCheckpoint(msystem, checkpoint_file);
     cout << "  done.  Wrote " << msystem->Get_bodylist()->size() << " bodies." << endl;
   }
-*/
+
   // Final stats
   cout << "==================================" << endl;
   cout << "Number of bodies:  " << msystem->GetNumBodies() << endl;
