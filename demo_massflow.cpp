@@ -119,10 +119,9 @@ float  alpha_c = 0.1;      // s/cm
 float  mu_c = 0.4;
 
 // Dimensions of mechanism
-double height = 3.175;     // height of the cavity, cm
-double width = 1;          // width of the cavity, cm
+double height = 4.0;       // height of the cavity, cm
+double width = 0.9525;     // width of the cavity, cm
 double thickness = 0.25;   // thickness of walls, cm
-//double angle = 45;         // angle of the cavity, degrees
 
 double height_insert = sqrt(2*height*height);
 double delta = sqrt(thickness*thickness/8);
