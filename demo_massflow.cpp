@@ -166,22 +166,10 @@ ChBody* CreateMechanism(ChSystemParallel* system)
   slot->SetBodyFixed(true);
 
   slot->GetCollisionModel()->ClearModel();
-  slot->GetCollisionModel()->AddBox(thickness*0.5,width*0.5,height*0.5, ChVector<>(0,0,0));
-  slot->GetCollisionModel()->AddBox(3*height*0.5,width*0.5,height, ChVector<>(0,width,0.5*height));
-  slot->GetCollisionModel()->AddBox(3*height*0.5,width*0.5,height, ChVector<>(0,-width,0.5*height));
-  // additional collision geometry added to prevent particles from falling out
-  slot->GetCollisionModel()->AddBox(thickness*0.5,width*0.5,height*0.5, ChVector<>(0,0,height));
-  slot->GetCollisionModel()->AddBox(3*height*0.5,width*0.5,height, ChVector<>(0,width,1.5*height));
-  slot->GetCollisionModel()->AddBox(3*height*0.5,width*0.5,height, ChVector<>(0,-width,1.5*height));
-  slot->GetCollisionModel()->AddBox(thickness*0.5,width*0.5,height*0.5, ChVector<>(0,0,2*height));
+  utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(thickness*0.5,width*0.5,height*0.5), ChVector<>(0,0,0));
+  utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(3*height*0.5,width*0.5,height),      ChVector<>(0,width,0.5*height));
+  utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(3*height*0.5,width*0.5,height),      ChVector<>(0,-width,0.5*height));
   slot->GetCollisionModel()->BuildModel();
-
-  ChSharedPtr<ChBoxShape> slot_shape = ChSharedPtr<ChAsset>(new ChBoxShape);
-  slot_shape->SetColor(ChColor(0, 0, 1));
-  slot_shape->GetBoxGeometry().Size = ChVector<>(thickness*0.5,width*0.5,height*0.5);
-  slot_shape->Pos = ChVector<>(0, 0, 0);
-  slot_shape->Rot = ChQuaternion<>(1, 0, 0, 0);
-  slot->GetAssets().push_back(slot_shape);
 
   system->AddBody(slot);
 
@@ -203,17 +191,8 @@ ChBody* CreateMechanism(ChSystemParallel* system)
   insert->SetBodyFixed(true);
 
   insert->GetCollisionModel()->ClearModel();
-  insert->GetCollisionModel()->AddBox(thickness*0.5,width*0.5,height_insert*0.5, ChVector<>(0,0,0));
-  // additional collision geometry added to prevent particles from falling out
-  insert->GetCollisionModel()->AddBox(thickness*0.5,width*0.5,height_insert*0.5, ChVector<>(0,0,height_insert));
+  utils::AddBoxGeometry(insert.get_ptr(), ChVector<>(thickness*0.5,width*0.5,height_insert*0.5),  ChVector<>(0,0,0));
   insert->GetCollisionModel()->BuildModel();
-
-  ChSharedPtr<ChBoxShape> insert_shape = ChSharedPtr<ChAsset>(new ChBoxShape);
-  insert_shape->SetColor(ChColor(0, 0, 1));
-  insert_shape->GetBoxGeometry().Size = ChVector<>(thickness*0.5,width*0.5,height_insert*0.5);
-  insert_shape->Pos = ChVector<>(0, 0, 0);
-  insert_shape->Rot = ChQuaternion<>(1, 0, 0, 0);
-  insert->GetAssets().push_back(insert_shape);
 
   system->AddBody(insert);
 
