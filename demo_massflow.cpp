@@ -241,8 +241,8 @@ void CreateParticles(ChSystemParallel* system)
 
   gen.setBodyIdentifier(1);
 
-  ChVector<> hdims(0.45 * height, 0.45 * width, 0);
-  ChVector<> center(-0.5 * height, 0, height);
+  ChVector<> hdims(0.38 * height, 0.48 * width, 0);
+  ChVector<> center(-0.4 * height, 0, 0.8 * height);
   ChVector<> vel(0, 0, 0);
   double r = 1.01 * r_g;
 
