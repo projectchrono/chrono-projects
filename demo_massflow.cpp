@@ -61,14 +61,14 @@ ProblemType problem = SETTLING;
 int threads = 100;
 
 // Perform dynamic tuning of number of threads?
-bool thread_tuning = false;
+bool thread_tuning = true;
 
 // Simulation parameters
-double gravity = 981; // gravity, cm/s^2
+double gravity = 9.81;
 
 double time_settling_min = 0.1;
 double time_settling_max = 1.0;
-double time_dropping_max = 3.0;
+double time_dropping_max = 6.0;
 
 #ifdef DEM
 double time_step = 1e-5;
@@ -78,7 +78,7 @@ double time_step = 1e-4;
 int max_iteration_normal = 30;
 int max_iteration_sliding = 20;
 int max_iteration_spinning = 0;
-float contact_recovery_speed = 10.0;
+float contact_recovery_speed = 0.1;
 #endif
 
 int max_iteration_bilateral = 0;
@@ -102,11 +102,11 @@ int out_fps_dropping = 200;
 int timing_frame = -1;   // output detailed step timing at this frame
 
 // Parameters for the granular material
-double r_g = 0.025;        // cm
-double rho_g = 2.5;        // g/cm^3
+double r_g = 0.25e-3;
+double rho_g = 2500.0;
 
-float  Y_g = 1e6;          // g/cm/s^2
-float  alpha_g = 0.1;      // s/cm
+float  Y_g = 1e7;
+float  alpha_g = 0.6;
 float  mu_g = 0.3;
 
 // Desired number of particles and X-Y dimensions of the sampling volume for
@@ -114,22 +114,29 @@ float  mu_g = 0.3;
 int    desired_num_particles = 400;
 
 // Parameters for the mechanism material
-float  Y_c = 1e6;          // g/cm/s^2
-float  alpha_c = 0.1;      // s/cm
+float  Y_c = 2e6;
+float  alpha_c = 0.6;
 float  mu_c = 0.4;
 
 // Dimensions of mechanism
-double height = 4.0;       // height of the cavity, cm
-double width = 0.9525;     // width of the cavity, cm
-double thickness = 0.25;   // thickness of walls, cm
+double height = 6.0e-2;       // height of the cavity
+////double width = 0.9525e-2;     // width of the cavity
+double width = 0.9398e-2;     // width of the cavity
+double thickness = 0.25e-2;   // thickness of walls
 
 double height_insert = sqrt(2*height*height);
 double delta = sqrt(thickness*thickness/8);
 
-double speed = 0.15;       // speed of the angled insert, cm/s
-double gap = 0.2;          // size of gap, cm
+////double speed = 1.5e-3;       // speed of the angled insert
+double speed = 1.0e-3;       // speed of the angled insert
+double gap = 2e-3;           // size of gap
 
 double time_opening = gap / speed;
+
+// Dimensions of collector
+double pos_collector = 4.0e-2;    // position below measuring line
+double size_collector = 8.0e-2;   // width and length of collector bin
+double height_collector = 1.0e-2; // height of collector walls
 
 
 // -----------------------------------------------------------------------------
@@ -200,9 +207,9 @@ ChBody* CreateMechanism(ChSystemParallel* system)
 
   // Containing bin
 #ifdef DEM
-  utils::CreateBoxContainerDEM(system, -3, mat_b, ChVector<>(0.5*height, 0.5*height, 0.1*height), thickness, ChVector<>(0, 0, -1.5*height));
+  utils::CreateBoxContainerDEM(system, -3, mat_b, ChVector<>(size_collector/2, size_collector/2, height_collector/2), thickness/2, ChVector<>(0, 0, -pos_collector));
 #else
-  utils::CreateBoxContainerDVI(system, -3, mat_b, ChVector<>(0.5*height, 0.5*height, 0.1*height), thickness, ChVector<>(0, 0, -1.5*height));
+  utils::CreateBoxContainerDVI(system, -3, mat_b, ChVector<>(size_collector/2, size_collector/2, height_collector/2), thickness/2, ChVector<>(0, 0, -pos_collector));
 #endif
 
   // Return the angled insert body
@@ -241,7 +248,7 @@ void CreateParticles(ChSystemParallel* system)
 
   gen.setBodyIdentifier(1);
 
-  ChVector<> hdims(0.38 * height, 0.48 * width, 0);
+  ChVector<> hdims(0.3 * height, 0.3 * width, 0);
   ChVector<> center(-0.4 * height, 0, 0.8 * height);
   ChVector<> vel(0, 0, 0);
   double r = 1.01 * r_g;
@@ -447,13 +454,14 @@ int main(int argc, char* argv[])
       num_contacts = 0;
     }
 
-    // Check for early termination
+    // Check for early termination of settling phase.
     if (problem == SETTLING && time > time_settling_min && CheckSettled(msystem, zero_v)) {
       cout << "Granular material settled...  time = " << time << endl;
       break;
     }
 
-    if (problem == DROPPING && time > time_opening && GetNumParticlesAboveHeight(msystem, -1.4 * height) == 0) {
+    // Check for early termination of dropping phase.
+    if (problem == DROPPING && time > time_opening && GetNumParticlesAboveHeight(msystem, -pos_collector/2) == 0) {
       cout << "Granular material exhausted... time = " << time << endl;
       break;
     }
@@ -462,7 +470,7 @@ int main(int argc, char* argv[])
     msystem->DoStepDynamics(time_step);
 
     // Open the gate until it reaches the specified gap distance.
-    if (problem == DROPPING && time < time_opening) {
+    if (problem == DROPPING && time <= time_opening) {
         insert->SetPos(ChVector<>(-0.5 * height - delta - time * speed, 0, 0.5 * height - delta));
         insert->SetPos_dt(ChVector<>(-speed, 0, 0));
     }
