@@ -78,7 +78,7 @@ double time_step = 1e-4;
 int max_iteration_normal = 30;
 int max_iteration_sliding = 20;
 int max_iteration_spinning = 0;
-float contact_recovery_speed = 0.1;
+float contact_recovery_speed = 10.0;
 #endif
 
 int max_iteration_bilateral = 0;
@@ -96,8 +96,8 @@ const char* stats_file = "../MASSFLOW_DVI/stats.dat";
 const char* checkpoint_file = "../MASSFLOW_DVI/settled.dat";
 #endif
 
-int out_fps_settling = 60;
-int out_fps_dropping = 120;
+int out_fps_settling = 200;
+int out_fps_dropping = 200;
 
 int timing_frame = -1;   // output detailed step timing at this frame
 
