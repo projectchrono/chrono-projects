@@ -465,6 +465,7 @@ int main(int argc, char* argv[])
       case DROPPING:
         // Save current gap opening and number of dropped particles.
         ffile << time << "  " << -opening << "  " << count << "\n";
+        ffile.GetFstream().sync();
         break;
       }
 
