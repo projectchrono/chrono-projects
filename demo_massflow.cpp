@@ -448,26 +448,23 @@ int main(int argc, char* argv[])
       cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
       cout << "             Execution time: " << exec_time << endl;
 
+      double opening = insert->GetPos().x + 0.5 * height + delta;
+      int count = GetNumParticlesBelowHeight(msystem, 0);
+
+      cout << "             Gap:            " << -opening << endl;
+      cout << "             Flow:           " << count << endl;
+
       sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
 
       switch (problem) {
       case SETTLING:
-        {
-          // Create a checkpoint from the current state.
-          cout << "             Write checkpoint data " << flush;
-          utils::WriteCheckpoint(msystem, checkpoint_file);
-          cout << msystem->Get_bodylist()->size() << " bodies" << endl;
-        }
+        // Create a checkpoint from the current state.
+        utils::WriteCheckpoint(msystem, checkpoint_file);
+        cout << "             Checkpoint:     " << msystem->Get_bodylist()->size() << " bodies" << endl;
         break;
       case DROPPING:
-        {
-          // Save current number of dropped particles.
-          double opening = insert->GetPos().x + 0.5 * height + delta;
-          int count = GetNumParticlesBelowHeight(msystem, 0);
-          ffile << time << "  " << -opening << "  " << count << "\n";
-          cout << "             Gap:            " << -opening << endl;
-          cout << "             Flow:           " << count << endl;
-        }
+        // Save current gap opening and number of dropped particles.
+        ffile << time << "  " << -opening << "  " << count << "\n";
         break;
       }
 
