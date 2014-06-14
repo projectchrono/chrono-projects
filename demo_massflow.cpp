@@ -157,31 +157,6 @@ ChBody* CreateMechanism(ChSystemParallel* system)
   mat_b->SetFriction(mu_c);
 #endif
 
-  // Static slot
-#ifdef DEM
-  ChSharedBodyDEMPtr slot(new ChBodyDEM(new ChCollisionModelParallel));
-  slot->SetMaterialSurfaceDEM(mat_b);
-#else
-  ChSharedBodyPtr slot(new ChBody(new ChCollisionModelParallel));
-  slot->SetMaterialSurface(mat_b);
-#endif
-
-  slot->SetIdentifier(-1);
-  slot->SetMass(1);
-  slot->SetInertiaXX(ChVector<>(1,1,1));
-  slot->SetPos(ChVector<>(0.5*thickness, 0, 0.5*height));
-  slot->SetRot(ChQuaternion<>(1, 0, 0, 0));
-  slot->SetCollide(true);
-  slot->SetBodyFixed(true);
-
-  slot->GetCollisionModel()->ClearModel();
-  utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(thickness/2, width/2, height/2), ChVector<>(0, 0, 0));
-  utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(3*height/2, thickness/2, height), ChVector<>(0,  width/2+thickness/2, height/2));
-  utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(3*height/2, thickness/2, height), ChVector<>(0, -width/2-thickness/2, height/2));
-  slot->GetCollisionModel()->BuildModel();
-
-  system->AddBody(slot);
-
   // Angled insert
 #ifdef DEM
   ChSharedBodyDEMPtr insert(new ChBodyDEM(new ChCollisionModelParallel));
@@ -204,6 +179,53 @@ ChBody* CreateMechanism(ChSystemParallel* system)
   insert->GetCollisionModel()->BuildModel();
 
   system->AddBody(insert);
+
+  // Static slot (back wall)
+#ifdef DEM
+  ChSharedBodyDEMPtr slot(new ChBodyDEM(new ChCollisionModelParallel));
+  slot->SetMaterialSurfaceDEM(mat_b);
+#else
+  ChSharedBodyPtr slot(new ChBody(new ChCollisionModelParallel));
+  slot->SetMaterialSurface(mat_b);
+#endif
+
+  slot->SetIdentifier(-1);
+  slot->SetMass(1);
+  slot->SetInertiaXX(ChVector<>(1,1,1));
+  slot->SetPos(ChVector<>(0.5*thickness, 0, 0.5*height));
+  slot->SetRot(ChQuaternion<>(1, 0, 0, 0));
+  slot->SetCollide(true);
+  slot->SetBodyFixed(true);
+
+  slot->GetCollisionModel()->ClearModel();
+  utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(thickness/2, width/2, height/2), ChVector<>(0, 0, 0));
+  slot->GetCollisionModel()->BuildModel();
+
+  system->AddBody(slot);
+
+  // Lateral walls
+#ifdef DEM
+  ChSharedBodyDEMPtr wall(new ChBodyDEM(new ChCollisionModelParallel));
+  wall->SetMaterialSurfaceDEM(mat_b);
+#else
+  ChSharedBodyPtr wall(new ChBody(new ChCollisionModelParallel));
+  wall->SetMaterialSurface(mat_b);
+#endif
+
+  wall->SetIdentifier(-2);
+  wall->SetMass(1);
+  wall->SetInertiaXX(ChVector<>(1, 1, 1));
+  wall->SetPos(ChVector<>(0, 0, 0));
+  wall->SetRot(ChQuaternion<>(1, 0, 0, 0));
+  wall->SetCollide(true);
+  wall->SetBodyFixed(true);
+
+  wall->GetCollisionModel()->ClearModel();
+  utils::AddBoxGeometry(wall.get_ptr(), ChVector<>(3*height/2, thickness/2, height), ChVector<>(0,  width/2+thickness/2, height/2));
+  utils::AddBoxGeometry(wall.get_ptr(), ChVector<>(3*height/2, thickness/2, height), ChVector<>(0, -width/2-thickness/2, height/2));
+  wall->GetCollisionModel()->BuildModel();
+
+  system->AddBody(wall);
 
   // Containing bin
 #ifdef DEM
