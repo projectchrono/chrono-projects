@@ -455,6 +455,7 @@ int main(int argc, char* argv[])
       cout << "             Flow:           " << count << endl;
 
       sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
+      sfile.GetFstream().sync();
 
       switch (problem) {
       case SETTLING:
