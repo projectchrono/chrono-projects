@@ -250,15 +250,8 @@ ChBody* CreateFallingBall(ChSystemParallel* system, double z, double vz)
   ball->SetBodyFixed(false);
 
   ball->GetCollisionModel()->ClearModel();
-  ball->GetCollisionModel()->AddSphere(R_b);
+  utils::AddSphereGeometry(ball.get_ptr(), R_b);
   ball->GetCollisionModel()->BuildModel();
-
-  ChSharedPtr<ChSphereShape> ball_shape = ChSharedPtr<ChAsset>(new ChSphereShape);
-  ball_shape->SetColor(ChColor(0, 0, 1));
-  ball_shape->GetSphereGeometry().rad = R_b;
-  ball_shape->Pos = ChVector<>(0, 0, 0);
-  ball_shape->Rot = ChQuaternion<>(1, 0, 0, 0);
-  ball->GetAssets().push_back(ball_shape);
 
   system->AddBody(ball);
 

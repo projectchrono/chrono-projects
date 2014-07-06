@@ -69,24 +69,6 @@ double hThickness = 0.1;   // wall thickness
 
 // =======================================================================
 
-template <typename T>
-void AddWall(T&                   body,
-             const ChVector<>&    loc,
-             const ChVector<>&    dim)
-{
-	// Append to collision geometry
-	body->GetCollisionModel()->AddBox(dim.x, dim.y, dim.z, loc);
-
-	// Append to assets
-	ChSharedPtr<ChBoxShape> box_shape = ChSharedPtr<ChAsset>(new ChBoxShape);
-	box_shape->SetColor(ChColor(1, 0, 0));
-	box_shape->Pos = loc;
-	box_shape->Rot = ChQuaternion<>(1,0,0,0);
-	box_shape->GetBoxGeometry().Size = dim;
-
-	body->GetAssets().push_back(box_shape);
-}
-
 void CreateObjects(ChSystemParallel* system)
 {
 	// Create a material for the ball mixture
@@ -119,26 +101,7 @@ void CreateObjects(ChSystemParallel* system)
 	cout << "Number bodies generated: " << gen.getTotalNumBodies() << endl;
 
 	// Create the containing bin
-	ChSharedBodyDEMPtr bin(new ChBodyDEM(new ChCollisionModelParallel));
-
-	bin->SetMaterialSurfaceDEM(binMat);
-
-	bin->SetIdentifier(binId);
-	bin->SetMass(1);
-	bin->SetPos(ChVector<>(0, 0, 0));
-	bin->SetRot(ChQuaternion<>(1, 0, 0, 0));
-	bin->SetCollide(true);
-	bin->SetBodyFixed(true);
-
-	bin->GetCollisionModel()->ClearModel();
-	AddWall(bin, ChVector<>(0, 0, -hThickness), ChVector<>(hDimX, hDimY, hThickness));
-	AddWall(bin, ChVector<>(-hDimX-hThickness, 0, hDimZ), ChVector<>(hThickness, hDimY, hDimZ));
-	AddWall(bin, ChVector<>( hDimX+hThickness, 0, hDimZ), ChVector<>(hThickness, hDimY, hDimZ));
-	AddWall(bin, ChVector<>(0, -hDimY-hThickness, hDimZ), ChVector<>(hDimX, hThickness, hDimZ));
-	AddWall(bin, ChVector<>(0,  hDimY+hThickness, hDimZ), ChVector<>(hDimX, hThickness, hDimZ));
-	bin->GetCollisionModel()->BuildModel();
-
-	system->AddBody(bin);
+  utils::CreateBoxContainerDEM(system, binId, binMat, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 }
 
 // =======================================================================
@@ -167,15 +130,8 @@ ChBody* CreateFallingBall()
 	ball->SetBodyFixed(false);
 
 	ball->GetCollisionModel()->ClearModel();
-	ball->GetCollisionModel()->AddSphere(radius1);
+  utils::AddSphereGeometry(ball, radius1);
 	ball->GetCollisionModel()->BuildModel();
-
-	ChSharedPtr<ChSphereShape> ball_shape = ChSharedPtr<ChAsset>(new ChSphereShape);
-	ball_shape->SetColor(ChColor(0, 0, 1));
-	ball_shape->GetSphereGeometry().rad = radius1;
-	ball_shape->Pos = ChVector<>(0,0,0);
-	ball_shape->Rot = ChQuaternion<>(1,0,0,0);
-	ball->GetAssets().push_back(ball_shape);
 
 	return ball;
 }
