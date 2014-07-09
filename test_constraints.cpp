@@ -142,6 +142,18 @@ int main(int argc, char* argv[])
   msystem->AddLink(rev_ground_crank);
 
 
+  // Create output directories
+  // -------------------------
+
+  if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+    cout << "Error creating directory " << out_dir << endl;
+    return 1;
+  }
+  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+    cout << "Error creating directory " << pov_dir << endl;
+    return 1;
+  }
+
 
   // Perform the simulation.
   // -----------------------

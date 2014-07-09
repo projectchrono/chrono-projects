@@ -205,7 +205,15 @@ int main(int argc, char* argv[])
 
   msystem->AddBody(bin);
 
-
+  // Create output directories.
+  if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+    cout << "Error creating directory " << out_dir << endl;
+    return 1;
+  }
+  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+    cout << "Error creating directory " << pov_dir << endl;
+    return 1;
+  }
 
   // Perform the simulation
   int num_steps = std::ceil(time_end / time_step);
