@@ -88,15 +88,15 @@ int max_iteration_bilateral = 0;
 
 // Output
 #ifdef DEM
-const string out_dir = "../MASSFLOW_DEM";
+const std::string out_dir = "../MASSFLOW_DEM";
 #else
-const string out_dir = "../MASSFLOW_DVI";
+const std::string out_dir = "../MASSFLOW_DVI";
 #endif
 
-const string pov_dir = out_dir + "/POVRAY";
-const string flow_file = out_dir + "/flow.dat";
-const string stats_file = out_dir + "/stats.dat";
-const string checkpoint_file = out_dir + "/settled.dat";
+const std::string pov_dir = out_dir + "/POVRAY";
+const std::string flow_file = out_dir + "/flow.dat";
+const std::string stats_file = out_dir + "/stats.dat";
+const std::string checkpoint_file = out_dir + "/settled.dat";
 
 int out_fps_settling = 200;
 int out_fps_dropping = 200;

@@ -2,6 +2,9 @@
 #include <vector>
 #include <cmath>
 
+#include "core/ChFileutils.h"
+#include "core/ChStream.h"
+
 #include "chrono_parallel/ChSystemParallel.h"
 #include "chrono_parallel/ChLcpSystemDescriptorParallel.h"
 
@@ -18,17 +21,18 @@
 // Define macro DEM to use penalty-based contact. Otherwise, DVI
 #define DEM
 
-
 // Global variables (for callback)
 int out_steps;
 
 #ifdef DEM
-  ChStreamOutAsciiFile sph_file("../TEST_BALL_DEM/sphere_pos.txt");
-  const char* data_folder = "../TEST_BALL_DEM/POVRAY";
+const std::string out_dir = "../TEST_BALL_DEM";
 #else
-  ChStreamOutAsciiFile sph_file("../TEST_BALL_DVI/sphere_pos.txt");
-  const char* data_folder = "../TEST_BALL_DVI/POVRAY";
+const std::string out_dir = "../TEST_BALL_DVI";
 #endif
+const std::string pov_dir = out_dir + "/POVRAY";
+const std::string out_file = out_dir + "/sphere_pos.dat";
+
+ChStreamOutAsciiFile ofile(out_file.c_str());
 
 
 // -----------------------------------------------------------------------------
@@ -43,7 +47,7 @@ void SimFrameCallback(T* mSys, const int frame)
 
   chrono::Vector bodyAngs;
 
-  sph_file << frame << "     ";
+  ofile << frame << "     ";
   std::cout << frame << "     ";
 
   for (int i = 0; i < mSys->Get_bodylist()->size(); ++i) {
@@ -53,12 +57,12 @@ void SimFrameCallback(T* mSys, const int frame)
 #endif
     const ChVector<>& bodypos = abody->GetPos();
     bodyAngs = abody->GetRot().Q_to_NasaAngles();
-    sph_file << bodypos.x  << "  " << bodypos.y  << "  " << bodypos.z  << "  ";
-    sph_file << bodyAngs.x << "  " << bodyAngs.y << "  " << bodyAngs.z << "       ";
+    ofile << bodypos.x  << "  " << bodypos.y  << "  " << bodypos.z  << "  ";
+    ofile << bodyAngs.x << "  " << bodyAngs.y << "  " << bodyAngs.z << "       ";
     std::cout << bodypos.x << "  " << bodypos.y << "  " << bodypos.z << "   |   ";
   }
 
-  sph_file << "\n";
+  ofile << "\n";
   std::cout << std::endl;
 }
 
@@ -75,6 +79,16 @@ int main(int argc, char* argv[])
   double time_end = 1;
 
   int max_iteration = 20;
+
+  // Create output directories.
+  if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+    cout << "Error creating directory " << out_dir << endl;
+    return 1;
+  }
+  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+    cout << "Error creating directory " << pov_dir << endl;
+    return 1;
+  }
 
   // Output
   double out_fps = 1000;

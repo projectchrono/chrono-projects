@@ -26,6 +26,9 @@
 #include <vector>
 #include <cmath>
 
+#include "core/ChFileutils.h"
+#include "core/ChStream.h"
+
 #include "chrono_parallel/ChSystemParallel.h"
 #include "chrono_parallel/ChLcpSystemDescriptorParallel.h"
 
@@ -85,16 +88,15 @@ int max_iteration_bilateral = 0;
 
 // Output
 #ifdef DEM
-const char* out_folder = "../CRATER_DEM/POVRAY";
-const char* height_file = "../CRATER_DEM/height.dat";
-const char* stats_file = "../CRATER_DEM/stats.dat";
-const char* checkpoint_file = "../CRATER_DEM/settled.dat";
+const std::string out_dir = "../CRATER_DEM";
 #else
-const char* out_folder = "../CRATER_DVI/POVRAY";
-const char* height_file = "../CRATER_DVI/height.dat";
-const char* stats_file = "../CRATER_DVI/stats.dat";
-const char* checkpoint_file = "../CRATER_DVI/settled.dat";
+const std::string out_dir = "../CRATER_DVI";
 #endif
+
+const std::string pov_dir = out_dir + "/POVRAY";
+const std::string height_file = out_dir + "/height.dat";
+const std::string stats_file = out_dir + "/stats.dat";
+const std::string checkpoint_file = out_dir + "/settled.dat";
 
 int out_fps_settling = 120;
 int out_fps_dropping = 1200;
@@ -400,6 +402,16 @@ int main(int argc, char* argv[])
   // (fraction of a grain radius per second)
   double zero_v = 0.1 * r_g;
 
+  // Create output directories.
+  if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+    cout << "Error creating directory " << out_dir << endl;
+    return 1;
+  }
+  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+    cout << "Error creating directory " << pov_dir << endl;
+    return 1;
+  }
+
   // Perform the simulation
   double time = 0;
   int sim_frame = 0;
@@ -407,13 +419,13 @@ int main(int argc, char* argv[])
   int next_out_frame = 0;
   double exec_time = 0;
   int num_contacts = 0;
-  ChStreamOutAsciiFile sfile(stats_file);
-  ChStreamOutAsciiFile hfile(height_file);
+  ChStreamOutAsciiFile sfile(stats_file.c_str());
+  ChStreamOutAsciiFile hfile(height_file.c_str());
 
   while (time < time_end) {
     if (sim_frame == next_out_frame) {
       char filename[100];
-      sprintf(filename, "%s/data_%03d.dat", out_folder, out_frame + 1);
+      sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
       utils::WriteShapesPovray(msystem, filename);
 
       cout << "------------ Output frame:   " << out_frame << endl;
