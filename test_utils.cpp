@@ -140,11 +140,6 @@ void checkGenerators()
   std::cout << "Total mass: "<< gen.getTotalMass() << "  Total volume: " << gen.getTotalVolume() << std::endl;
 
   gen.writeObjectInfo(data_folder + "body_info.dat");
-
-
-  // CHECK CSV WRITER
-  sprintf(filename, "%sdata_000.dat", data_folder.c_str());
-  utils::WriteShapesRender(msystem, filename);
 }
 
 
