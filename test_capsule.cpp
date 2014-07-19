@@ -15,12 +15,11 @@
 #include "chrono_utils/opengl/ChOpenGLWindow.h"
 #endif
 
+using namespace chrono;
+using namespace chrono::collision;
+
 // Define this to save the data when using the OpenGL code
 //#define SAVE_DATA
-
-using namespace chrono;
-using namespace geometry;
-
 
 void OutputFile(ChStreamOutAsciiFile& file,
                 ChSystem*             sys,

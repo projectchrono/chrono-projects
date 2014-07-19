@@ -13,6 +13,7 @@
 #include "chrono_utils/ChUtilsInputOutput.h"
 
 using namespace chrono;
+using namespace chrono::collision;
 
 using std::cout;
 using std::endl;

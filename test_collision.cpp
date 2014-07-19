@@ -17,7 +17,7 @@
 #endif
 
 using namespace chrono;
-using namespace geometry;
+using namespace chrono::collision;
 
 using std::cout;
 using std::endl;
