@@ -8,6 +8,9 @@
 #include "chrono_parallel/ChSystemParallel.h"
 #include "chrono_parallel/ChLcpSystemDescriptorParallel.h"
 
+#include "chrono_parallel/collision/ChCNarrowphaseRUtils.h"
+
+#include "chrono_utils/ChUtilsGeometry.h"
 #include "chrono_utils/ChUtilsCreators.h"
 #include "chrono_utils/ChUtilsGenerators.h"
 #include "chrono_utils/ChUtilsInputOutput.h"
@@ -17,234 +20,317 @@ using namespace chrono;
 using std::cout;
 using std::endl;
 
-// =======================================================================
+// -----------------------------------------------------------------------------
+// Problem setup
+// -----------------------------------------------------------------------------
 
+// Comment the following line to use DVI contact
+#define DEM
+
+// Simulation phase
 enum ProblemType {
   SETTLING,
   DROPPING,
-  COMPLETE
 };
-
 ProblemType problem = DROPPING;
 
-// =======================================================================
-// Global problem definitions
-
-int threads = 8;
-
+// -----------------------------------------------------------------------------
 // Simulation parameters
-double gravity = -9.81;
-double time_step = 0.0001;
-double time_drop = 5;
-double time_end = 10;
+// -----------------------------------------------------------------------------
 
+// Desired number of OpenMP threads (will be clamped to maximum available)
+int threads = 100;
+
+// Perform dynamic tuning of number of threads?
+bool thread_tuning = true;
+
+// Simulation duration.
+double time_settling = 5;
+double time_dropping = 10;
+
+// Solver parameters
+#ifdef DEM
+double time_step = 1e-4;
 int max_iteration = 20;
+#else
+double time_step = 1e-4;
+int max_iteration_normal = 30;
+int max_iteration_sliding = 20;
+int max_iteration_spinning = 0;
+float contact_recovery_speed = 0.1;
+#endif
 
 // Output
-const std::string out_dir = "../SOILBIN";
+#ifdef DEM
+const std::string out_dir = "../SOILBIN_DEM";
+#else
+const std::string out_dir = "../SOILBIN_DEM";
+#endif
 const std::string pov_dir = out_dir + "/POVRAY";
-const std::string checkpoint_file = out_dir + "/settled_hard.dat";
-const std::string out_file = out_dir + "/soilbin_pos.dat";
-double out_fps = 30;
+const std::string checkpoint_file = out_dir + "/settled.dat";
+const std::string stats_file = out_dir + "/stats.dat";
 
-// Parameters for the mixture balls
-double     radius = 0.1;
-double     density = 2000;
-double     vol = (4.0/3) * CH_C_PI * radius * radius * radius;
-double     mass = density * vol;
-ChVector<> inertia = 0.4 * mass * radius * radius * ChVector<>(1,1,1);
+int out_fps_settling = 30;
+int out_fps_dropping = 60;
 
-// Parameters for the falling ball
-double     dropHeight = 10;
-int        ballId = 100;
-double     radius1 = 0.5;
-double     density1 = 2000;
-double     volume1 = (4.0/3) * CH_C_PI * radius1 * radius1 * radius1;
-double     mass1 = density1 * volume1;
-ChVector<> inertia1 = 0.4 * mass1 * radius1 * radius1 * ChVector<>(1,1,1);
-ChVector<> initvel1(0, 0, -30);
+// -----------------------------------------------------------------------------
+// Parameters for the granular material (identical spheres)
+// -----------------------------------------------------------------------------
+double r_g = 0.1;
+double rho_g = 2000;
+int    desired_num_particles = 400;
 
-// Parameters for the containing bin
-int    binId = -200;
-double hDimX = 5;          // length in x direction
-double hDimY = 2;          // depth in y direction
-double hDimZ = 2;          // height in z direction
-double hThickness = 0.1;   // wall thickness
+// -----------------------------------------------------------------------------
+// Parameters for the falling object
+// -----------------------------------------------------------------------------
+// Shape of dropped object
+collision::ShapeType shape_o = collision::SPHERE;
 
-// =======================================================================
+double mass_o = 1000.0;
 
-void CreateObjects(ChSystemParallel* system)
+ChQuaternion<> initRot(1.0, 0.0, 0.0, 0.0);
+ChVector<>     initLinVel(0.0, 0.0, 0.0);
+ChVector<>     initAngVel(0.0, 0.0, 0.0);
+
+// -----------------------------------------------------------------------------
+// Half-dimensions of the container bin
+// -----------------------------------------------------------------------------
+double hDimX = 5;
+double hDimY = 2;
+double hDimZ = 2;
+
+
+// =============================================================================
+// Create container bin.
+// =============================================================================
+void CreateContainer(ChSystemParallel* system)
 {
-  // Create a material for the ball mixture
-  ChSharedPtr<ChMaterialSurfaceDEM> ballMixMat;
-  ballMixMat = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
-  ballMixMat->SetYoungModulus(1e8f);
-  ballMixMat->SetFriction(0.4f);
-  ballMixMat->SetDissipationFactor(0.1f);
+  int    id_c = -200;
+  double hThickness = 0.1;
 
-  // Create a material for the bin
-  ChSharedPtr<ChMaterialSurfaceDEM> binMat;
-  binMat = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
-  binMat->SetYoungModulus(2e6f);
-  binMat->SetFriction(0.4f);
-  binMat->SetDissipationFactor(0.6f);
+#ifdef DEM
+  ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
+  mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+  mat_c->SetYoungModulus(2e6f);
+  mat_c->SetFriction(0.4f);
+  mat_c->SetDissipationFactor(0.6f);
 
-  // Create a mixture entirely made out of spheres
+  utils::CreateBoxContainerDEM(system, id_c, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+#else
+  ChSharedPtr<ChMaterialSurface> mat_c(new ChMaterialSurface);
+  mat_c->SetFriction(0.4f);
+
+  utils::CreateBoxContainerDVI(system, id_c, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+
+#endif
+}
+
+// =============================================================================
+// Create granular material.
+// =============================================================================
+void CreateParticles(ChSystemParallel* system)
+{
+  // Create a material for the ball mixture.
+#ifdef DEM
+  ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
+  mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+  mat_g->SetYoungModulus(1e8f);
+  mat_g->SetFriction(0.4f);
+  mat_g->SetDissipationFactor(0.1f);
+#else
+  ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
+  mat_g->SetFriction(0.4f);
+#endif
+
+  // Create a mixture entirely made out of spheres.
   utils::Generator gen(system);
 
   utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
-  m1->setDefaultMaterialDEM(ballMixMat);
-  m1->setDefaultDensity(density);
-  m1->setDefaultSize(radius);
+#ifdef DEM
+  m1->setDefaultMaterialDEM(mat_g);
+#else
+  m1->setDefaultMaterialDVI(mat_g);
+#endif
+  m1->setDefaultDensity(rho_g);
+  m1->setDefaultSize(r_g);
 
-  gen.createObjectsBox(utils::POISSON_DISK,
-                       2.01 * radius,
-                       ChVector<>(0, 0, 2.5),
-                       ChVector<>(0.8 * hDimX, 0.8 * hDimY, 2));
+  // Create particles, one layer at a time, until the desired number is reached.
+  gen.setBodyIdentifier(1);
 
-  cout << "Number bodies generated: " << gen.getTotalNumBodies() << endl;
+  double     r = 1.01 * r_g;
+  ChVector<> hdims(hDimX - r, hDimY - r, 0);
+  ChVector<> center(0, 0, 2 * r);
 
-  // Create the containing bin
-  utils::CreateBoxContainerDEM(system, binId, binMat, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
-}
-
-// =======================================================================
-
-ChBody* CreateFallingBall()
-{
-  // Create a material for the falling ball
-  ChSharedPtr<ChMaterialSurfaceDEM> ballMat;
-  ballMat = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
-  ballMat->SetYoungModulus(1e8f);
-  ballMat->SetFriction(0.4f);
-  ballMat->SetDissipationFactor(0.1f);
-
-  // Create the falling ball, but do not add it to the system
-  ChBodyDEM* ball = new ChBodyDEM(new ChCollisionModelParallel);
-
-  ball->SetMaterialSurfaceDEM(ballMat);
-
-  ball->SetIdentifier(binId);
-  ball->SetMass(mass1);
-  ball->SetInertiaXX(inertia1);
-  ball->SetPos(ChVector<>(0, 0, dropHeight));
-  ball->SetRot(ChQuaternion<>(1, 0, 0, 0));
-  ball->SetPos_dt(initvel1);
-  ball->SetCollide(true);
-  ball->SetBodyFixed(false);
-
-  ball->GetCollisionModel()->ClearModel();
-  utils::AddSphereGeometry(ball, radius1);
-  ball->GetCollisionModel()->BuildModel();
-
-  return ball;
-}
-
-// =======================================================================
-
-void OutputFile(ChStreamOutAsciiFile& file,
-                ChSystem&             sys,
-                double                time)
-{
-  chrono::Vector bodyAngs;
-
-  file << time << "     ";
-  cout << time << "     ";
-
-  for (int i = 0; i < sys.Get_bodylist()->size(); ++i) {
-    ChBody* abody = (ChBody*) sys.Get_bodylist()->at(i);
-    assert(typeid(*abody) == typeid(ChBodyDEM));
-
-    const ChVector<>& bodypos = abody->GetPos();
-    bodyAngs = abody->GetRot().Q_to_NasaAngles();
-    file << bodypos.x  << "  " << bodypos.y  << "  " << bodypos.z  << "  ";
-    file << bodyAngs.x << "  " << bodyAngs.y << "  " << bodyAngs.z << "       ";
-    cout << bodypos.x << "  " << bodypos.y << "  " << bodypos.z << "   |   ";
+  while(gen.getTotalNumBodies() < desired_num_particles) {
+    gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
+    center.z += 2 * r;
   }
 
-  file << "\n";
-  cout << endl;
+  cout << "Number of particles: " << gen.getTotalNumBodies() << endl;
 }
 
-double FindLowest(ChSystem& sys)
+// =============================================================================
+// Create falling object.
+// =============================================================================
+void CreateObject(ChSystemParallel* system, double z)
+{
+  double rho_o = 2000.0;
+
+  // -----------------------------------------
+  // Create a material for the falling object.
+  // -----------------------------------------
+
+#ifdef DEM
+  ChSharedPtr<ChMaterialSurfaceDEM> mat_o;
+  mat_o = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+  mat_o->SetYoungModulus(1e8f);
+  mat_o->SetFriction(0.4f);
+  mat_o->SetDissipationFactor(0.1f);
+#else
+  ChSharedPtr<ChMaterialSurface> mat_o(new ChMaterialSurface);
+  mat_o->SetFriction(0.4f);
+#endif
+
+  // --------------------------
+  // Create the falling object.
+  // --------------------------
+
+#ifdef DEM
+  ChSharedBodyDEMPtr obj(new ChBodyDEM(new ChCollisionModelParallel));
+  obj->SetMaterialSurfaceDEM(mat_o);
+#else
+  ChSharedBodyPtr obj(new ChBody(new ChCollisionModelParallel));
+  obj->SetMaterialSurface(mat_o);
+#endif
+
+  obj->SetIdentifier(0);
+  obj->SetCollide(true);
+  obj->SetBodyFixed(false);
+
+  // ----------------------------------------------------
+  // Depending on the shape of the falling object,
+  //    - Calculate bounding radius, volume, and gyration
+  //    - Set contact and visualization shape
+  // ----------------------------------------------------
+
+  double       rb;
+  double       vol;
+  ChMatrix33<> J;
+
+  obj->GetCollisionModel()->ClearModel();
+
+  switch (shape_o) {
+  case collision::SPHERE:
+    {
+      double radius = 0.5;
+      rb = utils::CalcSphereBradius(radius);
+      vol = utils::CalcSphereVolume(radius);
+      J = utils::CalcSphereGyration(radius);
+      utils::AddSphereGeometry(obj.get_ptr(), radius);
+    }
+    break;
+  case collision::BOX:
+    {
+      ChVector<> hdims(0.5, 0.75, 1.0);
+      rb = utils::CalcBoxBradius(hdims);
+      vol = utils::CalcBoxVolume(hdims);
+      J = utils::CalcBoxGyration(hdims);
+      utils::AddBoxGeometry(obj.get_ptr(), hdims);
+    }
+    break;
+  case collision::CAPSULE:
+    {
+      double radius = 0.25;
+      double hlen = 0.5;
+      rb = utils::CalcCapsuleBradius(radius, hlen);
+      vol = utils::CalcCapsuleVolume(radius, hlen);
+      J = utils::CalcCapsuleGyration(radius, hlen);
+      utils::AddCapsuleGeometry(obj.get_ptr(), radius, hlen);
+    }
+    break;
+  case collision::CYLINDER:
+    {
+      double radius = 0.25;
+      double hlen = 0.5;
+      rb = utils::CalcCylinderBradius(radius, hlen);
+      vol = utils::CalcCylinderVolume(radius, hlen);
+      J = utils::CalcCylinderGyration(radius, hlen);
+      utils::AddCylinderGeometry(obj.get_ptr(), radius, hlen);
+    }
+    break;
+  case collision::ROUNDEDCYL:
+    {
+      double radius = 0.25;
+      double hlen = 0.5;
+      double srad = 0.1;
+      rb = utils::CalcRoundedCylinderBradius(radius, hlen, srad);
+      vol = utils::CalcRoundedCylinderVolume(radius, hlen, srad);
+      J = utils::CalcRoundedCylinderGyration(radius, hlen, srad);
+      utils::AddRoundedCylinderGeometry(obj.get_ptr(), radius, hlen, srad);
+    }
+    break;
+  }
+
+  obj->GetCollisionModel()->BuildModel();
+
+  // ---------------------
+  // Set mass and inertia.
+  // ---------------------
+
+  double mass = rho_o * vol;
+  obj->SetMass(mass);
+  obj->SetInertia(J * mass);
+
+  // ------------------
+  // Set initial state.
+  // ------------------
+
+  obj->SetPos(ChVector<>(0, 0, z + rb));
+  obj->SetRot(initRot);
+  obj->SetPos_dt(initLinVel);
+  obj->SetWvel_loc(initAngVel);
+
+  // ---------------------
+  // Add object to system.
+  // ---------------------
+  system->AddBody(obj);
+}
+
+// =============================================================================
+// Find the height of the highest and lowest, respectively, sphere in the
+// granular mix, respectively.  We only look at bodies whith stricty positive
+// identifiers (to exclude the containing bin).
+// =============================================================================
+double FindHighest(ChSystem* sys)
+{
+  double highest = 0;
+  for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
+    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
+    if (body->GetIdentifier() > 0 && body->GetPos().z > highest)
+      highest = body->GetPos().z;
+  }
+  return highest;
+}
+
+double FindLowest(ChSystem* sys)
 {
   double lowest = 1000;
-
-  for (int i = 0; i < sys.Get_bodylist()->size(); ++i) {
-    ChBody* abody = (ChBody*) sys.Get_bodylist()->at(i);
-    if (abody->GetBodyFixed())
-      continue;
-    if (abody->GetPos().z < lowest)
-      lowest = abody->GetPos().z;
+  for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
+    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
+    if (body->GetIdentifier() > 0 && body->GetPos().z < lowest)
+      lowest = body->GetPos().z;
   }
   return lowest;
 }
 
-
-
+// =============================================================================
+// =============================================================================
 int main(int argc, char* argv[])
 {
-
-  // Create system
-  ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
-
-  // Set number of threads.
-  int max_threads = msystem->GetParallelThreadNumber();
-  if (threads > max_threads)
-    threads = max_threads;
-  msystem->SetParallelThreadNumber(threads);
-  omp_set_num_threads(threads);
-
-  // Set gravitational acceleration
-  msystem->Set_G_acc(ChVector<>(0, 0, gravity));
-
-  // Edit system settings
-  msystem->SetMaxiter(max_iteration);
-  msystem->SetIterLCPmaxItersSpeed(max_iteration);
-  msystem->SetTol(1e-3);
-  msystem->SetTolSpeeds(1e-3);
-  msystem->SetStep(time_step);
-
-  ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->setBinsPerAxis(I3(10, 10, 10));
-  ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->setBodyPerBin(100, 50);
-
-  ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->ChangeNarrowphase(new ChCNarrowphaseR);
-
-  // Always create the falling ball (not attached to system)
-  ChBody* ball = CreateFallingBall();
-
-  // Select start/end simulation times
-  double Tstart;
-  double Tend;
-  bool dropped = false;
-
-  switch (problem) {
-  case SETTLING:
-    Tstart = 0;
-    Tend = time_drop;    // Simulate from 0 to time_drop
-    dropped = true;      // Make sure we never drop the ball
-    break;
-  case DROPPING:
-    Tstart = time_drop;
-    Tend = time_end;     // Simulate from time_drop to time_end
-    break;
-  case COMPLETE:
-    Tstart = 0;
-    Tend = time_end;     // Simulate from 0 to time_end
-    break;
-  }
-
-  // Create objects
-  if (problem == DROPPING)
-    utils::ReadCheckpoint(msystem, checkpoint_file);
-  else
-    CreateObjects(msystem);
-
-  // Number of steps
-  int num_steps = std::ceil((Tend - Tstart) / time_step);
-  int out_steps = std::ceil((1 / time_step) / out_fps);
-
+  // --------------------------
   // Create output directories.
+  // --------------------------
+
   if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
     cout << "Error creating directory " << out_dir << endl;
     return 1;
@@ -254,51 +340,154 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  // Perform the simulation
-  double time = Tstart;
+  // --------------
+  // Create system.
+  // --------------
+
+#ifdef DEM
+  cout << "Create DEM system" << endl;
+  ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
+#else
+  cout << "Create DVI system" << endl;
+  ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
+#endif
+
+  msystem->Set_G_acc(ChVector<>(0, 0, -9.81));
+
+  // ----------------------
+  // Set number of threads.
+  // ----------------------
+
+  int max_threads = msystem->GetParallelThreadNumber();
+  if (threads > max_threads)
+    threads = max_threads;
+  msystem->SetParallelThreadNumber(threads);
+  omp_set_num_threads(threads);
+  cout << "Using " << threads << " threads" << endl;
+
+  // ---------------------
+  // Edit system settings.
+  // ---------------------
+
+  msystem->SetTol(1e-3);
+  msystem->SetTolSpeeds(1e-3);
+  msystem->SetStep(time_step);
+
+#ifdef DEM
+  ((ChLcpSolverParallelDEM*) msystem->GetLcpSolverSpeed())->SetTolerance(1e-3);
+
+  ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->ChangeNarrowphase(new ChCNarrowphaseR);
+#else
+  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationNormal(max_iteration_normal);
+  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationSliding(max_iteration_sliding);
+  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationSpinning(max_iteration_spinning);
+  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationBilateral(max_iteration_bilateral);
+  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetTolerance(1e-3);
+  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetCompliance(0);
+  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetContactRecoverySpeed(contact_recovery_speed);
+  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetSolverType(APGDRS);
+
+  ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->SetCollisionEnvelope(0.05 * r_g);
+#endif
+
+  ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->setBinsPerAxis(I3(10, 10, 10));
+
+  // ----------------------------------------
+  // Depending on problem type:
+  // - Select end simulation time
+  // - Create granular material and container
+  // - Create falling object
+  // ----------------------------------------
+
+  double time_end;
+  int out_fps;
+  ChBody* ball;
+
+  if (problem == SETTLING) {
+    time_end = time_settling;
+    out_fps = out_fps_settling;
+
+    cout << "Create granular material" << endl;
+    CreateContainer(msystem);
+    CreateParticles(msystem);
+  } else {
+    time_end = time_dropping;
+    out_fps = out_fps_dropping;
+
+    // Create the granular material and the container from the checkpoint file.
+    cout << "Read checkpoint data from " << checkpoint_file;
+    utils::ReadCheckpoint(msystem, checkpoint_file);
+    cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
+
+    // Create the falling object just above the granular material.
+    double z = FindHighest(msystem);
+    cout << "Create falling object above height" << z + r_g << endl;
+    CreateObject(msystem, z);
+  }
+
+  // Number of steps.
+  int num_steps = std::ceil(time_end / time_step);
+  int out_steps = std::ceil((1.0 / time_step) / out_fps);
+
+  // -----------------------
+  // Perform the simulation.
+  // -----------------------
+  double time = 0;
+  int sim_frame = 0;
   int out_frame = 0;
+  int next_out_frame = 0;
   double exec_time = 0;
-  ChStreamOutAsciiFile ofile(out_file.c_str());
+  int num_contacts = 0;
+  ChStreamOutAsciiFile sfile(stats_file.c_str());
 
-  for (int i = 0; i < num_steps; i++) {
-    if (!dropped && time >= time_drop) {
-      cout << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DROP BALL" << endl;
-      msystem->AddBody(ChSharedPtr<ChBody>(ball));
-      dropped = true;
-    }
-
-    if (i % out_steps == 0) {
+  while (time < time_end) {
+    if (sim_frame == next_out_frame) {
       char filename[100];
-
-      // Output for POV-Ray
-      sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame);
+      sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
       utils::WriteShapesPovray(msystem, filename);
 
-      // Stats
-      cout << " --------------------------------- " << out_frame << "  " << time << "  " <<  endl;
-      cout << "                                   " << FindLowest(*msystem) << endl;
-      cout << "                                   " << exec_time << endl;
+      cout << "------------ Output frame:   " << out_frame << endl;
+      cout << "             Sim frame:      " << sim_frame << endl;
+      cout << "             Time:           " << time << endl;
+      cout << "             Lowest point:   " << FindLowest(msystem) << endl;
+      cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
+      cout << "             Execution time: " << exec_time << endl;
 
-      //OutputFile(ofile, *msystem, time);
+      sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
+
+      // Create a checkpoint from the current state.
+      if (problem == SETTLING) {
+        cout << "             Write checkpoint data " << flush;
+        utils::WriteCheckpoint(msystem, checkpoint_file);
+        cout << msystem->Get_bodylist()->size() << " bodies" << endl;
+      }
 
       out_frame++;
+      next_out_frame += out_steps;
+      num_contacts = 0;
     }
 
+    // Advance dynamics.
     msystem->DoStepDynamics(time_step);
-    time += time_step;
 
+    time += time_step;
+    sim_frame++;
     exec_time += msystem->GetTimerStep();
+    num_contacts += msystem->GetNcontacts();
   }
 
   // Create a checkpoint from the last state
-  if (problem == SETTLING)
+  if (problem == SETTLING) {
+    cout << "Write checkpoint data to " << checkpoint_file;
     utils::WriteCheckpoint(msystem, checkpoint_file);
+    cout << "  done.  Wrote " << msystem->Get_bodylist()->size() << " bodies." << endl;
+  }
 
   // Final stats
   cout << "==================================" << endl;
-  cout << "Number of bodies: " << msystem->Get_bodylist()->size() << endl;
-  cout << "Lowest position: " << FindLowest(*msystem) << endl;
-  cout << "Simulation time: " << exec_time << endl;
+  cout << "Number of bodies:  " << msystem->Get_bodylist()->size() << endl;
+  cout << "Lowest position:   " << FindLowest(msystem) << endl;
+  cout << "Simulation time:   " << exec_time << endl;
   cout << "Number of threads: " << threads << endl;
 
   return 0;
