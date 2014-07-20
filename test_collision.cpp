@@ -158,7 +158,7 @@ createMesh(ChSystemParallel* sys,
            const ChQuaternion<>& rot,
            const std::string& filename)
 {
-  ChTriangleMeshConnected trimesh;
+  geometry::ChTriangleMeshConnected trimesh;
   trimesh.LoadWavefrontMesh(filename, true, false);
 
 #ifdef DEM
@@ -181,7 +181,7 @@ createMesh(ChSystemParallel* sys,
   cout << counter++ << " [mesh]" << endl;
   for (int i = 0; i < trimesh.getNumTriangles(); i++) {
     cout << "   face " << i << endl;
-    ChTriangle tri = trimesh.getTriangle(i);
+    geometry::ChTriangle tri = trimesh.getTriangle(i);
     real3 A = R3(tri.p1.x, tri.p1.y, tri.p1.z);
     real3 B = R3(tri.p2.x, tri.p2.y, tri.p2.z);
     real3 C = R3(tri.p3.x, tri.p3.y, tri.p3.z);
