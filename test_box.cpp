@@ -11,15 +11,8 @@
 #include "chrono_utils/ChUtilsCreators.h"
 #include "chrono_utils/ChUtilsInputOutput.h"
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
-#include "chrono_utils/opengl/ChOpenGLWindow.h"
-#endif
-
 using namespace chrono;
 using namespace chrono::collision;
-
-// Define this to save the data when using the OpenGL code
-//#define SAVE_DATA
 
 //// Comment this for DVI contact
 #define DEM
@@ -40,10 +33,8 @@ void OutputFile(ChStreamOutAsciiFile& file,
     if (abody->IsActive()) {
       const ChVector<>& bodypos = abody->GetPos();
       ChQuaternion<>& bodyRot = abody->GetRot();
-      ChVector<> bodyAngs = bodyRot.Q_to_NasaAngles();
       file << bodypos.x  << "  " << bodypos.y  << "  " << bodypos.z  << "     ";
       file << bodyRot.e0 << "  " << bodyRot.e1 << "  " << bodyRot.e2 << "  " << bodyRot.e3 << "     ";
-      file << bodyAngs.x << "  " << bodyAngs.y << "  " << bodyAngs.z << "       ";
       std::cout << bodypos.x << "  " << bodypos.y << "  " << bodypos.z << "      ";
     }
   }
@@ -72,7 +63,6 @@ int main(int argc, char* argv[])
 #endif
   const std::string pov_dir = out_dir + "/POVRAY";
   const std::string out_file = out_dir + "/box_pos.dat";
-  ChStreamOutAsciiFile ofile(out_file.c_str());
 
   // Create output directories.
   if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
@@ -83,6 +73,8 @@ int main(int argc, char* argv[])
     cout << "Error creating directory " << pov_dir << endl;
     return 1;
   }
+
+  ChStreamOutAsciiFile ofile(out_file.c_str());
 
   // Parameters for the falling box
   int             boxId = 100;

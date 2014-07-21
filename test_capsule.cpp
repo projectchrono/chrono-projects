@@ -18,9 +18,6 @@
 using namespace chrono;
 using namespace chrono::collision;
 
-// Define this to save the data when using the OpenGL code
-//#define SAVE_DATA
-
 void OutputFile(ChStreamOutAsciiFile& file,
                 ChSystem*             sys,
                 double                time)
@@ -59,13 +56,24 @@ int main(int argc, char* argv[])
 
   int max_iteration = 20;
 
-  // Output
+  // Output directory and file names
   const std::string out_dir = "../TEST_CAPSULE";
   const std::string pov_dir = out_dir + "/POVRAY";
   const std::string out_file = out_dir + "/capsule_pos.dat";
+
+  // Create output directories.
+  if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+    cout << "Error creating directory " << out_dir << endl;
+    return 1;
+  }
+  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+    cout << "Error creating directory " << pov_dir << endl;
+    return 1;
+  }
+
   ChStreamOutAsciiFile ofile(out_file.c_str());
 
-  // Parameters for the falling box
+  // Parameters for the falling capsule
   int             capsuleId = 100;
   double          radius = 0.1;
   double          hlen = 0.2;
@@ -151,7 +159,7 @@ int main(int argc, char* argv[])
   utils::CreateBoxContainerDEM(msystem, binId, binMat, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 */
 
-/*
+
   // A set of fixed spheres
   ChSharedBodyDEMPtr bin(new ChBodyDEM(new ChCollisionModelParallel));
   bin->SetMaterialSurfaceDEM(binMat);
@@ -175,8 +183,9 @@ int main(int argc, char* argv[])
   bin->GetCollisionModel()->BuildModel();
 
   msystem->AddBody(bin);
-*/
 
+
+/*
   // A set of fixed capsules
   ChSharedBodyDEMPtr bin(new ChBodyDEM(new ChCollisionModelParallel));
   bin->SetMaterialSurfaceDEM(binMat);
@@ -203,16 +212,7 @@ int main(int argc, char* argv[])
   bin->GetCollisionModel()->BuildModel();
 
   msystem->AddBody(bin);
-
-  // Create output directories.
-  if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
-    cout << "Error creating directory " << out_dir << endl;
-    return 1;
-  }
-  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
-    cout << "Error creating directory " << pov_dir << endl;
-    return 1;
-  }
+*/
 
   // Perform the simulation
   int num_steps = std::ceil(time_end / time_step);
@@ -225,7 +225,7 @@ int main(int argc, char* argv[])
   for (int i = 0; i < num_steps; i++) {
 
     if (i % out_steps == 0) {
-      sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame);
+      sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
       utils::WriteShapesPovray(msystem, filename);
 
       OutputFile(ofile, msystem, time);

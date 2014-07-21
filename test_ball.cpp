@@ -18,54 +18,34 @@
 using namespace chrono;
 using namespace chrono::collision;
 
-// Define this to save the data when using the OpenGL code
-//#define SAVE_DATA
-
 // Define macro DEM to use penalty-based contact. Otherwise, DVI
 #define DEM
 
-// Global variables (for callback)
-int out_steps;
-
-#ifdef DEM
-const std::string out_dir = "../TEST_BALL_DEM";
-#else
-const std::string out_dir = "../TEST_BALL_DVI";
-#endif
-const std::string pov_dir = out_dir + "/POVRAY";
-const std::string out_file = out_dir + "/sphere_pos.dat";
-
-ChStreamOutAsciiFile ofile(out_file.c_str());
-
+// Continuous loop (only if OpenGL available)
+bool loop = true;
 
 // -----------------------------------------------------------------------------
-// Callback function invoked at every simulation frame. Generates output with a
-// frequency based on the specified FPS rate.
 // -----------------------------------------------------------------------------
-template<class T>
-void SimFrameCallback(T* mSys, const int frame)
+void OutputFile(ChStreamOutAsciiFile& file,
+                ChSystem*             sys,
+                double                time)
 {
-  if (frame % out_steps != 0)
-    return;
+  file << time << "     ";
+  std::cout << time << "     ";
 
-  chrono::Vector bodyAngs;
+  for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
+    ChBody* abody = (ChBody*) sys->Get_bodylist()->at(i);
 
-  ofile << frame << "     ";
-  std::cout << frame << "     ";
-
-  for (int i = 0; i < mSys->Get_bodylist()->size(); ++i) {
-    ChBody* abody = (ChBody*) mSys->Get_bodylist()->at(i);
-#ifdef DEM
-    assert(typeid(*abody) == typeid(ChBodyDEM));
-#endif
-    const ChVector<>& bodypos = abody->GetPos();
-    bodyAngs = abody->GetRot().Q_to_NasaAngles();
-    ofile << bodypos.x  << "  " << bodypos.y  << "  " << bodypos.z  << "  ";
-    ofile << bodyAngs.x << "  " << bodyAngs.y << "  " << bodyAngs.z << "       ";
-    std::cout << bodypos.x << "  " << bodypos.y << "  " << bodypos.z << "   |   ";
+    if (abody->IsActive()) {
+      const ChVector<>& bodypos = abody->GetPos();
+      ChQuaternion<>& bodyRot = abody->GetRot();
+      file << bodypos.x  << "  " << bodypos.y  << "  " << bodypos.z  << "     ";
+      file << bodyRot.e0 << "  " << bodyRot.e1 << "  " << bodyRot.e2 << "  " << bodyRot.e3 << "     ";
+      std::cout << bodypos.x << "  " << bodypos.y << "  " << bodypos.z << "      ";
+    }
   }
 
-  ofile << "\n";
+  file << "\n";
   std::cout << std::endl;
 }
 
@@ -83,6 +63,15 @@ int main(int argc, char* argv[])
 
   int max_iteration = 20;
 
+  // Output directory and file names
+#ifdef DEM
+  const std::string out_dir = "../TEST_BALL_DEM";
+#else
+  const std::string out_dir = "../TEST_BALL_DVI";
+#endif
+  const std::string pov_dir = out_dir + "/POVRAY";
+  const std::string out_file = out_dir + "/sphere_pos.dat";
+
   // Create output directories.
   if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
     cout << "Error creating directory " << out_dir << endl;
@@ -94,7 +83,7 @@ int main(int argc, char* argv[])
   }
 
   // Output
-  double out_fps = 1000;
+  double out_fps = 60;
 
   // Parameters for the falling ball
   int             ballId = 100;
@@ -232,22 +221,39 @@ int main(int argc, char* argv[])
   // Perform the simulation
   // ----------------------
 
-  out_steps = std::ceil((1 / time_step) / out_fps);
-  int out_frame = 0;
-
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
   utils::ChOpenGLWindow &gl_window = utils::ChOpenGLWindow::getInstance();
   gl_window.Initialize(1280, 720, "mixerDEM", &msystem);
   gl_window.SetCamera(ChVector<>(0,-10,0), ChVector<>(0,0,0),ChVector<>(0,0,1));
+
   // The OpenGL manager will automatically run the simulation
-  gl_window.StartDrawLoop();
+  if (loop) {
+    gl_window.StartDrawLoop();
+    return 0;
+  }
 #endif
+
   // Run simulation for specified time
-  int    num_steps = std::ceil(time_end / time_step);
+  int num_steps = std::ceil(time_end / time_step);
+  int out_steps = std::ceil((1 / time_step) / out_fps);
+
   double time = 0;
+  int out_frame = 0;
+  char filename[100];
+
+  ChStreamOutAsciiFile ofile(out_file.c_str());
 
   for (int i = 0; i < num_steps; i++) {
-    SimFrameCallback(&msystem, i);
+
+    if (i % out_steps == 0) {
+      sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
+      utils::WriteShapesPovray(&msystem, filename);
+
+      OutputFile(ofile, &msystem, time);
+
+      out_frame++;
+    }
+
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
     if (gl_window.Active()) {
        gl_window.DoStepDynamics(time_step);
@@ -256,6 +262,7 @@ int main(int argc, char* argv[])
 #else
     msystem.DoStepDynamics(time_step);
 #endif
+
     time += time_step;
   }
 
