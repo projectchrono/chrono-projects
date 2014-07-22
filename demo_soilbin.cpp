@@ -47,7 +47,7 @@ bool thread_tuning = true;
 
 // Simulation duration.
 double time_settling = 5;
-double time_dropping = 10;
+double time_dropping = 2;
 
 // Solver parameters
 #ifdef DEM
@@ -65,7 +65,7 @@ float contact_recovery_speed = 0.1;
 #ifdef DEM
 const std::string out_dir = "../SOILBIN_DEM";
 #else
-const std::string out_dir = "../SOILBIN_DEM";
+const std::string out_dir = "../SOILBIN_DVI";
 #endif
 const std::string pov_dir = out_dir + "/POVRAY";
 const std::string checkpoint_file = out_dir + "/settled.dat";
@@ -79,15 +79,13 @@ int out_fps_dropping = 60;
 // -----------------------------------------------------------------------------
 double r_g = 0.1;
 double rho_g = 2000;
-int    desired_num_particles = 400;
+int    desired_num_particles = 1000;
 
 // -----------------------------------------------------------------------------
 // Parameters for the falling object
 // -----------------------------------------------------------------------------
 // Shape of dropped object
-collision::ShapeType shape_o = collision::SPHERE;
-
-double mass_o = 1000.0;
+collision::ShapeType shape_o = collision::ROUNDEDCYL;
 
 ChQuaternion<> initRot(1.0, 0.0, 0.0, 0.0);
 ChVector<>     initLinVel(0.0, 0.0, 0.0);
@@ -262,7 +260,7 @@ void CreateObject(ChSystemParallel* system, double z)
   case collision::ROUNDEDCYL:
     {
       double radius = 0.25;
-      double hlen = 0.5;
+      double hlen = 0.1;
       double srad = 0.1;
       rb = utils::CalcRoundedCylinderBradius(radius, hlen, srad);
       vol = utils::CalcRoundedCylinderVolume(radius, hlen, srad);
@@ -423,7 +421,7 @@ int main(int argc, char* argv[])
     // Create the falling object just above the granular material.
     double z = FindHighest(msystem);
     cout << "Create falling object above height" << z + r_g << endl;
-    CreateObject(msystem, z);
+    CreateObject(msystem, z + r_g);
   }
 
   // Number of steps.
