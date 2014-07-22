@@ -1,5 +1,5 @@
 #--------------------------------------------------------------
-# Additional include paths (for ChronoEngine_Utils)
+# Additional include paths
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}
                     ${CMAKE_BINARY_DIR}
                     ${GLM_INCLUDE_DIRS}
@@ -56,9 +56,7 @@ SET(DEMOS
     demo_foam
     demo_soilbin
     demo_wheel
-    test_ball
-    test_box
-    test_capsule
+    demo_objectdrop
     test_mesh
     test_constraints
     test_utils
