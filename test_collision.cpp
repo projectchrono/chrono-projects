@@ -13,7 +13,7 @@
 #include "chrono_utils/ChUtilsInputOutput.h"
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
-#include "chrono_utils/opengl/ChOpenGLWindow.h"
+#include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
 using namespace chrono;
@@ -253,7 +253,7 @@ int main(int argc, char* argv[])
   msystem.Update();
   msystem.GetCollisionSystem()->Run();
 
-  writeContactInfo(msystem.gpu_data_manager);
+  writeContactInfo(msystem.data_manager);
 
   return 0;
 }

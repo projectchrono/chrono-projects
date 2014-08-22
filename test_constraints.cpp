@@ -1,4 +1,3 @@
-#include "physics/ChApidll.h" 
 #include "physics/ChSystem.h"
 
 #include "core/ChFileutils.h"
@@ -10,7 +9,7 @@
 #include "chrono_utils/ChUtilsInputOutput.h"
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
-#include "chrono_utils/opengl/ChOpenGLWindow.h"
+#include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
 using namespace chrono;
@@ -33,7 +32,7 @@ int main(int argc, char* argv[])
   double out_fps = 50;
 
   uint max_iteration = 50;
-  real tolerance = 1e-8;
+  real tolerance = real(1e-8);
 
   const std::string out_dir = "../TEST_CONSTRAINTS";
   const std::string pov_dir = out_dir + "/POVRAY";
@@ -159,8 +158,8 @@ int main(int argc, char* argv[])
   // Perform the simulation.
   // -----------------------
 
-  int num_steps = std::ceil(time_end / time_step);
-  int out_steps = std::ceil((1 / time_step) / out_fps);
+  int num_steps = (int) std::ceil(time_end / time_step);
+  int out_steps = (int) std::ceil((1 / time_step) / out_fps);
 
   double time = 0;
   int out_frame = 0;

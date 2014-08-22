@@ -10,7 +10,7 @@
 #include "chrono_utils/ChUtilsInputOutput.h"
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
-#include "chrono_utils/opengl/ChOpenGLWindow.h"
+#include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
 using namespace chrono;
@@ -120,8 +120,8 @@ int main(int argc, char* argv[])
 
 
   // Number of steps
-  int num_frames1 = std::ceil(measure_interval / time_step);
-  int num_frames2 = std::ceil((time_end - 2 * measure_interval) / time_step);
+  int num_frames1 = (int) std::ceil(measure_interval / time_step);
+  int num_frames2 = (int) std::ceil((time_end - 2 * measure_interval) / time_step);
 
   // Perform the simulation
   double timeA = 0;
@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
   cout << "Average num. contacts B: " << double(ncB) / num_frames1 << endl;
 
 
-  msystem->gpu_data_manager->system_timer.PrintReport();
+  msystem->data_manager->system_timer.PrintReport();
 
   return 0;
 }
