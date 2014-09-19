@@ -1,19 +1,25 @@
 #--------------------------------------------------------------
-# Additional include paths
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}
-                    ${CMAKE_BINARY_DIR}
-                    ${GLM_INCLUDE_DIRS}
-                    ${GLEW_INCLUDE_DIR}
-                    ${GLFW_INCLUDE_DIR}
+# Additional include paths and libraries
+INCLUDE_DIRECTORIES(
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}
 )
 
-# Libraries
 SET(LIBRARIES
     ${CHRONO_LIB}
     ChronoEngine_Parallel
     ChronoEngine_Utils
-    ChronoEngine_OpenGL
 )
+
+IF (ENABLE_OPENGL)
+    INCLUDE_DIRECTORIES(
+        ${GLM_INCLUDE_DIRS}
+        ${GLEW_INCLUDE_DIR}
+        ${GLFW_INCLUDE_DIR}
+    )
+
+    SET(LIBRARIES ${LIBRARIES} ChronoEngine_OpenGL)
+ENDIF()
 
 #--------------------------------------------------------------
 # Always use full RPATH (differentiating between the build and install trees)
@@ -65,7 +71,7 @@ SET(DEMOS
     test_timing
 )
 
-MESSAGE(STATUS "Executable programs...")
+MESSAGE(STATUS "Radu demo programs...")
 
 FOREACH(PROGRAM ${DEMOS})
     MESSAGE(STATUS "...add ${PROGRAM}")
