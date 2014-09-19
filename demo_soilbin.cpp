@@ -20,6 +20,7 @@ using namespace chrono::collision;
 
 using std::cout;
 using std::endl;
+using std::flush;
 
 // -----------------------------------------------------------------------------
 // Problem setup
@@ -372,24 +373,22 @@ int main(int argc, char* argv[])
   msystem->SetTolSpeeds(1e-3);
   msystem->SetStep(time_step);
 
-#ifdef DEM
-  ((ChLcpSolverParallelDEM*) msystem->GetLcpSolverSpeed())->SetTolerance(1e-3);
+  msystem->GetSettings()->solver.tolerance = 1e-3;
 
+#ifdef DEM
   ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->ChangeNarrowphase(new ChCNarrowphaseR);
 #else
-  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationNormal(max_iteration_normal);
-  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationSliding(max_iteration_sliding);
-  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationSpinning(max_iteration_spinning);
-  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetMaxIterationBilateral(max_iteration_bilateral);
-  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetTolerance(1e-3);
-  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetCompliance(0);
-  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetContactRecoverySpeed(contact_recovery_speed);
-  ((ChLcpSolverParallelDVI*) msystem->GetLcpSolverSpeed())->SetSolverType(APGDRS);
+  msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
+  msystem->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
+  msystem->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
+  msystem->GetSettings()->solver.alpha = 0;
+  msystem->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
+  msystem->ChangeSolverType(APGDRS);
 
-  ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->SetCollisionEnvelope(0.05 * r_g);
+  msystem->GetSettings()->collision.collision_envelope = 0.05 * r_g;
 #endif
 
-  ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->setBinsPerAxis(I3(10, 10, 10));
+  msystem->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
 
   // ----------------------------------------
   // Depending on problem type:

@@ -146,11 +146,11 @@ int main(int argc, char* argv[])
   // -------------------------
 
   if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
-    cout << "Error creating directory " << out_dir << endl;
+    std::cout << "Error creating directory " << out_dir << std::endl;
     return 1;
   }
   if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
-    cout << "Error creating directory " << pov_dir << endl;
+    std::cout << "Error creating directory " << pov_dir << std::endl;
     return 1;
   }
 

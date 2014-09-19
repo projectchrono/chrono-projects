@@ -121,8 +121,9 @@ int main(int argc, char* argv[])
   msystem->SetTolSpeeds(1e-3);
   msystem->SetStep(time_step);
 
-  ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->setBinsPerAxis(I3(10, 10, 10));
-  ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->setBodyPerBin(100, 50);
+  msystem->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
+  msystem->GetSettings()->collision.min_body_per_bin = 50;
+  msystem->GetSettings()->collision.max_body_per_bin = 100;
 
   ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->ChangeNarrowphase(new ChCNarrowphaseR);
 
