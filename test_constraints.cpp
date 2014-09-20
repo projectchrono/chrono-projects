@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
   omp_set_num_threads(threads);
 
   // Specify narrowphase collision detection
-  ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->ChangeNarrowphase(new ChCNarrowphaseR);
+  msystem->ChangeCollisionNarrowphase(NARROWPHASE_R);
 
   // Set tolerance and maximum number of iterations for bilateral constraint solver
   ((ChLcpSolverParallelDEM*) msystem->GetLcpSolverSpeed())->SetMaxIteration(max_iteration);

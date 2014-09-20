@@ -351,7 +351,7 @@ int main(int argc, char* argv[])
   msystem->GetSettings()->solver.tolerance = 1e-3;
 
 #ifdef DEM
-  ((ChCollisionSystemParallel*) msystem->GetCollisionSystem())->ChangeNarrowphase(new ChCNarrowphaseR);
+  msystem->ChangeCollisionNarrowphase(NARROWPHASE_R);
 #else
   msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
   msystem->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
