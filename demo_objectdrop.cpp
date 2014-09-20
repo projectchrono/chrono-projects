@@ -353,6 +353,7 @@ int main(int argc, char* argv[])
 #ifdef DEM
   msystem->ChangeCollisionNarrowphase(NARROWPHASE_R);
 #else
+  msystem->GetSettings()->solver.solver_mode = SLIDING;
   msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
   msystem->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
   msystem->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
