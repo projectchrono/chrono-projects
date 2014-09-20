@@ -63,6 +63,7 @@ SET(DEMOS
     demo_soilbin
     demo_wheel
     demo_objectdrop
+    rad_im_schmutz
     test_mesh
     test_constraints
     test_utils
