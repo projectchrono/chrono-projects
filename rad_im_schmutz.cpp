@@ -1,3 +1,19 @@
+// =============================================================================
+// PROJECT CHRONO - http://projectchrono.org
+//
+// Copyright (c) 2014 projectchrono.org
+// All right reserved.
+//
+// Use of this source code is governed by a BSD-style license that can be found
+// in the LICENSE file at the top level of the distribution and at
+// http://projectchrono.org/license-chrono.txt.
+//
+// =============================================================================
+// Authors: Radu Serban
+// =============================================================================
+//
+// =============================================================================
+
 #include <stdio.h>
 #include <vector>
 #include <cmath>
@@ -27,7 +43,7 @@ using std::flush;
 // -----------------------------------------------------------------------------
 
 // Comment the following line to use DVI contact
-//#define DEM
+////#define DEM
 
 // Simulation phase
 enum ProblemType {
@@ -55,7 +71,7 @@ double time_pushing = 2;
 // Solver parameters
 int max_iteration_bilateral = 50;
 #ifdef DEM
-double time_step = 1e-4;
+double time_step = 5e-4;
 #else
 double time_step = 5e-4;
 int max_iteration_normal = 30;
@@ -73,6 +89,7 @@ const std::string out_dir = "../SCHMUTZ_DVI";
 const std::string pov_dir = out_dir + "/POVRAY";
 const std::string checkpoint_file = out_dir + "/settled.dat";
 const std::string stats_file = out_dir + "/stats.dat";
+const std::string results_file = out_dir + "/results.dat";
 
 int out_fps_settling = 30;
 int out_fps_pushing = 60;
@@ -114,6 +131,142 @@ double init_angle = (CH_C_PI / 180) * 4;
 
 
 // =============================================================================
+// This class encapsulates the rig's mechanism
+// =============================================================================
+class Mechanism {
+public:
+  Mechanism(ChSystemParallel* system, double h);
+
+  void WriteReactionForce(ChStreamOutAsciiFile& f, double time);
+
+private:
+  ChVector<> calcLocationWheel(double h)
+  {
+    double ca = std::cos(init_angle);
+    double sa = std::sin(init_angle);
+
+    return ChVector<>(-d - ca * (c + w_w / 2) + sa * (b + r_w),
+                                 0,
+                      h + sa * (c + w_w / 2) + ca * (b + r_w));
+  }
+
+  ChVector<> calcLocationRevolute(double h)
+  {
+    double ca = std::cos(init_angle);
+    double sa = std::sin(init_angle);
+
+    return ChVector<>(-d - ca * (a + c + w_w / 2) + sa * r_w,
+                                 0,
+                      h + sa * (a + c + w_w / 2) + ca * r_w);
+  }
+
+  ChSharedPtr<ChBody> m_ground;
+  ChSharedPtr<ChBody> m_sled;
+  ChSharedPtr<ChBody> m_wheel;
+
+  ChSharedPtr<ChLinkLockPrismatic> m_prismatic;
+  ChSharedPtr<ChLinkLockRevolute> m_revolute;
+};
+
+Mechanism::Mechanism(ChSystemParallel* system, double h)
+{
+  // Calculate hardpoint locations at initial configuration (expressed in the
+  // global frame)
+  ChVector<> loc_revolute = calcLocationRevolute(h);
+  ChVector<> loc_wheel = calcLocationWheel(h);
+  ChVector<> loc_sled = loc_revolute - ChVector<>(e, 0, 0);
+  ChVector<> loc_prismatic = loc_sled - ChVector<>(0, 0, e / 4);
+
+  // Create the ground body
+#ifdef DEM
+  m_ground = ChSharedPtr<ChBodyDEM>(new ChBodyDEM(new ChCollisionModelParallel));
+#else
+  m_ground = ChSharedPtr<ChBody>(new ChBody(new ChCollisionModelParallel));
+#endif
+  m_ground->SetIdentifier(-1);
+  m_ground->SetBodyFixed(true);
+  m_ground->SetCollide(false);
+
+  system->AddBody(m_ground);
+
+  // Create the sled body
+#ifdef DEM
+  m_sled = ChSharedPtr<ChBodyDEM>(new ChBodyDEM(new ChCollisionModelParallel));
+#else
+  m_sled = ChSharedPtr<ChBody>(new ChBody(new ChCollisionModelParallel));
+#endif
+  m_sled->SetIdentifier(1);
+  m_sled->SetMass(mass1);
+  m_sled->SetInertiaXX(inertia_sled);
+  m_sled->SetPos(loc_sled);
+  m_sled->SetPos_dt(ChVector<>(init_vel, 0, 0));
+  m_sled->SetBodyFixed(false);
+  m_sled->SetCollide(false);
+
+  ChSharedPtr<ChBoxShape> box_sled(new ChBoxShape);
+  box_sled->GetBoxGeometry().Size = ChVector<>(e, e / 3, e / 3);
+  box_sled->Pos = ChVector<>(0, 0, 0);
+  box_sled->Rot = ChQuaternion<>(1, 0, 0, 0);
+  m_sled->AddAsset(box_sled);
+
+  system->AddBody(m_sled);
+
+  // Create the wheel body
+#ifdef DEM
+  m_wheel = ChSharedPtr<ChBodyDEM>(new ChBodyDEM(new ChCollisionModelParallel));
+#else
+  m_wheel = ChSharedPtr<ChBody>(new ChBody(new ChCollisionModelParallel));
+#endif
+  m_wheel->SetIdentifier(2);
+  m_wheel->SetMass(mass_wheel);
+  m_wheel->SetInertiaXX(inertia_wheel);
+  m_wheel->SetPos(loc_wheel);
+  m_wheel->SetRot(Q_from_AngY(init_angle));
+  m_wheel->SetBodyFixed(false);
+  m_wheel->SetCollide(true);
+
+  m_wheel->GetCollisionModel()->ClearModel();
+  utils::AddRoundedCylinderGeometry(m_wheel.get_ptr(), r_w, w_w / 2, s_w, ChVector<>(c, 0, -b), Q_from_AngZ(CH_C_PI_2));
+  m_wheel->GetCollisionModel()->BuildModel();
+
+  ChSharedPtr<ChCapsuleShape> cap_wheel(new ChCapsuleShape);
+  cap_wheel->GetCapsuleGeometry().hlen = (a + c) / 2 - w_w / 2;
+  cap_wheel->GetCapsuleGeometry().rad = w_w / 2;
+  cap_wheel->Pos = ChVector<>((c - a) / 2, 0, -b);
+  cap_wheel->Rot = Q_from_AngZ(CH_C_PI_2);
+  m_wheel->AddAsset(cap_wheel);
+
+  system->AddBody(m_wheel);
+
+  // Create and initialize translational joint ground - sled
+  m_prismatic = ChSharedPtr<ChLinkLockPrismatic>(new ChLinkLockPrismatic);
+  m_prismatic->Initialize(m_sled, m_ground, ChCoordsys<>(loc_prismatic, Q_from_AngY(CH_C_PI_2)));
+  system->AddLink(m_prismatic);
+
+  // Create and initialize revolute joint sled - wheel
+  m_revolute = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
+  m_revolute->Initialize(m_wheel, m_sled, ChCoordsys<>(loc_revolute, Q_from_AngX(CH_C_PI_2)));
+  system->AddLink(m_revolute);
+}
+
+void Mechanism::WriteReactionForce(ChStreamOutAsciiFile& f, double time)
+{
+  // Coordinate system of the revolute joint (relative to the frame of body2, in
+  // this case the sled)
+  ChCoordsys<> revCoordsys = m_revolute->GetLinkRelativeCoords();
+
+  ChVector<> force_jointsys = m_revolute->Get_react_force();
+  ChVector<> force_bodysys = revCoordsys.TransformDirectionLocalToParent(force_jointsys);
+  ChVector<> force_abssys = m_sled->GetCoord().TransformDirectionLocalToParent(force_bodysys);
+
+  f << time << "  "
+    << force_jointsys.x << "  " << force_jointsys.y << "  " << force_jointsys.z << "  "
+    << force_bodysys.x << "  " << force_bodysys.y << "  " << force_bodysys.z << "  "
+    << force_abssys.x << "  " << force_abssys.y << "  " << force_abssys.z << "\n";
+}
+
+
+// =============================================================================
 // Create container bin.
 // =============================================================================
 void CreateContainer(ChSystemParallel* system)
@@ -137,6 +290,7 @@ void CreateContainer(ChSystemParallel* system)
 
 #endif
 }
+
 
 // =============================================================================
 // Create granular material.
@@ -182,116 +336,6 @@ void CreateParticles(ChSystemParallel* system)
     layer++;
   }
 }
-
-// =============================================================================
-// Create the mechanism
-// =============================================================================
-ChVector<> calcLocationWheel(double h)
-{
-  double ca = std::cos(init_angle);
-  double sa = std::sin(init_angle);
-
-  return ChVector<>(
-    -d - ca * (c + w_w / 2) + sa * (b + r_w),
-    0,
-    h + sa * (c + w_w / 2) + ca * (b + r_w)
-    );
-}
-
-ChVector<> calcLocationRevolute(double h)
-{
-  double ca = std::cos(init_angle);
-  double sa = std::sin(init_angle);
-
-  return ChVector<>(
-    -d - ca * (a + c + w_w / 2) + sa * r_w,
-    0,
-    h + sa * (a + c + w_w / 2) + ca * r_w
-    );
-}
-
-
-void CreateMechanism(ChSystemParallel* system, double h)
-{
-  // Calculate hardpoint locations at initial configuration (expressed in the
-  // global frame)
-  ChVector<> loc_revolute  = calcLocationRevolute(h);
-  ChVector<> loc_wheel     = calcLocationWheel(h);
-  ChVector<> loc_sled      = loc_revolute - ChVector<>(e, 0, 0);
-  ChVector<> loc_prismatic = loc_sled - ChVector<>(0, 0, e / 4);
-
-  // Create the ground body
-#ifdef DEM
-  ChSharedBodyDEMPtr ground(new ChBodyDEM(new ChCollisionModelParallel));
-#else
-  ChSharedBodyPtr ground(new ChBody(new ChCollisionModelParallel));
-#endif
-  ground->SetIdentifier(-1);
-  ground->SetBodyFixed(true);
-  ground->SetCollide(false);
-
-  system->AddBody(ground);
-
-  // Create the sled body
-#ifdef DEM
-  ChSharedBodyDEMPtr sled(new ChBodyDEM(new ChCollisionModelParallel));
-#else
-  ChSharedBodyPtr sled(new ChBody(new ChCollisionModelParallel));
-#endif
-  sled->SetIdentifier(1);
-  sled->SetMass(mass1);
-  sled->SetInertiaXX(inertia_sled);
-  sled->SetPos(loc_sled);
-  sled->SetPos_dt(ChVector<>(init_vel, 0, 0));
-  sled->SetBodyFixed(false);
-  sled->SetCollide(false);
-
-  ChSharedPtr<ChBoxShape> box_sled(new ChBoxShape);
-  box_sled->GetBoxGeometry().Size = ChVector<>(e, e / 3, e / 3);
-  box_sled->Pos = ChVector<>(0, 0, 0);
-  box_sled->Rot = ChQuaternion<>(1, 0, 0, 0);
-  sled->AddAsset(box_sled);
-
-  system->AddBody(sled);
-
-  // Create the wheel body
-#ifdef DEM
-  ChSharedBodyDEMPtr wheel(new ChBodyDEM(new ChCollisionModelParallel));
-#else
-  ChSharedBodyPtr wheel(new ChBody(new ChCollisionModelParallel));
-#endif
-  wheel->SetIdentifier(2);
-  wheel->SetMass(mass_wheel);
-  wheel->SetInertiaXX(inertia_wheel);
-  wheel->SetPos(loc_wheel);
-  wheel->SetRot(Q_from_AngY(init_angle));
-  wheel->SetBodyFixed(false);
-  wheel->SetCollide(true);
-
-  wheel->GetCollisionModel()->ClearModel();
-  utils::AddRoundedCylinderGeometry(wheel.get_ptr(), r_w, w_w / 2, s_w, ChVector<>(c, 0, -b), Q_from_AngZ(CH_C_PI_2));
-  wheel->GetCollisionModel()->BuildModel();
-
-  ChSharedPtr<ChCapsuleShape> cap_wheel(new ChCapsuleShape);
-  cap_wheel->GetCapsuleGeometry().hlen = (a + c) / 2 - w_w / 2;
-  cap_wheel->GetCapsuleGeometry().rad = w_w / 2;
-  cap_wheel->Pos = ChVector<>((c - a) / 2, 0, -b);
-  cap_wheel->Rot = Q_from_AngZ(CH_C_PI_2);
-  wheel->AddAsset(cap_wheel);
-
-  system->AddBody(wheel);
-
-  // Create and initialize translational joint ground - sled
-  ChSharedPtr<ChLinkLockPrismatic> prismatic(new ChLinkLockPrismatic);
-  prismatic->Initialize(ground, sled, ChCoordsys<>(loc_prismatic, Q_from_AngY(CH_C_PI_2)));
-  system->AddLink(prismatic);
-
-  // Create and initialize revolute joint sled - wheel
-  ChSharedPtr<ChLinkLockRevolute> revolute(new ChLinkLockRevolute);
-  revolute->Initialize(sled, wheel, ChCoordsys<>(loc_revolute, Q_from_AngX(CH_C_PI_2)));
-  system->AddLink(revolute);
-}
-
 
 
 // =============================================================================
@@ -386,12 +430,12 @@ int main(int argc, char* argv[])
   // Depending on problem type:
   // - Select end simulation time
   // - Create granular material and container
-  // - Create falling object
+  // - Create mechanism
   // ----------------------------------------
 
   double time_end;
   int out_fps;
-  ChBody* ball;
+  Mechanism* mech = NULL;
 
   switch (problem) {
   case SETTLING:
@@ -418,7 +462,7 @@ int main(int argc, char* argv[])
     double lowest, highest;
     FindRange(msystem, lowest, highest);
     cout << "Create mechanism above height" << highest + r_g << endl;
-    CreateMechanism(msystem, highest + r_g);
+    mech = new Mechanism(msystem, highest + r_g);
   }
 
     break;
@@ -427,8 +471,7 @@ int main(int argc, char* argv[])
     time_end = time_pushing;
     out_fps = out_fps_pushing;
 
-    CreateContainer(msystem);
-    CreateMechanism(msystem, 0.9 * H);
+    mech = new Mechanism(msystem, 0.9 * H);
 
     break;
   }
@@ -447,6 +490,7 @@ int main(int argc, char* argv[])
   double exec_time = 0;
   int num_contacts = 0;
   ChStreamOutAsciiFile sfile(stats_file.c_str());
+  ChStreamOutAsciiFile rfile(results_file.c_str());
 
   while (time < time_end) {
     if (sim_frame == next_out_frame) {
@@ -480,11 +524,18 @@ int main(int argc, char* argv[])
     // Advance dynamics.
     msystem->DoStepDynamics(time_step);
 
+    // Increment counters
     time += time_step;
     sim_frame++;
     exec_time += msystem->GetTimerStep();
     num_contacts += msystem->GetNcontacts();
+
+    // Save results
+    if (problem != SETTLING) {
+      mech->WriteReactionForce(rfile, time);
+    }
   }
+
 
   // Create a checkpoint from the last state
   if (problem == SETTLING) {
