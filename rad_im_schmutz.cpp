@@ -71,9 +71,9 @@ double time_pushing = 2;
 // Solver parameters
 int max_iteration_bilateral = 50;
 #ifdef DEM
-double time_step = 5e-4;
+double time_step = 1e-4;
 #else
-double time_step = 5e-4;
+double time_step = 1e-4;
 int max_iteration_normal = 30;
 int max_iteration_sliding = 20;
 int max_iteration_spinning = 0;
@@ -99,6 +99,9 @@ int out_fps_pushing = 60;
 // -----------------------------------------------------------------------------
 double r_g = 0.01;
 double rho_g = 2700;
+float  Y_g = 5e7;
+float  alpha_g = 0.1f;
+float  mu_g = 0.4f;
 int    desired_num_particles = 10000;
 
 // -----------------------------------------------------------------------------
@@ -240,7 +243,7 @@ Mechanism::Mechanism(ChSystemParallel* system, double h)
 
   // Create and initialize translational joint ground - sled
   m_prismatic = ChSharedPtr<ChLinkLockPrismatic>(new ChLinkLockPrismatic);
-  m_prismatic->Initialize(m_sled, m_ground, ChCoordsys<>(loc_prismatic, Q_from_AngY(CH_C_PI_2)));
+  m_prismatic->Initialize(m_ground, m_sled, ChCoordsys<>(loc_prismatic, Q_from_AngY(CH_C_PI_2)));
   system->AddLink(m_prismatic);
 
   // Create and initialize revolute joint sled - wheel
@@ -301,12 +304,12 @@ void CreateParticles(ChSystemParallel* system)
 #ifdef DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
-  mat_g->SetYoungModulus(1e8f);
-  mat_g->SetFriction(0.4f);
-  mat_g->SetDissipationFactor(0.1f);
+  mat_g->SetYoungModulus(Y_g);
+  mat_g->SetFriction(mu_g);
+  mat_g->SetDissipationFactor(alpha_g);
 #else
   ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
-  mat_g->SetFriction(0.4f);
+  mat_g->SetFriction(mu_g);
 #endif
 
   // Create a mixture entirely made out of spheres.
