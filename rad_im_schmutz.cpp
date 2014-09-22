@@ -402,6 +402,8 @@ int main(int argc, char* argv[])
   omp_set_num_threads(threads);
   cout << "Using " << threads << " threads" << endl;
 
+  msystem->DoThreadTuning(thread_tuning);
+
   // ---------------------
   // Edit system settings.
   // ---------------------
