@@ -21,7 +21,11 @@ using std::endl;
 // =======================================================================
 // Global problem definitions
 
+// Desired number of OpenMP threads (will be clamped to maximum available)
 int threads = 8;
+
+// Perform dynamic tuning of number of threads?
+bool thread_tuning = false;
 
 // Simulation parameters
 double gravity = 9.81;
@@ -100,7 +104,7 @@ int main(int argc, char* argv[])
   msystem->SetParallelThreadNumber(threads);
   omp_set_num_threads(threads);
 
-  msystem->DoThreadTuning(false);
+  msystem->GetSettings()->perform_thread_tuning = thread_tuning;
 
   // Set gravitational acceleration
   msystem->Set_G_acc(ChVector<>(0, 0, -gravity));

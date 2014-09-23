@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
   msystem->SetParallelThreadNumber(threads);
   omp_set_num_threads(threads);
 
-  msystem->DoThreadTuning(false);
+  msystem->GetSettings()->perform_thread_tuning = false;
 
   // Set gravitational acceleration
   msystem->Set_G_acc(ChVector<>(0, 0, gravity));

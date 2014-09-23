@@ -370,7 +370,7 @@ int main(int argc, char* argv[])
   omp_set_num_threads(threads);
   cout << "Using " << threads << " threads" << endl;
 
-  msystem->DoThreadTuning(thread_tuning);
+  msystem->GetSettings()->perform_thread_tuning = thread_tuning;
 
   // Set gravitational acceleration
   msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
