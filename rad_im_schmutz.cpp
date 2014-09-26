@@ -32,7 +32,6 @@
 #include "chrono_utils/ChUtilsInputOutput.h"
 
 using namespace chrono;
-using namespace chrono::collision;
 
 using std::cout;
 using std::endl;
@@ -42,7 +41,7 @@ using std::flush;
 // Problem setup
 // -----------------------------------------------------------------------------
 
-// Comment the following line to use DVI contact
+// Specify solution method (comment next line for DVI)
 ////#define DEM
 
 // Simulation phase
@@ -53,6 +52,9 @@ enum ProblemType {
 };
 
 ProblemType problem = TESTING;
+
+// Wheel contact shape (one of collision::CYLINDER or collision::ROUNDEDCYL)
+collision::ShapeType wheel_shape = collision::CYLINDER;
 
 // -----------------------------------------------------------------------------
 // Simulation parameters
@@ -69,11 +71,12 @@ double time_settling = 5;
 double time_pushing = 2;
 
 // Solver parameters
+double tolerance = 1e-3;
 int max_iteration_bilateral = 50;
 #ifdef DEM
 double time_step = 1e-4;
 #else
-double time_step = 1e-4;
+double time_step = 5e-4;
 int max_iteration_normal = 30;
 int max_iteration_sliding = 20;
 int max_iteration_spinning = 0;
@@ -107,21 +110,21 @@ int    desired_num_particles = 10000;
 // -----------------------------------------------------------------------------
 // Parameters for the test rig
 // -----------------------------------------------------------------------------
-double mass1 = 895;
-double mass_wheel = 661;
+double mass1 = 550;
+double mass_wheel = 351;
 
-ChVector<> inertia_sled(1, 1, 1);
-ChVector<> inertia_wheel(1, 1, 1);
+ChVector<> inertia_sled(100, 100, 100);
+ChVector<> inertia_wheel(50, 138, 138);
 
-double a = 0.987;
-double b = 0.112;
-double c = 0.5;
+double a = 0.951;
+double b = 0.169;
+double c = 0.8;
 
 double e = 1;
 
-double r_w = 0.3;
-double w_w = 0.1;
-double s_w = 0.03;
+double r_w = 0.290;
+double w_w = 0.200;
+double s_w = 0.058;
 
 double L = 4;
 double W = 0.8;
@@ -182,9 +185,9 @@ Mechanism::Mechanism(ChSystemParallel* system, double h)
 
   // Create the ground body
 #ifdef DEM
-  m_ground = ChSharedPtr<ChBodyDEM>(new ChBodyDEM(new ChCollisionModelParallel));
+  m_ground = ChSharedPtr<ChBodyDEM>(new ChBodyDEM(new collision::ChCollisionModelParallel));
 #else
-  m_ground = ChSharedPtr<ChBody>(new ChBody(new ChCollisionModelParallel));
+  m_ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 #endif
   m_ground->SetIdentifier(-1);
   m_ground->SetBodyFixed(true);
@@ -194,9 +197,9 @@ Mechanism::Mechanism(ChSystemParallel* system, double h)
 
   // Create the sled body
 #ifdef DEM
-  m_sled = ChSharedPtr<ChBodyDEM>(new ChBodyDEM(new ChCollisionModelParallel));
+  m_sled = ChSharedPtr<ChBodyDEM>(new ChBodyDEM(new collision::ChCollisionModelParallel));
 #else
-  m_sled = ChSharedPtr<ChBody>(new ChBody(new ChCollisionModelParallel));
+  m_sled = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 #endif
   m_sled->SetIdentifier(1);
   m_sled->SetMass(mass1);
@@ -216,9 +219,9 @@ Mechanism::Mechanism(ChSystemParallel* system, double h)
 
   // Create the wheel body
 #ifdef DEM
-  m_wheel = ChSharedPtr<ChBodyDEM>(new ChBodyDEM(new ChCollisionModelParallel));
+  m_wheel = ChSharedPtr<ChBodyDEM>(new ChBodyDEM(new collision::ChCollisionModelParallel));
 #else
-  m_wheel = ChSharedPtr<ChBody>(new ChBody(new ChCollisionModelParallel));
+  m_wheel = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 #endif
   m_wheel->SetIdentifier(2);
   m_wheel->SetMass(mass_wheel);
@@ -229,12 +232,19 @@ Mechanism::Mechanism(ChSystemParallel* system, double h)
   m_wheel->SetCollide(true);
 
   m_wheel->GetCollisionModel()->ClearModel();
-  utils::AddRoundedCylinderGeometry(m_wheel.get_ptr(), r_w, w_w / 2, s_w, ChVector<>(c, 0, -b), Q_from_AngZ(CH_C_PI_2));
+  switch (wheel_shape) {
+  case collision::CYLINDER:
+    utils::AddCylinderGeometry(m_wheel.get_ptr(), r_w, w_w / 2, ChVector<>(c, 0, -b), Q_from_AngZ(CH_C_PI_2));
+    break;
+  case collision::ROUNDEDCYL:
+    utils::AddRoundedCylinderGeometry(m_wheel.get_ptr(), r_w - s_w, w_w / 2 - s_w, s_w, ChVector<>(c, 0, -b), Q_from_AngZ(CH_C_PI_2));
+    break;
+  }
   m_wheel->GetCollisionModel()->BuildModel();
 
   ChSharedPtr<ChCapsuleShape> cap_wheel(new ChCapsuleShape);
-  cap_wheel->GetCapsuleGeometry().hlen = (a + c) / 2 - w_w / 2;
-  cap_wheel->GetCapsuleGeometry().rad = w_w / 2;
+  cap_wheel->GetCapsuleGeometry().hlen = (a + c) / 2 - w_w / 4;
+  cap_wheel->GetCapsuleGeometry().rad = w_w / 4;
   cap_wheel->Pos = ChVector<>((c - a) / 2, 0, -b);
   cap_wheel->Rot = Q_from_AngZ(CH_C_PI_2);
   m_wheel->AddAsset(cap_wheel);
@@ -408,12 +418,12 @@ int main(int argc, char* argv[])
   // Edit system settings.
   // ---------------------
 
-  msystem->SetTol(1e-3);
-  msystem->SetTolSpeeds(1e-3);
+  msystem->SetTol(tolerance);
+  msystem->SetTolSpeeds(tolerance);
   msystem->SetStep(time_step);
 
   msystem->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
-  msystem->GetSettings()->solver.tolerance = 1e-3;
+  msystem->GetSettings()->solver.tolerance = tolerance;
 
 #ifdef DEM
   msystem->ChangeCollisionNarrowphase(NARROWPHASE_R);
@@ -497,6 +507,10 @@ int main(int argc, char* argv[])
   ChStreamOutAsciiFile sfile(stats_file.c_str());
   ChStreamOutAsciiFile rfile(results_file.c_str());
 
+  // Disable buffering on output file streams.
+  sfile.GetFstream().rdbuf()->pubsetbuf(0, 0);
+  rfile.GetFstream().rdbuf()->pubsetbuf(0, 0);
+
   while (time < time_end) {
     if (sim_frame == next_out_frame) {
       char filename[100];
@@ -513,6 +527,7 @@ int main(int argc, char* argv[])
       cout << "             Execution time: " << exec_time << endl;
 
       sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
+      sfile.GetFstream().flush();
 
       // Create a checkpoint from the current state.
       if (problem == SETTLING) {
@@ -538,6 +553,7 @@ int main(int argc, char* argv[])
     // Save results
     if (problem != SETTLING) {
       mech->WriteReactionForce(rfile, time);
+      rfile.GetFstream().flush();
     }
   }
 
