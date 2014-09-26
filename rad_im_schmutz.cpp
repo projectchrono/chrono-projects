@@ -130,7 +130,7 @@ double L = 4;
 double W = 0.8;
 double H = 0.4;
 
-double d = L / 2 - 2 * w_w;
+double d = L / 2 - 1.2 * w_w;
 
 double init_vel = 5;
 double init_angle = (CH_C_PI / 180) * 4;
@@ -518,7 +518,7 @@ int main(int argc, char* argv[])
       utils::WriteShapesPovray(msystem, filename, problem == TESTING);
       double highest, lowest;
       FindRange(msystem, lowest, highest);
-      cout << "------------ Output frame:   " << out_frame << endl;
+      cout << "------------ Output frame:   " << out_frame + 1 << endl;
       cout << "             Sim frame:      " << sim_frame << endl;
       cout << "             Time:           " << time << endl;
       cout << "             Lowest point:   " << lowest << endl;
