@@ -412,6 +412,7 @@ int main(int argc, char* argv[])
   omp_set_num_threads(threads);
   cout << "Using " << threads << " threads" << endl;
 
+  msystem->GetSettings()->max_threads = threads;
   msystem->GetSettings()->perform_thread_tuning = thread_tuning;
 
   // ---------------------
