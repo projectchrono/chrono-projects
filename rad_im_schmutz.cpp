@@ -126,9 +126,9 @@ double r_w = 0.290;
 double w_w = 0.200;
 double s_w = 0.058;
 
-double L = 4;
+double L = 4.0;
 double W = 0.8;
-double H = 0.4;
+double H = 2.0;
 
 double d = L / 2 - 1.2 * w_w;
 
