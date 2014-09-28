@@ -61,10 +61,10 @@ collision::ShapeType wheel_shape = collision::CYLINDER;
 // -----------------------------------------------------------------------------
 
 // Desired number of OpenMP threads (will be clamped to maximum available)
-int threads = 100;
+int threads = 20;
 
 // Perform dynamic tuning of number of threads?
-bool thread_tuning = true;
+bool thread_tuning = false;
 
 // Simulation duration.
 double time_settling = 5;
@@ -143,6 +143,7 @@ class Mechanism {
 public:
   Mechanism(ChSystemParallel* system, double h);
 
+  const ChVector<>& GetSledVelocity() const  { return m_sled->GetPos_dt(); }
   const ChVector<>& GetWheelVelocity() const { return m_wheel->GetPos_dt(); }
 
   void WriteResults(ChStreamOutAsciiFile& f, double time);
@@ -219,17 +220,32 @@ Mechanism::Mechanism(ChSystemParallel* system, double h)
 
   system->AddBody(m_sled);
 
+  // Create a material for the wheel body
+#ifdef DEM
+  ChSharedPtr<ChMaterialSurfaceDEM> mat_w;
+  mat_w = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+  mat_w->SetYoungModulus(2e6f);
+  mat_w->SetFriction(0.4f);
+  mat_w->SetDissipationFactor(0.6f);
+#else
+  ChSharedPtr<ChMaterialSurface> mat_w(new ChMaterialSurface);
+  mat_w->SetFriction(0.4f);
+#endif
+
   // Create the wheel body
 #ifdef DEM
   m_wheel = ChSharedPtr<ChBodyDEM>(new ChBodyDEM(new collision::ChCollisionModelParallel));
+  m_wheel->SetMaterialSurfaceDEM(mat_w);
 #else
   m_wheel = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+  m_wheel->SetMaterialSurface(mat_w);
 #endif
   m_wheel->SetIdentifier(2);
   m_wheel->SetMass(mass_wheel);
   m_wheel->SetInertiaXX(inertia_wheel);
   m_wheel->SetPos(loc_wheel);
   m_wheel->SetRot(Q_from_AngY(init_angle));
+  m_wheel->SetPos_dt(ChVector<>(init_vel, 0, 0));
   m_wheel->SetBodyFixed(false);
   m_wheel->SetCollide(true);
 
@@ -266,6 +282,9 @@ Mechanism::Mechanism(ChSystemParallel* system, double h)
 
 void Mechanism::WriteResults(ChStreamOutAsciiFile& f, double time)
 {
+  // Velocity of sled body (in absolute frame)
+  ChVector<> sled_vel = m_sled->GetPos_dt();
+
   // Velocity of wheel body (in absolute frame)
   ChVector<> wheel_vel = m_wheel->GetPos_dt();
 
@@ -279,6 +298,7 @@ void Mechanism::WriteResults(ChStreamOutAsciiFile& f, double time)
   ChVector<> force_abssys = m_sled->GetCoord().TransformDirectionLocalToParent(force_bodysys);
 
   f << time << "  "
+    << sled_vel.x << "  " << sled_vel.y << "  " << sled_vel.z << "      "
     << wheel_vel.x << "  " << wheel_vel.y << "  " << wheel_vel.z << "      "
     << force_abssys.x << "  " << force_abssys.y << "  " << force_abssys.z << "\n";
 }
@@ -529,8 +549,10 @@ int main(int argc, char* argv[])
       cout << "             Time:           " << time << endl;
       cout << "             Lowest point:   " << lowest << endl;
       cout << "             Highest point:  " << highest << endl;
-      if (problem != SETTLING)
-        cout << "             Wheel velocity: " << mech->GetWheelVelocity().x;
+      if (problem != SETTLING) {
+        cout << "             Sled X vel.   : " << mech->GetSledVelocity().x << endl;
+        cout << "             Wheel X vel.  : " << mech->GetWheelVelocity().x << endl;
+      }
       cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
       cout << "             Execution time: " << exec_time << endl;
 
