@@ -143,7 +143,9 @@ class Mechanism {
 public:
   Mechanism(ChSystemParallel* system, double h);
 
-  void WriteReactionForce(ChStreamOutAsciiFile& f, double time);
+  const ChVector<>& GetWheelVelocity() const { return m_wheel->GetPos_dt(); }
+
+  void WriteResults(ChStreamOutAsciiFile& f, double time);
 
 private:
   ChVector<> calcLocationWheel(double h)
@@ -262,19 +264,22 @@ Mechanism::Mechanism(ChSystemParallel* system, double h)
   system->AddLink(m_revolute);
 }
 
-void Mechanism::WriteReactionForce(ChStreamOutAsciiFile& f, double time)
+void Mechanism::WriteResults(ChStreamOutAsciiFile& f, double time)
 {
+  // Velocity of wheel body (in absolute frame)
+  ChVector<> wheel_vel = m_wheel->GetPos_dt();
+
   // Coordinate system of the revolute joint (relative to the frame of body2, in
   // this case the sled)
   ChCoordsys<> revCoordsys = m_revolute->GetLinkRelativeCoords();
 
+  // Reaction force in revolute joint
   ChVector<> force_jointsys = m_revolute->Get_react_force();
   ChVector<> force_bodysys = revCoordsys.TransformDirectionLocalToParent(force_jointsys);
   ChVector<> force_abssys = m_sled->GetCoord().TransformDirectionLocalToParent(force_bodysys);
 
   f << time << "  "
-    << force_jointsys.x << "  " << force_jointsys.y << "  " << force_jointsys.z << "  "
-    << force_bodysys.x << "  " << force_bodysys.y << "  " << force_bodysys.z << "  "
+    << wheel_vel.x << "  " << wheel_vel.y << "  " << wheel_vel.z << "      "
     << force_abssys.x << "  " << force_abssys.y << "  " << force_abssys.z << "\n";
 }
 
@@ -477,7 +482,7 @@ int main(int argc, char* argv[])
     // Create the mechanism with the wheel just above the granular material.
     double lowest, highest;
     FindRange(msystem, lowest, highest);
-    cout << "Create mechanism above height" << highest + r_g << endl;
+    cout << "Create mechanism above height " << highest + r_g << endl;
     mech = new Mechanism(msystem, highest + r_g);
   }
 
@@ -524,6 +529,8 @@ int main(int argc, char* argv[])
       cout << "             Time:           " << time << endl;
       cout << "             Lowest point:   " << lowest << endl;
       cout << "             Highest point:  " << highest << endl;
+      if (problem != SETTLING)
+        cout << "             Wheel velocity: " << mech->GetWheelVelocity().x;
       cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
       cout << "             Execution time: " << exec_time << endl;
 
@@ -553,7 +560,7 @@ int main(int argc, char* argv[])
 
     // Save results
     if (problem != SETTLING) {
-      mech->WriteReactionForce(rfile, time);
+      mech->WriteResults(rfile, time);
       rfile.GetFstream().flush();
     }
   }
