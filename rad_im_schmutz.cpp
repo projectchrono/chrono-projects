@@ -234,8 +234,9 @@ Mechanism::Mechanism(ChSystemParallel* system, double h)
 
   // Create the wheel body
 #ifdef DEM
-  m_wheel = ChSharedPtr<ChBodyDEM>(new ChBodyDEM(new collision::ChCollisionModelParallel));
-  m_wheel->SetMaterialSurfaceDEM(mat_w);
+  ChSharedPtr<ChBodyDEM> wheel(new ChBodyDEM(new collision::ChCollisionModelParallel));
+  wheel->SetMaterialSurfaceDEM(mat_w);
+  m_wheel = wheel;
 #else
   m_wheel = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
   m_wheel->SetMaterialSurface(mat_w);
