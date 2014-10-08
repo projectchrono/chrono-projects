@@ -376,7 +376,7 @@ int main(int argc, char* argv[])
   msystem->GetSettings()->solver.tolerance = 1e-3;
 
 #ifdef DEM
-  msystem->ChangeCollisionNarrowphase(NARROWPHASE_R);
+  msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 #else
   msystem->GetSettings()->solver.solver_mode = SLIDING;
   msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;

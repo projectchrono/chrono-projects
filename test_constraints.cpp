@@ -53,12 +53,11 @@ int main(int argc, char* argv[])
   omp_set_num_threads(threads);
 
   // Specify narrowphase collision detection
-  msystem->ChangeCollisionNarrowphase(NARROWPHASE_R);
+  msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 
   // Set tolerance and maximum number of iterations for bilateral constraint solver
-  ((ChLcpSolverParallelDEM*) msystem->GetLcpSolverSpeed())->SetMaxIteration(max_iteration);
-  ((ChLcpSolverParallelDEM*) msystem->GetLcpSolverSpeed())->SetTolerance(tolerance);
-
+  msystem->GetSettings()->solver.max_iteration_bilateral = max_iteration;
+  msystem->GetSettings()->solver.tolerance = tolerance;
 
   // Set solver parameters
   msystem->SetMaxiter(max_iteration);

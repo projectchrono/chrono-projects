@@ -207,7 +207,7 @@ int main(int argc, char* argv[])
   ChSystemParallelDEM msystem;
 #ifdef NARROW_NEW
   cout << "  R" << endl << endl;
-  msystem.ChangeCollisionNarrowphase(NARROWPHASE_R);
+  msystem.GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 #else
   cout << "  MPR" << endl << endl;
 #endif

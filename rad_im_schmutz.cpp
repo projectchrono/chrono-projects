@@ -42,7 +42,7 @@ using std::flush;
 // -----------------------------------------------------------------------------
 
 // Specify solution method (comment next line for DVI)
-////#define DEM
+#define DEM
 
 // Simulation phase
 enum ProblemType {
@@ -453,7 +453,7 @@ int main(int argc, char* argv[])
   msystem->GetSettings()->solver.tolerance = tolerance;
 
 #ifdef DEM
-  msystem->ChangeCollisionNarrowphase(NARROWPHASE_R);
+  msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 #else
   msystem->GetSettings()->solver.solver_mode = SLIDING;
   msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;

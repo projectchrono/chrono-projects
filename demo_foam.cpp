@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
   msystem->GetSettings()->collision.min_body_per_bin = 50;
   msystem->GetSettings()->collision.max_body_per_bin = 100;
 
-  msystem->ChangeCollisionNarrowphase(NARROWPHASE_R);
+  msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 
   // Create a material for the granular material
   ChSharedPtr<ChMaterialSurfaceDEM> mat_g;

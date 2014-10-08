@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
   msystem->GetSettings()->collision.min_body_per_bin = 50;
   msystem->GetSettings()->collision.max_body_per_bin = 100;
 
-  msystem->ChangeCollisionNarrowphase(NARROWPHASE_R);
+  msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 
   // --------------------------
   // Create the falling objects
