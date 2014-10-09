@@ -64,6 +64,7 @@ SET(DEMOS
     demo_wheel
     demo_objectdrop
     rad_im_schmutz
+    directShear
     test_mesh
     test_constraints
     test_utils
