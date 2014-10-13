@@ -763,9 +763,9 @@ int main(int argc, char* argv[])
 
     // If at an output frame, write PovRay file and print info
     if (sim_frame == next_out_frame) {
-      ////char filename[100];
-      ////sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
-      ////utils::WriteShapesPovray(msystem, filename, false);
+      char filename[100];
+      sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
+      utils::WriteShapesPovray(msystem, filename, false);
 
       cout << "------------ Output frame:   " << out_frame << endl;
       cout << "             Sim frame:      " << sim_frame << endl;
@@ -779,12 +779,12 @@ int main(int argc, char* argv[])
       sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
 
       // Create a checkpoint from the current state.
-      ////if (problem == SETTLING || problem == PRESSING) {
-      ////  cout << "             Write checkpoint data " << flush;
-      ////  if (problem == SETTLING) utils::WriteCheckpoint(msystem, settled_ckpnt_file);
-      ////  else                     utils::WriteCheckpoint(msystem, pressed_ckpnt_file);
-      ////  cout << msystem->Get_bodylist()->size() << " bodies" << endl;
-      ////}
+      if (problem == SETTLING || problem == PRESSING) {
+        cout << "             Write checkpoint data " << flush;
+        if (problem == SETTLING) utils::WriteCheckpoint(msystem, settled_ckpnt_file);
+        else                     utils::WriteCheckpoint(msystem, pressed_ckpnt_file);
+        cout << msystem->Get_bodylist()->size() << " bodies" << endl;
+      }
 
       // Increment counters
       out_frame++;
