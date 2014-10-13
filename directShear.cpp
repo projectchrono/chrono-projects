@@ -25,17 +25,15 @@
 //
 // =============================================================================
 
-#include <stdio.h>
-#include <vector>
-#include <cmath>
-
 #include "core/ChFileutils.h"
 #include "core/ChStream.h"
 
 #include <iostream>
 #include <vector>
+#include <valarray>
 #include <string>
 #include <sstream>
+#include <cmath>
 
 #include "chrono_parallel/ChSystemParallel.h"
 #include "chrono_parallel/ChLcpSystemDescriptorParallel.h"
@@ -97,17 +95,19 @@ bool thread_tuning = false;
 // Perform shearing action via a linear actuator or kinematically?
 bool use_actuator = true;
 
-// Simulation parameters
-double gravity = 981;  // [cm/s^2] 
-
+// Simulation times
 double time_settling_min = 0.1;
-double time_settling_max = 0.2;
+double time_settling_max = 0.5;
 
 double time_pressing_min = 0.1;
-double time_pressing_max = 0.2;
+double time_pressing_max = 0.5;
 
 double time_shearing = 10;  //0.06;
 
+// Stopping criteria for settling (fraction of particle radius)
+double settling_tol = 0.1;
+
+// Solver settings
 #ifdef DEM
 double time_step = 1e-5;
 #else
@@ -140,14 +140,19 @@ int out_fps_shearing = 120;
 
 int timing_frame = 10;   // output detailed step timing at this frame
 
+// Gravitational acceleration [cm/s^2]
+double gravity = 981;
+
 // Parameters for the containing bin and shear box
 int        Id_ground = -1;             // body ID for the ground (containing bin)
 int        Id_box = -2;                // body ID for the shear box
 
-double     hdimX = 6.0 / 2;            // [cm] half-length in x direction
-double     hdimY = 6.0 / 2;            // [cm] half-depth in y direction
-double     hdimZ = 3.0 / 2;            // [cm] half-height in z direction
-double     hthick = 1.0 / 2;           // [cm] half-thickness of the walls
+double     hdimX = 6.0 / 2;            // [cm] bin half-length in x direction
+double     hdimY = 6.0 / 2;            // [cm] bin half-depth in y direction
+double     hdimZ = 3.0 / 2;            // [cm] bin half-height in z direction
+double     hthick = 1.0 / 2;           // [cm] bin half-thickness of the walls
+
+double     h_scaling = 6;              // ratio of shear box height to bin height
 
 float      Y_walls = Pa2cgs * 2e6;
 float      alpha_walls = alpha2cgs * 0.4;
@@ -251,10 +256,10 @@ ChSharedPtr<ChBody> CreateContainerAndBox(ChSystemParallel* system)
   box->SetBodyFixed(true);
 
   box->GetCollisionModel()->ClearModel();
-  utils::AddBoxGeometry(box.get_ptr(), ChVector<>(hthick, hdimY, 5 * hdimZ), ChVector<>(-hdimX - hthick, 0, 5 * hdimZ));
-  utils::AddBoxGeometry(box.get_ptr(), ChVector<>(hthick, hdimY, 5 * hdimZ), ChVector<>( hdimX + hthick, 0, 5 * hdimZ));
-  utils::AddBoxGeometry(box.get_ptr(), ChVector<>(hdimX, hthick, 5 * hdimZ), ChVector<>(0, -hdimY - hthick, 5 * hdimZ));
-  utils::AddBoxGeometry(box.get_ptr(), ChVector<>(hdimX, hthick, 5 * hdimZ), ChVector<>(0,  hdimY + hthick, 5 * hdimZ));
+  utils::AddBoxGeometry(box.get_ptr(), ChVector<>(hthick, hdimY, h_scaling * hdimZ), ChVector<>(-hdimX - hthick, 0, h_scaling * hdimZ));
+  utils::AddBoxGeometry(box.get_ptr(), ChVector<>(hthick, hdimY, h_scaling * hdimZ), ChVector<>( hdimX + hthick, 0, h_scaling * hdimZ));
+  utils::AddBoxGeometry(box.get_ptr(), ChVector<>(hdimX, hthick, h_scaling * hdimZ), ChVector<>(0, -hdimY - hthick, h_scaling * hdimZ));
+  utils::AddBoxGeometry(box.get_ptr(), ChVector<>(hdimX, hthick, h_scaling * hdimZ), ChVector<>(0,  hdimY + hthick, h_scaling * hdimZ));
   box->GetCollisionModel()->BuildModel();
 
   system->AddBody(box);
@@ -404,7 +409,7 @@ int CreateObjects(ChSystemParallel* system)
   ChVector<> hdims(hdimX - r, hdimY - r, 0);
   ChVector<> center(0, 0, 2 * r);
 
-  while (center.z < 6 * hdimZ)
+  while (center.z < 2 * h_scaling * hdimZ)
   {
     gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
     center.z += 2 * r;
@@ -418,6 +423,7 @@ int CreateObjects(ChSystemParallel* system)
 // =============================================================================
 // Create a single large sphere (for use in TESTING)
 // =============================================================================
+
 ChSharedPtr<ChBody> CreateBall(ChSystemParallel* system)
 {
   // ------------------------------
@@ -590,6 +596,7 @@ int main(int argc, char* argv[])
   // - Select output FPS
   // - Create / load objects
 
+  double time_min = 0;
   double time_end;
   int out_fps;
   ChSharedPtr<ChBody> shearBox;
@@ -599,6 +606,7 @@ int main(int argc, char* argv[])
   switch (problem) {
   case SETTLING:
   {
+    time_min = time_settling_min;
     time_end = time_settling_max;
     out_fps = out_fps_settling;
 
@@ -614,6 +622,7 @@ int main(int argc, char* argv[])
 
   case PRESSING:
   {
+    time_min = time_pressing_min;
     time_end = time_pressing_max;
     out_fps = out_fps_pressing;
 
@@ -621,6 +630,10 @@ int main(int argc, char* argv[])
     cout << "Read checkpoint data from " << settled_ckpnt_file;
     utils::ReadCheckpoint(msystem, settled_ckpnt_file);
     cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
+
+    // Grab a handle to the shear box body (must increase ref count)
+    shearBox = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(1));
+    msystem->Get_bodylist()->at(1)->AddRef();
 
     // Create the load plate just above the granular material.
     double highest, lowest;
@@ -640,13 +653,14 @@ int main(int argc, char* argv[])
     utils::ReadCheckpoint(msystem, pressed_ckpnt_file);
     cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
 
-    // Fix the loadPlate and release the shearBox (if using an actuator)
-    loadPlate = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
+    // Grab a handle to the shear box (must increase ref count).
     shearBox = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(1));
-    loadPlate->SetBodyFixed(true);
+    msystem->Get_bodylist()->at(1)->AddRef();
+
+    // Release the shearBox if using an actuator.
     shearBox->SetBodyFixed(!use_actuator);
 
-    // Grab the pointer to the actuator
+    // Get a handle to the actuator.
     if (use_actuator)
       actuator = msystem->SearchLink("actuator").StaticCastTo<ChLinkLinActuator>();
 
@@ -663,16 +677,16 @@ int main(int argc, char* argv[])
     // Create container and shear box.
     shearBox = CreateContainerAndBox(msystem);
 
-    // Create the test ball
+    // Create the test ball.
     CreateBall(msystem);
 
-    // Create the load plate just above the ball
+    // Create the load plate just above the ball.
     loadPlate = CreateLoadPlate(msystem, 2.1 * radius_ball);
 
-    // Release the shear box (if using an actuator)
+    // Release the shear box if using an actuator.
     shearBox->SetBodyFixed(!use_actuator);
 
-    // Grab the pointer to the actuator
+    // Get a handle to the actuator.
     if (use_actuator)
       actuator = msystem->SearchLink("actuator").StaticCastTo<ChLinkLinActuator>();
 
@@ -689,13 +703,20 @@ int main(int argc, char* argv[])
   int num_steps = std::ceil(time_end / time_step);
   int out_steps = std::ceil((1.0 / time_step) / out_fps);
 
-  // Initialize counters and output files.
+  // Initialize counters
   double time = 0;
   int sim_frame = 0;
   int out_frame = 0;
   int next_out_frame = 0;
   double exec_time = 0;
   int num_contacts = 0;
+
+  // Circular buffer with highest particle location
+  // (only used for SETTLING or PRESSING)
+  int buffer_size = std::ceil(time_min / time_step);
+  std::valarray<double> hdata(0.0, buffer_size);
+
+  // Create output files
   ChStreamOutAsciiFile sfile(stats_file.c_str());
   ChStreamOutAsciiFile shearStream(shear_file.c_str());
 
@@ -712,15 +733,15 @@ int main(int argc, char* argv[])
     const ChVector<>& pos_old = shearBox->GetPos();
     const ChVector<>& vel_old = shearBox->GetPos_dt();
 
-    // Calculate running averages for particle min/max heights
-    //// TODO
+    // Calculate minimum and maximum particle heights
     double highest, lowest;
     FindHeightRange(msystem, lowest, highest);
 
+    // If at an output frame, write PovRay file and print info
     if (sim_frame == next_out_frame) {
-      char filename[100];
-      sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
-      utils::WriteShapesPovray(msystem, filename, false);
+      ////char filename[100];
+      ////sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
+      ////utils::WriteShapesPovray(msystem, filename, false);
 
       cout << "------------ Output frame:   " << out_frame << endl;
       cout << "             Sim frame:      " << sim_frame << endl;
@@ -734,12 +755,12 @@ int main(int argc, char* argv[])
       sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
 
       // Create a checkpoint from the current state.
-      if (problem == SETTLING || problem == PRESSING) {
-        cout << "             Write checkpoint data " << flush;
-        if (problem == SETTLING) utils::WriteCheckpoint(msystem, settled_ckpnt_file);
-        else                     utils::WriteCheckpoint(msystem, pressed_ckpnt_file);
-        cout << msystem->Get_bodylist()->size() << " bodies" << endl;
-      }
+      ////if (problem == SETTLING || problem == PRESSING) {
+      ////  cout << "             Write checkpoint data " << flush;
+      ////  if (problem == SETTLING) utils::WriteCheckpoint(msystem, settled_ckpnt_file);
+      ////  else                     utils::WriteCheckpoint(msystem, pressed_ckpnt_file);
+      ////  cout << msystem->Get_bodylist()->size() << " bodies" << endl;
+      ////}
 
       // Increment counters
       out_frame++;
@@ -747,12 +768,29 @@ int main(int argc, char* argv[])
       num_contacts = 0;
     }
 
-    ////if (problem == SETTLING && time > time_settling_min && CheckSettled(msystem, zero_v)) {
-    ////  cout << "Granular material settled...  time = " << time << endl;
-    ////  break;
-    ////}
+    // Check for early termination of a settling phase.
+    if (problem == SETTLING || problem == PRESSING)
+    {
+      // Store maximum particle height in circular buffer
+      hdata[sim_frame % buffer_size] = highest;
+      
+      // Check variance of data in circular buffer
+      if (time > time_min)
+      {
+        double mean_height = hdata.sum() / buffer_size;
+        std::valarray<double> x = hdata - mean_height;
+        double var = std::sqrt((x * x).sum() / buffer_size);
 
-    // Advance simulation time
+        // Consider the material settled when the variance is below the
+        // specified fraction of a particle radius
+        if (var < settling_tol * r_g) {
+          cout << "Granular material settled...  time = " << time << endl;
+          break;
+        }
+      }
+    }
+
+    // Advance simulation by one step
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
     if (gl_window.Active()) {
       gl_window.DoStepDynamics(time_step);
