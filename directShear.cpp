@@ -21,7 +21,8 @@
 // x-direction at a specified velocity.
 //
 // The global reference frame has Z up.
-// All units SI.
+// All units SI (CGS, i.e., centimeter - gram - second)
+//
 // =============================================================================
 
 #include <stdio.h>
@@ -43,6 +44,7 @@
 #include "chrono_utils/ChUtilsGenerators.h"
 #include "chrono_utils/ChUtilsInputOutput.h"
 
+//#undef CHRONO_PARALLEL_HAS_OPENGL
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
@@ -61,16 +63,27 @@ using std::endl;
 // Comment the following line to use DVI contact
 #define DEM
 
-// Comment the following line to use parallel collision detection
-//#define BULLET
-
 enum ProblemType {
   SETTLING,
-  SHEARING
+  PRESSING,
+  SHEARING,
+  TESTING
 };
 
-ProblemType problem = SETTLING;
+ProblemType problem = TESTING;
 
+// -----------------------------------------------------------------------------
+// Conversion factors
+// -----------------------------------------------------------------------------
+
+// Conversion for Young's modulus and pressure
+// [Y] = Pa = N / m^2 = kg / m / s^2
+double Pa2cgs = 10;
+
+// Conversion for dissipation factor alpha
+// [alpha] = s / m
+double alpha2cgs = 0.01;
+ 
 // -----------------------------------------------------------------------------
 // Global problem definitions
 // -----------------------------------------------------------------------------
@@ -81,28 +94,31 @@ int threads = 20;
 // Perform dynamic tuning of number of threads?
 bool thread_tuning = false;
 
-// Perform shearing action via constraints?
-bool kinematic_toggle = false;
+// Perform shearing action via a linear actuator or kinematically?
+bool use_actuator = true;
 
 // Simulation parameters
-double gravity = 981;
+double gravity = 981;  // [cm/s^2] 
 
 double time_settling_min = 0.1;
 double time_settling_max = 0.2;
-double time_shearing = 10;//0.06;
+
+double time_pressing_min = 0.1;
+double time_pressing_max = 0.2;
+
+double time_shearing = 10;  //0.06;
 
 #ifdef DEM
 double time_step = 1e-5;
-int max_iteration = 200;
 #else
 double time_step = 1e-4;
-int max_iteration_normal = 0;
-int max_iteration_sliding = 200;
+int max_iteration_normal = 50;
+int max_iteration_sliding = 100;
 int max_iteration_spinning = 0;
-float contact_recovery_speed = 10e30;
+float contact_recovery_speed = 1;
 #endif
 
-int max_iteration_bilateral = 0;
+int max_iteration_bilateral = 100;
 double tolerance = 1e-4;
 
 // Output
@@ -115,73 +131,241 @@ const std::string out_dir = "../DIRECTSHEAR_DVI/";
 const std::string pov_dir = out_dir + "/POVRAY";
 const std::string shear_file = out_dir + "/shear.dat";
 const std::string stats_file = out_dir + "/stats.dat";
-const std::string checkpoint_file = out_dir + "/settled.dat";
+const std::string settled_ckpnt_file = out_dir + "/settled.dat";
+const std::string pressed_ckpnt_file = out_dir + "/pressed.dat";
 
 int out_fps_settling = 120;
+int out_fps_pressing = 120;
 int out_fps_shearing = 120;
 
 int timing_frame = 10;   // output detailed step timing at this frame
 
+// Parameters for the containing bin and shear box
+int        Id_ground = -1;             // body ID for the ground (containing bin)
+int        Id_box = -2;                // body ID for the shear box
+
+double     hdimX = 6.0 / 2;            // [cm] half-length in x direction
+double     hdimY = 6.0 / 2;            // [cm] half-depth in y direction
+double     hdimZ = 3.0 / 2;            // [cm] half-height in z direction
+double     hthick = 1.0 / 2;           // [cm] half-thickness of the walls
+
+float      Y_walls = Pa2cgs * 2e6;
+float      alpha_walls = alpha2cgs * 0.4;
+float      mu_walls = 0.3f;
+
+// Parameters for the load plate
+int        Id_plate = -3;              // body ID for the load plate
+
+float      Y_plate = Pa2cgs * 2e6;
+float      alpha_plate = alpha2cgs * 0.4;
+float      mu_plate = 0.3f;
+
+// Applied normal pressure
+double     normalPressure = Pa2cgs * 16888.1;  // 16,888.1 Pa // 44,127.0 Pa// 71,365.9 Pa
+
+// Desired shearing velocity [cm/s]
+double     desiredVelocity = 0.5;  // 0.066;
+
 // Parameters for the granular material
 int        Id_g = 1;
-double     r_g = .3;//0.2;//4e-3 / 2;
-double     rho_g = 2.500;
-double     vol_g = (4.0/3) * CH_C_PI * r_g * r_g * r_g;
-double     mass_g = rho_g * vol_g;
-ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1,1,1);
-double     desiredBulkDensity = 1.3894; // 1.3894 g/cm^3
+double     r_g = 0.3;                    // [cm] radius of granular sphers
+double     rho_g = 2.500;                // [g/cm^3] density of granules
 
-float      Y_g = 1e8;
-float      mu_g = 0.5;
-float      alpha_g = 0;
+double     desiredBulkDensity = 1.3894;  // [g/cm^3] desired bulk density
 
-// Parameters for the shear box
-int        Id_b = 0;
-double     hDimX_plate = 6*0.5;                     // length in x direction
-double     hDimY_plate = 6*0.5;                     // depth in y direction
-double     hDimZ_plate = 3*0.5;                     // height in z direction
-double     area = hDimX_plate*2*hDimY_plate*2;
-double     rho_b = .700;
-double     normalPressure = 168881;                 // apply normal force to cieling// 16,888.1 Pa // 44,127.0 Pa// 71,365.9 Pa
-double     mass_b = normalPressure*area / gravity;    // mass of the top body
-ChVector<> inertia_b = ChVector<>(1,1,1);           // inertia of shear box
-double     desiredVelocity = 0.066;                 // desired shearing velocity
+float      Y_g = Pa2cgs * 2e6;
+float      alpha_g = alpha2cgs * 0.4;
+float      mu_g = 0.5f;
 
-float      Y_b = 1e8;
-float      mu_b = 0;
-float      alpha_b = 0.1f;
+// Parameters of the testing ball
+int        Id_ball = -4;
+double     mass_ball = 200;               // [g] mass of testing ball
+double     radius_ball = 0.9 * hdimX;     // [cm] radius of testing ball
 
-// Parameters for the containing bin
-int        binId = -200;
-double     hDimX = hDimX_plate;            // length in x direction
-double     hDimY = hDimY_plate;            // depth in y direction
-double     hDimZ = 3*0.5;                  // height in z direction
-double     hThickness = 3;                 // wall thickness
 
-float      Y_c = 2e7;
-float      mu_c = 0;//0.3;
-float      alpha_c = 0.1f;
+// =============================================================================
+// Create the containing bin (the ground) and shear box.
+// =============================================================================
 
-// Number of layers and height of one layer for generator domain
-int        numLayers = 1;
-int        scaleCon = 8;
-double     layerHeight = scaleCon*hDimZ/numLayers-r_g;//3e-3;
+ChSharedPtr<ChBody> CreateContainerAndBox(ChSystemParallel* system)
+{
+  // -------------------------------
+  // Create a material for the walls
+  // -------------------------------
 
-// Drop height (above surface of settled granular material)
-double h = 10e-2;
+#ifdef DEM
+  ChSharedPtr<ChMaterialSurfaceDEM> mat_walls;
+  mat_walls = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+  mat_walls->SetYoungModulus(Y_walls);
+  mat_walls->SetFriction(mu_walls);
+  mat_walls->SetDissipationFactor(alpha_walls);
+#else
+  ChSharedPtr<ChMaterialSurface> mat_walls(new ChMaterialSurface);
+  mat_walls->SetFriction(mu_walls);
+#endif
 
-// -----------------------------------------------------------------------------
-// Create the dynamic objects:
-// - granular material consisting of identical spheres with specified radius and
-//   material properties; the spheres are generated in a number of vertical
-//   layers with locations within each layer obtained using Poisson Disk
-//   sampling (thus ensuring that no two spheres are closer than twice the
-//   radius)
-// - a containing bin consisting of five boxes (no top)
-// -----------------------------------------------------------------------------
+  // ----------------------
+  // Create the ground body -- always FIRST body in system
+  // ----------------------
+
+#ifdef DEM
+  ChSharedPtr<ChBodyDEM> ground(new ChBodyDEM(new ChCollisionModelParallel));
+  ground->SetMaterialSurfaceDEM(mat_walls);
+#else
+  ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel));
+  ground->SetMaterialSurface(mat_walls);
+#endif
+
+  ground->SetIdentifier(Id_ground);
+  ground->SetBodyFixed(true);
+  ground->SetCollide(true);
+
+  // Attach geometry of the containing bin
+  ground->GetCollisionModel()->ClearModel();
+  utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
+  utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
+  utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>( hdimX + hthick, 0, hdimZ));
+  utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
+  utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0,  hdimY + hthick, hdimZ));
+  ground->GetCollisionModel()->BuildModel();
+
+  system->AddBody(ground);
+
+  // --------------------
+  // Create the shear box -- always SECOND body in system
+  // --------------------
+
+  // Initially, the shear box is fixed to ground.
+  // During the shearing phase it may be released (if using an actuator)
+#ifdef DEM
+  ChSharedBodyDEMPtr box(new ChBodyDEM(new ChCollisionModelParallel));
+  box->SetMaterialSurfaceDEM(mat_walls);
+#else
+  ChSharedBodyPtr box(new ChBody(new ChCollisionModelParallel));
+  box->SetMaterialSurface(mat_walls);
+#endif
+
+  box->SetIdentifier(Id_box);
+  box->SetPos(ChVector<>(0, 0, 2 * hdimZ));
+  box->SetCollide(true);
+  box->SetBodyFixed(true);
+
+  box->GetCollisionModel()->ClearModel();
+  utils::AddBoxGeometry(box.get_ptr(), ChVector<>(hthick, hdimY, 5 * hdimZ), ChVector<>(-hdimX - hthick, 0, 5 * hdimZ));
+  utils::AddBoxGeometry(box.get_ptr(), ChVector<>(hthick, hdimY, 5 * hdimZ), ChVector<>( hdimX + hthick, 0, 5 * hdimZ));
+  utils::AddBoxGeometry(box.get_ptr(), ChVector<>(hdimX, hthick, 5 * hdimZ), ChVector<>(0, -hdimY - hthick, 5 * hdimZ));
+  utils::AddBoxGeometry(box.get_ptr(), ChVector<>(hdimX, hthick, 5 * hdimZ), ChVector<>(0,  hdimY + hthick, 5 * hdimZ));
+  box->GetCollisionModel()->BuildModel();
+
+  system->AddBody(box);
+
+  // -------------------------------------------------------------------------
+  // Create a translational joint between ground and box and a linear actuator
+  // -------------------------------------------------------------------------
+
+  if (use_actuator) {
+    ChSharedPtr<ChLinkLockPrismatic> prismatic(new ChLinkLockPrismatic);
+    prismatic->Initialize(ground, box, ChCoordsys<>(ChVector<>(0, 0, 2 * hdimZ), Q_from_AngY(CH_C_PI_2)));
+    system->AddLink(prismatic);
+
+    ChSharedPtr<ChLinkLinActuator> actuator(new ChLinkLinActuator);
+    ChVector<> pt1(0, 0, 2 * hdimZ);
+    ChVector<> pt2(1, 0, 2 * hdimZ);
+    actuator->SetName("actuator");
+    actuator->Initialize(ground, box, false, ChCoordsys<>(pt1, QUNIT), ChCoordsys<>(pt2, QUNIT));
+    actuator->Set_lin_offset(1);
+    system->AddLink(actuator);
+  }
+
+
+  // Return a pointer to the shear box body
+  return box;
+}
+
+// =============================================================================
+// Create the load plate
+// =============================================================================
+
+ChSharedPtr<ChBody> CreateLoadPlate(ChSystemParallel* system, double z)
+{
+  // ------------------------------
+  // Create a material for the body
+  // ------------------------------
+
+#ifdef DEM
+  ChSharedPtr<ChMaterialSurfaceDEM> mat_plate;
+  mat_plate = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+  mat_plate->SetYoungModulus(Y_plate);
+  mat_plate->SetFriction(mu_plate);
+  mat_plate->SetDissipationFactor(alpha_plate);
+#else
+  ChSharedPtr<ChMaterialSurface> mat_plate(new ChMaterialSurface);
+  mat_plate->SetFriction(mu_plate);
+#endif
+
+  // ---------------------
+  // Create the plate body
+  // ---------------------
+
+  // Set plate dimension, shrinking by a half-radius on each side
+  double hdimX_p = hdimX - r_g / 2;
+  double hdimY_p = hdimY - r_g / 2;
+  double hdimZ_p = hdimZ;
+
+  // Estimate plate mass from desired applied normal pressure
+  double area = 4 * hdimX_p * hdimY_p;
+  double mass = normalPressure * area / gravity;
+
+#ifdef DEM
+  ChSharedBodyDEMPtr plate(new ChBodyDEM(new ChCollisionModelParallel));
+  plate->SetMaterialSurfaceDEM(mat_plate);
+#else
+  ChSharedBodyPtr plate(new ChBody(new ChCollisionModelParallel));
+  plate->SetMaterialSurface(mat_plate);
+#endif
+
+  plate->SetIdentifier(Id_plate);
+  plate->SetMass(mass);
+  plate->SetPos(ChVector<>(0, 0, z + hdimZ_p));
+  plate->SetCollide(true);
+  plate->SetBodyFixed(false);
+
+  plate->GetCollisionModel()->ClearModel();
+  utils::AddBoxGeometry(plate.get_ptr(), ChVector<>(hdimX_p, hdimY_p, hdimZ_p));
+  plate->GetCollisionModel()->BuildModel();
+
+  system->AddBody(plate);
+
+  // --------------------------------------------------------
+  // Create a translational joint between shear box and plate
+  // --------------------------------------------------------
+
+  ChSharedPtr<ChBody> box(system->Get_bodylist()->at(1));
+
+  ChSharedPtr<ChLinkLockPrismatic> prismatic(new ChLinkLockPrismatic);
+  prismatic->Initialize(box, plate, ChCoordsys<>(ChVector<>(0, 0, z + hdimZ_p), QUNIT));
+  system->AddLink(prismatic);
+
+  // Return a pointer to the plate body
+  return plate;
+}
+
+
+// =============================================================================
+// Create the granular material
+//
+// Granular material consisting of identical spheres with specified radius and
+// material properties; the spheres are generated in a number of vertical
+// layers with locations within each layer obtained using Poisson Disk sampling,
+// thus ensuring that no two spheres are closer than twice the radius.
+// =============================================================================
+
 int CreateObjects(ChSystemParallel* system)
 {
+  // -------------------------------------------
   // Create a material for the granular material
+  // -------------------------------------------
+
 #ifdef DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
@@ -193,7 +377,11 @@ int CreateObjects(ChSystemParallel* system)
   mat_g->SetFriction(mu_g);
 #endif
 
+  // ---------------------------------------------
   // Create a mixture entirely made out of spheres
+  // ---------------------------------------------
+
+  // Create the particle generator with a mixture of 100% spheres
   utils::Generator gen(system);
 
   utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
@@ -205,218 +393,111 @@ int CreateObjects(ChSystemParallel* system)
   m1->setDefaultDensity(rho_g);
   m1->setDefaultSize(r_g);
 
+  // Ensure that all generated particle bodies will have positive IDs.
   gen.setBodyIdentifier(Id_g);
 
-  double r = 1.01 * r_g;
+  // ----------------------
+  // Generate the particles
+  // ----------------------
 
-  for (int i = 0; i < numLayers; i++) {
-    double center = r + layerHeight / 2 + i * (2 * r + layerHeight);
-    gen.createObjectsBox(utils::POISSON_DISK,
-                         2 * r,
-                         ChVector<>(0, 0, center),
-                         ChVector<>(hDimX - r, hDimY - r, layerHeight/2));
-    cout << "Layer " << i << "  total bodies: " << gen.getTotalNumBodies() << endl;
+  double r = 1.01 * r_g;
+  ChVector<> hdims(hdimX - r, hdimY - r, 0);
+  ChVector<> center(0, 0, 2 * r);
+
+  while (center.z < 6 * hdimZ)
+  {
+    gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
+    center.z += 2 * r;
   }
 
-  // Create the containing bin
-#ifdef DEM
-  ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
-  mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
-  mat_c->SetYoungModulus(Y_c);
-  mat_c->SetFriction(mu_c);
-  mat_c->SetDissipationFactor(alpha_c);
-
-  utils::CreateBoxContainerDEM(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness/2);
-#else
-  ChSharedPtr<ChMaterialSurface> mat_c(new ChMaterialSurface);
-  mat_c->SetFriction(mu_c);
-
-  utils::CreateBoxContainerDVI(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness/2);
-#endif
-
+  // Return the number of generated particles.
   return gen.getTotalNumBodies();
 }
 
 
-// -----------------------------------------------------------------------------
-// Create the load body such that its bottom point is at the specified height
-// and its downward initial velocity has the specified magnitude.
-// -----------------------------------------------------------------------------
-ChBody* CreateLoadBody(ChSystemParallel* system, double z)
+// =============================================================================
+// Create a single large sphere (for use in TESTING)
+// =============================================================================
+ChSharedPtr<ChBody> CreateBall(ChSystemParallel* system)
 {
-  // Create a material for the body
+  // ------------------------------
+  // Create a material for the ball
+  // ------------------------------
+
 #ifdef DEM
-  ChSharedPtr<ChMaterialSurfaceDEM> mat_b;
-  mat_b = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
-  mat_b->SetYoungModulus(Y_b);
-  mat_b->SetFriction(mu_b);
-  mat_b->SetDissipationFactor(alpha_b);
+  ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
+  mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+  mat_g->SetYoungModulus(Y_g);
+  mat_g->SetFriction(mu_g);
+  mat_g->SetDissipationFactor(alpha_g);
 #else
-  ChSharedPtr<ChMaterialSurface> mat_b(new ChMaterialSurface);
-  mat_b->SetFriction(mu_b);
+  ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
+  mat_g->SetFriction(mu_g);
 #endif
 
-  // Create the load body
+  // ---------------
+  // Create the ball
+  // ---------------
+
 #ifdef DEM
-#ifdef BULLET
-  ChSharedBodyDEMPtr loadBody(new ChBodyDEM);
+  ChSharedBodyDEMPtr ball(new ChBodyDEM(new ChCollisionModelParallel));
+  ball->SetMaterialSurfaceDEM(mat_g);
 #else
-  ChSharedBodyDEMPtr loadBody(new ChBodyDEM(new ChCollisionModelParallel));
-#endif
-  loadBody->SetMaterialSurfaceDEM(mat_b);
-#else
-#ifdef BULLET
-  ChSharedBodyPtr loadBody(new ChBody);
-#else
-  ChSharedBodyPtr loadBody(new ChBody(new ChCollisionModelParallel));
-#endif
-  loadBody->SetMaterialSurface(mat_b);
+  ChSharedBodyPtr ball(new ChBody(new ChCollisionModelParallel));
+  ball->SetMaterialSurface(mat_g);
 #endif
 
-  loadBody->SetIdentifier(Id_b);
-  loadBody->SetMass(mass_b);
-  loadBody->SetInertiaXX(inertia_b);
-  loadBody->SetPos(ChVector<>(0, 0, z + 2*r_g + hDimZ_plate));
-  loadBody->SetRot(ChQuaternion<>(1, 0, 0, 0));
-  loadBody->SetCollide(true);
-  loadBody->SetBodyFixed(false);
+  ball->SetIdentifier(Id_ball);
+  ball->SetMass(mass_ball);
+  ball->SetPos(ChVector<>(0, 0, 1.01 * radius_ball));
+  ball->SetCollide(true);
+  ball->SetBodyFixed(false);
 
-  loadBody->GetCollisionModel()->ClearModel();
-  utils::AddBoxGeometry(loadBody.get_ptr(), ChVector<>(hDimX_plate, hDimY_plate, hDimZ_plate));
-  loadBody->GetCollisionModel()->BuildModel();
+  ball->GetCollisionModel()->ClearModel();
+  utils::AddSphereGeometry(ball.get_ptr(), radius_ball);
+  ball->GetCollisionModel()->BuildModel();
 
-  system->AddBody(loadBody);
+  system->AddBody(ball);
 
-  return loadBody.get_ptr();
-}
-
-void AddWall(ChBody*              body,
-             const ChVector<>&    loc,
-             const ChVector<>&    hdim)
-{
-  // Append to collision geometry
-  body->GetCollisionModel()->AddBox(hdim.x, hdim.y, hdim.z, loc);
-
-  // Append to assets
-  ChSharedPtr<ChBoxShape> box_shape(new ChBoxShape);
-  box_shape->Pos = loc;
-  box_shape->Rot = ChQuaternion<>(1,0,0,0);
-  box_shape->GetBoxGeometry().Size = hdim;
-
-  body->GetAssets().push_back(box_shape);
-}
-
-ChSharedPtr<ChBody> CreateShearPlate(ChSystemParallel* system)
-{
-  // Create a material for the plate
-#ifdef DEM
-  ChSharedPtr<ChMaterialSurfaceDEM> mat_b;
-  mat_b = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
-  mat_b->SetYoungModulus(1e8f);
-  mat_b->SetFriction(mu_c);
-  mat_b->SetDissipationFactor(0.1f);
-#else
-  ChSharedPtr<ChMaterialSurface> mat_b(new ChMaterialSurface);
-  mat_b->SetFriction(mu_c);
-#endif
-
-  // Create the body
-#ifdef DEM
-#ifdef BULLET
-  ChSharedBodyDEMPtr plate(new ChBodyDEM);
-#else
-  ChSharedBodyDEMPtr plate(new ChBodyDEM(new ChCollisionModelParallel));
-#endif
-  plate->SetMaterialSurfaceDEM(mat_b);
-#else
-#ifdef BULLET
-  ChSharedBodyPtr plate(new ChBody);
-#else
-  ChSharedBodyPtr plate(new ChBody(new ChCollisionModelParallel));
-#endif
-  plate->SetMaterialSurface(mat_b);
-#endif
-
-  plate->SetIdentifier(-11);
-  plate->SetMass(1);
-  plate->SetInertiaXX(inertia_b);
-  plate->SetPos(ChVector<>(0, 0, 2*hDimZ));
-  plate->SetRot(ChQuaternion<>(1, 0, 0, 0));
-  plate->SetPos_dt(ChVector<>(0, 0, 0));
-  plate->SetCollide(true);
-  plate->SetBodyFixed(true);
-
-  plate->GetCollisionModel()->ClearModel();
-  AddWall(plate.get_ptr(), ChVector<>(-hDimX-hThickness, 0, 5*hDimZ), ChVector<>(hThickness, hDimY, 5*hDimZ));
-  AddWall(plate.get_ptr(), ChVector<>( hDimX+hThickness, 0, 5*hDimZ), ChVector<>(hThickness, hDimY, 5*hDimZ));
-  AddWall(plate.get_ptr(), ChVector<>(0, -hDimY-hThickness, 5*hDimZ), ChVector<>(hDimX, hThickness, 5*hDimZ));
-  AddWall(plate.get_ptr(), ChVector<>(0,  hDimY+hThickness, 5*hDimZ), ChVector<>(hDimX, hThickness, 5*hDimZ));
-
-  plate->GetCollisionModel()->BuildModel();
-
-  system->AddBody(plate);
-
-  return plate;
+  // Return a pointer to the ball body
+  return ball;
 }
 
 
-// -----------------------------------------------------------------------------
-// Find the height of the highest and lowest, respectively, sphere in the
-// granular mix, respectively.  We only look at bodies whith stricty positive
-// identifiers (to exclude the containing bin).
-// -----------------------------------------------------------------------------
-double FindHighest(ChSystem* sys)
+// =============================================================================
+// Find the height of the highest and lowest sphere in the granular mix. We only
+// look at bodies whith positive identifiers (to exclude all other bodies).
+// =============================================================================
+
+void FindHeightRange(ChSystemParallel* sys, double& lowest, double& highest)
 {
-  double highest = 0;
+  highest = -1000;
+  lowest = 1000;
   for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
     ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
-    if (body->GetIdentifier() > 0 && body->GetPos().z > highest)
-      if ((body->GetPos().x <= hDimX_plate || body->GetPos().x >= -hDimX_plate) && (body->GetPos().y <= hDimY_plate || body->GetPos().y >= -hDimY_plate))
-      {
-      highest = body->GetPos().z;
-      }
+    if (body->GetIdentifier() <= 0)
+      continue;
+    double h = body->GetPos().z;
+    if (h < lowest)       lowest = h;
+    else if (h > highest) highest = h;
   }
-  return highest;
-}
-
-double FindLowest(ChSystem* sys)
-{
-  double lowest = 1000;
-  for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
-    if (body->GetIdentifier() > 0 && body->GetPos().z < lowest)
-      lowest = body->GetPos().z;
-  }
-  return lowest;
 }
 
 
-// -----------------------------------------------------------------------------
-// Return true if all bodies in the granular mix have a linear velocity whose
-// magnitude is below the specified value.
-// -----------------------------------------------------------------------------
-bool CheckSettled(ChSystem* sys, double threshold)
-{
-  double t2 = threshold * threshold;
-
-  for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
-    if (body->GetIdentifier() > 0) {
-      double vel2 = body->GetPos_dt().Length2();
-      if (vel2 > t2)
-        return false;
-    }
-  }
-
-  return true;
-}
+// =============================================================================
+//
+//// TODO:  cannot do this with DEM!!!!!
+//
+// =============================================================================
 
 int setBulkDensity(ChSystem* sys, double bulkDensity)
 {
-  double normalPlateHeight = sys->Get_bodylist()->at(1)->GetPos().z - hDimZ_plate;
+  double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
+
+  double normalPlateHeight = sys->Get_bodylist()->at(1)->GetPos().z - hdimZ;
   double bottomHeight = 0;
   int numBodies = sys->Get_bodylist()->size();
-  double boxVolume = hDimX_plate * 2 * hDimX_plate * 2 * (normalPlateHeight - bottomHeight);
+  double boxVolume = hdimX * 2 * hdimX * 2 * (normalPlateHeight - bottomHeight);
   double granularVolume = (numBodies - 3)*vol_g;
   double reqDensity = bulkDensity*boxVolume / granularVolume;
   for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
@@ -425,6 +506,7 @@ int setBulkDensity(ChSystem* sys, double bulkDensity)
       body->SetMass(reqDensity*vol_g);
     }
   }
+
   cout << "N Bodies: " << numBodies << endl;
   cout << "Box Volume: " << boxVolume << endl;
   cout << "Granular Volume: " << granularVolume << endl;
@@ -434,7 +516,8 @@ int setBulkDensity(ChSystem* sys, double bulkDensity)
 }
 
 
-// -----------------------------------------------------------------------------
+// =============================================================================
+
 int main(int argc, char* argv[])
 {
   // Create output directories.
@@ -447,7 +530,10 @@ int main(int argc, char* argv[])
     return 1;
   }
 
+  // -------------
   // Create system
+  // -------------
+
 #ifdef DEM
   cout << "Create DEM system" << endl;
   ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
@@ -473,12 +559,6 @@ int main(int argc, char* argv[])
   msystem->SetTolSpeeds(tolerance);
   msystem->SetStep(time_step);
 
-#ifdef BULLET
-  ChCollisionSystemBulletParallel * bullet_coll = new ChCollisionSystemBulletParallel();
-  bullet_coll->Clear();
-  msystem->ChangeCollisionSystem(bullet_coll);
-#endif
-
   msystem->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
   msystem->GetSettings()->solver.tolerance = tolerance;
 
@@ -501,79 +581,115 @@ int main(int argc, char* argv[])
   msystem->GetSettings()->collision.min_body_per_bin = 50;
   msystem->GetSettings()->collision.max_body_per_bin = 100;
 
+  // --------------
+  // Problem set up
+  // --------------
+
   // Depending on problem type:
   // - Select end simulation time
   // - Select output FPS
-  // - Create granular material and container
-  // - Create falling ball
+  // - Create / load objects
+
   double time_end;
   int out_fps;
-  ChBody* loadBody;
-  ChSharedPtr<ChBody> shearPlate;
-  ChLinkLockLock* translational;
+  ChSharedPtr<ChBody> shearBox;
+  ChSharedPtr<ChBody> loadPlate;
+  ChSharedPtr<ChLinkLinActuator> actuator;
 
-  if (problem == SETTLING) {
+  switch (problem) {
+  case SETTLING:
+  {
     time_end = time_settling_max;
     out_fps = out_fps_settling;
 
-    // Create the shear plate
-    shearPlate = CreateShearPlate(msystem);
-
-    // Create the load body just above the granular material
-    double z = scaleCon * hDimZ_plate;
-    cout << "Create load body with center at  " << z + 2*r_g + hDimZ_plate << endl;
-    loadBody = CreateLoadBody(msystem, z);
+    shearBox = CreateContainerAndBox(msystem);
 
     // Create granular material and containing bin
-    cout << "Create granular material" << endl;
-    CreateObjects(msystem);
+    cout << "Create granular material...  ";
+    int num_particles = CreateObjects(msystem);
+    cout << num_particles << " particles" << endl;
 
-  } else {
+    break;
+  }
+
+  case PRESSING:
+  {
+    time_end = time_pressing_max;
+    out_fps = out_fps_pressing;
+
+    // Create bodies (container and shear box) from checkpoint file.
+    cout << "Read checkpoint data from " << settled_ckpnt_file;
+    utils::ReadCheckpoint(msystem, settled_ckpnt_file);
+    cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
+
+    // Create the load plate just above the granular material.
+    double highest, lowest;
+    FindHeightRange(msystem, lowest, highest);
+    loadPlate = CreateLoadPlate(msystem, highest + 2 * r_g);
+
+    break;
+  }
+
+  case SHEARING:
+  {
     time_end = time_shearing;
     out_fps = out_fps_shearing;
 
-    // Create the granular material and the container from the checkpoint file.
-    cout << "Read checkpoint data from " << checkpoint_file;
-    utils::ReadCheckpoint(msystem, checkpoint_file);
+    // Create bodies (container, shear box, and plate) from checkpoint file.
+    cout << "Read checkpoint data from " << pressed_ckpnt_file;
+    utils::ReadCheckpoint(msystem, pressed_ckpnt_file);
     cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
 
-    shearPlate = (ChSharedPtr<ChBody>) msystem->Get_bodylist()->at(0);
-    loadBody = (ChBody*) msystem->Get_bodylist()->at(1);
-    loadBody->SetBodyFixed(false);
-    setBulkDensity(msystem, desiredBulkDensity);
+    // Fix the loadPlate and release the shearBox (if using an actuator)
+    loadPlate = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
+    shearBox = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(1));
+    loadPlate->SetBodyFixed(true);
+    shearBox->SetBodyFixed(!use_actuator);
 
-    if(kinematic_toggle)
-    {
-#ifdef BULLET
-      ChSharedPtr<ChBody> ground(new ChBody());
-#else
-      ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel));
-#endif
-      ground->SetBodyFixed(true);
-      msystem->AddBody(ground);
+    // Grab the pointer to the actuator
+    if (use_actuator)
+      actuator = msystem->SearchLink("actuator").StaticCastTo<ChLinkLinActuator>();
 
-      ChVector<> topCM = shearPlate->GetPos();
-      shearPlate->SetBodyFixed(false);
-      translational = new ChLinkLockLock();
-      translational->Initialize(ground, shearPlate, ChCoordsys<>(topCM, QUNIT));
-      msystem->AddLink(translational);
+    //setBulkDensity(msystem, desiredBulkDensity);
 
-      // apply motion
-      ChFunction_Ramp* motionFunc = new ChFunction_Ramp(0, desiredVelocity);
-      translational->SetMotion_X(motionFunc);
-    }
+    break;
   }
 
-  // Number of steps
+  case TESTING:
+  {
+    time_end = 2;
+    out_fps = 60;
+
+    // Create container and shear box.
+    shearBox = CreateContainerAndBox(msystem);
+
+    // Create the test ball
+    CreateBall(msystem);
+
+    // Create the load plate just above the ball
+    loadPlate = CreateLoadPlate(msystem, 2.1 * radius_ball);
+
+    // Release the shear box (if using an actuator)
+    shearBox->SetBodyFixed(!use_actuator);
+
+    // Grab the pointer to the actuator
+    if (use_actuator)
+      actuator = msystem->SearchLink("actuator").StaticCastTo<ChLinkLinActuator>();
+
+    break;
+  }
+
+  }
+
+  // ----------------------
+  // Perform the simulation
+  // ----------------------
+
+  // Set number of simulation steps and output frequency
   int num_steps = std::ceil(time_end / time_step);
   int out_steps = std::ceil((1.0 / time_step) / out_fps);
 
-  // Zero velocity level for settling check
-  // (fraction of a grain radius per second)
-  double zero_v = 0.1 * r_g;
-
-
-  // Perform the simulation
+  // Initialize counters and output files.
   double time = 0;
   int sim_frame = 0;
   int out_frame = 0;
@@ -589,8 +705,18 @@ int main(int argc, char* argv[])
   gl_window.SetCamera(ChVector<>(0,-10,0), ChVector<>(0,0,0),ChVector<>(0,0,1));
 #endif
 
-
+  // Loop until reaching the end time...
   while (time < time_end) {
+
+    // Current position and velocity of the shear box
+    const ChVector<>& pos_old = shearBox->GetPos();
+    const ChVector<>& vel_old = shearBox->GetPos_dt();
+
+    // Calculate running averages for particle min/max heights
+    //// TODO
+    double highest, lowest;
+    FindHeightRange(msystem, lowest, highest);
+
     if (sim_frame == next_out_frame) {
       char filename[100];
       sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
@@ -599,39 +725,34 @@ int main(int argc, char* argv[])
       cout << "------------ Output frame:   " << out_frame << endl;
       cout << "             Sim frame:      " << sim_frame << endl;
       cout << "             Time:           " << time << endl;
-      cout << "             Lowest point:   " << FindLowest(msystem) << endl;
+      cout << "             Shear box pos:  " << pos_old.x << endl;
+      cout << "             Lowest point:   " << lowest << endl;
+      cout << "             Highest point:  " << highest << endl;
       cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
       cout << "             Execution time: " << exec_time << endl;
 
       sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
 
       // Create a checkpoint from the current state.
-      if (problem == SETTLING) {
+      if (problem == SETTLING || problem == PRESSING) {
         cout << "             Write checkpoint data " << flush;
-        utils::WriteCheckpoint(msystem, checkpoint_file);
+        if (problem == SETTLING) utils::WriteCheckpoint(msystem, settled_ckpnt_file);
+        else                     utils::WriteCheckpoint(msystem, pressed_ckpnt_file);
         cout << msystem->Get_bodylist()->size() << " bodies" << endl;
       }
 
+      // Increment counters
       out_frame++;
       next_out_frame += out_steps;
       num_contacts = 0;
     }
 
-    if (problem == SETTLING && time > time_settling_min && CheckSettled(msystem, zero_v)) {
-      cout << "Granular material settled...  time = " << time << endl;
-      break;
-    }
+    ////if (problem == SETTLING && time > time_settling_min && CheckSettled(msystem, zero_v)) {
+    ////  cout << "Granular material settled...  time = " << time << endl;
+    ////  break;
+    ////}
 
-    double vx_old = 0;
-    double vx_new = 0;
-    double px_old = 0;
-    double px_new = 0;
-    if (problem == SHEARING) {
-      vx_old = shearPlate->GetPos_dt().x;
-      px_old = shearPlate->GetPos().x;
-      shearPlate->SetBodyFixed(false);
-    }
-
+    // Advance simulation time
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
     if (gl_window.Active()) {
       gl_window.DoStepDynamics(time_step);
@@ -641,30 +762,28 @@ int main(int argc, char* argv[])
     msystem->DoStepDynamics(time_step);
 #endif
 
-    if (problem == SHEARING) {
-      vx_new = shearPlate->GetPos_dt().x;
-      px_new = shearPlate->GetPos().x;
+    if (problem == SHEARING || problem == TESTING) {
+      // Calculate desired position of shear box at new time
+      double xpos_new = pos_old.x + desiredVelocity * time_step;
 
-      double FconX = (vx_new - vx_old) / time_step;
+      // Get/estimate the current reaction force and impose shear box position
+      double cnstr_force = 0;
+      if (use_actuator) {
+        cnstr_force = actuator->Get_react_force().x;
+        if (ChSharedPtr<ChFunction_Const> fun = actuator->Get_dist_funct().DynamicCastTo<ChFunction_Const>())
+          fun->Set_yconst(xpos_new);
+      }
+      else {
+        cnstr_force = (shearBox->GetPos_dt().x - vel_old.x) / time_step;
+        shearBox->SetPos(ChVector<>(xpos_new, pos_old.y, pos_old.z));
+        shearBox->SetPos_dt(ChVector<>(desiredVelocity, 0, 0));
+      }
 
-      if (kinematic_toggle)
-      {
-        FconX = translational->Get_react_force().x;
-      }
-      else
-      {
-        shearPlate->SetBodyFixed(true);
-        vx_new = desiredVelocity;
-        px_new = px_old + vx_new*time_step;
-        shearPlate->SetPos(ChVector<>(px_new, 0, 2 * hDimZ));
-        shearPlate->SetPos_dt(ChVector<>(vx_new, 0, 0));
-        shearPlate->SetRot(ChQuaternion<>(1, 0, 0, 0));
-        shearPlate->SetRot_dt(ChQuaternion<>(1, 0, 0, 0));
-      }
-      shearStream << time << ", " << px_new << ", " << FconX << ", " << loadBody->GetPos().z << ", \n";
-      std::cout << "Pos: " << px_new << " FconX: " << FconX << endl;
+      ////shearStream << time << ", " << xpos_new << ", " << cnstr_force << ", \n";
+      ////cout << "X pos: " << xpos_new << " X react: " << cnstr_force << endl;
     }
 
+    // Increment counters
     time += time_step;
     sim_frame++;
     exec_time += msystem->GetTimerStep();
@@ -675,17 +794,21 @@ int main(int argc, char* argv[])
       msystem->PrintStepStats();
   }
 
+  // ----------------
+  // Final processing
+  // ----------------
+
   // Create a checkpoint from the last state
-  if (problem == SETTLING) {
-    cout << "Write checkpoint data to " << checkpoint_file;
-    utils::WriteCheckpoint(msystem, checkpoint_file);
-    cout << "  done.  Wrote " << msystem->Get_bodylist()->size() << " bodies." << endl;
+  if (problem == SETTLING || problem == PRESSING) {
+    cout << "             Write checkpoint data " << flush;
+    if (problem == SETTLING) utils::WriteCheckpoint(msystem, settled_ckpnt_file);
+    else                     utils::WriteCheckpoint(msystem, pressed_ckpnt_file);
+    cout << msystem->Get_bodylist()->size() << " bodies" << endl;
   }
 
   // Final stats
   cout << "==================================" << endl;
   cout << "Number of bodies:  " << msystem->Get_bodylist()->size() << endl;
-  cout << "Lowest position:   " << FindLowest(msystem) << endl;
   cout << "Simulation time:   " << exec_time << endl;
   cout << "Number of threads: " << threads << endl;
 
