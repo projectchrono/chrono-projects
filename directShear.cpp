@@ -123,9 +123,9 @@ double tolerance = 1e-4;
 
 // Output
 #ifdef DEM
-const std::string out_dir = "../DIRECTSHEAR_DEM/";
+const std::string out_dir = "../DIRECTSHEAR_DEM";
 #else
-const std::string out_dir = "../DIRECTSHEAR_DVI/";
+const std::string out_dir = "../DIRECTSHEAR_DVI";
 #endif
 
 const std::string pov_dir = out_dir + "/POVRAY";
@@ -767,7 +767,7 @@ int main(int argc, char* argv[])
       sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
       utils::WriteShapesPovray(msystem, filename, false);
 
-      cout << "------------ Output frame:   " << out_frame << endl;
+      cout << "------------ Output frame:   " << out_frame + 1 << endl;
       cout << "             Sim frame:      " << sim_frame << endl;
       cout << "             Time:           " << time << endl;
       cout << "             Shear box pos:  " << pos_old.x << endl;
