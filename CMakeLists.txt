@@ -65,6 +65,7 @@ SET(DEMOS
     demo_objectdrop
     rad_im_schmutz
     directShear
+    pressureSinkage
     test_mesh
     test_constraints
     test_utils
