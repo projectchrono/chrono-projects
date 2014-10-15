@@ -35,6 +35,9 @@
 #include <sstream>
 #include <cmath>
 
+#include "core/ChFileutils.h"
+#include "core/ChStream.h"
+
 #include "chrono_parallel/ChSystemParallel.h"
 #include "chrono_parallel/ChLcpSystemDescriptorParallel.h"
 
@@ -42,7 +45,9 @@
 #include "chrono_utils/ChUtilsGenerators.h"
 #include "chrono_utils/ChUtilsInputOutput.h"
 
+// Control use of OpenGL run-time rendering
 //#undef CHRONO_PARALLEL_HAS_OPENGL
+
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
@@ -95,17 +100,22 @@ bool thread_tuning = false;
 // Perform shearing action via a linear actuator or kinematically?
 bool use_actuator = true;
 
+// Save PovRay post-processing data?
+bool write_povray_data = true;
+
 // Simulation times
 double time_settling_min = 0.1;
-double time_settling_max = 0.5;
+double time_settling_max = 1.0;
 
 double time_pressing_min = 0.1;
-double time_pressing_max = 0.5;
+double time_pressing_max = 1.0;
 
-double time_shearing = 2;  //0.06;
+double time_shearing = 10;
 
-// Stopping criteria for settling (fraction of particle radius)
-double settling_tol = 0.1;
+double time_testing = 2;
+
+// Stopping criteria for settling (as fraction of particle radius)
+double settling_tol = 0.2;
 
 // Solver settings
 #ifdef DEM
@@ -134,11 +144,17 @@ const std::string stats_file = out_dir + "/stats.dat";
 const std::string settled_ckpnt_file = out_dir + "/settled.dat";
 const std::string pressed_ckpnt_file = out_dir + "/pressed.dat";
 
+// Frequency for visualization output
 int out_fps_settling = 120;
 int out_fps_pressing = 120;
-int out_fps_shearing = 120;
+int out_fps_shearing = 60;
+int out_fps_testing = 60;
 
-int timing_frame = 10;   // output detailed step timing at this frame
+// Frequency for writing results to output file (SHEARING only)
+int write_fps = 1000;
+
+// Simulation frame at which detailed timing information is printed
+int timing_frame = -1;
 
 // Gravitational acceleration [cm/s^2]
 double gravity = 981;
@@ -163,7 +179,7 @@ float      mu_walls = 0.3f;
 double     normalPressure = Pa2cgs * 16888.1;  // 16,888.1 Pa // 44,127.0 Pa// 71,365.9 Pa
 
 // Desired shearing velocity [cm/s]
-double     desiredVelocity = 0.5;  // 0.066;
+double     desiredVelocity = 0.066;
 
 // Parameters for the granular material
 int        Id_g = 1;                     // start body ID for particles
@@ -172,7 +188,7 @@ double     rho_g = 2.500;                // [g/cm^3] density of granules
 
 double     desiredBulkDensity = 1.3894;  // [g/cm^3] desired bulk density
 
-float      Y_g = Pa2cgs * 2e6;
+float      Y_g = Pa2cgs * 5e7;
 float      alpha_g = alpha2cgs * 0.4;
 float      mu_g = 0.5f;
 
@@ -310,12 +326,15 @@ void ConnectShearBox(ChSystemParallel* system, ChSharedPtr<ChBody> ground, ChSha
   prismatic->Initialize(ground, box, ChCoordsys<>(ChVector<>(0, 0, 2 * hdimZ), Q_from_AngY(CH_C_PI_2)));
   system->AddLink(prismatic);
 
+  ChSharedPtr<ChFunction_Ramp> actuator_fun(new ChFunction_Ramp(0.0, desiredVelocity));
+
   ChSharedPtr<ChLinkLinActuator> actuator(new ChLinkLinActuator);
   ChVector<> pt1(0, 0, 2 * hdimZ);
   ChVector<> pt2(1, 0, 2 * hdimZ);
-  actuator->SetName("actuator");
   actuator->Initialize(ground, box, false, ChCoordsys<>(pt1, QUNIT), ChCoordsys<>(pt2, QUNIT));
+  actuator->SetName("actuator");
   actuator->Set_lin_offset(1);
+  actuator->Set_dist_funct(actuator_fun);
   system->AddLink(actuator);
 }
 
@@ -676,8 +695,11 @@ int main(int argc, char* argv[])
 
   case TESTING:
   {
-    time_end = 2;
-    out_fps = 60;
+    time_end = time_testing;
+    out_fps = out_fps_testing;
+
+    // For TESTING only, increse shearing velocity.
+    desiredVelocity = 0.5;
 
     // Create the mechanism bodies (all fixed).
     CreateMechanismBodies(msystem);
@@ -722,9 +744,10 @@ int main(int argc, char* argv[])
   // Perform the simulation
   // ----------------------
 
-  // Set number of simulation steps and output frequency
-  int num_steps = std::ceil(time_end / time_step);
-  int out_steps = std::ceil((1.0 / time_step) / out_fps);
+  // Set number of simulation steps and steps between successive output
+  int num_steps   = (int) std::ceil(time_end / time_step);
+  int out_steps   = (int) std::ceil((1.0 / time_step) / out_fps);
+  int write_steps = (int) std::ceil((1.0 / time_step) / write_fps);
 
   // Initialize counters
   double time = 0;
@@ -740,7 +763,7 @@ int main(int argc, char* argv[])
   std::valarray<double> hdata(0.0, buffer_size);
 
   // Create output files
-  ChStreamOutAsciiFile sfile(stats_file.c_str());
+  ChStreamOutAsciiFile statsStream(stats_file.c_str());
   ChStreamOutAsciiFile shearStream(shear_file.c_str());
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
@@ -754,19 +777,16 @@ int main(int argc, char* argv[])
   while (time < time_end) {
 
     // Current position and velocity of the shear box
-    const ChVector<>& pos_old = shearBox->GetPos();
-    const ChVector<>& vel_old = shearBox->GetPos_dt();
+    ChVector<> pos_old = shearBox->GetPos();
+    ChVector<> vel_old = shearBox->GetPos_dt();
 
     // Calculate minimum and maximum particle heights
     double highest, lowest;
     FindHeightRange(msystem, lowest, highest);
 
     // If at an output frame, write PovRay file and print info
-    if (sim_frame == next_out_frame) {
-      char filename[100];
-      sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
-      utils::WriteShapesPovray(msystem, filename, false);
-
+    if (sim_frame == next_out_frame)
+    {
       cout << "------------ Output frame:   " << out_frame + 1 << endl;
       cout << "             Sim frame:      " << sim_frame << endl;
       cout << "             Time:           " << time << endl;
@@ -776,7 +796,15 @@ int main(int argc, char* argv[])
       cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
       cout << "             Execution time: " << exec_time << endl;
 
-      sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
+      statsStream << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
+      statsStream.GetFstream().flush();
+
+      // Save PovRay post-processing data.
+      if (write_povray_data) {
+        char filename[100];
+        sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
+        utils::WriteShapesPovray(msystem, filename, false);
+      }
 
       // Create a checkpoint from the current state.
       if (problem == SETTLING || problem == PRESSING) {
@@ -797,7 +825,7 @@ int main(int argc, char* argv[])
     {
       // Store maximum particle height in circular buffer
       hdata[sim_frame % buffer_size] = highest;
-      
+
       // Check variance of data in circular buffer
       if (time > time_min)
       {
@@ -825,24 +853,23 @@ int main(int argc, char* argv[])
 #endif
 
     if (problem == SHEARING || problem == TESTING) {
-      // Calculate desired position of shear box at new time
-      double xpos_new = pos_old.x + desiredVelocity * time_step;
 
-      // Get/estimate the current reaction force and impose shear box position
+      // Get the current reaction force or impose shear box position
       double cnstr_force = 0;
       if (use_actuator) {
         cnstr_force = actuator->Get_react_force().x;
-        if (ChSharedPtr<ChFunction_Const> fun = actuator->Get_dist_funct().DynamicCastTo<ChFunction_Const>())
-          fun->Set_yconst(xpos_new);
-      }
-      else {
-        cnstr_force = (shearBox->GetPos_dt().x - vel_old.x) / time_step;
+      } else {
+        double xpos_new = pos_old.x + desiredVelocity * time_step;
+        ////cnstr_force = (shearBox->GetPos_dt().x - vel_old.x) / time_step;
         shearBox->SetPos(ChVector<>(xpos_new, pos_old.y, pos_old.z));
         shearBox->SetPos_dt(ChVector<>(desiredVelocity, 0, 0));
       }
 
-      ////shearStream << time << ", " << xpos_new << ", " << cnstr_force << ", \n";
-      ////cout << "X pos: " << xpos_new << " X react: " << cnstr_force << endl;
+      if (sim_frame % write_steps == 0) {
+        ////cout << "X pos: " << xpos_new << " X react: " << cnstr_force << endl;
+        shearStream << time << ", " << shearBox->GetPos().x << ", " << cnstr_force << ", \n";
+        shearStream.GetFstream().flush();
+      }
     }
 
     // Increment counters
