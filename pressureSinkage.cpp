@@ -673,8 +673,8 @@ int main(int argc, char* argv[])
   while (time < time_end) {
 
     // Current position and velocity of the shear box
-    ChVector<>& pos_old = loadPlate->GetPos();
-    ChVector<>& vel_old = loadPlate->GetPos_dt();
+    ChVector<> pos_old = loadPlate->GetPos();
+    ChVector<> vel_old = loadPlate->GetPos_dt();
 
     // Calculate minimum and maximum particle heights
     double highest, lowest;
