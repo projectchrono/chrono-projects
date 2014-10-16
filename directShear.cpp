@@ -324,6 +324,7 @@ void ConnectShearBox(ChSystemParallel* system, ChSharedPtr<ChBody> ground, ChSha
 {
   ChSharedPtr<ChLinkLockPrismatic> prismatic(new ChLinkLockPrismatic);
   prismatic->Initialize(ground, box, ChCoordsys<>(ChVector<>(0, 0, 2 * hdimZ), Q_from_AngY(CH_C_PI_2)));
+  prismatic->SetName("prismatic_box_ground");
   system->AddLink(prismatic);
 
   ChSharedPtr<ChFunction_Ramp> actuator_fun(new ChFunction_Ramp(0.0, desiredVelocity));
@@ -348,6 +349,7 @@ void ConnectLoadPlate(ChSystemParallel* system, ChSharedPtr<ChBody> box, ChShare
 {
   ChSharedPtr<ChLinkLockPrismatic> prismatic(new ChLinkLockPrismatic);
   prismatic->Initialize(box, plate, ChCoordsys<>(ChVector<>(0, 0, 2 * hdimZ), QUNIT));
+  prismatic->SetName("prismatic_plate_box");
   system->AddLink(prismatic);
 }
 
@@ -593,6 +595,8 @@ int main(int argc, char* argv[])
   ChSharedPtr<ChBody> ground;
   ChSharedPtr<ChBody> shearBox;
   ChSharedPtr<ChBody> loadPlate;
+  ChSharedPtr<ChLinkLockPrismatic> prismatic_box_ground;
+  ChSharedPtr<ChLinkLockPrismatic> prismatic_plate_box;
   ChSharedPtr<ChLinkLinActuator> actuator;
 
   switch (problem) {
@@ -648,6 +652,7 @@ int main(int argc, char* argv[])
 
     // Connect the load plate to the shear box.
     ConnectLoadPlate(msystem, shearBox, loadPlate);
+    prismatic_plate_box = msystem->SearchLink("prismatic_plate_box").StaticCastTo<ChLinkLockPrismatic>();
 
     // Release the load plate.
     loadPlate->SetBodyFixed(false);
@@ -676,6 +681,7 @@ int main(int argc, char* argv[])
     // If using an actuator, connect the shear box and get a handle to the actuator.
     if (use_actuator) {
       ConnectShearBox(msystem, ground, shearBox);
+      prismatic_box_ground = msystem->SearchLink("prismatic_box_ground").StaticCastTo<ChLinkLockPrismatic>();
       actuator = msystem->SearchLink("actuator").StaticCastTo<ChLinkLinActuator>();
     }
 
@@ -684,6 +690,7 @@ int main(int argc, char* argv[])
 
     // Connect the load plate to the shear box.
     ConnectLoadPlate(msystem, shearBox, loadPlate);
+    prismatic_plate_box = msystem->SearchLink("prismatic_plate_box").StaticCastTo<ChLinkLockPrismatic>();
 
     // Release the load plate.
     loadPlate->SetBodyFixed(false);
@@ -723,6 +730,7 @@ int main(int argc, char* argv[])
     // If using an actuator, connect the shear box and get a handle to the actuator.
     if (use_actuator) {
       ConnectShearBox(msystem, ground, shearBox);
+      prismatic_box_ground = msystem->SearchLink("prismatic_box_ground").StaticCastTo<ChLinkLockPrismatic>();
       actuator = msystem->SearchLink("actuator").StaticCastTo<ChLinkLinActuator>();
     }
 
@@ -731,6 +739,7 @@ int main(int argc, char* argv[])
 
     // Connect the load plate to the shear box.
     ConnectLoadPlate(msystem, shearBox, loadPlate);
+    prismatic_plate_box = msystem->SearchLink("prismatic_plate_box").StaticCastTo<ChLinkLockPrismatic>();
 
     // Release the load plate.
     loadPlate->SetBodyFixed(false);
@@ -756,6 +765,7 @@ int main(int argc, char* argv[])
   int next_out_frame = 0;
   double exec_time = 0;
   int num_contacts = 0;
+  double max_cnstr_viol = 0;
 
   // Circular buffer with highest particle location
   // (only used for SETTLING or PRESSING)
@@ -794,6 +804,7 @@ int main(int argc, char* argv[])
       cout << "             Lowest point:   " << lowest << endl;
       cout << "             Highest point:  " << highest << endl;
       cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
+      cout << "             Max. constraint " << max_cnstr_viol << endl;
       cout << "             Execution time: " << exec_time << endl;
 
       statsStream << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
@@ -818,6 +829,7 @@ int main(int argc, char* argv[])
       out_frame++;
       next_out_frame += out_steps;
       num_contacts = 0;
+      max_cnstr_viol = 0;
     }
 
     // Check for early termination of a settling phase.
@@ -870,6 +882,22 @@ int main(int argc, char* argv[])
         shearStream << time << ", " << shearBox->GetPos().x << ", " << cnstr_force << ", \n";
         shearStream.GetFstream().flush();
       }
+    }
+
+    // Find maximum constraint violation
+    if (!prismatic_box_ground.IsNull()) {
+      ChMatrix<>* C = prismatic_box_ground->GetC();
+      for (int i = 0; i < 5; i++)
+        max_cnstr_viol = std::max(max_cnstr_viol, std::abs(C->GetElement(i, 0)));
+    }
+    if (!prismatic_plate_box.IsNull()) {
+      ChMatrix<>* C = prismatic_plate_box->GetC();
+      for (int i = 0; i < 5; i++)
+        max_cnstr_viol = std::max(max_cnstr_viol, std::abs(C->GetElement(i, 0)));
+    }
+    if (!actuator.IsNull()) {
+      ChMatrix<>* C = prismatic_plate_box->GetC();
+      max_cnstr_viol = std::max(max_cnstr_viol, std::abs(C->GetElement(0, 0)));
     }
 
     // Increment counters
