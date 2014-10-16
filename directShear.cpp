@@ -765,7 +765,7 @@ int main(int argc, char* argv[])
   int next_out_frame = 0;
   double exec_time = 0;
   int num_contacts = 0;
-  double max_cnstr_viol = 0;
+  double max_cnstr_viol[3] = { 0, 0, 0 };
 
   // Circular buffer with highest particle location
   // (only used for SETTLING or PRESSING)
@@ -797,15 +797,18 @@ int main(int argc, char* argv[])
     // If at an output frame, write PovRay file and print info
     if (sim_frame == next_out_frame)
     {
-      cout << "------------ Output frame:   " << out_frame + 1 << endl;
-      cout << "             Sim frame:      " << sim_frame << endl;
-      cout << "             Time:           " << time << endl;
-      cout << "             Shear box pos:  " << pos_old.x << endl;
-      cout << "             Lowest point:   " << lowest << endl;
-      cout << "             Highest point:  " << highest << endl;
-      cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
-      cout << "             Max. constraint " << max_cnstr_viol << endl;
-      cout << "             Execution time: " << exec_time << endl;
+      cout << "------------ Output frame:     " << out_frame + 1 << endl;
+      cout << "             Sim frame:        " << sim_frame << endl;
+      cout << "             Time:             " << time << endl;
+      cout << "             Shear box pos:    " << pos_old.x << endl;
+      cout << "                       vel:    " << vel_old.x << endl;
+      cout << "             Particle lowest:  " << lowest << endl;
+      cout << "                      highest: " << highest << endl;
+      cout << "             Avg. contacts:    " << num_contacts / out_steps << endl;
+      cout << "             Max. constraint   " << max_cnstr_viol[0] << endl;
+      cout << "                               " << max_cnstr_viol[1] << endl;
+      cout << "                               " << max_cnstr_viol[2] << endl;
+      cout << "             Execution time:   " << exec_time << endl;
 
       statsStream << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
       statsStream.GetFstream().flush();
@@ -829,7 +832,9 @@ int main(int argc, char* argv[])
       out_frame++;
       next_out_frame += out_steps;
       num_contacts = 0;
-      max_cnstr_viol = 0;
+      max_cnstr_viol[0] = 0;
+      max_cnstr_viol[1] = 0;
+      max_cnstr_viol[2] = 0;
     }
 
     // Check for early termination of a settling phase.
@@ -888,16 +893,16 @@ int main(int argc, char* argv[])
     if (!prismatic_box_ground.IsNull()) {
       ChMatrix<>* C = prismatic_box_ground->GetC();
       for (int i = 0; i < 5; i++)
-        max_cnstr_viol = std::max(max_cnstr_viol, std::abs(C->GetElement(i, 0)));
+        max_cnstr_viol[0] = std::max(max_cnstr_viol[0], std::abs(C->GetElement(i, 0)));
     }
     if (!prismatic_plate_box.IsNull()) {
       ChMatrix<>* C = prismatic_plate_box->GetC();
       for (int i = 0; i < 5; i++)
-        max_cnstr_viol = std::max(max_cnstr_viol, std::abs(C->GetElement(i, 0)));
+        max_cnstr_viol[1] = std::max(max_cnstr_viol[1], std::abs(C->GetElement(i, 0)));
     }
     if (!actuator.IsNull()) {
-      ChMatrix<>* C = prismatic_plate_box->GetC();
-      max_cnstr_viol = std::max(max_cnstr_viol, std::abs(C->GetElement(0, 0)));
+      ChMatrix<>* C = actuator->GetC();
+      max_cnstr_viol[2] = std::max(max_cnstr_viol[2], std::abs(C->GetElement(0, 0)));
     }
 
     // Increment counters
