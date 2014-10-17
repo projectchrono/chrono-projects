@@ -32,8 +32,8 @@
 #include "core/ChFileutils.h"
 #include "core/ChStream.h"
 
-#include "chrono_parallel/ChSystemParallel.h"
-#include "chrono_parallel/ChLcpSystemDescriptorParallel.h"
+#include "chrono_parallel/physics/ChSystemParallel.h"
+#include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
 #include "chrono_utils/ChUtilsCreators.h"
 #include "chrono_utils/ChUtilsGenerators.h"
