@@ -244,7 +244,8 @@ void CreateMechanismBodies(ChSystemParallel* system)
   ground->SetBodyFixed(true);
   ground->SetCollide(true);
 
-  // Attach geometry of the containing bin.  Disable contact ground-shearBox.
+  // Attach geometry of the containing bin.  Disable contact ground-shearBox
+  // and ground-loadPlate.
   ground->GetCollisionModel()->ClearModel();
   utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
   utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
@@ -253,6 +254,7 @@ void CreateMechanismBodies(ChSystemParallel* system)
   utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0,  hdimY + hthick, hdimZ));
   ground->GetCollisionModel()->SetFamily(ground_coll_fam);
   ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(box_coll_fam);
+  ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(plate_coll_fam);
   ground->GetCollisionModel()->BuildModel();
 
   system->AddBody(ground);
@@ -318,11 +320,10 @@ void CreateMechanismBodies(ChSystemParallel* system)
   plate->SetCollide(true);
   plate->SetBodyFixed(true);
 
-  // Add geometry of the load plate.  Disable contact with the containing bin.
+  // Add geometry of the load plate.
   plate->GetCollisionModel()->ClearModel();
   utils::AddBoxGeometry(plate.get_ptr(), ChVector<>(hdimX_p, hdimY, hdimZ), ChVector<>(0, 0, hdimZ));
   plate->GetCollisionModel()->SetFamily(plate_coll_fam);
-  plate->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(ground_coll_fam);
   plate->GetCollisionModel()->BuildModel();
 
   system->AddBody(plate);
