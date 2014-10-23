@@ -59,13 +59,6 @@ int main(int argc, char* argv[])
   msystem->GetSettings()->solver.max_iteration_bilateral = max_iteration;
   msystem->GetSettings()->solver.tolerance = tolerance;
 
-  // Set solver parameters
-  msystem->SetMaxiter(max_iteration);
-  msystem->SetIterLCPmaxItersSpeed(max_iteration);
-  msystem->SetTol(1e-3);
-  msystem->SetTolSpeeds(1e-3);
-  msystem->SetStep(time_step);
-
 
   // Create the rigid bodies of the slider-crank mechanical system.
   // --------------------------------------------------------------

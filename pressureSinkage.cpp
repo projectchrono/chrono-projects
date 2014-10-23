@@ -119,6 +119,8 @@ int max_iteration_spinning = 0;
 float contact_recovery_speed = 1;
 #endif
 
+bool clamp_bilaterals = false;
+double bilateral_clamp_speed = 1000;
 int max_iteration_bilateral = 100;
 double tolerance = 1e-4;
 
@@ -496,12 +498,10 @@ int main(int argc, char* argv[])
   msystem->GetSettings()->perform_thread_tuning = thread_tuning;
 
   // Edit system settings
-  msystem->SetTol(tolerance);
-  msystem->SetTolSpeeds(tolerance);
-  msystem->SetStep(time_step);
-
-  msystem->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
   msystem->GetSettings()->solver.tolerance = tolerance;
+  msystem->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
+  msystem->GetSettings()->solver.clamp_bilaterals = clamp_bilaterals;
+  msystem->GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
 
 #ifdef DEM
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;

@@ -85,6 +85,8 @@ int max_iteration_spinning = 0;
 float contact_recovery_speed = 0.1;
 #endif
 
+double tolerance = 1e-4;
+
 // Output
 #ifdef DEM
 const std::string out_dir = "../CRATER_DEM";
@@ -335,11 +337,7 @@ int main(int argc, char* argv[])
   msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
 
   // Edit system settings
-  msystem->SetTol(1e-3);
-  msystem->SetTolSpeeds(1e-3);
-  msystem->SetStep(time_step);
-
-  msystem->GetSettings()->solver.tolerance = 1e-3;
+  msystem->GetSettings()->solver.tolerance = tolerance;
 
 #ifdef DEM
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;

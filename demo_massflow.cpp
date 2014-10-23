@@ -376,10 +376,6 @@ int main(int argc, char* argv[])
   msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
 
   // Edit system settings
-  msystem->SetTol(1e-3);
-  msystem->SetTolSpeeds(1e-3);
-  msystem->SetStep(time_step);
-
   msystem->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
   msystem->GetSettings()->solver.tolerance = 1e-3;
 

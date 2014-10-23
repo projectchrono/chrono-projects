@@ -110,13 +110,7 @@ int main(int argc, char* argv[])
   msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
 
   // Edit system settings
-  msystem->SetMaxiter(max_iteration);
-  msystem->SetIterLCPmaxItersSpeed(max_iteration);
-  msystem->SetTol(1e-3);
-  msystem->SetTolSpeeds(1e-3);
-  msystem->SetStep(time_step);
-
-  msystem->GetSettings()->solver.tolerance = 1e-3;
+  msystem->GetSettings()->solver.tolerance = 1e-4;
 
   msystem->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
   msystem->GetSettings()->collision.min_body_per_bin = 50;

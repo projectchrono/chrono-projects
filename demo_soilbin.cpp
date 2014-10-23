@@ -368,10 +368,6 @@ int main(int argc, char* argv[])
   // Edit system settings.
   // ---------------------
 
-  msystem->SetTol(1e-3);
-  msystem->SetTolSpeeds(1e-3);
-  msystem->SetStep(time_step);
-
   msystem->GetSettings()->solver.tolerance = 1e-3;
 
 #ifdef DEM

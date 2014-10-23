@@ -70,8 +70,11 @@ double time_settling = 5;
 double time_pushing = 2;
 
 // Solver parameters
+bool clamp_bilaterals = false;
+double bilateral_clamp_speed = 1000;
 double tolerance = 1e-3;
-int max_iteration_bilateral = 50;
+int max_iteration_bilateral = 100;
+
 #ifdef DEM
 double time_step = 1e-4;
 #else
@@ -444,12 +447,10 @@ int main(int argc, char* argv[])
   // Edit system settings.
   // ---------------------
 
-  msystem->SetTol(tolerance);
-  msystem->SetTolSpeeds(tolerance);
-  msystem->SetStep(time_step);
-
-  msystem->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
   msystem->GetSettings()->solver.tolerance = tolerance;
+  msystem->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
+  msystem->GetSettings()->solver.clamp_bilaterals = clamp_bilaterals;
+  msystem->GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
 
 #ifdef DEM
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
