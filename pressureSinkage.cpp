@@ -66,7 +66,7 @@ enum ProblemType {
   TESTING
 };
 
-ProblemType problem = PRESSING;
+ProblemType problem = SETTLING;
 
 // -----------------------------------------------------------------------------
 // Conversion factors
@@ -112,16 +112,16 @@ double settling_tol = 0.2;
 #ifdef DEM
 double time_step = 1e-5;
 #else
-double time_step = 1e-3;
-int max_iteration_normal = 50;
-int max_iteration_sliding = 100;
+double time_step = 1e-4;
+int max_iteration_normal = 0;
+int max_iteration_sliding = 20000;
 int max_iteration_spinning = 0;
-float contact_recovery_speed = 1;
+float contact_recovery_speed = 10e30;
 #endif
 
 bool clamp_bilaterals = false;
-double bilateral_clamp_speed = 1000;
-int max_iteration_bilateral = 100;
+double bilateral_clamp_speed = 10e30;
+int max_iteration_bilateral = 0;
 double tolerance = 1e-4;
 
 // Output
@@ -170,11 +170,11 @@ float      alpha_walls = alpha2cgs * 0.4;
 float      mu_walls = 0.3f;
 
 // Desired sinkage velocity [cm/s]
-double     desiredVelocity = -1;
+double     desiredVelocity = 1;
 
 // Parameters for the granular material
 int        Id_g = 1;                     // start body ID for particles
-double     r_g = 1.0;                    // [cm] radius of granular sphers
+double     r_g = 0.2;                    // [cm] radius of granular sphers
 double     rho_g = 2.500;                // [g/cm^3] density of granules
 
 double     desiredBulkDensity = 1.3894;  // [g/cm^3] desired bulk density
@@ -278,9 +278,10 @@ void ConnectLoadPlate(ChSystemParallel* system, ChSharedPtr<ChBody> ground, ChSh
 {
   ChSharedPtr<ChLinkLockPrismatic> prismatic(new ChLinkLockPrismatic);
   prismatic->Initialize(ground, plate, ChCoordsys<>(ChVector<>(0, 0, 2 * hdimZ), QUNIT));
+  prismatic->SetName("prismatic");
   system->AddLink(prismatic);
 
-  ChSharedPtr<ChFunction_Ramp> actuator_fun(new ChFunction_Ramp(0.0, -desiredVelocity));
+  ChSharedPtr<ChFunction_Ramp> actuator_fun(new ChFunction_Ramp(0.0, desiredVelocity));
 
   ChSharedPtr<ChLinkLinActuator> actuator(new ChLinkLinActuator);
   ChVector<> pt1(0, 0, 2 * hdimZ+1);
@@ -536,6 +537,7 @@ int main(int argc, char* argv[])
   int out_fps;
   ChSharedPtr<ChBody> ground;
   ChSharedPtr<ChBody> loadPlate;
+  ChSharedPtr<ChLinkLockPrismatic> prismatic;
   ChSharedPtr<ChLinkLinActuator> actuator;
 
   switch (problem) {
@@ -582,12 +584,13 @@ int main(int argc, char* argv[])
     double highest, lowest;
     FindHeightRange(msystem, lowest, highest);
     ChVector<> pos = loadPlate->GetPos();
-    double z_new = highest + r_g;// + hdimZ_p;
+    double z_new = highest + 2*r_g;// + hdimZ_p;
     loadPlate->SetPos(ChVector<>(pos.x, pos.y, z_new));
 
     // If using an actuator, connect the load plate and get a handle to the actuator.
     if (use_actuator) {
       ConnectLoadPlate(msystem, ground, loadPlate);
+      prismatic = msystem->SearchLink("prismatic").StaticCastTo<ChLinkLockPrismatic>();
       actuator = msystem->SearchLink("actuator").StaticCastTo<ChLinkLinActuator>();
     }
 
@@ -652,6 +655,7 @@ int main(int argc, char* argv[])
   int next_out_frame = 0;
   double exec_time = 0;
   int num_contacts = 0;
+  double max_cnstr_viol[2] = { 0, 0 };
 
   // Circular buffer with highest particle location
   // (only used for SETTLING or PRESSING)
@@ -661,6 +665,7 @@ int main(int argc, char* argv[])
   // Create output files
   ChStreamOutAsciiFile statsStream(stats_file.c_str());
   ChStreamOutAsciiFile sinkageStream(sinkage_file.c_str());
+  sinkageStream.SetNumFormat("%16.4e");
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
   opengl::ChOpenGLWindow &gl_window = opengl::ChOpenGLWindow::getInstance();
@@ -689,6 +694,8 @@ int main(int argc, char* argv[])
       cout << "             Lowest point:   " << lowest << endl;
       cout << "             Highest point:  " << highest << endl;
       cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
+      cout << "             Max. constraint   " << max_cnstr_viol[0] << endl;
+      cout << "                               " << max_cnstr_viol[1] << endl;
       cout << "             Execution time: " << exec_time << endl;
 
       statsStream << time << " " << exec_time << " " << num_contacts / out_steps << "\n";
@@ -713,6 +720,8 @@ int main(int argc, char* argv[])
       out_frame++;
       next_out_frame += out_steps;
       num_contacts = 0;
+      max_cnstr_viol[0] = 0;
+      max_cnstr_viol[1] = 0;
     }
 
     // Check for early termination of a settling phase.
@@ -765,6 +774,17 @@ int main(int argc, char* argv[])
         sinkageStream << time << ", " << loadPlate->GetPos().z << ", " << cnstr_force << ", \n";
         sinkageStream.GetFstream().flush();
       }
+    }
+
+    // Find maximum constraint violation
+    if (!prismatic.IsNull()) {
+      ChMatrix<>* C = prismatic->GetC();
+      for (int i = 0; i < 5; i++)
+        max_cnstr_viol[0] = std::max(max_cnstr_viol[0], std::abs(C->GetElement(i, 0)));
+    }
+    if (!actuator.IsNull()) {
+      ChMatrix<>* C = actuator->GetC();
+      max_cnstr_viol[1] = std::max(max_cnstr_viol[2], std::abs(C->GetElement(0, 0)));
     }
 
     // Increment counters
