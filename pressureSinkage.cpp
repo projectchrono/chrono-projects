@@ -66,7 +66,7 @@ enum ProblemType {
   TESTING
 };
 
-ProblemType problem = PRESSING;
+ProblemType problem = SETTLING;
 
 // -----------------------------------------------------------------------------
 // Conversion factors
@@ -114,7 +114,7 @@ double time_step = 1e-5;
 #else
 double time_step = 1e-4;
 int max_iteration_normal = 0;
-int max_iteration_sliding = 20;
+int max_iteration_sliding = 5000;
 int max_iteration_spinning = 0;
 float contact_recovery_speed = 10e30;
 #endif
@@ -174,7 +174,7 @@ double     desiredVelocity = 1;
 
 // Parameters for the granular material
 int        Id_g = 1;                     // start body ID for particles
-double     r_g = 2.0;                    // [cm] radius of granular sphers
+double     r_g = 0.2;                    // [cm] radius of granular sphers
 double     rho_g = 2.500;                // [g/cm^3] density of granules
 
 double     desiredBulkDensity = 1.3894;  // [g/cm^3] desired bulk density
@@ -323,14 +323,14 @@ int CreateGranularMaterial(ChSystemParallel* system)
   // Create the particle generator with a mixture of 100% spheres
   utils::Generator gen(system);
 
-  utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+  utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::ELLIPSOID, 1.0);
 #ifdef DEM
   m1->setDefaultMaterialDEM(mat_g);
 #else
   m1->setDefaultMaterialDVI(mat_g);
 #endif
   m1->setDefaultDensity(rho_g);
-  m1->setDefaultSize(r_g);
+  m1->setDefaultSize(ChVector<>(r_g,2*r_g/3,2*r_g/3));
 
   // Ensure that all generated particle bodies will have positive IDs.
   gen.setBodyIdentifier(Id_g);
