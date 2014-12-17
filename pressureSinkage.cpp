@@ -66,7 +66,7 @@ enum ProblemType {
   TESTING
 };
 
-ProblemType problem = SETTLING;
+ProblemType problem = PRESSING;
 
 // -----------------------------------------------------------------------------
 // Conversion factors
@@ -100,7 +100,7 @@ bool write_povray_data = true;
 double time_settling_min = 0.1;
 double time_settling_max = 1.0;
 
-double time_pressing_min = 0.1;
+double time_pressing_min = 5;
 double time_pressing_max = 10;
 
 double time_testing = 2;
@@ -114,7 +114,7 @@ double time_step = 1e-5;
 #else
 double time_step = 1e-4;
 int max_iteration_normal = 0;
-int max_iteration_sliding = 20000;
+int max_iteration_sliding = 20;
 int max_iteration_spinning = 0;
 float contact_recovery_speed = 10e30;
 #endif
@@ -174,7 +174,7 @@ double     desiredVelocity = 1;
 
 // Parameters for the granular material
 int        Id_g = 1;                     // start body ID for particles
-double     r_g = 0.2;                    // [cm] radius of granular sphers
+double     r_g = 2.0;                    // [cm] radius of granular sphers
 double     rho_g = 2.500;                // [g/cm^3] density of granules
 
 double     desiredBulkDensity = 1.3894;  // [g/cm^3] desired bulk density
@@ -260,10 +260,6 @@ void CreateMechanismBodies(ChSystemParallel* system)
   plate->SetPos(ChVector<>(0, 0, -1 - 2 * hdimZ));
   plate->SetCollide(true);
   plate->SetBodyFixed(true);
-
-  plate->GetCollisionModel()->ClearModel();
-  utils::AddBoxGeometry(plate.get_ptr(), ChVector<>(hdimX_p, hdimY_p, hdimZ_p), ChVector<>(0, 0, hdimZ_p));
-  plate->GetCollisionModel()->BuildModel();
 
   system->AddBody(plate);
 }
@@ -587,6 +583,11 @@ int main(int argc, char* argv[])
     double z_new = highest + 2*r_g;// + hdimZ_p;
     loadPlate->SetPos(ChVector<>(pos.x, pos.y, z_new));
 
+    // Add collision geometry to plate
+    loadPlate->GetCollisionModel()->ClearModel();
+    utils::AddBoxGeometry(loadPlate.get_ptr(), ChVector<>(hdimX_p, hdimY_p, hdimZ_p), ChVector<>(0, 0, hdimZ_p));
+    loadPlate->GetCollisionModel()->BuildModel();
+
     // If using an actuator, connect the load plate and get a handle to the actuator.
     if (use_actuator) {
       ConnectLoadPlate(msystem, ground, loadPlate);
@@ -624,6 +625,11 @@ int main(int argc, char* argv[])
     ChVector<> pos = loadPlate->GetPos();
     double z_new = 2.1 * radius_ball;
     loadPlate->SetPos(ChVector<>(pos.x, pos.y, z_new));
+
+    // Add collision geometry to plate
+    loadPlate->GetCollisionModel()->ClearModel();
+    utils::AddBoxGeometry(loadPlate.get_ptr(), ChVector<>(hdimX_p, hdimY_p, hdimZ_p), ChVector<>(0, 0, hdimZ_p));
+    loadPlate->GetCollisionModel()->BuildModel();
 
     // If using an actuator, connect the shear box and get a handle to the actuator.
     if (use_actuator) {
