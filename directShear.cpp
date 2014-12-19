@@ -120,17 +120,18 @@ double settling_tol = 0.2;
 // Solver settings
 #ifdef DEM
 double time_step = 1e-5;
+int max_iteration_bilateral = 100;
 #else
 double time_step = 1e-4;
 int max_iteration_normal = 0;
 int max_iteration_sliding = 5000;
 int max_iteration_spinning = 0;
+int max_iteration_bilateral = 0;
 double contact_recovery_speed = 10e30;
 #endif
 
 bool clamp_bilaterals = false;
 double bilateral_clamp_speed = 10e30;
-int max_iteration_bilateral = 0;
 double tolerance = 1;
 
 // Output
