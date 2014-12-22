@@ -671,6 +671,11 @@ int main(int argc, char* argv[])
     // Release the load plate.
     loadPlate->SetBodyFixed(false);
 
+    // Set plate mass from desired applied normal pressure
+    double area = 4 * hdimX * hdimY;
+    double mass = normalPressure * area / gravity;
+    loadPlate->SetMass(mass);
+
     break;
   }
 
@@ -710,6 +715,11 @@ int main(int argc, char* argv[])
     loadPlate->SetBodyFixed(false);
 
     //setBulkDensity(msystem, desiredBulkDensity);
+
+    // Set plate mass from desired applied normal pressure
+    double area = 4 * hdimX * hdimY;
+    double mass = normalPressure * area / gravity;
+    loadPlate->SetMass(mass);
 
     break;
   }
@@ -757,6 +767,11 @@ int main(int argc, char* argv[])
 
     // Release the load plate.
     loadPlate->SetBodyFixed(false);
+
+    // Set plate mass from desired applied normal pressure
+    double area = 4 * hdimX * hdimY;
+    double mass = normalPressure * area / gravity;
+    loadPlate->SetMass(mass);
 
     break;
   }
