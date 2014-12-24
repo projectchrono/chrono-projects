@@ -230,6 +230,10 @@ Mechanism::Mechanism(ChSystemParallel* system, double h)
   box_sled->Rot = ChQuaternion<>(1, 0, 0, 0);
   m_sled->AddAsset(box_sled);
 
+  ChSharedPtr<ChColorAsset> col_sled(new ChColorAsset);
+  col_sled->SetColor(ChColor(0.7f, 0.3f, 0.3f));
+  m_sled->AddAsset(col_sled);
+
   system->AddBody(m_sled);
 
   // Create a material for the wheel body
@@ -279,6 +283,10 @@ Mechanism::Mechanism(ChSystemParallel* system, double h)
   cap_wheel->Pos = ChVector<>((c - a) / 2, 0, -b);
   cap_wheel->Rot = Q_from_AngZ(CH_C_PI_2);
   m_wheel->AddAsset(cap_wheel);
+
+  ChSharedPtr<ChColorAsset> col_wheel(new ChColorAsset);
+  col_wheel->SetColor(ChColor(0.3f, 0.3f, 0.7f));
+  m_wheel->AddAsset(col_wheel);
 
   system->AddBody(m_wheel);
 
