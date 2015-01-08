@@ -73,7 +73,7 @@ enum ProblemType {
   TESTING
 };
 
-ProblemType problem = SETTLING;
+ProblemType problem = TESTING;
 
 // -----------------------------------------------------------------------------
 // Conversion factors
@@ -101,7 +101,7 @@ bool thread_tuning = false;
 bool use_actuator = true;
 
 // Save PovRay post-processing data?
-bool write_povray_data = false;
+bool write_povray_data = true;
 
 // Simulation times
 double time_settling_min = 0.1;
@@ -124,7 +124,7 @@ int max_iteration_bilateral = 100;
 #else
 double time_step = 1e-4;
 int max_iteration_normal = 0;
-int max_iteration_sliding = 5000;
+int max_iteration_sliding = 10000;
 int max_iteration_spinning = 0;
 int max_iteration_bilateral = 0;
 double contact_recovery_speed = 10e30;
@@ -835,14 +835,7 @@ int main(int argc, char* argv[])
       cout << "                       vel:    " << vel_old.x << endl;
       cout << "             Particle lowest:  " << lowest << endl;
       cout << "                      highest: " << highest << endl;
-      cout << "             Avg. contacts:    " << num_contacts / out_steps << endl;
-      cout << "             Max. constraint   " << max_cnstr_viol[0] << endl;
-      cout << "                               " << max_cnstr_viol[1] << endl;
-      cout << "                               " << max_cnstr_viol[2] << endl;
       cout << "             Execution time:   " << exec_time << endl;
-
-      statsStream << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
-      statsStream.GetFstream().flush();
 
       // Save PovRay post-processing data.
       if (write_povray_data) {
@@ -862,10 +855,6 @@ int main(int argc, char* argv[])
       // Increment counters
       out_frame++;
       next_out_frame += out_steps;
-      num_contacts = 0;
-      max_cnstr_viol[0] = 0;
-      max_cnstr_viol[1] = 0;
-      max_cnstr_viol[2] = 0;
     }
 
     // Check for early termination of a settling phase.
@@ -899,6 +888,18 @@ int main(int argc, char* argv[])
 #else
     msystem->DoStepDynamics(time_step);
 #endif
+
+    // Record stats about the simulation
+    if (sim_frame % write_steps == 0) {
+	  std::vector<double> history = ((ChLcpIterativeSolver*) (msystem->GetLcpSolverSpeed()))->GetViolationHistory();
+      statsStream << time << ", " << exec_time << ", " << num_contacts/write_steps << ", " << history.size() << ", " << history[history.size() - 1] << ", " << max_cnstr_viol[0] << ", " << max_cnstr_viol[1] << ", " << max_cnstr_viol[2] << ", \n";
+      statsStream.GetFstream().flush();
+	  
+	  num_contacts = 0;
+      max_cnstr_viol[0] = 0;
+      max_cnstr_viol[1] = 0;
+	  max_cnstr_viol[2] = 0;
+    }
 
     if (problem == SHEARING || problem == TESTING) {
 
