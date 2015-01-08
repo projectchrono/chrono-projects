@@ -66,7 +66,7 @@ enum ProblemType {
   TESTING
 };
 
-ProblemType problem = SETTLING;
+ProblemType problem = TESTING;
 
 // -----------------------------------------------------------------------------
 // Conversion factors
@@ -113,9 +113,9 @@ double settling_tol = 0.2;
 double time_step = 1e-5;
 int max_iteration_bilateral = 100;
 #else
-double time_step = 1e-4;
+double time_step = 1e-3;
 int max_iteration_normal = 0;
-int max_iteration_sliding = 5000;
+int max_iteration_sliding = 10000;
 int max_iteration_spinning = 0;
 int max_iteration_bilateral = 0;
 float contact_recovery_speed = 10e30;
@@ -581,7 +581,7 @@ int main(int argc, char* argv[])
     double highest, lowest;
     FindHeightRange(msystem, lowest, highest);
     ChVector<> pos = loadPlate->GetPos();
-    double z_new = highest + 2*r_g;// + hdimZ_p;
+    double z_new = highest + 1.01*r_g;
     loadPlate->SetPos(ChVector<>(pos.x, pos.y, z_new));
 
     // Add collision geometry to plate
@@ -700,13 +700,7 @@ int main(int argc, char* argv[])
       cout << "             Load plate pos: " << pos_old.z << endl;
       cout << "             Lowest point:   " << lowest << endl;
       cout << "             Highest point:  " << highest << endl;
-      cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
-      cout << "             Max. constraint   " << max_cnstr_viol[0] << endl;
-      cout << "                               " << max_cnstr_viol[1] << endl;
       cout << "             Execution time: " << exec_time << endl;
-
-      statsStream << time << " " << exec_time << " " << num_contacts / out_steps << "\n";
-      statsStream.GetFstream().flush();
 
       // Save PovRay post-processing data.
       if (write_povray_data) {
@@ -726,9 +720,6 @@ int main(int argc, char* argv[])
       // Increment counters
       out_frame++;
       next_out_frame += out_steps;
-      num_contacts = 0;
-      max_cnstr_viol[0] = 0;
-      max_cnstr_viol[1] = 0;
     }
 
     // Check for early termination of a settling phase.
@@ -763,6 +754,17 @@ int main(int argc, char* argv[])
     msystem->DoStepDynamics(time_step);
 #endif
 
+    // Record stats about the simulation
+    if (sim_frame % write_steps == 0) {
+	  std::vector<double> history = ((ChLcpIterativeSolver*) (msystem->GetLcpSolverSpeed()))->GetViolationHistory();
+      statsStream << time << ", " << exec_time << ", " << num_contacts/write_steps << ", " << history.size() << ", " << history[history.size() - 1] << ", " << max_cnstr_viol[0] << ", " << max_cnstr_viol[1] << ", \n";
+      statsStream.GetFstream().flush();
+	  
+	  num_contacts = 0;
+      max_cnstr_viol[0] = 0;
+      max_cnstr_viol[1] = 0;
+    }
+
     if (problem == PRESSING || problem == TESTING) {
 
       // Get the current reaction force or impose load plate position
@@ -777,7 +779,7 @@ int main(int argc, char* argv[])
       }
 
       if (sim_frame % write_steps == 0) {
-        std::cout << time << ", " << loadPlate->GetPos().z << ", " << cnstr_force << ", \n";
+        //std::cout << time << ", " << loadPlate->GetPos().z << ", " << cnstr_force << ", \n";
         sinkageStream << time << ", " << loadPlate->GetPos().z << ", " << cnstr_force << ", \n";
         sinkageStream.GetFstream().flush();
       }
