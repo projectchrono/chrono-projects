@@ -585,14 +585,12 @@ int main(int argc, char* argv[])
   msystem->GetSettings()->solver.alpha = 0;
   msystem->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
   msystem->SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
-  msystem->ChangeSolverType(APGDBLAZE);
+  msystem->ChangeSolverType(APGDREF);
 
   msystem->GetSettings()->collision.collision_envelope = 0.05 * r_g;
 #endif
 
   msystem->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
-  msystem->GetSettings()->collision.min_body_per_bin = 50;
-  msystem->GetSettings()->collision.max_body_per_bin = 100;
 
   // --------------
   // Problem set up

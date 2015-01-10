@@ -118,8 +118,6 @@ int main(int argc, char* argv[])
   msystem->GetSettings()->solver.tolerance = 1e-3;
 
   msystem->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
-  msystem->GetSettings()->collision.min_body_per_bin = 50;
-  msystem->GetSettings()->collision.max_body_per_bin = 100;
 
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 
