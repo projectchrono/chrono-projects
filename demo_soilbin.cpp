@@ -379,7 +379,7 @@ int main(int argc, char* argv[])
   msystem->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
   msystem->GetSettings()->solver.alpha = 0;
   msystem->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-  msystem->ChangeSolverType(APGDRS);
+  msystem->ChangeSolverType(APGDREF);
 
   msystem->GetSettings()->collision.collision_envelope = 0.05 * r_g;
 #endif
