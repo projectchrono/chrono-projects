@@ -889,16 +889,17 @@ int main(int argc, char* argv[])
 
     // Record stats about the simulation
     if (sim_frame % write_steps == 0) {
-	  std::vector<double> history = ((ChLcpIterativeSolver*) (msystem->GetLcpSolverSpeed()))->GetViolationHistory();
+      // write stat info
+      int numIters = msystem->data_manager->measures.solver.iter_hist.size();
       double residual = 0;
-      if(history.size()) residual = history[history.size() - 1];
-      statsStream << time << ", " << exec_time << ", " << num_contacts/write_steps << ", " << history.size() << ", " << residual << ", " << max_cnstr_viol[0] << ", " << max_cnstr_viol[1] << ", " << max_cnstr_viol[2] << ", \n";
+      if(numIters) residual = msystem->data_manager->measures.solver.residual;
+      statsStream << time << ", " << exec_time << ", " << num_contacts/write_steps << ", " << numIters << ", " << residual << ", " << max_cnstr_viol[0] << ", " << max_cnstr_viol[1] << ", " << max_cnstr_viol[2] << ", \n";
       statsStream.GetFstream().flush();
 	  
-	  num_contacts = 0;
+      num_contacts = 0;
       max_cnstr_viol[0] = 0;
       max_cnstr_viol[1] = 0;
-	  max_cnstr_viol[2] = 0;
+      max_cnstr_viol[2] = 0;
     }
 
     if (problem == SHEARING || problem == TESTING) {
@@ -984,4 +985,3 @@ int main(int argc, char* argv[])
 
   return 0;
 }
-
