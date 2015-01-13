@@ -66,6 +66,7 @@ SET(DEMOS
     rad_im_schmutz
     directShear
     pressureSinkage
+    singleWheel
     test_mesh
     test_constraints
     test_utils
