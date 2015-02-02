@@ -74,6 +74,7 @@ SET(DEMOS
     test_scaling
     test_timing
     demo_suspension
+    test_fill
 )
 
 MESSAGE(STATUS "Radu demo programs...")
