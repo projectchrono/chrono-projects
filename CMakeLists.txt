@@ -73,6 +73,7 @@ SET(DEMOS
     test_collision
     test_scaling
     test_timing
+    demo_suspension
 )
 
 MESSAGE(STATUS "Radu demo programs...")
