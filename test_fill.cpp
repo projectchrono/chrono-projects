@@ -39,6 +39,9 @@
 #include "chrono_utils/ChUtilsGenerators.h"
 #include "chrono_utils/ChUtilsInputOutput.h"
 
+// Comment the following line to use parallel collision detection
+//#define BULLET
+
 // Control use of OpenGL run-time rendering
 //#undef CHRONO_PARALLEL_HAS_OPENGL
 
@@ -143,7 +146,11 @@ void CreateMechanismBodies(ChSystemParallel* system)
   // Create the container body -- always FIRST body in system
   // ----------------------
 
-  ChSharedPtr<ChBody> container(new ChBody(new ChCollisionModelParallel));
+  ChSharedPtr<ChBody> container(new ChBody(
+#ifndef BULLET
+		  new ChCollisionModelParallel
+#endif
+		  ));
   container->SetMaterialSurface(mat_walls);
   container->SetIdentifier(Id_container);
   container->SetBodyFixed(false);
@@ -165,7 +172,11 @@ void CreateMechanismBodies(ChSystemParallel* system)
   // Create the ground body -- always SECOND body in system
   // ----------------------
 
-  ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel));
+  ChSharedPtr<ChBody> ground(new ChBody(
+#ifndef BULLET
+		  new ChCollisionModelParallel
+#endif
+		  ));
   ground->SetMaterialSurface(mat_walls);
   ground->SetIdentifier(Id_ground);
   ground->SetBodyFixed(true);
@@ -291,6 +302,10 @@ int main(int argc, char* argv[])
   //cout << "Create DVI system" << endl;
   ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
   msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
+
+#ifdef BULLET
+  msystem->ChangeCollisionSystem(COLLSYS_BULLET_PARALLEL);
+#endif
 
   // Set number of threads.
   int max_threads = msystem->GetParallelThreadNumber();
