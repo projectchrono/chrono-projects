@@ -38,6 +38,8 @@
 #include "core/ChFileutils.h"
 #include "core/ChStream.h"
 
+#include "chrono_utils/ChUtilsCreators.h"
+
 using namespace chrono;
 using namespace chrono::collision;
 
