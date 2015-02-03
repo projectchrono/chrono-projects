@@ -75,11 +75,7 @@ SET(DEMOS
     test_timing
     demo_suspension
     test_fill
-    demo_ballDEM
     demo_shearDEM
-    demo_shearDVI
-    demo_bounceDEM
-    demo_bounceDVI
 )
 
 MESSAGE(STATUS "Radu demo programs...")
