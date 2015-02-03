@@ -81,7 +81,7 @@ double time_step = 1e-3;
 int max_iteration_normal = 0;
 int max_iteration_sliding = 1000;
 int max_iteration_spinning = 0;
-int max_iteration_bilateral = 0;
+int max_iteration_bilateral = 1000;
 float contact_recovery_speed = 10e30;
 bool clamp_bilaterals = false;
 double bilateral_clamp_speed = 10e30;
@@ -146,9 +146,9 @@ void CreateMechanismBodies(ChSystemParallel* system)
   ChSharedPtr<ChBody> container(new ChBody(new ChCollisionModelParallel));
   container->SetMaterialSurface(mat_walls);
   container->SetIdentifier(Id_container);
-  container->SetBodyFixed(true);
+  container->SetBodyFixed(false);
   container->SetCollide(true);
-  container->SetMass(1.0);
+  container->SetMass(10000.0);
 
   // Attach geometry of the containing bin
   container->GetCollisionModel()->ClearModel();
@@ -161,23 +161,18 @@ void CreateMechanismBodies(ChSystemParallel* system)
 
   system->AddBody(container);
 
-//  // ----------------------
-//  // Create the ground body -- always SECOND body in system
-//  // ----------------------
-//
-//  ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel));
-//  ground->SetMaterialSurface(mat_walls);
-//  ground->SetIdentifier(Id_ground);
-//  ground->SetBodyFixed(true);
-//  ground->SetCollide(true);
-//  ground->SetMass(1.0);
-//
-//  system->AddBody(ground);
-//
-//  // Lock the container to the ground
-//  ChSharedPtr<ChLinkLockLock> lock(new ChLinkLockLock);
-//  lock->Initialize(container, ground, false, ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT), ChCoordsys<>(ChVector<>(0, 0, 1), QUNIT));
-//  system->AddLink(lock);
+  // ----------------------
+  // Create the ground body -- always SECOND body in system
+  // ----------------------
+
+  ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel));
+  ground->SetMaterialSurface(mat_walls);
+  ground->SetIdentifier(Id_ground);
+  ground->SetBodyFixed(true);
+  ground->SetCollide(true);
+  ground->SetMass(1.0);
+
+  system->AddBody(ground);
 }
 
 // =============================================================================
@@ -250,7 +245,7 @@ double3 calculateContactForceOnBody(ChSystemParallel* system, int bodyIndex)
   // F_contact = D*gamma/h;
   blaze::DynamicVector<real> contactForces;
   contactForces.resize(system->data_manager->host_data.gamma.size());
-  contactForces = (D_n * gamma_n + D_t * gamma_t + D_b * gamma_b) / time_step;
+  contactForces = (D_n * gamma_n + D_t * gamma_t) / time_step; // Don't include the bilateral
 
   // NOTE: contactForces is now a vector of length 6*numBodies that contains the contact force/torque on each body
   //       unfortunately, the D matrix does not include entries for inactive bodies meaning that there will be 0's
@@ -356,15 +351,15 @@ int main(int argc, char* argv[])
     //cout << "Granular material:  " << num_particles << " particles" << endl;
   }
 
-//  // Lock the container to the ground
-//  ChSharedPtr<ChBody> container = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
-//  ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(1));
-//  msystem->Get_bodylist()->at(0)->AddRef();
-//  msystem->Get_bodylist()->at(1)->AddRef();
-//
-//  ChSharedPtr<ChLinkLockLock> lock(new ChLinkLockLock);
-//  lock->Initialize(container, ground, false, ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT), ChCoordsys<>(ChVector<>(0, 0, 1), QUNIT));
-//  msystem->AddLink(lock);
+  // Lock the container to the ground
+  ChSharedPtr<ChBody> container = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
+  ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(1));
+  msystem->Get_bodylist()->at(0)->AddRef();
+  msystem->Get_bodylist()->at(1)->AddRef();
+
+  ChSharedPtr<ChLinkLockLock> lock(new ChLinkLockLock);
+  lock->Initialize(container, ground, false, ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT), ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
+  msystem->AddLink(lock);
 
   // ----------------------
   // Perform the simulation
@@ -406,10 +401,10 @@ int main(int argc, char* argv[])
 
     // If at an output frame, write PovRay file and print info
     if (sim_frame == next_out_frame) {
-      //cout << "------------ Output frame:   " << out_frame + 1 << endl;
-      //cout << "             Sim frame:      " << sim_frame << endl;
-      //cout << "             Time:           " << time << endl;
-      //cout << "             Execution time: " << exec_time << endl;
+      cout << "------------ Output frame:   " << out_frame + 1 << endl;
+      cout << "             Sim frame:      " << sim_frame << endl;
+      cout << "             Time:           " << time << endl;
+      cout << "             Execution time: " << exec_time << endl;
 
       // Save PovRay post-processing data.
       if (write_povray_data) {
@@ -419,9 +414,9 @@ int main(int argc, char* argv[])
       }
 
       // Create a checkpoint from the current state.
-      //cout << "             Write checkpoint data " << flush;
+      cout << "             Write checkpoint data " << flush;
       utils::WriteCheckpoint(msystem, settled_ckpnt_file);
-      //cout << msystem->Get_bodylist()->size() << " bodies" << endl;
+      cout << msystem->Get_bodylist()->size() << " bodies" << endl;
 
       // Increment counters
       out_frame++;
@@ -441,10 +436,10 @@ int main(int argc, char* argv[])
     // Record stats about the simulation
     if (sim_frame % write_steps == 0) {
       // Compute contact force on container (container should be the first body)
-      double3 force;
+      double force = 0;
       if(msystem->GetNcontacts())
       {
-        force = calculateContactForceOnBody(msystem, 0);
+        force = -calculateContactForceOnBody(msystem, 0).z;
       }
       double actualWeight = (msystem->Get_bodylist()->size()-1)*(4.0/3.0)*CH_C_PI*pow(r_g, 3.0)*rho_g*gravity;
 
@@ -457,8 +452,8 @@ int main(int argc, char* argv[])
       }
 
       // write fill info
-      statsStream << time << ", " << -force.y << ", " << actualWeight << ", " << maxVelocity << ", \n";
-      statsStream.GetFstream().flush();
+      fillStream << time << ", " << -(lock->Get_react_force().z+gravity*container->GetMass()) << ", " << force << ", " << actualWeight << ", " << maxVelocity << ", \n";
+      fillStream.GetFstream().flush();
 
       // write stat info
       int numIters = msystem->data_manager->measures.solver.iter_hist.size();
@@ -477,8 +472,8 @@ int main(int argc, char* argv[])
     num_contacts += msystem->GetNcontacts();
 
     // If requested, output detailed timing information for this step
-    //if (sim_frame == timing_frame)
-      //msystem->PrintStepStats();
+    if (sim_frame == timing_frame)
+      msystem->PrintStepStats();
   }
 
   // ----------------
@@ -486,15 +481,15 @@ int main(int argc, char* argv[])
   // ----------------
 
   // Create a checkpoint from the last state
-  //cout << "             Write checkpoint data " << flush;
+  cout << "             Write checkpoint data " << flush;
   utils::WriteCheckpoint(msystem, settled_ckpnt_file);
-  //cout << msystem->Get_bodylist()->size() << " bodies" << endl;
+  cout << msystem->Get_bodylist()->size() << " bodies" << endl;
 
   // Final stats
-  //cout << "==================================" << endl;
-  //cout << "Number of bodies:  " << msystem->Get_bodylist()->size() << endl;
-  //cout << "Simulation time:   " << exec_time << endl;
-  //cout << "Number of threads: " << threads << endl;
+  cout << "==================================" << endl;
+  cout << "Number of bodies:  " << msystem->Get_bodylist()->size() << endl;
+  cout << "Simulation time:   " << exec_time << endl;
+  cout << "Number of threads: " << threads << endl;
 
   return 0;
 }
