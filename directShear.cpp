@@ -126,7 +126,7 @@ double time_step = 1e-4;
 int max_iteration_normal = 0;
 int max_iteration_sliding = 10000;
 int max_iteration_spinning = 0;
-int max_iteration_bilateral = 0;
+int max_iteration_bilateral = 100;
 double contact_recovery_speed = 10e30;
 #endif
 
