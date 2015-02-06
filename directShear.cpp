@@ -83,10 +83,6 @@ ProblemType problem = TESTING;
 // [Y] = Pa = N / m^2 = kg / m / s^2
 double Pa2cgs = 10;
 
-// Conversion for dissipation factor alpha
-// [alpha] = s / m
-double alpha2cgs = 0.01;
- 
 // -----------------------------------------------------------------------------
 // Global problem definitions
 // -----------------------------------------------------------------------------
@@ -175,7 +171,7 @@ double     hthick = 1.0 / 2;           // [cm] bin half-thickness of the walls
 double     h_scaling = 6;              // ratio of shear box height to bin height
 
 float      Y_walls = Pa2cgs * 2e6;
-float      alpha_walls = alpha2cgs * 0.4;
+float      cr_walls = 0.4;
 float      mu_walls = 0.3f;
 
 int        ground_coll_fam = 1;        // collision family for bin contact shapes
@@ -196,7 +192,7 @@ double     rho_g = 2.500;                // [g/cm^3] density of granules
 double     desiredBulkDensity = 1.3894;  // [g/cm^3] desired bulk density
 
 float      Y_g = Pa2cgs * 5e7;
-float      alpha_g = alpha2cgs * 0.4;
+float      cr_g = 0.4;
 float      mu_g = 0.5f;
 
 // Parameters of the testing ball
@@ -223,7 +219,7 @@ void CreateMechanismBodies(ChSystemParallel* system)
   mat_walls = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_walls->SetYoungModulus(Y_walls);
   mat_walls->SetFriction(mu_walls);
-  mat_walls->SetDissipationFactor(alpha_walls);
+  mat_walls->SetRestitution(cr_walls);
 #else
   ChSharedPtr<ChMaterialSurface> mat_walls(new ChMaterialSurface);
   mat_walls->SetFriction(mu_walls);
@@ -390,7 +386,7 @@ int CreateGranularMaterial(ChSystemParallel* system)
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_g->SetYoungModulus(Y_g);
   mat_g->SetFriction(mu_g);
-  mat_g->SetDissipationFactor(alpha_g);
+  mat_g->SetRestitution(cr_g);
 #else
   ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
   mat_g->SetFriction(mu_g);
@@ -449,7 +445,7 @@ void CreateBall(ChSystemParallel* system)
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_g->SetYoungModulus(Y_g);
   mat_g->SetFriction(mu_g);
-  mat_g->SetDissipationFactor(alpha_g);
+  mat_g->SetRestitution(cr_g);
 #else
   ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
   mat_g->SetFriction(mu_g);
