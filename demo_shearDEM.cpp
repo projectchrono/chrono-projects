@@ -92,7 +92,6 @@ int main(int argc, char* argv[]) {
   double Y = 8.0e6;  // Pa
   double nu = 0.3;
   double COR = 0.9;
-  double alpha = -log(COR) * 6.66264 / (3.85238 + log(COR));  // Hu et al. (2011)
   double mu = 0.5;
 
   // Parameters for containing bin, shear box, and load plate
@@ -145,7 +144,7 @@ int main(int argc, char* argv[]) {
   material = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   material->SetYoungModulus(Y);
   material->SetPoissonRatio(nu);
-  material->SetDissipationFactor(alpha);
+  material->SetRestitution(COR);
   material->SetFriction(mu);
 
   // Create lower bin

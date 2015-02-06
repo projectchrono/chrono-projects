@@ -47,7 +47,7 @@ double     rho_g = 2000;
 
 float      Y_g = 2e7;
 float      mu_g = 0.2;
-float      alpha_g = 0.4;
+float      cr_g = 0.1;
 float      cohesion_g = 300;
 
 // Parameters for the containing bin
@@ -59,7 +59,7 @@ double     hThickness = 0.4;     // wall thickness
 
 float      Y_c = 2e6;
 float      mu_c = 0.3;
-float      alpha_c = 0.6;
+float      cr_c = 0.1;
 float      cohesion_c = 5;
 
 // Particle generator
@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_g->SetYoungModulus(Y_g);
   mat_g->SetFriction(mu_g);
-  mat_g->SetDissipationFactor(alpha_g);
+  mat_g->SetRestitution(cr_g);
   mat_g->SetCohesion(cohesion_g);
 
   // Create a material for the container
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
   mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_c->SetYoungModulus(Y_c);
   mat_c->SetFriction(mu_c);
-  mat_c->SetDissipationFactor(alpha_c);
+  mat_c->SetRestitution(cr_c);
   mat_c->SetCohesion(cohesion_c);
 
   // Create the containing bin

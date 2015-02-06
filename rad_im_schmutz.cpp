@@ -115,7 +115,7 @@ int out_fps_pushing = 60;
 double r_g = 0.01;
 double rho_g = 2700;
 float  Y_g = 5e7;
-float  alpha_g = 0.1f;
+float  cr_g = 0.1f;
 float  mu_g = 0.4f;
 int    desired_num_particles = 10000;
 
@@ -242,7 +242,7 @@ Mechanism::Mechanism(ChSystemParallel* system, double h)
   mat_w = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_w->SetYoungModulus(2e6f);
   mat_w->SetFriction(0.4f);
-  mat_w->SetDissipationFactor(0.6f);
+  mat_w->SetRestitution(0.1f);
 #else
   ChSharedPtr<ChMaterialSurface> mat_w(new ChMaterialSurface);
   mat_w->SetFriction(0.4f);
@@ -338,7 +338,7 @@ void CreateContainer(ChSystemParallel* system)
   mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_c->SetYoungModulus(2e6f);
   mat_c->SetFriction(0.4f);
-  mat_c->SetDissipationFactor(0.6f);
+  mat_c->SetRestitution(0.1f);
 
   utils::CreateBoxContainerDEM(system, id_c, mat_c, ChVector<>(L/2, W/2, H/2), thickness/2);
 #else
@@ -362,7 +362,7 @@ void CreateParticles(ChSystemParallel* system)
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_g->SetYoungModulus(Y_g);
   mat_g->SetFriction(mu_g);
-  mat_g->SetDissipationFactor(alpha_g);
+  mat_g->SetRestitution(cr_g);
 #else
   ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
   mat_g->SetFriction(mu_g);

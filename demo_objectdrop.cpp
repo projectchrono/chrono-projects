@@ -94,7 +94,7 @@ void CreateGround(ChSystemParallel* system)
   ChSharedPtr<ChMaterialSurfaceDEM> mat_g(new ChMaterialSurfaceDEM);
   mat_g->SetYoungModulus(1e7f);
   mat_g->SetFriction(0.4f);
-  mat_g->SetDissipationFactor(0.1f);
+  mat_g->SetRestitution(0.4f);
 
   ChSharedBodyDEMPtr ground(new ChBodyDEM(new ChCollisionModelParallel));
   ground->SetMaterialSurfaceDEM(mat_g);
@@ -191,7 +191,7 @@ void CreateObject(ChSystemParallel* system)
   mat_o = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_o->SetYoungModulus(1e7f);
   mat_o->SetFriction(0.4f);
-  mat_o->SetDissipationFactor(0.1f);
+  mat_o->SetRestitution(0.4f);
 
   ChSharedBodyDEMPtr obj(new ChBodyDEM(new ChCollisionModelParallel));
   obj->SetMaterialSurfaceDEM(mat_o);

@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
   ChSharedPtr<ChMaterialSurfaceDEM> bodyMat(new ChMaterialSurfaceDEM);
   bodyMat->SetYoungModulus(1e8f);
   bodyMat->SetFriction(0.5f);
-  bodyMat->SetDissipationFactor(0.4f);
+  bodyMat->SetRestitution(0.1f);
 
   ChSharedBodyDEMPtr body1(new ChBodyDEM(new ChCollisionModelParallel));
   body1->SetMaterialSurfaceDEM(bodyMat);
@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
   ChSharedPtr<ChMaterialSurfaceDEM> binMat(new ChMaterialSurfaceDEM);
   binMat->SetYoungModulus(1e8f);
   binMat->SetFriction(0.4f);
-  binMat->SetDissipationFactor(0.1f);
+  binMat->SetRestitution(0.1f);
 
   // A set of fixed spheres
   ChSharedBodyDEMPtr bin(new ChBodyDEM(new ChCollisionModelParallel));

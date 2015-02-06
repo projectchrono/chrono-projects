@@ -112,7 +112,7 @@ void CreateContainer(ChSystemParallel* system)
   mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_c->SetYoungModulus(2e6f);
   mat_c->SetFriction(0.4f);
-  mat_c->SetDissipationFactor(0.6f);
+  mat_c->SetRestitution(0.1f);
 
   utils::CreateBoxContainerDEM(system, id_c, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 #else
@@ -135,7 +135,7 @@ void CreateParticles(ChSystemParallel* system)
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_g->SetYoungModulus(1e8f);
   mat_g->SetFriction(0.4f);
-  mat_g->SetDissipationFactor(0.1f);
+  mat_g->SetRestitution(0.1f);
 #else
   ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
   mat_g->SetFriction(0.4f);
@@ -184,7 +184,7 @@ void CreateObject(ChSystemParallel* system, double z)
   mat_o = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_o->SetYoungModulus(1e8f);
   mat_o->SetFriction(0.4f);
-  mat_o->SetDissipationFactor(0.1f);
+  mat_o->SetRestitution(0.1f);
 #else
   ChSharedPtr<ChMaterialSurface> mat_o(new ChMaterialSurface);
   mat_o->SetFriction(0.4f);

@@ -58,7 +58,7 @@ ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1,1,1);
 
 float      Y_g = 2e8;
 float      mu_g = 0.5;
-float      alpha_g = 0.3;
+float      cr_g = 0.1;
 float      cohesion_g = 20;
 
 // Parameters for the wheel
@@ -72,7 +72,7 @@ ChVector<> inertia_w = ChVector<>(1.85, 1.85, 3.675);
 
 float      Y_w = 1e8;
 float      mu_w = 1.0;
-float      alpha_w = 0.3;
+float      cr_w = 0.1;
 float      cohesion_w = 20;
 
 // Parameters for the containing bin
@@ -84,7 +84,7 @@ double     hThickness = 0.04;       // wall thickness
 
 float      Y_c = 2e6;
 float      mu_c = 1.0;
-float      alpha_c = 0.6;
+float      cr_c = 0.1;
 float      cohesion_c = 0;
 
 // Height of layer for generator domain
@@ -100,7 +100,7 @@ int CreateObjects(ChSystemParallel* system)
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_g->SetYoungModulus(Y_g);
   mat_g->SetFriction(mu_g);
-  mat_g->SetDissipationFactor(alpha_g);
+  mat_g->SetRestitution(cr_g);
   mat_g->SetCohesion(cohesion_g);
 
   // Create a material for the container
@@ -108,7 +108,7 @@ int CreateObjects(ChSystemParallel* system)
   mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_c->SetYoungModulus(Y_c);
   mat_c->SetFriction(mu_c);
-  mat_c->SetDissipationFactor(alpha_c);
+  mat_c->SetRestitution(cr_c);
   mat_c->SetCohesion(cohesion_c);
 
   // Create a mixture entirely made out of spheres
@@ -145,7 +145,7 @@ ChSharedBodyDEMPtr CreateWheel(ChSystemParallel* system, double z)
   mat_w = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_w->SetYoungModulus(Y_w);
   mat_w->SetFriction(mu_w);
-  mat_w->SetDissipationFactor(alpha_w);
+  mat_w->SetRestitution(cr_w);
   mat_w->SetCohesion(cohesion_w);
 
   // Create the wheel body

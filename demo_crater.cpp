@@ -114,7 +114,7 @@ ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1,1,1);
 
 float      Y_g = 1e8;
 float      mu_g = 0.3;
-float      alpha_g = 0.1;
+float      cr_g = 0.1;
 
 // Parameters for the falling ball
 int        Id_b = 0;
@@ -126,7 +126,7 @@ ChVector<> inertia_b = 0.4 * mass_b * R_b * R_b * ChVector<>(1,1,1);
 
 float      Y_b = 1e8;
 float      mu_b = 0.3;
-float      alpha_b = 0.1;
+float      cr_b = 0.1;
 
 // Parameters for the containing bin
 int        binId = -200;
@@ -137,7 +137,7 @@ double     hThickness = 0.5e-2;     // wall thickness
 
 float      Y_c = 2e6;
 float      mu_c = 0.3;
-float      alpha_c = 0.6;
+float      cr_c = 0.1;
 
 // Number of layers and height of one layer for generator domain
 ////int        numLayers = 10;
@@ -165,7 +165,7 @@ int CreateObjects(ChSystemParallel* system)
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_g->SetYoungModulus(Y_g);
   mat_g->SetFriction(mu_g);
-  mat_g->SetDissipationFactor(alpha_g);
+  mat_g->SetRestitution(cr_g);
 #else
   ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
   mat_g->SetFriction(mu_g);
@@ -202,7 +202,7 @@ int CreateObjects(ChSystemParallel* system)
   mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_c->SetYoungModulus(Y_c);
   mat_c->SetFriction(mu_c);
-  mat_c->SetDissipationFactor(alpha_c);
+  mat_c->SetRestitution(cr_c);
 
   utils::CreateBoxContainerDEM(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 #else
@@ -228,7 +228,7 @@ ChBody* CreateFallingBall(ChSystemParallel* system, double z, double vz)
   mat_b = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_b->SetYoungModulus(1e8f);
   mat_b->SetFriction(0.4f);
-  mat_b->SetDissipationFactor(0.1f);
+  mat_b->SetRestitution(0.1f);
 #else
   ChSharedPtr<ChMaterialSurface> mat_b(new ChMaterialSurface);
   mat_b->SetFriction(mu_c);

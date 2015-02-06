@@ -56,7 +56,7 @@ void CreateObjects(ChSystemParallel* system)
   ballMixMat = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   ballMixMat->SetYoungModulus(1e8f);
   ballMixMat->SetFriction(0.4f);
-  ballMixMat->SetDissipationFactor(0.1f);
+  ballMixMat->SetRestitution(0.5f);
 
   // Create a mixture entirely made out of spheres
   utils::Generator gen(system);
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
   binMat = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   binMat->SetYoungModulus(2e6f);
   binMat->SetFriction(0.4f);
-  binMat->SetDissipationFactor(0.6f);
+  binMat->SetRestitution(0.1f);
 
   utils::CreateBoxContainerDEM(msystem, binId, binMat, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 

@@ -109,7 +109,7 @@ double r_g = 0.25e-3;
 double rho_g = 2500.0;
 
 float  Y_g = 1e7;
-float  alpha_g = 0.6;
+float  cr_g = 0.1;
 float  mu_g = 0.3;
 
 // Desired number of particles and X-Y dimensions of the sampling volume for
@@ -118,7 +118,7 @@ int    desired_num_particles = 400;
 
 // Parameters for the mechanism material
 float  Y_c = 2e6;
-float  alpha_c = 0.6;
+float  cr_c = 0.1;
 float  mu_c = 0.4;
 
 // Dimensions of mechanism
@@ -154,7 +154,7 @@ ChBody* CreateMechanism(ChSystemParallel* system)
   mat_b = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_b->SetYoungModulus(Y_c);
   mat_b->SetFriction(mu_c);
-  mat_b->SetDissipationFactor(alpha_c);
+  mat_b->SetRestitution(cr_c);
 #else
   ChSharedPtr<ChMaterialSurface> mat_b(new ChMaterialSurface);
   mat_b->SetFriction(mu_c);
@@ -253,7 +253,7 @@ void CreateParticles(ChSystemParallel* system)
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_g->SetYoungModulus(Y_g);
   mat_g->SetFriction(mu_g);
-  mat_g->SetDissipationFactor(alpha_g);
+  mat_g->SetRestitution(cr_g);
 #else
   ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
   mat_g->SetFriction(mu_g);

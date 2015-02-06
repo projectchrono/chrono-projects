@@ -117,7 +117,7 @@ void checkGenerators()
   ballMat = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   ballMat->SetYoungModulus(5e4f);
   ballMat->SetFriction(0.4f);
-  ballMat->SetDissipationFactor(0.6f);
+  ballMat->SetRestitution(0.2f);
 
 
   // CHECK GENERATOR
