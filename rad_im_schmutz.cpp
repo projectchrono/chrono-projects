@@ -602,7 +602,8 @@ int main(int argc, char* argv[])
     if (gl_window.Active()) {
       gl_window.DoStepDynamics(time_step);
       gl_window.Render();
-    }
+    } else
+      break;
 #else
     msystem->DoStepDynamics(time_step);
 #endif
