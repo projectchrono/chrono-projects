@@ -72,9 +72,9 @@ int main(int argc, char* argv[]) {
   // Simulation parameters
 
   double gravity = 9.81;
-  double time_step = 1e-2;
-  double data_out_step = 1e0 * time_step;
-  double visual_out_step = 1e1 * time_step;
+  double time_step = 1e-3;
+  double data_out_step = 1e1 * time_step;
+  double visual_out_step = 1e2 * time_step;
   double settling_time = 1.0;
   double begin_shear_time = 10.0;
   double end_simulation_time = 20.0;
@@ -92,7 +92,6 @@ int main(int argc, char* argv[]) {
   double Y = 8.0e6;  // Pa
   double nu = 0.3;
   double COR = 0.9;
-  double alpha = -log(COR) * 6.66264 / (3.85238 + log(COR));  // Hu et al. (2011)
   double mu = 0.5;
 
   // Parameters for containing bin, shear box, and load plate
@@ -127,7 +126,7 @@ int main(int argc, char* argv[]) {
   // Create the system
 
   ChSystemParallelDVI* my_system = new ChSystemParallelDVI();
-  my_system->GetSettings()->solver.tolerance = 0.1;
+  my_system->GetSettings()->solver.tolerance = 0.01;
   my_system->GetSettings()->solver.max_iteration_bilateral = 100;
   my_system->GetSettings()->solver.clamp_bilaterals = false;
   my_system->GetSettings()->solver.bilateral_clamp_speed = 1;
@@ -343,10 +342,13 @@ int main(int argc, char* argv[]) {
           shearing = true;
         }
 
-        if(shearing == true)
+        if(shearing == true) {
         	bin->SetPos(ChVector<>(0, -height / 2, -shear_speed * begin_shear_time + shear_speed*time));
-        else
+        	bin->SetRot(QUNIT);
+        } else {
         	bin->SetPos(ChVector<>(0, -height / 2, 0));
+        	bin->SetRot(QUNIT);
+        }
 
         my_system->DoStepDynamics(time_step);
         time += time_step;
@@ -363,11 +365,11 @@ int main(int argc, char* argv[]) {
 
         if (shearing == true) {
           shearStream << (pos.z - shear_Disp) / (2 * radius) << "	";
-          shearStream << force.z / (shear_Area * normal_pressure) << "	";
+          shearStream << -force.z / (shear_Area * normal_pressure) << "	";
           shearStream << (plate->GetPos().y - shear_Height) / (2 * radius) << "\n";
 
           cout << (pos.z - shear_Disp) / (2 * radius) << "	";
-          cout << force.z / (shear_Area * normal_pressure) << "	";
+          cout << -force.z / (shear_Area * normal_pressure) << "	";
           cout << (plate->GetPos().y - shear_Height) / (2 * radius) << "\n";
         }
       }

@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
   ChVector<> pos(0, 0, 0);
   ChQuaternion<> rot(1, 0, 0, 0);
   ChVector<> vel(0, 0, 0);
-  ChVector<> force(0, 0, 0);
+  real3 force(0, 0, 0);
 
   // Define two quaternions representing:
   // - a rotation of -90 degrees around x (z2y)
@@ -128,6 +128,11 @@ int main(int argc, char* argv[]) {
   ChSystemParallelDEM* my_system = new ChSystemParallelDEM();
   my_system->GetSettings()->solver.tolerance = 0.01;
   my_system->GetSettings()->solver.max_iteration_bilateral = 100;
+//  my_system->GetSettings()->solver.clamp_bilaterals = false;
+//  my_system->GetSettings()->solver.bilateral_clamp_speed = 1;
+
+  my_system->GetSettings()->collision.collision_envelope = 0.05 * radius;
+  my_system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 
   my_system->Set_G_acc(ChVector<>(0, -gravity, 0));
 
@@ -154,7 +159,7 @@ int main(int argc, char* argv[]) {
   bin->SetIdentifier(binId);
   bin->SetMass(1);
   bin->SetPos(ChVector<>(0, -height / 2, 0));
-  bin->SetBodyFixed(false);
+  bin->SetBodyFixed(true);
   bin->SetCollide(true);
 
   bin->SetMaterialSurfaceDEM(material);
@@ -296,13 +301,6 @@ int main(int argc, char* argv[]) {
   prismatic_plate_box->Initialize(plate, box, ChCoordsys<>(ChVector<>(0, 0, 0), z2y));
   my_system->AddLink(prismatic_plate_box);
 
-  // Create locked (6 DOF fixed) joint between lower bin and shear box.
-
-  ChSharedPtr<ChLinkLockLock> lock_bin_box(new ChLinkLockLock);
-  lock_bin_box->SetName("lock_bin_box");
-  lock_bin_box->Initialize(bin, box, ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
-  my_system->AddLink(lock_bin_box);
-
   // Setup output
 
   ChStreamOutAsciiFile shearStream(shear_file.c_str());
@@ -319,9 +317,6 @@ int main(int argc, char* argv[]) {
   bool settling = true;
   bool shearing = false;
   while (gl_window.Active() && time < end_simulation_time) {
-
-    gl_window.Render();
-
     while (time < visual_out_time) {
       while (time < data_out_time) {
         if (time > settling_time && settling == true) {
@@ -340,43 +335,41 @@ int main(int argc, char* argv[]) {
           shearing = true;
         }
 
-        if(shearing == true)
-        {
+        if(shearing == true) {
         	bin->SetPos(ChVector<>(0, -height / 2, -shear_speed * begin_shear_time + shear_speed*time));
-//        	bin->SetPos_dt(ChVector<>(0, 0, shear_speed));
-//        	bin->SetPos_dtdt(ChVector<>(0, 0, 0));
-        } else
-        {
+        	bin->SetRot(QUNIT);
+        } else {
         	bin->SetPos(ChVector<>(0, -height / 2, 0));
-//        	bin->SetPos_dt(ChVector<>(0, 0, 0));
-//        	bin->SetPos_dtdt(ChVector<>(0, 0, 0));
+        	bin->SetRot(QUNIT);
         }
 
         my_system->DoStepDynamics(time_step);
         time += time_step;
       }
 
-      cout << time << "	" << plate->GetPos().y - bin->GetPos().y << "	"
-    		  << bin->GetPos().x << "	"
-    		  << bin->GetPos().y << "	"
-    		  << bin->GetPos().z << "	"
-    		  << lock_bin_box->Get_react_force().x << "	"
-    		  << lock_bin_box->Get_react_force().y << "	"
-    		  << lock_bin_box->Get_react_force().z << "\n";
+      if (time > 0) {
+        pos = bin->GetPos();
+        force = my_system->GetBodyContactForce(0);
 
-      if (shearing == true) {
-        shearStream << (bin->GetPos().z - shear_Disp) / (2 * radius) << "	";
-        shearStream << lock_bin_box->Get_react_force().z / (shear_Area * normal_pressure) << "	";
-        shearStream << (plate->GetPos().y - shear_Height) / (2 * radius) << "\n";
+        cout << time << "	" << plate->GetPos().y - bin->GetPos().y << "	"
+        	  << pos.x << "	" << pos.y << "	" << pos.z << "	"
+        	  << force.x << "	" << force.y << "	" << force.z << "\n";
 
-        cout << (bin->GetPos().z - shear_Disp) / (2 * radius) << "	";
-        cout << lock_bin_box->Get_react_force().z / (shear_Area * normal_pressure) << "	";
-        cout << (plate->GetPos().y - shear_Height) / (2 * radius) << "\n";
+        if (shearing == true) {
+          shearStream << (pos.z - shear_Disp) / (2 * radius) << "	";
+          shearStream << -force.z / (shear_Area * normal_pressure) << "	";
+          shearStream << (plate->GetPos().y - shear_Height) / (2 * radius) << "\n";
+
+          cout << (pos.z - shear_Disp) / (2 * radius) << "	";
+          cout << -force.z / (shear_Area * normal_pressure) << "	";
+          cout << (plate->GetPos().y - shear_Height) / (2 * radius) << "\n";
+        }
       }
 
       data_out_time += data_out_step;
     }
 
+    gl_window.Render();
     visual_out_time += visual_out_step;
   }
 
