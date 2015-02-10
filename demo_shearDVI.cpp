@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
   double time_step = 1e-3;
   double data_out_step = 1e1 * time_step;
   double visual_out_step = 1e2 * time_step;
-  double settling_time = 1.0;
+  double settling_time = 0.2;
   double begin_shear_time = 10.0;
   double end_simulation_time = 20.0;
   double normal_pressure = 1e3;		// Pa
@@ -83,9 +83,15 @@ int main(int argc, char* argv[]) {
 
   // Parameters for the balls
 
-  int ballId = 1;
-  int numballs = 1800;  // right now 1800 balls is hard-wired
+  int ballId = 1; // first ball id
+
+  const int a = 50;
+  const int b = 6;
+  const int c = 6;
+  int numballs = a*b*c; // number of falling balls = (a X b X c)
+
   bool dense = true;
+
   double radius = 0.0025;  // m
   double density = 2500;   // kg/m^3
   double mass = density * (4.0 / 3) * CH_C_PI * radius * radius * radius;
@@ -141,7 +147,7 @@ int main(int argc, char* argv[]) {
   my_system->ChangeSolverType(APGDREF);
 
   my_system->GetSettings()->collision.collision_envelope = 0.05 * radius;
-  my_system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_MPR;
+  my_system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
 
   my_system->Set_G_acc(ChVector<>(0, -gravity, 0));
 
@@ -242,9 +248,9 @@ int main(int argc, char* argv[]) {
 
   plate->SetIdentifier(binId);
   plate->SetMass(normal_pressure * shear_Area / gravity);
-  plate->SetPos(ChVector<>(0, height, 0));
+  plate->SetPos(ChVector<>(0, 2.0 * radius * float(a) + thickness, 0));
   plate->SetBodyFixed(true);
-  plate->SetCollide(false);
+  plate->SetCollide(true);
 
   plate->SetMaterialSurface(material);
 
@@ -258,18 +264,18 @@ int main(int argc, char* argv[]) {
 
   my_system->AddBody(plate);
 
-  // Create 1800 falling balls
+  // Create (a X b X c) many falling balls
 
   int i, j, k;
   double ball_x, ball_y, ball_z;
 
-  for (i = 0; i < 50; i++) {
-    for (j = 0; j < 6; j++) {
-      for (k = 0; k < 6; k++) {
-        ball_y = 2 * radius * float(i);
+  for (i = 0; i < a; i++) {
+    for (j = 0; j < b; j++) {
+      for (k = 0; k < c; k++) {
+        ball_y = 2.0 * radius * float(i);
 
-        ball_x = -0.025 + 0.01 * float(j) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
-        ball_z = -0.025 + 0.01 * float(k) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
+        ball_x = 4.0 * radius * (float(j - b / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
+        ball_z = 4.0 * radius * (float(k - c / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
 
         ChSharedPtr<ChBody> ball(new ChBody(new ChCollisionModelParallel));
 
@@ -313,72 +319,78 @@ int main(int argc, char* argv[]) {
   ChStreamOutAsciiFile shearStream(shear_file.c_str());
   shearStream.SetNumFormat("%16.4e");
 
-  // The soft-real-time cycle
-
-  double time = 0.0;
-  double data_out_time = 0.0;
-  double visual_out_time = 0.0;
-
   // Begin simulation
 
   bool settling = true;
   bool shearing = false;
-  while (gl_window.Active() && time < end_simulation_time) {
-    while (time < visual_out_time) {
-      while (time < data_out_time) {
-        if (time > settling_time && settling == true) {
-          if (dense == true)
-            material->SetFriction(0.05);
-          plate->SetBodyFixed(false);
-          plate->SetCollide(true);
-          settling = false;
-        }
 
-        if (time > begin_shear_time && shearing == false) {
-          if (dense == true)
-            material->SetFriction(mu);
-          shear_Height = plate->GetPos().y;
-          shear_Disp = bin->GetPos().z;
-          shearing = true;
-        }
+  int data_out_frame = 0;
+  int visual_out_frame = 0;
 
-        if(shearing == true) {
-        	bin->SetPos(ChVector<>(0, -height / 2, -shear_speed * begin_shear_time + shear_speed*time));
-        	bin->SetRot(QUNIT);
-        } else {
-        	bin->SetPos(ChVector<>(0, -height / 2, 0));
-        	bin->SetRot(QUNIT);
-        }
+  while (gl_window.Active() && my_system->GetChTime() < end_simulation_time) {
 
-        my_system->DoStepDynamics(time_step);
-        time += time_step;
-      }
-
-      if (time > 0) {
-        pos = bin->GetPos();
-        my_system->CalculateContactForces();
-        force = my_system->GetBodyContactForce(0);
-
-        cout << time << "	" << plate->GetPos().y - bin->GetPos().y << "	"
-        	  << pos.x << "	" << pos.y << "	" << pos.z << "	"
-        	  << force.x << "	" << force.y << "	" << force.z << "\n";
-
-        if (shearing == true) {
-          shearStream << (pos.z - shear_Disp) / (2 * radius) << "	";
-          shearStream << -force.z / (shear_Area * normal_pressure) << "	";
-          shearStream << (plate->GetPos().y - shear_Height) / (2 * radius) << "\n";
-
-          cout << (pos.z - shear_Disp) / (2 * radius) << "	";
-          cout << -force.z / (shear_Area * normal_pressure) << "	";
-          cout << (plate->GetPos().y - shear_Height) / (2 * radius) << "\n";
-        }
-      }
-
-      data_out_time += data_out_step;
+    if (my_system->GetChTime() > settling_time && settling == true) {
+      if (dense == true)
+        material->SetFriction(0.05);
+      plate->SetPos(ChVector<>(0, height, 0));
+      plate->SetBodyFixed(false);
+      settling = false;
     }
 
+    if (my_system->GetChTime() > begin_shear_time && shearing == false) {
+      if (dense == true)
+        material->SetFriction(mu);
+      shear_Height = plate->GetPos().y;
+      shear_Disp = bin->GetPos().z;
+      shearing = true;
+    }
+
+    if(shearing == true) {
+      bin->SetPos(ChVector<>(0, -height / 2, -shear_speed * begin_shear_time + shear_speed*my_system->GetChTime()));
+      bin->SetRot(QUNIT);
+    } else {
+      bin->SetPos(ChVector<>(0, -height / 2, 0));
+      bin->SetRot(QUNIT);
+    }
+
+//  Do time step
+
+    gl_window.DoStepDynamics(time_step);
     gl_window.Render();
-    visual_out_time += visual_out_step;
+
+//  Output to screen
+
+    if (my_system->GetChTime() >= data_out_frame * data_out_step) {
+
+      my_system->CalculateContactForces();
+      force = my_system->GetBodyContactForce(0);
+
+      cout << my_system->GetChTime() << "	" << plate->GetPos().y - bin->GetPos().y << "	"
+          << bin->GetPos().x << "	" << bin->GetPos().y << "	" << bin->GetPos().z << "	"
+          << force.x << "	" << force.y << "	" << force.z << "\n";
+
+//  Output to shear data file
+
+      if (shearing == true) {
+
+        shearStream << (bin->GetPos().z - shear_Disp) / (2 * radius) << "	";
+        shearStream << -force.z / (shear_Area * normal_pressure) << "	";
+        shearStream << (plate->GetPos().y - shear_Height) / (2 * radius) << "\n";
+
+        cout << (bin->GetPos().z - shear_Disp) / (2 * radius) << "	";
+        cout << -force.z / (shear_Area * normal_pressure) << "	";
+        cout << (plate->GetPos().y - shear_Height) / (2 * radius) << "\n";
+      }
+
+      data_out_frame++;
+    }
+
+//  TODO: Output to POV-Ray
+
+    if (my_system->GetChTime() >= visual_out_frame * visual_out_step) {
+
+      visual_out_frame++;
+    }
   }
 
   return 0;
