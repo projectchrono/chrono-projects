@@ -30,15 +30,17 @@
 #include <sstream>
 #include <cmath>
 
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
-
-#include "chrono_opengl/ChOpenGLWindow.h"
-
 #include "core/ChFileutils.h"
 #include "core/ChStream.h"
 
 #include "chrono_utils/ChUtilsCreators.h"
+#include "chrono_utils/ChUtilsGenerators.h"
+#include "chrono_utils/ChUtilsInputOutput.h"
+
+#include "chrono_parallel/physics/ChSystemParallel.h"
+#include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
+
+#include "chrono_opengl/ChOpenGLWindow.h"
 
 using namespace chrono;
 using namespace chrono::collision;
@@ -65,9 +67,22 @@ void AddWall(ChSharedBodyDEMPtr& body, const ChVector<>& dim, const ChVector<>& 
 
 // Output
 
-const std::string shear_file = "shearDEM.dat";
+const std::string out_dir = "./SHEAR_DEM";
+const std::string pov_dir = out_dir + "/POVRAY";
+const std::string shear_file = out_dir + "/shear.dat";
 
 int main(int argc, char* argv[]) {
+
+  // Create output directories
+
+  if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+    cout << "Error creating directory " << out_dir << endl;
+    return 1;
+  }
+  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+    cout << "Error creating directory " << pov_dir << endl;
+    return 1;
+  }
 
   // Simulation parameters
 
@@ -80,6 +95,8 @@ int main(int argc, char* argv[]) {
   double end_simulation_time = 20.0;
   double normal_pressure = 1e3;		// Pa
   double shear_speed = 0.001;		// m/s
+
+  bool write_povray_data = true;
 
   // Parameters for the balls
 
@@ -135,7 +152,7 @@ int main(int argc, char* argv[]) {
   my_system->GetSettings()->solver.tolerance = 0.01;
   my_system->GetSettings()->solver.max_iteration_bilateral = 100;
   my_system->GetSettings()->solver.clamp_bilaterals = false;
-  my_system->GetSettings()->solver.bilateral_clamp_speed = 1;
+  my_system->GetSettings()->solver.bilateral_clamp_speed = 0.1;
 
   my_system->GetSettings()->solver.contact_force_model = HERTZ;
 
@@ -148,7 +165,7 @@ int main(int argc, char* argv[]) {
 
   opengl::ChOpenGLWindow &gl_window = opengl::ChOpenGLWindow::getInstance();
   gl_window.Initialize(800, 600, "soft-sphere (DEM) direct shear box test", my_system);
-  gl_window.SetCamera(ChVector<>(3*width,0,0), ChVector<>(0,0,0),ChVector<>(0,1,0), 0.01, 0.01);
+  gl_window.SetCamera(ChVector<>(3*width,0,0), ChVector<>(0,0,0),ChVector<>(0,1,0), radius, radius);
   gl_window.SetRenderMode(opengl::SOLID);
 
   // Create a material (will be used by all objects)
@@ -379,9 +396,15 @@ int main(int argc, char* argv[]) {
       data_out_frame++;
     }
 
-//  TODO: Output to POV-Ray
+//  Output to POV-Ray
 
     if (my_system->GetChTime() >= visual_out_frame * visual_out_step) {
+
+      if (write_povray_data) {
+        char filename[100];
+        sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), visual_out_frame + 1);
+        utils::WriteShapesPovray(my_system, filename, false);
+      }
 
       visual_out_frame++;
     }
