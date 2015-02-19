@@ -57,8 +57,8 @@ void AddWall(ChSharedBodyPtr& body, const ChVector<>& dim, const ChVector<>& loc
   if (visible == true) {
     ChSharedPtr<ChBoxShape> box(new ChBoxShape);
     box->GetBoxGeometry().Size = dim;
-    //    box->GetBoxGeometry().Pos = loc;		// for Chrono
-    box->Pos = loc;  // for Chrono-Parallel
+//    box->GetBoxGeometry().Pos = loc;		// for Chrono
+    box->Pos = loc;							// for Chrono-Parallel
     box->SetColor(ChColor(1, 0, 0));
     box->SetFading(0.6f);
     body->AddAsset(box);
@@ -72,13 +72,14 @@ const std::string pov_dir = out_dir + "/POVRAY";
 const std::string shear_file = out_dir + "/shear.dat";
 
 int main(int argc, char* argv[]) {
+
   // Create output directories
 
   if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
     cout << "Error creating directory " << out_dir << endl;
     return 1;
   }
-  if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
     cout << "Error creating directory " << pov_dir << endl;
     return 1;
   }
@@ -92,19 +93,19 @@ int main(int argc, char* argv[]) {
   double settling_time = 0.2;
   double begin_shear_time = 10.0;
   double end_simulation_time = 20.0;
-  double normal_pressure = 1e3;  // Pa
-  double shear_speed = 0.001;    // m/s
+  double normal_pressure = 1e3;		// Pa
+  double shear_speed = 0.001;		// m/s
 
   bool write_povray_data = true;
 
   // Parameters for the balls
 
-  int ballId = 1;  // first ball id
+  int ballId = 1; // first ball id
 
   const int a = 50;
   const int b = 6;
   const int c = 6;
-  int numballs = a * b * c;  // number of falling balls = (a X b X c)
+  int numballs = a*b*c; // number of falling balls = (a X b X c)
 
   bool dense = true;
 
@@ -168,9 +169,9 @@ int main(int argc, char* argv[]) {
 
   // Create the OpenGL visualization
 
-  opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
+  opengl::ChOpenGLWindow &gl_window = opengl::ChOpenGLWindow::getInstance();
   gl_window.Initialize(800, 600, "hard-sphere (DVI) direct shear box test", my_system);
-  gl_window.SetCamera(ChVector<>(3 * width, 0, 0), ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), radius, radius);
+  gl_window.SetCamera(ChVector<>(3*width,0,0), ChVector<>(0,0,0),ChVector<>(0,1,0), radius, radius);
   gl_window.SetRenderMode(opengl::SOLID);
 
   // Create a material (will be used by all objects)
@@ -343,6 +344,7 @@ int main(int argc, char* argv[]) {
   int visual_out_frame = 0;
 
   while (gl_window.Active() && my_system->GetChTime() < end_simulation_time) {
+
     if (my_system->GetChTime() > settling_time && settling == true) {
       if (dense == true)
         material->SetFriction(0.05);
@@ -359,32 +361,34 @@ int main(int argc, char* argv[]) {
       shearing = true;
     }
 
-    if (shearing == true) {
-      bin->SetPos(ChVector<>(0, -height / 2, -shear_speed * begin_shear_time + shear_speed * my_system->GetChTime()));
+    if(shearing == true) {
+      bin->SetPos(ChVector<>(0, -height / 2, -shear_speed * begin_shear_time + shear_speed*my_system->GetChTime()));
       bin->SetRot(QUNIT);
     } else {
       bin->SetPos(ChVector<>(0, -height / 2, 0));
       bin->SetRot(QUNIT);
     }
 
-    //  Do time step
+//  Do time step
 
     gl_window.DoStepDynamics(time_step);
     gl_window.Render();
 
-    //  Output to screen
+//  Output to screen
 
     if (my_system->GetChTime() >= data_out_frame * data_out_step) {
+
       my_system->CalculateContactForces();
       force = my_system->GetBodyContactForce(0);
 
-      cout << my_system->GetChTime() << "	" << plate->GetPos().y - bin->GetPos().y << "	" << bin->GetPos().x
-           << "	" << bin->GetPos().y << "	" << bin->GetPos().z << "	" << force.x << "	" << force.y
-           << "	" << force.z << "\n";
+      cout << my_system->GetChTime() << "	" << plate->GetPos().y - bin->GetPos().y << "	"
+          << bin->GetPos().x << "	" << bin->GetPos().y << "	" << bin->GetPos().z << "	"
+          << force.x << "	" << force.y << "	" << force.z << "\n";
 
-      //  Output to shear data file
+//  Output to shear data file
 
       if (shearing == true) {
+
         shearStream << (bin->GetPos().z - shear_Disp) / (2 * radius) << "	";
         shearStream << -force.z / (shear_Area * normal_pressure) << "	";
         shearStream << (plate->GetPos().y - shear_Height) / (2 * radius) << "\n";
@@ -397,9 +401,10 @@ int main(int argc, char* argv[]) {
       data_out_frame++;
     }
 
-    //  Output to POV-Ray
+//  Output to POV-Ray
 
     if (my_system->GetChTime() >= visual_out_frame * visual_out_step) {
+
       if (write_povray_data) {
         char filename[100];
         sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), visual_out_frame + 1);

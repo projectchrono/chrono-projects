@@ -21,7 +21,9 @@ using namespace chrono::collision;
 // Define this to save the data when using the OpenGL code
 //#define SAVE_DATA
 
-int main(int argc, char* argv[]) {
+
+int main(int argc, char* argv[])
+{
   int threads = 8;
 
   // Simulation parameters
@@ -40,25 +42,25 @@ int main(int argc, char* argv[]) {
   const std::string pov_mesh_file = out_dir + "/" + mesh_name + ".inc";
 
   // Parameters for the falling body
-  ChVector<> hdims(1, 1, 1);
-  double density = 1000;
-  double volume = 8 * hdims.x * hdims.y * hdims.z;
-  double mass = density * volume;
-  ChVector<> inertia = mass / 12 * ChVector<>(hdims.y * hdims.y + hdims.z * hdims.z,
-                                              hdims.x * hdims.x + hdims.z * hdims.z,
-                                              hdims.x * hdims.x + hdims.y * hdims.y);
+  ChVector<>      hdims(1, 1, 1);
+  double          density = 1000;
+  double          volume = 8 * hdims.x * hdims.y * hdims.z;
+  double          mass = density * volume;
+  ChVector<>      inertia = mass/12 * ChVector<>(hdims.y * hdims.y + hdims.z * hdims.z,
+                                                 hdims.x * hdims.x + hdims.z * hdims.z,
+                                                 hdims.x * hdims.x + hdims.y * hdims.y);
 
-  ChVector<> initPos1(1.5, 1.5, 4);
-  ChVector<> initPos2(-1.5, -1.5, 4);
+  ChVector<>      initPos1( 1.5,  1.5, 4);
+  ChVector<>      initPos2(-1.5, -1.5, 4);
 
-  ChVector<> initVel1(0, 0, 0);
-  ChVector<> initVel2(0, 0, 0);
+  ChVector<>      initVel1(0,0,0);
+  ChVector<>      initVel2(0,0,0);
 
-  ChQuaternion<> initRot1(1, 0, 0, 0);
-  initRot1.Q_from_AngAxis(CH_C_PI / 4, ChVector<>(1 / sqrt(2.0), 1 / sqrt(2.0), 0));
+  ChQuaternion<>  initRot1(1,0,0,0);
+  initRot1.Q_from_AngAxis(CH_C_PI/4, ChVector<>(1/sqrt(2.0), 1/sqrt(2.0), 0));
 
-  ChQuaternion<> initRot2(1, 0, 0, 0);
-  initRot2.Q_from_AngAxis(CH_C_PI / 4, ChVector<>(-1 / sqrt(2.0), -1 / sqrt(2.0), 0));
+  ChQuaternion<>  initRot2(1,0,0,0);
+  initRot2.Q_from_AngAxis(CH_C_PI/4, ChVector<>(-1/sqrt(2.0), -1/sqrt(2.0), 0));
 
   // -------------
   // Create system
@@ -113,6 +115,7 @@ int main(int argc, char* argv[]) {
 
   utils::WriteMeshPovray(obj_mesh_file, mesh_name, pov_mesh_file);
 
+
   ChSharedBodyDEMPtr body2(new ChBodyDEM(new ChCollisionModelParallel));
   body2->SetMaterialSurfaceDEM(bodyMat);
   body2->SetIdentifier(102);
@@ -132,6 +135,7 @@ int main(int argc, char* argv[]) {
 
   msystem->AddBody(body2);
 
+
   // -------------------------
   // Create the fixed objects
   // -------------------------
@@ -146,8 +150,8 @@ int main(int argc, char* argv[]) {
   bin->SetMaterialSurfaceDEM(binMat);
   bin->SetIdentifier(-100);
   bin->SetMass(1);
-  bin->SetPos(ChVector<>(0, 0, 0));
-  bin->SetRot(ChQuaternion<>(1, 0, 0, 0));
+  bin->SetPos(ChVector<>(0,0,0));
+  bin->SetRot(ChQuaternion<>(1,0,0,0));
   bin->SetBodyFixed(true);
   bin->SetCollide(true);
 
@@ -169,11 +173,11 @@ int main(int argc, char* argv[]) {
   // Create output directories
   // -------------------------
 
-  if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+  if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
     std::cout << "Error creating directory " << out_dir << std::endl;
     return 1;
   }
-  if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
     std::cout << "Error creating directory " << pov_dir << std::endl;
     return 1;
   }
@@ -190,6 +194,7 @@ int main(int argc, char* argv[]) {
   char filename[100];
 
   for (int i = 0; i < num_steps; i++) {
+
     if (i % out_steps == 0) {
       sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame);
       utils::WriteShapesPovray(msystem, filename);
@@ -202,3 +207,4 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
+

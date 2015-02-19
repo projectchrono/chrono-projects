@@ -53,9 +53,10 @@ using std::endl;
 // No joints between bodies are defined at this time.
 // =============================================================================
 
-void CreateMechanismBodies(ChSystem* system, double hdimX, double hdimY, double hdimZ, double hthick, double mu_walls) {
+void CreateMechanismBodies(ChSystem* system, double hdimX, double hdimY, double hdimZ, double hthick, double mu_walls)
+{
   // Parameters for the mechanism
-  int Id_container = 0;  // body ID for the containing bin
+  int Id_container = 0;             // body ID for the containing bin
 
   // -------------------------------
   // Create a material for the walls
@@ -79,9 +80,9 @@ void CreateMechanismBodies(ChSystem* system, double hdimX, double hdimY, double 
   container->GetCollisionModel()->ClearModel();
   utils::AddBoxGeometry(container.get_ptr(), ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
   utils::AddBoxGeometry(container.get_ptr(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
-  utils::AddBoxGeometry(container.get_ptr(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
+  utils::AddBoxGeometry(container.get_ptr(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>( hdimX + hthick, 0, hdimZ));
   utils::AddBoxGeometry(container.get_ptr(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
-  utils::AddBoxGeometry(container.get_ptr(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, hdimY + hthick, hdimZ));
+  utils::AddBoxGeometry(container.get_ptr(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0,  hdimY + hthick, hdimZ));
   container->GetCollisionModel()->BuildModel();
 
   system->AddBody(container);
@@ -96,14 +97,9 @@ void CreateMechanismBodies(ChSystem* system, double hdimX, double hdimY, double 
 // thus ensuring that no two spheres are closer than twice the radius.
 // =============================================================================
 
-int CreateGranularMaterial(ChSystem* system,
-                           double hdimX,
-                           double hdimY,
-                           double hdimZ,
-                           double r_g,
-                           double rho_g,
-                           double mu_g) {
-  int Id_g = 1;  // start body ID for particles
+int CreateGranularMaterial(ChSystem* system, double hdimX, double hdimY, double hdimZ, double r_g, double rho_g, double mu_g)
+{
+  int        Id_g = 1; // start body ID for particles
 
   // -------------------------------------------
   // Create a material for the granular material
@@ -135,7 +131,8 @@ int CreateGranularMaterial(ChSystem* system,
   ChVector<> hdims(hdimX - r, hdimY - r, 0);
   ChVector<> center(0, 0, 2 * r);
 
-  while (center.z < 2 * hdimZ) {
+  while (center.z < 2 * hdimZ)
+  {
     gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
     center.z += 2 * r;
   }
@@ -148,32 +145,34 @@ int CreateGranularMaterial(ChSystem* system,
 
 int generateSettledFile(ChSystem* msystem, double timeStep, double endTime, std::string settled_ckpnt_file) {
   // Parameters
-  double r_g = 0.8;     // [m] radius of granular sphers
-  double rho_g = 1000;  // [kg/m^3] density of granules
-  double mu_g = 0.5f;
-  double hdimX = 2.0 / 2;   // [m] bin half-length in x direction
-  double hdimY = 2.0 / 2;   // [m] bin half-depth in y direction
-  double hdimZ = 2.0 / 2;   // [m] bin half-height in z direction
-  double hthick = 0.1 / 2;  // [m] bin half-thickness of the walls
-  double mu_walls = 0.3f;
+  double     r_g = 0.8;                    // [m] radius of granular sphers
+  double     rho_g = 1000;                 // [kg/m^3] density of granules
+  double     mu_g = 0.5f;
+  double     hdimX = 2.0 / 2;              // [m] bin half-length in x direction
+  double     hdimY = 2.0 / 2;              // [m] bin half-depth in y direction
+  double     hdimZ = 2.0 / 2;              // [m] bin half-height in z direction
+  double     hthick = 0.1 / 2;             // [m] bin half-thickness of the walls
+  double     mu_walls = 0.3f;
 
   // Create the bodies
-  CreateMechanismBodies(msystem, hdimX, hdimY, hdimZ, hthick, mu_walls);
+	CreateMechanismBodies(msystem,hdimX,hdimY,hdimZ,hthick,mu_walls);
 
-  // Create the granular material
-  CreateGranularMaterial(msystem, hdimX, hdimY, hdimZ, r_g, rho_g, mu_g);
+	// Create the granular material
+	CreateGranularMaterial(msystem,hdimX,hdimY,hdimZ,r_g,rho_g,mu_g);
 
-  while (msystem->GetChTime() < endTime) {
-    msystem->DoStepDynamics(timeStep);
-    printf("  Time: %f\n", msystem->GetChTime());
-  }
+	while(msystem->GetChTime()<endTime)
+	{
+		msystem->DoStepDynamics(timeStep);
+		printf("  Time: %f\n", msystem->GetChTime());
+	}
 
-  utils::WriteCheckpoint(msystem, settled_ckpnt_file);
+	utils::WriteCheckpoint(msystem, settled_ckpnt_file);
 
-  return 0;
+	return 0;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
   // Step 0: Set up the simulation parameters
 
   // Solver settings
@@ -218,7 +217,7 @@ int main(int argc, char* argv[]) {
     cout << "Error creating directory " << serial_out_dir << endl;
     return 1;
   }
-  if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
     cout << "Error creating directory " << pov_dir << endl;
     return 1;
   }
@@ -229,7 +228,7 @@ int main(int argc, char* argv[]) {
   serialSystem->Set_G_acc(ChVector<>(0, 0, -gravity));
   serialSystem->SetTolForce(tolerance);
   serialSystem->SetIterLCPmaxItersSpeed(max_iteration_sliding);
-  serialSystem->SetMaxPenetrationRecoverySpeed(contact_recovery_speed);  // used by Anitescu stepper only
+  serialSystem->SetMaxPenetrationRecoverySpeed(contact_recovery_speed); // used by Anitescu stepper only
   serialSystem->SetUseSleeping(false);
   serialSystem->SetLcpSolverType(ChSystem::LCP_ITERATIVE_APGD);
   serialSystem->SetIntegrationType(ChSystem::INT_ANITESCU);
@@ -245,8 +244,7 @@ int main(int argc, char* argv[]) {
   parallelSystem->ChangeCollisionSystem(COLLSYS_BULLET_PARALLEL);
 
   int max_threads = parallelSystem->GetParallelThreadNumber();
-  if (threads > max_threads)
-    threads = max_threads;
+  if (threads > max_threads) threads = max_threads;
   parallelSystem->SetParallelThreadNumber(threads);
   omp_set_num_threads(threads);
   parallelSystem->GetSettings()->max_threads = threads;
@@ -281,17 +279,18 @@ int main(int argc, char* argv[]) {
   ChBody* bodyParallel;
   double posError = 0;
   double velError = 0;
-  for (int i = 0; i < serialSystem->Get_bodylist()->size(); i++) {
+  for(int i=0; i<serialSystem->Get_bodylist()->size(); i++)
+  {
     bodySerial = (ChBody*)serialSystem->Get_bodylist()->at(i);
     bodyParallel = (ChBody*)parallelSystem->Get_bodylist()->at(i);
 
-    posError += fabs(bodySerial->GetPos().x - bodyParallel->GetPos().x);
-    posError += fabs(bodySerial->GetPos().y - bodyParallel->GetPos().y);
-    posError += fabs(bodySerial->GetPos().z - bodyParallel->GetPos().z);
+    posError += fabs(bodySerial->GetPos().x-bodyParallel->GetPos().x);
+    posError += fabs(bodySerial->GetPos().y-bodyParallel->GetPos().y);
+    posError += fabs(bodySerial->GetPos().z-bodyParallel->GetPos().z);
 
-    velError += fabs(bodySerial->GetPos_dt().x - bodyParallel->GetPos_dt().x);
-    velError += fabs(bodySerial->GetPos_dt().y - bodyParallel->GetPos_dt().y);
-    velError += fabs(bodySerial->GetPos_dt().z - bodyParallel->GetPos_dt().z);
+    velError += fabs(bodySerial->GetPos_dt().x-bodyParallel->GetPos_dt().x);
+    velError += fabs(bodySerial->GetPos_dt().y-bodyParallel->GetPos_dt().y);
+    velError += fabs(bodySerial->GetPos_dt().z-bodyParallel->GetPos_dt().z);
   }
   cout << "  Position error: " << posError << endl;
   cout << "  Velocity error: " << velError << endl;
@@ -320,17 +319,18 @@ int main(int argc, char* argv[]) {
   // Check position and velocity
   posError = 0;
   velError = 0;
-  for (int i = 0; i < serialSystem->Get_bodylist()->size(); i++) {
+  for(int i=0; i<serialSystem->Get_bodylist()->size(); i++)
+  {
     bodySerial = (ChBody*)serialSystem->Get_bodylist()->at(i);
     bodyParallel = (ChBody*)parallelSystem->Get_bodylist()->at(i);
 
-    posError += fabs(bodySerial->GetPos().x - bodyParallel->GetPos().x);
-    posError += fabs(bodySerial->GetPos().y - bodyParallel->GetPos().y);
-    posError += fabs(bodySerial->GetPos().z - bodyParallel->GetPos().z);
+    posError += fabs(bodySerial->GetPos().x-bodyParallel->GetPos().x);
+    posError += fabs(bodySerial->GetPos().y-bodyParallel->GetPos().y);
+    posError += fabs(bodySerial->GetPos().z-bodyParallel->GetPos().z);
 
-    velError += fabs(bodySerial->GetPos_dt().x - bodyParallel->GetPos_dt().x);
-    velError += fabs(bodySerial->GetPos_dt().y - bodyParallel->GetPos_dt().y);
-    velError += fabs(bodySerial->GetPos_dt().z - bodyParallel->GetPos_dt().z);
+    velError += fabs(bodySerial->GetPos_dt().x-bodyParallel->GetPos_dt().x);
+    velError += fabs(bodySerial->GetPos_dt().y-bodyParallel->GetPos_dt().y);
+    velError += fabs(bodySerial->GetPos_dt().z-bodyParallel->GetPos_dt().z);
   }
   cout << "  Position error: " << posError << endl;
   cout << "  Velocity error: " << velError << endl;
@@ -339,3 +339,5 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
+
+

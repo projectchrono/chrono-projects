@@ -41,37 +41,38 @@ const std::string out_file = out_dir + "/timing.dat";
 double out_fps = 50;
 
 // Parameters for the granular material
-int Id_g = 1;
-double r_g = 0.01;
-double rho_g = 2000;
+int        Id_g = 1;
+double     r_g = 0.01;
+double     rho_g = 2000;
 
-float Y_g = 2e7;
-float mu_g = 0.2;
-float cr_g = 0.1;
-float cohesion_g = 300;
+float      Y_g = 2e7;
+float      mu_g = 0.2;
+float      cr_g = 0.1;
+float      cohesion_g = 300;
 
 // Parameters for the containing bin
-int binId = -200;
-double hDimX = 10;        // length in x direction
-double hDimY = 10;        // depth in y direction
-double hDimZ = 1;         // height in z direction
-double hThickness = 0.4;  // wall thickness
+int        binId = -200;
+double     hDimX = 10;           // length in x direction
+double     hDimY = 10;           // depth in y direction
+double     hDimZ = 1;            // height in z direction
+double     hThickness = 0.4;     // wall thickness
 
-float Y_c = 2e6;
-float mu_c = 0.3;
-float cr_c = 0.1;
-float cohesion_c = 5;
+float      Y_c = 2e6;
+float      mu_c = 0.3;
+float      cr_c = 0.1;
+float      cohesion_c = 5;
 
 // Particle generator
-utils::Generator* gen;
+utils::Generator*  gen;
 
-double initVel = 5;  // initial particle velocity in negative X direction
+double     initVel = 5;         // initial particle velocity in negative X direction
 
 int maxNumParticles = 10000;
 
 // =======================================================================
 
-int SpawnParticles() {
+int SpawnParticles()
+{
   double dist = 2 * 0.99 * r_g;
 
   ////gen->createObjectsBox(utils::POISSON_DISK,
@@ -79,14 +80,20 @@ int SpawnParticles() {
   ////                     ChVector<>(9, 0, 3),
   ////                     ChVector<>(0, 1, 0.5),
   ////                     ChVector<>(-initVel, 0, 0));
-  gen->createObjectsCylinderX(utils::POISSON_DISK, dist, ChVector<>(9, 0, 3), 0.2, 0, ChVector<>(-initVel, 0, 0));
+  gen->createObjectsCylinderX(utils::POISSON_DISK,
+                       dist,
+                       ChVector<>(9, 0, 3),
+                       0.2, 0,
+                       ChVector<>(-initVel, 0, 0));
   cout << "  total bodies: " << gen->getTotalNumBodies() << endl;
 
   return gen->getTotalNumBodies();
 }
 
+
 // ========================================================================
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
   // Create system
   ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
 
@@ -129,9 +136,9 @@ int main(int argc, char* argv[]) {
   utils::CreateBoxContainerDEM(msystem, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 
   // Create a mixture entirely made out of spheres
-  double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
-  double mass_g = rho_g * vol_g;
-  ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
+  double     vol_g = (4.0/3) * CH_C_PI * r_g * r_g * r_g;
+  double     mass_g = rho_g * vol_g;
+  ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1,1,1);
 
   gen = new utils::Generator(msystem);
 
@@ -148,11 +155,11 @@ int main(int argc, char* argv[]) {
   int gen_steps = std::ceil(3 * r_g / initVel / time_step);
 
   // Create output directories.
-  if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+  if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
     cout << "Error creating directory " << out_dir << endl;
     return 1;
   }
-  if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
     cout << "Error creating directory " << pov_dir << endl;
     return 1;
   }
@@ -182,7 +189,11 @@ int main(int argc, char* argv[]) {
       cout << "                                   Execution time: " << exec_time << endl;
       cout << "                                   Num. bodies:    " << numParticles << endl;
 
-      ofile << sim_frame << "  " << time << "  " << exec_time << "  " << numParticles << "  " << msystem->GetNcontacts()
+      ofile << sim_frame << "  "
+            << time << "  "
+            << exec_time << "  "
+            << numParticles << "  "
+            << msystem->GetNcontacts()
             << "\n";
 
       out_frame++;
@@ -203,3 +214,4 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
+

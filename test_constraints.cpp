@@ -20,7 +20,9 @@ using namespace chrono::collision;
 
 #define SLIDER_CRANK
 
-int main(int argc, char* argv[]) {
+
+int main(int argc, char* argv[])
+{
   int threads = 1;
 
   // Simulation parameters
@@ -57,26 +59,28 @@ int main(int argc, char* argv[]) {
   msystem->GetSettings()->solver.max_iteration_bilateral = max_iteration;
   msystem->GetSettings()->solver.tolerance = tolerance;
 
+
   // Create the rigid bodies of the slider-crank mechanical system.
   // --------------------------------------------------------------
 
   // Rotation of -90 degrees around z
   ChVector<> zero(0, 0, 0);
   ChQuaternion<> y2x(1, 0, 0, 0);
-  y2x.Q_from_AngAxis(-CH_C_PI / 2, ChVector<>(0, 0, 1));
+  y2x.Q_from_AngAxis(-CH_C_PI/2, ChVector<>(0, 0, 1));
+
 
   // ground
-  ChSharedBodyDEMPtr ground(new ChBodyDEM(new ChCollisionModelParallel));
+  ChSharedBodyDEMPtr  ground(new ChBodyDEM(new ChCollisionModelParallel));
   msystem->AddBody(ground);
   ground->SetIdentifier(0);
   ground->SetBodyFixed(true);
   ground->SetCollide(false);
 
   // crank
-  ChSharedBodyDEMPtr crank(new ChBodyDEM(new ChCollisionModelParallel));
+  ChSharedBodyDEMPtr  crank(new ChBodyDEM(new ChCollisionModelParallel));
   msystem->AddBody(crank);
   crank->SetIdentifier(1);
-  crank->SetPos(ChVector<>(1, 0, 0));
+  crank->SetPos(ChVector<>(1,0,0));
   crank->SetCollide(false);
   crank->GetCollisionModel()->ClearModel();
   utils::AddCapsuleGeometry(crank.get_ptr(), 0.1, 1, zero, y2x);
@@ -84,10 +88,10 @@ int main(int argc, char* argv[]) {
 
 #ifdef SLIDER_CRANK
   // rod
-  ChSharedBodyDEMPtr rod(new ChBodyDEM(new ChCollisionModelParallel));
+  ChSharedBodyDEMPtr  rod(new ChBodyDEM(new ChCollisionModelParallel));
   msystem->AddBody(rod);
   rod->SetIdentifier(2);
-  rod->SetPos(ChVector<>(4, 0, 0));
+  rod->SetPos(ChVector<>(4,0,0));
   rod->SetCollide(false);
   rod->GetCollisionModel()->ClearModel();
   utils::AddCapsuleGeometry(rod.get_ptr(), 0.1, 2, zero, y2x);
@@ -101,18 +105,18 @@ int main(int argc, char* argv[]) {
   ChSharedBodyPtr rod_(rod);
 #endif
 
-// Create joint constraints. Joint locations are specified in global frame.
-// ------------------------------------------------------------------------
+  // Create joint constraints. Joint locations are specified in global frame.
+  // ------------------------------------------------------------------------
 
 #ifdef SLIDER_CRANK
   // Revolute joint between crank and rod
-  ChSharedPtr<ChLinkLockRevolute> rev_crank_rod(new ChLinkLockRevolute);
-  rev_crank_rod->Initialize(crank_, rod_, ChCoordsys<>(ChVector<>(2, 0, 0)));
+  ChSharedPtr<ChLinkLockRevolute>  rev_crank_rod(new ChLinkLockRevolute);
+  rev_crank_rod->Initialize(crank_, rod_, ChCoordsys<>(ChVector<>(2,0,0)));
   msystem->AddLink(rev_crank_rod);
 
   // Slider (point on line) joint between rod and ground
   ChSharedPtr<ChLinkLockPointLine> slider_rod_ground(new ChLinkLockPointLine);
-  slider_rod_ground->Initialize(rod_, ground_, ChCoordsys<>(ChVector<>(6, 0, 0)));
+  slider_rod_ground->Initialize(rod_, ground_, ChCoordsys<>(ChVector<>(6,0,0)));
   msystem->AddLink(slider_rod_ground);
 #endif
 
@@ -125,33 +129,36 @@ int main(int argc, char* argv[]) {
   ////msystem->AddLink(engine_ground_crank);
 
   // Revolute between ground and crank
-  ChSharedPtr<ChLinkLockRevolute> rev_ground_crank(new ChLinkLockRevolute);
-  rev_ground_crank->Initialize(ground_, crank_, ChCoordsys<>(ChVector<>(0, 0, 0)));
+  ChSharedPtr<ChLinkLockRevolute>  rev_ground_crank(new ChLinkLockRevolute);
+  rev_ground_crank->Initialize(ground_, crank_, ChCoordsys<>(ChVector<>(0,0,0)));
   msystem->AddLink(rev_ground_crank);
+
 
   // Create output directories
   // -------------------------
 
-  if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+  if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
     std::cout << "Error creating directory " << out_dir << std::endl;
     return 1;
   }
-  if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
     std::cout << "Error creating directory " << pov_dir << std::endl;
     return 1;
   }
 
+
   // Perform the simulation.
   // -----------------------
 
-  int num_steps = (int)std::ceil(time_end / time_step);
-  int out_steps = (int)std::ceil((1 / time_step) / out_fps);
+  int num_steps = (int) std::ceil(time_end / time_step);
+  int out_steps = (int) std::ceil((1 / time_step) / out_fps);
 
   double time = 0;
   int out_frame = 0;
   char filename[100];
 
   for (int i = 0; i < num_steps; i++) {
+
     if (i % out_steps == 0) {
       sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame);
       utils::WriteShapesPovray(msystem, filename);
@@ -165,3 +172,5 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
+
+

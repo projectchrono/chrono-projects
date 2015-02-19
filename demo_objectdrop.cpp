@@ -33,12 +33,12 @@ using std::endl;
 // Parameters for the falling object
 collision::ShapeType shape_o = collision::ROUNDEDCYL;
 
-ChVector<> initPos(1.0, -1.0, 3.0);
-// ChQuaternion<> initRot(1.0, 0.0, 0.0, 0.0);
-ChQuaternion<> initRot = Q_from_AngAxis(CH_C_PI / 3, ChVector<>(1, 0, 0));
+ChVector<>     initPos(1.0, -1.0, 3.0);
+//ChQuaternion<> initRot(1.0, 0.0, 0.0, 0.0);
+ChQuaternion<> initRot = Q_from_AngAxis(CH_C_PI/3, ChVector<>(1, 0, 0));
 
-ChVector<> initLinVel(0.0, 0.0, 0.0);
-ChVector<> initAngVel(0.0, 0.0, 0.0);
+ChVector<>     initLinVel(0.0, 0.0, 0.0);
+ChVector<>     initAngVel(0.0, 0.0, 0.0);
 
 // Ground contact shapes (SPHERE, CAPSULE, BOX)
 collision::ShapeType shape_g = collision::SPHERE;
@@ -84,10 +84,11 @@ bool loop = false;
 // =============================================================================
 // Create ground body
 // =============================================================================
-void CreateGround(ChSystemParallel* system) {
-// ---------------------------------------
-// Create a material and the "ground" body
-// ---------------------------------------
+void CreateGround(ChSystemParallel* system)
+{
+  // ---------------------------------------
+  // Create a material and the "ground" body
+  // ---------------------------------------
 
 #ifdef DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_g(new ChMaterialSurfaceDEM);
@@ -107,8 +108,8 @@ void CreateGround(ChSystemParallel* system) {
 
   ground->SetIdentifier(-1);
   ground->SetMass(1);
-  ground->SetPos(ChVector<>(0, 0, 0));
-  ground->SetRot(ChQuaternion<>(1, 0, 0, 0));
+  ground->SetPos(ChVector<>(0,0,0));
+  ground->SetRot(ChQuaternion<>(1,0,0,0));
   ground->SetBodyFixed(true);
   ground->SetCollide(true);
 
@@ -117,54 +118,55 @@ void CreateGround(ChSystemParallel* system) {
   // ---------------------------------------------------------
 
   switch (shape_g) {
-    case SPHERE:
-      // A grid of 5x5 spheres
-      {
-        double spacing = 1.6;
-        double bigR = 2;
 
-        ground->GetCollisionModel()->ClearModel();
-        for (int ix = -2; ix < 3; ix++) {
-          for (int iy = -2; iy < 3; iy++) {
-            ChVector<> pos(ix * spacing, iy * spacing, -bigR);
-            utils::AddSphereGeometry(ground.get_ptr(), bigR, pos);
-          }
+  case SPHERE:
+    // A grid of 5x5 spheres
+    {
+      double spacing = 1.6;
+      double bigR = 2;
+
+      ground->GetCollisionModel()->ClearModel();
+      for (int ix = -2; ix < 3; ix++) {
+        for (int iy = -2; iy < 3; iy++) {
+          ChVector<> pos(ix * spacing, iy * spacing, -bigR);
+          utils::AddSphereGeometry(ground.get_ptr(), bigR, pos);
         }
-        ground->GetCollisionModel()->BuildModel();
       }
-      break;
+      ground->GetCollisionModel()->BuildModel();
+    }
+    break;
 
-    case CAPSULE:
-      // A set of 7 parallel capsules, rotated by 30 degrees around Z
-      {
-        double spacing = 1.5;
-        double bigR = 1;
-        double bigH = 6;
+  case CAPSULE:
+    // A set of 7 parallel capsules, rotated by 30 degrees around Z
+    {
+      double spacing = 1.5;
+      double bigR = 1;
+      double bigH = 6;
 
-        ChQuaternion<> rot(1, 0, 0, 0);
-        rot.Q_from_AngAxis(CH_C_PI / 6, ChVector<>(0, 0, 1));
+      ChQuaternion<>  rot(1,0,0,0);
+      rot.Q_from_AngAxis(CH_C_PI/6, ChVector<>(0, 0, 1));
 
-        ground->GetCollisionModel()->ClearModel();
-        for (int ix = -3; ix < 6; ix++) {
-          ChVector<> pos(ix * spacing, 0, -bigR);
-          utils::AddCapsuleGeometry(ground.get_ptr(), bigR, bigH, pos, rot);
-        }
-        ground->GetCollisionModel()->BuildModel();
+      ground->GetCollisionModel()->ClearModel();
+      for (int ix = -3; ix < 6; ix++) {
+        ChVector<> pos(ix * spacing, 0, -bigR);
+        utils::AddCapsuleGeometry(ground.get_ptr(), bigR, bigH, pos, rot);
       }
-      break;
+      ground->GetCollisionModel()->BuildModel();
+    }
+    break;
 
-    case BOX:
-      // A single box
-      {
-        double bigHx = 6;
-        double bigHy = 6;
-        double bigHz = 1;
+  case BOX:
+    // A single box
+    {
+      double bigHx = 6;
+      double bigHy = 6;
+      double bigHz = 1;
 
-        ground->GetCollisionModel()->ClearModel();
-        utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(bigHx, bigHy, bigHz), ChVector<>(0, 0, -bigHz));
-        ground->GetCollisionModel()->BuildModel();
-      }
-      break;
+      ground->GetCollisionModel()->ClearModel();
+      utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(bigHx, bigHy, bigHz), ChVector<>(0, 0, -bigHz));
+      ground->GetCollisionModel()->BuildModel();
+    }
+    break;
   }
 
   // ------------------------------------
@@ -176,12 +178,13 @@ void CreateGround(ChSystemParallel* system) {
 // =============================================================================
 // Create falling object
 // =============================================================================
-void CreateObject(ChSystemParallel* system) {
+void CreateObject(ChSystemParallel* system)
+{
   double rho_o = 2000.0;
 
-// -----------------------------------------
-// Create a material and the falling object.
-// -----------------------------------------
+  // -----------------------------------------
+  // Create a material and the falling object.
+  // -----------------------------------------
 
 #ifdef DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_o;
@@ -210,44 +213,53 @@ void CreateObject(ChSystemParallel* system) {
   //    - Set contact and visualization shape
   // ----------------------------------------------------
 
-  double rb;
-  double vol;
+  double       rb;
+  double       vol;
   ChMatrix33<> J;
 
   obj->GetCollisionModel()->ClearModel();
 
   switch (shape_o) {
-    case collision::SPHERE: {
+  case collision::SPHERE:
+    {
       double radius = 0.3;
       rb = utils::CalcSphereBradius(radius);
       vol = utils::CalcSphereVolume(radius);
       J = utils::CalcSphereGyration(radius);
       utils::AddSphereGeometry(obj.get_ptr(), radius);
-    } break;
-    case collision::BOX: {
+    }
+    break;
+  case collision::BOX:
+    {
       ChVector<> hdims(0.1, 0.2, 0.1);
       rb = utils::CalcBoxBradius(hdims);
       vol = utils::CalcBoxVolume(hdims);
       J = utils::CalcBoxGyration(hdims);
       utils::AddBoxGeometry(obj.get_ptr(), hdims);
-    } break;
-    case collision::CAPSULE: {
+    }
+    break;
+  case collision::CAPSULE:
+    {
       double radius = 0.1;
       double hlen = 0.2;
       rb = utils::CalcCapsuleBradius(radius, hlen);
       vol = utils::CalcCapsuleVolume(radius, hlen);
       J = utils::CalcCapsuleGyration(radius, hlen);
       utils::AddCapsuleGeometry(obj.get_ptr(), radius, hlen);
-    } break;
-    case collision::CYLINDER: {
+    }
+    break;
+  case collision::CYLINDER:
+    {
       double radius = 0.1;
       double hlen = 0.2;
       rb = utils::CalcCylinderBradius(radius, hlen);
       vol = utils::CalcCylinderVolume(radius, hlen);
       J = utils::CalcCylinderGyration(radius, hlen);
       utils::AddCylinderGeometry(obj.get_ptr(), radius, hlen);
-    } break;
-    case collision::ROUNDEDCYL: {
+    }
+    break;
+  case collision::ROUNDEDCYL:
+    {
       double radius = 0.1;
       double hlen = 0.2;
       double srad = 0.05;
@@ -255,7 +267,8 @@ void CreateObject(ChSystemParallel* system) {
       vol = utils::CalcRoundedCylinderVolume(radius, hlen, srad);
       J = utils::CalcRoundedCylinderGyration(radius, hlen, srad);
       utils::AddRoundedCylinderGeometry(obj.get_ptr(), radius, hlen, srad);
-    } break;
+    }
+    break;
   }
 
   obj->GetCollisionModel()->BuildModel();
@@ -286,23 +299,24 @@ void CreateObject(ChSystemParallel* system) {
 
 // =============================================================================
 // =============================================================================
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
   // --------------------------
   // Create output directories.
   // --------------------------
 
-  if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+  if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
     cout << "Error creating directory " << out_dir << endl;
     return 1;
   }
-  if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
     cout << "Error creating directory " << pov_dir << endl;
     return 1;
   }
 
-// --------------
-// Create system.
-// --------------
+  // --------------
+  // Create system.
+  // --------------
 
 #ifdef DEM
   cout << "Create DEM system" << endl;
@@ -353,15 +367,15 @@ int main(int argc, char* argv[]) {
   CreateGround(msystem);
   CreateObject(msystem);
 
-// -----------------------
-// Perform the simulation.
-// -----------------------
+  // -----------------------
+  // Perform the simulation.
+  // -----------------------
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
   // Initialize OpenGL
-  opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
+  opengl::ChOpenGLWindow &gl_window = opengl::ChOpenGLWindow::getInstance();
   gl_window.Initialize(1280, 720, "mixerDEM", msystem);
-  gl_window.SetCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
+  gl_window.SetCamera(ChVector<>(0,-10,0), ChVector<>(0,0,0),ChVector<>(0,0,1));
 
   // Let the OpenGL manager run the simulation until interrupted.
   if (loop) {
@@ -392,16 +406,17 @@ int main(int argc, char* argv[]) {
       cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
       cout << "             Execution time: " << exec_time << endl;
 
+
       out_frame++;
       next_out_frame += out_steps;
       num_contacts = 0;
     }
 
-// Advance dynamics.
+    // Advance dynamics.
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
     if (gl_window.Active()) {
-      gl_window.DoStepDynamics(time_step);
-      gl_window.Render();
+       gl_window.DoStepDynamics(time_step);
+       gl_window.Render();
     } else
       break;
 #else

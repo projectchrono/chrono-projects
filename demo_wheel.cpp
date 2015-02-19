@@ -20,7 +20,10 @@ using std::endl;
 
 // =======================================================================
 
-enum ProblemType { SETTLING, SIMULATION };
+enum ProblemType {
+  SETTLING,
+  SIMULATION
+};
 
 ProblemType problem = SETTLING;
 
@@ -46,50 +49,52 @@ const std::string checkpoint_file = out_dir + "/settled.dat";
 double out_fps = 60;
 
 // Parameters for the granular material
-int Id_g = 100;
-double r_g = 0.02;
-double rho_g = 2500;
-double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
-double mass_g = rho_g * vol_g;
-ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
+int        Id_g = 100;
+double     r_g = 0.02;
+double     rho_g = 2500;
+double     vol_g = (4.0/3) * CH_C_PI * r_g * r_g * r_g;
+double     mass_g = rho_g * vol_g;
+ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1,1,1);
 
-float Y_g = 2e8;
-float mu_g = 0.5;
-float cr_g = 0.1;
-float cohesion_g = 20;
+float      Y_g = 2e8;
+float      mu_g = 0.5;
+float      cr_g = 0.1;
+float      cohesion_g = 20;
 
 // Parameters for the wheel
-const std::string obj_mesh_file("../WHEEL/wheel.obj");
-const std::string mesh_name("wheel");
-const std::string pov_mesh_file("../WHEEL/wheel.inc");
+const std::string  obj_mesh_file("../WHEEL/wheel.obj");
+const std::string  mesh_name("wheel");
+const std::string  pov_mesh_file("../WHEEL/wheel.inc");
 
-int Id_w = 0;
-double mass_w = 600;  ////60;
+int        Id_w = 0;
+double     mass_w = 600;////60;
 ChVector<> inertia_w = ChVector<>(1.85, 1.85, 3.675);
 
-float Y_w = 1e8;
-float mu_w = 1.0;
-float cr_w = 0.1;
-float cohesion_w = 20;
+float      Y_w = 1e8;
+float      mu_w = 1.0;
+float      cr_w = 0.1;
+float      cohesion_w = 20;
 
 // Parameters for the containing bin
-int binId = -200;
-double hDimX = 4.0;        // length in x direction
-double hDimY = 1.0;        // width in y direction
-double hDimZ = 0.5;        // height in z direction
-double hThickness = 0.04;  // wall thickness
+int        binId = -200;
+double     hDimX = 4.0;             // length in x direction
+double     hDimY = 1.0;             // width in y direction
+double     hDimZ = 0.5;             // height in z direction
+double     hThickness = 0.04;       // wall thickness
 
-float Y_c = 2e6;
-float mu_c = 1.0;
-float cr_c = 0.1;
-float cohesion_c = 0;
+float      Y_c = 2e6;
+float      mu_c = 1.0;
+float      cr_c = 0.1;
+float      cohesion_c = 0;
 
 // Height of layer for generator domain
-double layerHeight = 1.0;
+double     layerHeight = 1.0;
+
 
 // =======================================================================
 
-int CreateObjects(ChSystemParallel* system) {
+int CreateObjects(ChSystemParallel* system)
+{
   // Create a material for the granular material
   ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
@@ -120,7 +125,7 @@ int CreateObjects(ChSystemParallel* system) {
   gen.createObjectsBox(utils::POISSON_DISK,
                        2 * r,
                        ChVector<>(0, 0, r + layerHeight / 2),
-                       ChVector<>(hDimX - r, hDimY - r, layerHeight / 2));
+                       ChVector<>(hDimX - r, hDimY - r, layerHeight/2));
   cout << "total granules: " << gen.getTotalNumBodies() << endl;
 
   // Create the containing bin
@@ -129,10 +134,12 @@ int CreateObjects(ChSystemParallel* system) {
   return gen.getTotalNumBodies();
 }
 
+
 // =======================================================================
 // Create the wheel body at the specified height.
 
-ChSharedBodyDEMPtr CreateWheel(ChSystemParallel* system, double z) {
+ChSharedBodyDEMPtr CreateWheel(ChSystemParallel* system, double z)
+{
   // Create a material for the wheel
   ChSharedPtr<ChMaterialSurfaceDEM> mat_w;
   mat_w = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
@@ -168,14 +175,16 @@ ChSharedBodyDEMPtr CreateWheel(ChSystemParallel* system, double z) {
   return wheel;
 }
 
+
 // ========================================================================
 // This utility function returns true if all bodies in the granular mix
 // have a linear velocity whose magnitude is below the specified value.
 
-bool CheckSettled(ChSystem* sys, double threshold) {
+bool CheckSettled(ChSystem* sys, double threshold)
+{
   double t2 = threshold * threshold;
   for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-    ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
     if (body->GetIdentifier() >= Id_g) {
       double vel2 = body->GetPos_dt().Length2();
       if (vel2 > t2)
@@ -191,20 +200,22 @@ bool CheckSettled(ChSystem* sys, double threshold) {
 // in the granular mix, respectively.  We only look at bodies whith
 // identifiers larger than Id_g.
 
-double FindHighest(ChSystem* sys) {
+double FindHighest(ChSystem* sys)
+{
   double highest = 0;
   for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-    ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
     if (body->GetIdentifier() >= Id_g && body->GetPos().z > highest)
       highest = body->GetPos().z;
   }
   return highest;
 }
 
-double FindLowest(ChSystem* sys) {
+double FindLowest(ChSystem* sys)
+{
   double lowest = DBL_MAX;
   for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-    ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
     if (body->GetIdentifier() >= Id_g && body->GetPos().z < lowest)
       lowest = body->GetPos().z;
   }
@@ -212,7 +223,9 @@ double FindLowest(ChSystem* sys) {
 }
 
 // ========================================================================
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
+
   // Create system
   ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
 
@@ -234,11 +247,11 @@ int main(int argc, char* argv[]) {
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 
   // Create output directories.
-  if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+  if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
     cout << "Error creating directory " << out_dir << endl;
     return 1;
   }
-  if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
     cout << "Error creating directory " << pov_dir << endl;
     return 1;
   }
@@ -253,29 +266,29 @@ int main(int argc, char* argv[]) {
   ChSharedBodyDEMPtr wheel;
 
   switch (problem) {
-    case SETTLING:
-      time_step = time_step_settling;
-      time_end = time_settling_max;
+  case SETTLING:
+    time_step = time_step_settling;
+    time_end = time_settling_max;
 
-      // Create containing bin and the granular material at randomized initial positions
-      CreateObjects(msystem);
+    // Create containing bin and the granular material at randomized initial positions
+    CreateObjects(msystem);
 
-      break;
+    break;
 
-    case SIMULATION:
-      time_step = time_step_simulation;
-      time_end = time_simulation;
+  case SIMULATION:
+    time_step = time_step_simulation;
+    time_end = time_simulation;
 
-      // Create the granular material bodies and the container from the checkpoint file.
-      cout << "Read checkpoint data from " << checkpoint_file;
-      utils::ReadCheckpoint(msystem, checkpoint_file);
-      cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
+    // Create the granular material bodies and the container from the checkpoint file.
+    cout << "Read checkpoint data from " << checkpoint_file;
+    utils::ReadCheckpoint(msystem, checkpoint_file);
+    cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
 
-      // Create the wheel.
-      double z = FindHighest(msystem);
-      wheel = CreateWheel(msystem, z + r_g + 0.4);
+    // Create the wheel.
+    double z = FindHighest(msystem);
+    wheel = CreateWheel(msystem, z + r_g + 0.4);
 
-      break;
+    break;
   }
 
   msystem->SetStep(time_step);
@@ -335,3 +348,4 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
+

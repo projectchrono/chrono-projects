@@ -14,8 +14,8 @@
 //
 // ChronoParallel demo program for mass flow rate studies.
 //
-// The model simulated here consists of a granular material that flows out of a
-// container and the mass of the collected material is measured over time, using
+// The model simulated here consists of a granular material that flows out of a 
+// container and the mass of the collected material is measured over time, using 
 // either penalty or complementarity method for frictional contact.
 //
 // The global reference frame has Z up.
@@ -50,7 +50,10 @@ using std::endl;
 // Comment the following line to use DVI contact
 #define DEM
 
-enum ProblemType { SETTLING, DROPPING };
+enum ProblemType {
+  SETTLING,
+  DROPPING
+};
 
 ProblemType problem = SETTLING;
 
@@ -99,50 +102,53 @@ const std::string checkpoint_file = out_dir + "/settled.dat";
 int out_fps_settling = 200;
 int out_fps_dropping = 200;
 
-int timing_frame = -1;  // output detailed step timing at this frame
+int timing_frame = -1;   // output detailed step timing at this frame
 
 // Parameters for the granular material
 double r_g = 0.25e-3;
 double rho_g = 2500.0;
 
-float Y_g = 1e7;
-float cr_g = 0.1;
-float mu_g = 0.3;
+float  Y_g = 1e7;
+float  cr_g = 0.1;
+float  mu_g = 0.3;
 
 // Desired number of particles and X-Y dimensions of the sampling volume for
 // granular material.
-int desired_num_particles = 400;
+int    desired_num_particles = 400;
 
 // Parameters for the mechanism material
-float Y_c = 2e6;
-float cr_c = 0.1;
-float mu_c = 0.4;
+float  Y_c = 2e6;
+float  cr_c = 0.1;
+float  mu_c = 0.4;
 
 // Dimensions of mechanism
-double height = 6.0e-2;  // height of the cavity
+double height = 6.0e-2;       // height of the cavity
 ////double width = 0.9525e-2;     // width of the cavity
-double width = 0.9398e-2;    // width of the cavity
-double thickness = 0.25e-2;  // thickness of walls
+double width = 0.9398e-2;     // width of the cavity
+double thickness = 0.25e-2;   // thickness of walls
 
-double height_insert = sqrt(2 * height * height);
-double delta = sqrt(thickness * thickness / 8);
+double height_insert = sqrt(2*height*height);
+double delta = sqrt(thickness*thickness/8);
 
 ////double speed = 1.5e-3;       // speed of the angled insert
-double speed = 1.0e-3;  // speed of the angled insert
-double gap = 2e-3;      // size of gap
+double speed = 1.0e-3;       // speed of the angled insert
+double gap = 2e-3;           // size of gap
 
 double time_opening = gap / speed;
 
 // Dimensions of collector
-double pos_collector = 4.0e-2;     // position below measuring line
-double size_collector = 8.0e-2;    // width and length of collector bin
-double height_collector = 1.0e-2;  // height of collector walls
+double pos_collector = 4.0e-2;    // position below measuring line
+double size_collector = 8.0e-2;   // width and length of collector bin
+double height_collector = 1.0e-2; // height of collector walls
+
 
 // -----------------------------------------------------------------------------
 // Create mechanism
 // -----------------------------------------------------------------------------
-ChBody* CreateMechanism(ChSystemParallel* system) {
-// Create the common material
+ChBody* CreateMechanism(ChSystemParallel* system)
+{
+
+  // Create the common material
 #ifdef DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_b;
   mat_b = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
@@ -154,7 +160,7 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
   mat_b->SetFriction(mu_c);
 #endif
 
-// Angled insert
+  // Angled insert
 #ifdef DEM
   ChSharedBodyDEMPtr insert(new ChBodyDEM(new ChCollisionModelParallel));
   insert->SetMaterialSurfaceDEM(mat_b);
@@ -165,19 +171,19 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 
   insert->SetIdentifier(0);
   insert->SetMass(1);
-  insert->SetInertiaXX(ChVector<>(1, 1, 1));
-  insert->SetPos(ChVector<>(-0.5 * height - delta, 0, 0.5 * height - delta));
-  insert->SetRot(chrono::Q_from_AngAxis(-CH_C_PI / 4, VECT_Y));
+  insert->SetInertiaXX(ChVector<>(1,1,1));
+  insert->SetPos(ChVector<>(-0.5*height-delta, 0, 0.5*height-delta));
+  insert->SetRot(chrono::Q_from_AngAxis(-CH_C_PI/4, VECT_Y));
   insert->SetCollide(true);
   insert->SetBodyFixed(true);
 
   insert->GetCollisionModel()->ClearModel();
-  utils::AddBoxGeometry(insert.get_ptr(), ChVector<>(thickness * 0.5, width * 0.5, height_insert * 0.5));
+  utils::AddBoxGeometry(insert.get_ptr(), ChVector<>(thickness*0.5,width*0.5,height_insert*0.5));
   insert->GetCollisionModel()->BuildModel();
 
   system->AddBody(insert);
 
-// Static slot (back wall)
+  // Static slot (back wall)
 #ifdef DEM
   ChSharedBodyDEMPtr slot(new ChBodyDEM(new ChCollisionModelParallel));
   slot->SetMaterialSurfaceDEM(mat_b);
@@ -188,19 +194,19 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 
   slot->SetIdentifier(-1);
   slot->SetMass(1);
-  slot->SetInertiaXX(ChVector<>(1, 1, 1));
-  slot->SetPos(ChVector<>(0.5 * thickness, 0, 0.5 * height));
+  slot->SetInertiaXX(ChVector<>(1,1,1));
+  slot->SetPos(ChVector<>(0.5*thickness, 0, 0.5*height));
   slot->SetRot(ChQuaternion<>(1, 0, 0, 0));
   slot->SetCollide(true);
   slot->SetBodyFixed(true);
 
   slot->GetCollisionModel()->ClearModel();
-  utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(thickness / 2, width / 2, height / 2), ChVector<>(0, 0, 0));
+  utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(thickness/2, width/2, height/2), ChVector<>(0, 0, 0));
   slot->GetCollisionModel()->BuildModel();
 
   system->AddBody(slot);
 
-// Lateral walls
+  // Lateral walls
 #ifdef DEM
   ChSharedBodyDEMPtr wall(new ChBodyDEM(new ChCollisionModelParallel));
   wall->SetMaterialSurfaceDEM(mat_b);
@@ -218,42 +224,30 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
   wall->SetBodyFixed(true);
 
   wall->GetCollisionModel()->ClearModel();
-  utils::AddBoxGeometry(wall.get_ptr(),
-                        ChVector<>(3 * height / 2, thickness / 2, height),
-                        ChVector<>(0, width / 2 + thickness / 2, height / 2));
-  utils::AddBoxGeometry(wall.get_ptr(),
-                        ChVector<>(3 * height / 2, thickness / 2, height),
-                        ChVector<>(0, -width / 2 - thickness / 2, height / 2));
+  utils::AddBoxGeometry(wall.get_ptr(), ChVector<>(3*height/2, thickness/2, height), ChVector<>(0,  width/2+thickness/2, height/2));
+  utils::AddBoxGeometry(wall.get_ptr(), ChVector<>(3*height/2, thickness/2, height), ChVector<>(0, -width/2-thickness/2, height/2));
   wall->GetCollisionModel()->BuildModel();
 
   system->AddBody(wall);
 
-// Containing bin
+  // Containing bin
 #ifdef DEM
-  utils::CreateBoxContainerDEM(system,
-                               -3,
-                               mat_b,
-                               ChVector<>(size_collector / 2, size_collector / 2, height_collector / 2),
-                               thickness / 2,
-                               ChVector<>(0, 0, -pos_collector));
+  utils::CreateBoxContainerDEM(system, -3, mat_b, ChVector<>(size_collector/2, size_collector/2, height_collector/2), thickness/2, ChVector<>(0, 0, -pos_collector));
 #else
-  utils::CreateBoxContainerDVI(system,
-                               -3,
-                               mat_b,
-                               ChVector<>(size_collector / 2, size_collector / 2, height_collector / 2),
-                               thickness / 2,
-                               ChVector<>(0, 0, -pos_collector));
+  utils::CreateBoxContainerDVI(system, -3, mat_b, ChVector<>(size_collector/2, size_collector/2, height_collector/2), thickness/2, ChVector<>(0, 0, -pos_collector));
 #endif
 
   // Return the angled insert body
   return insert.get_ptr();
 }
 
+
 // -----------------------------------------------------------------------------
 // Create granular material
 // -----------------------------------------------------------------------------
-void CreateParticles(ChSystemParallel* system) {
-// Create a material for the granular material
+void CreateParticles(ChSystemParallel* system)
+{
+  // Create a material for the granular material
 #ifdef DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
@@ -292,12 +286,14 @@ void CreateParticles(ChSystemParallel* system) {
   std::cout << "Number of particles: " << gen.getTotalNumBodies() << std::endl;
 }
 
+
 // -----------------------------------------------------------------------------
 // Find and return the body with specified identifier.
 // -----------------------------------------------------------------------------
-ChBody* FindBodyById(ChSystemParallel* sys, int id) {
+ChBody* FindBodyById(ChSystemParallel* sys, int id)
+{
   for (int i = 0; i < sys->GetNumBodies(); ++i) {
-    ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
     if (body->GetIdentifier() == id)
       return body;
   }
@@ -305,39 +301,44 @@ ChBody* FindBodyById(ChSystemParallel* sys, int id) {
   return NULL;
 }
 
+
 // -----------------------------------------------------------------------------
 // Find the number of particles whose height is below and above, respectively,
 // the specified value.
 // -----------------------------------------------------------------------------
-int GetNumParticlesBelowHeight(ChSystemParallel* sys, double value) {
+int GetNumParticlesBelowHeight(ChSystemParallel* sys, double value)
+{
   int count = 0;
   for (int i = 0; i < sys->GetNumBodies(); ++i) {
-    ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
     if (body->GetIdentifier() > 0 && body->GetPos().z < value)
       count++;
   }
   return count;
 }
 
-int GetNumParticlesAboveHeight(ChSystemParallel* sys, double value) {
+int GetNumParticlesAboveHeight(ChSystemParallel* sys, double value)
+{
   int count = 0;
   for (int i = 0; i < sys->GetNumBodies(); ++i) {
-    ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
     if (body->GetIdentifier() > 0 && body->GetPos().z > value)
       count++;
   }
   return count;
 }
 
+
 // -----------------------------------------------------------------------------
 // Return true if all bodies in the granular mix have a linear velocity whose
 // magnitude is below the specified value.
 // -----------------------------------------------------------------------------
-bool CheckSettled(ChSystemParallel* sys, double threshold) {
+bool CheckSettled(ChSystemParallel* sys, double threshold)
+{
   double t2 = threshold * threshold;
 
   for (int i = 0; i < sys->GetNumBodies(); ++i) {
-    ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
     if (body->GetIdentifier() > 0) {
       double vel2 = body->GetPos_dt().Length2();
       if (vel2 > t2)
@@ -348,9 +349,11 @@ bool CheckSettled(ChSystemParallel* sys, double threshold) {
   return true;
 }
 
+
 // -----------------------------------------------------------------------------
-int main(int argc, char* argv[]) {
-// Create system
+int main(int argc, char* argv[])
+{
+  // Create system
 #ifdef DEM
   cout << "Create DEM system" << endl;
   ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
@@ -398,19 +401,19 @@ int main(int argc, char* argv[]) {
   ChBody* insert;
 
   switch (problem) {
-    case SETTLING:
-      time_end = time_settling_max;
-      out_fps = out_fps_settling;
-      insert = CreateMechanism(msystem);
-      CreateParticles(msystem);
-      break;
+  case SETTLING:
+    time_end = time_settling_max;
+    out_fps = out_fps_settling;
+    insert = CreateMechanism(msystem);
+    CreateParticles(msystem);
+    break;
 
-    case DROPPING:
-      time_end = time_dropping_max;
-      out_fps = out_fps_dropping;
-      utils::ReadCheckpoint(msystem, checkpoint_file);
-      insert = FindBodyById(msystem, 0);
-      break;
+  case DROPPING:
+    time_end = time_dropping_max;
+    out_fps = out_fps_dropping;
+    utils::ReadCheckpoint(msystem, checkpoint_file);
+    insert = FindBodyById(msystem, 0);
+    break;
   }
 
   // Number of steps
@@ -421,11 +424,11 @@ int main(int argc, char* argv[]) {
   double zero_v = 2 * r_g;
 
   // Create output directories.
-  if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+  if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
     cout << "Error creating directory " << out_dir << endl;
     return 1;
   }
-  if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
     cout << "Error creating directory " << pov_dir << endl;
     return 1;
   }
@@ -463,16 +466,16 @@ int main(int argc, char* argv[]) {
       sfile.GetFstream().sync();
 
       switch (problem) {
-        case SETTLING:
-          // Create a checkpoint from the current state.
-          utils::WriteCheckpoint(msystem, checkpoint_file);
-          cout << "             Checkpoint:     " << msystem->Get_bodylist()->size() << " bodies" << endl;
-          break;
-        case DROPPING:
-          // Save current gap opening and number of dropped particles.
-          ffile << time << "  " << -opening << "  " << count << "\n";
-          ffile.GetFstream().sync();
-          break;
+      case SETTLING:
+        // Create a checkpoint from the current state.
+        utils::WriteCheckpoint(msystem, checkpoint_file);
+        cout << "             Checkpoint:     " << msystem->Get_bodylist()->size() << " bodies" << endl;
+        break;
+      case DROPPING:
+        // Save current gap opening and number of dropped particles.
+        ffile << time << "  " << -opening << "  " << count << "\n";
+        ffile.GetFstream().sync();
+        break;
       }
 
       out_frame++;
@@ -487,7 +490,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Check for early termination of dropping phase.
-    if (problem == DROPPING && time > time_opening && GetNumParticlesAboveHeight(msystem, -pos_collector / 2) == 0) {
+    if (problem == DROPPING && time > time_opening && GetNumParticlesAboveHeight(msystem, -pos_collector/2) == 0) {
       cout << "Granular material exhausted... time = " << time << endl;
       break;
     }
@@ -497,8 +500,8 @@ int main(int argc, char* argv[]) {
 
     // Open the gate until it reaches the specified gap distance.
     if (problem == DROPPING && time <= time_opening) {
-      insert->SetPos(ChVector<>(-0.5 * height - delta - time * speed, 0, 0.5 * height - delta));
-      insert->SetPos_dt(ChVector<>(-speed, 0, 0));
+        insert->SetPos(ChVector<>(-0.5 * height - delta - time * speed, 0, 0.5 * height - delta));
+        insert->SetPos_dt(ChVector<>(-speed, 0, 0));
     }
 
     time += time_step;
