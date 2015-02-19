@@ -9,13 +9,11 @@
 #include "chrono_utils/ChUtilsGenerators.h"
 #include "chrono_utils/ChUtilsInputOutput.h"
 
-
 using namespace chrono;
 using namespace chrono::collision;
 
 using std::cout;
 using std::endl;
-
 
 // =======================================================================
 // Global problem definitions
@@ -31,25 +29,22 @@ int num_steps_measure = 1000;
 int max_iteration = 50;
 
 // Parameters for the mixture balls
-double     radius = 0.1;
-double     density = 2000;
-double     vol = (4.0/3) * CH_C_PI * radius * radius * radius;
-double     mass = density * vol;
+double radius = 0.1;
+double density = 2000;
+double vol = (4.0 / 3) * CH_C_PI * radius * radius * radius;
+double mass = density * vol;
 ChVector<> inertia = 0.4 * mass * radius * radius * ChVector<>(1, 1, 1);
 
 // Parameters for the containing bin
-int    binId = -200;
-double hDimX = 2;          // length in x direction
-double hDimY = 2;          // depth in y direction
-double hDimZ = 5;          // height in z direction
-double hThickness = 0.1;   // wall thickness
+int binId = -200;
+double hDimX = 2;         // length in x direction
+double hDimY = 2;         // depth in y direction
+double hDimZ = 5;         // height in z direction
+double hThickness = 0.1;  // wall thickness
 
 // =======================================================================
 
-enum ProblemType {
-  SETTLE,
-  MEASURE
-};
+enum ProblemType { SETTLE, MEASURE };
 
 ProblemType problem = SETTLE;
 
@@ -58,8 +53,7 @@ const char* povray_file = "../TEST/settled_povray.dat";
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-int CreateObjects(ChSystemParallel* system)
-{
+int CreateObjects(ChSystemParallel* system) {
   // Create a material for the ball mixture
   ChSharedPtr<ChMaterialSurfaceDEM> ballMixMat;
   ballMixMat = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
@@ -76,10 +70,7 @@ int CreateObjects(ChSystemParallel* system)
   m1->setDefaultSize(radius);
 
   // Generate the objects
-  gen.createObjectsBox(utils::POISSON_DISK,
-    2 * radius,
-    ChVector<>(0, 0, 2.5),
-    ChVector<>(0.8 * hDimX, 0.8 * hDimY, 1));
+  gen.createObjectsBox(utils::POISSON_DISK, 2 * radius, ChVector<>(0, 0, 2.5), ChVector<>(0.8 * hDimX, 0.8 * hDimY, 1));
 
   // Create the containing bin
   ChSharedPtr<ChMaterialSurfaceDEM> binMat;
@@ -95,8 +86,7 @@ int CreateObjects(ChSystemParallel* system)
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
   // Create system
   // -------------
 
@@ -125,8 +115,7 @@ int main(int argc, char* argv[])
   // -------------------------------------
 
   switch (problem) {
-  case SETTLE:
-    {
+    case SETTLE: {
       cout << "Create objects  ";
       int num_obj = CreateObjects(msystem);
       cout << num_obj << endl;
@@ -139,8 +128,7 @@ int main(int argc, char* argv[])
     }
 
     break;
-  case MEASURE:
-    {
+    case MEASURE: {
       cout << "Read checkpoint data from " << checkpoint_file;
       utils::ReadCheckpoint(msystem, checkpoint_file);
       cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
@@ -187,4 +175,3 @@ int main(int argc, char* argv[])
 
   return 0;
 }
-

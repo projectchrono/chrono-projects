@@ -22,24 +22,21 @@ using namespace chrono::collision;
 using std::cout;
 using std::endl;
 
-
 #define DEM
 #define NARROW_NEW
-
 
 int counter = 0;
 
 // ------------------------------------------------------------------------------
 
-void writeContactInfo(ChParallelDataManager* data_container)
-{
-  int    ncontacts = data_container->num_contacts;
+void writeContactInfo(ChParallelDataManager* data_container) {
+  int ncontacts = data_container->num_contacts;
 
   real3* pt1 = data_container->host_data.cpta_rigid_rigid.data();
   real3* pt2 = data_container->host_data.cptb_rigid_rigid.data();
   real3* nrm = data_container->host_data.norm_rigid_rigid.data();
-  real*  depth = data_container->host_data.dpth_rigid_rigid.data();
-  real*  erad = data_container->host_data.erad_rigid_rigid.data();
+  real* depth = data_container->host_data.dpth_rigid_rigid.data();
+  real* erad = data_container->host_data.erad_rigid_rigid.data();
 
   int2* bid = data_container->host_data.bids_rigid_rigid.data();
 
@@ -61,12 +58,7 @@ void writeContactInfo(ChParallelDataManager* data_container)
 
 // ------------------------------------------------------------------------------
 
-void
-createSphere(ChSystemParallel* sys,
-             const ChVector<>& pos,
-             const ChQuaternion<>& rot,
-             double radius)
-{
+void createSphere(ChSystemParallel* sys, const ChVector<>& pos, const ChQuaternion<>& rot, double radius) {
 #ifdef DEM
   ChSharedBodyDEMPtr ball(new ChBodyDEM(new ChCollisionModelParallel));
 #else
@@ -91,12 +83,11 @@ createSphere(ChSystemParallel* sys,
 
 // ------------------------------------------------------------------------------
 
-void
-createCapsule(ChSystemParallel* sys,
-              const ChVector<>& pos,
-              const ChQuaternion<>& rot,
-              double radius, double hlen)
-{
+void createCapsule(ChSystemParallel* sys,
+                   const ChVector<>& pos,
+                   const ChQuaternion<>& rot,
+                   double radius,
+                   double hlen) {
 #ifdef DEM
   ChSharedBodyDEMPtr capsule(new ChBodyDEM(new ChCollisionModelParallel));
 #else
@@ -122,12 +113,7 @@ createCapsule(ChSystemParallel* sys,
 
 // ------------------------------------------------------------------------------
 
-void
-createBox(ChSystemParallel* sys,
-          const ChVector<>& pos,
-          const ChQuaternion<>& rot,
-          const ChVector<>& hdims)
-{
+void createBox(ChSystemParallel* sys, const ChVector<>& pos, const ChQuaternion<>& rot, const ChVector<>& hdims) {
 #ifdef DEM
   ChSharedBodyDEMPtr box(new ChBodyDEM(new ChCollisionModelParallel));
 #else
@@ -152,12 +138,7 @@ createBox(ChSystemParallel* sys,
 
 // ------------------------------------------------------------------------------
 
-void
-createMesh(ChSystemParallel* sys,
-           const ChVector<>& pos,
-           const ChQuaternion<>& rot,
-           const std::string& filename)
-{
+void createMesh(ChSystemParallel* sys, const ChVector<>& pos, const ChQuaternion<>& rot, const std::string& filename) {
   geometry::ChTriangleMeshConnected trimesh;
   trimesh.LoadWavefrontMesh(filename, true, false);
 
@@ -196,12 +177,11 @@ createMesh(ChSystemParallel* sys,
 
 // ------------------------------------------------------------------------------
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
   int threads = 8;
   omp_set_num_threads(threads);
 
-  // Create system
+// Create system
 #ifdef DEM
   cout << "DEM";
   ChSystemParallelDEM msystem;
@@ -216,38 +196,33 @@ int main(int argc, char* argv[])
   ChSystemParallelDVI msystem;
 #endif
 
+  // createBox(&msystem, ChVector<>(0, 0, -0.1), ChQuaternion<>(1, 0, 0, 0), ChVector<>(5, 2, 0.1));
+  // createSphere(&msystem, ChVector<>(0.629447, -1.45809, 0.045702643641292666), ChQuaternion<>(1, 0, 0, 0), 0.1);
+  // createSphere(&msystem, ChVector<>(1, -1, 0.045702643641292666), ChQuaternion<>(1, 0, 0, 0), 0.1);
 
-  //createBox(&msystem, ChVector<>(0, 0, -0.1), ChQuaternion<>(1, 0, 0, 0), ChVector<>(5, 2, 0.1));
-  //createSphere(&msystem, ChVector<>(0.629447, -1.45809, 0.045702643641292666), ChQuaternion<>(1, 0, 0, 0), 0.1);
-  //createSphere(&msystem, ChVector<>(1, -1, 0.045702643641292666), ChQuaternion<>(1, 0, 0, 0), 0.1);
+  // createSphere(&msystem, ChVector<>(0, 0, 7), ChQuaternion<>(1, 0, 0, 0), 1);
+  // createSphere(&msystem, ChVector<>(0, 0, 4), ChQuaternion<>(1, 0, 0, 0), 2);
 
-  //createSphere(&msystem, ChVector<>(0, 0, 7), ChQuaternion<>(1, 0, 0, 0), 1);
-  //createSphere(&msystem, ChVector<>(0, 0, 4), ChQuaternion<>(1, 0, 0, 0), 2);
+  // ChQuaternion<> rot;
+  // rot.Q_from_AngAxis(PI/4, ChVector<>(1, 0, 0));
+  // createCapsule(&msystem, ChVector<>(0, 0, 4), rot, 2, 1);
 
-  //ChQuaternion<> rot;
-  //rot.Q_from_AngAxis(PI/4, ChVector<>(1, 0, 0));
-  //createCapsule(&msystem, ChVector<>(0, 0, 4), rot, 2, 1);
+  // createCapsule(&msystem, ChVector<>(0, 0, 4), ChQuaternion<>(1, 0, 0, 0), 2, 1);
+  // createBox(&msystem, ChVector<>(0, 0, 4), ChQuaternion<>(1, 0, 0, 0), ChVector<>(2, 3, 2));
 
-  //createCapsule(&msystem, ChVector<>(0, 0, 4), ChQuaternion<>(1, 0, 0, 0), 2, 1);
-  //createBox(&msystem, ChVector<>(0, 0, 4), ChQuaternion<>(1, 0, 0, 0), ChVector<>(2, 3, 2));
+  // createBox(&msystem, ChVector<>(0, 0, -0.1), ChQuaternion<>(1, 0, 0, 0), ChVector<>(5, 2, 0.1));
 
-  //createBox(&msystem, ChVector<>(0, 0, -0.1), ChQuaternion<>(1, 0, 0, 0), ChVector<>(5, 2, 0.1));
+  // createCapsule(&msystem, ChVector<>(0, 0, 0), ChQuaternion<>(1, 0, 0, 0), 1.1, 1);
 
+  // createSphere(&msystem, ChVector<>(0, 0, 3), ChQuaternion<>(1, 0, 0, 0), 2);
 
-  //createCapsule(&msystem, ChVector<>(0, 0, 0), ChQuaternion<>(1, 0, 0, 0), 1.1, 1);
+  // ChQuaternion<> rot;
+  // rot.Q_from_AngAxis(PI/2, ChVector<>(1, 0, 0));
+  // createCapsule(&msystem, ChVector<>(0, 0, 4), rot, 2, 1);
 
-  //createSphere(&msystem, ChVector<>(0, 0, 3), ChQuaternion<>(1, 0, 0, 0), 2);
-
-  //ChQuaternion<> rot;
-  //rot.Q_from_AngAxis(PI/2, ChVector<>(1, 0, 0));
-  //createCapsule(&msystem, ChVector<>(0, 0, 4), rot, 2, 1);
-
-  //createBox(&msystem, ChVector<>(0, 0, 0), ChQuaternion<>(1, 0, 0, 0), ChVector<>(2, 3, 1));
-  createMesh(&msystem, ChVector<>(0,0,0), ChQuaternion<>(1,0,0,0), "../TEST/test.obj");
+  // createBox(&msystem, ChVector<>(0, 0, 0), ChQuaternion<>(1, 0, 0, 0), ChVector<>(2, 3, 1));
+  createMesh(&msystem, ChVector<>(0, 0, 0), ChQuaternion<>(1, 0, 0, 0), "../TEST/test.obj");
   createSphere(&msystem, ChVector<>(1.6, 0, -1), ChQuaternion<>(1, 0, 0, 0), 2);
-
-
-
 
   // Perform the collision detection.
   msystem.Update();
@@ -257,4 +232,3 @@ int main(int argc, char* argv[])
 
   return 0;
 }
-
