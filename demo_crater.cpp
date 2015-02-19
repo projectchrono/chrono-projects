@@ -50,10 +50,7 @@ using std::endl;
 // Comment the following line to use DVI contact
 #define DEM
 
-enum ProblemType {
-  SETTLING,
-  DROPPING
-};
+enum ProblemType { SETTLING, DROPPING };
 
 ProblemType problem = SETTLING;
 
@@ -102,48 +99,48 @@ const std::string checkpoint_file = out_dir + "/settled.dat";
 int out_fps_settling = 120;
 int out_fps_dropping = 1200;
 
-int timing_frame = 10;   // output detailed step timing at this frame
+int timing_frame = 10;  // output detailed step timing at this frame
 
 // Parameters for the granular material
-int        Id_g = 1;
-double     r_g = 1e-3 / 2;
-double     rho_g = 2500;
-double     vol_g = (4.0/3) * CH_C_PI * r_g * r_g * r_g;
-double     mass_g = rho_g * vol_g;
-ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1,1,1);
+int Id_g = 1;
+double r_g = 1e-3 / 2;
+double rho_g = 2500;
+double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
+double mass_g = rho_g * vol_g;
+ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
-float      Y_g = 1e8;
-float      mu_g = 0.3;
-float      cr_g = 0.1;
+float Y_g = 1e8;
+float mu_g = 0.3;
+float cr_g = 0.1;
 
 // Parameters for the falling ball
-int        Id_b = 0;
-double     R_b = 2.54e-2 / 2;
-double     rho_b = 700;
-double     vol_b = (4.0/3) * CH_C_PI * R_b * R_b * R_b;
-double     mass_b = rho_b * vol_b;
-ChVector<> inertia_b = 0.4 * mass_b * R_b * R_b * ChVector<>(1,1,1);
+int Id_b = 0;
+double R_b = 2.54e-2 / 2;
+double rho_b = 700;
+double vol_b = (4.0 / 3) * CH_C_PI * R_b * R_b * R_b;
+double mass_b = rho_b * vol_b;
+ChVector<> inertia_b = 0.4 * mass_b * R_b * R_b * ChVector<>(1, 1, 1);
 
-float      Y_b = 1e8;
-float      mu_b = 0.3;
-float      cr_b = 0.1;
+float Y_b = 1e8;
+float mu_b = 0.3;
+float cr_b = 0.1;
 
 // Parameters for the containing bin
-int        binId = -200;
-double     hDimX = 4e-2;            // length in x direction
-double     hDimY = 4e-2;            // depth in y direction
-double     hDimZ = 7.5e-2;          // height in z direction
-double     hThickness = 0.5e-2;     // wall thickness
+int binId = -200;
+double hDimX = 4e-2;         // length in x direction
+double hDimY = 4e-2;         // depth in y direction
+double hDimZ = 7.5e-2;       // height in z direction
+double hThickness = 0.5e-2;  // wall thickness
 
-float      Y_c = 2e6;
-float      mu_c = 0.3;
-float      cr_c = 0.1;
+float Y_c = 2e6;
+float mu_c = 0.3;
+float cr_c = 0.1;
 
 // Number of layers and height of one layer for generator domain
 ////int        numLayers = 10;
 ////double     layerHeight = 1e-2;
-int        numLayers = 1;
-double     layerHeight = 3e-3;
+int numLayers = 1;
+double layerHeight = 3e-3;
 
 // Drop height (above surface of settled granular material)
 double h = 10e-2;
@@ -157,9 +154,8 @@ double h = 10e-2;
 //   radius)
 // - a containing bin consisting of five boxes (no top)
 // -----------------------------------------------------------------------------
-int CreateObjects(ChSystemParallel* system)
-{
-  // Create a material for the granular material
+int CreateObjects(ChSystemParallel* system) {
+// Create a material for the granular material
 #ifdef DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
@@ -189,14 +185,12 @@ int CreateObjects(ChSystemParallel* system)
 
   for (int i = 0; i < numLayers; i++) {
     double center = r + layerHeight / 2 + i * (2 * r + layerHeight);
-    gen.createObjectsBox(utils::POISSON_DISK,
-                         2 * r,
-                         ChVector<>(0, 0, center),
-                         ChVector<>(hDimX - r, hDimY - r, layerHeight/2));
+    gen.createObjectsBox(
+        utils::POISSON_DISK, 2 * r, ChVector<>(0, 0, center), ChVector<>(hDimX - r, hDimY - r, layerHeight / 2));
     cout << "Layer " << i << "  total bodies: " << gen.getTotalNumBodies() << endl;
   }
 
-  // Create the containing bin
+// Create the containing bin
 #ifdef DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
   mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
@@ -215,14 +209,12 @@ int CreateObjects(ChSystemParallel* system)
   return gen.getTotalNumBodies();
 }
 
-
 // -----------------------------------------------------------------------------
 // Create the falling ball such that its bottom point is at the specified height
 // and its downward initial velocity has the specified magnitude.
 // -----------------------------------------------------------------------------
-ChBody* CreateFallingBall(ChSystemParallel* system, double z, double vz)
-{
-  // Create a material for the falling ball
+ChBody* CreateFallingBall(ChSystemParallel* system, double z, double vz) {
+// Create a material for the falling ball
 #ifdef DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_b;
   mat_b = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
@@ -234,7 +226,7 @@ ChBody* CreateFallingBall(ChSystemParallel* system, double z, double vz)
   mat_b->SetFriction(mu_c);
 #endif
 
-  // Create the falling ball
+// Create the falling ball
 #ifdef DEM
   ChSharedBodyDEMPtr ball(new ChBodyDEM(new ChCollisionModelParallel));
   ball->SetMaterialSurfaceDEM(mat_b);
@@ -261,45 +253,40 @@ ChBody* CreateFallingBall(ChSystemParallel* system, double z, double vz)
   return ball.get_ptr();
 }
 
-
 // -----------------------------------------------------------------------------
 // Find the height of the highest and lowest, respectively, sphere in the
 // granular mix, respectively.  We only look at bodies whith stricty positive
 // identifiers (to exclude the containing bin).
 // -----------------------------------------------------------------------------
-double FindHighest(ChSystem* sys)
-{
+double FindHighest(ChSystem* sys) {
   double highest = 0;
   for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
+    ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
     if (body->GetIdentifier() > 0 && body->GetPos().z > highest)
       highest = body->GetPos().z;
   }
   return highest;
 }
 
-double FindLowest(ChSystem* sys)
-{
+double FindLowest(ChSystem* sys) {
   double lowest = 1000;
   for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
+    ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
     if (body->GetIdentifier() > 0 && body->GetPos().z < lowest)
       lowest = body->GetPos().z;
   }
   return lowest;
 }
 
-
 // -----------------------------------------------------------------------------
 // Return true if all bodies in the granular mix have a linear velocity whose
 // magnitude is below the specified value.
 // -----------------------------------------------------------------------------
-bool CheckSettled(ChSystem* sys, double threshold)
-{
+bool CheckSettled(ChSystem* sys, double threshold) {
   double t2 = threshold * threshold;
 
   for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
+    ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
     if (body->GetIdentifier() > 0) {
       double vel2 = body->GetPos_dt().Length2();
       if (vel2 > t2)
@@ -310,11 +297,9 @@ bool CheckSettled(ChSystem* sys, double threshold)
   return true;
 }
 
-
 // -----------------------------------------------------------------------------
-int main(int argc, char* argv[])
-{
-  // Create system
+int main(int argc, char* argv[]) {
+// Create system
 #ifdef DEM
   cout << "Create DEM system" << endl;
   ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
@@ -354,7 +339,6 @@ int main(int argc, char* argv[])
 #endif
 
   msystem->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
-
 
   // Depending on problem type:
   // - Select end simulation time
@@ -397,11 +381,11 @@ int main(int argc, char* argv[])
   double zero_v = 0.1 * r_g;
 
   // Create output directories.
-  if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+  if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
     cout << "Error creating directory " << out_dir << endl;
     return 1;
   }
-  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+  if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
     cout << "Error creating directory " << pov_dir << endl;
     return 1;
   }
@@ -482,4 +466,3 @@ int main(int argc, char* argv[])
 
   return 0;
 }
-

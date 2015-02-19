@@ -19,7 +19,6 @@ using namespace chrono::collision;
 using std::cout;
 using std::endl;
 
-
 // =======================================================================
 // Global problem definitions
 
@@ -34,23 +33,22 @@ double time_end = 2;
 int max_iteration = 20;
 
 // Parameters for the mixture balls
-double     radius = 0.1;
-double     density = 2000;
-double     vol = (4.0/3) * CH_C_PI * radius * radius * radius;
-double     mass = density * vol;
-ChVector<> inertia = 0.4 * mass * radius * radius * ChVector<>(1,1,1);
+double radius = 0.1;
+double density = 2000;
+double vol = (4.0 / 3) * CH_C_PI * radius * radius * radius;
+double mass = density * vol;
+ChVector<> inertia = 0.4 * mass * radius * radius * ChVector<>(1, 1, 1);
 
 // Parameters for the containing bin
-int    binId = -200;
-double hDimX = 2;          // length in x direction
-double hDimY = 2;          // depth in y direction
-double hDimZ = 5;          // height in z direction
-double hThickness = 0.1;   // wall thickness
+int binId = -200;
+double hDimX = 2;         // length in x direction
+double hDimY = 2;         // depth in y direction
+double hDimZ = 5;         // height in z direction
+double hThickness = 0.1;  // wall thickness
 
 // =======================================================================
 
-void CreateObjects(ChSystemParallel* system)
-{
+void CreateObjects(ChSystemParallel* system) {
   // Create a material for the ball mixture
   ChSharedPtr<ChMaterialSurfaceDEM> ballMixMat;
   ballMixMat = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
@@ -67,20 +65,15 @@ void CreateObjects(ChSystemParallel* system)
   m1->setDefaultSize(radius);
 
   // Generate the objects
-  gen.createObjectsBox(utils::POISSON_DISK,
-                       2.01 * radius,
-                       ChVector<>(0, 0, 2.5),
-                       ChVector<>(0.8 * hDimX, 0.8 * hDimY, 2));
+  gen.createObjectsBox(
+      utils::POISSON_DISK, 2.01 * radius, ChVector<>(0, 0, 2.5), ChVector<>(0.8 * hDimX, 0.8 * hDimY, 2));
 
   cout << "Number bodies generated: " << gen.getTotalNumBodies() << endl;
 }
 
 // =======================================================================
 
-
-int main(int argc, char* argv[])
-{
-
+int main(int argc, char* argv[]) {
   // Create system
   ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
 
@@ -113,10 +106,9 @@ int main(int argc, char* argv[])
   // Create the granular material
   CreateObjects(msystem);
 
-
   // Number of steps
-  int num_frames1 = (int) std::ceil(measure_interval / time_step);
-  int num_frames2 = (int) std::ceil((time_end - 2 * measure_interval) / time_step);
+  int num_frames1 = (int)std::ceil(measure_interval / time_step);
+  int num_frames2 = (int)std::ceil((time_end - 2 * measure_interval) / time_step);
 
   // Perform the simulation
   double timeA = 0;
@@ -151,9 +143,7 @@ int main(int argc, char* argv[])
   cout << "Simulation time B: " << timeB << endl;
   cout << "Average num. contacts B: " << double(ncB) / num_frames1 << endl;
 
-
   msystem->data_manager->system_timer.PrintReport();
 
   return 0;
 }
-

@@ -79,7 +79,7 @@ int out_fps_dropping = 60;
 // -----------------------------------------------------------------------------
 double r_g = 0.1;
 double rho_g = 2000;
-int    desired_num_particles = 1000;
+int desired_num_particles = 1000;
 
 // -----------------------------------------------------------------------------
 // Parameters for the falling object
@@ -88,8 +88,8 @@ int    desired_num_particles = 1000;
 collision::ShapeType shape_o = collision::ROUNDEDCYL;
 
 ChQuaternion<> initRot(1.0, 0.0, 0.0, 0.0);
-ChVector<>     initLinVel(0.0, 0.0, 0.0);
-ChVector<>     initAngVel(0.0, 0.0, 0.0);
+ChVector<> initLinVel(0.0, 0.0, 0.0);
+ChVector<> initAngVel(0.0, 0.0, 0.0);
 
 // -----------------------------------------------------------------------------
 // Half-dimensions of the container bin
@@ -98,13 +98,11 @@ double hDimX = 5;
 double hDimY = 2;
 double hDimZ = 2;
 
-
 // =============================================================================
 // Create container bin.
 // =============================================================================
-void CreateContainer(ChSystemParallel* system)
-{
-  int    id_c = -200;
+void CreateContainer(ChSystemParallel* system) {
+  int id_c = -200;
   double hThickness = 0.1;
 
 #ifdef DEM
@@ -127,9 +125,8 @@ void CreateContainer(ChSystemParallel* system)
 // =============================================================================
 // Create granular material.
 // =============================================================================
-void CreateParticles(ChSystemParallel* system)
-{
-  // Create a material for the ball mixture.
+void CreateParticles(ChSystemParallel* system) {
+// Create a material for the ball mixture.
 #ifdef DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
@@ -156,11 +153,11 @@ void CreateParticles(ChSystemParallel* system)
   // Create particles, one layer at a time, until the desired number is reached.
   gen.setBodyIdentifier(1);
 
-  double     r = 1.01 * r_g;
+  double r = 1.01 * r_g;
   ChVector<> hdims(hDimX - r, hDimY - r, 0);
   ChVector<> center(0, 0, 2 * r);
 
-  while(gen.getTotalNumBodies() < desired_num_particles) {
+  while (gen.getTotalNumBodies() < desired_num_particles) {
     gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
     center.z += 2 * r;
   }
@@ -171,13 +168,12 @@ void CreateParticles(ChSystemParallel* system)
 // =============================================================================
 // Create falling object.
 // =============================================================================
-void CreateObject(ChSystemParallel* system, double z)
-{
+void CreateObject(ChSystemParallel* system, double z) {
   double rho_o = 2000.0;
 
-  // -----------------------------------------
-  // Create a material for the falling object.
-  // -----------------------------------------
+// -----------------------------------------
+// Create a material for the falling object.
+// -----------------------------------------
 
 #ifdef DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_o;
@@ -190,9 +186,9 @@ void CreateObject(ChSystemParallel* system, double z)
   mat_o->SetFriction(0.4f);
 #endif
 
-  // --------------------------
-  // Create the falling object.
-  // --------------------------
+// --------------------------
+// Create the falling object.
+// --------------------------
 
 #ifdef DEM
   ChSharedBodyDEMPtr obj(new ChBodyDEM(new ChCollisionModelParallel));
@@ -212,53 +208,44 @@ void CreateObject(ChSystemParallel* system, double z)
   //    - Set contact and visualization shape
   // ----------------------------------------------------
 
-  double       rb;
-  double       vol;
+  double rb;
+  double vol;
   ChMatrix33<> J;
 
   obj->GetCollisionModel()->ClearModel();
 
   switch (shape_o) {
-  case collision::SPHERE:
-    {
+    case collision::SPHERE: {
       double radius = 0.5;
       rb = utils::CalcSphereBradius(radius);
       vol = utils::CalcSphereVolume(radius);
       J = utils::CalcSphereGyration(radius);
       utils::AddSphereGeometry(obj.get_ptr(), radius);
-    }
-    break;
-  case collision::BOX:
-    {
+    } break;
+    case collision::BOX: {
       ChVector<> hdims(0.5, 0.75, 1.0);
       rb = utils::CalcBoxBradius(hdims);
       vol = utils::CalcBoxVolume(hdims);
       J = utils::CalcBoxGyration(hdims);
       utils::AddBoxGeometry(obj.get_ptr(), hdims);
-    }
-    break;
-  case collision::CAPSULE:
-    {
+    } break;
+    case collision::CAPSULE: {
       double radius = 0.25;
       double hlen = 0.5;
       rb = utils::CalcCapsuleBradius(radius, hlen);
       vol = utils::CalcCapsuleVolume(radius, hlen);
       J = utils::CalcCapsuleGyration(radius, hlen);
       utils::AddCapsuleGeometry(obj.get_ptr(), radius, hlen);
-    }
-    break;
-  case collision::CYLINDER:
-    {
+    } break;
+    case collision::CYLINDER: {
       double radius = 0.25;
       double hlen = 0.5;
       rb = utils::CalcCylinderBradius(radius, hlen);
       vol = utils::CalcCylinderVolume(radius, hlen);
       J = utils::CalcCylinderGyration(radius, hlen);
       utils::AddCylinderGeometry(obj.get_ptr(), radius, hlen);
-    }
-    break;
-  case collision::ROUNDEDCYL:
-    {
+    } break;
+    case collision::ROUNDEDCYL: {
       double radius = 0.25;
       double hlen = 0.1;
       double srad = 0.1;
@@ -266,8 +253,7 @@ void CreateObject(ChSystemParallel* system, double z)
       vol = utils::CalcRoundedCylinderVolume(radius, hlen, srad);
       J = utils::CalcRoundedCylinderGyration(radius, hlen, srad);
       utils::AddRoundedCylinderGeometry(obj.get_ptr(), radius, hlen, srad);
-    }
-    break;
+    } break;
   }
 
   obj->GetCollisionModel()->BuildModel();
@@ -300,22 +286,20 @@ void CreateObject(ChSystemParallel* system, double z)
 // granular mix, respectively.  We only look at bodies whith stricty positive
 // identifiers (to exclude the containing bin).
 // =============================================================================
-double FindHighest(ChSystem* sys)
-{
+double FindHighest(ChSystem* sys) {
   double highest = 0;
   for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
+    ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
     if (body->GetIdentifier() > 0 && body->GetPos().z > highest)
       highest = body->GetPos().z;
   }
   return highest;
 }
 
-double FindLowest(ChSystem* sys)
-{
+double FindLowest(ChSystem* sys) {
   double lowest = 1000;
   for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-    ChBody* body = (ChBody*) sys->Get_bodylist()->at(i);
+    ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
     if (body->GetIdentifier() > 0 && body->GetPos().z < lowest)
       lowest = body->GetPos().z;
   }
@@ -324,24 +308,23 @@ double FindLowest(ChSystem* sys)
 
 // =============================================================================
 // =============================================================================
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
   // --------------------------
   // Create output directories.
   // --------------------------
 
-  if(ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+  if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
     cout << "Error creating directory " << out_dir << endl;
     return 1;
   }
-  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+  if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
     cout << "Error creating directory " << pov_dir << endl;
     return 1;
   }
 
-  // --------------
-  // Create system.
-  // --------------
+// --------------
+// Create system.
+// --------------
 
 #ifdef DEM
   cout << "Create DEM system" << endl;
@@ -486,4 +469,3 @@ int main(int argc, char* argv[])
 
   return 0;
 }
-

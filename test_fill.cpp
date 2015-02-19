@@ -111,20 +111,20 @@ int timing_frame = -1;
 double gravity = 9.81;
 
 // Parameters for the mechanism
-int        Id_container = 0;             // body ID for the containing bin
-int        Id_ground = 1;                // body ID for the ground
+int Id_container = 0;  // body ID for the containing bin
+int Id_ground = 1;     // body ID for the ground
 
-double     hdimX = 2.0 / 2;              // [m] bin half-length in x direction
-double     hdimY = 2.0 / 2;              // [m] bin half-depth in y direction
-double     hdimZ = 2.0 / 2;              // [m] bin half-height in z direction
-double     hthick = 0.1 / 2;             // [m] bin half-thickness of the walls
-float      mu_walls = 0.3f;
+double hdimX = 2.0 / 2;   // [m] bin half-length in x direction
+double hdimY = 2.0 / 2;   // [m] bin half-depth in y direction
+double hdimZ = 2.0 / 2;   // [m] bin half-height in z direction
+double hthick = 0.1 / 2;  // [m] bin half-thickness of the walls
+float mu_walls = 0.3f;
 
 // Parameters for the granular material
-int        Id_g = 2;                     // start body ID for particles
-double     r_g = 0.1;                    // [m] radius of granular sphers
-double     rho_g = 1000;                 // [kg/m^3] density of granules
-float      mu_g = 0.5f;
+int Id_g = 2;         // start body ID for particles
+double r_g = 0.1;     // [m] radius of granular sphers
+double rho_g = 1000;  // [kg/m^3] density of granules
+float mu_g = 0.5f;
 
 // =============================================================================
 // Create the containing bin (the ground) and the load plate.
@@ -133,8 +133,7 @@ float      mu_g = 0.5f;
 // No joints between bodies are defined at this time.
 // =============================================================================
 
-void CreateMechanismBodies(ChSystemParallel* system)
-{
+void CreateMechanismBodies(ChSystemParallel* system) {
   // -------------------------------
   // Create a material for the walls
   // -------------------------------
@@ -148,9 +147,9 @@ void CreateMechanismBodies(ChSystemParallel* system)
 
   ChSharedPtr<ChBody> container(new ChBody(
 #ifndef BULLET
-		  new ChCollisionModelParallel
+      new ChCollisionModelParallel
 #endif
-		  ));
+      ));
   container->SetMaterialSurface(mat_walls);
   container->SetIdentifier(Id_container);
   container->SetBodyFixed(false);
@@ -161,9 +160,9 @@ void CreateMechanismBodies(ChSystemParallel* system)
   container->GetCollisionModel()->ClearModel();
   utils::AddBoxGeometry(container.get_ptr(), ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
   utils::AddBoxGeometry(container.get_ptr(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
-  utils::AddBoxGeometry(container.get_ptr(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>( hdimX + hthick, 0, hdimZ));
+  utils::AddBoxGeometry(container.get_ptr(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
   utils::AddBoxGeometry(container.get_ptr(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
-  utils::AddBoxGeometry(container.get_ptr(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0,  hdimY + hthick, hdimZ));
+  utils::AddBoxGeometry(container.get_ptr(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, hdimY + hthick, hdimZ));
   container->GetCollisionModel()->BuildModel();
 
   system->AddBody(container);
@@ -174,9 +173,9 @@ void CreateMechanismBodies(ChSystemParallel* system)
 
   ChSharedPtr<ChBody> ground(new ChBody(
 #ifndef BULLET
-		  new ChCollisionModelParallel
+      new ChCollisionModelParallel
 #endif
-		  ));
+      ));
   ground->SetMaterialSurface(mat_walls);
   ground->SetIdentifier(Id_ground);
   ground->SetBodyFixed(true);
@@ -195,8 +194,7 @@ void CreateMechanismBodies(ChSystemParallel* system)
 // thus ensuring that no two spheres are closer than twice the radius.
 // =============================================================================
 
-int CreateGranularMaterial(ChSystemParallel* system)
-{
+int CreateGranularMaterial(ChSystemParallel* system) {
   // -------------------------------------------
   // Create a material for the granular material
   // -------------------------------------------
@@ -227,8 +225,7 @@ int CreateGranularMaterial(ChSystemParallel* system)
   ChVector<> hdims(hdimX - r, hdimY - r, 0);
   ChVector<> center(0, 0, 2 * r);
 
-  while (center.z < 2 * hdimZ)
-  {
+  while (center.z < 2 * hdimZ) {
     gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
     center.z += 2 * r;
   }
@@ -237,8 +234,7 @@ int CreateGranularMaterial(ChSystemParallel* system)
   return gen.getTotalNumBodies();
 }
 
-double3 calculateContactForceOnBody(ChSystemParallel* system, int bodyIndex)
-{
+double3 calculateContactForceOnBody(ChSystemParallel* system, int bodyIndex) {
   double3 force;
   uint num_contacts = system->data_manager->num_contacts;
   uint num_unilaterals = system->data_manager->num_unilaterals;
@@ -256,26 +252,24 @@ double3 calculateContactForceOnBody(ChSystemParallel* system, int bodyIndex)
   // F_contact = D*gamma/h;
   blaze::DynamicVector<real> contactForces;
   contactForces.resize(system->data_manager->host_data.gamma.size());
-  contactForces = (D_n * gamma_n + D_t * gamma_t) / time_step; // Don't include the bilateral
+  contactForces = (D_n * gamma_n + D_t * gamma_t) / time_step;  // Don't include the bilateral
 
   // NOTE: contactForces is now a vector of length 6*numBodies that contains the contact force/torque on each body
   //       unfortunately, the D matrix does not include entries for inactive bodies meaning that there will be 0's
   //       for any inactive body! (As a hack, you can go into ChConstraintRigidRigid.cpp and force the solver to
   //       fill in the entries for the fixed bodies in D).
 
-  force.x = contactForces[6*bodyIndex];
-  force.y = contactForces[6*bodyIndex+1];
-  force.z = contactForces[6*bodyIndex+2];
+  force.x = contactForces[6 * bodyIndex];
+  force.y = contactForces[6 * bodyIndex + 1];
+  force.z = contactForces[6 * bodyIndex + 2];
 
   return force;
 }
 
 // =============================================================================
 
-int main(int argc, char* argv[])
-{
-  if (argc > 1)
-  {
+int main(int argc, char* argv[]) {
+  if (argc > 1) {
     tolerance = atof(argv[1]);
     hdimZ = atof(argv[2]);
     out_dir = argv[3];
@@ -287,11 +281,11 @@ int main(int argc, char* argv[])
 
   // Create output directories.
   if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
-    //cout << "Error creating directory " << out_dir << endl;
+    // cout << "Error creating directory " << out_dir << endl;
     return 1;
   }
-  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
-    //cout << "Error creating directory " << pov_dir << endl;
+  if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+    // cout << "Error creating directory " << pov_dir << endl;
     return 1;
   }
 
@@ -299,7 +293,7 @@ int main(int argc, char* argv[])
   // Create system
   // -------------
 
-  //cout << "Create DVI system" << endl;
+  // cout << "Create DVI system" << endl;
   ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
   msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
 
@@ -309,10 +303,11 @@ int main(int argc, char* argv[])
 
   // Set number of threads.
   int max_threads = msystem->GetParallelThreadNumber();
-  if (threads > max_threads) threads = max_threads;
+  if (threads > max_threads)
+    threads = max_threads;
   msystem->SetParallelThreadNumber(threads);
   omp_set_num_threads(threads);
-  //cout << "Using " << threads << " threads" << endl;
+  // cout << "Using " << threads << " threads" << endl;
   msystem->GetSettings()->max_threads = threads;
   msystem->GetSettings()->perform_thread_tuning = thread_tuning;
 
@@ -350,20 +345,17 @@ int main(int argc, char* argv[])
   out_fps = out_fps_settling;
 
   int num_particles = 0;
-  if(loadCheckPointFile)
-  {
-    //cout << "Read checkpoint data from " << settled_ckpnt_file;
+  if (loadCheckPointFile) {
+    // cout << "Read checkpoint data from " << settled_ckpnt_file;
     utils::ReadCheckpoint(msystem, settled_ckpnt_file);
-    //cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
-  }
-  else
-  {
+    // cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
+  } else {
     // Create the mechanism bodies (all fixed).
     CreateMechanismBodies(msystem);
 
     // Create granular material.
     num_particles = CreateGranularMaterial(msystem);
-    //cout << "Granular material:  " << num_particles << " particles" << endl;
+    // cout << "Granular material:  " << num_particles << " particles" << endl;
   }
 
   // Lock the container to the ground
@@ -373,7 +365,8 @@ int main(int argc, char* argv[])
   msystem->Get_bodylist()->at(1)->AddRef();
 
   ChSharedPtr<ChLinkLockLock> lock(new ChLinkLockLock);
-  lock->Initialize(container, ground, false, ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT), ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
+  lock->Initialize(
+      container, ground, false, ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT), ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
   msystem->AddLink(lock);
 
   // ----------------------
@@ -381,9 +374,9 @@ int main(int argc, char* argv[])
   // ----------------------
 
   // Set number of simulation steps and steps between successive output
-  int num_steps = (int) std::ceil(time_end / time_step);
-  int out_steps = (int) std::ceil((1.0 / time_step) / out_fps);
-  int write_steps = (int) std::ceil((1.0 / time_step) / write_fps);
+  int num_steps = (int)std::ceil(time_end / time_step);
+  int out_steps = (int)std::ceil((1.0 / time_step) / out_fps);
+  int write_steps = (int)std::ceil((1.0 / time_step) / write_fps);
 
   // Initialize counters
   double time = 0;
@@ -405,15 +398,14 @@ int main(int argc, char* argv[])
   statsStream.SetNumFormat("%16.4e");
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
-  opengl::ChOpenGLWindow &gl_window = opengl::ChOpenGLWindow::getInstance();
+  opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
   gl_window.Initialize(1280, 720, "Filling Test", msystem);
-  gl_window.SetCamera(ChVector<>(0,-10*hdimY,hdimZ), ChVector<>(0,0,hdimZ),ChVector<>(0,0,1));
+  gl_window.SetCamera(ChVector<>(0, -10 * hdimY, hdimZ), ChVector<>(0, 0, hdimZ), ChVector<>(0, 0, 1));
   gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif
 
   // Loop until reaching the end time...
   while (time < time_end) {
-
     // If at an output frame, write PovRay file and print info
     if (sim_frame == next_out_frame) {
       cout << "------------ Output frame:   " << out_frame + 1 << endl;
@@ -438,7 +430,7 @@ int main(int argc, char* argv[])
       next_out_frame += out_steps;
     }
 
-    // Advance simulation by one step
+// Advance simulation by one step
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
     if (gl_window.Active()) {
       gl_window.DoStepDynamics(time_step);
@@ -452,31 +444,36 @@ int main(int argc, char* argv[])
     if (sim_frame % write_steps == 0) {
       // Compute contact force on container (container should be the first body)
       double force = 0;
-      if(msystem->GetNcontacts())
-      {
+      if (msystem->GetNcontacts()) {
         force = -calculateContactForceOnBody(msystem, 0).z;
       }
-      double actualWeight = (msystem->Get_bodylist()->size()-1)*(4.0/3.0)*CH_C_PI*pow(r_g, 3.0)*rho_g*gravity;
+      double actualWeight =
+          (msystem->Get_bodylist()->size() - 1) * (4.0 / 3.0) * CH_C_PI * pow(r_g, 3.0) * rho_g * gravity;
 
       // get maximum body velocity
       double maxVelocity = 0;
       for (int i = 0; i < msystem->Get_bodylist()->size(); ++i) {
         ChBody* body = (ChBody*)msystem->Get_bodylist()->at(i);
-        double vel = sqrt(pow(body->GetPos_dt().x,2.0)+pow(body->GetPos_dt().y,2.0)+pow(body->GetPos_dt().z,2.0));
-        if(vel > maxVelocity) maxVelocity = vel;
+        double vel =
+            sqrt(pow(body->GetPos_dt().x, 2.0) + pow(body->GetPos_dt().y, 2.0) + pow(body->GetPos_dt().z, 2.0));
+        if (vel > maxVelocity)
+          maxVelocity = vel;
       }
 
       // write fill info
-      fillStream << time << ", " << -(lock->Get_react_force().z+gravity*container->GetMass()) << ", " << force << ", " << actualWeight << ", " << maxVelocity << ", \n";
+      fillStream << time << ", " << -(lock->Get_react_force().z + gravity * container->GetMass()) << ", " << force
+                 << ", " << actualWeight << ", " << maxVelocity << ", \n";
       fillStream.GetFstream().flush();
 
       // write stat info
       int numIters = msystem->data_manager->measures.solver.iter_hist.size();
       double residual = 0;
-      if(numIters) residual = msystem->data_manager->measures.solver.residual;
-      statsStream << time << ", " << exec_time << ", " << num_contacts/write_steps << ", " << numIters << ", " << residual << ", \n";
+      if (numIters)
+        residual = msystem->data_manager->measures.solver.residual;
+      statsStream << time << ", " << exec_time << ", " << num_contacts / write_steps << ", " << numIters << ", "
+                  << residual << ", \n";
       statsStream.GetFstream().flush();
-	  
+
       num_contacts = 0;
     }
 
@@ -508,4 +505,3 @@ int main(int argc, char* argv[])
 
   return 0;
 }
-

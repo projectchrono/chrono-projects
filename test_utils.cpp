@@ -12,14 +12,11 @@
 using namespace chrono;
 using namespace geometry;
 
-
 // =======================================================================
 // Global problem definitions
 const std::string data_folder = "../TEST/";
 
-void writePoints(const std::string          filename,
-                 const utils::PointVectorD& points)
-{
+void writePoints(const std::string filename, const utils::PointVectorD& points) {
   utils::CSV_writer csv(" ");
   for (int i = 0; i < points.size(); i++) {
     csv << points[i] << std::endl;
@@ -29,13 +26,12 @@ void writePoints(const std::string          filename,
   std::cout << "Wrote " << points.size() << " points to " << data_folder + filename << std::endl;
 }
 
-void checkSamplers()
-{
-  utils::PointVectorD  points;
+void checkSamplers() {
+  utils::PointVectorD points;
 
   // Grid sampler
   utils::GridSampler<> gs(ChVector<>(0.1, 0.2, 0.3));
-  
+
   points = gs.SampleBox(ChVector<>(2, 0, 0), ChVector<>(0, 2, 1));
   writePoints("GS_rectangleX.out", points);
 
@@ -62,7 +58,6 @@ void checkSamplers()
 
   points = gs.SampleCylinderZ(ChVector<>(1, 0, -1), 2, 0.5);
   writePoints("GS_cylinderZ.out", points);
-
 
   // Poisson Disk sampler
   utils::PDSampler<> pd(0.2);
@@ -95,19 +90,17 @@ void checkSamplers()
   writePoints("PD_cylinderZ.out", points);
 }
 
-void checkGenerators()
-{
+void checkGenerators() {
   char filename[100];
 
-
   // Parameters for the falling ball
-  int             ballId = 100;
-  double          radius = .1;
-  double          density = 2000;
-  double          volume = (4.0/3) * CH_C_PI * radius * radius * radius;
-  double          mass = density * volume;
-  ChVector<>      inertia = 0.4 * mass * radius * radius * ChVector<>(1,1,1);
-  ChVector<>      init_vel(0, 0, 0);
+  int ballId = 100;
+  double radius = .1;
+  double density = 2000;
+  double volume = (4.0 / 3) * CH_C_PI * radius * radius * radius;
+  double mass = density * volume;
+  ChVector<> inertia = 0.4 * mass * radius * radius * ChVector<>(1, 1, 1);
+  ChVector<> init_vel(0, 0, 0);
 
   // Create system
   ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
@@ -118,7 +111,6 @@ void checkGenerators()
   ballMat->SetYoungModulus(5e4f);
   ballMat->SetFriction(0.4f);
   ballMat->SetRestitution(0.2f);
-
 
   // CHECK GENERATOR
   utils::Generator gen(msystem);
@@ -137,17 +129,14 @@ void checkGenerators()
 
   gen.createObjectsBox(utils::POISSON_DISK, radius, ChVector<>(0, 0, 2), ChVector<>(3, 3, 0));
 
-  std::cout << "Total mass: "<< gen.getTotalMass() << "  Total volume: " << gen.getTotalVolume() << std::endl;
+  std::cout << "Total mass: " << gen.getTotalMass() << "  Total volume: " << gen.getTotalVolume() << std::endl;
 
   gen.writeObjectInfo(data_folder + "body_info.dat");
 }
 
-
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
   checkSamplers();
-  //checkGenerators();
+  // checkGenerators();
 
   return 0;
 }
-
