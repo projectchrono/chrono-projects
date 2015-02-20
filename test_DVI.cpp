@@ -138,8 +138,6 @@ void CreateMechanism(ChSystem* system) {
 
   // Create upper load plate
 
-  double shear_Area = w * l;
-
   ChSharedPtr<ChBody> plate;
   switch (sys_type) {
   case utils::PARALLEL_DVI:
@@ -150,15 +148,19 @@ void CreateMechanism(ChSystem* system) {
     break;
   }
 
-  plate->SetIdentifier(binId);
-  plate->SetMass(normal_pressure * shear_Area / gravity);
+  double plate_mass = normal_pressure * (w * l) / gravity;
+  ChVector<> plate_hdim(w / 2, thick / 2, l / 2);
+
+  plate->SetIdentifier(plateId);
+  plate->SetMass(plate_mass);
+  //plate->SetInertia(utils::CalcBoxGyration(plate_hdim) * plate_mass);
   plate->SetPos(ChVector<>(0, h, 0));
   plate->SetBodyFixed(false);
   plate->SetCollide(true);
   plate->SetMaterialSurface(material);
 
   plate->GetCollisionModel()->ClearModel();
-  AddWall(plate, ChVector<>(w / 2, thick / 2, l / 2), ChVector<>(0, 0, 0), true);
+  AddWall(plate, plate_hdim, ChVector<>(0, 0, 0), true);
   plate->GetCollisionModel()->SetFamily(2);
   plate->GetCollisionModel()->BuildModel();
 
