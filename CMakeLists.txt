@@ -78,6 +78,7 @@ SET(DEMOS
     demo_shearDEM
     demo_shearDVI
     test_serial
+    test_DVI
 )
 
 MESSAGE(STATUS "Radu demo programs...")
