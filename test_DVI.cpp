@@ -97,6 +97,9 @@ void AddWall(ChSharedBodyPtr& body, const ChVector<>& dim, const ChVector<>& loc
 // =============================================================================
 void CreateMechanism(ChSystem* system) {
 
+  // Get the type of system.
+  utils::SystemType sys_type = utils::GetSystemType(system);
+
   // Create a material (will be used by all objects)
 
   ChSharedPtr<ChMaterialSurface> material;
@@ -106,7 +109,16 @@ void CreateMechanism(ChSystem* system) {
 
   // Create lower bin
 
-  ChSharedPtr<ChBody> bin(new ChBody(new ChCollisionModelParallel));
+  ChSharedPtr<ChBody> bin;
+  switch (sys_type) {
+    case utils::PARALLEL_DVI:
+      bin = ChSharedPtr<ChBody>(new ChBody(new ChCollisionModelParallel));
+      break;
+    case utils::SEQUENTIAL_DVI:
+      bin = ChSharedPtr<ChBody>(new ChBody());
+      break;
+  }
+
   bin->SetIdentifier(binId);
   bin->SetMass(1);
   bin->SetPos(ChVector<>(0, -h / 2, 0));
@@ -128,7 +140,16 @@ void CreateMechanism(ChSystem* system) {
 
   double shear_Area = w * l;
 
-  ChSharedPtr<ChBody> plate(new ChBody(new ChCollisionModelParallel));
+  ChSharedPtr<ChBody> plate;
+  switch (sys_type) {
+  case utils::PARALLEL_DVI:
+    plate = ChSharedPtr<ChBody>(new ChBody(new ChCollisionModelParallel));
+    break;
+  case utils::SEQUENTIAL_DVI:
+    plate = ChSharedPtr<ChBody>(new ChBody());
+    break;
+  }
+
   plate->SetIdentifier(binId);
   plate->SetMass(normal_pressure * shear_Area / gravity);
   plate->SetPos(ChVector<>(0, h, 0));
@@ -145,7 +166,16 @@ void CreateMechanism(ChSystem* system) {
 
   // Create ball
 
-  ChSharedPtr<ChBody> ball(new ChBody(new ChCollisionModelParallel));
+  ChSharedPtr<ChBody> ball;
+  switch (sys_type) {
+  case utils::PARALLEL_DVI:
+    ball = ChSharedPtr<ChBody>(new ChBody(new ChCollisionModelParallel));
+    break;
+  case utils::SEQUENTIAL_DVI:
+    ball = ChSharedPtr<ChBody>(new ChBody());
+    break;
+  }
+
   ball->SetIdentifier(ballId);
   ball->SetMass(mass);
   ball->SetInertiaXX((2.0 / 5.0) * mass * radius * radius * ChVector<>(1, 1, 1));
@@ -185,35 +215,58 @@ void CreateMechanism(ChSystem* system) {
 // =============================================================================
 int main(int argc, char* argv[]) {
 
-  // Create the system
+  // Solver parameters
 
-  ChSystemParallelDVI* my_system = new ChSystemParallelDVI();
-  my_system->GetSettings()->solver.tolerance = 0.01;
-  my_system->GetSettings()->solver.max_iteration_bilateral = 100;
-  my_system->GetSettings()->solver.clamp_bilaterals = false;
-  my_system->GetSettings()->solver.bilateral_clamp_speed = 0.1;
+  double tolerance = 0.01;
+  double contact_recovery_speed = 0.1;
+  int max_iteration_bilateral = 100;
+  int max_iteration_sliding = 1000;
 
-  my_system->GetSettings()->solver.solver_mode = SLIDING;
-  my_system->GetSettings()->solver.max_iteration_normal = 0;
-  my_system->GetSettings()->solver.max_iteration_sliding = 1000;
-  my_system->GetSettings()->solver.max_iteration_spinning = 0;
-  my_system->GetSettings()->solver.alpha = 0;
-  my_system->GetSettings()->solver.contact_recovery_speed = 0.1;
-  my_system->ChangeSolverType(APGDREF);
+  // Create the serial system
 
-  my_system->GetSettings()->collision.collision_envelope = 0.05 * radius;
-  my_system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+  ChSystem* systemS = new ChSystem();
+  systemS->Set_G_acc(ChVector<>(0, -gravity, 0));
+  systemS->SetTolForce(tolerance);
+  systemS->SetIterLCPmaxItersSpeed(max_iteration_sliding);
+  systemS->SetMaxPenetrationRecoverySpeed(contact_recovery_speed);  // used by Anitescu stepper only
+  systemS->SetUseSleeping(false);
+  systemS->SetLcpSolverType(ChSystem::LCP_ITERATIVE_APGD);
+  systemS->SetIntegrationType(ChSystem::INT_ANITESCU);
+  systemS->SetIterLCPwarmStarting(true);
 
-  my_system->Set_G_acc(ChVector<>(0, -gravity, 0));
+  // Create the parallel system
+
+  ChSystemParallelDVI* systemP = new ChSystemParallelDVI();
+  systemP->GetSettings()->solver.tolerance = tolerance;
+  systemP->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
+  systemP->GetSettings()->solver.clamp_bilaterals = false;
+  systemP->GetSettings()->solver.bilateral_clamp_speed = 0.1;
+
+  systemP->GetSettings()->solver.solver_mode = SLIDING;
+  systemP->GetSettings()->solver.max_iteration_normal = 0;
+  systemP->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
+  systemP->GetSettings()->solver.max_iteration_spinning = 0;
+  systemP->GetSettings()->solver.alpha = 0;
+  systemP->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
+  systemP->ChangeSolverType(APGDREF);
+
+  systemP->GetSettings()->collision.collision_envelope = 0.05 * radius;
+  systemP->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+
+  systemP->Set_G_acc(ChVector<>(0, -gravity, 0));
+
+  // Select which system is simulated
+
+  ChSystem* system = systemP;
 
   // Create the mechanism
 
-  CreateMechanism(my_system);
+  CreateMechanism(system);
 
   // Create the OpenGL visualization
 
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-  gl_window.Initialize(1280, 720, "DVI test", my_system);
+  gl_window.Initialize(1280, 720, "DVI test", system);
   gl_window.SetCamera(ChVector<>(3 * w, 0, 0), ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), radius, radius);
   gl_window.SetRenderMode(opengl::WIREFRAME);
 
