@@ -48,16 +48,18 @@ using std::endl;
 
 // Simulation parameters
 
-double gravity = 9.81;
+double UNIT_SCALE = 1000;     // 1 for m, 1000 for mm
+
+double gravity = 9.81 * UNIT_SCALE;
 double time_step = 1e-3;
-double settling_time = 0.01;// 0.2;
-double normal_pressure = 1e3;  // Pa
+double settling_time = 0.01;   // 0.2;
+double normal_pressure = 1e3 / UNIT_SCALE;
 
 // Parameters for the ball
 
 int ballId = 1;
-double radius = 0.0025;  // m
-double density = 2500;   // kg/m^3
+double radius = 0.0025 * UNIT_SCALE;
+double density = 2500 / (UNIT_SCALE * UNIT_SCALE * UNIT_SCALE);
 double mass = density * (4.0 / 3) * CH_C_PI * radius * radius * radius;
 double COR = 0.9;
 double mu = 0.5;
@@ -66,13 +68,12 @@ ChVector<> ball_pos(2 * radius, 0, 2 * radius);
 
 // Parameters for the lower and upper plates
 
-int groundId = 0;
 int binId = -1;
 int plateId = -3;
-double w = 0.06;
-double l = 0.06;
-double h = 0.06;
-double thick = 0.01;
+double w = 0.06 * UNIT_SCALE;
+double l = 0.06 * UNIT_SCALE;
+double h = 0.06 * UNIT_SCALE;
+double thick = 0.01 * UNIT_SCALE;
 
 
 // =============================================================================
@@ -230,9 +231,10 @@ int main(int argc, char* argv[]) {
   systemS->Set_G_acc(ChVector<>(0, -gravity, 0));
   systemS->SetTolForce(tolerance);
   systemS->SetIterLCPmaxItersSpeed(max_iteration_sliding);
-  systemS->SetMaxPenetrationRecoverySpeed(contact_recovery_speed);  // used by Anitescu stepper only
+  systemS->SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
   systemS->SetUseSleeping(false);
-  systemS->SetLcpSolverType(ChSystem::LCP_ITERATIVE_APGD);
+  //systemS->SetLcpSolverType(ChSystem::LCP_ITERATIVE_APGD);
+  systemS->SetLcpSolverType(ChSystem::LCP_ITERATIVE_SYMMSOR);
   systemS->SetIntegrationType(ChSystem::INT_ANITESCU);
   systemS->SetIterLCPwarmStarting(true);
 
