@@ -28,8 +28,18 @@ using std::endl;
 
 // =============================================================================
 
-// JSON file for vehicle model
-std::string vehicle_file("hmmwv/vehicle/HMMWV_Vehicle_simple.json");
+// -----------------------------------------------------------------------------
+// Specification of the vehicle model
+// -----------------------------------------------------------------------------
+
+enum WheelType {CYLINDRICAL, LUGGED};
+
+// Type of wheel/tire (controls both contact and visualization)
+WheelType wheel_type = LUGGED;
+
+// JSON files for vehicle model (using different wheel visualization meshes)
+std::string vehicle_file_cyl("hmmwv/vehicle/HMMWV_Vehicle_simple.json");
+std::string vehicle_file_lug("hmmwv/vehicle/HMMWV_Vehicle_simple_lugged.json");
 
 // JSON files for powertrain (simple)
 std::string simplepowertrain_file("hmmwv/powertrain/HMMWV_SimplePowertrain.json");
@@ -75,6 +85,7 @@ bool loop = false;
 
 // =============================================================================
 
+// Callback class for providing driver inputs.
 class MyDriverInputs : public utils::DriverInputsCallback {
  public:
   virtual void onCallback(double time, double& throttle, double& steering, double& braking) {
@@ -89,20 +100,65 @@ class MyDriverInputs : public utils::DriverInputsCallback {
   }
 };
 
+// Callback class for specifying rigid tire contact model.
+// This version uses cylindrical contact shapes.
 class MyCylindricalTire : public utils::TireContactCallback {
  public:
   virtual void onCallback(ChSharedPtr<ChBody> wheelBody, double radius, double width) {
     wheelBody->GetCollisionModel()->ClearModel();
-    wheelBody->GetCollisionModel()->AddCylinder(radius, radius, width / 2);
+    wheelBody->GetCollisionModel()->AddCylinder(0.46, 0.46, width / 2);
     wheelBody->GetCollisionModel()->BuildModel();
 
     wheelBody->GetMaterialSurface()->SetFriction(0.6f);
   }
 };
 
-class MyKnobbyTire : public utils::TireContactCallback {
+// Callback class for specifying rigid tire contact model.
+// This version uses a collection of convex contact shapes (meshes).
+class MyLuggedTire : public utils::TireContactCallback {
  public:
-  MyKnobbyTire() {
+  MyLuggedTire() {
+    std::string lugged_file("hmmwv/lugged_wheel_section.obj");
+    geometry::ChTriangleMeshConnected lugged_mesh;
+    utils::LoadConvexMesh(vehicle::GetDataFile(lugged_file), lugged_mesh, lugged_convex);
+    num_hulls = lugged_convex.GetHullCount();
+  }
+
+  virtual void onCallback(ChSharedPtr<ChBody> wheelBody, double radius, double width) {
+    ChCollisionModelParallel* coll_model = (ChCollisionModelParallel*) wheelBody->GetCollisionModel();
+    coll_model->ClearModel();
+
+    // Assemble the tire contact from 15 segments, properly offset.
+    // Each segment is further decomposed in convex hulls.
+    for (int iseg = 0; iseg < 15; iseg++) {
+      ChQuaternion<> rot = Q_from_AngAxis(iseg * 24 * CH_C_DEG_TO_RAD, VECT_Y);
+      for (int ihull = 0; ihull < num_hulls; ihull++) {
+        std::vector<ChVector<> > convexhull;
+        lugged_convex.GetConvexHullResult(ihull, convexhull);
+        coll_model->AddConvexHull(convexhull, VNULL, rot);
+      }
+    }
+
+    // Add a cylinder to represent the wheel hub.
+    coll_model->AddCylinder(0.223, 0.223, 0.126);
+
+    coll_model->BuildModel();
+
+    wheelBody->GetMaterialSurface()->SetFriction(0.8f);
+  }
+
+ private:
+  ChConvexDecompositionHACDv2 lugged_convex;
+  int num_hulls;
+};
+
+// Callback class for specifying rigid tire contact model.
+// This version uses a collection of convex contact shapes (meshes).
+// In addition, this version overrides the visualization assets of the provided
+// wheel body with the collision meshes.
+class MyLuggedTire_vis : public utils::TireContactCallback {
+public:
+  MyLuggedTire_vis() {
     std::string lugged_file("hmmwv/lugged_wheel_section.obj");
     utils::LoadConvexMesh(vehicle::GetDataFile(lugged_file), lugged_mesh, lugged_convex);
   }
@@ -114,22 +170,20 @@ class MyKnobbyTire : public utils::TireContactCallback {
     wheelBody->GetCollisionModel()->ClearModel();
     for (int j = 0; j < 15; j++) {
       utils::AddConvexCollisionModel(wheelBody, lugged_mesh, lugged_convex, VNULL,
-                                     Q_from_AngAxis(j * 24 * CH_C_DEG_TO_RAD, VECT_Y), false);
+        Q_from_AngAxis(j * 24 * CH_C_DEG_TO_RAD, VECT_Y), false);
     }
     // This cylinder acts like the rims
     utils::AddCylinderGeometry(wheelBody.get_ptr(), 0.223, 0.126);
     wheelBody->GetCollisionModel()->BuildModel();
 
-    wheelBody->GetCollisionModel()->SetFamily(4);
-    wheelBody->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(4);
-
     wheelBody->GetMaterialSurface()->SetFriction(0.8f);
   }
 
- private:
+private:
   ChConvexDecompositionHACDv2 lugged_convex;
   geometry::ChTriangleMeshConnected lugged_mesh;
 };
+
 
 // =============================================================================
 
@@ -191,16 +245,26 @@ int main(int argc, char* argv[]) {
   // Create and initialize the vehicle system.
   // -----------------------------------------
 
-  utils::VehicleSystem vehicle(system, vehicle_file, simplepowertrain_file);
+  utils::VehicleSystem* vehicle;
+  utils::TireContactCallback* tire_cb;
 
-  MyCylindricalTire tire_cb;
-  //MyKnobbyTire tire_cb;
-  vehicle.SetTireContactCallback(&tire_cb);
+  switch (wheel_type) {
+    case CYLINDRICAL: {
+      vehicle = new utils::VehicleSystem(system, vehicle_file_cyl, simplepowertrain_file);
+      tire_cb = new MyCylindricalTire();
+    } break;
+    case LUGGED: {
+      vehicle = new utils::VehicleSystem(system, vehicle_file_lug, simplepowertrain_file);
+      tire_cb = new MyLuggedTire_vis();
+    } break;
+  }
+
+  vehicle->SetTireContactCallback(tire_cb);
 
   MyDriverInputs driver_cb;
-  vehicle.SetDriverInputsCallback(&driver_cb);
+  vehicle->SetDriverInputsCallback(&driver_cb);
 
-  vehicle.Initialize(initLoc, initRot);
+  vehicle->Initialize(initLoc, initRot);
 
   // ------------------------------------------------
   // Create the ground body and set contact geometry.
@@ -234,7 +298,7 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
   // Initialize OpenGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-  gl_window.Initialize(1280, 720, "mixerDEM", system);
+  gl_window.Initialize(1280, 720, "HMMWV", system);
   gl_window.SetCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
 
   // Let the OpenGL manager run the simulation until interrupted.
@@ -275,7 +339,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Update vehicle
-    vehicle.Update(time);
+    vehicle->Update(time);
 
 // Advance dynamics.
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
@@ -299,6 +363,9 @@ int main(int argc, char* argv[]) {
   cout << "==================================" << endl;
   cout << "Simulation time:   " << exec_time << endl;
   cout << "Number of threads: " << threads << endl;
+
+  delete vehicle;
+  delete tire_cb;
 
   return 0;
 }
