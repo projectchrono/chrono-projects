@@ -54,7 +54,7 @@ double time_end = 5;
 // Solver parameters
 double time_step = 1e-3;
 
-double tolerance = 1e-3;
+double tolerance = 1e-1;
 
 int max_iteration_normal = 0;
 int max_iteration_sliding = 200;
@@ -63,6 +63,8 @@ int max_iteration_spinning = 0;
 float contact_recovery_speed = 0.1;
 
 // Output
+bool povray_output = false;
+
 const std::string out_dir = "../HMMWV";
 const std::string pov_dir = out_dir + "/POVRAY";
 
@@ -139,13 +141,15 @@ int main(int argc, char* argv[]) {
   // Create output directories.
   // --------------------------
 
-  if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
-    cout << "Error creating directory " << out_dir << endl;
-    return 1;
-  }
-  if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
-    cout << "Error creating directory " << pov_dir << endl;
-    return 1;
+  if (povray_output) {
+    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+      cout << "Error creating directory " << out_dir << endl;
+      return 1;
+    }
+    if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+      cout << "Error creating directory " << pov_dir << endl;
+      return 1;
+    }
   }
 
   // --------------
@@ -179,17 +183,18 @@ int main(int argc, char* argv[]) {
   system->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
   system->GetSettings()->solver.alpha = 0;
   system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-  system->ChangeSolverType(APGDREF);
+  system->ChangeSolverType(APGD);
 
   system->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
 
   // -----------------------------------------
   // Create and initialize the vehicle system.
   // -----------------------------------------
+
   utils::VehicleSystem vehicle(system, vehicle_file, simplepowertrain_file);
 
-  //MyCylindricalTire tire_cb;
-  MyKnobbyTire tire_cb;
+  MyCylindricalTire tire_cb;
+  //MyKnobbyTire tire_cb;
   vehicle.SetTireContactCallback(&tire_cb);
 
   MyDriverInputs driver_cb;
@@ -253,7 +258,7 @@ int main(int argc, char* argv[]) {
   int num_contacts = 0;
 
   while (time < time_end) {
-    if (sim_frame == next_out_frame) {
+    if (povray_output && sim_frame == next_out_frame) {
       char filename[100];
       sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
       utils::WriteShapesPovray(system, filename);
