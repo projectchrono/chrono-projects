@@ -57,7 +57,7 @@ ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
 float mu_g = 0.8;
 
-int num_particles = 1000;
+int num_particles = 100;
 
 // -----------------------------------------------------------------------------
 // Specification of the vehicle model
@@ -76,7 +76,7 @@ std::string vehicle_file_lug("hmmwv/vehicle/HMMWV_Vehicle_simple_lugged.json");
 std::string simplepowertrain_file("hmmwv/powertrain/HMMWV_SimplePowertrain.json");
 
 // Initial vehicle position and orientation
-ChVector<> initLoc(-hdimX + 2.5, 0, 0.75);
+ChVector<> initLoc(-hdimX + 2.5, 0, 0.6);
 ChQuaternion<> initRot(1, 0, 0, 0);
 
 // Coefficient of friction
@@ -97,7 +97,7 @@ double time_end = 7;
 
 // Duration of the "hold time" (vehicle chassis fixed and no driver inputs).
 // This can be used to allow the granular material to settle.
-double time_hold = 0.5;
+double time_hold = 0.2;
 
 // Solver parameters
 double time_step = 1e-3;
@@ -106,7 +106,7 @@ double tolerance = 0.1;
 
 int max_iteration_bilateral = 100;
 int max_iteration_normal = 0;
-int max_iteration_sliding = 200;
+int max_iteration_sliding = 2000;
 int max_iteration_spinning = 0;
 
 float contact_recovery_speed = 0.1;
@@ -317,6 +317,8 @@ int main(int argc, char* argv[]) {
   system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
   system->ChangeSolverType(APGD);
 
+  system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+  system->GetSettings()->collision.collision_envelope = 0.1 * r_g;
   system->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
 
   // -------------------
