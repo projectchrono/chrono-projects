@@ -30,29 +30,6 @@ using std::endl;
 // =============================================================================
 
 // -----------------------------------------------------------------------------
-// Specification of the vehicle model
-// -----------------------------------------------------------------------------
-
-enum WheelType { CYLINDRICAL, LUGGED };
-
-// Type of wheel/tire (controls both contact and visualization)
-WheelType wheel_type = CYLINDRICAL;
-
-// JSON files for vehicle model (using different wheel visualization meshes)
-std::string vehicle_file_cyl("hmmwv/vehicle/HMMWV_Vehicle_simple.json");
-std::string vehicle_file_lug("hmmwv/vehicle/HMMWV_Vehicle_simple_lugged.json");
-
-// JSON files for powertrain (simple)
-std::string simplepowertrain_file("hmmwv/powertrain/HMMWV_SimplePowertrain.json");
-
-// Initial vehicle position and orientation
-ChVector<> initLoc(-3.0, 0, 0.75);
-ChQuaternion<> initRot(1, 0, 0, 0);
-
-// Coefficient of friction
-float mu_t = 0.8;
-
-// -----------------------------------------------------------------------------
 // Specification of the terrain
 // -----------------------------------------------------------------------------
 
@@ -83,6 +60,29 @@ float mu_g = 0.8;
 int num_particles = 1000;
 
 // -----------------------------------------------------------------------------
+// Specification of the vehicle model
+// -----------------------------------------------------------------------------
+
+enum WheelType { CYLINDRICAL, LUGGED };
+
+// Type of wheel/tire (controls both contact and visualization)
+WheelType wheel_type = CYLINDRICAL;
+
+// JSON files for vehicle model (using different wheel visualization meshes)
+std::string vehicle_file_cyl("hmmwv/vehicle/HMMWV_Vehicle_simple.json");
+std::string vehicle_file_lug("hmmwv/vehicle/HMMWV_Vehicle_simple_lugged.json");
+
+// JSON files for powertrain (simple)
+std::string simplepowertrain_file("hmmwv/powertrain/HMMWV_SimplePowertrain.json");
+
+// Initial vehicle position and orientation
+ChVector<> initLoc(-hdimX + 2.5, 0, 0.75);
+ChQuaternion<> initRot(1, 0, 0, 0);
+
+// Coefficient of friction
+float mu_t = 0.8;
+
+// -----------------------------------------------------------------------------
 // Simulation parameters
 // -----------------------------------------------------------------------------
 
@@ -97,7 +97,7 @@ double time_end = 7;
 
 // Duration of the "hold time" (vehicle chassis fixed and no driver inputs).
 // This can be used to allow the granular material to settle.
-double time_hold = 2;
+double time_hold = 0.5;
 
 // Solver parameters
 double time_step = 1e-3;
@@ -389,11 +389,15 @@ int main(int argc, char* argv[]) {
   MyDriverInputs driver_cb(time_hold);
   vehicle->SetDriverInputsCallback(&driver_cb);
 
-  // Initially, fix the chassis (will be released after time_hold).
-  vehicle->GetVehicle()->GetChassis()->SetBodyFixed(true);
-
   // Initialize the vehicle at a height above the terrain.
   vehicle->Initialize(initLoc + ChVector<>(0, 0, vertical_offset), initRot);
+
+  // Initially, fix the chassis and wheel bodies (will be released after time_hold).
+  vehicle->GetVehicle()->GetChassis()->SetBodyFixed(true);
+  for (int i = 0; i < 2 * vehicle->GetVehicle()->GetNumberAxles(); i++) {
+    vehicle->GetVehicle()->GetWheelBody(i)->SetBodyFixed(true);
+  }
+
 
 // -----------------------
 // Perform the simulation.
@@ -436,8 +440,12 @@ int main(int argc, char* argv[]) {
     }
 
     // Release the vehicle chassis at the end of the hold time.
-    if (vehicle->GetVehicle()->GetChassis()->GetBodyFixed() && time > time_hold)
+    if (vehicle->GetVehicle()->GetChassis()->GetBodyFixed() && time > time_hold) {
       vehicle->GetVehicle()->GetChassis()->SetBodyFixed(false);
+      for (int i = 0; i < 2 * vehicle->GetVehicle()->GetNumberAxles(); i++) {
+        vehicle->GetVehicle()->GetWheelBody(i)->SetBodyFixed(false);
+      }
+    }
 
     // Update vehicle
     vehicle->Update(time);
