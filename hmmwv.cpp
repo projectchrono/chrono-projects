@@ -109,7 +109,7 @@ int max_iteration_normal = 0;
 int max_iteration_sliding = 2000;
 int max_iteration_spinning = 0;
 
-float contact_recovery_speed = 0.1;
+float contact_recovery_speed = -1;
 
 // Output
 bool povray_output = false;
@@ -305,6 +305,8 @@ int main(int argc, char* argv[]) {
   // ---------------------
   // Edit system settings.
   // ---------------------
+
+  system->GetSettings()->solver.use_full_inertia_tensor = false;
 
   system->GetSettings()->solver.tolerance = tolerance;
 
