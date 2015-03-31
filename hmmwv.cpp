@@ -100,7 +100,7 @@ double time_end = 7;
 double time_hold = 0.2;
 
 // Solver parameters
-double time_step = 1e-3;
+double time_step = 2e-4;
 
 double tolerance = 0.1;
 
@@ -110,6 +110,10 @@ int max_iteration_sliding = 2000;
 int max_iteration_spinning = 0;
 
 float contact_recovery_speed = -1;
+
+// Periodically monitor maximum bilateral constraint violation
+bool monitor_bilaterals = false;
+int bilateral_frame_interval = 100;
 
 // Output
 bool povray_output = false;
@@ -172,7 +176,7 @@ class MyLuggedTire : public utils::TireContactCallback {
   }
 
   virtual void onCallback(ChSharedPtr<ChBody> wheelBody, double radius, double width) {
-    ChCollisionModelParallel* coll_model = (ChCollisionModelParallel*) wheelBody->GetCollisionModel();
+    ChCollisionModelParallel* coll_model = (ChCollisionModelParallel*)wheelBody->GetCollisionModel();
     coll_model->ClearModel();
 
     // Assemble the tire contact from 15 segments, properly offset.
@@ -204,7 +208,7 @@ class MyLuggedTire : public utils::TireContactCallback {
 // In addition, this version overrides the visualization assets of the provided
 // wheel body with the collision meshes.
 class MyLuggedTire_vis : public utils::TireContactCallback {
-public:
+ public:
   MyLuggedTire_vis() {
     std::string lugged_file("hmmwv/lugged_wheel_section.obj");
     utils::LoadConvexMesh(vehicle::GetDataFile(lugged_file), lugged_mesh, lugged_convex);
@@ -217,7 +221,7 @@ public:
     wheelBody->GetCollisionModel()->ClearModel();
     for (int j = 0; j < 15; j++) {
       utils::AddConvexCollisionModel(wheelBody, lugged_mesh, lugged_convex, VNULL,
-        Q_from_AngAxis(j * 24 * CH_C_DEG_TO_RAD, VECT_Y), false);
+                                     Q_from_AngAxis(j * 24 * CH_C_DEG_TO_RAD, VECT_Y), false);
     }
     // This cylinder acts like the rims
     utils::AddCylinderGeometry(wheelBody.get_ptr(), 0.223, 0.126);
@@ -226,11 +230,10 @@ public:
     wheelBody->GetMaterialSurface()->SetFriction(mu_t);
   }
 
-private:
+ private:
   ChConvexDecompositionHACDv2 lugged_convex;
   geometry::ChTriangleMeshConnected lugged_mesh;
 };
-
 
 // =============================================================================
 
@@ -402,7 +405,6 @@ int main(int argc, char* argv[]) {
     vehicle->GetVehicle()->GetWheelBody(i)->SetBodyFixed(true);
   }
 
-
 // -----------------------
 // Perform the simulation.
 // -----------------------
@@ -445,6 +447,7 @@ int main(int argc, char* argv[]) {
 
     // Release the vehicle chassis at the end of the hold time.
     if (vehicle->GetVehicle()->GetChassis()->GetBodyFixed() && time > time_hold) {
+      cout << "Release vehicle t = " << time << endl;
       vehicle->GetVehicle()->GetChassis()->SetBodyFixed(false);
       for (int i = 0; i < 2 * vehicle->GetVehicle()->GetNumberAxles(); i++) {
         vehicle->GetVehicle()->GetWheelBody(i)->SetBodyFixed(false);
@@ -464,6 +467,13 @@ int main(int argc, char* argv[]) {
 #else
     system->DoStepDynamics(time_step);
 #endif
+
+    // Periodically display maximum constraint violation
+    if (monitor_bilaterals && sim_frame % bilateral_frame_interval == 0) {
+      std::vector<double> cvec;
+      ////vehicle->GetVehicle()->LogConstraintViolations();
+      cout << "  Max. violation = " << system->CalculateConstraintViolation(cvec) << endl;
+    }
 
     // Update counters.
     time += time_step;
