@@ -64,11 +64,11 @@ using std::endl;
 // -----------------------------------------------------------------------------
 
 // Comment the following line to use DVI contact
-//#define USE_DEM
+#define USE_DEM
 
 enum ProblemType { SETTLING, PRESSING, SHEARING, TESTING };
 
-ProblemType problem = TESTING;
+ProblemType problem = SHEARING;
 
 // -----------------------------------------------------------------------------
 // Conversion factors
@@ -101,7 +101,7 @@ double time_settling_max = 1.0;
 double time_pressing_min = 0.1;
 double time_pressing_max = 1.0;
 
-double time_shearing = 10;
+double time_shearing = 50;
 
 double time_testing = 2;
 
@@ -158,37 +158,39 @@ int Id_ground = -1;  // body ID for the ground (containing bin)
 int Id_box = -2;     // body ID for the shear box
 int Id_plate = -3;   // body ID for the load plate
 
-double hdimX = 6.0 / 2;   // [cm] bin half-length in x direction
-double hdimY = 6.0 / 2;   // [cm] bin half-depth in y direction
-double hdimZ = 3.0 / 2;   // [cm] bin half-height in z direction
+double hdimX = 12.0 / 2;  // [cm] bin half-length in x direction
+double hdimY = 12.0 / 2;  // [cm] bin half-depth in y direction
+double hdimZ =  3.0 / 2;  // [cm] bin half-height in z direction
 double hthick = 1.0 / 2;  // [cm] bin half-thickness of the walls
 
-double h_scaling = 6;  // ratio of shear box height to bin height
+double h_scaling = 5;  // ratio of shear box height to bin height
 
-float Y_walls = Pa2cgs * 2e6;
-float cr_walls = 0.4;
-float mu_walls = 0.3f;
+float Y_walls = Pa2cgs * 1e7;
+float cr_walls = 0.6;
+float nu_walls = 0.3;
+float mu_walls = 0.08f;
 
 int ground_coll_fam = 1;  // collision family for bin contact shapes
-int box_coll_fam = 2;     // collision family for shear box conatct shapes
+int box_coll_fam = 2;     // collision family for shear box contact shapes
 int plate_coll_fam = 3;   // collision family for load plate contact shapes
 
 // Applied normal pressure
-double normalPressure = Pa2cgs * 16888.1;  // 16,888.1 Pa // 44,127.0 Pa// 71,365.9 Pa
+double normalPressure = Pa2cgs * 3.1e3;  // 3.1 kPa // 6.4 kPa // 12.5 kPa // 24.2 kPa
 
 // Desired shearing velocity [cm/s]
-double desiredVelocity = 0.066;
+double desiredVelocity = 0.0166;  // 1 cm/min (about 10 times faster than experiment)
 
 // Parameters for the granular material
 int Id_g = 1;          // start body ID for particles
-double r_g = 0.4;      // [cm] radius of granular sphers
-double rho_g = 2.500;  // [g/cm^3] density of granules
+double r_g = 0.3;      // [cm] radius of granular spheres
+double rho_g = 2.550;  // [g/cm^3] density of granules
 
-double desiredBulkDensity = 1.3894;  // [g/cm^3] desired bulk density
+double desiredBulkDensity = 1.5;  // [g/cm^3] desired bulk density
 
-float Y_g = Pa2cgs * 5e7;
-float cr_g = 0.4;
-float mu_g = 0.5f;
+float Y_g = Pa2cgs * 4e7;	// (1,000 times softer than experiment on glass beads)
+float cr_g = 0.87;
+float nu_g = 0.22;
+float mu_g = 0.18f;
 
 // Parameters of the testing ball
 int Id_ball = -4;
@@ -198,7 +200,7 @@ double radius_ball = 0.9 * hdimX;  // [cm] radius of testing ball
 // =============================================================================
 // Create the containing bin (the ground), the shear box, and the load plate.
 //
-// Both the shear box and load plate are constructed fixed to the gorund.
+// Both the shear box and load plate are constructed fixed to the ground.
 // No joints between bodies are defined at this time.
 // =============================================================================
 
@@ -207,12 +209,13 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // Create a material for the walls
 // -------------------------------
 
-#ifdef USE_DEM
+#ifdef DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_walls;
   mat_walls = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_walls->SetYoungModulus(Y_walls);
   mat_walls->SetFriction(mu_walls);
   mat_walls->SetRestitution(cr_walls);
+  mat_walls->SetPoissonRatio(nu_walls);
 #else
   ChSharedPtr<ChMaterialSurface> mat_walls(new ChMaterialSurface);
   mat_walls->SetFriction(mu_walls);
@@ -265,7 +268,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 #endif
 
   box->SetIdentifier(Id_box);
-  box->SetPos(ChVector<>(0, 0, 2 * hdimZ));
+  box->SetPos(ChVector<>(0, 0, 2 * hdimZ + r_g));
   box->SetCollide(true);
   box->SetBodyFixed(true);
 
@@ -378,6 +381,7 @@ int CreateGranularMaterial(ChSystemParallel* system) {
   mat_g->SetYoungModulus(Y_g);
   mat_g->SetFriction(mu_g);
   mat_g->SetRestitution(cr_g);
+  mat_g->SetPoissonRatio(nu_g);
 #else
   ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
   mat_g->SetFriction(mu_g);
@@ -434,6 +438,7 @@ void CreateBall(ChSystemParallel* system) {
   mat_g->SetYoungModulus(Y_g);
   mat_g->SetFriction(mu_g);
   mat_g->SetRestitution(cr_g);
+  mat_g->SetPoissonRatio(nu_g);
 #else
   ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
   mat_g->SetFriction(mu_g);
@@ -558,6 +563,8 @@ int main(int argc, char* argv[]) {
 
 #ifdef USE_DEM
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
+  msystem->GetSettings()->solver.contact_force_model = HERTZ;
+  msystem->GetSettings()->solver.use_contact_history = true;
 #else
   msystem->GetSettings()->solver.solver_mode = SLIDING;
   msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
@@ -704,7 +711,7 @@ int main(int argc, char* argv[]) {
       time_end = time_testing;
       out_fps = out_fps_testing;
 
-      // For TESTING only, increse shearing velocity.
+      // For TESTING only, increase shearing velocity.
       desiredVelocity = 0.5;
 
       // Create the mechanism bodies (all fixed).
