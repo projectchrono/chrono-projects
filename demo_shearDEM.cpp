@@ -51,7 +51,7 @@ using std::endl;
 
 // Utility for adding (visible or invisible) walls
 
-void AddWall(ChSharedBodyDEMPtr& body, const ChVector<>& dim, const ChVector<>& loc, bool visible) {
+void AddWall(ChSharedPtr<ChBody>& body, const ChVector<>& dim, const ChVector<>& loc, bool visible) {
   body->GetCollisionModel()->AddBox(dim.x, dim.y, dim.z, loc);
 
   if (visible == true) {
@@ -178,7 +178,7 @@ int main(int argc, char* argv[]) {
 
   // Create lower bin
 
-  ChSharedPtr<ChBodyDEM> bin(new ChBodyDEM(new ChCollisionModelParallel));
+  ChSharedPtr<ChBody> bin(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
 
   bin->SetIdentifier(binId);
   bin->SetMass(1);
@@ -186,7 +186,7 @@ int main(int argc, char* argv[]) {
   bin->SetBodyFixed(true);
   bin->SetCollide(true);
 
-  bin->SetMaterialSurfaceDEM(material);
+  bin->SetMaterialSurface(material);
 
   bin->GetCollisionModel()->ClearModel();
   AddWall(bin, ChVector<>(width / 2, thickness / 2, length / 2), ChVector<>(0, 0, 0), true);
@@ -216,7 +216,7 @@ int main(int argc, char* argv[]) {
 
   // Create upper shear box
 
-  ChSharedPtr<ChBodyDEM> box(new ChBodyDEM(new ChCollisionModelParallel));
+  ChSharedPtr<ChBody> box(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
 
   box->SetIdentifier(boxId);
   box->SetMass(1);
@@ -224,7 +224,7 @@ int main(int argc, char* argv[]) {
   box->SetBodyFixed(true);
   box->SetCollide(true);
 
-  box->SetMaterialSurfaceDEM(material);
+  box->SetMaterialSurface(material);
 
   box->GetCollisionModel()->ClearModel();
   AddWall(box,
@@ -253,7 +253,7 @@ int main(int argc, char* argv[]) {
 
   // Create upper load plate
 
-  ChSharedPtr<ChBodyDEM> plate(new ChBodyDEM(new ChCollisionModelParallel));
+  ChSharedPtr<ChBody> plate(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
 
   shear_Area = width * length;
 
@@ -263,7 +263,7 @@ int main(int argc, char* argv[]) {
   plate->SetBodyFixed(true);
   plate->SetCollide(true);
 
-  plate->SetMaterialSurfaceDEM(material);
+  plate->SetMaterialSurface(material);
 
   plate->GetCollisionModel()->ClearModel();
   AddWall(plate, ChVector<>(width / 2, thickness / 2, length / 2), ChVector<>(0, 0, 0), true);
@@ -288,7 +288,7 @@ int main(int argc, char* argv[]) {
         ball_x = 4.0 * radius * (float(j - b / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
         ball_z = 4.0 * radius * (float(k - c / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
 
-        ChSharedPtr<ChBodyDEM> ball(new ChBodyDEM(new ChCollisionModelParallel));
+        ChSharedPtr<ChBody> ball(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
 
         ball->SetIdentifier(ballId + 6 * 6 * i + 6 * j + k);
         ball->SetMass(mass);
@@ -297,7 +297,7 @@ int main(int argc, char* argv[]) {
         ball->SetBodyFixed(false);
         ball->SetCollide(true);
 
-        ball->SetMaterialSurfaceDEM(material);
+        ball->SetMaterialSurface(material);
 
         ball->GetCollisionModel()->ClearModel();
         ball->GetCollisionModel()->AddSphere(radius);

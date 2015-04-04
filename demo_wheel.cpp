@@ -124,7 +124,7 @@ int CreateObjects(ChSystemParallel* system) {
   cout << "total granules: " << gen.getTotalNumBodies() << endl;
 
   // Create the containing bin
-  utils::CreateBoxContainerDEM(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+  utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 
   return gen.getTotalNumBodies();
 }
@@ -132,7 +132,7 @@ int CreateObjects(ChSystemParallel* system) {
 // =======================================================================
 // Create the wheel body at the specified height.
 
-ChSharedBodyDEMPtr CreateWheel(ChSystemParallel* system, double z) {
+ChSharedPtr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
   // Create a material for the wheel
   ChSharedPtr<ChMaterialSurfaceDEM> mat_w;
   mat_w = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
@@ -142,9 +142,9 @@ ChSharedBodyDEMPtr CreateWheel(ChSystemParallel* system, double z) {
   mat_w->SetCohesion(cohesion_w);
 
   // Create the wheel body
-  ChSharedBodyDEMPtr wheel(new ChBodyDEM(new ChCollisionModelParallel));
+  ChSharedPtr<ChBody> wheel(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
 
-  wheel->SetMaterialSurfaceDEM(mat_w);
+  wheel->SetMaterialSurface(mat_w);
 
   wheel->SetIdentifier(Id_w);
   wheel->SetMass(mass_w);
@@ -250,7 +250,7 @@ int main(int argc, char* argv[]) {
   // - Create wheel
   double time_step;
   double time_end;
-  ChSharedBodyDEMPtr wheel;
+  ChSharedPtr<ChBody> wheel;
 
   switch (problem) {
     case SETTLING:

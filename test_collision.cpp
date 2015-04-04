@@ -22,7 +22,7 @@ using namespace chrono::collision;
 using std::cout;
 using std::endl;
 
-#define DEM
+#define USE_DEM
 #define NARROW_NEW
 
 int counter = 0;
@@ -59,8 +59,8 @@ void writeContactInfo(ChParallelDataManager* data_container) {
 // ------------------------------------------------------------------------------
 
 void createSphere(ChSystemParallel* sys, const ChVector<>& pos, const ChQuaternion<>& rot, double radius) {
-#ifdef DEM
-  ChSharedBodyDEMPtr ball(new ChBodyDEM(new ChCollisionModelParallel));
+#ifdef USE_DEM
+  ChSharedPtr<ChBody> ball(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
 #else
   ChSharedBodyPtr ball(new ChBody(new ChCollisionModelParallel));
 #endif
@@ -88,8 +88,8 @@ void createCapsule(ChSystemParallel* sys,
                    const ChQuaternion<>& rot,
                    double radius,
                    double hlen) {
-#ifdef DEM
-  ChSharedBodyDEMPtr capsule(new ChBodyDEM(new ChCollisionModelParallel));
+#ifdef USE_DEM
+  ChSharedPtr<ChBody> capsule(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
 #else
   ChSharedBodyPtr capsule(new ChBody(new ChCollisionModelParallel));
 #endif
@@ -114,8 +114,8 @@ void createCapsule(ChSystemParallel* sys,
 // ------------------------------------------------------------------------------
 
 void createBox(ChSystemParallel* sys, const ChVector<>& pos, const ChQuaternion<>& rot, const ChVector<>& hdims) {
-#ifdef DEM
-  ChSharedBodyDEMPtr box(new ChBodyDEM(new ChCollisionModelParallel));
+#ifdef USE_DEM
+  ChSharedPtr<ChBody> box(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
 #else
   ChSharedBodyPtr box(new ChBody(new ChCollisionModelParallel));
 #endif
@@ -142,8 +142,8 @@ void createMesh(ChSystemParallel* sys, const ChVector<>& pos, const ChQuaternion
   geometry::ChTriangleMeshConnected trimesh;
   trimesh.LoadWavefrontMesh(filename, true, false);
 
-#ifdef DEM
-  ChSharedBodyDEMPtr body(new ChBodyDEM(new ChCollisionModelParallel));
+#ifdef USE_DEM
+  ChSharedPtr<ChBody> body(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
 #else
   ChSharedBodyPtr body(new ChBody(new ChCollisionModelParallel));
 #endif
@@ -182,7 +182,7 @@ int main(int argc, char* argv[]) {
   omp_set_num_threads(threads);
 
 // Create system
-#ifdef DEM
+#ifdef USE_DEM
   cout << "DEM";
   ChSystemParallelDEM msystem;
 #ifdef NARROW_NEW

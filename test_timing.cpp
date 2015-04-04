@@ -79,7 +79,7 @@ int CreateObjects(ChSystemParallel* system) {
   binMat->SetFriction(0.4f);
   binMat->SetRestitution(0.1f);
 
-  utils::CreateBoxContainerDEM(system, binId, binMat, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+  utils::CreateBoxContainer(system, binId, binMat, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 
   return gen.getTotalNumBodies();
 }

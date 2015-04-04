@@ -92,8 +92,8 @@ int main(int argc, char* argv[]) {
   bodyMat->SetFriction(0.5f);
   bodyMat->SetRestitution(0.1f);
 
-  ChSharedBodyDEMPtr body1(new ChBodyDEM(new ChCollisionModelParallel));
-  body1->SetMaterialSurfaceDEM(bodyMat);
+  ChSharedPtr<ChBody> body1(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  body1->SetMaterialSurface(bodyMat);
   body1->SetIdentifier(101);
   body1->SetMass(mass);
   body1->SetInertiaXX(inertia);
@@ -113,8 +113,8 @@ int main(int argc, char* argv[]) {
 
   utils::WriteMeshPovray(obj_mesh_file, mesh_name, pov_mesh_file);
 
-  ChSharedBodyDEMPtr body2(new ChBodyDEM(new ChCollisionModelParallel));
-  body2->SetMaterialSurfaceDEM(bodyMat);
+  ChSharedPtr<ChBody> body2(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  body2->SetMaterialSurface(bodyMat);
   body2->SetIdentifier(102);
   body2->SetMass(mass);
   body2->SetInertiaXX(inertia);
@@ -142,8 +142,8 @@ int main(int argc, char* argv[]) {
   binMat->SetRestitution(0.1f);
 
   // A set of fixed spheres
-  ChSharedBodyDEMPtr bin(new ChBodyDEM(new ChCollisionModelParallel));
-  bin->SetMaterialSurfaceDEM(binMat);
+  ChSharedPtr<ChBody> bin(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  bin->SetMaterialSurface(binMat);
   bin->SetIdentifier(-100);
   bin->SetMass(1);
   bin->SetPos(ChVector<>(0, 0, 0));

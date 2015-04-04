@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
   binMat->SetFriction(0.4f);
   binMat->SetRestitution(0.1f);
 
-  utils::CreateBoxContainerDEM(msystem, binId, binMat, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+  utils::CreateBoxContainer(msystem, binId, binMat, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 
   // Create the granular material
   CreateObjects(msystem);

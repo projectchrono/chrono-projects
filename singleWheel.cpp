@@ -64,7 +64,7 @@ using std::endl;
 // -----------------------------------------------------------------------------
 
 // Comment the following line to use DVI contact
-//#define DEM
+//#define USE_DEM
 
 enum ProblemType { SETTLING, PRESSING, ROLLING, TESTING };
 
@@ -114,7 +114,7 @@ double time_testing = 2;
 double settling_tol = 0.2;
 
 // Solver settings
-#ifdef DEM
+#ifdef USE_DEM
 double time_step = 1e-5;
 int max_iteration_bilateral = 100;
 #else
@@ -131,7 +131,7 @@ double bilateral_clamp_speed = 10e30;
 double tolerance = 1;
 
 // Output
-#ifdef DEM
+#ifdef USE_DEM
 const std::string out_dir = "../SINGLEWHEEL_DEM";
 #else
 const std::string out_dir = "../SINGLEWHEEL_DVI";
@@ -177,7 +177,6 @@ double wheelWeight = 80;               // * N2cgs;   // Normal load of the wheel
 double velocity = angVel * wheelRadius * (1.0 - wheelSlip);
 
 float Y_walls = Pa2cgs * 2e6;
-float alpha_walls = alpha2cgs * 0.4;
 float mu_walls = 0.3f;
 
 // Parameters for the granular material
@@ -188,7 +187,6 @@ double rho_g = 2.500;  // [g/cm^3] density of granules
 double desiredBulkDensity = 1.3894;  // [g/cm^3] desired bulk density
 
 float Y_g = Pa2cgs * 5e7;
-float alpha_g = alpha2cgs * 0.4;
 float mu_g = 0.5f;
 
 // Parameters of the testing ball
@@ -208,12 +206,11 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // Create a material for the walls
 // -------------------------------
 
-#ifdef DEM
+#ifdef USE_DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_walls;
   mat_walls = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_walls->SetYoungModulus(Y_walls);
   mat_walls->SetFriction(mu_walls);
-  mat_walls->SetDissipationFactor(alpha_walls);
 #else
   ChSharedPtr<ChMaterialSurface> mat_walls(new ChMaterialSurface);
   mat_walls->SetFriction(mu_walls);
@@ -223,9 +220,9 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // Create the ground body -- always FIRST body in system
 // ----------------------
 
-#ifdef DEM
-  ChSharedPtr<ChBodyDEM> ground(new ChBodyDEM(new ChCollisionModelParallel));
-  ground->SetMaterialSurfaceDEM(mat_walls);
+#ifdef USE_DEM
+  ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  ground->SetMaterialSurface(mat_walls);
 #else
   ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel));
   ground->SetMaterialSurface(mat_walls);
@@ -253,9 +250,9 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 
 // Initially, the wheel is fixed to ground.
 
-#ifdef DEM
-  ChSharedBodyDEMPtr wheel(new ChBodyDEM(new ChCollisionModelParallel));
-  wheel->SetMaterialSurfaceDEM(mat_walls);
+#ifdef USE_DEM
+  ChSharedPtr<ChBody> wheel(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  wheel->SetMaterialSurface(mat_walls);
 #else
   ChSharedBodyPtr wheel(new ChBody(new ChCollisionModelParallel));
   wheel->SetMaterialSurface(mat_walls);
@@ -284,9 +281,9 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // Initially, the chassis is fixed to ground.
 // It is released after the settling phase.
 
-#ifdef DEM
-  ChSharedBodyDEMPtr chassis(new ChBodyDEM(new ChCollisionModelParallel));
-  chassis->SetMaterialSurfaceDEM(mat_walls);
+#ifdef USE_DEM
+  ChSharedPtr<ChBody> chassis(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  chassis->SetMaterialSurface(mat_walls);
 #else
   ChSharedBodyPtr chassis(new ChBody(new ChCollisionModelParallel));
   chassis->SetMaterialSurface(mat_walls);
@@ -313,9 +310,9 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // Initially, the axle is fixed to ground.
 // It is released after the settling phase.
 
-#ifdef DEM
-  ChSharedBodyDEMPtr axle(new ChBodyDEM(new ChCollisionModelParallel));
-  axle->SetMaterialSurfaceDEM(mat_walls);
+#ifdef USE_DEM
+  ChSharedPtr<ChBody> axle(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  axle->SetMaterialSurface(mat_walls);
 #else
   ChSharedBodyPtr axle(new ChBody(new ChCollisionModelParallel));
   axle->SetMaterialSurface(mat_walls);
@@ -400,12 +397,11 @@ int CreateGranularMaterial(ChSystemParallel* system) {
 // Create a material for the granular material
 // -------------------------------------------
 
-#ifdef DEM
+#ifdef USE_DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_g->SetYoungModulus(Y_g);
   mat_g->SetFriction(mu_g);
-  mat_g->SetDissipationFactor(alpha_g);
 #else
   ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
   mat_g->SetFriction(mu_g);
@@ -419,7 +415,7 @@ int CreateGranularMaterial(ChSystemParallel* system) {
   utils::Generator gen(system);
 
   utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
-#ifdef DEM
+#ifdef USE_DEM
   m1->setDefaultMaterialDEM(mat_g);
 #else
   m1->setDefaultMaterialDVI(mat_g);
@@ -456,12 +452,11 @@ void CreateBall(ChSystemParallel* system) {
 // Create a material for the ball
 // ------------------------------
 
-#ifdef DEM
+#ifdef USE_DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_g->SetYoungModulus(Y_g);
   mat_g->SetFriction(mu_g);
-  mat_g->SetDissipationFactor(alpha_g);
 #else
   ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
   mat_g->SetFriction(mu_g);
@@ -471,9 +466,9 @@ void CreateBall(ChSystemParallel* system) {
 // Create the ball
 // ---------------
 
-#ifdef DEM
-  ChSharedBodyDEMPtr ball(new ChBodyDEM(new ChCollisionModelParallel));
-  ball->SetMaterialSurfaceDEM(mat_g);
+#ifdef USE_DEM
+  ChSharedPtr<ChBody> ball(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  ball->SetMaterialSurface(mat_g);
 #else
   ChSharedBodyPtr ball(new ChBody(new ChCollisionModelParallel));
   ball->SetMaterialSurface(mat_g);
@@ -557,7 +552,7 @@ int main(int argc, char* argv[]) {
 // Create system
 // -------------
 
-#ifdef DEM
+#ifdef USE_DEM
   cout << "Create DEM system" << endl;
   ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
 #else
@@ -584,7 +579,7 @@ int main(int argc, char* argv[]) {
   msystem->GetSettings()->solver.clamp_bilaterals = clamp_bilaterals;
   msystem->GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
 
-#ifdef DEM
+#ifdef USE_DEM
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 #else
   msystem->GetSettings()->solver.solver_mode = SLIDING;

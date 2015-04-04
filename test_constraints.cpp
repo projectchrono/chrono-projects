@@ -66,14 +66,14 @@ int main(int argc, char* argv[]) {
   y2x.Q_from_AngAxis(-CH_C_PI / 2, ChVector<>(0, 0, 1));
 
   // ground
-  ChSharedBodyDEMPtr ground(new ChBodyDEM(new ChCollisionModelParallel));
+  ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
   msystem->AddBody(ground);
   ground->SetIdentifier(0);
   ground->SetBodyFixed(true);
   ground->SetCollide(false);
 
   // crank
-  ChSharedBodyDEMPtr crank(new ChBodyDEM(new ChCollisionModelParallel));
+  ChSharedPtr<ChBody> crank(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
   msystem->AddBody(crank);
   crank->SetIdentifier(1);
   crank->SetPos(ChVector<>(1, 0, 0));
@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef SLIDER_CRANK
   // rod
-  ChSharedBodyDEMPtr rod(new ChBodyDEM(new ChCollisionModelParallel));
+  ChSharedPtr<ChBody> rod(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
   msystem->AddBody(rod);
   rod->SetIdentifier(2);
   rod->SetPos(ChVector<>(4, 0, 0));

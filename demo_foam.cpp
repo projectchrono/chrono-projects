@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
   mat_c->SetCohesion(cohesion_c);
 
   // Create the containing bin
-  utils::CreateBoxContainerDEM(msystem, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+  utils::CreateBoxContainer(msystem, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 
   // Create a mixture entirely made out of spheres
   double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;

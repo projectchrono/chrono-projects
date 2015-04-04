@@ -48,7 +48,7 @@ using std::flush;
 // -----------------------------------------------------------------------------
 
 // Specify solution method (comment next line for DVI)
-#define DEM
+#define USE_DEM
 
 // Simulation phase
 enum ProblemType { SETTLING, PUSHING, TESTING };
@@ -77,7 +77,7 @@ bool clamp_bilaterals = false;
 double bilateral_clamp_speed = 1000;
 double tolerance = 1e-3;
 
-#ifdef DEM
+#ifdef USE_DEM
 double time_step = 1e-4;
 int max_iteration_bilateral = 100;
 #else
@@ -90,7 +90,7 @@ float contact_recovery_speed = 1e4;
 #endif
 
 // Output
-#ifdef DEM
+#ifdef USE_DEM
 const std::string out_dir = "../SCHMUTZ_DEM";
 #else
 const std::string out_dir = "../SCHMUTZ_DVI";
@@ -185,8 +185,8 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
   ChVector<> loc_prismatic = loc_sled - ChVector<>(0, 0, e / 4);
 
 // Create the ground body
-#ifdef DEM
-  m_ground = ChSharedPtr<ChBodyDEM>(new ChBodyDEM(new collision::ChCollisionModelParallel));
+#ifdef USE_DEM
+  m_ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel, ChBody::DEM));
 #else
   m_ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 #endif
@@ -197,8 +197,8 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
   system->AddBody(m_ground);
 
 // Create the sled body
-#ifdef DEM
-  m_sled = ChSharedPtr<ChBodyDEM>(new ChBodyDEM(new collision::ChCollisionModelParallel));
+#ifdef USE_DEM
+  m_sled = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel, ChBody::DEM));
 #else
   m_sled = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 #endif
@@ -223,7 +223,7 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
   system->AddBody(m_sled);
 
 // Create a material for the wheel body
-#ifdef DEM
+#ifdef USE_DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_w;
   mat_w = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_w->SetYoungModulus(2e6f);
@@ -235,9 +235,9 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 #endif
 
 // Create the wheel body
-#ifdef DEM
-  ChSharedPtr<ChBodyDEM> wheel(new ChBodyDEM(new collision::ChCollisionModelParallel));
-  wheel->SetMaterialSurfaceDEM(mat_w);
+#ifdef USE_DEM
+  ChSharedPtr<ChBody> wheel(new ChBody(new collision::ChCollisionModelParallel, ChBody::DEM));
+  wheel->SetMaterialSurface(mat_w);
   m_wheel = wheel;
 #else
   m_wheel = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
@@ -316,19 +316,19 @@ void CreateContainer(ChSystemParallel* system) {
   int id_c = -200;
   double thickness = 0.2;
 
-#ifdef DEM
+#ifdef USE_DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
   mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_c->SetYoungModulus(2e6f);
   mat_c->SetFriction(0.4f);
   mat_c->SetRestitution(0.1f);
 
-  utils::CreateBoxContainerDEM(system, id_c, mat_c, ChVector<>(L / 2, W / 2, H / 2), thickness / 2);
+  utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(L / 2, W / 2, H / 2), thickness / 2);
 #else
   ChSharedPtr<ChMaterialSurface> mat_c(new ChMaterialSurface);
   mat_c->SetFriction(0.4f);
 
-  utils::CreateBoxContainerDVI(system, id_c, mat_c, ChVector<>(L / 2, W / 2, H / 2), thickness / 2);
+  utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(L / 2, W / 2, H / 2), thickness / 2);
 
 #endif
 }
@@ -338,7 +338,7 @@ void CreateContainer(ChSystemParallel* system) {
 // =============================================================================
 void CreateParticles(ChSystemParallel* system) {
 // Create a material for the ball mixture.
-#ifdef DEM
+#ifdef USE_DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
   mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_g->SetYoungModulus(Y_g);
@@ -353,7 +353,7 @@ void CreateParticles(ChSystemParallel* system) {
   utils::Generator gen(system);
 
   utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
-#ifdef DEM
+#ifdef USE_DEM
   m1->setDefaultMaterialDEM(mat_g);
 #else
   m1->setDefaultMaterialDVI(mat_g);
@@ -417,7 +417,7 @@ int main(int argc, char* argv[]) {
 // Create system.
 // --------------
 
-#ifdef DEM
+#ifdef USE_DEM
   cout << "Create DEM system" << endl;
   ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
 #else
@@ -450,7 +450,7 @@ int main(int argc, char* argv[]) {
   msystem->GetSettings()->solver.clamp_bilaterals = clamp_bilaterals;
   msystem->GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
 
-#ifdef DEM
+#ifdef USE_DEM
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 #else
   msystem->GetSettings()->solver.solver_mode = SLIDING;

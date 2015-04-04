@@ -28,7 +28,7 @@ using std::endl;
 // -----------------------------------------------------------------------------
 
 // Comment the following line to use DVI contact
-#define DEM
+#define USE_DEM
 
 // Parameters for the falling object
 collision::ShapeType shape_o = collision::ROUNDEDCYL;
@@ -57,7 +57,7 @@ bool thread_tuning = true;
 double time_end = 5;
 
 // Solver parameters
-#ifdef DEM
+#ifdef USE_DEM
 double time_step = 1e-4;
 int max_iteration = 20;
 #else
@@ -69,7 +69,7 @@ float contact_recovery_speed = 0.1;
 #endif
 
 // Output
-#ifdef DEM
+#ifdef USE_DEM
 const std::string out_dir = "../OBJECTDROP_DEM";
 #else
 const std::string out_dir = "../OBJECTDROP_DVI";
@@ -89,14 +89,14 @@ void CreateGround(ChSystemParallel* system) {
 // Create a material and the "ground" body
 // ---------------------------------------
 
-#ifdef DEM
+#ifdef USE_DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_g(new ChMaterialSurfaceDEM);
   mat_g->SetYoungModulus(1e7f);
   mat_g->SetFriction(0.4f);
   mat_g->SetRestitution(0.4f);
 
-  ChSharedBodyDEMPtr ground(new ChBodyDEM(new ChCollisionModelParallel));
-  ground->SetMaterialSurfaceDEM(mat_g);
+  ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  ground->SetMaterialSurface(mat_g);
 #else
   ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
   mat_g->SetFriction(0.4f);
@@ -183,15 +183,15 @@ void CreateObject(ChSystemParallel* system) {
 // Create a material and the falling object.
 // -----------------------------------------
 
-#ifdef DEM
+#ifdef USE_DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_o;
   mat_o = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_o->SetYoungModulus(1e7f);
   mat_o->SetFriction(0.4f);
   mat_o->SetRestitution(0.4f);
 
-  ChSharedBodyDEMPtr obj(new ChBodyDEM(new ChCollisionModelParallel));
-  obj->SetMaterialSurfaceDEM(mat_o);
+  ChSharedPtr<ChBody> obj(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  obj->SetMaterialSurface(mat_o);
 #else
   ChSharedPtr<ChMaterialSurface> mat_o(new ChMaterialSurface);
   mat_o->SetFriction(0.4f);
@@ -304,7 +304,7 @@ int main(int argc, char* argv[]) {
 // Create system.
 // --------------
 
-#ifdef DEM
+#ifdef USE_DEM
   cout << "Create DEM system" << endl;
   ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
 #else
@@ -331,7 +331,7 @@ int main(int argc, char* argv[]) {
 
   msystem->GetSettings()->solver.tolerance = 1e-3;
 
-#ifdef DEM
+#ifdef USE_DEM
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 #else
   msystem->GetSettings()->solver.solver_mode = SLIDING;
