@@ -36,6 +36,13 @@
 #include "chrono_utils/ChUtilsGenerators.h"
 #include "chrono_utils/ChUtilsInputOutput.h"
 
+// Control use of OpenGL run-time rendering
+#undef CHRONO_PARALLEL_HAS_OPENGL
+
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#include "chrono_opengl/ChOpenGLWindow.h"
+#endif
+
 using namespace chrono;
 using namespace chrono::collision;
 
@@ -76,11 +83,13 @@ double time_step = 1e-5;
 int max_iteration = 20;
 #else
 double time_step = 1e-4;
-int max_iteration_normal = 30;
-int max_iteration_sliding = 20;
+int max_iteration_normal = 0;
+int max_iteration_sliding = 50000;
 int max_iteration_spinning = 0;
-float contact_recovery_speed = 0.1;
+float contact_recovery_speed = 1.0e30;
 #endif
+
+double tolerance = 500.0;
 
 int max_iteration_bilateral = 0;
 
@@ -374,7 +383,7 @@ int main(int argc, char* argv[]) {
 
   // Edit system settings
   msystem->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
-  msystem->GetSettings()->solver.tolerance = 1e-3;
+  msystem->GetSettings()->solver.tolerance = tolerance;
 
 #ifdef USE_DEM
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
@@ -440,6 +449,13 @@ int main(int argc, char* argv[]) {
   ChStreamOutAsciiFile sfile(stats_file.c_str());
   ChStreamOutAsciiFile ffile(flow_file.c_str());
 
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
+  opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
+  gl_window.Initialize(1280, 720, "Mass Flow Test", msystem);
+  gl_window.SetCamera(ChVector<>(0, -width, height), ChVector<>(0, 0, height), ChVector<>(0, 0, 1));
+  gl_window.SetRenderMode(opengl::WIREFRAME);
+#endif
+
   while (time < time_end) {
     // Output data
     if (sim_frame == next_out_frame) {
@@ -493,7 +509,16 @@ int main(int argc, char* argv[]) {
     }
 
     // Advance system state by one step.
-    msystem->DoStepDynamics(time_step);
+    // Advance simulation by one step
+    #ifdef CHRONO_PARALLEL_HAS_OPENGL
+        if (gl_window.Active()) {
+          gl_window.DoStepDynamics(time_step);
+          gl_window.Render();
+        } else
+          break;
+    #else
+        msystem->DoStepDynamics(time_step);
+    #endif
 
     // Open the gate until it reaches the specified gap distance.
     if (problem == DROPPING && time <= time_opening) {
