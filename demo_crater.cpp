@@ -36,6 +36,13 @@
 #include "chrono_utils/ChUtilsGenerators.h"
 #include "chrono_utils/ChUtilsInputOutput.h"
 
+// Control use of OpenGL run-time rendering
+#undef CHRONO_PARALLEL_HAS_OPENGL
+
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#include "chrono_opengl/ChOpenGLWindow.h"
+#endif
+
 using namespace chrono;
 using namespace chrono::collision;
 
@@ -76,13 +83,13 @@ double time_step = 1e-5;
 int max_iteration = 20;
 #else
 double time_step = 1e-4;
-int max_iteration_normal = 30;
-int max_iteration_sliding = 20;
+int max_iteration_normal = 0;
+int max_iteration_sliding = 50000;
 int max_iteration_spinning = 0;
-float contact_recovery_speed = 0.1;
+float contact_recovery_speed = 1.0e30;
 #endif
 
-double tolerance = 1e-4;
+double tolerance = 500.0;
 
 // Output
 #ifdef USE_DEM
@@ -155,6 +162,23 @@ double h = 10e-2;
 // - a containing bin consisting of five boxes (no top)
 // -----------------------------------------------------------------------------
 int CreateObjects(ChSystemParallel* system) {
+
+	// Create the containing bin
+#ifdef USE_DEM
+	ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
+	mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+	mat_c->SetYoungModulus(Y_c);
+	mat_c->SetFriction(mu_c);
+	mat_c->SetRestitution(cr_c);
+
+	utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+#else
+	ChSharedPtr<ChMaterialSurface> mat_c(new ChMaterialSurface);
+	mat_c->SetFriction(mu_c);
+
+	utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+#endif
+
 // Create a material for the granular material
 #ifdef USE_DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
@@ -190,22 +214,6 @@ int CreateObjects(ChSystemParallel* system) {
     cout << "Layer " << i << "  total bodies: " << gen.getTotalNumBodies() << endl;
   }
 
-// Create the containing bin
-#ifdef USE_DEM
-  ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
-  mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
-  mat_c->SetYoungModulus(Y_c);
-  mat_c->SetFriction(mu_c);
-  mat_c->SetRestitution(cr_c);
-
-  utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
-#else
-  ChSharedPtr<ChMaterialSurface> mat_c(new ChMaterialSurface);
-  mat_c->SetFriction(mu_c);
-
-  utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
-#endif
-
   return gen.getTotalNumBodies();
 }
 
@@ -213,7 +221,7 @@ int CreateObjects(ChSystemParallel* system) {
 // Create the falling ball such that its bottom point is at the specified height
 // and its downward initial velocity has the specified magnitude.
 // -----------------------------------------------------------------------------
-ChBody* CreateFallingBall(ChSystemParallel* system, double z, double vz) {
+void CreateFallingBall(ChSystemParallel* system, double z, double vz) {
 // Create a material for the falling ball
 #ifdef USE_DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_b;
@@ -249,8 +257,6 @@ ChBody* CreateFallingBall(ChSystemParallel* system, double z, double vz) {
   ball->GetCollisionModel()->BuildModel();
 
   system->AddBody(ball);
-
-  return ball.get_ptr();
 }
 
 // -----------------------------------------------------------------------------
@@ -326,6 +332,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef USE_DEM
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
+
 #else
   msystem->GetSettings()->solver.solver_mode = SLIDING;
   msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
@@ -347,13 +354,18 @@ int main(int argc, char* argv[]) {
   // - Create falling ball
   double time_end;
   int out_fps;
-  ChBody* ball;
+  ChSharedPtr<ChBody> ball;
 
   if (problem == SETTLING) {
     time_end = time_settling_max;
     out_fps = out_fps_settling;
 
     cout << "Create granular material" << endl;
+    // Create the fixed falling ball just below the granular material
+    CreateFallingBall(msystem, -3*R_b, 0);
+    ball = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
+    msystem->Get_bodylist()->at(0)->AddRef();
+    ball->SetBodyFixed(true);
     CreateObjects(msystem);
   } else {
     time_end = time_dropping;
@@ -364,12 +376,19 @@ int main(int argc, char* argv[]) {
     utils::ReadCheckpoint(msystem, checkpoint_file);
     cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
 
-    // Create the falling ball just above the granular material with a velocity
+    // Move the falling ball just above the granular material with a velocity
     // given by free fall from the specified height and starting at rest.
     double z = FindHighest(msystem);
     double vz = std::sqrt(2 * gravity * h);
-    cout << "Create falling ball with center at" << z + R_b + r_g << " and velocity " << vz << endl;
-    ball = CreateFallingBall(msystem, z, vz);
+    cout << "Move falling ball with center at" << z + R_b + r_g << " and velocity " << vz << endl;
+    ball = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
+    msystem->Get_bodylist()->at(0)->AddRef();
+    ball->SetMass(mass_b);
+    ball->SetInertiaXX(inertia_b);
+    ball->SetPos(ChVector<>(0, 0, z + r_g + R_b));
+    ball->SetRot(ChQuaternion<>(1, 0, 0, 0));
+    ball->SetPos_dt(ChVector<>(0, 0, -vz));
+    ball->SetBodyFixed(false);
   }
 
   // Number of steps
@@ -399,6 +418,13 @@ int main(int argc, char* argv[]) {
   int num_contacts = 0;
   ChStreamOutAsciiFile sfile(stats_file.c_str());
   ChStreamOutAsciiFile hfile(height_file.c_str());
+
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
+  opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
+  gl_window.Initialize(1280, 720, "Crater Test", msystem);
+  gl_window.SetCamera(ChVector<>(0, -10 * hDimY, hDimZ), ChVector<>(0, 0, hDimZ), ChVector<>(0, 0, 1));
+  gl_window.SetRenderMode(opengl::WIREFRAME);
+#endif
 
   while (time < time_end) {
     if (sim_frame == next_out_frame) {
@@ -438,7 +464,16 @@ int main(int argc, char* argv[]) {
       break;
     }
 
-    msystem->DoStepDynamics(time_step);
+    // Advance simulation by one step
+    #ifdef CHRONO_PARALLEL_HAS_OPENGL
+        if (gl_window.Active()) {
+          gl_window.DoStepDynamics(time_step);
+          gl_window.Render();
+        } else
+          break;
+    #else
+        msystem->DoStepDynamics(time_step);
+    #endif
 
     time += time_step;
     sim_frame++;
