@@ -262,7 +262,29 @@ double CreateParticles(ChSystem* system) {
     center.z += 2 * r;
   }
 
+  cout << "Created " << gen.getTotalNumBodies() << " particles." << endl;
+
   return center.z;
+}
+
+// =============================================================================
+// Utility function for displaying an ASCII progress bar for the quantity x
+// which must be a value between 0 and n. The width 'w' represents the number
+// of '=' characters corresponding to 100%.
+
+static inline void progressbar(unsigned int x, unsigned int n, unsigned int w = 50) {
+  if ((x != n) && (x % (n / 100 + 1) != 0))
+    return;
+
+  float ratio = x / (float)n;
+  int c = ratio * w;
+
+  cout << std::setw(3) << (int)(ratio * 100) << "% [";
+  for (int x = 0; x < c; x++)
+    cout << "=";
+  for (int x = c; x < w; x++)
+    cout << " ";
+  cout << "]\r" << std::flush;
 }
 
 // =============================================================================
@@ -431,16 +453,19 @@ int main(int argc, char* argv[]) {
 
   while (time < time_end) {
     // If enabled, output data for PovRay postprocessing.
-    if (povray_output && sim_frame == next_out_frame) {
-      char filename[100];
-      sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
-      utils::WriteShapesPovray(system, filename);
+    if (sim_frame == next_out_frame) {
+      cout << endl;
+      cout << "---- Frame:          " << out_frame + 1 << endl;
+      cout << "     Sim frame:      " << sim_frame << endl;
+      cout << "     Time:           " << time << endl;
+      cout << "     Avg. contacts:  " << num_contacts / out_steps << endl;
+      cout << "     Execution time: " << exec_time << endl;
 
-      cout << "------------ Output frame:   " << out_frame + 1 << endl;
-      cout << "             Sim frame:      " << sim_frame << endl;
-      cout << "             Time:           " << time << endl;
-      cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
-      cout << "             Execution time: " << exec_time << endl;
+      if (povray_output) {
+        char filename[100];
+        sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
+        utils::WriteShapesPovray(system, filename);
+      }
 
       out_frame++;
       next_out_frame += out_steps;
@@ -449,7 +474,7 @@ int main(int argc, char* argv[]) {
 
     // Release the vehicle chassis at the end of the hold time.
     if (vehicle->GetVehicle()->GetChassis()->GetBodyFixed() && time > time_hold) {
-      cout << "Release vehicle t = " << time << endl;
+      cout << endl << "Release vehicle t = " << time << endl;
       vehicle->GetVehicle()->GetChassis()->SetBodyFixed(false);
       for (int i = 0; i < 2 * vehicle->GetVehicle()->GetNumberAxles(); i++) {
         vehicle->GetVehicle()->GetWheelBody(i)->SetBodyFixed(false);
@@ -468,6 +493,7 @@ int main(int argc, char* argv[]) {
       break;
 #else
     system->DoStepDynamics(time_step);
+    progressbar(out_steps + sim_frame - next_out_frame + 1, out_steps);
 #endif
 
     // Periodically display maximum constraint violation
