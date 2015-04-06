@@ -87,10 +87,10 @@ float mu_t = 0.8;
 // -----------------------------------------------------------------------------
 
 // Desired number of OpenMP threads (will be clamped to maximum available)
-int threads = 100;
+int threads = 20;
 
 // Perform dynamic tuning of number of threads?
-bool thread_tuning = true;
+bool thread_tuning = false;
 
 // Total simulation duration.
 double time_end = 7;
@@ -304,6 +304,8 @@ int main(int argc, char* argv[]) {
   system->SetParallelThreadNumber(threads);
   omp_set_num_threads(threads);
   cout << "Using " << threads << " threads" << endl;
+
+  system->GetSettings()->perform_thread_tuning = thread_tuning;
 
   // ---------------------
   // Edit system settings.
