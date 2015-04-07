@@ -384,6 +384,7 @@ int main(int argc, char* argv[]) {
   // Edit system settings
   msystem->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
   msystem->GetSettings()->solver.tolerance = tolerance;
+  msystem->GetSettings()->solver.use_full_inertia_tensor = false;
 
 #ifdef USE_DEM
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;

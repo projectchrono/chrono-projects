@@ -475,6 +475,7 @@ int main(int argc, char* argv[]) {
   msystem->GetSettings()->perform_thread_tuning = thread_tuning;
 
   // Edit system settings
+  msystem->GetSettings()->solver.use_full_inertia_tensor = false;
   msystem->GetSettings()->solver.tolerance = tolerance;
   msystem->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
   msystem->GetSettings()->solver.clamp_bilaterals = clamp_bilaterals;

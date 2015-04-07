@@ -332,11 +332,11 @@ int main(int argc, char* argv[]) {
   msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
 
   // Edit system settings
+  msystem->GetSettings()->solver.use_full_inertia_tensor = false;
   msystem->GetSettings()->solver.tolerance = tolerance;
 
 #ifdef USE_DEM
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
-
 #else
   msystem->GetSettings()->solver.solver_mode = SLIDING;
   msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
