@@ -21,6 +21,8 @@
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
+#include "demo_utils.h"
+
 using namespace chrono;
 using namespace chrono::collision;
 
@@ -265,26 +267,6 @@ double CreateParticles(ChSystem* system) {
   cout << "Created " << gen.getTotalNumBodies() << " particles." << endl;
 
   return center.z;
-}
-
-// =============================================================================
-// Utility function for displaying an ASCII progress bar for the quantity x
-// which must be a value between 0 and n. The width 'w' represents the number
-// of '=' characters corresponding to 100%.
-
-static inline void progressbar(unsigned int x, unsigned int n, unsigned int w = 50) {
-  if ((x != n) && (x % (n / 100 + 1) != 0))
-    return;
-
-  float ratio = x / (float)n;
-  int c = ratio * w;
-
-  cout << std::setw(3) << (int)(ratio * 100) << "% [";
-  for (int x = 0; x < c; x++)
-    cout << "=";
-  for (int x = c; x < w; x++)
-    cout << " ";
-  cout << "]\r" << std::flush;
 }
 
 // =============================================================================

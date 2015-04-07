@@ -43,6 +43,8 @@
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
+#include "demo_utils.h"
+
 using namespace chrono;
 using namespace chrono::collision;
 
@@ -84,14 +86,16 @@ int max_iteration = 20;
 #else
 double time_step = 1e-4;
 int max_iteration_normal = 0;
-int max_iteration_sliding = 50000;
+int max_iteration_sliding = 50;
 int max_iteration_spinning = 0;
-float contact_recovery_speed = 1.0e30;
+float contact_recovery_speed = 0.1;
 #endif
 
-double tolerance = 500.0;
+double tolerance = 1.0;
 
 // Output
+bool povray_output = true;
+
 #ifdef USE_DEM
 const std::string out_dir = "../CRATER_DEM";
 #else
@@ -106,7 +110,7 @@ const std::string checkpoint_file = out_dir + "/settled.dat";
 int out_fps_settling = 120;
 int out_fps_dropping = 1200;
 
-int timing_frame = 10;  // output detailed step timing at this frame
+int timing_frame = -1;  // output detailed step timing at this frame
 
 // Parameters for the granular material
 int Id_g = 1;
@@ -428,22 +432,26 @@ int main(int argc, char* argv[]) {
 
   while (time < time_end) {
     if (sim_frame == next_out_frame) {
-      char filename[100];
-      sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
-      utils::WriteShapesPovray(msystem, filename);
-
-      cout << "------------ Output frame:   " << out_frame << endl;
-      cout << "             Sim frame:      " << sim_frame << endl;
-      cout << "             Time:           " << time << endl;
-      cout << "             Lowest point:   " << FindLowest(msystem) << endl;
-      cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
-      cout << "             Execution time: " << exec_time << endl;
+      cout << endl;
+      cout << "---- Frame:          " << out_frame << endl;
+      cout << "     Sim frame:      " << sim_frame << endl;
+      cout << "     Time:           " << time << endl;
+      cout << "     Lowest point:   " << FindLowest(msystem) << endl;
+      cout << "     Avg. contacts:  " << num_contacts / out_steps << endl;
+      cout << "     Execution time: " << exec_time << endl;
 
       sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
 
+      // If enabled, output data for PovRay postprocessing.
+      if (povray_output) {
+        char filename[100];
+        sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
+        utils::WriteShapesPovray(msystem, filename);
+      }
+
       // Create a checkpoint from the current state.
       if (problem == SETTLING) {
-        cout << "             Write checkpoint data " << flush;
+        cout << "     Write checkpoint data " << flush;
         utils::WriteCheckpoint(msystem, checkpoint_file);
         cout << msystem->Get_bodylist()->size() << " bodies" << endl;
       }
@@ -451,7 +459,7 @@ int main(int argc, char* argv[]) {
       // Save current projectile height.
       if (problem == DROPPING) {
         hfile << time << "  " << ball->GetPos().z << "\n";
-        cout << "             Ball height:    " << ball->GetPos().z << endl;
+        cout << "     Ball height:    " << ball->GetPos().z << endl;
       }
 
       out_frame++;
@@ -473,7 +481,8 @@ int main(int argc, char* argv[]) {
           break;
     #else
         msystem->DoStepDynamics(time_step);
-    #endif
+        progressbar(out_steps + sim_frame - next_out_frame + 1, out_steps);
+#endif
 
     time += time_step;
     sim_frame++;
