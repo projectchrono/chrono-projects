@@ -52,6 +52,8 @@
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
+#include "demo_utils.h"
+
 using namespace chrono;
 using namespace chrono::collision;
 
@@ -68,7 +70,7 @@ using std::endl;
 
 enum ProblemType { SETTLING, PRESSING, SHEARING, TESTING };
 
-ProblemType problem = SHEARING;
+ProblemType problem = TESTING;
 
 // -----------------------------------------------------------------------------
 // Conversion factors
@@ -209,7 +211,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // Create a material for the walls
 // -------------------------------
 
-#ifdef DEM
+#ifdef USE_DEM
   ChSharedPtr<ChMaterialSurfaceDEM> mat_walls;
   mat_walls = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
   mat_walls->SetYoungModulus(Y_walls);
@@ -868,6 +870,8 @@ int main(int argc, char* argv[]) {
       break;
 #else
     msystem->DoStepDynamics(time_step);
+    ////progressbar(out_steps + sim_frame - next_out_frame + 1, out_steps);
+    TimingOutput(msystem);
 #endif
 
     // Record stats about the simulation
