@@ -3,6 +3,7 @@
 
 #include <iostream>
 
+#include "chrono_parallel/physics/ChSystemParallel.h"
 
 // =============================================================================
 // Utility function for displaying an ASCII progress bar for the quantity x
@@ -24,6 +25,29 @@ static inline void progressbar(unsigned int x, unsigned int n, unsigned int w = 
   std::cout << "]\r" << std::flush;
 }
 
+// =============================================================================
+// Utility function to print to console a few important step statistics
 
+static inline void TimingOutput(chrono::ChSystem* mSys) {
+  double TIME = mSys->GetChTime();
+  double STEP = mSys->GetTimerStep();
+  double BROD = mSys->GetTimerCollisionBroad();
+  double NARR = mSys->GetTimerCollisionNarrow();
+  double LCP = mSys->GetTimerLcp();
+  double UPDT = mSys->GetTimerUpdate();
+  double RESID = 0;
+  int REQ_ITS = 0;
+  int BODS = mSys->GetNbodies();
+  int CNTC = mSys->GetNcontacts();
+  if (chrono::ChSystemParallel* parallel_sys = dynamic_cast<chrono::ChSystemParallel*>(mSys)) {
+    RESID = ((chrono::ChLcpSolverParallel*)(mSys->GetLcpSolverSpeed()))->GetResidual();
+    REQ_ITS = ((chrono::ChLcpSolverParallel*)(mSys->GetLcpSolverSpeed()))->GetTotalIterations();
+    BODS = parallel_sys->GetNbodies();
+    CNTC = parallel_sys->GetNcontacts();
+  }
+
+  printf("%8.5f|%7.4f|%7.4f|%7.4f|%7.4f|%7.4f|%7d|%7d|%7d|%7.4f\n", TIME, STEP, BROD, NARR, LCP, UPDT, BODS, CNTC,
+         REQ_ITS, RESID);
+}
 
 #endif
