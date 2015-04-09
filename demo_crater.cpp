@@ -68,7 +68,7 @@ ProblemType problem = SETTLING;
 // -----------------------------------------------------------------------------
 
 // Desired number of OpenMP threads (will be clamped to maximum available)
-int threads = 100;
+int threads = 20;
 
 // Perform dynamic tuning of number of threads?
 bool thread_tuning = false;
@@ -92,6 +92,12 @@ float contact_recovery_speed = 0.1;
 #endif
 
 double tolerance = 1.0;
+
+// Contact force model
+#ifdef USE_DEM
+CONTACTFORCEMODEL contact_force_model = HERTZ;
+bool use_contact_history = true;
+#endif
 
 // Output
 bool povray_output = true;
@@ -148,10 +154,10 @@ float mu_c = 0.3;
 float cr_c = 0.1;
 
 // Number of layers and height of one layer for generator domain
-////int        numLayers = 10;
-////double     layerHeight = 1e-2;
-int numLayers = 1;
-double layerHeight = 3e-3;
+int        numLayers = 10;
+double     layerHeight = 1e-2;
+////int numLayers = 1;
+////double layerHeight = 3e-3;
 
 // Drop height (above surface of settled granular material)
 double h = 10e-2;
@@ -318,6 +324,10 @@ int main(int argc, char* argv[]) {
   ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
 #endif
 
+  // Debug log messages.
+  ////msystem->SetLoggingLevel(LOG_INFO, true);
+  ////msystem->SetLoggingLevel(LOG_TRACE, true);
+
   // Set number of threads.
   int max_threads = msystem->GetParallelThreadNumber();
   if (threads > max_threads)
@@ -337,6 +347,9 @@ int main(int argc, char* argv[]) {
 
 #ifdef USE_DEM
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
+
+  msystem->GetSettings()->solver.contact_force_model = contact_force_model;
+  msystem->GetSettings()->solver.use_contact_history = use_contact_history;
 #else
   msystem->GetSettings()->solver.solver_mode = SLIDING;
   msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
@@ -349,7 +362,8 @@ int main(int argc, char* argv[]) {
   msystem->GetSettings()->collision.collision_envelope = 0.05 * r_g;
 #endif
 
-  msystem->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
+  msystem->GetSettings()->collision.bins_per_axis = I3(20, 20, 20);
+  msystem->GetSettings()->perform_bin_tuning = false;
 
   // Depending on problem type:
   // - Select end simulation time
@@ -384,7 +398,7 @@ int main(int argc, char* argv[]) {
     // given by free fall from the specified height and starting at rest.
     double z = FindHighest(msystem);
     double vz = std::sqrt(2 * gravity * h);
-    cout << "Move falling ball with center at" << z + R_b + r_g << " and velocity " << vz << endl;
+    cout << "Move falling ball with center at " << z + R_b + r_g << " and velocity " << vz << endl;
     ball = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
     msystem->Get_bodylist()->at(0)->AddRef();
     ball->SetMass(mass_b);
@@ -446,7 +460,7 @@ int main(int argc, char* argv[]) {
       if (povray_output) {
         char filename[100];
         sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
-        utils::WriteShapesPovray(msystem, filename);
+        utils::WriteShapesPovray(msystem, filename, false);
       }
 
       // Create a checkpoint from the current state.
@@ -481,7 +495,8 @@ int main(int argc, char* argv[]) {
           break;
     #else
         msystem->DoStepDynamics(time_step);
-        progressbar(out_steps + sim_frame - next_out_frame + 1, out_steps);
+        ////progressbar(out_steps + sim_frame - next_out_frame + 1, out_steps);
+        TimingOutput(msystem);
 #endif
 
     time += time_step;
