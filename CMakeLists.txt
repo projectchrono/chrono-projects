@@ -28,6 +28,7 @@ SET(DEMOS
 
 SET(DEMOS_VEHICLE
     hmmwv
+    hmmwvDEM
 )
 
 #--------------------------------------------------------------
