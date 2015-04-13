@@ -37,7 +37,7 @@
 #include "chrono_utils/ChUtilsInputOutput.h"
 
 // Control use of OpenGL run-time rendering
-#undef CHRONO_PARALLEL_HAS_OPENGL
+//#undef CHRONO_PARALLEL_HAS_OPENGL
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
@@ -95,7 +95,7 @@ double tolerance = 1.0;
 
 // Contact force model
 #ifdef USE_DEM
-CONTACTFORCEMODEL contact_force_model = HERTZ;
+CONTACTFORCEMODEL contact_force_model = HOOKE;
 bool use_contact_history = true;
 #endif
 
@@ -486,18 +486,19 @@ int main(int argc, char* argv[]) {
       break;
     }
 
-    // Advance simulation by one step
-    #ifdef CHRONO_PARALLEL_HAS_OPENGL
-        if (gl_window.Active()) {
-          gl_window.DoStepDynamics(time_step);
-          gl_window.Render();
-        } else
-          break;
-    #else
-        msystem->DoStepDynamics(time_step);
-        ////progressbar(out_steps + sim_frame - next_out_frame + 1, out_steps);
-        TimingOutput(msystem);
+// Advance simulation by one step
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
+    if (gl_window.Active()) {
+      gl_window.DoStepDynamics(time_step);
+      gl_window.Render();
+    } else
+      break;
+#else
+    msystem->DoStepDynamics(time_step);
 #endif
+
+    ////progressbar(out_steps + sim_frame - next_out_frame + 1, out_steps);
+    TimingOutput(msystem);
 
     time += time_step;
     sim_frame++;
