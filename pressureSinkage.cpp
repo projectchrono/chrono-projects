@@ -46,6 +46,8 @@
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
+#include "demo_utils.h"
+
 using namespace chrono;
 using namespace chrono::collision;
 
@@ -116,6 +118,12 @@ float contact_recovery_speed = 10e30;
 bool clamp_bilaterals = false;
 double bilateral_clamp_speed = 10e30;
 double tolerance = 1;
+
+// Contact force model
+#ifdef USE_DEM
+CONTACTFORCEMODEL contact_force_model = HERTZ;
+TANGENTIALDISPLACEMENTMODE tangential_displ_mode = MULTI_STEP;
+#endif
 
 // Output
 #ifdef USE_DEM
@@ -483,6 +491,8 @@ int main(int argc, char* argv[]) {
 
 #ifdef USE_DEM
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
+  msystem->GetSettings()->solver.contact_force_model = contact_force_model;
+  msystem->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 #else
   msystem->GetSettings()->solver.solver_mode = SLIDING;
   msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
@@ -727,6 +737,8 @@ int main(int argc, char* argv[]) {
 #else
     msystem->DoStepDynamics(time_step);
 #endif
+
+    TimingOutput(msystem);
 
     // Record stats about the simulation
     if (sim_frame % write_steps == 0) {

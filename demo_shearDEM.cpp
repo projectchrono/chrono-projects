@@ -154,8 +154,8 @@ int main(int argc, char* argv[]) {
   my_system->GetSettings()->solver.bilateral_clamp_speed = 0.1;
 
   my_system->GetSettings()->solver.contact_force_model = HERTZ;
+  my_system->GetSettings()->solver.tangential_displ_mode = MULTI_STEP;
 
-  my_system->GetSettings()->collision.collision_envelope = 0.05 * radius;
   my_system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
 
   my_system->Set_G_acc(ChVector<>(0, -gravity, 0));
