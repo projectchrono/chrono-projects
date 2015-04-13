@@ -66,7 +66,7 @@ using std::endl;
 // -----------------------------------------------------------------------------
 
 // Comment the following line to use DVI contact
-#define USE_DEM
+//#define USE_DEM
 
 enum ProblemType { SETTLING, PRESSING, SHEARING, TESTING };
 
@@ -103,7 +103,7 @@ double time_settling_max = 1.0;
 double time_pressing_min = 0.1;
 double time_pressing_max = 1.0;
 
-double time_shearing = 50;
+double time_shearing = 5;
 
 double time_testing = 2;
 
@@ -126,6 +126,12 @@ double contact_recovery_speed = 10e30;
 bool clamp_bilaterals = false;
 double bilateral_clamp_speed = 10e30;
 double tolerance = 1;
+
+// Contact force model
+#ifdef USE_DEM
+CONTACTFORCEMODEL contact_force_model = HERTZ;
+TANGENTIALDISPLACEMENTMODE tangential_displ_mode = MULTI_STEP;
+#endif
 
 // Output
 #ifdef USE_DEM
@@ -180,7 +186,7 @@ int plate_coll_fam = 3;   // collision family for load plate contact shapes
 double normalPressure = Pa2cgs * 3.1e3;  // 3.1 kPa // 6.4 kPa // 12.5 kPa // 24.2 kPa
 
 // Desired shearing velocity [cm/s]
-double desiredVelocity = 0.0166;  // 1 cm/min (about 10 times faster than experiment)
+double desiredVelocity = 0.166;  // 10 cm/min (about 100 times faster than experiment)
 
 // Parameters for the granular material
 int Id_g = 1;          // start body ID for particles
@@ -189,7 +195,7 @@ double rho_g = 2.550;  // [g/cm^3] density of granules
 
 double desiredBulkDensity = 1.5;  // [g/cm^3] desired bulk density
 
-float Y_g = Pa2cgs * 4e7;	// (1,000 times softer than experiment on glass beads)
+float Y_g = Pa2cgs * 4e7;  // (1,000 times softer than experiment on glass beads)
 float cr_g = 0.87;
 float nu_g = 0.22;
 float mu_g = 0.18f;
@@ -566,8 +572,8 @@ int main(int argc, char* argv[]) {
 
 #ifdef USE_DEM
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
-  msystem->GetSettings()->solver.contact_force_model = HERTZ;
-  msystem->GetSettings()->solver.use_contact_history = true;
+  msystem->GetSettings()->solver.contact_force_model = contact_force_model;
+  msystem->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 #else
   msystem->GetSettings()->solver.solver_mode = SLIDING;
   msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
@@ -870,9 +876,10 @@ int main(int argc, char* argv[]) {
       break;
 #else
     msystem->DoStepDynamics(time_step);
+#endif
+
     ////progressbar(out_steps + sim_frame - next_out_frame + 1, out_steps);
     TimingOutput(msystem);
-#endif
 
     // Record stats about the simulation
     if (sim_frame % write_steps == 0) {

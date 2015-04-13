@@ -114,7 +114,7 @@ int max_iteration_bilateral = 100;
 
 // Contact force model
 CONTACTFORCEMODEL contact_force_model = HERTZ;
-bool use_contact_history = true;
+TANGENTIALDISPLACEMENTMODE tangential_displ_mode = ONE_STEP;
 
 // Periodically monitor maximum bilateral constraint violation
 bool monitor_bilaterals = false;
@@ -298,7 +298,7 @@ int main(int argc, char* argv[]) {
   system->GetSettings()->solver.tolerance = tolerance;
 
   system->GetSettings()->solver.contact_force_model = contact_force_model;
-  system->GetSettings()->solver.use_contact_history = use_contact_history;
+  system->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 
   system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
   system->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);

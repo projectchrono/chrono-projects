@@ -96,7 +96,7 @@ double tolerance = 1.0;
 // Contact force model
 #ifdef USE_DEM
 CONTACTFORCEMODEL contact_force_model = HOOKE;
-bool use_contact_history = true;
+TANGENTIALDISPLACEMENTMODE tangential_displ_mode = ONE_STEP;
 #endif
 
 // Output
@@ -349,7 +349,7 @@ int main(int argc, char* argv[]) {
   msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 
   msystem->GetSettings()->solver.contact_force_model = contact_force_model;
-  msystem->GetSettings()->solver.use_contact_history = use_contact_history;
+  msystem->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 #else
   msystem->GetSettings()->solver.solver_mode = SLIDING;
   msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
