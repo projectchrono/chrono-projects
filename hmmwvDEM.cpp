@@ -113,7 +113,7 @@ double tolerance = 0.1;
 int max_iteration_bilateral = 100;
 
 // Contact force model
-CONTACTFORCEMODEL contact_force_model = HERTZ;
+CONTACTFORCEMODEL contact_force_model = HOOKE;
 TANGENTIALDISPLACEMENTMODE tangential_displ_mode = ONE_STEP;
 
 // Periodically monitor maximum bilateral constraint violation
@@ -275,6 +275,13 @@ int main(int argc, char* argv[]) {
   ChSystemParallelDEM* system = new ChSystemParallelDEM();
 
   system->Set_G_acc(ChVector<>(0, 0, -9.81));
+
+  // ----------------------
+  // Enable debug log
+  // ----------------------
+
+  ////system->SetLoggingLevel(LOG_INFO, true);
+  ////system->SetLoggingLevel(LOG_TRACE, true);
 
   // ----------------------
   // Set number of threads.
@@ -449,8 +456,10 @@ int main(int argc, char* argv[]) {
       break;
 #else
     system->DoStepDynamics(time_step);
-    progressbar(out_steps + sim_frame - next_out_frame + 1, out_steps);
 #endif
+
+    ////progressbar(out_steps + sim_frame - next_out_frame + 1, out_steps);
+    TimingOutput(system);
 
     // Periodically display maximum constraint violation
     if (monitor_bilaterals && sim_frame % bilateral_frame_interval == 0) {
