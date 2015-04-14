@@ -37,7 +37,7 @@
 #include "chrono_utils/ChUtilsInputOutput.h"
 
 // Control use of OpenGL run-time rendering
-//#undef CHRONO_PARALLEL_HAS_OPENGL
+#undef CHRONO_PARALLEL_HAS_OPENGL
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
@@ -96,7 +96,7 @@ double tolerance = 1.0;
 // Contact force model
 #ifdef USE_DEM
 CONTACTFORCEMODEL contact_force_model = HOOKE;
-TANGENTIALDISPLACEMENTMODE tangential_displ_mode = ONE_STEP;
+TANGENTIALDISPLACEMENTMODE tangential_displ_mode = MULTI_STEP;
 #endif
 
 // Output
