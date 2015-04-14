@@ -84,7 +84,7 @@ ChVector<> initLoc(-hdimX + 2.5, 0, 0.6);
 ChQuaternion<> initRot(1, 0, 0, 0);
 
 // Contact material properties
-float Y_t = 2e6;
+float Y_t = 1e8;
 float cr_t = 0.1;
 float mu_t = 0.8;
 
@@ -309,7 +309,6 @@ int main(int argc, char* argv[]) {
 
   system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
   system->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
-  system->GetSettings()->perform_bin_tuning = false;
 
   // -------------------
   // Create the terrain.

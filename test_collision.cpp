@@ -30,7 +30,7 @@ int counter = 0;
 // ------------------------------------------------------------------------------
 
 void writeContactInfo(ChParallelDataManager* data_container) {
-  int ncontacts = data_container->num_contacts;
+  int ncontacts = data_container->num_rigid_contacts;
 
   real3* pt1 = data_container->host_data.cpta_rigid_rigid.data();
   real3* pt2 = data_container->host_data.cptb_rigid_rigid.data();

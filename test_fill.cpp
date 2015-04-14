@@ -236,7 +236,7 @@ int CreateGranularMaterial(ChSystemParallel* system) {
 
 double3 calculateContactForceOnBody(ChSystemParallel* system, int bodyIndex) {
   double3 force;
-  uint num_contacts = system->data_manager->num_contacts;
+  uint num_contacts = system->data_manager->num_rigid_contacts;
   uint num_unilaterals = system->data_manager->num_unilaterals;
   uint num_bilaterals = system->data_manager->num_bilaterals;
 
@@ -466,7 +466,7 @@ int main(int argc, char* argv[]) {
       fillStream.GetFstream().flush();
 
       // write stat info
-      int numIters = msystem->data_manager->measures.solver.iter_hist.size();
+      int numIters = msystem->data_manager->measures.solver.maxd_hist.size();
       double residual = 0;
       if (numIters)
         residual = msystem->data_manager->measures.solver.residual;

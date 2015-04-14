@@ -363,7 +363,6 @@ int main(int argc, char* argv[]) {
 #endif
 
   msystem->GetSettings()->collision.bins_per_axis = I3(20, 20, 20);
-  msystem->GetSettings()->perform_bin_tuning = false;
 
   // Depending on problem type:
   // - Select end simulation time

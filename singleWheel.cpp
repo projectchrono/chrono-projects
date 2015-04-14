@@ -911,7 +911,7 @@ int main(int argc, char* argv[]) {
     // Record stats about the simulation
     if (sim_frame % write_steps == 0) {
       // write stat info
-      int numIters = msystem->data_manager->measures.solver.iter_hist.size();
+      int numIters = msystem->data_manager->measures.solver.maxd_hist.size();
       double residual = 0;
       if (numIters)
         residual = msystem->data_manager->measures.solver.residual;
