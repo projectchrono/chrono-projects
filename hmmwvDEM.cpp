@@ -311,7 +311,7 @@ int main(int argc, char* argv[]) {
   system->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 
   system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
-  system->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
+  system->GetSettings()->collision.bins_per_axis = I3(20, 20, 10);
 
   // -------------------
   // Create the terrain.
