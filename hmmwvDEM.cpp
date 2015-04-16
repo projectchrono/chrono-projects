@@ -57,11 +57,13 @@ double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
 ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
+float cohesion_g = 500;
+
 float Y_g = 1e8;
 float cr_g = 0.1;
 float mu_g = 0.8;
 
-int num_particles = 100;
+int num_particles = 100000;
 
 // -----------------------------------------------------------------------------
 // Specification of the vehicle model
@@ -221,6 +223,7 @@ double CreateParticles(ChSystem* system) {
   mat_g->SetYoungModulus(Y_g);
   mat_g->SetFriction(mu_g);
   mat_g->SetRestitution(cr_g);
+  mat_g->SetCohesion(cohesion_g);
 
   // Create a particle generator and a mixture entirely made out of spheres
   utils::Generator gen(system);
@@ -323,6 +326,7 @@ int main(int argc, char* argv[]) {
   ground->GetMaterialSurfaceDEM()->SetFriction(mu_g);
   ground->GetMaterialSurfaceDEM()->SetYoungModulus(Y_g);
   ground->GetMaterialSurfaceDEM()->SetRestitution(cr_g);
+  ground->GetMaterialSurfaceDEM()->SetCohesion(cohesion_g);
 
   ground->GetCollisionModel()->ClearModel();
 
