@@ -29,6 +29,7 @@ SET(DEMOS
 SET(DEMOS_VEHICLE
     hmmwv
     hmmwvDEM
+    hmmwvDEM_ditch
 )
 
 #--------------------------------------------------------------
