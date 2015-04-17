@@ -57,7 +57,7 @@ double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
 ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
-float cohesion_g = 500;
+float cohesion_g = 200;
 
 float Y_g = 1e8;
 float cr_g = 0.1;
@@ -320,6 +320,7 @@ int main(int argc, char* argv[]) {
   // Ground body
   ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel, ChBody::DEM));
   ground->SetIdentifier(-1);
+  ground->SetMass(1000);
   ground->SetBodyFixed(true);
   ground->SetCollide(true);
 
