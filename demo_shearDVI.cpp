@@ -40,7 +40,12 @@
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
+// Control use of OpenGL run-time rendering
+//#undef CHRONO_PARALLEL_HAS_OPENGL
+
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
+#endif
 
 using namespace chrono;
 using namespace chrono::collision;
@@ -166,12 +171,14 @@ int main(int argc, char* argv[]) {
 
   my_system->Set_G_acc(ChVector<>(0, -gravity, 0));
 
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
   // Create the OpenGL visualization
 
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
   gl_window.Initialize(800, 600, "hard-sphere (DVI) direct shear box test", my_system);
   gl_window.SetCamera(ChVector<>(3 * width, 0, 0), ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), radius, radius);
   gl_window.SetRenderMode(opengl::SOLID);
+#endif
 
   // Create a material (will be used by all objects)
 
@@ -342,7 +349,7 @@ int main(int argc, char* argv[]) {
   int data_out_frame = 0;
   int visual_out_frame = 0;
 
-  while (gl_window.Active() && my_system->GetChTime() < end_simulation_time) {
+  while (my_system->GetChTime() < end_simulation_time) {
     if (my_system->GetChTime() > settling_time && settling == true) {
       if (dense == true)
         material->SetFriction(0.05);
@@ -368,9 +375,16 @@ int main(int argc, char* argv[]) {
     }
 
     //  Do time step
-
-    gl_window.DoStepDynamics(time_step);
-    gl_window.Render();
+    // Advance dynamics.
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
+    if (gl_window.Active()) {
+		gl_window.DoStepDynamics(time_step);
+		gl_window.Render();
+    } else
+    	break;
+#else
+    my_system->DoStepDynamics(time_step);
+#endif
 
     //  Output to screen
 
@@ -408,6 +422,7 @@ int main(int argc, char* argv[]) {
 
       visual_out_frame++;
     }
+
   }
 
   return 0;

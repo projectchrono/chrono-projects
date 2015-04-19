@@ -37,7 +37,12 @@
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
+// Control use of OpenGL run-time rendering
+//#undef CHRONO_PARALLEL_HAS_OPENGL
+
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
+#endif
 
 using namespace chrono;
 using namespace chrono::collision;
@@ -267,6 +272,7 @@ int main(int argc, char* argv[]) {
 
   CreateMechanism(system);
 
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
   // Create the OpenGL visualization
 
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
@@ -280,6 +286,9 @@ int main(int argc, char* argv[]) {
     gl_window.DoStepDynamics(time_step);
     gl_window.Render();
   }
+#else
+  systemP->DoStepDynamics(time_step);
+#endif
 
   return 0;
 }
