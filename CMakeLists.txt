@@ -22,6 +22,7 @@ SET(DEMOS
     test_fill
     demo_shearDEM
     demo_shearDVI
+    demo_shear
     test_serial
     test_DVI
     test_active
