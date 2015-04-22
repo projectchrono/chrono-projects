@@ -234,8 +234,7 @@ int CreateGranularMaterial(ChSystemParallel* system) {
   return gen.getTotalNumBodies();
 }
 
-double3 calculateContactForceOnBody(ChSystemParallel* system, int bodyIndex) {
-  double3 force;
+double calculateContactForceOnBody(ChSystemParallel* system, int bodyIndex) {
   uint num_contacts = system->data_manager->num_rigid_contacts;
   uint num_unilaterals = system->data_manager->num_unilaterals;
   uint num_bilaterals = system->data_manager->num_bilaterals;
@@ -259,11 +258,9 @@ double3 calculateContactForceOnBody(ChSystemParallel* system, int bodyIndex) {
   //       for any inactive body! (As a hack, you can go into ChConstraintRigidRigid.cpp and force the solver to
   //       fill in the entries for the fixed bodies in D).
 
-  force.x = contactForces[6 * bodyIndex];
-  force.y = contactForces[6 * bodyIndex + 1];
-  force.z = contactForces[6 * bodyIndex + 2];
+  double force_z = contactForces[6 * bodyIndex + 2];
 
-  return force;
+  return force_z;
 }
 
 // =============================================================================
@@ -445,7 +442,7 @@ int main(int argc, char* argv[]) {
       // Compute contact force on container (container should be the first body)
       double force = 0;
       if (msystem->GetNcontacts()) {
-        force = -calculateContactForceOnBody(msystem, 0).z;
+        force = -calculateContactForceOnBody(msystem, 0);
       }
       double actualWeight =
           (msystem->Get_bodylist()->size() - 1) * (4.0 / 3.0) * CH_C_PI * pow(r_g, 3.0) * rho_g * gravity;
