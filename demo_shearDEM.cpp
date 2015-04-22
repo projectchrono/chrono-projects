@@ -74,7 +74,8 @@ void AddWall(ChSharedPtr<ChBody>& body, const ChVector<>& dim, const ChVector<>&
 
 const std::string out_dir = "./SHEAR_DEM";
 const std::string pov_dir = out_dir + "/POVRAY";
-const std::string shear_file = out_dir + "/shear.dat";
+const std::string shear_file = out_dir + "/shear_ratio.dat";
+const std::string force_file = out_dir + "/shear_force.dat";
 
 int main(int argc, char* argv[]) {
   // Create output directories
@@ -88,47 +89,59 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  // Set number of threads.
+
+  int threads = 4;
+
   // Simulation parameters
 
   double gravity = 9.81;
   double time_step = 1e-5;
-  double data_out_step = 1e3 * time_step;
-  double visual_out_step = 1e4 * time_step;
-  double settling_time = 0.2;
-  double begin_shear_time = 10.0;
-  double end_simulation_time = 20.0;
-  double normal_pressure = 1e3;  // Pa
-  double shear_speed = 0.001;    // m/s
+  double data_out_step = 1e-2;
+  double visual_out_step = 1e-1;
+  double settling_time = 0.23;
+  double begin_shear_time = 2.0;
+  double end_simulation_time = 12.0;
+  double shear_speed = 0.001;  // m/s
 
   bool write_povray_data = true;
+
+  // Use one of the following normal pressures:
+
+//  double normal_pressure = 24.2e3;  // Pa
+//  double normal_pressure = 12.5e3;  // Pa
+//  double normal_pressure = 6.4e3;  // Pa
+  double normal_pressure = 3.1e3;  // Pa
 
   // Parameters for the balls
 
   int ballId = 1;  // first ball id
 
   const int a = 50;
-  const int b = 6;
-  const int c = 6;
+  const int b = 10;
+  const int c = 10;
   int numballs = a * b * c;  // number of falling balls = (a X b X c)
 
-  bool dense = true;
+  bool dense = false;
 
-  double radius = 0.0025;  // m
-  double density = 2500;   // kg/m^3
+  double radius = 0.003;  // m
+  double density = 2550;  // kg/m^3
   double mass = density * (4.0 / 3) * CH_C_PI * radius * radius * radius;
-  double Y = 8.0e6;  // Pa
-  double nu = 0.3;
-  double COR = 0.9;
-  double mu = 0.5;
+  double Y = 4.0e7;  // Pa
+  double nu = 0.22;
+  double COR = 0.87;
+  double mu = 0.18;
 
   // Parameters for containing bin, shear box, and load plate
+
+  double mu_ext = 0.13;
 
   int groundId = 0;
   int binId = -1;
   int boxId = -2;
   int plateId = -3;
-  double width = 0.06;
-  double length = 0.06;
+  double width = 0.12;
+  double length = 0.12;
   double height = 0.06;
   double thickness = 0.01;
 
@@ -174,7 +187,7 @@ int main(int argc, char* argv[]) {
   gl_window.SetRenderMode(opengl::SOLID);
 #endif
 
-  // Create a material (will be used by all objects)
+  // Create a ball material (will be used by balls only)
 
   ChSharedPtr<ChMaterialSurfaceDEM> material;
   material = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
@@ -182,6 +195,15 @@ int main(int argc, char* argv[]) {
   material->SetPoissonRatio(nu);
   material->SetRestitution(COR);
   material->SetFriction(mu);
+
+  // Create a material for all objects other than balls
+
+  ChSharedPtr<ChMaterialSurfaceDEM> mat_ext;
+  mat_ext = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+  mat_ext->SetYoungModulus(Y);
+  mat_ext->SetPoissonRatio(nu);
+  mat_ext->SetRestitution(COR);
+  mat_ext->SetFriction(mu_ext);
 
   // Create lower bin
 
@@ -193,7 +215,7 @@ int main(int argc, char* argv[]) {
   bin->SetBodyFixed(true);
   bin->SetCollide(true);
 
-  bin->SetMaterialSurface(material);
+  bin->SetMaterialSurface(mat_ext);
 
   bin->GetCollisionModel()->ClearModel();
   AddWall(bin, ChVector<>(width / 2, thickness / 2, length / 2), ChVector<>(0, 0, 0), true);
@@ -231,7 +253,7 @@ int main(int argc, char* argv[]) {
   box->SetBodyFixed(true);
   box->SetCollide(true);
 
-  box->SetMaterialSurface(material);
+  box->SetMaterialSurface(mat_ext);
 
   box->GetCollisionModel()->ClearModel();
   AddWall(box,
@@ -270,7 +292,7 @@ int main(int argc, char* argv[]) {
   plate->SetBodyFixed(true);
   plate->SetCollide(true);
 
-  plate->SetMaterialSurface(material);
+  plate->SetMaterialSurface(mat_ext);
 
   plate->GetCollisionModel()->ClearModel();
   AddWall(plate, ChVector<>(width / 2, thickness / 2, length / 2), ChVector<>(0, 0, 0), true);
@@ -335,9 +357,16 @@ int main(int argc, char* argv[]) {
   // Setup output
 
   ChStreamOutAsciiFile shearStream(shear_file.c_str());
+  ChStreamOutAsciiFile forceStream(force_file.c_str());
   shearStream.SetNumFormat("%16.4e");
+  forceStream.SetNumFormat("%16.4e");
 
   // Begin simulation
+
+  int max_threads = my_system->GetParallelThreadNumber();
+  if (threads > max_threads) threads = max_threads;
+  my_system->SetParallelThreadNumber(threads);
+  omp_set_num_threads(threads);
 
   bool settling = true;
   bool shearing = false;
@@ -348,7 +377,7 @@ int main(int argc, char* argv[]) {
   while (my_system->GetChTime() < end_simulation_time) {
     if (my_system->GetChTime() > settling_time && settling == true) {
       if (dense == true)
-        material->SetFriction(0.05);
+        material->SetFriction(0.01);
       plate->SetPos(ChVector<>(0, height, 0));
       plate->SetBodyFixed(false);
       settling = false;
@@ -364,13 +393,16 @@ int main(int argc, char* argv[]) {
 
     if (shearing == true) {
       bin->SetPos(ChVector<>(0, -height / 2, -shear_speed * begin_shear_time + shear_speed * my_system->GetChTime()));
+      bin->SetPos_dt(ChVector<>(0, 0, shear_speed)); // This is needed for the tangential contact displacement history model
       bin->SetRot(QUNIT);
     } else {
       bin->SetPos(ChVector<>(0, -height / 2, 0));
+      bin->SetPos_dt(ChVector<>(0, 0, 0));
       bin->SetRot(QUNIT);
     }
 
     //  Do time step
+
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
     if (gl_window.Active()) {
 		gl_window.DoStepDynamics(time_step);
@@ -385,6 +417,10 @@ int main(int argc, char* argv[]) {
 
     if (my_system->GetChTime() >= data_out_frame * data_out_step) {
       force = my_system->GetBodyContactForce(0);
+
+      forceStream << my_system->GetChTime() << "	" << plate->GetPos().y - bin->GetPos().y << "	" << bin->GetPos().x
+           << "	" << bin->GetPos().y << "	" << bin->GetPos().z << "	" << force.x << "	" << force.y
+           << "	" << force.z << "\n";
 
       cout << my_system->GetChTime() << "	" << plate->GetPos().y - bin->GetPos().y << "	" << bin->GetPos().x
            << "	" << bin->GetPos().y << "	" << bin->GetPos().z << "	" << force.x << "	" << force.y
