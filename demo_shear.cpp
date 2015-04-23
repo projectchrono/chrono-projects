@@ -73,8 +73,8 @@ double time_step = 1e-5;
 double tolerance = 0.01;
 int max_iteration_bilateral = 100;
 #else
-double time_step = 1e-4;
-double tolerance = 500;
+double time_step = 1e-5;
+double tolerance = 1;
 int max_iteration_normal = 0;
 int max_iteration_sliding = 10000;
 int max_iteration_spinning = 0;
@@ -242,7 +242,7 @@ int main(int argc, char* argv[]) {
   my_system->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
   my_system->GetSettings()->solver.alpha = 0;
   my_system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-  my_system->ChangeSolverType(APGDREF);
+  my_system->ChangeSolverType(APGD);
 
   my_system->GetSettings()->collision.collision_envelope = 0.05 * radius;
 #endif
