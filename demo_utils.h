@@ -3,6 +3,7 @@
 
 #include <iostream>
 
+#include "core/ChStream.h"
 #include "chrono_parallel/physics/ChSystemParallel.h"
 
 // =============================================================================
@@ -28,7 +29,7 @@ static inline void progressbar(unsigned int x, unsigned int n, unsigned int w = 
 // =============================================================================
 // Utility function to print to console a few important step statistics
 
-static inline void TimingOutput(chrono::ChSystem* mSys) {
+static inline void TimingOutput(chrono::ChSystem* mSys, chrono::ChStreamOutAsciiFile* ofile = NULL) {
   double TIME = mSys->GetChTime();
   double STEP = mSys->GetTimerStep();
   double BROD = mSys->GetTimerCollisionBroad();
@@ -46,8 +47,15 @@ static inline void TimingOutput(chrono::ChSystem* mSys) {
     CNTC = parallel_sys->GetNcontacts();
   }
 
-  printf("%8.5f|%7.4f|%7.4f|%7.4f|%7.4f|%7.4f|%7d|%7d|%7d|%7.4f\n", TIME, STEP, BROD, NARR, LCP, UPDT, BODS, CNTC,
-         REQ_ITS, RESID);
+  if (ofile) {
+    char buf[200];
+    sprintf(buf, "%8.5f  %7.4f  %7.4f  %7.4f  %7.4f  %7.4f  %7d  %7d  %7d  %7.4f\n", TIME, STEP, BROD, NARR, LCP, UPDT,
+            BODS, CNTC, REQ_ITS, RESID);
+    *ofile << buf;
+  }
+
+  printf("   %8.5f | %7.4f | %7.4f | %7.4f | %7.4f | %7.4f | %7d | %7d | %7d | %7.4f\n", TIME, STEP, BROD, NARR, LCP,
+         UPDT, BODS, CNTC, REQ_ITS, RESID);
 }
 
 #endif
