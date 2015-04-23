@@ -93,14 +93,15 @@ double normal_pressure = 3.1e3;
 
 // Output
 #ifdef USE_DEM
-const std::string out_dir = "./SHEAR_DEM";
+const std::string out_dir = "../SHEAR_DEM";
 #else
-const std::string out_dir = "./SHEAR_DVI";
+const std::string out_dir = "../SHEAR_DVI";
 #endif
 
 const std::string pov_dir = out_dir + "/POVRAY";
 const std::string shear_file = out_dir + "/shear_ratio.dat";
 const std::string force_file = out_dir + "/shear_force.dat";
+const std::string stats_file = out_dir + "/stats.dat";
 
 bool write_povray_data = true;
 
@@ -436,6 +437,7 @@ int main(int argc, char* argv[]) {
 
   ChStreamOutAsciiFile shearStream(shear_file.c_str());
   ChStreamOutAsciiFile forceStream(force_file.c_str());
+  ChStreamOutAsciiFile statsStream(stats_file.c_str());
   shearStream.SetNumFormat("%16.4e");
   forceStream.SetNumFormat("%16.4e");
 
@@ -497,7 +499,7 @@ int main(int argc, char* argv[]) {
     my_system->DoStepDynamics(time_step);
 #endif
 
-    //TimingOutput(my_system);
+    TimingOutput(my_system, &statsStream);
 
     //  Output to files
 
