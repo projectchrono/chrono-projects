@@ -9,10 +9,6 @@
 #include "chrono_utils/ChUtilsGenerators.h"
 #include "chrono_utils/ChUtilsInputOutput.h"
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
-#include "chrono_opengl/ChOpenGLWindow.h"
-#endif
-
 using namespace chrono;
 using namespace chrono::collision;
 
