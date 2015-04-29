@@ -26,6 +26,7 @@ SET(DEMOS
     test_serial
     test_DVI
     test_active
+    test_shear
 )
 
 SET(DEMOS_VEHICLE
