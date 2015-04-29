@@ -44,6 +44,8 @@
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
+#include "demo_utils.h"
+
 using namespace chrono;
 using namespace chrono::collision;
 
@@ -53,28 +55,23 @@ using std::endl;
 
 // Simulation parameters
 
-double UNIT_SCALE = 1000;     // 1 for m, 1000 for mm
+double UNIT_SCALE = 1;     // 1 for m, 1000 for mm
 
-double gravity = 9.81 * UNIT_SCALE;
-double time_step = 1e-3;
-double settling_time = 0.01;   // 0.2;
+double gravity = 10 * UNIT_SCALE;
 double normal_pressure = 1e3 / UNIT_SCALE;
 
 // Parameters for the ball
 
-int ballId = 1;
 double radius = 0.0025 * UNIT_SCALE;
 double density = 2500 / (UNIT_SCALE * UNIT_SCALE * UNIT_SCALE);
 double mass = density * (4.0 / 3) * CH_C_PI * radius * radius * radius;
 double COR = 0.9;
 double mu = 0.5;
-ChVector<> ball_pos(2 * radius, 0, 2 * radius);
+ChVector<> ball_pos(5 * radius, 0, 5 * radius);
 //ChVector<> ball_pos(0, 0, 0);
 
 // Parameters for the lower and upper plates
 
-int binId = -1;
-int plateId = -3;
 double w = 0.06 * UNIT_SCALE;
 double l = 0.06 * UNIT_SCALE;
 double h = 0.06 * UNIT_SCALE;
@@ -125,7 +122,6 @@ void CreateMechanism(ChSystem* system) {
       break;
   }
 
-  bin->SetIdentifier(binId);
   bin->SetMass(1);
   bin->SetPos(ChVector<>(0, -h / 2, 0));
   bin->SetBodyFixed(true);
@@ -136,11 +132,10 @@ void CreateMechanism(ChSystem* system) {
   AddWall(bin, ChVector<>(w / 2, thick / 2, l / 2), ChVector<>(0, 0, 0), true);
   bin->GetCollisionModel()->SetFamily(1);
   bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
-  bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(3);
-  bin->GetCollisionModel()->SetFamilyMaskDoCollisionWithFamily(4);
   bin->GetCollisionModel()->BuildModel();
 
   system->AddBody(bin);
+  cout << "Create bin body, Id = " << bin->GetId() << endl;
 
   // Create upper load plate
 
@@ -157,7 +152,6 @@ void CreateMechanism(ChSystem* system) {
   double plate_mass = normal_pressure * (w * l) / gravity;
   ChVector<> plate_hdim(w / 2, thick / 2, l / 2);
 
-  plate->SetIdentifier(plateId);
   plate->SetMass(plate_mass);
   //plate->SetInertia(utils::CalcBoxGyration(plate_hdim) * plate_mass);
   plate->SetPos(ChVector<>(0, h, 0));
@@ -171,6 +165,9 @@ void CreateMechanism(ChSystem* system) {
   plate->GetCollisionModel()->BuildModel();
 
   system->AddBody(plate);
+  cout << "Create plate body, Id = " << plate->GetId() << endl;
+  cout << "                   mass = " << plate_mass << endl;
+  cout << "                   weight = " << plate_mass * gravity << endl;
 
   // Create ball
 
@@ -184,7 +181,6 @@ void CreateMechanism(ChSystem* system) {
     break;
   }
 
-  ball->SetIdentifier(ballId);
   ball->SetMass(mass);
   ball->SetInertiaXX((2.0 / 5.0) * mass * radius * radius * ChVector<>(1, 1, 1));
   ball->SetPos(ball_pos);
@@ -203,6 +199,9 @@ void CreateMechanism(ChSystem* system) {
   ball->AddAsset(sphere);
 
   system->AddBody(ball);
+  cout << "Create ball body, Id = " << ball->GetId() << endl;
+  cout << "                  mass = " << mass << endl;
+  cout << "                  weight = " << mass * gravity << endl;
 
   // Create prismatic (translational) joint between plates.
   // The translational axis of a prismatic joint is along the Z axis of the
@@ -225,10 +224,11 @@ int main(int argc, char* argv[]) {
 
   // Solver parameters
 
-  double tolerance = 0.01;
-  double contact_recovery_speed = 0.1;
-  int max_iteration_bilateral = 100;
-  int max_iteration_sliding = 1000;
+  double time_step = 1e-4;
+  double tolerance = 0.01 * UNIT_SCALE;
+  double contact_recovery_speed = 1e30;
+  int max_iteration_bilateral = 0;
+  int max_iteration_sliding = 10000;
 
   // Create the serial system
 
@@ -238,8 +238,8 @@ int main(int argc, char* argv[]) {
   systemS->SetIterLCPmaxItersSpeed(max_iteration_sliding);
   systemS->SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
   systemS->SetUseSleeping(false);
-  //systemS->SetLcpSolverType(ChSystem::LCP_ITERATIVE_APGD);
-  systemS->SetLcpSolverType(ChSystem::LCP_ITERATIVE_SYMMSOR);
+  systemS->SetLcpSolverType(ChSystem::LCP_ITERATIVE_APGD);
+  //systemS->SetLcpSolverType(ChSystem::LCP_ITERATIVE_SYMMSOR);
   systemS->SetIntegrationType(ChSystem::INT_ANITESCU);
   systemS->SetIterLCPwarmStarting(true);
 
@@ -289,6 +289,19 @@ int main(int argc, char* argv[]) {
 #else
   systemP->DoStepDynamics(time_step);
 #endif
+
+  if (system == systemP) {
+    real3 force;
+    systemP->CalculateContactForces();
+    force = systemP->GetBodyContactForce(0);
+    cout << force.x << "  " << force.y << "  " << force.z << endl;
+    force = systemP->GetBodyContactForce(1);
+    cout << force.x << "  " << force.y << "  " << force.z << endl;
+    force = systemP->GetBodyContactForce(2);
+    cout << force.x << "  " << force.y << "  " << force.z << endl;
+    cout << endl;
+    TimingOutput(system);
+  }
 
   return 0;
 }
