@@ -73,8 +73,8 @@ double time_step = 1e-5;
 double tolerance = 0.01;
 int max_iteration_bilateral = 100;
 #else
-double time_step = 1e-5;
-double tolerance = 1;
+double time_step = 1e-4;
+double tolerance = 0.1;
 int max_iteration_normal = 0;
 int max_iteration_sliding = 10000;
 int max_iteration_spinning = 0;
@@ -84,6 +84,19 @@ double contact_recovery_speed = 10e30;
 
 bool clamp_bilaterals = false;
 double bilateral_clamp_speed = 0.1;
+
+// Simulation parameters
+#ifdef USE_DEM
+double settling_time = 0.23;
+double begin_shear_time = 2.0;
+double end_simulation_time = 12.0;
+double shear_speed = 0.001;  // m/s
+#else
+double settling_time = 0.23;
+double begin_shear_time = 0.5;
+double end_simulation_time = 2.5;
+double shear_speed = 0.005;  // m/s
+#endif
 
 // Normal pressure (Pa)
 //double normal_pressure = 24.2e3;
@@ -140,13 +153,9 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  // Simulation parameters
+  // Parameters for the system
 
-  double gravity = 9.81;
-  double settling_time = 0.23;
-  double begin_shear_time = 2.0;
-  double end_simulation_time = 12.0;
-  double shear_speed = 0.001;  // m/s
+  double gravity = 9.81;  // m/s^2
 
   // Parameters for the balls
 
