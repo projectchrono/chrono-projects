@@ -20,8 +20,6 @@ SET(DEMOS
     test_timing
     demo_suspension
     test_fill
-    demo_shearDEM
-    demo_shearDVI
     demo_shear
     test_serial
     test_DVI
