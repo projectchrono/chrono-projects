@@ -106,7 +106,7 @@ double time_step = 2e-4;
 
 double tolerance = 0.1;
 
-int max_iteration_bilateral = 100;
+int max_iteration_bilateral = 1000;
 int max_iteration_normal = 0;
 int max_iteration_sliding = 2000;
 int max_iteration_spinning = 0;
@@ -143,10 +143,10 @@ class MyDriverInputs : public utils::DriverInputsCallback {
     if (eff_time < 0)
       return;
 
-    if (eff_time > 0.5)
+    if (eff_time > 0.2)
       throttle = 1.0;
-    else if (eff_time > 0.25)
-      throttle = 4 * (eff_time - 0.25);
+    else if (eff_time > 0.1)
+      throttle = 10 * (eff_time - 0.1);
   }
 
  private:
@@ -447,6 +447,7 @@ int main(int argc, char* argv[]) {
       cout << "---- Frame:          " << out_frame + 1 << endl;
       cout << "     Sim frame:      " << sim_frame << endl;
       cout << "     Time:           " << time << endl;
+      cout << "     Speed:          " << vehicle->GetVehicle()->GetVehicleSpeed() << endl;
       cout << "     Avg. contacts:  " << num_contacts / out_steps << endl;
       cout << "     Execution time: " << exec_time << endl;
 

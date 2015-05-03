@@ -43,7 +43,7 @@ double hdimX = 2.5;
 double hdimY = 1.75;
 double hdimZ = 0.5;
 double hthick = 0.25;
-double hlen = 3;
+double hlen = 2.5;
 
 // Parameters for granular material
 int Id_g = 1;
@@ -109,14 +109,14 @@ double time_end = 7;
 
 // Duration of the "hold time" (vehicle chassis fixed and no driver inputs).
 // This can be used to allow the granular material to settle.
-double time_hold = 0.5;
+double time_hold = 0.3;
 
 // Solver parameters
-double time_step = 2e-4;
+double time_step = 2e-5;
 
 double tolerance = 0.1;
 
-int max_iteration_bilateral = 100;
+int max_iteration_bilateral = 1000;
 
 // Contact force model
 CONTACTFORCEMODEL contact_force_model = HOOKE;
@@ -429,6 +429,7 @@ int main(int argc, char* argv[]) {
   system->GetSettings()->solver.use_full_inertia_tensor = false;
 
   system->GetSettings()->solver.tolerance = tolerance;
+  system->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
 
   system->GetSettings()->solver.contact_force_model = contact_force_model;
   system->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
@@ -460,6 +461,14 @@ int main(int argc, char* argv[]) {
   int num_particles = CreateParticles(system);
   cout << "Created " << num_particles << " particles." << endl;
 
+  // -------------------
+  // Specify active box.
+  // -------------------
+
+  system->GetSettings()->collision.use_aabb_active = true;
+  system->GetSettings()->collision.aabb_min = R3(-hdimX - 2 * hlen, -hdimY, 0);
+  system->GetSettings()->collision.aabb_max = R3(hdimX + 2 * hlen, hdimY, 2 * hdimZ);
+
 // -----------------------
 // Start the simulation.
 // -----------------------
@@ -489,6 +498,7 @@ int main(int argc, char* argv[]) {
       cout << "---- Frame:          " << out_frame + 1 << endl;
       cout << "     Sim frame:      " << sim_frame << endl;
       cout << "     Time:           " << time << endl;
+      cout << "     Speed:          " << vehicle_assembly->GetVehicle()->GetVehicleSpeed() << endl;
       cout << "     Avg. contacts:  " << num_contacts / out_steps << endl;
       cout << "     Execution time: " << exec_time << endl;
 
