@@ -506,8 +506,8 @@ int main(int argc, char* argv[])
   ShearBox* shearBox = new ShearBox(msystem, gravity, L, H, HTOP, W, TH, desiredVelocity, normalPressure, muWalls, muParticles, particleDensity, particleRadius, disturbance, useSpheres, data_folder);
   shearBox->setFriction(0);
 
-// Set number of threads.
-  int max_threads = msystem->GetParallelThreadNumber();
+  // Set number of threads.
+  int max_threads = omp_get_num_procs();
   if (threads > max_threads) threads = max_threads;
   msystem->SetParallelThreadNumber(threads);
   omp_set_num_threads(threads);

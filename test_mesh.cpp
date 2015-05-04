@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
   ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
 
   // Set number of threads.
-  int max_threads = msystem->GetParallelThreadNumber();
+  int max_threads = omp_get_num_procs();
   if (threads > max_threads)
     threads = max_threads;
   msystem->SetParallelThreadNumber(threads);

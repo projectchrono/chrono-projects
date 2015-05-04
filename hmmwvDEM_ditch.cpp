@@ -412,8 +412,7 @@ int main(int argc, char* argv[]) {
   // ----------------------
   // Set number of threads.
   // ----------------------
-
-  int max_threads = system->GetParallelThreadNumber();
+  int max_threads = omp_get_num_procs();
   if (threads > max_threads)
     threads = max_threads;
   system->SetParallelThreadNumber(threads);
