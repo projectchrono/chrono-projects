@@ -494,11 +494,12 @@ int main(int argc, char* argv[]) {
   while (time < time_end) {
     // If enabled, output data for PovRay postprocessing.
     if (sim_frame == next_out_frame) {
+      double speed = vehicle_assembly ? vehicle_assembly->GetVehicle()->GetVehicleSpeed() : 0;
       cout << endl;
       cout << "---- Frame:          " << out_frame + 1 << endl;
       cout << "     Sim frame:      " << sim_frame << endl;
       cout << "     Time:           " << time << endl;
-      cout << "     Speed:          " << vehicle_assembly->GetVehicle()->GetVehicleSpeed() << endl;
+      cout << "     Speed:          " << speed << endl;
       cout << "     Avg. contacts:  " << num_contacts / out_steps << endl;
       cout << "     Execution time: " << exec_time << endl;
 
