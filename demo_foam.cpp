@@ -12,6 +12,14 @@
 #include "chrono_utils/ChUtilsGenerators.h"
 #include "chrono_utils/ChUtilsInputOutput.h"
 
+//#undef CHRONO_PARALLEL_HAS_OPENGL
+
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#include "chrono_opengl/ChOpenGLWindow.h"
+#endif
+
+#include "demo_utils.h"
+
 using namespace chrono;
 using namespace chrono::collision;
 
@@ -29,7 +37,7 @@ bool thread_tuning = false;
 
 // Simulation parameters
 double gravity = 9.81;
-double time_step = 2e-5;
+double time_step = 1e-4;
 double time_end = 5;
 
 int max_iteration = 20;
@@ -67,7 +75,7 @@ utils::Generator* gen;
 
 double initVel = 5;  // initial particle velocity in negative X direction
 
-int maxNumParticles = 10000;
+int maxNumParticles = 100000;
 
 // =======================================================================
 
@@ -157,6 +165,14 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
+  // Initialize OpenGL
+  opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
+  gl_window.Initialize(1280, 720, "Foam demo", msystem);
+  gl_window.SetCamera(ChVector<>(4, -5, 4), ChVector<>(9, 0, 3), ChVector<>(0, 0, 1));
+  gl_window.SetRenderMode(opengl::WIREFRAME);
+#endif
+
   // Perform the simulation
   double time = 0;
   int sim_frame = 0;
@@ -173,10 +189,10 @@ int main(int argc, char* argv[]) {
 
     if (sim_frame % out_steps == 0) {
       char filename[100];
-      sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame);
+      sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
       utils::WriteShapesPovray(msystem, filename);
 
-      cout << " --------------------------------- Output frame:   " << out_frame << endl;
+      cout << " --------------------------------- Output frame:   " << out_frame + 1 << endl;
       cout << "                                   Sim frame:      " << sim_frame << endl;
       cout << "                                   Time:           " << time << endl;
       cout << "                                   Execution time: " << exec_time << endl;
@@ -188,7 +204,16 @@ int main(int argc, char* argv[]) {
       out_frame++;
     }
 
+    // Advance dynamics.
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
+    if (gl_window.Active()) {
+      gl_window.DoStepDynamics(time_step);
+      gl_window.Render();
+    } else
+      break;
+#else
     msystem->DoStepDynamics(time_step);
+#endif
 
     time += time_step;
     sim_frame++;
