@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
   msystem->Set_G_acc(ChVector<>(0, -gravity, 0));
 
   // Set number of threads.
-  int max_threads = msystem->GetParallelThreadNumber();
+  int max_threads = omp_get_num_procs();
   if (threads > max_threads)
     threads = max_threads;
   msystem->SetParallelThreadNumber(threads);

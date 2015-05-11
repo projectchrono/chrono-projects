@@ -244,7 +244,7 @@ int main(int argc, char* argv[]) {
   // Make sure to use consistent collision detection
   parallelSystem->ChangeCollisionSystem(COLLSYS_BULLET_PARALLEL);
 
-  int max_threads = parallelSystem->GetParallelThreadNumber();
+  int max_threads = omp_get_num_procs();
   if (threads > max_threads)
     threads = max_threads;
   parallelSystem->SetParallelThreadNumber(threads);
