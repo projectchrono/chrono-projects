@@ -26,6 +26,7 @@ SET(DEMOS
     test_active
     test_shear
     test_ball
+    test_contact
 )
 
 SET(DEMOS_VEHICLE
