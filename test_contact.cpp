@@ -12,10 +12,21 @@
 // Author: Daniel Melanz
 // =============================================================================
 //
-// ChronoParallel program for testing the DVI contact
+// ChronoParallel program for testing the DVI contact, there are 4 cases that
+// are being tested (coefficient of friction is 1.0):
+//   1) Ball sitting on plane, no gravity
+//   2) Ball sitting on plane, with gravity - no applied force in lateral dir
+//   3) Ball sitting on plane, with gravity - small applied force in lateral dir
+//   4) Ball sitting on plane, with gravity - large applied force in lateral dir
+//
+// The contact force is measured in each case, the results should be as follows:
+//   1) Normal Force: Zero, Tangent Force: Zero
+//   2) Normal Force: Weight, Tangent Force: Zero
+//   3) Normal Force: Weight, Tangent Force: Equal to applied force (mu = 1)
+//   4) Normal Force: Weight, Tangent Force: Weight (mu = 1)
 //
 // The global reference frame has Z up.
-// All units SI (CGS, i.e., centimeter - gram - second)
+// All units SI.
 //
 // =============================================================================
 
@@ -65,26 +76,6 @@ int threads = 20;
 // Perform dynamic tuning of number of threads?
 bool thread_tuning = false;
 
-// Save PovRay post-processing data?
-bool write_povray_data = true;
-
-// Output
-std::string out_dir = "../TEST_SHEAR";
-
-std::string pov_dir = out_dir + "/POVRAY";
-std::string fill_file = out_dir + "/filling.dat";
-std::string stats_file = out_dir + "/stats.dat";
-std::string settled_ckpnt_file = out_dir + "/settled.dat";
-
-// Frequency for visualization output
-int out_fps = 60;
-
-// Frequency for writing results to output file
-int write_fps = 1000;
-
-// Simulation frame at which detailed timing information is printed
-int timing_frame = -1;
-
 ChSharedPtr<ChBody> createBall(ChSystem* mphysicalSystem, double radius, ChVector<> position, ChQuaternion<> rotation)
 {
   // create the body
@@ -127,14 +118,41 @@ ChSharedPtr<ChBody> createBox(ChSystem* mphysicalSystem, ChVector<> size, ChVect
 int main(int argc, char* argv[])
 {
   // working in [m, kg, s]
-  double gravity = -9.81;
+  ChVector<> gravity = ChVector<>(0,0,-9.81);
+  ChVector<> appliedForce = ChVector<>(100,0,0);
   double hh = 0.001;
-  double tolerance = 1;
-  double envelope = 0.05;
+  double tolerance = 0.001;
+  double envelope = 0.005;
+  double mass = 1.0;
+  double mu_sliding = 1.0;
+  int testCase = 4;
+
+  // Choose a test case
   if (argc > 1)
   {
-    tolerance      = atof(argv[1]);
-    envelope       = atof(argv[2]);   // [cm]
+    testCase = atoi(argv[1]);
+    switch (testCase) {
+      case 1:
+    	// 1) Ball sitting on plane, no gravity
+    	gravity = ChVector<>(0,0,0);
+    	appliedForce = ChVector<>(0,0,0);
+        break;
+      case 2:
+    	// 2) Ball sitting on plane, with gravity - no applied force in lateral dir
+      	gravity = ChVector<>(0,0,-9.81);
+      	appliedForce = ChVector<>(0,0,0);
+        break;
+      case 3:
+    	// 3) Ball sitting on plane, with gravity - small applied force in lateral dir
+      	gravity = ChVector<>(0,0,-9.81);
+      	appliedForce = ChVector<>(1,0,0);
+        break;
+      case 4:
+    	// 4) Ball sitting on plane, with gravity - large applied force in lateral dir
+      	gravity = ChVector<>(0,0,-9.81);
+      	appliedForce = ChVector<>(100,0,0);
+        break;
+      }
   }
 
   // -------------
@@ -143,7 +161,7 @@ int main(int argc, char* argv[])
 
   cout << "Create DVI system" << endl;
   ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
-  msystem->Set_G_acc(ChVector<>(0, gravity, 0));
+  msystem->Set_G_acc(gravity);
 
   // -------------
   // Create bodies
@@ -151,36 +169,19 @@ int main(int argc, char* argv[])
 
   // Create a material
   ChSharedPtr<ChMaterialSurface> mmaterial(new ChMaterialSurface);
-  mmaterial->SetFriction(1.0); // Friction coefficient of steel
+  mmaterial->SetFriction(mu_sliding); // Friction coefficient of steel
 
   // Create the ground
-  ChSharedPtr<ChBody> ground = createBox(msystem, ChVector<>(10,2,2), ChVector<>(0,0,0), QUNIT);
+  ChSharedPtr<ChBody> ground = createBox(msystem, ChVector<>(2,2,2), ChVector<>(0,0,-1), QUNIT);
   ground->SetBodyFixed(true);
   ground->SetMaterialSurface(mmaterial);
 
-  // Create a stationary ball on top
-  ChSharedPtr<ChBody> ball1 = createBall(msystem, 1, ChVector<>(-4,2,0), QUNIT);
-  ball1->SetMaterialSurface(mmaterial);
-  ball1->SetMass(1.0);
-
-  // Create a stationary ball on bottom
-  ChSharedPtr<ChBody> ball2 = createBall(msystem, 1, ChVector<>(-2,-2,0), QUNIT);
-  ball2->SetMaterialSurface(mmaterial);
-  ball2->SetMass(1.0);
-
-  // Create a ball with a small force applied in lateral direction
-  ChSharedPtr<ChBody> ball3 = createBall(msystem, 1, ChVector<>(0,2,0), QUNIT);
-  ball3->SetMaterialSurface(mmaterial);
-  ball3->SetMass(1.0);
-  ball3->Empty_forces_accumulators();
-  ball3->Accumulate_force(ChVector<>(1, 0, 0), ball3->GetPos(), false);
-
-  // Create a ball with a large force applied in lateral direction
-  ChSharedPtr<ChBody> ball4 = createBall(msystem, 1, ChVector<>(4,2,0), QUNIT);
-  ball4->SetMaterialSurface(mmaterial);
-  ball4->SetMass(1.0);
-  ball4->Empty_forces_accumulators();
-  ball4->Accumulate_force(ChVector<>(100, 0, 0), ball4->GetPos(), false);
+  // Create a unit ball
+  ChSharedPtr<ChBody> ball = createBall(msystem, 1.0, ChVector<>(0,0,1), QUNIT);
+  ball->SetMaterialSurface(mmaterial);
+  ball->SetMass(mass);
+  ball->Empty_forces_accumulators();
+  ball->Accumulate_force(appliedForce, ball->GetPos(), false);
 
   // Set number of threads.
   int max_threads = msystem->GetParallelThreadNumber();
@@ -219,7 +220,7 @@ int main(int argc, char* argv[])
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
   opengl::ChOpenGLWindow &gl_window = opengl::ChOpenGLWindow::getInstance();
   gl_window.Initialize(1280, 720, "Contact Test", msystem);
-  gl_window.SetCamera(ChVector<>(0,3,20), ChVector<>(0,3,0),ChVector<>(0,1,0));
+  gl_window.SetCamera(ChVector<>(0,10,0), ChVector<>(0,0,0),ChVector<>(0,0,1));
   gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif
 
@@ -242,13 +243,7 @@ int main(int argc, char* argv[])
     msystem->CalculateContactForces();
     real3 force(0, 0, 0);
     force = msystem->GetBodyContactForce(1);
-    printf("Ball1: %f %f %f\n",force.x,force.y,force.z);
-    force = msystem->GetBodyContactForce(2);
-    printf("Ball2: %f %f %f\n",force.x,force.y,force.z);
-    force = msystem->GetBodyContactForce(3);
-    printf("Ball3: %f %f %f\n",force.x,force.y,force.z);
-    force = msystem->GetBodyContactForce(4);
-    printf("Ball4: %f %f %f\n",force.x,force.y,force.z);
+    printf("Contact force on ball: %f %f %f\n",force.x,force.y,force.z);
     std::cin.get();   
   }
 
