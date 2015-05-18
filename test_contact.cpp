@@ -243,7 +243,26 @@ int main(int argc, char* argv[])
     msystem->CalculateContactForces();
     real3 force(0, 0, 0);
     force = msystem->GetBodyContactForce(1);
-    printf("Contact force on ball: %f %f %f\n",force.x,force.y,force.z);
+    printf("Contact force on ball: (%f, %f, %f)\n",force.x,force.y,force.z);
+    switch (testCase) {
+      case 1:
+    	// 1) Ball sitting on plane, no gravity
+    	printf("The contact force should be (0, 0, 0)\n");
+        break;
+      case 2:
+    	// 2) Ball sitting on plane, with gravity - no applied force in lateral dir
+    	printf("The contact force should be (0, 0, %f)\n",-mass*gravity.z);
+        break;
+      case 3:
+    	// 3) Ball sitting on plane, with gravity - small applied force in lateral dir
+    	printf("The contact force should be (%f, 0, %f)\n",-appliedForce.x,-mass*gravity.z);
+        break;
+      case 4:
+    	// 4) Ball sitting on plane, with gravity - large applied force in lateral dir
+    	printf("The contact force should be (%f, 0, %f)\n",mass*gravity.z*mu_sliding,-mass*gravity.z);
+        break;
+      }
+
     std::cin.get();   
   }
 
