@@ -1,6 +1,6 @@
 #=============================================================================
 # CMake configuration file for Chrono-Projects
-#
+# 
 #=============================================================================
 
 cmake_minimum_required(VERSION 2.8)
@@ -56,5 +56,5 @@ endif()
 add_subdirectory(irrlicht)
 add_subdirectory(parallel)
 #add_subdirectory(parallel_tests)
-#add_subdirectory(vehicle)
+add_subdirectory(vehicle)
 

@@ -5,6 +5,7 @@
 # Depends on Chrono with unit_IRRLICHT enabled.
 #=============================================================================
 
+message(STATUS "==== Chrono IRRLICHT programs ====")
 
 #--------------------------------------------------------------
 # List of all executables
@@ -33,39 +34,25 @@ if(NOT Chrono_FOUND)
   return()
 endif()
 
-# Report what we have found
-
-message(STATUS "Chrono include directories: ${CHRONO_INCLUDE_DIRS}")
-message(STATUS "Chrono library names: ${CHRONO_LIB_NAMES}")
-message(STATUS "Chrono libraries: ${CHRONO_LIBRARIES}")
-message(STATUS "Chrono DLL names: ${CHRONO_DLL_NAMES}")
-message(STATUS "Chrono DLLs: ${CHRONO_DLLS}")
-message(STATUS "Chrono data directory: ${CHRONO_DATA_DIR}")
-
 #--------------------------------------------------------------
 # Include paths and libraries
 #--------------------------------------------------------------
 
-# Path to the Chrono include headers
+# (A) Path to the Chrono include headers
 # - If using an installed version of Chrono, this will be the path 
 #   to the installed headers (the configuration headers are also
 #   available there)
 # - If using a build version of Chrono, this will contain both the
 #   path to the Chrono sources and the path to the chrono BUILD tree
 #   (the latter for the configuration headers)
-# Path to the top of the source tree for this project
+# 
+# (B) Path to the top of the source tree for this project
 # - for access to utility headers
 
 include_directories(
     ${CHRONO_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
 )
-
-# Initialize the list of libraries:
-# - main Chrono::Engine library
-# - Chrono::Irrlicht library
-
-set(LIBRARIES ${CHRONO_LIBRARIES})
 
 #--------------------------------------------------------------
 # Copy DLLs
@@ -96,10 +83,10 @@ foreach(PROGRAM ${DEMOS})
   set_target_properties(${PROGRAM} PROPERTIES
     FOLDER demos
     COMPILE_FLAGS "${CHRONO_CFLAGS}"
-    LINK_FLAGS "${CH_LINKERFLAG_EXE}"
+    LINK_FLAGS "${CHRONO_LDFLAGS}"
   )
 
-  target_link_libraries(${PROGRAM} ${LIBRARIES})
+  target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
   
   #install(TARGETS ${PROGRAM} DESTINATION bin)
 
