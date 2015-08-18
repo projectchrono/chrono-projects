@@ -5,15 +5,17 @@
 #include "core/ChFileutils.h"
 #include "core/ChStream.h"
 
+#include "utils/ChUtilsGeometry.h"
+#include "utils/ChUtilsCreators.h"
+#include "utils/ChUtilsGenerators.h"
+#include "utils/ChUtilsInputOutput.h"
+
+#include "chrono_vehicle/ChVehicleModelData.h"
+#include "chrono_vehicle/utils/ChWheeledVehicleAssembly.h"
+
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 #include "chrono_parallel/collision/ChCNarrowphaseRUtils.h"
-
-#include "chrono_utils/ChUtilsVehicle.h"
-#include "chrono_utils/ChUtilsGeometry.h"
-#include "chrono_utils/ChUtilsCreators.h"
-#include "chrono_utils/ChUtilsGenerators.h"
-#include "chrono_utils/ChUtilsInputOutput.h"
 
 //#undef CHRONO_PARALLEL_HAS_OPENGL
 
@@ -21,7 +23,7 @@
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
-#include "demo_utils.h"
+#include "utils/demo_utils.h"
 
 using namespace chrono;
 using namespace chrono::collision;
@@ -133,7 +135,7 @@ int out_fps = 60;
 // =============================================================================
 
 // Callback class for providing driver inputs.
-class MyDriverInputs : public utils::DriverInputsCallback {
+class MyDriverInputs : public ChDriverInputsCallback {
  public:
   MyDriverInputs(double delay) : m_delay(delay) {}
 
@@ -160,7 +162,7 @@ class MyDriverInputs : public utils::DriverInputsCallback {
 
 // Callback class for specifying rigid tire contact model.
 // This version uses cylindrical contact shapes.
-class MyCylindricalTire : public utils::TireContactCallback {
+class MyCylindricalTire : public ChTireContactCallback {
  public:
   virtual void onCallback(ChSharedPtr<ChBody> wheelBody, double radius, double width) {
     wheelBody->GetCollisionModel()->ClearModel();
@@ -175,7 +177,7 @@ class MyCylindricalTire : public utils::TireContactCallback {
 
 // Callback class for specifying rigid tire contact model.
 // This version uses a collection of convex contact shapes (meshes).
-class MyLuggedTire : public utils::TireContactCallback {
+class MyLuggedTire : public ChTireContactCallback {
  public:
   MyLuggedTire() {
     std::string lugged_file("hmmwv/lugged_wheel_section.obj");
@@ -319,7 +321,7 @@ int main(int argc, char* argv[]) {
   // -------------------
 
   // Ground body
-  ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel, ChBody::DEM));
+  ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
   ground->SetIdentifier(-1);
   ground->SetMass(1000);
   ground->SetBodyFixed(true);
@@ -365,20 +367,22 @@ int main(int argc, char* argv[]) {
   // Create and initialize the vehicle system.
   // -----------------------------------------
 
-  utils::VehicleSystem* vehicle;
-  utils::TireContactCallback* tire_cb;
+  ChWheeledVehicleAssembly* vehicle;
+  ChTireContactCallback* tire_cb;
 
   // Create the vehicle assembly and the callback object for tire contact
   // according to the specified type of tire/wheel.
   switch (wheel_type) {
-    case CYLINDRICAL: {
-      vehicle = new utils::VehicleSystem(system, vehicle_file_cyl, simplepowertrain_file);
-      tire_cb = new MyCylindricalTire();
-    } break;
-    case LUGGED: {
-      vehicle = new utils::VehicleSystem(system, vehicle_file_lug, simplepowertrain_file);
-      tire_cb = new MyLuggedTire();
-    } break;
+  case CYLINDRICAL: {
+    vehicle = new ChWheeledVehicleAssembly(system, vehicle_file_cyl,
+                                           simplepowertrain_file);
+    tire_cb = new MyCylindricalTire();
+  } break;
+  case LUGGED: {
+    vehicle = new ChWheeledVehicleAssembly(system, vehicle_file_lug,
+                                           simplepowertrain_file);
+    tire_cb = new MyLuggedTire();
+  } break;
   }
 
   vehicle->SetTireContactCallback(tire_cb);
