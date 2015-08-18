@@ -68,6 +68,17 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 endif()
 
 #--------------------------------------------------------------
+# Compilation flags
+#--------------------------------------------------------------
+
+set(COMPILE_FLAGS ${CHRONO_CFLAGS})
+
+# Disable some warnings triggered by Irrlicht (Windows only)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    SET(COMPILE_FLAGS "${COMPILE_FLAGS} /wd4275")
+endif()
+
+#--------------------------------------------------------------
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
@@ -82,7 +93,7 @@ foreach(PROGRAM ${DEMOS})
 
   set_target_properties(${PROGRAM} PROPERTIES
     FOLDER demos
-    COMPILE_FLAGS "${CHRONO_CFLAGS}"
+    COMPILE_FLAGS "${COMPILE_FLAGS}"
     COMPILE_DEFINITIONS "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\""
     LINK_FLAGS "${CHRONO_LDFLAGS}"
   )
