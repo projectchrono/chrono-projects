@@ -1,8 +1,8 @@
 #=============================================================================
 # CMake configuration file for projects requiring the Chrono unit_PARALLEL
-#
+# 
 # Cannot be used stand-alone (but is mostly self-contained).
-# Depends on Chrono with unit_PARALLEL enabled and optional OpenGL support.
+# Depends on Chrono with unit_PARALLEL enabled and optionally OpenGL support.
 #=============================================================================
 
 
@@ -20,6 +20,7 @@ set(DEMOS
     demo_suspension
     demo_wheel
     directShear
+    mixerDEM
     pressureSinkage
     rad_im_schmutz
     singleWheel
@@ -29,14 +30,11 @@ set(DEMOS
 # Find the Chrono package with required components
 #--------------------------------------------------------------
 
-# Specify the location of the Chrono project configuration file
-
-# TODO
-
 # Invoke find_package in CONFIG mode
 
 find_package(Chrono
              COMPONENTS Parallel
+             #OPTIONAL_COMPONENTS OpenGL
              CONFIG
 )
 
@@ -49,9 +47,11 @@ endif()
 
 # Report what we have found
 
-message(STATUS "Chrono include directories" ${CHRONO_INCLUDE_DIRS})
-message(STATUS "Chrono libraries" ${CHRONO_LIBRARIES})
-message(STATUS "Chrono DLLs" ${CHRONO_DLLS})
+message(STATUS "Chrono include directories: ${CHRONO_INCLUDE_DIRS}")
+message(STATUS "Chrono library names: ${CHRONO_LIB_NAMES}")
+message(STATUS "Chrono libraries: ${CHRONO_LIBRARIES}")
+message(STATUS "Chrono DLL names: ${CHRONO_DLL_NAMES}")
+message(STATUS "Chrono DLLs: ${CHRONO_DLLS}")
 
 #--------------------------------------------------------------
 # Include paths and libraries
@@ -78,12 +78,6 @@ include_directories(
 # - Utility library for Chrono::Parallel
 
 set(LIBRARIES ${CHRONO_LIBRARIES})
-
-# On windows, initialize the list of DLLs to be copied
-
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-  set(DLLS ${CHRONO_DLLS})
-endif()
 
 # If Chrono was configured with OpenGL support
 
@@ -117,7 +111,7 @@ endif()
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Radu demo programs...")
+message(STATUS "Parallel programs...")
 
 foreach(PROGRAM ${DEMOS})
 
@@ -128,13 +122,12 @@ foreach(PROGRAM ${DEMOS})
 
   set_target_properties(${PROGRAM} PROPERTIES
     FOLDER demos
-    COMPILE_FLAGS "${CH_BUILDFLAGS}"
+    COMPILE_FLAGS "${CHRONO_CFLAGS}"
     LINK_FLAGS "${CH_LINKERFLAG_EXE}"
   )
 
   target_link_libraries(${PROGRAM} ${LIBRARIES})
-  add_dependencies(${PROGRAM} ${LIBRARIES})
-
+  
   #install(TARGETS ${PROGRAM} DESTINATION bin)
 
 endforeach(PROGRAM)
