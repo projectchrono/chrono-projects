@@ -50,11 +50,24 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 endif()
 
 #-----------------------------------------------------------------------------
+# Disable some warnings
+#-----------------------------------------------------------------------------
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    if(MSVC)
+        add_definitions( "-D_CRT_SECURE_NO_DEPRECATE" )  # avoids deprecation warnings
+        add_definitions( "-D_SCL_SECURE_NO_DEPRECATE" )  # avoids deprecation warnings
+        add_definitions( "-DNOMINMAX" ) # do not use MSVC's min/max macros
+        add_definitions( "-MP" ) # perform parallel builds
+    endif(MSVC)
+endif()
+
+#-----------------------------------------------------------------------------
 # Invoke CMake in subdirectories
 #-----------------------------------------------------------------------------
 
 add_subdirectory(irrlicht)
 add_subdirectory(parallel)
+add_subdirectory(vehicle_parallel)
 #add_subdirectory(parallel_tests)
-add_subdirectory(vehicle)
 
