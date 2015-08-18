@@ -37,9 +37,9 @@
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
 // Control use of OpenGL run-time rendering
-#undef CHRONO_PARALLEL_HAS_OPENGL
+#undef CHRONO_OPENGL
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
@@ -450,7 +450,7 @@ int main(int argc, char* argv[]) {
   ChStreamOutAsciiFile sfile(stats_file.c_str());
   ChStreamOutAsciiFile ffile(flow_file.c_str());
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
   gl_window.Initialize(1280, 720, "Mass Flow Test", msystem);
   gl_window.SetCamera(ChVector<>(0, -width, height), ChVector<>(0, 0, height), ChVector<>(0, 0, 1));
@@ -511,7 +511,7 @@ int main(int argc, char* argv[]) {
 
     // Advance system state by one step.
     // Advance simulation by one step
-    #ifdef CHRONO_PARALLEL_HAS_OPENGL
+    #ifdef CHRONO_OPENGL
         if (gl_window.Active()) {
           gl_window.DoStepDynamics(time_step);
           gl_window.Render();

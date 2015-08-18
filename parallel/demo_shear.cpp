@@ -39,9 +39,9 @@
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
 // Control use of OpenGL run-time rendering
-//#undef CHRONO_PARALLEL_HAS_OPENGL
+//#undef CHRONO_OPENGL
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
@@ -452,7 +452,7 @@ int main(int argc, char* argv[]) {
 
   // Create the OpenGL visualization window
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
   gl_window.Initialize(800, 600, title.c_str(), my_system);
   gl_window.SetCamera(ChVector<>(3 * width, 0, 0), ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), radius, radius);
@@ -497,7 +497,7 @@ int main(int argc, char* argv[]) {
 
     //  Do time step
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
     if (gl_window.Active()) {
       gl_window.DoStepDynamics(time_step);
       gl_window.Render();

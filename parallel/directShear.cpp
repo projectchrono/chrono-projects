@@ -46,9 +46,9 @@
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
 // Control use of OpenGL run-time rendering
-//#undef CHRONO_PARALLEL_HAS_OPENGL
+//#undef CHRONO_OPENGL
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
@@ -797,7 +797,7 @@ int main(int argc, char* argv[]) {
 
   shearStream.SetNumFormat("%16.4e");
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
   gl_window.Initialize(1280, 720, "Direct Shear Test", msystem);
   gl_window.SetCamera(ChVector<>(0, -10 * hdimY, hdimZ), ChVector<>(0, 0, hdimZ), ChVector<>(0, 0, 1));
@@ -868,7 +868,7 @@ int main(int argc, char* argv[]) {
     }
 
 // Advance simulation by one step
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
     if (gl_window.Active()) {
       gl_window.DoStepDynamics(time_step);
       gl_window.Render();

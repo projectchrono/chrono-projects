@@ -17,9 +17,9 @@
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 #include "chrono_parallel/collision/ChCNarrowphaseRUtils.h"
 
-//#undef CHRONO_PARALLEL_HAS_OPENGL
+//#undef CHRONO_OPENGL
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
@@ -405,10 +405,10 @@ int main(int argc, char* argv[]) {
 // Perform the simulation.
 // -----------------------
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
   // Initialize OpenGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-  gl_window.Initialize(1280, 720, "HMMWV", system);
+  gl_window.Initialize(1280, 720, "HMMWV (DEM contact)", system);
   gl_window.SetCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
   gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif
@@ -458,7 +458,7 @@ int main(int argc, char* argv[]) {
     vehicle->Update(time);
 
 // Advance dynamics.
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
     if (gl_window.Active()) {
       gl_window.DoStepDynamics(time_step);
       gl_window.Render();
