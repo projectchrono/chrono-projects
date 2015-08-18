@@ -53,6 +53,7 @@ endif()
 # Invoke CMake in subdirectories
 #-----------------------------------------------------------------------------
 
+add_subdirectory(irrlicht)
 add_subdirectory(parallel)
 #add_subdirectory(parallel_tests)
 #add_subdirectory(vehicle)
