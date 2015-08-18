@@ -190,6 +190,9 @@ void create_some_falling_items(ChSystem& mphysicalSystem, ISceneManager* msceneM
 }
 
 int main(int argc, char* argv[]) {
+    // Set path to Chrono data directory
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     // Create a ChronoENGINE physical system
     ChSystem mphysicalSystem;
 

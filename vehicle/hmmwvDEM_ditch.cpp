@@ -380,8 +380,8 @@ double FindHighestParticle(ChSystem* system) {
 // =============================================================================
 
 int main(int argc, char* argv[]) {
-  // Set path to ChronoVehicle data files
-  vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
+  // Set path to Chrono data directory
+  SetChronoDataPath(CHRONO_DATA_DIR);
 
   // --------------------------
   // Create output directories.
