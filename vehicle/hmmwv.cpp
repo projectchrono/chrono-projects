@@ -160,6 +160,8 @@ class MyDriverInputs : public ChDriverInputsCallback {
 class MyCylindricalTire : public ChTireContactCallback {
  public:
   virtual void onCallback(ChSharedPtr<ChBody> wheelBody, double radius, double width) {
+    wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
+
     wheelBody->GetCollisionModel()->ClearModel();
     wheelBody->GetCollisionModel()->AddCylinder(0.46, 0.46, width / 2);
     wheelBody->GetCollisionModel()->BuildModel();
@@ -180,6 +182,8 @@ class MyLuggedTire : public ChTireContactCallback {
   }
 
   virtual void onCallback(ChSharedPtr<ChBody> wheelBody, double radius, double width) {
+    wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
+
     ChCollisionModelParallel* coll_model = (ChCollisionModelParallel*)wheelBody->GetCollisionModel();
     coll_model->ClearModel();
 
@@ -219,6 +223,8 @@ class MyLuggedTire_vis : public ChTireContactCallback {
   }
 
   virtual void onCallback(ChSharedPtr<ChBody> wheelBody, double radius, double width) {
+    wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
+
     // Clear any existing assets (will be overriden)
     wheelBody->GetAssets().clear();
 
