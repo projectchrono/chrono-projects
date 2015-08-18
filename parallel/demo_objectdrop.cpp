@@ -5,13 +5,13 @@
 #include "core/ChFileutils.h"
 #include "core/ChStream.h"
 
+#include "utils/ChUtilsGeometry.h"
+#include "utils/ChUtilsCreators.h"
+#include "utils/ChUtilsInputOutput.h"
+
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 #include "chrono_parallel/collision/ChCNarrowphaseRUtils.h"
-
-#include "chrono_utils/ChUtilsGeometry.h"
-#include "chrono_utils/ChUtilsCreators.h"
-#include "chrono_utils/ChUtilsInputOutput.h"
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
@@ -95,7 +95,7 @@ void CreateGround(ChSystemParallel* system) {
   mat_g->SetFriction(0.4f);
   mat_g->SetRestitution(0.4f);
 
-  ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
   ground->SetMaterialSurface(mat_g);
 #else
   ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
@@ -190,7 +190,7 @@ void CreateObject(ChSystemParallel* system) {
   mat_o->SetFriction(0.4f);
   mat_o->SetRestitution(0.4f);
 
-  ChSharedPtr<ChBody> obj(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  ChSharedPtr<ChBody> obj(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
   obj->SetMaterialSurface(mat_o);
 #else
   ChSharedPtr<ChMaterialSurface> mat_o(new ChMaterialSurface);

@@ -29,12 +29,12 @@
 #include "core/ChFileutils.h"
 #include "core/ChStream.h"
 
+#include "utils/ChUtilsCreators.h"
+#include "utils/ChUtilsGenerators.h"
+#include "utils/ChUtilsInputOutput.h"
+
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
-
-#include "chrono_utils/ChUtilsCreators.h"
-#include "chrono_utils/ChUtilsGenerators.h"
-#include "chrono_utils/ChUtilsInputOutput.h"
 
 // Control use of OpenGL run-time rendering
 #undef CHRONO_PARALLEL_HAS_OPENGL
@@ -165,7 +165,7 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 
 // Angled insert
 #ifdef USE_DEM
-  ChSharedPtr<ChBody> insert(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  ChSharedPtr<ChBody> insert(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
   insert->SetMaterialSurface(mat_b);
 #else
   ChSharedBodyPtr insert(new ChBody(new ChCollisionModelParallel));
@@ -188,7 +188,7 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 
 // Static slot (back wall)
 #ifdef USE_DEM
-  ChSharedPtr<ChBody> slot(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  ChSharedPtr<ChBody> slot(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
   slot->SetMaterialSurface(mat_b);
 #else
   ChSharedBodyPtr slot(new ChBody(new ChCollisionModelParallel));
@@ -211,7 +211,7 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 
 // Lateral walls
 #ifdef USE_DEM
-  ChSharedPtr<ChBody> wall(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  ChSharedPtr<ChBody> wall(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
   wall->SetMaterialSurface(mat_b);
 #else
   ChSharedBodyPtr wall(new ChBody(new ChCollisionModelParallel));

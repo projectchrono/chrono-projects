@@ -21,14 +21,14 @@
 #include "core/ChFileutils.h"
 #include "core/ChStream.h"
 
+#include "utils/ChUtilsGeometry.h"
+#include "utils/ChUtilsCreators.h"
+#include "utils/ChUtilsGenerators.h"
+#include "utils/ChUtilsInputOutput.h"
+
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 #include "chrono_parallel/collision/ChCNarrowphaseRUtils.h"
-
-#include "chrono_utils/ChUtilsGeometry.h"
-#include "chrono_utils/ChUtilsCreators.h"
-#include "chrono_utils/ChUtilsGenerators.h"
-#include "chrono_utils/ChUtilsInputOutput.h"
 
 // Control use of OpenGL run-time rendering
 //#undef CHRONO_PARALLEL_HAS_OPENGL
@@ -186,7 +186,7 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
 // Create the ground body
 #ifdef USE_DEM
-  m_ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel, ChBody::DEM));
+  m_ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
 #else
   m_ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 #endif
@@ -198,7 +198,7 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
 // Create the sled body
 #ifdef USE_DEM
-  m_sled = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel, ChBody::DEM));
+  m_sled = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
 #else
   m_sled = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 #endif
@@ -236,7 +236,7 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
 // Create the wheel body
 #ifdef USE_DEM
-  ChSharedPtr<ChBody> wheel(new ChBody(new collision::ChCollisionModelParallel, ChBody::DEM));
+  ChSharedPtr<ChBody> wheel(new ChBody(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
   wheel->SetMaterialSurface(mat_w);
   m_wheel = wheel;
 #else

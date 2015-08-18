@@ -5,12 +5,12 @@
 #include "core/ChFileutils.h"
 #include "core/ChStream.h"
 
+#include "utils/ChUtilsCreators.h"
+#include "utils/ChUtilsGenerators.h"
+#include "utils/ChUtilsInputOutput.h"
+
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
-
-#include "chrono_utils/ChUtilsCreators.h"
-#include "chrono_utils/ChUtilsGenerators.h"
-#include "chrono_utils/ChUtilsInputOutput.h"
 
 using namespace chrono;
 using namespace chrono::collision;
@@ -142,7 +142,7 @@ ChSharedPtr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
   mat_w->SetCohesion(cohesion_w);
 
   // Create the wheel body
-  ChSharedPtr<ChBody> wheel(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  ChSharedPtr<ChBody> wheel(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
 
   wheel->SetMaterialSurface(mat_w);
 

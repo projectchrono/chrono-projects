@@ -5,14 +5,14 @@
 #include "core/ChFileutils.h"
 #include "core/ChStream.h"
 
+#include "utils/ChUtilsGeometry.h"
+#include "utils/ChUtilsCreators.h"
+#include "utils/ChUtilsGenerators.h"
+#include "utils/ChUtilsInputOutput.h"
+
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 #include "chrono_parallel/collision/ChCNarrowphaseRUtils.h"
-
-#include "chrono_utils/ChUtilsGeometry.h"
-#include "chrono_utils/ChUtilsCreators.h"
-#include "chrono_utils/ChUtilsGenerators.h"
-#include "chrono_utils/ChUtilsInputOutput.h"
 
 using namespace chrono;
 using namespace chrono::collision;
@@ -191,7 +191,7 @@ void CreateObject(ChSystemParallel* system, double z) {
 // --------------------------
 
 #ifdef USE_DEM
-  ChSharedPtr<ChBody> obj(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+  ChSharedPtr<ChBody> obj(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
   obj->SetMaterialSurface(mat_o);
 #else
   ChSharedBodyPtr obj(new ChBody(new ChCollisionModelParallel));

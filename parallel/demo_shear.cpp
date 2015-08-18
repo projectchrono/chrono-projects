@@ -31,9 +31,9 @@
 #include "core/ChFileutils.h"
 #include "core/ChStream.h"
 
-#include "chrono_utils/ChUtilsCreators.h"
-#include "chrono_utils/ChUtilsGenerators.h"
-#include "chrono_utils/ChUtilsInputOutput.h"
+#include "utils/ChUtilsCreators.h"
+#include "utils/ChUtilsGenerators.h"
+#include "utils/ChUtilsInputOutput.h"
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
@@ -217,7 +217,7 @@ int main(int argc, char* argv[]) {
 #else
   cout << "Create DVI system" << endl;
   const std::string title = "hard-sphere (DVI) direct shear box test";
-  ChBody::ContactMethod contact_method = ChBody::DVI;
+  ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::DVI;
   ChSystemParallelDVI* my_system = new ChSystemParallelDVI();
 #endif
 
