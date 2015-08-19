@@ -5,8 +5,6 @@
 # Depends on Chrono with unit_PARALLEL enabled and optionally OpenGL support.
 #=============================================================================
 
-message(STATUS "==== Chrono PARALLEL programs ====")
-
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
@@ -67,17 +65,11 @@ include_directories(
 )
 
 #--------------------------------------------------------------
-# Copy DLLs
+# Append to the parent's list of DLLs (and make it visible up)
 #--------------------------------------------------------------
 
-# On Windows, traverse the list of DLLs and copy them next to
-# the binaries.
-
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-
-#    TODO
-
-endif()
+list(APPEND ALL_DLLS "${CHRONO_DLLS}")
+set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 
 #--------------------------------------------------------------
 # Loop over all demo programs and build them

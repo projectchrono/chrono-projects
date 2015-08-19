@@ -66,25 +66,69 @@ endif()
 # Invoke CMake in subdirectories
 #-----------------------------------------------------------------------------
 
+# Options for configuring/building individual sets of programs
 option(ENABLE_IRRLICHT_PROGRAMS "Build the IRRLICHT programs" OFF)
 option(ENABLE_PARALLEL_PROGRAMS "Build the PARALLEL programs" OFF)
 option(ENABLE_VEHICLE_PARALLEL_PROGRAMS "Build the VEHICLE + PARALLEL programs" OFF)
 option(ENABLE_FEA_PROGRAMS "Build the FEA programs" OFF)
 option(ENABLE_PARALLEL_TESTS_PROGRAMS "Build the PARALLEL TEST programs" OFF)
 
+# Keep track of all DLLs. Each submodule should append to this list.
+list(APPEND ALL_DLLS "")
+
+# Propagate configuration to submodules.
 if(ENABLE_IRRLICHT_PROGRAMS)
-  add_subdirectory(irrlicht)
+  message(STATUS "==== Chrono IRRLICHT programs ====")
+ add_subdirectory(irrlicht)
 endif()
 if(ENABLE_PARALLEL_PROGRAMS)
+  message(STATUS "==== Chrono PARALLEL programs ====")
   add_subdirectory(parallel)
 endif()
 if(ENABLE_VEHICLE_PARALLEL_PROGRAMS)
+  message(STATUS "==== Chrono VEHICLE_PARALLEL programs ====")
   add_subdirectory(vehicle_parallel)
 endif()
 if(ENABLE_FEA_PROGRAMS)
+  message(STATUS "==== Chrono FEA programs ====")
   add_subdirectory(fea)
 endif()
 #if(ENABLE_PARALLEL_TESTS_PROGRAMS)
 #  add_subdirectory(parallel_tests)
 #endif()
 
+# Remove duplicates in the list of DLLs
+list(REMOVE_DUPLICATES ALL_DLLS)
+
+#--------------------------------------------------------------
+# Copy DLLs
+#--------------------------------------------------------------
+
+# On Windows, traverse the list of DLLs and copy them next to
+# the binaries.
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+
+  message(STATUS "==== Add custom commands for copying DLLs ====")
+  message(STATUS "DLL list...")
+
+  # Create custom target for copying DLLs; add it to the default build target
+  add_custom_target(COPY_DLLS ALL)
+
+  # Loop over the list of all DLLs and create a custom command
+  foreach(DLL ${ALL_DLLS})
+
+    message(STATUS "...${DLL}")
+
+    # Create custom commands, invoked post-build to copy DLLs to the appropriate
+    # directory (depending on the configuration selected at build time in VS)
+    add_custom_command(
+        TARGET COPY_DLLS POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${DLL}"
+            "${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>"
+    )
+
+  endforeach()
+
+endif()
