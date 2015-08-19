@@ -1,34 +1,21 @@
-//
+// =============================================================================
 // PROJECT CHRONO - http://projectchrono.org
 //
-// Copyright (c) 2010-2011 Alessandro Tasora
-// Copyright (c) 2013 Project Chrono
-// All rights reserved.
+// Copyright (c) 2014 projectchrono.org
+// All right reserved.
 //
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file at the top level of the distribution
-// and at http://projectchrono.org/license-chrono.txt.
+// Use of this source code is governed by a BSD-style license that can be found
+// in the LICENSE file at the top level of the distribution and at
+// http://projectchrono.org/license-chrono.txt.
 //
-
-///////////////////////////////////////////////////
+// =============================================================================
+// Authors: Alessandro Tasora
+// =============================================================================
 //
-//   Demo code about
-//
-//     - collisions and contacts
-//     - use Irrlicht to display objects.
-//
-//       (This is just a possible method of integration
-//       of Chrono::Engine + Irrlicht: many others
-//       are possible.)
-//
-//	 CHRONO
-//   ------
-//   Multibody dinamics engine
-//
-// ------------------------------------------------
-//             www.deltaknowledge.com
-// ------------------------------------------------
-///////////////////////////////////////////////////
+// Demo code about
+//   - collisions and contacts
+//   - use Irrlicht to display objects.
+// =============================================================================
 
 #include "physics/ChSystem.h"
 #include "physics/ChBodyEasy.h"
@@ -36,11 +23,7 @@
 #include "assets/ChTexture.h"
 #include "unit_IRRLICHT/ChIrrApp.h"
 
-// Use the namespace of Chrono
-
 using namespace chrono;
-
-// Use the main namespaces of Irrlicht
 using namespace irr;
 
 using namespace core;
@@ -53,7 +36,6 @@ void create_some_falling_items(ChSystem& mphysicalSystem, ISceneManager* msceneM
     for (int bi = 0; bi < 29; bi++) {
         // Create a bunch of ChronoENGINE rigid bodies (spheres and
         // boxes etc.) which will fall..
-
         ChSharedPtr<ChBodyEasySphere> msphereBody(new ChBodyEasySphere(1.1,     // radius size
                                                                        1000,    // density
                                                                        true,    // collide enable?
@@ -154,39 +136,6 @@ void create_some_falling_items(ChSystem& mphysicalSystem, ISceneManager* msceneM
     if (ChSharedPtr<ChFunction_Const> mfun = my_motor->Get_spe_funct().DynamicCastTo<ChFunction_Const>())
         mfun->Set_yconst(CH_C_PI / 2.0);  // speed w=90°/s
     mphysicalSystem.AddLink(my_motor);
-
-    /*
-
-    /// NOTE: Instead of creating five separate 'box' bodies to make
-    /// the walls of the bowl, you could have used a single body
-    /// made of five box shapes, which build a single collision description,
-    /// as in the alternative approach:
-
-        // create a plain ChBody (no colliding shape nor visualization mesh is used yet)
-    ChSharedPtr<ChBodyEasyBox> mrigidBody(new ChBody);
-
-        // set the ChBodySceneNode as fixed body, and turn collision ON, otherwise no collide by default
-    mrigidBody->SetBodyFixed(true);
-    mrigidBody->SetCollide(true);
-
-        // Clear model. The colliding shape description MUST be between  ClearModel() .. BuildModel() pair.
-    mrigidBody->GetCollisionModel()->ClearModel();
-        // Describe the (invisible) colliding shape by adding five boxes (the walls and floor)
-    mrigidBody->GetCollisionModel()->AddBox(20,1,20, ChVector<>(  0,-10,  0));
-    mrigidBody->GetCollisionModel()->AddBox(1,40,20, ChVector<>(-11,  0,  0));
-    mrigidBody->GetCollisionModel()->AddBox(1,40,20, ChVector<>( 11,  0,  0));
-    mrigidBody->GetCollisionModel()->AddBox(20,40,1, ChVector<>(  0,  0,-11));
-    mrigidBody->GetCollisionModel()->AddBox(20,40,1, ChVector<>(  0,  0, 11));
-        // Complete the description of collision shape.
-    mrigidBody->GetCollisionModel()->BuildModel();
-
-        // Attach some visualization shapes if needed:
-    ChSharedPtr<ChBoxShape> vshape (new ChBoxShape() );
-    vshape->GetBoxGeometry().SetLengths( ChVector<> (20,1,20) );
-    vshape->GetBoxGeometry().Pos = ChVector<> (0,-5,0);
-    this->AddAsset( vshape );
-    // etc. for other 4 box shapes..
-    */
 }
 
 int main(int argc, char* argv[]) {
@@ -207,7 +156,6 @@ int main(int argc, char* argv[]) {
     ChIrrWizard::add_typical_Camera(application.GetDevice(), core::vector3df(0, 14, -20));
 
     // Create all the rigid bodies.
-
     create_some_falling_items(mphysicalSystem, application.GetSceneManager(), application.GetVideoDriver());
 
     // Use this function for adding a ChIrrNodeAsset to all items
@@ -221,8 +169,6 @@ int main(int argc, char* argv[]) {
     mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR);
     mphysicalSystem.SetIterLCPmaxItersSpeed(20);
     mphysicalSystem.SetIterLCPmaxItersStab(5);
-
-    // mphysicalSystem.SetUseSleeping(true);
 
     application.SetStepManage(true);
     application.SetTimestep(0.02);

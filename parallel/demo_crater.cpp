@@ -37,6 +37,7 @@
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
 // Control use of OpenGL run-time rendering
+// Note: CHRONO_OPENGL is defined in ChConfigParallel.h
 #undef CHRONO_OPENGL
 
 #ifdef CHRONO_OPENGL
@@ -154,8 +155,8 @@ float mu_c = 0.3;
 float cr_c = 0.1;
 
 // Number of layers and height of one layer for generator domain
-int        numLayers = 10;
-double     layerHeight = 1e-2;
+int numLayers = 10;
+double layerHeight = 1e-2;
 ////int numLayers = 1;
 ////double layerHeight = 3e-3;
 
@@ -172,59 +173,58 @@ double h = 10e-2;
 // - a containing bin consisting of five boxes (no top)
 // -----------------------------------------------------------------------------
 int CreateObjects(ChSystemParallel* system) {
-
-	// Create the containing bin
+// Create the containing bin
 #ifdef USE_DEM
-	ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
-	mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
-	mat_c->SetYoungModulus(Y_c);
-	mat_c->SetFriction(mu_c);
-	mat_c->SetRestitution(cr_c);
+    ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
+    mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    mat_c->SetYoungModulus(Y_c);
+    mat_c->SetFriction(mu_c);
+    mat_c->SetRestitution(cr_c);
 
-	utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 #else
-	ChSharedPtr<ChMaterialSurface> mat_c(new ChMaterialSurface);
-	mat_c->SetFriction(mu_c);
+    ChSharedPtr<ChMaterialSurface> mat_c(new ChMaterialSurface);
+    mat_c->SetFriction(mu_c);
 
-	utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 #endif
 
 // Create a material for the granular material
 #ifdef USE_DEM
-  ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
-  mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
-  mat_g->SetYoungModulus(Y_g);
-  mat_g->SetFriction(mu_g);
-  mat_g->SetRestitution(cr_g);
+    ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
+    mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    mat_g->SetYoungModulus(Y_g);
+    mat_g->SetFriction(mu_g);
+    mat_g->SetRestitution(cr_g);
 #else
-  ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
-  mat_g->SetFriction(mu_g);
+    ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
+    mat_g->SetFriction(mu_g);
 #endif
 
-  // Create a mixture entirely made out of spheres
-  utils::Generator gen(system);
+    // Create a mixture entirely made out of spheres
+    utils::Generator gen(system);
 
-  utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
 #ifdef USE_DEM
-  m1->setDefaultMaterialDEM(mat_g);
+    m1->setDefaultMaterialDEM(mat_g);
 #else
-  m1->setDefaultMaterialDVI(mat_g);
+    m1->setDefaultMaterialDVI(mat_g);
 #endif
-  m1->setDefaultDensity(rho_g);
-  m1->setDefaultSize(r_g);
+    m1->setDefaultDensity(rho_g);
+    m1->setDefaultSize(r_g);
 
-  gen.setBodyIdentifier(Id_g);
+    gen.setBodyIdentifier(Id_g);
 
-  double r = 1.01 * r_g;
+    double r = 1.01 * r_g;
 
-  for (int i = 0; i < numLayers; i++) {
-    double center = r + layerHeight / 2 + i * (2 * r + layerHeight);
-    gen.createObjectsBox(
-        utils::POISSON_DISK, 2 * r, ChVector<>(0, 0, center), ChVector<>(hDimX - r, hDimY - r, layerHeight / 2));
-    cout << "Layer " << i << "  total bodies: " << gen.getTotalNumBodies() << endl;
-  }
+    for (int i = 0; i < numLayers; i++) {
+        double center = r + layerHeight / 2 + i * (2 * r + layerHeight);
+        gen.createObjectsBox(utils::POISSON_DISK, 2 * r, ChVector<>(0, 0, center),
+                             ChVector<>(hDimX - r, hDimY - r, layerHeight / 2));
+        cout << "Layer " << i << "  total bodies: " << gen.getTotalNumBodies() << endl;
+    }
 
-  return gen.getTotalNumBodies();
+    return gen.getTotalNumBodies();
 }
 
 // -----------------------------------------------------------------------------
@@ -234,39 +234,39 @@ int CreateObjects(ChSystemParallel* system) {
 void CreateFallingBall(ChSystemParallel* system, double z, double vz) {
 // Create a material for the falling ball
 #ifdef USE_DEM
-  ChSharedPtr<ChMaterialSurfaceDEM> mat_b;
-  mat_b = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
-  mat_b->SetYoungModulus(1e8f);
-  mat_b->SetFriction(0.4f);
-  mat_b->SetRestitution(0.1f);
+    ChSharedPtr<ChMaterialSurfaceDEM> mat_b;
+    mat_b = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    mat_b->SetYoungModulus(1e8f);
+    mat_b->SetFriction(0.4f);
+    mat_b->SetRestitution(0.1f);
 #else
-  ChSharedPtr<ChMaterialSurface> mat_b(new ChMaterialSurface);
-  mat_b->SetFriction(mu_c);
+    ChSharedPtr<ChMaterialSurface> mat_b(new ChMaterialSurface);
+    mat_b->SetFriction(mu_c);
 #endif
 
 // Create the falling ball
 #ifdef USE_DEM
-  ChSharedPtr<ChBody> ball(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
-  ball->SetMaterialSurface(mat_b);
+    ChSharedPtr<ChBody> ball(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
+    ball->SetMaterialSurface(mat_b);
 #else
-  ChSharedBodyPtr ball(new ChBody(new ChCollisionModelParallel));
-  ball->SetMaterialSurface(mat_b);
+    ChSharedBodyPtr ball(new ChBody(new ChCollisionModelParallel));
+    ball->SetMaterialSurface(mat_b);
 #endif
 
-  ball->SetIdentifier(Id_b);
-  ball->SetMass(mass_b);
-  ball->SetInertiaXX(inertia_b);
-  ball->SetPos(ChVector<>(0, 0, z + r_g + R_b));
-  ball->SetRot(ChQuaternion<>(1, 0, 0, 0));
-  ball->SetPos_dt(ChVector<>(0, 0, -vz));
-  ball->SetCollide(true);
-  ball->SetBodyFixed(false);
+    ball->SetIdentifier(Id_b);
+    ball->SetMass(mass_b);
+    ball->SetInertiaXX(inertia_b);
+    ball->SetPos(ChVector<>(0, 0, z + r_g + R_b));
+    ball->SetRot(ChQuaternion<>(1, 0, 0, 0));
+    ball->SetPos_dt(ChVector<>(0, 0, -vz));
+    ball->SetCollide(true);
+    ball->SetBodyFixed(false);
 
-  ball->GetCollisionModel()->ClearModel();
-  utils::AddSphereGeometry(ball.get_ptr(), R_b);
-  ball->GetCollisionModel()->BuildModel();
+    ball->GetCollisionModel()->ClearModel();
+    utils::AddSphereGeometry(ball.get_ptr(), R_b);
+    ball->GetCollisionModel()->BuildModel();
 
-  system->AddBody(ball);
+    system->AddBody(ball);
 }
 
 // -----------------------------------------------------------------------------
@@ -275,23 +275,23 @@ void CreateFallingBall(ChSystemParallel* system, double z, double vz) {
 // identifiers (to exclude the containing bin).
 // -----------------------------------------------------------------------------
 double FindHighest(ChSystem* sys) {
-  double highest = 0;
-  for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-    ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
-    if (body->GetIdentifier() > 0 && body->GetPos().z > highest)
-      highest = body->GetPos().z;
-  }
-  return highest;
+    double highest = 0;
+    for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
+        ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+        if (body->GetIdentifier() > 0 && body->GetPos().z > highest)
+            highest = body->GetPos().z;
+    }
+    return highest;
 }
 
 double FindLowest(ChSystem* sys) {
-  double lowest = 1000;
-  for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-    ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
-    if (body->GetIdentifier() > 0 && body->GetPos().z < lowest)
-      lowest = body->GetPos().z;
-  }
-  return lowest;
+    double lowest = 1000;
+    for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
+        ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+        if (body->GetIdentifier() > 0 && body->GetPos().z < lowest)
+            lowest = body->GetPos().z;
+    }
+    return lowest;
 }
 
 // -----------------------------------------------------------------------------
@@ -299,229 +299,229 @@ double FindLowest(ChSystem* sys) {
 // magnitude is below the specified value.
 // -----------------------------------------------------------------------------
 bool CheckSettled(ChSystem* sys, double threshold) {
-  double t2 = threshold * threshold;
+    double t2 = threshold * threshold;
 
-  for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-    ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
-    if (body->GetIdentifier() > 0) {
-      double vel2 = body->GetPos_dt().Length2();
-      if (vel2 > t2)
-        return false;
+    for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
+        ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+        if (body->GetIdentifier() > 0) {
+            double vel2 = body->GetPos_dt().Length2();
+            if (vel2 > t2)
+                return false;
+        }
     }
-  }
 
-  return true;
+    return true;
 }
 
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
 // Create system
 #ifdef USE_DEM
-  cout << "Create DEM system" << endl;
-  ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
+    cout << "Create DEM system" << endl;
+    ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
 #else
-  cout << "Create DVI system" << endl;
-  ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
+    cout << "Create DVI system" << endl;
+    ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
 #endif
 
-  // Debug log messages.
-  ////msystem->SetLoggingLevel(LOG_INFO, true);
-  ////msystem->SetLoggingLevel(LOG_TRACE, true);
+    // Debug log messages.
+    ////msystem->SetLoggingLevel(LOG_INFO, true);
+    ////msystem->SetLoggingLevel(LOG_TRACE, true);
 
-  // Set number of threads.
-  int max_threads = omp_get_num_procs();
-  if (threads > max_threads)
-    threads = max_threads;
-  msystem->SetParallelThreadNumber(threads);
-  omp_set_num_threads(threads);
-  cout << "Using " << threads << " threads" << endl;
+    // Set number of threads.
+    int max_threads = omp_get_num_procs();
+    if (threads > max_threads)
+        threads = max_threads;
+    msystem->SetParallelThreadNumber(threads);
+    omp_set_num_threads(threads);
+    cout << "Using " << threads << " threads" << endl;
 
-  msystem->GetSettings()->perform_thread_tuning = thread_tuning;
+    msystem->GetSettings()->perform_thread_tuning = thread_tuning;
 
-  // Set gravitational acceleration
-  msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
+    // Set gravitational acceleration
+    msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
 
-  // Edit system settings
-  msystem->GetSettings()->solver.use_full_inertia_tensor = false;
-  msystem->GetSettings()->solver.tolerance = tolerance;
+    // Edit system settings
+    msystem->GetSettings()->solver.use_full_inertia_tensor = false;
+    msystem->GetSettings()->solver.tolerance = tolerance;
 
 #ifdef USE_DEM
-  msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
+    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 
-  msystem->GetSettings()->solver.contact_force_model = contact_force_model;
-  msystem->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
+    msystem->GetSettings()->solver.contact_force_model = contact_force_model;
+    msystem->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 #else
-  msystem->GetSettings()->solver.solver_mode = SLIDING;
-  msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
-  msystem->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
-  msystem->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
-  msystem->GetSettings()->solver.alpha = 0;
-  msystem->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-  msystem->ChangeSolverType(APGDREF);
+    msystem->GetSettings()->solver.solver_mode = SLIDING;
+    msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
+    msystem->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
+    msystem->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
+    msystem->GetSettings()->solver.alpha = 0;
+    msystem->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
+    msystem->ChangeSolverType(APGDREF);
 
-  msystem->GetSettings()->collision.collision_envelope = 0.05 * r_g;
+    msystem->GetSettings()->collision.collision_envelope = 0.05 * r_g;
 #endif
 
-  msystem->GetSettings()->collision.bins_per_axis = I3(20, 20, 20);
+    msystem->GetSettings()->collision.bins_per_axis = I3(20, 20, 20);
 
-  // Depending on problem type:
-  // - Select end simulation time
-  // - Select output FPS
-  // - Create granular material and container
-  // - Create falling ball
-  double time_end;
-  int out_fps;
-  ChSharedPtr<ChBody> ball;
+    // Depending on problem type:
+    // - Select end simulation time
+    // - Select output FPS
+    // - Create granular material and container
+    // - Create falling ball
+    double time_end;
+    int out_fps;
+    ChSharedPtr<ChBody> ball;
 
-  if (problem == SETTLING) {
-    time_end = time_settling_max;
-    out_fps = out_fps_settling;
+    if (problem == SETTLING) {
+        time_end = time_settling_max;
+        out_fps = out_fps_settling;
 
-    cout << "Create granular material" << endl;
-    // Create the fixed falling ball just below the granular material
-    CreateFallingBall(msystem, -3*R_b, 0);
-    ball = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
-    msystem->Get_bodylist()->at(0)->AddRef();
-    ball->SetBodyFixed(true);
-    CreateObjects(msystem);
-  } else {
-    time_end = time_dropping;
-    out_fps = out_fps_dropping;
+        cout << "Create granular material" << endl;
+        // Create the fixed falling ball just below the granular material
+        CreateFallingBall(msystem, -3 * R_b, 0);
+        ball = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
+        msystem->Get_bodylist()->at(0)->AddRef();
+        ball->SetBodyFixed(true);
+        CreateObjects(msystem);
+    } else {
+        time_end = time_dropping;
+        out_fps = out_fps_dropping;
 
-    // Create the granular material and the container from the checkpoint file.
-    cout << "Read checkpoint data from " << checkpoint_file;
-    utils::ReadCheckpoint(msystem, checkpoint_file);
-    cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
+        // Create the granular material and the container from the checkpoint file.
+        cout << "Read checkpoint data from " << checkpoint_file;
+        utils::ReadCheckpoint(msystem, checkpoint_file);
+        cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
 
-    // Move the falling ball just above the granular material with a velocity
-    // given by free fall from the specified height and starting at rest.
-    double z = FindHighest(msystem);
-    double vz = std::sqrt(2 * gravity * h);
-    cout << "Move falling ball with center at " << z + R_b + r_g << " and velocity " << vz << endl;
-    ball = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
-    msystem->Get_bodylist()->at(0)->AddRef();
-    ball->SetMass(mass_b);
-    ball->SetInertiaXX(inertia_b);
-    ball->SetPos(ChVector<>(0, 0, z + r_g + R_b));
-    ball->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    ball->SetPos_dt(ChVector<>(0, 0, -vz));
-    ball->SetBodyFixed(false);
-  }
+        // Move the falling ball just above the granular material with a velocity
+        // given by free fall from the specified height and starting at rest.
+        double z = FindHighest(msystem);
+        double vz = std::sqrt(2 * gravity * h);
+        cout << "Move falling ball with center at " << z + R_b + r_g << " and velocity " << vz << endl;
+        ball = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
+        msystem->Get_bodylist()->at(0)->AddRef();
+        ball->SetMass(mass_b);
+        ball->SetInertiaXX(inertia_b);
+        ball->SetPos(ChVector<>(0, 0, z + r_g + R_b));
+        ball->SetRot(ChQuaternion<>(1, 0, 0, 0));
+        ball->SetPos_dt(ChVector<>(0, 0, -vz));
+        ball->SetBodyFixed(false);
+    }
 
-  // Number of steps
-  int num_steps = std::ceil(time_end / time_step);
-  int out_steps = std::ceil((1.0 / time_step) / out_fps);
+    // Number of steps
+    int num_steps = std::ceil(time_end / time_step);
+    int out_steps = std::ceil((1.0 / time_step) / out_fps);
 
-  // Zero velocity level for settling check
-  // (fraction of a grain radius per second)
-  double zero_v = 0.1 * r_g;
+    // Zero velocity level for settling check
+    // (fraction of a grain radius per second)
+    double zero_v = 0.1 * r_g;
 
-  // Create output directories.
-  if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
-    cout << "Error creating directory " << out_dir << endl;
-    return 1;
-  }
-  if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
-    cout << "Error creating directory " << pov_dir << endl;
-    return 1;
-  }
+    // Create output directories.
+    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+        cout << "Error creating directory " << out_dir << endl;
+        return 1;
+    }
+    if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+        cout << "Error creating directory " << pov_dir << endl;
+        return 1;
+    }
 
-  // Perform the simulation
-  double time = 0;
-  int sim_frame = 0;
-  int out_frame = 0;
-  int next_out_frame = 0;
-  double exec_time = 0;
-  int num_contacts = 0;
-  ChStreamOutAsciiFile sfile(stats_file.c_str());
-  ChStreamOutAsciiFile hfile(height_file.c_str());
+    // Perform the simulation
+    double time = 0;
+    int sim_frame = 0;
+    int out_frame = 0;
+    int next_out_frame = 0;
+    double exec_time = 0;
+    int num_contacts = 0;
+    ChStreamOutAsciiFile sfile(stats_file.c_str());
+    ChStreamOutAsciiFile hfile(height_file.c_str());
 
 #ifdef CHRONO_OPENGL
-  opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-  gl_window.Initialize(1280, 720, "Crater Test", msystem);
-  gl_window.SetCamera(ChVector<>(0, -10 * hDimY, hDimZ), ChVector<>(0, 0, hDimZ), ChVector<>(0, 0, 1));
-  gl_window.SetRenderMode(opengl::WIREFRAME);
+    opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
+    gl_window.Initialize(1280, 720, "Crater Test", msystem);
+    gl_window.SetCamera(ChVector<>(0, -10 * hDimY, hDimZ), ChVector<>(0, 0, hDimZ), ChVector<>(0, 0, 1));
+    gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif
 
-  while (time < time_end) {
-    if (sim_frame == next_out_frame) {
-      cout << endl;
-      cout << "---- Frame:          " << out_frame << endl;
-      cout << "     Sim frame:      " << sim_frame << endl;
-      cout << "     Time:           " << time << endl;
-      cout << "     Lowest point:   " << FindLowest(msystem) << endl;
-      cout << "     Avg. contacts:  " << num_contacts / out_steps << endl;
-      cout << "     Execution time: " << exec_time << endl;
+    while (time < time_end) {
+        if (sim_frame == next_out_frame) {
+            cout << endl;
+            cout << "---- Frame:          " << out_frame << endl;
+            cout << "     Sim frame:      " << sim_frame << endl;
+            cout << "     Time:           " << time << endl;
+            cout << "     Lowest point:   " << FindLowest(msystem) << endl;
+            cout << "     Avg. contacts:  " << num_contacts / out_steps << endl;
+            cout << "     Execution time: " << exec_time << endl;
 
-      sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
+            sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
 
-      // If enabled, output data for PovRay postprocessing.
-      if (povray_output) {
-        char filename[100];
-        sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
-        utils::WriteShapesPovray(msystem, filename, false);
-      }
+            // If enabled, output data for PovRay postprocessing.
+            if (povray_output) {
+                char filename[100];
+                sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
+                utils::WriteShapesPovray(msystem, filename, false);
+            }
 
-      // Create a checkpoint from the current state.
-      if (problem == SETTLING) {
-        cout << "     Write checkpoint data " << flush;
-        utils::WriteCheckpoint(msystem, checkpoint_file);
-        cout << msystem->Get_bodylist()->size() << " bodies" << endl;
-      }
+            // Create a checkpoint from the current state.
+            if (problem == SETTLING) {
+                cout << "     Write checkpoint data " << flush;
+                utils::WriteCheckpoint(msystem, checkpoint_file);
+                cout << msystem->Get_bodylist()->size() << " bodies" << endl;
+            }
 
-      // Save current projectile height.
-      if (problem == DROPPING) {
-        hfile << time << "  " << ball->GetPos().z << "\n";
-        cout << "     Ball height:    " << ball->GetPos().z << endl;
-      }
+            // Save current projectile height.
+            if (problem == DROPPING) {
+                hfile << time << "  " << ball->GetPos().z << "\n";
+                cout << "     Ball height:    " << ball->GetPos().z << endl;
+            }
 
-      out_frame++;
-      next_out_frame += out_steps;
-      num_contacts = 0;
-    }
+            out_frame++;
+            next_out_frame += out_steps;
+            num_contacts = 0;
+        }
 
-    if (problem == SETTLING && time > time_settling_min && CheckSettled(msystem, zero_v)) {
-      cout << "Granular material settled...  time = " << time << endl;
-      break;
-    }
+        if (problem == SETTLING && time > time_settling_min && CheckSettled(msystem, zero_v)) {
+            cout << "Granular material settled...  time = " << time << endl;
+            break;
+        }
 
 // Advance simulation by one step
 #ifdef CHRONO_OPENGL
-    if (gl_window.Active()) {
-      gl_window.DoStepDynamics(time_step);
-      gl_window.Render();
-    } else
-      break;
+        if (gl_window.Active()) {
+            gl_window.DoStepDynamics(time_step);
+            gl_window.Render();
+        } else
+            break;
 #else
-    msystem->DoStepDynamics(time_step);
+        msystem->DoStepDynamics(time_step);
 #endif
 
-    ////progressbar(out_steps + sim_frame - next_out_frame + 1, out_steps);
-    TimingOutput(msystem);
+        ////progressbar(out_steps + sim_frame - next_out_frame + 1, out_steps);
+        TimingOutput(msystem);
 
-    time += time_step;
-    sim_frame++;
-    exec_time += msystem->GetTimerStep();
-    num_contacts += msystem->GetNcontacts();
+        time += time_step;
+        sim_frame++;
+        exec_time += msystem->GetTimerStep();
+        num_contacts += msystem->GetNcontacts();
 
-    // If requested, output detailed timing information for this step
-    if (sim_frame == timing_frame)
-      msystem->PrintStepStats();
-  }
+        // If requested, output detailed timing information for this step
+        if (sim_frame == timing_frame)
+            msystem->PrintStepStats();
+    }
 
-  // Create a checkpoint from the last state
-  if (problem == SETTLING) {
-    cout << "Write checkpoint data to " << checkpoint_file;
-    utils::WriteCheckpoint(msystem, checkpoint_file);
-    cout << "  done.  Wrote " << msystem->Get_bodylist()->size() << " bodies." << endl;
-  }
+    // Create a checkpoint from the last state
+    if (problem == SETTLING) {
+        cout << "Write checkpoint data to " << checkpoint_file;
+        utils::WriteCheckpoint(msystem, checkpoint_file);
+        cout << "  done.  Wrote " << msystem->Get_bodylist()->size() << " bodies." << endl;
+    }
 
-  // Final stats
-  cout << "==================================" << endl;
-  cout << "Number of bodies:  " << msystem->Get_bodylist()->size() << endl;
-  cout << "Lowest position:   " << FindLowest(msystem) << endl;
-  cout << "Simulation time:   " << exec_time << endl;
-  cout << "Number of threads: " << threads << endl;
+    // Final stats
+    cout << "==================================" << endl;
+    cout << "Number of bodies:  " << msystem->Get_bodylist()->size() << endl;
+    cout << "Lowest position:   " << FindLowest(msystem) << endl;
+    cout << "Simulation time:   " << exec_time << endl;
+    cout << "Number of threads: " << threads << endl;
 
-  return 0;
+    return 0;
 }

@@ -1,3 +1,23 @@
+// =============================================================================
+// PROJECT CHRONO - http://projectchrono.org
+//
+// Copyright (c) 2014 projectchrono.org
+// All right reserved.
+//
+// Use of this source code is governed by a BSD-style license that can be found
+// in the LICENSE file at the top level of the distribution and at
+// http://projectchrono.org/license-chrono.txt.
+//
+// =============================================================================
+// Author: Radu Serban
+// =============================================================================
+//
+// ChronoParallel demo program for cohesive DEM-P granular material simulation.
+//
+// The global reference frame has Z up.
+// All units SI.
+// =============================================================================
+
 #include <stdio.h>
 #include <vector>
 #include <cmath>
@@ -12,6 +32,8 @@
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
+// Control use of OpenGL run-time rendering
+// Note: CHRONO_OPENGL is defined in ChConfigParallel.h
 //#undef CHRONO_OPENGL
 
 #ifdef CHRONO_OPENGL
@@ -80,151 +102,151 @@ int maxNumParticles = 100000;
 // =======================================================================
 
 int SpawnParticles() {
-  double dist = 2 * 0.99 * r_g;
+    double dist = 2 * 0.99 * r_g;
 
-  ////gen->createObjectsBox(utils::POISSON_DISK,
-  ////                     dist,
-  ////                     ChVector<>(9, 0, 3),
-  ////                     ChVector<>(0, 1, 0.5),
-  ////                     ChVector<>(-initVel, 0, 0));
-  gen->createObjectsCylinderX(utils::POISSON_DISK, dist, ChVector<>(9, 0, 3), 0.2, 0, ChVector<>(-initVel, 0, 0));
-  cout << "  total bodies: " << gen->getTotalNumBodies() << endl;
+    ////gen->createObjectsBox(utils::POISSON_DISK,
+    ////                     dist,
+    ////                     ChVector<>(9, 0, 3),
+    ////                     ChVector<>(0, 1, 0.5),
+    ////                     ChVector<>(-initVel, 0, 0));
+    gen->createObjectsCylinderX(utils::POISSON_DISK, dist, ChVector<>(9, 0, 3), 0.2, 0, ChVector<>(-initVel, 0, 0));
+    cout << "  total bodies: " << gen->getTotalNumBodies() << endl;
 
-  return gen->getTotalNumBodies();
+    return gen->getTotalNumBodies();
 }
 
 // ========================================================================
 int main(int argc, char* argv[]) {
-  // Create system
-  ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
+    // Create system
+    ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
 
-  // Set number of threads.
-  int max_threads = omp_get_num_procs();
-  if (threads > max_threads)
-    threads = max_threads;
-  msystem->SetParallelThreadNumber(threads);
-  omp_set_num_threads(threads);
+    // Set number of threads.
+    int max_threads = omp_get_num_procs();
+    if (threads > max_threads)
+        threads = max_threads;
+    msystem->SetParallelThreadNumber(threads);
+    omp_set_num_threads(threads);
 
-  msystem->GetSettings()->perform_thread_tuning = thread_tuning;
+    msystem->GetSettings()->perform_thread_tuning = thread_tuning;
 
-  // Set gravitational acceleration
-  msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
+    // Set gravitational acceleration
+    msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
 
-  // Edit system settings
-  msystem->GetSettings()->solver.tolerance = 1e-4;
+    // Edit system settings
+    msystem->GetSettings()->solver.tolerance = 1e-4;
 
-  msystem->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
+    msystem->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
 
-  msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
+    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 
-  // Create a material for the granular material
-  ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
-  mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
-  mat_g->SetYoungModulus(Y_g);
-  mat_g->SetFriction(mu_g);
-  mat_g->SetRestitution(cr_g);
-  mat_g->SetCohesion(cohesion_g);
+    // Create a material for the granular material
+    ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
+    mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    mat_g->SetYoungModulus(Y_g);
+    mat_g->SetFriction(mu_g);
+    mat_g->SetRestitution(cr_g);
+    mat_g->SetCohesion(cohesion_g);
 
-  // Create a material for the container
-  ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
-  mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
-  mat_c->SetYoungModulus(Y_c);
-  mat_c->SetFriction(mu_c);
-  mat_c->SetRestitution(cr_c);
-  mat_c->SetCohesion(cohesion_c);
+    // Create a material for the container
+    ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
+    mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    mat_c->SetYoungModulus(Y_c);
+    mat_c->SetFriction(mu_c);
+    mat_c->SetRestitution(cr_c);
+    mat_c->SetCohesion(cohesion_c);
 
-  // Create the containing bin
-  utils::CreateBoxContainer(msystem, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    // Create the containing bin
+    utils::CreateBoxContainer(msystem, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 
-  // Create a mixture entirely made out of spheres
-  double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
-  double mass_g = rho_g * vol_g;
-  ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
+    // Create a mixture entirely made out of spheres
+    double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
+    double mass_g = rho_g * vol_g;
+    ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
-  gen = new utils::Generator(msystem);
+    gen = new utils::Generator(msystem);
 
-  utils::MixtureIngredientPtr& m1 = gen->AddMixtureIngredient(utils::SPHERE, 1.0);
-  m1->setDefaultMaterialDEM(mat_g);
-  m1->setDefaultDensity(rho_g);
-  m1->setDefaultSize(r_g);
+    utils::MixtureIngredientPtr& m1 = gen->AddMixtureIngredient(utils::SPHERE, 1.0);
+    m1->setDefaultMaterialDEM(mat_g);
+    m1->setDefaultDensity(rho_g);
+    m1->setDefaultSize(r_g);
 
-  gen->setBodyIdentifier(Id_g);
+    gen->setBodyIdentifier(Id_g);
 
-  // Number of steps
-  int num_steps = std::ceil(time_end / time_step);
-  int out_steps = std::ceil((1 / time_step) / out_fps);
-  int gen_steps = std::ceil(3 * r_g / initVel / time_step);
+    // Number of steps
+    int num_steps = std::ceil(time_end / time_step);
+    int out_steps = std::ceil((1 / time_step) / out_fps);
+    int gen_steps = std::ceil(3 * r_g / initVel / time_step);
 
-  // Create output directories.
-  if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
-    cout << "Error creating directory " << out_dir << endl;
-    return 1;
-  }
-  if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
-    cout << "Error creating directory " << pov_dir << endl;
-    return 1;
-  }
+    // Create output directories.
+    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+        cout << "Error creating directory " << out_dir << endl;
+        return 1;
+    }
+    if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+        cout << "Error creating directory " << pov_dir << endl;
+        return 1;
+    }
 
 #ifdef CHRONO_OPENGL
-  // Initialize OpenGL
-  opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-  gl_window.Initialize(1280, 720, "Foam demo", msystem);
-  gl_window.SetCamera(ChVector<>(4, -5, 4), ChVector<>(9, 0, 3), ChVector<>(0, 0, 1));
-  gl_window.SetRenderMode(opengl::WIREFRAME);
+    // Initialize OpenGL
+    opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
+    gl_window.Initialize(1280, 720, "Foam demo", msystem);
+    gl_window.SetCamera(ChVector<>(4, -5, 4), ChVector<>(9, 0, 3), ChVector<>(0, 0, 1));
+    gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif
 
-  // Perform the simulation
-  double time = 0;
-  int sim_frame = 0;
-  int out_frame = 0;
-  double exec_time = 0;
-  ChStreamOutAsciiFile ofile(out_file.c_str());
+    // Perform the simulation
+    double time = 0;
+    int sim_frame = 0;
+    int out_frame = 0;
+    double exec_time = 0;
+    ChStreamOutAsciiFile ofile(out_file.c_str());
 
-  while (time < time_end) {
-    int numParticles = msystem->Get_bodylist()->size() - 1;
+    while (time < time_end) {
+        int numParticles = msystem->Get_bodylist()->size() - 1;
 
-    if (numParticles < maxNumParticles && sim_frame % gen_steps == 0) {
-      SpawnParticles();
-    }
+        if (numParticles < maxNumParticles && sim_frame % gen_steps == 0) {
+            SpawnParticles();
+        }
 
-    if (sim_frame % out_steps == 0) {
-      char filename[100];
-      sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
-      utils::WriteShapesPovray(msystem, filename);
+        if (sim_frame % out_steps == 0) {
+            char filename[100];
+            sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
+            utils::WriteShapesPovray(msystem, filename);
 
-      cout << " --------------------------------- Output frame:   " << out_frame + 1 << endl;
-      cout << "                                   Sim frame:      " << sim_frame << endl;
-      cout << "                                   Time:           " << time << endl;
-      cout << "                                   Execution time: " << exec_time << endl;
-      cout << "                                   Num. bodies:    " << numParticles << endl;
+            cout << " --------------------------------- Output frame:   " << out_frame + 1 << endl;
+            cout << "                                   Sim frame:      " << sim_frame << endl;
+            cout << "                                   Time:           " << time << endl;
+            cout << "                                   Execution time: " << exec_time << endl;
+            cout << "                                   Num. bodies:    " << numParticles << endl;
 
-      ofile << sim_frame << "  " << time << "  " << exec_time << "  " << numParticles << "  " << msystem->GetNcontacts()
-            << "\n";
+            ofile << sim_frame << "  " << time << "  " << exec_time << "  " << numParticles << "  "
+                  << msystem->GetNcontacts() << "\n";
 
-      out_frame++;
-    }
+            out_frame++;
+        }
 
-    // Advance dynamics.
+// Advance dynamics.
 #ifdef CHRONO_OPENGL
-    if (gl_window.Active()) {
-      gl_window.DoStepDynamics(time_step);
-      gl_window.Render();
-    } else
-      break;
+        if (gl_window.Active()) {
+            gl_window.DoStepDynamics(time_step);
+            gl_window.Render();
+        } else
+            break;
 #else
-    msystem->DoStepDynamics(time_step);
+        msystem->DoStepDynamics(time_step);
 #endif
 
-    time += time_step;
-    sim_frame++;
-    exec_time += msystem->GetTimerStep();
-  }
+        time += time_step;
+        sim_frame++;
+        exec_time += msystem->GetTimerStep();
+    }
 
-  // Final stats
-  cout << "==================================" << endl;
-  cout << "Number of bodies: " << msystem->Get_bodylist()->size() << endl;
-  cout << "Simulation time: " << exec_time << endl;
-  cout << "Number of threads: " << threads << endl;
+    // Final stats
+    cout << "==================================" << endl;
+    cout << "Number of bodies: " << msystem->Get_bodylist()->size() << endl;
+    cout << "Simulation time: " << exec_time << endl;
+    cout << "Number of threads: " << threads << endl;
 
-  return 0;
+    return 0;
 }
