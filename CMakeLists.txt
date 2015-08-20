@@ -97,9 +97,6 @@ endif()
 #  add_subdirectory(parallel_tests)
 #endif()
 
-# Remove duplicates in the list of DLLs
-list(REMOVE_DUPLICATES ALL_DLLS)
-
 #--------------------------------------------------------------
 # Copy DLLs
 #--------------------------------------------------------------
@@ -108,6 +105,9 @@ list(REMOVE_DUPLICATES ALL_DLLS)
 # the binaries.
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+
+  # Remove duplicates in the list of DLLs
+  list(REMOVE_DUPLICATES ALL_DLLS)
 
   message(STATUS "==== Add custom commands for copying DLLs ====")
   message(STATUS "DLL list...")
