@@ -41,13 +41,9 @@ endif()
 # Force C++11
 #-----------------------------------------------------------------------------
 
-if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-endif()
-
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	set(CH_LINKERFLAG_EXE  "${CH_LINKERFLAG_EXE} -framework IOKit -framework Cocoa -framework OpenGL")
-endif()
+#if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+#    set(CH_LINKERFLAG_EXE  "${CH_LINKERFLAG_EXE} -framework IOKit -framework Cocoa -framework OpenGL")
+#endif()
 
 #-----------------------------------------------------------------------------
 # Disable some warnings

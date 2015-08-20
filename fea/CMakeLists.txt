@@ -79,7 +79,7 @@ set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 # Compilation flags
 #--------------------------------------------------------------
 
-set(COMPILE_FLAGS ${CHRONO_CFLAGS})
+set(COMPILE_FLAGS ${CHRONO_CXX_FLAGS})
 
 # Disable some warnings triggered by Irrlicht (Windows only)
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
@@ -103,7 +103,7 @@ foreach(PROGRAM ${DEMOS})
     FOLDER demos
     COMPILE_FLAGS "${COMPILE_FLAGS}"
     COMPILE_DEFINITIONS "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\""
-    LINK_FLAGS "${CHRONO_LDFLAGS}"
+    LINK_FLAGS "${CHRONO_CXX_FLAGS} ${CHRONO_LINKER_FLAGS}"
   )
 
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
