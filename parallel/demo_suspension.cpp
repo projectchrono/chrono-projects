@@ -25,15 +25,16 @@
 #include <vector>
 #include <cmath>
 
-#include "utils/ChUtilsCreators.h"
-#include "utils/ChUtilsInputOutput.h"
-#include "utils/ChUtilsGenerators.h"
+#include "chrono/ChConfig.h"
+#include "chrono/utils/ChUtilsCreators.h"
+#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/utils/ChUtilsGenerators.h"
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
 // Control use of OpenGL run-time rendering
-// Note: CHRONO_OPENGL is defined in ChConfigParallel.h
+// Note: CHRONO_OPENGL is defined in ChConfig.h
 //#undef CHRONO_OPENGL
 
 #ifdef CHRONO_OPENGL

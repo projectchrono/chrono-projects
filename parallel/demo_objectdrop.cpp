@@ -22,18 +22,18 @@
 #include <vector>
 #include <cmath>
 
-#include "core/ChFileutils.h"
-#include "core/ChStream.h"
-
-#include "utils/ChUtilsGeometry.h"
-#include "utils/ChUtilsCreators.h"
-#include "utils/ChUtilsInputOutput.h"
+#include "chrono/ChConfig.h"
+#include "chrono/core/ChFileutils.h"
+#include "chrono/core/ChStream.h"
+#include "chrono/utils/ChUtilsGeometry.h"
+#include "chrono/utils/ChUtilsCreators.h"
+#include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 #include "chrono_parallel/collision/ChCNarrowphaseRUtils.h"
 
-// Note: CHRONO_OPENGL is defined in ChConfigParallel.h
+// Note: CHRONO_OPENGL is defined in ChConfig.h
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif

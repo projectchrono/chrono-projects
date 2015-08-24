@@ -28,12 +28,13 @@
 #include <vector>
 #include <cmath>
 
-#include "utils/ChUtilsCreators.h"
-#include "utils/ChUtilsInputOutput.h"
+#include "chrono/ChConfig.h"
+#include "chrono/utils/ChUtilsCreators.h"
+#include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
 
-// Note: CHRONO_OPENGL is defined in ChConfigParallel.h
+// Note: CHRONO_OPENGL is defined in ChConfig.h
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif

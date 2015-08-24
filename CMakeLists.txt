@@ -119,10 +119,10 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     # Create custom commands, invoked post-build to copy DLLs to the appropriate
     # directory (depending on the configuration selected at build time in VS)
     add_custom_command(
-        TARGET COPY_DLLS POST_BUILD
+        TARGET COPY_DLLS PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${DLL}"
-            "${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>"
+            "${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>/"
     )
 
   endforeach()

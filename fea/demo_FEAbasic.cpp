@@ -15,15 +15,16 @@
 // ChronoFEA demo program for basic FEA functionality
 // =============================================================================
 
-#include "physics/ChSystem.h"
-#include "lcp/ChLcpIterativeMINRES.h"
-#include "unit_FEA/ChElementSpring.h"
-#include "unit_FEA/ChElementTetra_4.h"
-#include "unit_FEA/ChElementTetra_10.h"
-#include "unit_FEA/ChElementHexa_8.h"
-#include "unit_FEA/ChElementHexa_20.h"
-#include "unit_FEA/ChMesh.h"
-#include "unit_FEA/ChLinkPointFrame.h"
+#include "chrono/physics/ChSystem.h"
+#include "chrono/lcp/ChLcpIterativeMINRES.h"
+
+#include "chrono_fea/ChElementSpring.h"
+#include "chrono_fea/ChElementTetra_4.h"
+#include "chrono_fea/ChElementTetra_10.h"
+#include "chrono_fea/ChElementHexa_8.h"
+#include "chrono_fea/ChElementHexa_20.h"
+#include "chrono_fea/ChMesh.h"
+#include "chrono_fea/ChLinkPointFrame.h"
 
 using namespace chrono;
 using namespace fea;
