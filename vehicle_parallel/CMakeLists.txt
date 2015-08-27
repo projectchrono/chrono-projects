@@ -1,10 +1,8 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono unit_VEHICLE
-# and unit_PARALLEL
+# CMake configuration file for projects requiring the Chrono VEHICLE and
+# PARALLEL modules (and optionally the OPENGL module)
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
-# Depends on Chrono with unit_VEHICLE and unit_PARALLEL enabled and optional
-# OpenGL support.
 #=============================================================================
 
 #--------------------------------------------------------------
@@ -83,8 +81,6 @@ FOREACH(PROGRAM ${DEMOS})
     )
 
     TARGET_LINK_LIBRARIES(${PROGRAM} ${CHRONO_LIBRARIES})
-
-    #INSTALL(TARGETS ${PROGRAM} DESTINATION bin)
 
 ENDFOREACH(PROGRAM)
 

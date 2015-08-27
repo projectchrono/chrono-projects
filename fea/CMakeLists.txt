@@ -1,9 +1,8 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono unit_FEA
-# and optionally the unit_IRRLICHT
+# CMake configuration file for projects requiring the Chrono FEA module
+# and optionally the IRRLICHT module
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
-# Depends on Chrono with unit_IRRLICHT enabled (and optionally unit_IRRLICHT).
 #=============================================================================
 
 #--------------------------------------------------------------
@@ -107,8 +106,6 @@ foreach(PROGRAM ${DEMOS})
   )
 
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
-  
-  #install(TARGETS ${PROGRAM} DESTINATION bin)
 
 endforeach(PROGRAM)
 

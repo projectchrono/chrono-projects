@@ -1,8 +1,7 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono unit_IRRLICHT
+# CMake configuration file for projects requiring the Chrono Irrlicht module
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
-# Depends on Chrono with unit_IRRLICHT enabled.
 #=============================================================================
 
 #--------------------------------------------------------------
@@ -91,8 +90,6 @@ foreach(PROGRAM ${DEMOS})
   )
 
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
-  
-  #install(TARGETS ${PROGRAM} DESTINATION bin)
 
 endforeach(PROGRAM)
 

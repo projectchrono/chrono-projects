@@ -1,8 +1,7 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono unit_PARALLEL
+# CMake configuration file for projects requiring the Chrono PARALLEL module
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
-# Depends on Chrono with unit_PARALLEL enabled and optionally OpenGL support.
 #=============================================================================
 
 #--------------------------------------------------------------
@@ -92,8 +91,6 @@ foreach(PROGRAM ${DEMOS})
   )
 
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
-  
-  #install(TARGETS ${PROGRAM} DESTINATION bin)
 
 endforeach(PROGRAM)
 
