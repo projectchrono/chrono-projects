@@ -102,34 +102,9 @@ endif()
 # Copy DLLs
 #--------------------------------------------------------------
 
-# On Windows, traverse the list of DLLs and copy them next to
-# the binaries.
+# Add custom command for copying DLLs to the appropriate binary
+# output folder (on Windows only).
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+add_DLL_copy_command("${ALL_DLLS}")
 
-  # Remove duplicates in the list of DLLs
-  list(REMOVE_DUPLICATES ALL_DLLS)
 
-  message(STATUS "==== Add custom commands for copying DLLs ====")
-  message(STATUS "DLL list...")
-
-  # Create custom target for copying DLLs; add it to the default build target
-  add_custom_target(COPY_DLLS ALL)
-
-  # Loop over the list of all DLLs and create a custom command
-  foreach(DLL ${ALL_DLLS})
-
-    message(STATUS "...${DLL}")
-
-    # Create custom commands, invoked post-build to copy DLLs to the appropriate
-    # directory (depending on the configuration selected at build time in VS)
-    add_custom_command(
-        TARGET COPY_DLLS PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${DLL}"
-            "${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>/"
-    )
-
-  endforeach()
-
-endif()
