@@ -10,6 +10,7 @@
 
 set(DEMOS
     demo_collision
+    demo_inv_pendulum
     #slider_crank
 )
 
