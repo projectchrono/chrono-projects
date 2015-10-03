@@ -145,8 +145,8 @@ double tolerance = 0.1;
 int max_iteration_bilateral = 1000;
 
 // Contact force model
-CONTACTFORCEMODEL contact_force_model = HOOKE;
-TANGENTIALDISPLACEMENTMODE tangential_displ_mode = ONE_STEP;
+ChSystemDEM::ContactForceModel contact_force_model = ChSystemDEM::ContactForceModel::Hooke;
+ChSystemDEM::TangentialDisplacementModel tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::OneStep;
 
 // Periodically monitor maximum bilateral constraint violation
 bool monitor_bilaterals = false;
@@ -342,7 +342,7 @@ int main(int argc, char* argv[]) {
     system->GetSettings()->solver.tolerance = tolerance;
     system->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
 
-    system->GetSettings()->solver.adhesion_force_model = CONSTANT;
+    system->GetSettings()->solver.adhesion_force_model = ChSystemDEM::AdhesionForceModel::Constant;
     system->GetSettings()->solver.contact_force_model = contact_force_model;
     system->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 

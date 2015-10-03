@@ -122,8 +122,8 @@ double tolerance = 1;
 
 // Contact force model
 #ifdef USE_DEM
-CONTACTFORCEMODEL contact_force_model = HERTZ;
-TANGENTIALDISPLACEMENTMODE tangential_displ_mode = MULTI_STEP;
+ChSystemDEM::ContactForceModel contact_force_model = ChSystemDEM::ContactForceModel::Hertz;
+ChSystemDEM::TangentialDisplacementModel tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::MultiStep;
 #endif
 
 // Output

@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
     msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
 
     // Using constant adhesion model
-    msystem->GetSettings()->solver.adhesion_force_model = CONSTANT;
+    msystem->GetSettings()->solver.adhesion_force_model = ChSystemDEM::AdhesionForceModel::Constant;
 
     // Edit system settings
     msystem->GetSettings()->solver.tolerance = 1e-4;

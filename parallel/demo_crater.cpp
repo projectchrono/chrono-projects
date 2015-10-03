@@ -96,8 +96,8 @@ double tolerance = 1.0;
 
 // Contact force model
 #ifdef USE_DEM
-CONTACTFORCEMODEL contact_force_model = HOOKE;
-TANGENTIALDISPLACEMENTMODE tangential_displ_mode = MULTI_STEP;
+ChSystemDEM::ContactForceModel contact_force_model = ChSystemDEM::ContactForceModel::Hooke;
+ChSystemDEM::TangentialDisplacementModel tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::MultiStep;
 #endif
 
 // Output

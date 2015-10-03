@@ -241,8 +241,8 @@ int main(int argc, char* argv[]) {
     my_system->GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
 
 #ifdef USE_DEM
-    my_system->GetSettings()->solver.contact_force_model = HERTZ;
-    my_system->GetSettings()->solver.tangential_displ_mode = MULTI_STEP;
+    my_system->GetSettings()->solver.contact_force_model = ChSystemDEM::ContactForceModel::Hertz;
+    my_system->GetSettings()->solver.tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::MultiStep;
 #else
     my_system->GetSettings()->solver.solver_mode = SLIDING;
     my_system->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
