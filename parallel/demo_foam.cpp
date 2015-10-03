@@ -132,6 +132,9 @@ int main(int argc, char* argv[]) {
     // Set gravitational acceleration
     msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
 
+    // Using constant adhesion model
+    msystem->GetSettings()->solver.adhesion_force_model = CONSTANT;
+
     // Edit system settings
     msystem->GetSettings()->solver.tolerance = 1e-4;
 
@@ -145,7 +148,7 @@ int main(int argc, char* argv[]) {
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
-    mat_g->SetCohesion(cohesion_g);
+    mat_g->SetAdhesion(cohesion_g);
 
     // Create a material for the container
     ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
@@ -153,7 +156,7 @@ int main(int argc, char* argv[]) {
     mat_c->SetYoungModulus(Y_c);
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
-    mat_c->SetCohesion(cohesion_c);
+    mat_c->SetAdhesion(cohesion_c);
 
     // Create the containing bin
     utils::CreateBoxContainer(msystem, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);

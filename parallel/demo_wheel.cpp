@@ -115,7 +115,7 @@ int CreateObjects(ChSystemParallel* system) {
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
-    mat_g->SetCohesion(cohesion_g);
+    mat_g->SetAdhesion(cohesion_g);
 
     // Create a material for the container
     ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
@@ -123,7 +123,7 @@ int CreateObjects(ChSystemParallel* system) {
     mat_c->SetYoungModulus(Y_c);
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
-    mat_c->SetCohesion(cohesion_c);
+    mat_c->SetAdhesion(cohesion_c);
 
     // Create a mixture entirely made out of spheres
     utils::Generator gen(system);
@@ -156,7 +156,7 @@ ChSharedPtr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
     mat_w->SetYoungModulus(Y_w);
     mat_w->SetFriction(mu_w);
     mat_w->SetRestitution(cr_w);
-    mat_w->SetCohesion(cohesion_w);
+    mat_w->SetAdhesion(cohesion_w);
 
     // Create the wheel body
     ChSharedPtr<ChBody> wheel(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
@@ -242,6 +242,9 @@ int main(int argc, char* argv[]) {
 
     // Set gravitational acceleration
     msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
+
+    // Using constant adhesion model
+    msystem->GetSettings()->solver.adhesion_force_model = CONSTANT;
 
     // Edit system settings
     msystem->GetSettings()->solver.tolerance = 1e-3;

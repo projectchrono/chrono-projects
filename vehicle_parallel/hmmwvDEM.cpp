@@ -257,7 +257,7 @@ double CreateParticles(ChSystem* system) {
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
-    mat_g->SetCohesion(cohesion_g);
+    mat_g->SetAdhesion(cohesion_g);
 
     // Create a particle generator and a mixture entirely made out of spheres
     utils::Generator gen(system);
@@ -342,6 +342,7 @@ int main(int argc, char* argv[]) {
     system->GetSettings()->solver.tolerance = tolerance;
     system->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
 
+    system->GetSettings()->solver.adhesion_force_model = CONSTANT;
     system->GetSettings()->solver.contact_force_model = contact_force_model;
     system->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 
@@ -363,7 +364,7 @@ int main(int argc, char* argv[]) {
     ground->GetMaterialSurfaceDEM()->SetFriction(mu_g);
     ground->GetMaterialSurfaceDEM()->SetYoungModulus(Y_g);
     ground->GetMaterialSurfaceDEM()->SetRestitution(cr_g);
-    ground->GetMaterialSurfaceDEM()->SetCohesion(cohesion_g);
+    ground->GetMaterialSurfaceDEM()->SetAdhesion(cohesion_g);
 
     ground->GetCollisionModel()->ClearModel();
 
