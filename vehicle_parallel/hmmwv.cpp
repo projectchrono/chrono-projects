@@ -37,7 +37,7 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono_vehicle/ChVehicleModelData.h"
-#include "chrono_vehicle/utils/ChWheeledVehicleAssembly.h"
+#include "chrono_vehicle/wheeled_vehicle/utils/ChWheeledVehicleAssembly.h"
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
