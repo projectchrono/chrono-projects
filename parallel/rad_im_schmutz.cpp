@@ -388,8 +388,8 @@ void CreateParticles(ChSystemParallel* system) {
 void FindRange(ChSystem* sys, double& lowest, double& highest) {
     highest = -1000;
     lowest = 1000;
-    for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
+        auto body = (*sys->Get_bodylist())[i];
         if (body->GetIdentifier() < 100)
             continue;
         double h = body->GetPos().z;

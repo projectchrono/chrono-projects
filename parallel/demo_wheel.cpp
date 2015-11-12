@@ -191,8 +191,8 @@ ChSharedPtr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
 
 bool CheckSettled(ChSystem* sys, double threshold) {
     double t2 = threshold * threshold;
-    for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
+        auto body = (*sys->Get_bodylist())[i];
         if (body->GetIdentifier() >= Id_g) {
             double vel2 = body->GetPos_dt().Length2();
             if (vel2 > t2)
@@ -210,8 +210,8 @@ bool CheckSettled(ChSystem* sys, double threshold) {
 
 double FindHighest(ChSystem* sys) {
     double highest = 0;
-    for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
+        auto body = (*sys->Get_bodylist())[i];
         if (body->GetIdentifier() >= Id_g && body->GetPos().z > highest)
             highest = body->GetPos().z;
     }
@@ -220,8 +220,8 @@ double FindHighest(ChSystem* sys) {
 
 double FindLowest(ChSystem* sys) {
     double lowest = DBL_MAX;
-    for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
+        auto body = (*sys->Get_bodylist())[i];
         if (body->GetIdentifier() >= Id_g && body->GetPos().z < lowest)
             lowest = body->GetPos().z;
     }

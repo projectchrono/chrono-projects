@@ -401,8 +401,8 @@ void CreateBall(ChSystemParallel* system) {
 void FindHeightRange(ChSystemParallel* sys, double& lowest, double& highest) {
     highest = -1000;
     lowest = 1000;
-    for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
+        auto body = (*sys->Get_bodylist())[i];
 
         if (body->GetIdentifier() <= 0)
             continue;
@@ -432,8 +432,8 @@ void setBulkDensity(ChSystem* sys, double bulkDensity) {
     double boxVolume = hdimX * 2 * hdimX * 2 * (normalPlateHeight - bottomHeight);
     double granularVolume = (numBodies - 3) * vol_g;
     double reqDensity = bulkDensity * boxVolume / granularVolume;
-    for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
+        auto body = (*sys->Get_bodylist())[i];
         if (body->GetIdentifier() > 1) {
             body->SetMass(reqDensity * vol_g);
         }

@@ -298,10 +298,10 @@ void CreateParticles(ChSystemParallel* system) {
 // Find and return the body with specified identifier.
 // -----------------------------------------------------------------------------
 ChBody* FindBodyById(ChSystemParallel* sys, int id) {
-    for (int i = 0; i < sys->GetNumBodies(); ++i) {
-        ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
+        auto body = (*sys->Get_bodylist())[i];
         if (body->GetIdentifier() == id)
-            return body;
+            return body.get_ptr();
     }
 
     return NULL;
@@ -313,8 +313,8 @@ ChBody* FindBodyById(ChSystemParallel* sys, int id) {
 // -----------------------------------------------------------------------------
 int GetNumParticlesBelowHeight(ChSystemParallel* sys, double value) {
     int count = 0;
-    for (int i = 0; i < sys->GetNumBodies(); ++i) {
-        ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
+        auto body = (*sys->Get_bodylist())[i];
         if (body->GetIdentifier() > 0 && body->GetPos().z < value)
             count++;
     }
@@ -323,8 +323,8 @@ int GetNumParticlesBelowHeight(ChSystemParallel* sys, double value) {
 
 int GetNumParticlesAboveHeight(ChSystemParallel* sys, double value) {
     int count = 0;
-    for (int i = 0; i < sys->GetNumBodies(); ++i) {
-        ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
+        auto body = (*sys->Get_bodylist())[i];
         if (body->GetIdentifier() > 0 && body->GetPos().z > value)
             count++;
     }
@@ -338,8 +338,8 @@ int GetNumParticlesAboveHeight(ChSystemParallel* sys, double value) {
 bool CheckSettled(ChSystemParallel* sys, double threshold) {
     double t2 = threshold * threshold;
 
-    for (int i = 0; i < sys->GetNumBodies(); ++i) {
-        ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
+        auto body = (*sys->Get_bodylist())[i];
         if (body->GetIdentifier() > 0) {
             double vel2 = body->GetPos_dt().Length2();
             if (vel2 > t2)

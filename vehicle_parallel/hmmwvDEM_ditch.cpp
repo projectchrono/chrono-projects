@@ -401,8 +401,8 @@ int CreateParticles(ChSystem* system) {
 
 double FindHighestParticle(ChSystem* system) {
     double highest = 0;
-    for (int i = 0; i < system->Get_bodylist()->size(); ++i) {
-        ChBody* body = (ChBody*)system->Get_bodylist()->at(i);
+    for (size_t i = 0; i < system->Get_bodylist()->size(); ++i) {
+        auto body = (*system->Get_bodylist())[i];
         if (body->GetIdentifier() > 0 && body->GetPos().z > highest)
             highest = body->GetPos().z;
     }

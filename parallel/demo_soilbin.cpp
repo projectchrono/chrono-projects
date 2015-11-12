@@ -307,8 +307,8 @@ void CreateObject(ChSystemParallel* system, double z) {
 // =============================================================================
 double FindHighest(ChSystem* sys) {
     double highest = 0;
-    for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
+        auto body = (*sys->Get_bodylist())[i];
         if (body->GetIdentifier() > 0 && body->GetPos().z > highest)
             highest = body->GetPos().z;
     }
@@ -317,8 +317,8 @@ double FindHighest(ChSystem* sys) {
 
 double FindLowest(ChSystem* sys) {
     double lowest = 1000;
-    for (int i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        ChBody* body = (ChBody*)sys->Get_bodylist()->at(i);
+    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
+        auto body = (*sys->Get_bodylist())[i];
         if (body->GetIdentifier() > 0 && body->GetPos().z < lowest)
             lowest = body->GetPos().z;
     }
