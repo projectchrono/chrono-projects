@@ -66,7 +66,7 @@ using std::endl;
 
 enum ProblemType { SETTLING, PRESSING, ROLLING, TESTING };
 
-ProblemType problem = ROLLING;
+ProblemType problem = SETTLING;
 
 // -----------------------------------------------------------------------------
 // Conversion factors
