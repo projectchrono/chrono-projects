@@ -143,16 +143,14 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 
     // Create a material for the granular material
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
-    mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
     mat_g->SetAdhesion(cohesion_g);
 
     // Create a material for the container
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
-    mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_c = std::make_shared<ChMaterialSurfaceDEM>();
     mat_c->SetYoungModulus(Y_c);
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
@@ -168,7 +166,7 @@ int main(int argc, char* argv[]) {
 
     gen = new utils::Generator(msystem);
 
-    utils::MixtureIngredientPtr& m1 = gen->AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient>& m1 = gen->AddMixtureIngredient(utils::SPHERE, 1.0);
     m1->setDefaultMaterialDEM(mat_g);
     m1->setDefaultDensity(rho_g);
     m1->setDefaultSize(r_g);

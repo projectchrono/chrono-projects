@@ -38,7 +38,7 @@
 
 // Control use of OpenGL run-time rendering
 // Note: CHRONO_OPENGL is defined in ChConfig.h
-#undef CHRONO_OPENGL
+////#undef CHRONO_OPENGL
 
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
@@ -154,22 +154,21 @@ double height_collector = 1.0e-2;  // height of collector walls
 ChBody* CreateMechanism(ChSystemParallel* system) {
 // Create the common material
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_b;
-    mat_b = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_b = std::make_shared<ChMaterialSurfaceDEM>();
     mat_b->SetYoungModulus(Y_c);
     mat_b->SetFriction(mu_c);
     mat_b->SetRestitution(cr_c);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_b(new ChMaterialSurface);
+    auto mat_b = std::make_shared<ChMaterialSurface>();
     mat_b->SetFriction(mu_c);
 #endif
 
 // Angled insert
 #ifdef USE_DEM
-    ChSharedPtr<ChBody> insert(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
+    auto insert = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     insert->SetMaterialSurface(mat_b);
 #else
-    ChSharedBodyPtr insert(new ChBody(new ChCollisionModelParallel));
+    auto insert = std::make_shared<ChBody>(new ChCollisionModelParallel);
     insert->SetMaterialSurface(mat_b);
 #endif
 
@@ -182,17 +181,17 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
     insert->SetBodyFixed(true);
 
     insert->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(insert.get_ptr(), ChVector<>(thickness * 0.5, width * 0.5, height_insert * 0.5));
+    utils::AddBoxGeometry(insert.get(), ChVector<>(thickness * 0.5, width * 0.5, height_insert * 0.5));
     insert->GetCollisionModel()->BuildModel();
 
     system->AddBody(insert);
 
 // Static slot (back wall)
 #ifdef USE_DEM
-    ChSharedPtr<ChBody> slot(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
+    auto slot = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     slot->SetMaterialSurface(mat_b);
 #else
-    ChSharedBodyPtr slot(new ChBody(new ChCollisionModelParallel));
+    auto slot = std::make_shared<ChBody>(new ChCollisionModelParallel);
     slot->SetMaterialSurface(mat_b);
 #endif
 
@@ -205,17 +204,17 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
     slot->SetBodyFixed(true);
 
     slot->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(slot.get_ptr(), ChVector<>(thickness / 2, width / 2, height / 2), ChVector<>(0, 0, 0));
+    utils::AddBoxGeometry(slot.get(), ChVector<>(thickness / 2, width / 2, height / 2), ChVector<>(0, 0, 0));
     slot->GetCollisionModel()->BuildModel();
 
     system->AddBody(slot);
 
 // Lateral walls
 #ifdef USE_DEM
-    ChSharedPtr<ChBody> wall(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
+    auto wall = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     wall->SetMaterialSurface(mat_b);
 #else
-    ChSharedBodyPtr wall(new ChBody(new ChCollisionModelParallel));
+    auto wall = std::make_shared<ChBody>(new ChCollisionModelParallel);
     wall->SetMaterialSurface(mat_b);
 #endif
 
@@ -228,9 +227,9 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
     wall->SetBodyFixed(true);
 
     wall->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(wall.get_ptr(), ChVector<>(3 * height / 2, thickness / 2, height),
+    utils::AddBoxGeometry(wall.get(), ChVector<>(3 * height / 2, thickness / 2, height),
                           ChVector<>(0, width / 2 + thickness / 2, height / 2));
-    utils::AddBoxGeometry(wall.get_ptr(), ChVector<>(3 * height / 2, thickness / 2, height),
+    utils::AddBoxGeometry(wall.get(), ChVector<>(3 * height / 2, thickness / 2, height),
                           ChVector<>(0, -width / 2 - thickness / 2, height / 2));
     wall->GetCollisionModel()->BuildModel();
 
@@ -248,7 +247,7 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 #endif
 
     // Return the angled insert body
-    return insert.get_ptr();
+    return insert.get();
 }
 
 // -----------------------------------------------------------------------------
@@ -257,20 +256,19 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 void CreateParticles(ChSystemParallel* system) {
 // Create a material for the granular material
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
-    mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
+    auto mat_g = std::make_shared<ChMaterialSurface>();
     mat_g->SetFriction(mu_g);
 #endif
 
     // Create a mixture entirely made out of spheres
     utils::Generator gen(system);
 
-    utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
 #ifdef USE_DEM
     m1->setDefaultMaterialDEM(mat_g);
 #else
@@ -301,7 +299,7 @@ ChBody* FindBodyById(ChSystemParallel* sys, int id) {
     for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
         auto body = (*sys->Get_bodylist())[i];
         if (body->GetIdentifier() == id)
-            return body.get_ptr();
+            return body.get();
     }
 
     return NULL;

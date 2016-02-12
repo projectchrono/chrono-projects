@@ -175,15 +175,14 @@ double h = 10e-2;
 int CreateObjects(ChSystemParallel* system) {
 // Create the containing bin
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
-    mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_c = std::make_shared<ChMaterialSurfaceDEM>();
     mat_c->SetYoungModulus(Y_c);
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
 
     utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_c(new ChMaterialSurface);
+    auto mat_c = std::make_shared<ChMaterialSurface>();
     mat_c->SetFriction(mu_c);
 
     utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
@@ -191,20 +190,19 @@ int CreateObjects(ChSystemParallel* system) {
 
 // Create a material for the granular material
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
-    mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
+    auto mat_g = std::make_shared<ChMaterialSurface>();
     mat_g->SetFriction(mu_g);
 #endif
 
     // Create a mixture entirely made out of spheres
     utils::Generator gen(system);
 
-    utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
 #ifdef USE_DEM
     m1->setDefaultMaterialDEM(mat_g);
 #else
@@ -234,22 +232,21 @@ int CreateObjects(ChSystemParallel* system) {
 void CreateFallingBall(ChSystemParallel* system, double z, double vz) {
 // Create a material for the falling ball
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_b;
-    mat_b = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_b = std::make_shared<ChMaterialSurfaceDEM>();
     mat_b->SetYoungModulus(1e8f);
     mat_b->SetFriction(0.4f);
     mat_b->SetRestitution(0.1f);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_b(new ChMaterialSurface);
+    auto mat_b = std::make_shared<ChMaterialSurface>();
     mat_b->SetFriction(mu_c);
 #endif
 
 // Create the falling ball
 #ifdef USE_DEM
-    ChSharedPtr<ChBody> ball(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
+    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     ball->SetMaterialSurface(mat_b);
 #else
-    ChSharedBodyPtr ball(new ChBody(new ChCollisionModelParallel));
+    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel);
     ball->SetMaterialSurface(mat_b);
 #endif
 
@@ -263,7 +260,7 @@ void CreateFallingBall(ChSystemParallel* system, double z, double vz) {
     ball->SetBodyFixed(false);
 
     ball->GetCollisionModel()->ClearModel();
-    utils::AddSphereGeometry(ball.get_ptr(), R_b);
+    utils::AddSphereGeometry(ball.get(), R_b);
     ball->GetCollisionModel()->BuildModel();
 
     system->AddBody(ball);
@@ -371,7 +368,7 @@ int main(int argc, char* argv[]) {
     // - Create falling ball
     double time_end;
     int out_fps;
-    ChSharedPtr<ChBody> ball;
+    std::shared_ptr<ChBody> ball;
 
     if (problem == SETTLING) {
         time_end = time_settling_max;
@@ -380,8 +377,7 @@ int main(int argc, char* argv[]) {
         cout << "Create granular material" << endl;
         // Create the fixed falling ball just below the granular material
         CreateFallingBall(msystem, -3 * R_b, 0);
-        ball = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
-        msystem->Get_bodylist()->at(0)->AddRef();
+        ball = msystem->Get_bodylist()->at(0);
         ball->SetBodyFixed(true);
         CreateObjects(msystem);
     } else {
@@ -398,8 +394,7 @@ int main(int argc, char* argv[]) {
         double z = FindHighest(msystem);
         double vz = std::sqrt(2 * gravity * h);
         cout << "Move falling ball with center at " << z + R_b + r_g << " and velocity " << vz << endl;
-        ball = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
-        msystem->Get_bodylist()->at(0)->AddRef();
+        ball = msystem->Get_bodylist()->at(0);
         ball->SetMass(mass_b);
         ball->SetInertiaXX(inertia_b);
         ball->SetPos(ChVector<>(0, 0, z + r_g + R_b));

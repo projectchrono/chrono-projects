@@ -36,6 +36,7 @@
 #include "chrono_irrlicht/ChIrrApp.h"
 
 using namespace chrono;
+using namespace chrono::irrlicht;
 using namespace irr;
 
 // =============================================================================
@@ -44,7 +45,7 @@ using namespace irr;
 
 class MyController {
   public:
-    MyController(ChSharedPtr<ChBody> cart, ChSharedPtr<ChBody> pend);
+    MyController(std::shared_ptr<ChBody> cart, std::shared_ptr<ChBody> pend);
 
     // Set PID controller gains
     void SetGainsCart(double Kp, double Ki, double Kd);
@@ -67,8 +68,8 @@ class MyController {
     double GetCurrentPendAngle();
 
   private:
-    ChSharedPtr<ChBody> m_cart;
-    ChSharedPtr<ChBody> m_pend;
+    std::shared_ptr<ChBody> m_cart;
+    std::shared_ptr<ChBody> m_pend;
 
     double m_Kp_cart;  // gains for the PID for cart x displacement
     double m_Ki_cart;
@@ -92,7 +93,7 @@ class MyController {
     double m_force;    // controller output force (horizontal force on cart body)
 };
 
-MyController::MyController(ChSharedPtr<ChBody> cart, ChSharedPtr<ChBody> pend)
+MyController::MyController(std::shared_ptr<ChBody> cart, std::shared_ptr<ChBody> pend)
     : m_cart(cart), m_pend(pend), m_force(0) {
     // Set zero gains
     SetGainsCart(0, 0, 0);
@@ -189,29 +190,29 @@ int main(int argc, char* argv[]) {
 
     // Create the ground body
     // ----------------------
-    ChSharedPtr<ChBody> ground(new ChBody);
+    auto ground = std::make_shared<ChBody>();
     system.AddBody(ground);
     ground->SetIdentifier(-1);
     ground->SetBodyFixed(true);
 
     // Attach visualization assets
-    ChSharedPtr<ChSphereShape> sphere1_g(new ChSphereShape);
+    auto sphere1_g = std::make_shared<ChSphereShape>();
     sphere1_g->GetSphereGeometry().rad = 0.02;
     sphere1_g->Pos = ChVector<>(travel_dist, 0, 0);
     ground->AddAsset(sphere1_g);
 
-    ChSharedPtr<ChSphereShape> sphere2_g(new ChSphereShape);
+    auto sphere2_g = std::make_shared<ChSphereShape>();
     sphere2_g->GetSphereGeometry().rad = 0.03;
     sphere2_g->Pos = ChVector<>(-travel_dist, 0, 0);
     ground->AddAsset(sphere2_g);
 
-    ChSharedPtr<ChColorAsset> col_g(new ChColorAsset);
+    auto col_g = std::make_shared<ChColorAsset>();
     col_g->SetColor(ChColor(0, 0.8f, 0.8f));
     ground->AddAsset(col_g);
 
     // Create the cart body
     // --------------------
-    ChSharedPtr<ChBody> cart(new ChBody);
+    auto cart = std::make_shared<ChBody>();
     system.AddBody(cart);
     cart->SetIdentifier(1);
     cart->SetMass(mass_cart);
@@ -219,18 +220,18 @@ int main(int argc, char* argv[]) {
     cart->SetPos(ChVector<>(0, 0, 0));
 
     // Attach visualization assets.
-    ChSharedPtr<ChBoxShape> box_c(new ChBoxShape);
+    auto box_c = std::make_shared<ChBoxShape>();
     box_c->GetBoxGeometry().Size = ChVector<>(0.1, 0.1, 0.1);
     box_c->Pos = ChVector<>(0, -0.1, 0);
     cart->AddAsset(box_c);
 
-    ChSharedPtr<ChColorAsset> col_c(new ChColorAsset);
+    auto col_c = std::make_shared<ChColorAsset>();
     col_c->SetColor(ChColor(0, 0.6f, 0.8f));
     cart->AddAsset(col_c);
 
     // Create the pendulum body
     // ------------------------
-    ChSharedPtr<ChBody> pend(new ChBody);
+    auto pend = std::make_shared<ChBody>();
     system.AddBody(pend);
     pend->SetIdentifier(2);
     pend->SetMass(mass_pend);
@@ -238,25 +239,25 @@ int main(int argc, char* argv[]) {
     pend->SetPos(ChVector<>(0, hlen_pend, 0));
 
     // Attach visualization assets.
-    ChSharedPtr<ChCylinderShape> cyl_p(new ChCylinderShape);
+    auto cyl_p = std::make_shared<ChCylinderShape>();
     cyl_p->GetCylinderGeometry().p1 = ChVector<>(0, -hlen_pend, 0);
     cyl_p->GetCylinderGeometry().p2 = ChVector<>(0, hlen_pend, 0);
     cyl_p->GetCylinderGeometry().rad = r_pend;
     pend->AddAsset(cyl_p);
 
-    ChSharedPtr<ChColorAsset> col_p(new ChColorAsset);
+    auto col_p = std::make_shared<ChColorAsset>();
     col_p->SetColor(ChColor(1.0f, 0.2f, 0));
     pend->AddAsset(col_p);
 
     // Translational joint ground-cart
     // -------------------------------
-    ChSharedPtr<ChLinkLockPrismatic>  prismatic(new ChLinkLockPrismatic);
+    auto prismatic = std::make_shared<ChLinkLockPrismatic>();
     prismatic->Initialize(ground, cart, ChCoordsys<>(ChVector<>(0, 0, 0), Q_from_AngY(CH_C_PI_2)));
     system.AddLink(prismatic);
 
     // Revolute joint cart-pendulum
     // ----------------------------
-    ChSharedPtr<ChLinkLockRevolute>  revolute(new ChLinkLockRevolute);
+    auto revolute = std::make_shared<ChLinkLockRevolute>();
     revolute->Initialize(cart, pend, ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
     system.AddLink(revolute);
 
