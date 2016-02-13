@@ -52,7 +52,7 @@ using std::endl;
 #define USE_DEM
 
 // Parameters for the falling object
-collision::ShapeType shape_o = collision::ROUNDEDCYL;
+collision::ShapeType shape_o = collision::SPHERE;
 
 ChVector<> initPos(1.0, -1.0, 3.0);
 // ChQuaternion<> initRot(1.0, 0.0, 0.0, 0.0);
@@ -111,18 +111,18 @@ void CreateGround(ChSystemParallel* system) {
 // ---------------------------------------
 
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_g(new ChMaterialSurfaceDEM);
+    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
     mat_g->SetYoungModulus(1e7f);
     mat_g->SetFriction(0.4f);
     mat_g->SetRestitution(0.4f);
 
-    ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
+    auto ground = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     ground->SetMaterialSurface(mat_g);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
+    auto mat_g = std::make_shared<ChMaterialSurface>();
     mat_g->SetFriction(0.4f);
 
-    ChSharedBodyPtr ground(new ChBody(new ChCollisionModelParallel));
+    auto ground = std::make_shared<ChBody>(new ChCollisionModelParallel);
     ground->SetMaterialSurface(mat_g);
 #endif
 
@@ -148,7 +148,7 @@ void CreateGround(ChSystemParallel* system) {
                 for (int ix = -2; ix < 3; ix++) {
                     for (int iy = -2; iy < 3; iy++) {
                         ChVector<> pos(ix * spacing, iy * spacing, -bigR);
-                        utils::AddSphereGeometry(ground.get_ptr(), bigR, pos);
+                        utils::AddSphereGeometry(ground.get(), bigR, pos);
                     }
                 }
                 ground->GetCollisionModel()->BuildModel();
@@ -168,7 +168,7 @@ void CreateGround(ChSystemParallel* system) {
                 ground->GetCollisionModel()->ClearModel();
                 for (int ix = -3; ix < 6; ix++) {
                     ChVector<> pos(ix * spacing, 0, -bigR);
-                    utils::AddCapsuleGeometry(ground.get_ptr(), bigR, bigH, pos, rot);
+                    utils::AddCapsuleGeometry(ground.get(), bigR, bigH, pos, rot);
                 }
                 ground->GetCollisionModel()->BuildModel();
             }
@@ -182,7 +182,7 @@ void CreateGround(ChSystemParallel* system) {
                 double bigHz = 1;
 
                 ground->GetCollisionModel()->ClearModel();
-                utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(bigHx, bigHy, bigHz), ChVector<>(0, 0, -bigHz));
+                utils::AddBoxGeometry(ground.get(), ChVector<>(bigHx, bigHy, bigHz), ChVector<>(0, 0, -bigHz));
                 ground->GetCollisionModel()->BuildModel();
             }
             break;
@@ -205,19 +205,18 @@ void CreateObject(ChSystemParallel* system) {
 // -----------------------------------------
 
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_o;
-    mat_o = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_o = std::make_shared<ChMaterialSurfaceDEM>();
     mat_o->SetYoungModulus(1e7f);
     mat_o->SetFriction(0.4f);
     mat_o->SetRestitution(0.4f);
 
-    ChSharedPtr<ChBody> obj(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
+    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     obj->SetMaterialSurface(mat_o);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_o(new ChMaterialSurface);
+    auto mat_o = std::make_shared<ChMaterialSurface>();
     mat_o->SetFriction(0.4f);
 
-    ChSharedBodyPtr obj(new ChBody(new ChCollisionModelParallel));
+    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel);
     obj->SetMaterialSurface(mat_o);
 #endif
 
@@ -243,14 +242,14 @@ void CreateObject(ChSystemParallel* system) {
             rb = utils::CalcSphereBradius(radius);
             vol = utils::CalcSphereVolume(radius);
             J = utils::CalcSphereGyration(radius);
-            utils::AddSphereGeometry(obj.get_ptr(), radius);
+            utils::AddSphereGeometry(obj.get(), radius);
         } break;
         case collision::BOX: {
             ChVector<> hdims(0.1, 0.2, 0.1);
             rb = utils::CalcBoxBradius(hdims);
             vol = utils::CalcBoxVolume(hdims);
             J = utils::CalcBoxGyration(hdims);
-            utils::AddBoxGeometry(obj.get_ptr(), hdims);
+            utils::AddBoxGeometry(obj.get(), hdims);
         } break;
         case collision::CAPSULE: {
             double radius = 0.1;
@@ -258,7 +257,7 @@ void CreateObject(ChSystemParallel* system) {
             rb = utils::CalcCapsuleBradius(radius, hlen);
             vol = utils::CalcCapsuleVolume(radius, hlen);
             J = utils::CalcCapsuleGyration(radius, hlen);
-            utils::AddCapsuleGeometry(obj.get_ptr(), radius, hlen);
+            utils::AddCapsuleGeometry(obj.get(), radius, hlen);
         } break;
         case collision::CYLINDER: {
             double radius = 0.1;
@@ -266,7 +265,7 @@ void CreateObject(ChSystemParallel* system) {
             rb = utils::CalcCylinderBradius(radius, hlen);
             vol = utils::CalcCylinderVolume(radius, hlen);
             J = utils::CalcCylinderGyration(radius, hlen);
-            utils::AddCylinderGeometry(obj.get_ptr(), radius, hlen);
+            utils::AddCylinderGeometry(obj.get(), radius, hlen);
         } break;
         case collision::ROUNDEDCYL: {
             double radius = 0.1;
@@ -275,7 +274,7 @@ void CreateObject(ChSystemParallel* system) {
             rb = utils::CalcRoundedCylinderBradius(radius, hlen, srad);
             vol = utils::CalcRoundedCylinderVolume(radius, hlen, srad);
             J = utils::CalcRoundedCylinderGyration(radius, hlen, srad);
-            utils::AddRoundedCylinderGeometry(obj.get_ptr(), radius, hlen, srad);
+            utils::AddRoundedCylinderGeometry(obj.get(), radius, hlen, srad);
         } break;
     }
 

@@ -110,16 +110,14 @@ double layerHeight = 1.0;
 
 int CreateObjects(ChSystemParallel* system) {
     // Create a material for the granular material
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
-    mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
     mat_g->SetAdhesion(cohesion_g);
 
     // Create a material for the container
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
-    mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_c = std::make_shared<ChMaterialSurfaceDEM>();
     mat_c->SetYoungModulus(Y_c);
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
@@ -128,7 +126,7 @@ int CreateObjects(ChSystemParallel* system) {
     // Create a mixture entirely made out of spheres
     utils::Generator gen(system);
 
-    utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
     m1->setDefaultMaterialDEM(mat_g);
     m1->setDefaultDensity(rho_g);
     m1->setDefaultSize(r_g);
@@ -149,17 +147,16 @@ int CreateObjects(ChSystemParallel* system) {
 // =======================================================================
 // Create the wheel body at the specified height.
 
-ChSharedPtr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
+std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
     // Create a material for the wheel
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_w;
-    mat_w = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_w = std::make_shared<ChMaterialSurfaceDEM>();
     mat_w->SetYoungModulus(Y_w);
     mat_w->SetFriction(mu_w);
     mat_w->SetRestitution(cr_w);
     mat_w->SetAdhesion(cohesion_w);
 
     // Create the wheel body
-    ChSharedPtr<ChBody> wheel(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
+    auto wheel = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
 
     wheel->SetMaterialSurface(mat_w);
 
@@ -172,7 +169,7 @@ ChSharedPtr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
     wheel->SetBodyFixed(false);
 
     wheel->GetCollisionModel()->ClearModel();
-    utils::AddTriangleMeshGeometry(wheel.get_ptr(), obj_mesh_file, mesh_name);
+    utils::AddTriangleMeshGeometry(wheel.get(), obj_mesh_file, mesh_name);
     wheel->GetCollisionModel()->BuildModel();
 
     wheel->SetInertiaXX(inertia_w);
@@ -270,7 +267,7 @@ int main(int argc, char* argv[]) {
     // - Create wheel
     double time_step;
     double time_end;
-    ChSharedPtr<ChBody> wheel;
+    std::shared_ptr<ChBody> wheel;
 
     switch (problem) {
         case SETTLING:

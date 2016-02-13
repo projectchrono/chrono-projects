@@ -27,7 +27,7 @@
 #include "chrono_fea/ChLinkPointFrame.h"
 
 using namespace chrono;
-using namespace fea;
+using namespace chrono::fea;
 
 int main(int argc, char* argv[]) {
     GetLog() << "Example: FEA techology for finite elements \n";
@@ -39,11 +39,11 @@ int main(int argc, char* argv[]) {
 
     // Create a mesh, that is a container for groups
     // of elements and their referenced nodes.
-    ChSharedPtr<ChMesh> my_mesh(new ChMesh);
+    auto my_mesh = std::make_shared<ChMesh>();
 
     // Create a material, that must be assigned to each element,
     // and set its parameters
-    ChSharedPtr<ChContinuumElastic> mmaterial(new ChContinuumElastic);
+    auto mmaterial = std::make_shared<ChContinuumElastic>();
     mmaterial->Set_E(207e6);
     mmaterial->Set_v(0.3);
 
@@ -54,14 +54,14 @@ int main(int argc, char* argv[]) {
     double sx = 0.01;
     double sy = 0.10;
     double sz = 0.01;
-    ChSharedPtr<ChNodeFEAxyz> mnode1(new ChNodeFEAxyz(ChVector<>(0, 0, 0)));
-    ChSharedPtr<ChNodeFEAxyz> mnode2(new ChNodeFEAxyz(ChVector<>(0, 0, sz)));
-    ChSharedPtr<ChNodeFEAxyz> mnode3(new ChNodeFEAxyz(ChVector<>(sx, 0, sz)));
-    ChSharedPtr<ChNodeFEAxyz> mnode4(new ChNodeFEAxyz(ChVector<>(sx, 0, 0)));
-    ChSharedPtr<ChNodeFEAxyz> mnode5(new ChNodeFEAxyz(ChVector<>(0, sy, 0)));
-    ChSharedPtr<ChNodeFEAxyz> mnode6(new ChNodeFEAxyz(ChVector<>(0, sy, sz)));
-    ChSharedPtr<ChNodeFEAxyz> mnode7(new ChNodeFEAxyz(ChVector<>(sx, sy, sz)));
-    ChSharedPtr<ChNodeFEAxyz> mnode8(new ChNodeFEAxyz(ChVector<>(sx, sy, 0)));
+    auto mnode1 = std::make_shared<ChNodeFEAxyz>(ChVector<>(0, 0, 0));
+    auto mnode2 = std::make_shared<ChNodeFEAxyz>(ChVector<>(0, 0, sz));
+    auto mnode3 = std::make_shared<ChNodeFEAxyz>(ChVector<>(sx, 0, sz));
+    auto mnode4 = std::make_shared<ChNodeFEAxyz>(ChVector<>(sx, 0, 0));
+    auto mnode5 = std::make_shared<ChNodeFEAxyz>(ChVector<>(0, sy, 0));
+    auto mnode6 = std::make_shared<ChNodeFEAxyz>(ChVector<>(0, sy, sz));
+    auto mnode7 = std::make_shared<ChNodeFEAxyz>(ChVector<>(sx, sy, sz));
+    auto mnode8 = std::make_shared<ChNodeFEAxyz>(ChVector<>(sx, sy, 0));
 
     // For example, set applied forces to nodes:
     mnode5->SetForce(ChVector<>(0, -1000, 0));
@@ -81,42 +81,38 @@ int main(int argc, char* argv[]) {
 
     // Create the tetrahedron element, and assign
     // it nodes and material
-    ChSharedPtr<ChElementHexa_8> melement1(new ChElementHexa_8);
+    auto melement1 = std::make_shared<ChElementHexa_8>();
     melement1->SetNodes(mnode1, mnode2, mnode3, mnode4, mnode5, mnode6, mnode7, mnode8);
     melement1->SetMaterial(mmaterial);
 
     // Remember to add elements to the mesh!
     my_mesh->AddElement(melement1);
 
-    // This is necessary in order to precompute the
-    // stiffness matrices for all inserted elements in mesh
-    my_mesh->SetupInitial();
-
     // Remember to add the mesh to the system!
     my_system.Add(my_mesh);
 
     // Create also a truss
-    ChSharedPtr<ChBody> truss(new ChBody);
+    auto truss = std::make_shared<ChBody>();
     my_system.Add(truss);
     truss->SetBodyFixed(true);
 
     // Create a constraint between a node and the truss
-    ChSharedPtr<ChLinkPointFrame> constraint1(new ChLinkPointFrame);
+    auto constraint1 = std::make_shared<ChLinkPointFrame>();
     constraint1->Initialize(my_mesh,  // node container
                             0,        // index of node in node container
                             truss);   // body to be connected to
 
-    ChSharedPtr<ChLinkPointFrame> constraint2(new ChLinkPointFrame);
+    auto constraint2 = std::make_shared<ChLinkPointFrame>();
     constraint2->Initialize(my_mesh,  // node container
                             1,        // index of node in node container
                             truss);   // body to be connected to
 
-    ChSharedPtr<ChLinkPointFrame> constraint3(new ChLinkPointFrame);
+    auto constraint3 = std::make_shared<ChLinkPointFrame>();
     constraint3->Initialize(my_mesh,  // node container
                             2,        // index of node in node container
                             truss);   // body to be connected to
 
-    ChSharedPtr<ChLinkPointFrame> constraint4(new ChLinkPointFrame);
+    auto constraint4 = std::make_shared<ChLinkPointFrame>();
     constraint4->Initialize(my_mesh,  // node container
                             3,        // index of node in node container
                             truss);   // body to be connected to
@@ -128,6 +124,9 @@ int main(int argc, char* argv[]) {
 
     // Set no gravity
     // my_system.Set_G_acc(VNULL);
+
+    // Mark system completion
+    my_system.SetupInitial();
 
     // Perform a linear static analysis
     my_system.SetLcpSolverType(

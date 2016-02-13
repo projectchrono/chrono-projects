@@ -193,7 +193,7 @@ class MyDriverInputs : public ChDriverInputsCallback {
 // This version uses cylindrical contact shapes.
 class MyCylindricalTire : public ChTireContactCallback {
   public:
-    virtual void onCallback(ChSharedPtr<ChBody> wheelBody, double radius, double width) {
+    virtual void onCallback(std::shared_ptr<ChBody> wheelBody, double radius, double width) {
         wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
 
         wheelBody->GetCollisionModel()->ClearModel();
@@ -217,7 +217,7 @@ class MyLuggedTire : public ChTireContactCallback {
         num_hulls = lugged_convex.GetHullCount();
     }
 
-    virtual void onCallback(ChSharedPtr<ChBody> wheelBody, double radius, double width) {
+    virtual void onCallback(std::shared_ptr<ChBody> wheelBody, double radius, double width) {
         wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
 
         ChCollisionModelParallel* coll_model = (ChCollisionModelParallel*)wheelBody->GetCollisionModel();
@@ -253,8 +253,7 @@ class MyLuggedTire : public ChTireContactCallback {
 
 double CreateParticles(ChSystem* system) {
     // Create a material
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
-    mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
@@ -262,7 +261,7 @@ double CreateParticles(ChSystem* system) {
 
     // Create a particle generator and a mixture entirely made out of spheres
     utils::Generator gen(system);
-    utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
     m1->setDefaultMaterialDEM(mat_g);
     m1->setDefaultDensity(rho_g);
     m1->setDefaultSize(r_g);
@@ -356,8 +355,7 @@ int main(int argc, char* argv[]) {
     // -------------------
 
     // Ground body
-    ChSharedPtr<ChBody> ground =
-        ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
+    auto ground = std::make_shared<ChBody>(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     ground->SetIdentifier(-1);
     ground->SetMass(1000);
     ground->SetBodyFixed(true);
@@ -371,21 +369,21 @@ int main(int argc, char* argv[]) {
     ground->GetCollisionModel()->ClearModel();
 
     // Bottom box
-    utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick),
+    utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick),
                           ChQuaternion<>(1, 0, 0, 0), true);
     if (terrain_type == GRANULAR_TERRAIN) {
         // Front box
-        utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hthick, hdimY, hdimZ + hthick),
+        utils::AddBoxGeometry(ground.get(), ChVector<>(hthick, hdimY, hdimZ + hthick),
                               ChVector<>(hdimX + hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), visible_walls);
         // Rear box
-        utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hthick, hdimY, hdimZ + hthick),
+        utils::AddBoxGeometry(ground.get(), ChVector<>(hthick, hdimY, hdimZ + hthick),
                               ChVector<>(-hdimX - hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
                               visible_walls);
         // Left box
-        utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hdimX, hthick, hdimZ + hthick),
+        utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hthick, hdimZ + hthick),
                               ChVector<>(0, hdimY + hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), visible_walls);
         // Right box
-        utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hdimX, hthick, hdimZ + hthick),
+        utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hthick, hdimZ + hthick),
                               ChVector<>(0, -hdimY - hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
                               visible_walls);
     }
