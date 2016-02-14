@@ -59,7 +59,7 @@ using std::endl;
 // -----------------------------------------------------------------------------
 
 // Comment the following line to use DVI contact
-//#define USE_DEM
+#define USE_DEM
 
 // Desired number of OpenMP threads (will be clamped to maximum available)
 int threads = 20;
@@ -124,11 +124,11 @@ double visual_out_step = 1e-1;  // time interval between PovRay outputs
 // -----------------------------------------------------------------------------
 // Utility for adding (visible or invisible) walls
 // -----------------------------------------------------------------------------
-void AddWall(ChSharedPtr<ChBody>& body, const ChVector<>& dim, const ChVector<>& loc, bool visible) {
+void AddWall(std::shared_ptr<ChBody>& body, const ChVector<>& dim, const ChVector<>& loc, bool visible) {
     body->GetCollisionModel()->AddBox(dim.x, dim.y, dim.z, loc);
 
     if (visible == true) {
-        ChSharedPtr<ChBoxShape> box(new ChBoxShape);
+        auto box = std::make_shared<ChBoxShape>();
         box->GetBoxGeometry().Size = dim;
         box->Pos = loc;
         box->SetColor(ChColor(1, 0, 0));
@@ -210,7 +210,7 @@ int main(int argc, char* argv[]) {
 #ifdef USE_DEM
     cout << "Create DEM system" << endl;
     const std::string title = "soft-sphere (DEM) direct shear box test";
-    ChBody::ContactMethod contact_method = ChBody::DEM;
+    ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::DEM;
     ChSystemParallelDEM* my_system = new ChSystemParallelDEM();
 #else
     cout << "Create DVI system" << endl;
@@ -261,15 +261,13 @@ int main(int argc, char* argv[]) {
 // Create a ball material (will be used by balls only)
 
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> material;
-    material = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto material = std::make_shared<ChMaterialSurfaceDEM>();
     material->SetYoungModulus(Y);
     material->SetPoissonRatio(nu);
     material->SetRestitution(COR);
     material->SetFriction(mu);
 #else
-    ChSharedPtr<ChMaterialSurface> material;
-    material = ChSharedPtr<ChMaterialSurface>(new ChMaterialSurface);
+    auto material = std::make_shared<ChMaterialSurface>();
     material->SetRestitution(COR);
     material->SetFriction(mu);
 #endif
@@ -277,22 +275,20 @@ int main(int argc, char* argv[]) {
 // Create a material for all objects other than balls
 
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_ext;
-    mat_ext = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_ext = std::make_shared<ChMaterialSurfaceDEM>();
     mat_ext->SetYoungModulus(Y);
     mat_ext->SetPoissonRatio(nu);
     mat_ext->SetRestitution(COR);
     mat_ext->SetFriction(mu_ext);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_ext;
-    mat_ext = ChSharedPtr<ChMaterialSurface>(new ChMaterialSurface);
+    auto mat_ext = std::make_shared<ChMaterialSurface>();
     mat_ext->SetRestitution(COR);
     mat_ext->SetFriction(mu_ext);
 #endif
 
     // Create lower bin
 
-    ChSharedPtr<ChBody> bin(new ChBody(new ChCollisionModelParallel, contact_method));
+    auto bin = std::make_shared<ChBody>(new ChCollisionModelParallel, contact_method);
 
     bin->SetIdentifier(binId);
     bin->SetMass(1);
@@ -322,7 +318,7 @@ int main(int argc, char* argv[]) {
 
     // Create upper shear box
 
-    ChSharedPtr<ChBody> box(new ChBody(new ChCollisionModelParallel, contact_method));
+    auto box = std::make_shared<ChBody>(new ChCollisionModelParallel, contact_method);
 
     box->SetIdentifier(boxId);
     box->SetMass(1);
@@ -351,7 +347,7 @@ int main(int argc, char* argv[]) {
 
     // Create upper load plate
 
-    ChSharedPtr<ChBody> plate(new ChBody(new ChCollisionModelParallel, contact_method));
+    auto plate = std::make_shared<ChBody>(new ChCollisionModelParallel, contact_method);
 
     shear_Area = width * length;
 
@@ -386,7 +382,7 @@ int main(int argc, char* argv[]) {
                 ball_x = 4.0 * radius * (float(j - b / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
                 ball_z = 4.0 * radius * (float(k - c / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
 
-                ChSharedPtr<ChBody> ball(new ChBody(new ChCollisionModelParallel, contact_method));
+                auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel, contact_method);
 
                 ball->SetIdentifier(ballId + 6 * 6 * i + 6 * j + k);
                 ball->SetMass(mass);
@@ -402,7 +398,7 @@ int main(int argc, char* argv[]) {
                 ball->GetCollisionModel()->SetFamily(4);
                 ball->GetCollisionModel()->BuildModel();
 
-                ChSharedPtr<ChSphereShape> sphere(new ChSphereShape);
+                auto sphere = std::make_shared<ChSphereShape>();
 
                 sphere->GetSphereGeometry().rad = radius;
                 sphere->SetColor(ChColor(1, 0, 1));
@@ -418,7 +414,7 @@ int main(int argc, char* argv[]) {
     // specified joint coordinate system.  Here, we apply the 'z2y' rotation to
     // align it with the Y axis of the global reference frame.
 
-    ChSharedPtr<ChLinkLockPrismatic> prismatic_plate_box(new ChLinkLockPrismatic);
+    auto prismatic_plate_box = std::make_shared<ChLinkLockPrismatic>();
     prismatic_plate_box->SetName("prismatic_plate_box");
     prismatic_plate_box->Initialize(plate, box, ChCoordsys<>(ChVector<>(0, 0, 0), z2y));
     my_system->AddLink(prismatic_plate_box);

@@ -75,49 +75,49 @@ class MySimpleCar {
     // The parts making the car, as 3d Irrlicht scene nodes, each containing
     // the ChBody object
     // .. truss:
-    ChSharedBodyPtr truss;
+    std::shared_ptr<ChBody> truss;
     // .. right front suspension:
-    ChSharedBodyPtr spindleRF;
-    ChSharedBodyPtr wheelRF;
-    ChSharedPtr<ChLinkLockRevolute> link_revoluteRF;
-    ChSharedPtr<ChLinkDistance> link_distRFU1;
-    ChSharedPtr<ChLinkDistance> link_distRFU2;
-    ChSharedPtr<ChLinkDistance> link_distRFL1;
-    ChSharedPtr<ChLinkDistance> link_distRFL2;
-    ChSharedPtr<ChLinkSpring> link_springRF;
-    ChSharedPtr<ChLinkDistance> link_distRSTEER;
+    std::shared_ptr<ChBody> spindleRF;
+    std::shared_ptr<ChBody> wheelRF;
+    std::shared_ptr<ChLinkLockRevolute> link_revoluteRF;
+    std::shared_ptr<ChLinkDistance> link_distRFU1;
+    std::shared_ptr<ChLinkDistance> link_distRFU2;
+    std::shared_ptr<ChLinkDistance> link_distRFL1;
+    std::shared_ptr<ChLinkDistance> link_distRFL2;
+    std::shared_ptr<ChLinkSpring> link_springRF;
+    std::shared_ptr<ChLinkDistance> link_distRSTEER;
     // .. left front suspension:
-    ChSharedBodyPtr spindleLF;
-    ChSharedBodyPtr wheelLF;
-    ChSharedPtr<ChLinkLockRevolute> link_revoluteLF;
-    ChSharedPtr<ChLinkDistance> link_distLFU1;
-    ChSharedPtr<ChLinkDistance> link_distLFU2;
-    ChSharedPtr<ChLinkDistance> link_distLFL1;
-    ChSharedPtr<ChLinkDistance> link_distLFL2;
-    ChSharedPtr<ChLinkSpring> link_springLF;
-    ChSharedPtr<ChLinkDistance> link_distLSTEER;
+    std::shared_ptr<ChBody> spindleLF;
+    std::shared_ptr<ChBody> wheelLF;
+    std::shared_ptr<ChLinkLockRevolute> link_revoluteLF;
+    std::shared_ptr<ChLinkDistance> link_distLFU1;
+    std::shared_ptr<ChLinkDistance> link_distLFU2;
+    std::shared_ptr<ChLinkDistance> link_distLFL1;
+    std::shared_ptr<ChLinkDistance> link_distLFL2;
+    std::shared_ptr<ChLinkSpring> link_springLF;
+    std::shared_ptr<ChLinkDistance> link_distLSTEER;
     // .. right back suspension:
-    ChSharedBodyPtr spindleRB;
-    ChSharedBodyPtr wheelRB;
-    ChSharedPtr<ChLinkLockRevolute> link_revoluteRB;
-    ChSharedPtr<ChLinkDistance> link_distRBU1;
-    ChSharedPtr<ChLinkDistance> link_distRBU2;
-    ChSharedPtr<ChLinkDistance> link_distRBL1;
-    ChSharedPtr<ChLinkDistance> link_distRBL2;
-    ChSharedPtr<ChLinkSpring> link_springRB;
-    ChSharedPtr<ChLinkDistance> link_distRBlat;
-    ChSharedPtr<ChLinkEngine> link_engineL;
+    std::shared_ptr<ChBody> spindleRB;
+    std::shared_ptr<ChBody> wheelRB;
+    std::shared_ptr<ChLinkLockRevolute> link_revoluteRB;
+    std::shared_ptr<ChLinkDistance> link_distRBU1;
+    std::shared_ptr<ChLinkDistance> link_distRBU2;
+    std::shared_ptr<ChLinkDistance> link_distRBL1;
+    std::shared_ptr<ChLinkDistance> link_distRBL2;
+    std::shared_ptr<ChLinkSpring> link_springRB;
+    std::shared_ptr<ChLinkDistance> link_distRBlat;
+    std::shared_ptr<ChLinkEngine> link_engineL;
     // .. left back suspension:
-    ChSharedBodyPtr spindleLB;
-    ChSharedBodyPtr wheelLB;
-    ChSharedPtr<ChLinkLockRevolute> link_revoluteLB;
-    ChSharedPtr<ChLinkDistance> link_distLBU1;
-    ChSharedPtr<ChLinkDistance> link_distLBU2;
-    ChSharedPtr<ChLinkDistance> link_distLBL1;
-    ChSharedPtr<ChLinkDistance> link_distLBL2;
-    ChSharedPtr<ChLinkSpring> link_springLB;
-    ChSharedPtr<ChLinkDistance> link_distLBlat;
-    ChSharedPtr<ChLinkEngine> link_engineR;
+    std::shared_ptr<ChBody> spindleLB;
+    std::shared_ptr<ChBody> wheelLB;
+    std::shared_ptr<ChLinkLockRevolute> link_revoluteLB;
+    std::shared_ptr<ChLinkDistance> link_distLBU1;
+    std::shared_ptr<ChLinkDistance> link_distLBU2;
+    std::shared_ptr<ChLinkDistance> link_distLBL1;
+    std::shared_ptr<ChLinkDistance> link_distLBL2;
+    std::shared_ptr<ChLinkSpring> link_springLB;
+    std::shared_ptr<ChLinkDistance> link_distLBlat;
+    std::shared_ptr<ChLinkEngine> link_engineR;
     // THE FUNCTIONS
 
     // Build and initialize the car, creating all bodies corresponding to
@@ -135,12 +135,12 @@ class MySimpleCar {
         double angularSpeed = 20;
 
         // Create the wheel material
-        ChSharedPtr<ChMaterialSurface> mat(new ChMaterialSurface);
+        auto mat = std::make_shared<ChMaterialSurface>();
         mat->SetFriction(1.0);
 
         // --- The car body ---
 
-        truss = (ChSharedPtr<ChBody>)(new ChBody(new ChCollisionModelParallel));
+        truss = std::make_shared<ChBody>(new ChCollisionModelParallel);
         truss->SetIdentifier(-1);
         truss->SetMaterialSurface(mat);
         truss->SetMass(2086.524902);
@@ -148,7 +148,7 @@ class MySimpleCar {
         truss->SetRot(ChQuaternion<>(1, 0, 0, 0));
         truss->SetInertiaXX(ChVector<>(3570.20377, 1078.52344, 2955.66050));
         truss->GetCollisionModel()->ClearModel();
-        utils::AddBoxGeometry(truss.get_ptr(), ChVector<>(0.7, 0.5, 3) * 0.5, ChVector<>(0, 0, 0));
+        utils::AddBoxGeometry(truss.get(), ChVector<>(0.7, 0.5, 3) * 0.5, ChVector<>(0, 0, 0));
         truss->GetCollisionModel()->BuildModel();
         truss->SetCollide(false);
         truss->SetBodyFixed(false);
@@ -157,7 +157,7 @@ class MySimpleCar {
         // --- Right Front suspension ---
 
         // ..the car right-front spindle
-        spindleRF = (ChSharedPtr<ChBody>)(new ChBody(new ChCollisionModelParallel));
+        spindleRF = std::make_shared<ChBody>(new ChCollisionModelParallel);
         spindleRF->SetIdentifier(-2);
         spindleRF->SetMaterialSurface(mat);
         spindleRF->SetMass(14.705);
@@ -165,13 +165,13 @@ class MySimpleCar {
         spindleRF->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleRF->SetInertiaXX(ChVector<>(0.07352, 0.04117, 0.04117));
         spindleRF->GetCollisionModel()->ClearModel();
-        utils::AddBoxGeometry(spindleRF.get_ptr(), ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
+        utils::AddBoxGeometry(spindleRF.get(), ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
         spindleRF->GetCollisionModel()->BuildModel();
         spindleRF->SetCollide(false);
         my_system->AddBody(spindleRF);
 
         // ..the car right-front wheel
-        wheelRF = (ChSharedPtr<ChBody>)(new ChBody(new ChCollisionModelParallel));
+        wheelRF = std::make_shared<ChBody>(new ChCollisionModelParallel);
         wheelRF->SetIdentifier(-3);
         wheelRF->SetMaterialSurface(mat);
         wheelRF->SetMass(3.0);
@@ -180,43 +180,43 @@ class MySimpleCar {
         wheelRF->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
         wheelRF->GetCollisionModel()->ClearModel();
         if (useSpheres) {
-            utils::AddSphereGeometry(wheelRF.get_ptr(), 0.45, ChVector<>(0, 0, 0));
+            utils::AddSphereGeometry(wheelRF.get(), 0.45, ChVector<>(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelRF.get_ptr(), 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelRF.get(), 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
         }
         wheelRF->GetCollisionModel()->BuildModel();
         wheelRF->SetCollide(true);
         my_system->AddBody(wheelRF);
 
         // .. create the revolute joint between the wheel and the spindle
-        link_revoluteRF = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);  // right, front, upper, 1
+        link_revoluteRF = std::make_shared<ChLinkLockRevolute>();  // right, front, upper, 1
         link_revoluteRF->Initialize(wheelRF, spindleRF, ChCoordsys<>(ChVector<>(0.91, -0.026, 1.648965),
                                                                      chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
         my_system->AddLink(link_revoluteRF);
 
         // .. impose distance between two parts (as a massless rod with two spherical joints at the end)
-        link_distRFU1 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // right, front, upper, 1
+        link_distRFU1 = std::make_shared<ChLinkDistance>();  // right, front, upper, 1
         link_distRFU1->Initialize(truss, spindleRF, false, ChVector<>(0.446, 0.245, 1.640965),
                                   ChVector<>(0.716, 0.215, 1.635965));
         my_system->AddLink(link_distRFU1);
 
-        link_distRFU2 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // right, front, upper, 2
+        link_distRFU2 = std::make_shared<ChLinkDistance>();  // right, front, upper, 2
         link_distRFU2->Initialize(truss, spindleRF, false, ChVector<>(0.478, 0.196, 1.420965),
                                   ChVector<>(0.716, 0.215, 1.635965));
         my_system->AddLink(link_distRFU2);
 
-        link_distRFL1 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // right, front, lower, 1
+        link_distRFL1 = std::make_shared<ChLinkDistance>();  // right, front, lower, 1
         link_distRFL1->Initialize(truss, spindleRF, false, ChVector<>(0.307, 0, 1.911965),
                                   ChVector<>(0.787, -0.118, 1.652965));
         my_system->AddLink(link_distRFL1);
 
-        link_distRFL2 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // right, front, lower, 2
+        link_distRFL2 = std::make_shared<ChLinkDistance>();  // right, front, lower, 2
         link_distRFL2->Initialize(truss, spindleRF, false, ChVector<>(0.307, 0, 1.465965),
                                   ChVector<>(0.787, -0.118, 1.652965));
         my_system->AddLink(link_distRFL2);
 
         // .. create the spring between the truss and the spindle
-        link_springRF = ChSharedPtr<ChLinkSpring>(new ChLinkSpring);
+        link_springRF = std::make_shared<ChLinkSpring>();
         link_springRF->Initialize(truss, spindleRF, false, ChVector<>(0.498, 0.323, 1.792965),
                                   ChVector<>(0.543, -0.047, 1.785965));
         link_springRF->Set_SpringK(167062.000);
@@ -225,7 +225,7 @@ class MySimpleCar {
         my_system->AddLink(link_springRF);
 
         // .. create the rod for steering the wheel
-        link_distRSTEER = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // right steer
+        link_distRSTEER = std::make_shared<ChLinkDistance>();  // right steer
         link_distRSTEER->Initialize(truss, spindleRF, false, ChVector<>(0.448, 0.054, 1.438965),
                                     ChVector<>(0.821, -0.016, 1.512965));
         my_system->AddLink(link_distRSTEER);
@@ -233,7 +233,7 @@ class MySimpleCar {
         // --- Left Front suspension ---
 
         // ..the car left-front spindle
-        spindleLF = (ChSharedPtr<ChBody>)(new ChBody(new ChCollisionModelParallel));
+        spindleLF = std::make_shared<ChBody>(new ChCollisionModelParallel);
         spindleLF->SetIdentifier(-4);
         spindleLF->SetMaterialSurface(mat);
         spindleLF->SetMass(14.705);
@@ -241,13 +241,13 @@ class MySimpleCar {
         spindleLF->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleLF->SetInertiaXX(ChVector<>(0.07352, 0.04117, 0.04117));
         spindleLF->GetCollisionModel()->ClearModel();
-        utils::AddBoxGeometry(spindleLF.get_ptr(), ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
+        utils::AddBoxGeometry(spindleLF.get(), ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
         spindleLF->GetCollisionModel()->BuildModel();
         spindleLF->SetCollide(false);
         my_system->AddBody(spindleLF);
 
         // ..the car left-front wheel
-        wheelLF = (ChSharedPtr<ChBody>)(new ChBody(new ChCollisionModelParallel));
+        wheelLF = std::make_shared<ChBody>(new ChCollisionModelParallel);
         wheelLF->SetIdentifier(-5);
         wheelLF->SetMaterialSurface(mat);
         wheelLF->SetMass(3.0);
@@ -256,43 +256,43 @@ class MySimpleCar {
         wheelLF->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
         wheelLF->GetCollisionModel()->ClearModel();
         if (useSpheres) {
-            utils::AddSphereGeometry(wheelLF.get_ptr(), 0.45, ChVector<>(0, 0, 0));
+            utils::AddSphereGeometry(wheelLF.get(), 0.45, ChVector<>(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelLF.get_ptr(), 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelLF.get(), 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
         }
         wheelLF->GetCollisionModel()->BuildModel();
         wheelLF->SetCollide(true);
         my_system->AddBody(wheelLF);
 
         // .. create the revolute joint between the wheel and the spindle
-        link_revoluteLF = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);  // left, front, upper, 1
+        link_revoluteLF = std::make_shared<ChLinkLockRevolute>();  // left, front, upper, 1
         link_revoluteLF->Initialize(wheelLF, spindleLF, ChCoordsys<>(ChVector<>(-0.91, -0.026, 1.648965),
                                                                      chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
         my_system->AddLink(link_revoluteLF);
 
         // .. impose distance between two parts (as a massless rod with two spherical joints at the end)
-        link_distLFU1 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // left, front, upper, 1
+        link_distLFU1 = std::make_shared<ChLinkDistance>();  // left, front, upper, 1
         link_distLFU1->Initialize(truss, spindleLF, false, ChVector<>(-0.446, 0.245, 1.640965),
                                   ChVector<>(-0.716, 0.215, 1.635965));
         my_system->AddLink(link_distLFU1);
 
-        link_distLFU2 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // left, front, upper, 2
+        link_distLFU2 = std::make_shared<ChLinkDistance>();  // left, front, upper, 2
         link_distLFU2->Initialize(truss, spindleLF, false, ChVector<>(-0.478, 0.196, 1.420965),
                                   ChVector<>(-0.716, 0.215, 1.635965));
         my_system->AddLink(link_distLFU2);
 
-        link_distLFL1 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // left, front, lower, 1
+        link_distLFL1 = std::make_shared<ChLinkDistance>();  // left, front, lower, 1
         link_distLFL1->Initialize(truss, spindleLF, false, ChVector<>(-0.307, 0, 1.911965),
                                   ChVector<>(-0.787, -0.118, 1.652965));
         my_system->AddLink(link_distLFL1);
 
-        link_distLFL2 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // left, front, lower, 2
+        link_distLFL2 = std::make_shared<ChLinkDistance>();  // left, front, lower, 2
         link_distLFL2->Initialize(truss, spindleLF, false, ChVector<>(-0.307, 0, 1.465965),
                                   ChVector<>(-0.787, -0.118, 1.652965));
         my_system->AddLink(link_distLFL2);
 
         // .. create the spring between the truss and the spindle
-        link_springLF = ChSharedPtr<ChLinkSpring>(new ChLinkSpring);
+        link_springLF = std::make_shared<ChLinkSpring>();
         link_springLF->Initialize(truss, spindleLF, false, ChVector<>(-0.498, 0.323, 1.792965),
                                   ChVector<>(-0.543, -0.047, 1.785965));
         link_springLF->Set_SpringK(167062.000);
@@ -301,7 +301,7 @@ class MySimpleCar {
         my_system->AddLink(link_springLF);
 
         // .. create the rod for steering the wheel
-        link_distLSTEER = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // right steer
+        link_distLSTEER = std::make_shared<ChLinkDistance>();  // right steer
         link_distLSTEER->Initialize(truss, spindleLF, false, ChVector<>(-0.448, 0.054, 1.438965),
                                     ChVector<>(-0.821, -0.016, 1.512965));
         my_system->AddLink(link_distLSTEER);
@@ -309,7 +309,7 @@ class MySimpleCar {
         // --- Right Back suspension ---
 
         // ..the car right-back spindle
-        spindleRB = (ChSharedPtr<ChBody>)(new ChBody(new ChCollisionModelParallel));
+        spindleRB = std::make_shared<ChBody>(new ChCollisionModelParallel);
         spindleRB->SetIdentifier(-6);
         spindleRB->SetMaterialSurface(mat);
         spindleRB->SetMass(15.91);
@@ -317,13 +317,13 @@ class MySimpleCar {
         spindleRB->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleRB->SetInertiaXX(ChVector<>(4, 2, 2));
         spindleRB->GetCollisionModel()->ClearModel();
-        utils::AddBoxGeometry(spindleRB.get_ptr(), ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
+        utils::AddBoxGeometry(spindleRB.get(), ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
         spindleRB->GetCollisionModel()->BuildModel();
         spindleRB->SetCollide(false);
         my_system->AddBody(spindleRB);
 
         // ..the car right-back wheel
-        wheelRB = (ChSharedPtr<ChBody>)(new ChBody(new ChCollisionModelParallel));
+        wheelRB = std::make_shared<ChBody>(new ChCollisionModelParallel);
         wheelRB->SetIdentifier(-7);
         wheelRB->SetMaterialSurface(mat);
         wheelRB->SetMass(3.0);
@@ -332,53 +332,53 @@ class MySimpleCar {
         wheelRB->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
         wheelRB->GetCollisionModel()->ClearModel();
         if (useSpheres) {
-            utils::AddSphereGeometry(wheelRB.get_ptr(), 0.45, ChVector<>(0, 0, 0));
+            utils::AddSphereGeometry(wheelRB.get(), 0.45, ChVector<>(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelRB.get_ptr(), 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelRB.get(), 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
         }
         wheelRB->GetCollisionModel()->BuildModel();
         wheelRB->SetCollide(true);
         my_system->AddBody(wheelRB);
 
         // .. create the revolute joint between the wheel and the spindle
-        link_revoluteRB = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);  // right, back, upper, 1
+        link_revoluteRB = std::make_shared<ChLinkLockRevolute>();  // right, back, upper, 1
         link_revoluteRB->Initialize(wheelRB, spindleRB, ChCoordsys<>(ChVector<>(0.91, -0.026, -1.652965),
                                                                      chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
         my_system->AddLink(link_revoluteRB);
 
         // .. create the motor transmission joint between the wheel and the truss (assuming small changes of alignment)
-        link_engineR = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
+        link_engineR = std::make_shared<ChLinkEngine>();
         link_engineR->Initialize(wheelRB, truss, ChCoordsys<>(ChVector<>(0.91, -0.026, -1.652965),
                                                               chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
         link_engineR->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_CARDANO);  // approx as a double Rzeppa joint
         // link_engineR->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
         link_engineR->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-        link_engineR->Set_rot_funct(ChSharedPtr<ChFunction>(new ChFunction_Ramp(0, angularSpeed)));
+        link_engineR->Set_rot_funct(std::make_shared<ChFunction_Ramp>(0, angularSpeed));
         my_system->AddLink(link_engineR);
 
         // .. impose distance between two parts (as a massless rod with two spherical joints at the end)
-        link_distRBU1 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // right, back, upper, 1
+        link_distRBU1 = std::make_shared<ChLinkDistance>();  // right, back, upper, 1
         link_distRBU1->Initialize(truss, spindleRB, false, ChVector<>(0.462, 0.228, -1.339965),
                                   ChVector<>(0.716, 0.216, -1.652965));
         my_system->AddLink(link_distRBU1);
 
-        link_distRBU2 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // right, back, upper, 2
+        link_distRBU2 = std::make_shared<ChLinkDistance>();  // right, back, upper, 2
         link_distRBU2->Initialize(truss, spindleRB, false, ChVector<>(0.462, 0.224, -1.611965),
                                   ChVector<>(0.716, 0.216, -1.652965));
         my_system->AddLink(link_distRBU2);
 
-        link_distRBL1 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // right, back, lower, 1
+        link_distRBL1 = std::make_shared<ChLinkDistance>();  // right, back, lower, 1
         link_distRBL1->Initialize(truss, spindleRB, false, ChVector<>(0.307, 0, -1.465965),
                                   ChVector<>(0.787, -0.118, -1.652965));
         my_system->AddLink(link_distRBL1);
 
-        link_distRBL2 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // right, back, lower, 2
+        link_distRBL2 = std::make_shared<ChLinkDistance>();  // right, back, lower, 2
         link_distRBL2->Initialize(truss, spindleRB, false, ChVector<>(0.307, 0, -1.911965),
                                   ChVector<>(0.787, -0.118, -1.652965));
         my_system->AddLink(link_distRBL2);
 
         // .. create the spring between the truss and the spindle
-        link_springRB = ChSharedPtr<ChLinkSpring>(new ChLinkSpring);
+        link_springRB = std::make_shared<ChLinkSpring>();
         link_springRB->Initialize(truss, spindleRB, false, ChVector<>(0.498, 0.323, -1.79297),
                                   ChVector<>(0.544, -0.038, -1.78597));
         link_springRB->Set_SpringK(369149.000);
@@ -387,7 +387,7 @@ class MySimpleCar {
         my_system->AddLink(link_springRB);
 
         // .. create the rod for avoid the steering of the wheel
-        link_distRBlat = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // right rod
+        link_distRBlat = std::make_shared<ChLinkDistance>();  // right rod
         link_distRBlat->Initialize(truss, spindleRB, false, ChVector<>(0.416, 0.059, -1.465965),
                                    ChVector<>(0.821, -0.009, -1.518965));
         my_system->AddLink(link_distRBlat);
@@ -395,7 +395,7 @@ class MySimpleCar {
         // --- Left Back suspension ---
 
         // ..the car right-back spindle
-        spindleLB = (ChSharedPtr<ChBody>)(new ChBody(new ChCollisionModelParallel));
+        spindleLB = std::make_shared<ChBody>(new ChCollisionModelParallel);
         spindleLB->SetIdentifier(-8);
         spindleLB->SetMaterialSurface(mat);
         spindleLB->SetMass(15.91);
@@ -403,13 +403,13 @@ class MySimpleCar {
         spindleLB->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleLB->SetInertiaXX(ChVector<>(4, 2, 2));
         spindleLB->GetCollisionModel()->ClearModel();
-        utils::AddBoxGeometry(spindleLB.get_ptr(), ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
+        utils::AddBoxGeometry(spindleLB.get(), ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
         spindleLB->GetCollisionModel()->BuildModel();
         spindleLB->SetCollide(false);
         my_system->AddBody(spindleLB);
 
         // ..the car left-back wheel
-        wheelLB = (ChSharedPtr<ChBody>)(new ChBody(new ChCollisionModelParallel));
+        wheelLB = std::make_shared<ChBody>(new ChCollisionModelParallel);
         wheelLB->SetIdentifier(-9);
         wheelLB->SetMaterialSurface(mat);
         wheelLB->SetMass(3.0);
@@ -418,53 +418,53 @@ class MySimpleCar {
         wheelLB->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
         wheelLB->GetCollisionModel()->ClearModel();
         if (useSpheres) {
-            utils::AddSphereGeometry(wheelLB.get_ptr(), 0.45, ChVector<>(0, 0, 0));
+            utils::AddSphereGeometry(wheelLB.get(), 0.45, ChVector<>(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelLB.get_ptr(), 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelLB.get(), 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
         }
         wheelLB->GetCollisionModel()->BuildModel();
         wheelLB->SetCollide(true);
         my_system->AddBody(wheelLB);
 
         // .. create the revolute joint between the wheel and the spindle
-        link_revoluteLB = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);  // left, back, upper, 1
+        link_revoluteLB = std::make_shared<ChLinkLockRevolute>();  // left, back, upper, 1
         link_revoluteLB->Initialize(wheelLB, spindleLB, ChCoordsys<>(ChVector<>(-0.91, -0.026, -1.652965),
                                                                      chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
         my_system->AddLink(link_revoluteLB);
 
         // .. create the motor transmission joint between the wheel and the truss (assuming small changes of alignment)
-        link_engineL = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
+        link_engineL = std::make_shared<ChLinkEngine>();
         link_engineL->Initialize(wheelLB, truss, ChCoordsys<>(ChVector<>(-0.91, -0.026, -1.652965),
                                                               chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
         link_engineL->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_CARDANO);  // approx as a double Rzeppa joint
         //    link_engineL->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
         link_engineL->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-        link_engineL->Set_rot_funct(ChSharedPtr<ChFunction>(new ChFunction_Ramp(0, angularSpeed)));
+        link_engineL->Set_rot_funct(std::make_shared<ChFunction_Ramp>(0, angularSpeed));
         my_system->AddLink(link_engineL);
 
         // .. impose distance between two parts (as a massless rod with two spherical joints at the end)
-        link_distLBU1 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // left, front, upper, 1
+        link_distLBU1 = std::make_shared<ChLinkDistance>();  // left, front, upper, 1
         link_distLBU1->Initialize(truss, spindleLB, false, ChVector<>(-0.462, 0.228, -1.339965),
                                   ChVector<>(-0.716, 0.216, -1.652965));
         my_system->AddLink(link_distLBU1);
 
-        link_distLBU2 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // left, back, upper, 2
+        link_distLBU2 = std::make_shared<ChLinkDistance>();  // left, back, upper, 2
         link_distLBU2->Initialize(truss, spindleLB, false, ChVector<>(-0.462, 0.224, -1.611965),
                                   ChVector<>(-0.716, 0.216, -1.652965));
         my_system->AddLink(link_distLBU2);
 
-        link_distLBL1 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // left, back, lower, 1
+        link_distLBL1 = std::make_shared<ChLinkDistance>();  // left, back, lower, 1
         link_distLBL1->Initialize(truss, spindleLB, false, ChVector<>(-0.307, 0, -1.465965),
                                   ChVector<>(-0.787, -0.118, -1.652965));
         my_system->AddLink(link_distLBL1);
 
-        link_distLBL2 = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // left, back, lower, 2
+        link_distLBL2 = std::make_shared<ChLinkDistance>();  // left, back, lower, 2
         link_distLBL2->Initialize(truss, spindleLB, false, ChVector<>(-0.307, 0, -1.911965),
                                   ChVector<>(-0.787, -0.118, -1.652965));
         my_system->AddLink(link_distLBL2);
 
         // .. create the spring between the truss and the spindle
-        link_springLB = ChSharedPtr<ChLinkSpring>(new ChLinkSpring);
+        link_springLB = std::make_shared<ChLinkSpring>();
         link_springLB->Initialize(truss, spindleLB, false, ChVector<>(-0.498, 0.323, -1.79297),
                                   ChVector<>(-0.544, -0.038, -1.78597));
         link_springLB->Set_SpringK(369149.000);
@@ -473,7 +473,7 @@ class MySimpleCar {
         my_system->AddLink(link_springLB);
 
         // .. create the rod for avoid the steering of the wheel
-        link_distLBlat = ChSharedPtr<ChLinkDistance>(new ChLinkDistance);  // right
+        link_distLBlat = std::make_shared<ChLinkDistance>();  // right
         link_distLBlat->Initialize(truss, spindleLB, false, ChVector<>(-0.416, 0.059, -1.465965),
                                    ChVector<>(-0.821, -0.009, -1.518965));
         my_system->AddLink(link_distLBlat);
@@ -547,9 +547,9 @@ class MySimpleCar {
         // it is half of the shaft torque  (multiplied the conic gear transmission ratio)
         double singlewheeltorque = 0.5 * shafttorque * (1.0 / this->conic_tau);
         // Set the wheel torque in both 'engine' links, connecting the wheels to the truss;
-        if (ChSharedPtr<ChFunction_Const> mfun = link_engineL->Get_tor_funct().DynamicCastTo<ChFunction_Const>())
+        if (auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(link_engineL->Get_tor_funct()))
             mfun->Set_yconst(singlewheeltorque);
-        if (ChSharedPtr<ChFunction_Const> mfun = link_engineR->Get_tor_funct().DynamicCastTo<ChFunction_Const>())
+        if (auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(link_engineR->Get_tor_funct()))
             mfun->Set_yconst(singlewheeltorque);
         // debug:print infos on screen:
         // GetLog() << "motor torque="<< motortorque<< "  speed=" <<
@@ -586,7 +586,7 @@ int CreateGranularMaterial(ChSystemParallel* system,
     // Create a material for the granular material
     // -------------------------------------------
 
-    ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
+    auto mat_g = std::make_shared<ChMaterialSurface>();
     mat_g->SetFriction(mu_g);
 
     // ---------------------------------------------
@@ -596,7 +596,7 @@ int CreateGranularMaterial(ChSystemParallel* system,
     // Create the particle generator with a mixture of 100% spheres
     utils::Generator gen(system);
 
-    utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
     m1->setDefaultMaterialDVI(mat_g);
     m1->setDefaultDensity(rho_g);
     m1->setDefaultSize(r_g);
@@ -632,7 +632,7 @@ void AddGround(ChSystemParallelDVI* sys) {
     int groundId = -200;
 
     // Create a common material
-    ChSharedPtr<ChMaterialSurface> mat(new ChMaterialSurface);
+    auto mat = std::make_shared<ChMaterialSurface>();
     mat->SetFriction(1.0f);
 
     // Create the containing bin (2 x 2 x 1)
@@ -644,7 +644,7 @@ void AddGround(ChSystemParallelDVI* sys) {
     double groundWidth = 5;
     double wallHeight = 6;
     double thickness = 0.1;
-    ChSharedBodyPtr ground(new ChBody(new ChCollisionModelParallel));
+    auto ground = std::make_shared<ChBody>(new ChCollisionModelParallel);
     ground->SetMaterialSurface(mat);
     ground->SetIdentifier(groundId);
     ground->SetMass(1);
@@ -654,23 +654,23 @@ void AddGround(ChSystemParallelDVI* sys) {
     ground->SetBodyFixed(true);
 
     ground->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(groundWidth / 2, thickness, 10 * pitLocation_z / 2),
+    utils::AddBoxGeometry(ground.get(), ChVector<>(groundWidth / 2, thickness, 10 * pitLocation_z / 2),
                           ChVector<>(0, -thickness, 0));
 
-    // utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(groundWidth/2, thickness, pitLocation_z/2), ChVector<>(0,
+    // utils::AddBoxGeometry(ground.get(), ChVector<>(groundWidth/2, thickness, pitLocation_z/2), ChVector<>(0,
     // -thickness, pitLocation_z/2));
-    // utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(groundWidth/2, thickness, pitLength/2), ChVector<>(0,
+    // utils::AddBoxGeometry(ground.get(), ChVector<>(groundWidth/2, thickness, pitLength/2), ChVector<>(0,
     // -thickness-pitDepth, pitLocation_z+pitLength/2));
-    // utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(groundWidth/2, thickness,
+    // utils::AddBoxGeometry(ground.get(), ChVector<>(groundWidth/2, thickness,
     // (groundLength-pitLength-pitLocation_z)/2), ChVector<>(0, -thickness,
     // pitLocation_z+pitLength+(groundLength-pitLength-pitLocation_z)/2));
-    // utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(groundWidth/2, pitDepth/2, thickness), ChVector<>(0,
+    // utils::AddBoxGeometry(ground.get(), ChVector<>(groundWidth/2, pitDepth/2, thickness), ChVector<>(0,
     // -pitDepth/2-thickness*2, pitLocation_z-thickness));
-    // utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(groundWidth/2, pitDepth/2, thickness), ChVector<>(0,
+    // utils::AddBoxGeometry(ground.get(), ChVector<>(groundWidth/2, pitDepth/2, thickness), ChVector<>(0,
     // -pitDepth/2-thickness*2, pitLocation_z+pitLength+thickness));
-    // utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(thickness, wallHeight/2+pitDepth/2, groundLength/2),
+    // utils::AddBoxGeometry(ground.get(), ChVector<>(thickness, wallHeight/2+pitDepth/2, groundLength/2),
     // ChVector<>(groundWidth/2+thickness, wallHeight/2-pitDepth/2-thickness*2, groundLength/2));
-    // utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(thickness, wallHeight/2+pitDepth/2, groundLength/2),
+    // utils::AddBoxGeometry(ground.get(), ChVector<>(thickness, wallHeight/2+pitDepth/2, groundLength/2),
     // ChVector<>(-groundWidth/2-thickness, wallHeight/2-pitDepth/2-thickness*2, groundLength/2));
     ground->GetCollisionModel()->BuildModel();
 

@@ -125,15 +125,14 @@ void CreateContainer(ChSystemParallel* system) {
     double hThickness = 0.1;
 
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
-    mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_c = std::make_shared<ChMaterialSurfaceDEM>();
     mat_c->SetYoungModulus(2e6f);
     mat_c->SetFriction(0.4f);
     mat_c->SetRestitution(0.1f);
 
     utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_c(new ChMaterialSurface);
+    auto mat_c = std::make_shared<ChMaterialSurface>();
     mat_c->SetFriction(0.4f);
 
     utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
@@ -147,20 +146,19 @@ void CreateContainer(ChSystemParallel* system) {
 void CreateParticles(ChSystemParallel* system) {
 // Create a material for the ball mixture.
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
-    mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
     mat_g->SetYoungModulus(1e8f);
     mat_g->SetFriction(0.4f);
     mat_g->SetRestitution(0.1f);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
+    auto mat_g = std::make_shared<ChMaterialSurface>();
     mat_g->SetFriction(0.4f);
 #endif
 
     // Create a mixture entirely made out of spheres.
     utils::Generator gen(system);
 
-    utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
 #ifdef USE_DEM
     m1->setDefaultMaterialDEM(mat_g);
 #else
@@ -195,13 +193,12 @@ void CreateObject(ChSystemParallel* system, double z) {
 // -----------------------------------------
 
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_o;
-    mat_o = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_o = std::make_shared<ChMaterialSurfaceDEM>();
     mat_o->SetYoungModulus(1e8f);
     mat_o->SetFriction(0.4f);
     mat_o->SetRestitution(0.1f);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_o(new ChMaterialSurface);
+    auto mat_o = std::make_shared<ChMaterialSurface>();
     mat_o->SetFriction(0.4f);
 #endif
 
@@ -210,10 +207,10 @@ void CreateObject(ChSystemParallel* system, double z) {
 // --------------------------
 
 #ifdef USE_DEM
-    ChSharedPtr<ChBody> obj(new ChBody(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
+    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     obj->SetMaterialSurface(mat_o);
 #else
-    ChSharedBodyPtr obj(new ChBody(new ChCollisionModelParallel));
+    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel);
     obj->SetMaterialSurface(mat_o);
 #endif
 
@@ -239,14 +236,14 @@ void CreateObject(ChSystemParallel* system, double z) {
             rb = utils::CalcSphereBradius(radius);
             vol = utils::CalcSphereVolume(radius);
             J = utils::CalcSphereGyration(radius);
-            utils::AddSphereGeometry(obj.get_ptr(), radius);
+            utils::AddSphereGeometry(obj.get(), radius);
         } break;
         case collision::BOX: {
             ChVector<> hdims(0.5, 0.75, 1.0);
             rb = utils::CalcBoxBradius(hdims);
             vol = utils::CalcBoxVolume(hdims);
             J = utils::CalcBoxGyration(hdims);
-            utils::AddBoxGeometry(obj.get_ptr(), hdims);
+            utils::AddBoxGeometry(obj.get(), hdims);
         } break;
         case collision::CAPSULE: {
             double radius = 0.25;
@@ -254,7 +251,7 @@ void CreateObject(ChSystemParallel* system, double z) {
             rb = utils::CalcCapsuleBradius(radius, hlen);
             vol = utils::CalcCapsuleVolume(radius, hlen);
             J = utils::CalcCapsuleGyration(radius, hlen);
-            utils::AddCapsuleGeometry(obj.get_ptr(), radius, hlen);
+            utils::AddCapsuleGeometry(obj.get(), radius, hlen);
         } break;
         case collision::CYLINDER: {
             double radius = 0.25;
@@ -262,7 +259,7 @@ void CreateObject(ChSystemParallel* system, double z) {
             rb = utils::CalcCylinderBradius(radius, hlen);
             vol = utils::CalcCylinderVolume(radius, hlen);
             J = utils::CalcCylinderGyration(radius, hlen);
-            utils::AddCylinderGeometry(obj.get_ptr(), radius, hlen);
+            utils::AddCylinderGeometry(obj.get(), radius, hlen);
         } break;
         case collision::ROUNDEDCYL: {
             double radius = 0.25;
@@ -271,7 +268,7 @@ void CreateObject(ChSystemParallel* system, double z) {
             rb = utils::CalcRoundedCylinderBradius(radius, hlen, srad);
             vol = utils::CalcRoundedCylinderVolume(radius, hlen, srad);
             J = utils::CalcRoundedCylinderGyration(radius, hlen, srad);
-            utils::AddRoundedCylinderGeometry(obj.get_ptr(), radius, hlen, srad);
+            utils::AddRoundedCylinderGeometry(obj.get(), radius, hlen, srad);
         } break;
     }
 
