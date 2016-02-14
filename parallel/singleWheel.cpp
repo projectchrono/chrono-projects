@@ -205,12 +205,11 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // -------------------------------
 
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_walls;
-    mat_walls = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_walls = std::make_shared<ChMaterialSurfaceDEM>();
     mat_walls->SetYoungModulus(Y_walls);
     mat_walls->SetFriction(mu_walls);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_walls(new ChMaterialSurface);
+    auto mat_walls = std::make_shared<ChMaterialSurface>();
     mat_walls->SetFriction(mu_walls);
 #endif
 
@@ -219,10 +218,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // ----------------------
 
 #ifdef USE_DEM
-    ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+    auto ground = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     ground->SetMaterialSurface(mat_walls);
 #else
-    ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel));
+    auto ground = std::make_shared<ChBody>(new ChCollisionModelParallel);
     ground->SetMaterialSurface(mat_walls);
 #endif
 
@@ -233,11 +232,11 @@ void CreateMechanismBodies(ChSystemParallel* system) {
     // Attach geometry of the containing bin.  Disable contact ground-shearBox
     // and ground-loadPlate.
     ground->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
-    utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
-    utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
-    utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
-    utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, hdimY + hthick, hdimZ));
+    utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
+    utils::AddBoxGeometry(ground.get(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
+    utils::AddBoxGeometry(ground.get(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
+    utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
+    utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, hdimY + hthick, hdimZ));
     ground->GetCollisionModel()->BuildModel();
 
     system->AddBody(ground);
@@ -249,10 +248,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // Initially, the wheel is fixed to ground.
 
 #ifdef USE_DEM
-    ChSharedPtr<ChBody> wheel(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+    auto wheel = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     wheel->SetMaterialSurface(mat_walls);
 #else
-    ChSharedBodyPtr wheel(new ChBody(new ChCollisionModelParallel));
+    auto wheel = std::make_shared<ChBody>(new ChCollisionModelParallel);
     wheel->SetMaterialSurface(mat_walls);
 #endif
 
@@ -267,7 +266,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 
     // Add geometry of the wheel.
     wheel->GetCollisionModel()->ClearModel();
-    utils::AddCylinderGeometry(wheel.get_ptr(), wheelRadius, wheelWidth / 2, ChVector<>(0, 0, 0), QUNIT);
+    utils::AddCylinderGeometry(wheel.get(), wheelRadius, wheelWidth / 2, ChVector<>(0, 0, 0), QUNIT);
     wheel->GetCollisionModel()->BuildModel();
 
     system->AddBody(wheel);
@@ -280,10 +279,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // It is released after the settling phase.
 
 #ifdef USE_DEM
-    ChSharedPtr<ChBody> chassis(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+    auto chassis = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     chassis->SetMaterialSurface(mat_walls);
 #else
-    ChSharedBodyPtr chassis(new ChBody(new ChCollisionModelParallel));
+    auto chassis = std::make_shared<ChBody>(new ChCollisionModelParallel);
     chassis->SetMaterialSurface(mat_walls);
 #endif
 
@@ -295,7 +294,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 
     // Add geometry of the wheel.
     chassis->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(chassis.get_ptr(), ChVector<>(.1 * wheelRadius, .1 * wheelRadius, .1 * wheelRadius),
+    utils::AddBoxGeometry(chassis.get(), ChVector<>(.1 * wheelRadius, .1 * wheelRadius, .1 * wheelRadius),
                           ChVector<>(0, 0, 0));
     chassis->GetCollisionModel()->BuildModel();
 
@@ -309,10 +308,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // It is released after the settling phase.
 
 #ifdef USE_DEM
-    ChSharedPtr<ChBody> axle(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+    auto axle = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     axle->SetMaterialSurface(mat_walls);
 #else
-    ChSharedBodyPtr axle(new ChBody(new ChCollisionModelParallel));
+    auto axle = std::make_shared<ChBody>(new ChCollisionModelParallel);
     axle->SetMaterialSurface(mat_walls);
 #endif
 
@@ -324,7 +323,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 
     // Add geometry of the wheel.
     axle->GetCollisionModel()->ClearModel();
-    utils::AddSphereGeometry(axle.get_ptr(), 0.1 * wheelRadius, ChVector<>(0, 0, 0));
+    utils::AddSphereGeometry(axle.get(), 0.1 * wheelRadius, ChVector<>(0, 0, 0));
     axle->GetCollisionModel()->BuildModel();
 
     system->AddBody(axle);
@@ -335,16 +334,16 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // joint and create a linear actuator.
 // =============================================================================
 
-void ConnectChassisToGround(ChSystemParallel* system, ChSharedPtr<ChBody> ground, ChSharedPtr<ChBody> chassis) {
-    ChSharedPtr<ChLinkLockPrismatic> prismatic(new ChLinkLockPrismatic);
+void ConnectChassisToGround(ChSystemParallel* system, std::shared_ptr<ChBody> ground, std::shared_ptr<ChBody> chassis) {
+    auto prismatic = std::make_shared<ChLinkLockPrismatic>();
     prismatic->Initialize(ground, chassis, ChCoordsys<>(chassis->GetPos(), Q_from_AngY(CH_C_PI_2)));
     prismatic->SetName("prismatic_chassis_ground");
     system->AddLink(prismatic);
 
     velocity = angVel * wheelRadius * (1.0 - wheelSlip);
-    ChSharedPtr<ChFunction_Ramp> actuator_fun(new ChFunction_Ramp(0.0, velocity));
+    auto actuator_fun = std::make_shared<ChFunction_Ramp>(0.0, velocity);
 
-    ChSharedPtr<ChLinkLinActuator> actuator(new ChLinkLinActuator);
+    auto actuator = std::make_shared<ChLinkLinActuator>();
     actuator->Initialize(ground, chassis, false, ChCoordsys<>(chassis->GetPos(), QUNIT),
                          ChCoordsys<>(chassis->GetPos() + ChVector<>(1, 0, 0), QUNIT));
     actuator->SetName("actuator");
@@ -358,8 +357,8 @@ void ConnectChassisToGround(ChSystemParallel* system, ChSharedPtr<ChBody> ground
 // joint.
 // =============================================================================
 
-void ConnectChassisToAxle(ChSystemParallel* system, ChSharedPtr<ChBody> chassis, ChSharedPtr<ChBody> axle) {
-    ChSharedPtr<ChLinkLockPrismatic> prismatic(new ChLinkLockPrismatic);
+void ConnectChassisToAxle(ChSystemParallel* system, std::shared_ptr<ChBody> chassis, std::shared_ptr<ChBody> axle) {
+    auto prismatic = std::make_shared<ChLinkLockPrismatic>();
     prismatic->Initialize(chassis, axle, ChCoordsys<>(chassis->GetPos(), QUNIT));
     prismatic->SetName("prismatic_axle_chassis");
     system->AddLink(prismatic);
@@ -369,12 +368,12 @@ void ConnectChassisToAxle(ChSystemParallel* system, ChSharedPtr<ChBody> chassis,
 // Connect the wheel to the axle through a engine joint.
 // =============================================================================
 
-void ConnectWheelToAxle(ChSystemParallel* system, ChSharedPtr<ChBody> wheel, ChSharedPtr<ChBody> axle) {
-    ChSharedPtr<ChLinkEngine> motor(new ChLinkEngine);
+void ConnectWheelToAxle(ChSystemParallel* system, std::shared_ptr<ChBody> wheel, std::shared_ptr<ChBody> axle) {
+    auto motor = std::make_shared<ChLinkEngine>();
     motor->Initialize(wheel, axle, ChCoordsys<>(wheel->GetPos(), chrono::Q_from_AngAxis(CH_C_PI / 2.0, VECT_X)));
     motor->SetName("engine_wheel_axle");
     motor->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-    motor->Set_rot_funct(ChSharedPtr<ChFunction>(new ChFunction_Ramp(0, -angVel)));
+    motor->Set_rot_funct(std::make_shared<ChFunction_Ramp>(0, -angVel));
     system->AddLink(motor);
 }
 
@@ -393,12 +392,11 @@ int CreateGranularMaterial(ChSystemParallel* system) {
 // -------------------------------------------
 
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
-    mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
+    auto mat_g = std::make_shared<ChMaterialSurface>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -409,7 +407,7 @@ int CreateGranularMaterial(ChSystemParallel* system) {
     // Create the particle generator with a mixture of 100% spheres
     utils::Generator gen(system);
 
-    utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
 #ifdef USE_DEM
     m1->setDefaultMaterialDEM(mat_g);
 #else
@@ -448,12 +446,11 @@ void CreateBall(ChSystemParallel* system) {
 // ------------------------------
 
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
-    mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
+    auto mat_g = std::make_shared<ChMaterialSurface>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -462,10 +459,10 @@ void CreateBall(ChSystemParallel* system) {
 // ---------------
 
 #ifdef USE_DEM
-    ChSharedPtr<ChBody> ball(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     ball->SetMaterialSurface(mat_g);
 #else
-    ChSharedBodyPtr ball(new ChBody(new ChCollisionModelParallel));
+    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel);
     ball->SetMaterialSurface(mat_g);
 #endif
 
@@ -476,7 +473,7 @@ void CreateBall(ChSystemParallel* system) {
     ball->SetBodyFixed(false);
 
     ball->GetCollisionModel()->ClearModel();
-    utils::AddSphereGeometry(ball.get_ptr(), radius_ball);
+    utils::AddSphereGeometry(ball.get(), radius_ball);
     ball->GetCollisionModel()->BuildModel();
 
     system->AddBody(ball);
@@ -603,14 +600,14 @@ int main(int argc, char* argv[]) {
     double time_min = 0;
     double time_end;
     int out_fps;
-    ChSharedPtr<ChBody> ground;
-    ChSharedPtr<ChBody> wheel;
-    ChSharedPtr<ChBody> chassis;
-    ChSharedPtr<ChBody> axle;
-    ChSharedPtr<ChLinkLockPrismatic> prismatic_chassis_ground;
-    ChSharedPtr<ChLinkLockPrismatic> prismatic_axle_chassis;
-    ChSharedPtr<ChLinkLinActuator> actuator;
-    ChSharedPtr<ChLinkEngine> engine_wheel_axle;
+    std::shared_ptr<ChBody> ground;
+    std::shared_ptr<ChBody> wheel;
+    std::shared_ptr<ChBody> chassis;
+    std::shared_ptr<ChBody> axle;
+    std::shared_ptr<ChLinkLockPrismatic> prismatic_chassis_ground;
+    std::shared_ptr<ChLinkLockPrismatic> prismatic_axle_chassis;
+    std::shared_ptr<ChLinkLinActuator> actuator;
+    std::shared_ptr<ChLinkEngine> engine_wheel_axle;
 
     switch (problem) {
         case SETTLING: {
@@ -622,14 +619,10 @@ int main(int argc, char* argv[]) {
             CreateMechanismBodies(msystem);
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
-            wheel = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(1));
-            chassis = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(2));
-            axle = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(3));
-            msystem->Get_bodylist()->at(0)->AddRef();
-            msystem->Get_bodylist()->at(1)->AddRef();
-            msystem->Get_bodylist()->at(2)->AddRef();
-            msystem->Get_bodylist()->at(3)->AddRef();
+            ground = msystem->Get_bodylist()->at(0);
+            wheel = msystem->Get_bodylist()->at(1);
+            chassis = msystem->Get_bodylist()->at(2);
+            axle = msystem->Get_bodylist()->at(3);
 
             // Create granular material.
             int num_particles = CreateGranularMaterial(msystem);
@@ -649,14 +642,10 @@ int main(int argc, char* argv[]) {
             cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
-            wheel = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(1));
-            chassis = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(2));
-            axle = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(3));
-            msystem->Get_bodylist()->at(0)->AddRef();
-            msystem->Get_bodylist()->at(1)->AddRef();
-            msystem->Get_bodylist()->at(2)->AddRef();
-            msystem->Get_bodylist()->at(3)->AddRef();
+            ground = msystem->Get_bodylist()->at(0);
+            wheel = msystem->Get_bodylist()->at(1);
+            chassis = msystem->Get_bodylist()->at(2);
+            axle = msystem->Get_bodylist()->at(3);
 
             // Move the load plate just above the granular material.
             double highest, lowest;
@@ -669,7 +658,7 @@ int main(int argc, char* argv[]) {
 
             // Connect the chassis to the axle.
             ConnectChassisToAxle(msystem, chassis, axle);
-            prismatic_axle_chassis = msystem->SearchLink("prismatic_axle_chassis").StaticCastTo<ChLinkLockPrismatic>();
+            prismatic_axle_chassis = std::static_pointer_cast<ChLinkLockPrismatic>(msystem->SearchLink("prismatic_axle_chassis"));
 
             // Release the axle.
             axle->SetBodyFixed(false);
@@ -680,7 +669,7 @@ int main(int argc, char* argv[]) {
             // Connect the axle to the chassis.
             angVel = 0.0;  // Don't rotate the wheel in this stage
             ConnectWheelToAxle(msystem, wheel, axle);
-            engine_wheel_axle = msystem->SearchLink("engine_wheel_axle").StaticCastTo<ChLinkEngine>();
+            engine_wheel_axle = std::static_pointer_cast<ChLinkEngine>(msystem->SearchLink("engine_wheel_axle"));
 
             // Release the axle.
             wheel->SetBodyFixed(false);
@@ -698,27 +687,22 @@ int main(int argc, char* argv[]) {
             cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
-            wheel = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(1));
-            chassis = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(2));
-            axle = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(3));
-            msystem->Get_bodylist()->at(0)->AddRef();
-            msystem->Get_bodylist()->at(1)->AddRef();
-            msystem->Get_bodylist()->at(2)->AddRef();
-            msystem->Get_bodylist()->at(3)->AddRef();
+            ground = msystem->Get_bodylist()->at(0);
+            wheel = msystem->Get_bodylist()->at(1);
+            chassis = msystem->Get_bodylist()->at(2);
+            axle = msystem->Get_bodylist()->at(3);
 
             // Connect the chassis and get a handle to the actuator.
             ConnectChassisToGround(msystem, ground, chassis);
-            prismatic_chassis_ground =
-                msystem->SearchLink("prismatic_chassis_ground").StaticCastTo<ChLinkLockPrismatic>();
-            actuator = msystem->SearchLink("actuator").StaticCastTo<ChLinkLinActuator>();
+            prismatic_chassis_ground = std::static_pointer_cast<ChLinkLockPrismatic>(msystem->SearchLink("prismatic_chassis_ground"));
+            actuator = std::static_pointer_cast<ChLinkLinActuator>(msystem->SearchLink("actuator"));
 
             // Release the load plate.
             chassis->SetBodyFixed(false);
 
             // Connect the load plate to the shear box.
             ConnectChassisToAxle(msystem, chassis, axle);
-            prismatic_axle_chassis = msystem->SearchLink("prismatic_axle_chassis").StaticCastTo<ChLinkLockPrismatic>();
+            prismatic_axle_chassis = std::static_pointer_cast<ChLinkLockPrismatic>(msystem->SearchLink("prismatic_axle_chassis"));
 
             // Release the axle.
             axle->SetBodyFixed(false);
@@ -728,7 +712,7 @@ int main(int argc, char* argv[]) {
 
             // Connect the axle to the chassis.
             ConnectWheelToAxle(msystem, wheel, axle);
-            engine_wheel_axle = msystem->SearchLink("engine_wheel_axle").StaticCastTo<ChLinkEngine>();
+            engine_wheel_axle = std::static_pointer_cast<ChLinkEngine>(msystem->SearchLink("engine_wheel_axle"));
 
             // Release the axle.
             wheel->SetBodyFixed(false);
@@ -750,14 +734,10 @@ int main(int argc, char* argv[]) {
             CreateBall(msystem);
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
-            wheel = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(1));
-            chassis = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(2));
-            axle = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(3));
-            msystem->Get_bodylist()->at(0)->AddRef();
-            msystem->Get_bodylist()->at(1)->AddRef();
-            msystem->Get_bodylist()->at(2)->AddRef();
-            msystem->Get_bodylist()->at(3)->AddRef();
+            ground = msystem->Get_bodylist()->at(0);
+            wheel = msystem->Get_bodylist()->at(1);
+            chassis = msystem->Get_bodylist()->at(2);
+            axle = msystem->Get_bodylist()->at(3);
 
             // Move the wheel just above the ground.
             ChVector<> pos = wheel->GetPos();
@@ -767,15 +747,14 @@ int main(int argc, char* argv[]) {
 
             // Connect the chassis and get a handle to the actuator.
             ConnectChassisToGround(msystem, ground, chassis);
-            prismatic_chassis_ground =
-                msystem->SearchLink("prismatic_chassis_ground").StaticCastTo<ChLinkLockPrismatic>();
-            actuator = msystem->SearchLink("actuator").StaticCastTo<ChLinkLinActuator>();
+            prismatic_chassis_ground = std::static_pointer_cast<ChLinkLockPrismatic>(msystem->SearchLink("prismatic_chassis_ground"));
+            actuator = std::static_pointer_cast<ChLinkLinActuator>(msystem->SearchLink("actuator"));
 
             chassis->SetBodyFixed(false);
 
             // Connect the axle to the chassis.
             ConnectChassisToAxle(msystem, chassis, axle);
-            prismatic_axle_chassis = msystem->SearchLink("prismatic_axle_chassis").StaticCastTo<ChLinkLockPrismatic>();
+            prismatic_axle_chassis = std::static_pointer_cast<ChLinkLockPrismatic>(msystem->SearchLink("prismatic_axle_chassis"));
 
             // Release the axle.
             axle->SetBodyFixed(false);
@@ -785,7 +764,7 @@ int main(int argc, char* argv[]) {
 
             // Connect the axle to the chassis.
             ConnectWheelToAxle(msystem, wheel, axle);
-            engine_wheel_axle = msystem->SearchLink("engine_wheel_axle").StaticCastTo<ChLinkEngine>();
+            engine_wheel_axle = std::static_pointer_cast<ChLinkEngine>(msystem->SearchLink("engine_wheel_axle"));
 
             // Release the axle.
             wheel->SetBodyFixed(false);

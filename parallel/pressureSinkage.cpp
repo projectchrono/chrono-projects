@@ -203,13 +203,12 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // -------------------------------
 
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_walls;
-    mat_walls = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_walls = std::make_shared<ChMaterialSurfaceDEM>();
     mat_walls->SetYoungModulus(Y_walls);
     mat_walls->SetFriction(mu_walls);
     mat_walls->SetRestitution(cr_walls);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_walls(new ChMaterialSurface);
+    auto mat_walls = std::make_shared<ChMaterialSurface>();
     mat_walls->SetFriction(mu_walls);
 #endif
 
@@ -218,10 +217,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // ----------------------
 
 #ifdef USE_DEM
-    ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+    auto ground = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     ground->SetMaterialSurface(mat_walls);
 #else
-    ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel));
+    auto ground = std::make_shared<ChBody>(new ChCollisionModelParallel);
     ground->SetMaterialSurface(mat_walls);
 #endif
 
@@ -231,11 +230,11 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 
     // Attach geometry of the containing bin
     ground->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
-    utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
-    utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
-    utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
-    utils::AddBoxGeometry(ground.get_ptr(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, hdimY + hthick, hdimZ));
+    utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
+    utils::AddBoxGeometry(ground.get(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
+    utils::AddBoxGeometry(ground.get(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
+    utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
+    utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, hdimY + hthick, hdimZ));
     ground->GetCollisionModel()->BuildModel();
 
     system->AddBody(ground);
@@ -248,10 +247,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // It is released after the settling phase.
 
 #ifdef USE_DEM
-    ChSharedPtr<ChBody> plate(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+    auto plate = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     plate->SetMaterialSurface(mat_walls);
 #else
-    ChSharedBodyPtr plate(new ChBody(new ChCollisionModelParallel));
+    auto plate = std::make_shared<ChBody>(new ChCollisionModelParallel);
     plate->SetMaterialSurface(mat_walls);
 #endif
 
@@ -269,15 +268,15 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // translational joint and create a linear actuator.
 // =============================================================================
 
-void ConnectLoadPlate(ChSystemParallel* system, ChSharedPtr<ChBody> ground, ChSharedPtr<ChBody> plate) {
-    ChSharedPtr<ChLinkLockPrismatic> prismatic(new ChLinkLockPrismatic);
+void ConnectLoadPlate(ChSystemParallel* system, std::shared_ptr<ChBody> ground, std::shared_ptr<ChBody> plate) {
+    auto prismatic = std::make_shared<ChLinkLockPrismatic>();
     prismatic->Initialize(ground, plate, ChCoordsys<>(ChVector<>(0, 0, 2 * hdimZ), QUNIT));
     prismatic->SetName("prismatic");
     system->AddLink(prismatic);
 
-    ChSharedPtr<ChFunction_Ramp> actuator_fun(new ChFunction_Ramp(0.0, desiredVelocity));
+    auto actuator_fun = std::make_shared<ChFunction_Ramp>(0.0, desiredVelocity);
 
-    ChSharedPtr<ChLinkLinActuator> actuator(new ChLinkLinActuator);
+    auto actuator = std::make_shared<ChLinkLinActuator>();
     ChVector<> pt1(0, 0, 2 * hdimZ + 1);
     ChVector<> pt2(0, 0, 2 * hdimZ);
     actuator->Initialize(ground, plate, false, ChCoordsys<>(pt1, QUNIT), ChCoordsys<>(pt2, QUNIT));
@@ -302,13 +301,12 @@ int CreateGranularMaterial(ChSystemParallel* system) {
 // -------------------------------------------
 
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
-    mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
+    auto mat_g = std::make_shared<ChMaterialSurface>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -319,7 +317,7 @@ int CreateGranularMaterial(ChSystemParallel* system) {
     // Create the particle generator with a mixture of 100% spheres
     utils::Generator gen(system);
 
-    utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
 #ifdef USE_DEM
     m1->setDefaultMaterialDEM(mat_g);
 #else
@@ -358,13 +356,12 @@ void CreateBall(ChSystemParallel* system) {
 // ------------------------------
 
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
-    mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
+    auto mat_g = std::make_shared<ChMaterialSurface>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -373,10 +370,10 @@ void CreateBall(ChSystemParallel* system) {
 // ---------------
 
 #ifdef USE_DEM
-    ChSharedPtr<ChBody> ball(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
+    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
     ball->SetMaterialSurface(mat_g);
 #else
-    ChSharedBodyPtr ball(new ChBody(new ChCollisionModelParallel));
+    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel);
     ball->SetMaterialSurface(mat_g);
 #endif
 
@@ -387,7 +384,7 @@ void CreateBall(ChSystemParallel* system) {
     ball->SetBodyFixed(false);
 
     ball->GetCollisionModel()->ClearModel();
-    utils::AddSphereGeometry(ball.get_ptr(), radius_ball);
+    utils::AddSphereGeometry(ball.get(), radius_ball);
     ball->GetCollisionModel()->BuildModel();
 
     system->AddBody(ball);
@@ -521,10 +518,10 @@ int main(int argc, char* argv[]) {
     double time_min = 0;
     double time_end;
     int out_fps;
-    ChSharedPtr<ChBody> ground;
-    ChSharedPtr<ChBody> loadPlate;
-    ChSharedPtr<ChLinkLockPrismatic> prismatic;
-    ChSharedPtr<ChLinkLinActuator> actuator;
+    std::shared_ptr<ChBody> ground;
+    std::shared_ptr<ChBody> loadPlate;
+    std::shared_ptr<ChLinkLockPrismatic> prismatic;
+    std::shared_ptr<ChLinkLinActuator> actuator;
 
     switch (problem) {
         case SETTLING: {
@@ -536,10 +533,8 @@ int main(int argc, char* argv[]) {
             CreateMechanismBodies(msystem);
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
-            loadPlate = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(1));
-            msystem->Get_bodylist()->at(0)->AddRef();
-            msystem->Get_bodylist()->at(1)->AddRef();
+            ground = msystem->Get_bodylist()->at(0);
+            loadPlate = msystem->Get_bodylist()->at(1);
 
             // Create granular material.
             int num_particles = CreateGranularMaterial(msystem);
@@ -559,10 +554,8 @@ int main(int argc, char* argv[]) {
             cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
-            loadPlate = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(1));
-            msystem->Get_bodylist()->at(0)->AddRef();
-            msystem->Get_bodylist()->at(1)->AddRef();
+            ground = msystem->Get_bodylist()->at(0);
+            loadPlate = msystem->Get_bodylist()->at(1);
 
             // Move the load plate just above the granular material.
             double highest, lowest;
@@ -573,15 +566,15 @@ int main(int argc, char* argv[]) {
 
             // Add collision geometry to plate
             loadPlate->GetCollisionModel()->ClearModel();
-            utils::AddBoxGeometry(loadPlate.get_ptr(), ChVector<>(hdimX_p, hdimY_p, hdimZ_p),
+            utils::AddBoxGeometry(loadPlate.get(), ChVector<>(hdimX_p, hdimY_p, hdimZ_p),
                                   ChVector<>(0, 0, hdimZ_p));
             loadPlate->GetCollisionModel()->BuildModel();
 
             // If using an actuator, connect the load plate and get a handle to the actuator.
             if (use_actuator) {
                 ConnectLoadPlate(msystem, ground, loadPlate);
-                prismatic = msystem->SearchLink("prismatic").StaticCastTo<ChLinkLockPrismatic>();
-                actuator = msystem->SearchLink("actuator").StaticCastTo<ChLinkLinActuator>();
+                prismatic = std::static_pointer_cast<ChLinkLockPrismatic>(msystem->SearchLink("prismatic"));
+                actuator = std::static_pointer_cast<ChLinkLinActuator>(msystem->SearchLink("actuator"));
             }
 
             // Release the load plate.
@@ -604,10 +597,8 @@ int main(int argc, char* argv[]) {
             CreateBall(msystem);
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(0));
-            loadPlate = ChSharedPtr<ChBody>(msystem->Get_bodylist()->at(1));
-            msystem->Get_bodylist()->at(0)->AddRef();
-            msystem->Get_bodylist()->at(1)->AddRef();
+            ground = msystem->Get_bodylist()->at(0);
+            loadPlate = msystem->Get_bodylist()->at(1);
 
             // Move the load plate just above the test ball.
             ChVector<> pos = loadPlate->GetPos();
@@ -616,14 +607,14 @@ int main(int argc, char* argv[]) {
 
             // Add collision geometry to plate
             loadPlate->GetCollisionModel()->ClearModel();
-            utils::AddBoxGeometry(loadPlate.get_ptr(), ChVector<>(hdimX_p, hdimY_p, hdimZ_p),
+            utils::AddBoxGeometry(loadPlate.get(), ChVector<>(hdimX_p, hdimY_p, hdimZ_p),
                                   ChVector<>(0, 0, hdimZ_p));
             loadPlate->GetCollisionModel()->BuildModel();
 
             // If using an actuator, connect the shear box and get a handle to the actuator.
             if (use_actuator) {
                 ConnectLoadPlate(msystem, ground, loadPlate);
-                actuator = msystem->SearchLink("actuator").StaticCastTo<ChLinkLinActuator>();
+                actuator = std::static_pointer_cast<ChLinkLinActuator>(msystem->SearchLink("actuator"));
             }
 
             // Release the shear box when using an actuator.
@@ -778,12 +769,12 @@ int main(int argc, char* argv[]) {
         }
 
         // Find maximum constraint violation
-        if (!prismatic.IsNull()) {
+        if (prismatic) {
             ChMatrix<>* C = prismatic->GetC();
             for (int i = 0; i < 5; i++)
                 max_cnstr_viol[0] = std::max(max_cnstr_viol[0], std::abs(C->GetElement(i, 0)));
         }
-        if (!actuator.IsNull()) {
+        if (actuator) {
             ChMatrix<>* C = actuator->GetC();
             max_cnstr_viol[1] = std::max(max_cnstr_viol[2], std::abs(C->GetElement(0, 0)));
         }

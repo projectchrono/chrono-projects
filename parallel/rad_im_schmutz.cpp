@@ -171,12 +171,12 @@ class Mechanism {
         return ChVector<>(-d - ca * (a + c + w_w / 2) + sa * r_w, 0, h + sa * (a + c + w_w / 2) + ca * r_w);
     }
 
-    ChSharedPtr<ChBody> m_ground;
-    ChSharedPtr<ChBody> m_sled;
-    ChSharedPtr<ChBody> m_wheel;
+    std::shared_ptr<ChBody> m_ground;
+    std::shared_ptr<ChBody> m_sled;
+    std::shared_ptr<ChBody> m_wheel;
 
-    ChSharedPtr<ChLinkLockPrismatic> m_prismatic;
-    ChSharedPtr<ChLinkLockRevolute> m_revolute;
+    std::shared_ptr<ChLinkLockPrismatic> m_prismatic;
+    std::shared_ptr<ChLinkLockRevolute> m_revolute;
 };
 
 Mechanism::Mechanism(ChSystemParallel* system, double h) {
@@ -189,9 +189,9 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
 // Create the ground body
 #ifdef USE_DEM
-    m_ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
+    m_ground = std::make_shared<ChBody>(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
 #else
-    m_ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+    m_ground = std::make_shared<ChBody>(new collision::ChCollisionModelParallel);
 #endif
     m_ground->SetIdentifier(-1);
     m_ground->SetBodyFixed(true);
@@ -201,9 +201,9 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
 // Create the sled body
 #ifdef USE_DEM
-    m_sled = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
+    m_sled = std::make_shared<ChBody>(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
 #else
-    m_sled = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+    m_sled = std::make_shared<ChBody>(new collision::ChCollisionModelParallel);
 #endif
     m_sled->SetIdentifier(1);
     m_sled->SetMass(mass1);
@@ -213,13 +213,13 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
     m_sled->SetBodyFixed(false);
     m_sled->SetCollide(false);
 
-    ChSharedPtr<ChBoxShape> box_sled(new ChBoxShape);
+    auto box_sled = std::make_shared<ChBoxShape>();
     box_sled->GetBoxGeometry().Size = ChVector<>(e, e / 3, e / 3);
     box_sled->Pos = ChVector<>(0, 0, 0);
     box_sled->Rot = ChQuaternion<>(1, 0, 0, 0);
     m_sled->AddAsset(box_sled);
 
-    ChSharedPtr<ChColorAsset> col_sled(new ChColorAsset);
+    auto col_sled = std::make_shared<ChColorAsset>();
     col_sled->SetColor(ChColor(0.7f, 0.3f, 0.3f));
     m_sled->AddAsset(col_sled);
 
@@ -227,23 +227,21 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
 // Create a material for the wheel body
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_w;
-    mat_w = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_w = std::make_shared<ChMaterialSurfaceDEM>();
     mat_w->SetYoungModulus(2e6f);
     mat_w->SetFriction(0.4f);
     mat_w->SetRestitution(0.1f);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_w(new ChMaterialSurface);
+    auto mat_w = std::make_shared<ChMaterialSurface>();
     mat_w->SetFriction(0.4f);
 #endif
 
 // Create the wheel body
 #ifdef USE_DEM
-    ChSharedPtr<ChBody> wheel(new ChBody(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM));
-    wheel->SetMaterialSurface(mat_w);
-    m_wheel = wheel;
+    m_wheel = std::make_shared<ChBody>(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    m_wheel->SetMaterialSurface(mat_w);
 #else
-    m_wheel = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+    m_wheel = std::make_shared<ChBody>(new collision::ChCollisionModelParallel);
     m_wheel->SetMaterialSurface(mat_w);
 #endif
     m_wheel->SetIdentifier(2);
@@ -258,35 +256,35 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
     m_wheel->GetCollisionModel()->ClearModel();
     switch (wheel_shape) {
         case collision::CYLINDER:
-            utils::AddCylinderGeometry(m_wheel.get_ptr(), r_w, w_w / 2, ChVector<>(c, 0, -b), Q_from_AngZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(m_wheel.get(), r_w, w_w / 2, ChVector<>(c, 0, -b), Q_from_AngZ(CH_C_PI_2));
             break;
         case collision::ROUNDEDCYL:
-            utils::AddRoundedCylinderGeometry(m_wheel.get_ptr(), r_w - s_w, w_w / 2 - s_w, s_w, ChVector<>(c, 0, -b),
+            utils::AddRoundedCylinderGeometry(m_wheel.get(), r_w - s_w, w_w / 2 - s_w, s_w, ChVector<>(c, 0, -b),
                                               Q_from_AngZ(CH_C_PI_2));
             break;
     }
     m_wheel->GetCollisionModel()->BuildModel();
 
-    ChSharedPtr<ChCapsuleShape> cap_wheel(new ChCapsuleShape);
+    auto cap_wheel = std::make_shared<ChCapsuleShape>();
     cap_wheel->GetCapsuleGeometry().hlen = (a + c) / 2 - w_w / 4;
     cap_wheel->GetCapsuleGeometry().rad = w_w / 4;
     cap_wheel->Pos = ChVector<>((c - a) / 2, 0, -b);
     cap_wheel->Rot = Q_from_AngZ(CH_C_PI_2);
     m_wheel->AddAsset(cap_wheel);
 
-    ChSharedPtr<ChColorAsset> col_wheel(new ChColorAsset);
+    auto col_wheel = std::make_shared<ChColorAsset>();
     col_wheel->SetColor(ChColor(0.3f, 0.3f, 0.7f));
     m_wheel->AddAsset(col_wheel);
 
     system->AddBody(m_wheel);
 
     // Create and initialize translational joint ground - sled
-    m_prismatic = ChSharedPtr<ChLinkLockPrismatic>(new ChLinkLockPrismatic);
+    m_prismatic = std::make_shared<ChLinkLockPrismatic>();
     m_prismatic->Initialize(m_ground, m_sled, ChCoordsys<>(loc_prismatic, Q_from_AngY(CH_C_PI_2)));
     system->AddLink(m_prismatic);
 
     // Create and initialize revolute joint sled - wheel
-    m_revolute = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
+    m_revolute = std::make_shared<ChLinkLockRevolute>();
     m_revolute->Initialize(m_wheel, m_sled, ChCoordsys<>(loc_revolute, Q_from_AngX(CH_C_PI_2)));
     system->AddLink(m_revolute);
 }
@@ -320,15 +318,14 @@ void CreateContainer(ChSystemParallel* system) {
     double thickness = 0.2;
 
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_c;
-    mat_c = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_c = std::make_shared<ChMaterialSurfaceDEM>();
     mat_c->SetYoungModulus(2e6f);
     mat_c->SetFriction(0.4f);
     mat_c->SetRestitution(0.1f);
 
     utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(L / 2, W / 2, H / 2), thickness / 2);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_c(new ChMaterialSurface);
+    auto mat_c = std::make_shared<ChMaterialSurface>();
     mat_c->SetFriction(0.4f);
 
     utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(L / 2, W / 2, H / 2), thickness / 2);
@@ -342,20 +339,19 @@ void CreateContainer(ChSystemParallel* system) {
 void CreateParticles(ChSystemParallel* system) {
 // Create a material for the ball mixture.
 #ifdef USE_DEM
-    ChSharedPtr<ChMaterialSurfaceDEM> mat_g;
-    mat_g = ChSharedPtr<ChMaterialSurfaceDEM>(new ChMaterialSurfaceDEM);
+    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
+    auto mat_g = std::make_shared<ChMaterialSurface>();
     mat_g->SetFriction(mu_g);
 #endif
 
     // Create a mixture entirely made out of spheres.
     utils::Generator gen(system);
 
-    utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
 #ifdef USE_DEM
     m1->setDefaultMaterialDEM(mat_g);
 #else
