@@ -110,11 +110,11 @@ int main(int argc, char* argv[]) {
         // In case you want to fetch an item, remember that they got the
         // names that you see in the CAD interface, for example suppose you know that
         // a ChBodyAuxRef has the name "brick_1-8":
-        ChSharedPtr<ChBodyAuxRef> mbody;
+        std::shared_ptr<ChBodyAuxRef> mbody;
         ChSystem::IteratorOtherPhysicsItems myiterp = my_system.IterBeginOtherPhysicsItems();
         while (myiterp != my_system.IterEndOtherPhysicsItems()) {
             if ((*myiterp)->GetNameString() == "brick_1-8")
-                mbody = (*myiterp).DynamicCastTo<ChBodyAuxRef>();
+                mbody = std::dynamic_pointer_cast<ChBodyAuxRef>(*myiterp);
 
             ++myiterp;
         }
