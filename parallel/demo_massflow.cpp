@@ -444,7 +444,7 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_OPENGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
     gl_window.Initialize(1280, 720, "Mass Flow Test", msystem);
-    gl_window.SetCamera(ChVector<>(0, -width, height), ChVector<>(0, 0, height), ChVector<>(0, 0, 1));
+    gl_window.SetCamera(ChVector<>(0, -12 * width, height), ChVector<>(0, 0, height), ChVector<>(0, 0, 1), 0.01f);
     gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif
 
