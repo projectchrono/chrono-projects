@@ -560,7 +560,7 @@ int main(int argc, char* argv[]) {
 
         // Update vehicle
         if (vehicle_assembly)
-            vehicle_assembly->Update(time);
+            vehicle_assembly->Synchronize(time);
 
 // Advance dynamics.
 #ifdef CHRONO_OPENGL

@@ -512,7 +512,7 @@ int main(int argc, char* argv[]) {
         }
 
         // Update vehicle
-        vehicle->Update(time);
+        vehicle->Synchronize(time);
 
 // Advance dynamics.
 #ifdef CHRONO_OPENGL
