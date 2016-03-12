@@ -52,9 +52,9 @@ using std::endl;
 #define USE_DEM
 
 // Parameters for the falling object
-collision::ShapeType shape_o = collision::SPHERE;
+collision::ShapeType shape_o = collision::CONE;
 
-ChVector<> initPos(1.0, -1.0, 3.0);
+ChVector<> initPos(1.0, -1.0, 2.0);
 // ChQuaternion<> initRot(1.0, 0.0, 0.0, 0.0);
 ChQuaternion<> initRot = Q_from_AngAxis(CH_C_PI / 3, ChVector<>(1, 0, 0));
 
@@ -79,7 +79,7 @@ double time_end = 5;
 
 // Solver parameters
 #ifdef USE_DEM
-double time_step = 1e-4;
+double time_step = 1e-3;
 int max_iteration = 20;
 #else
 double time_step = 1e-4;
@@ -100,7 +100,8 @@ const std::string pov_dir = out_dir + "/POVRAY";
 int out_fps = 60;
 
 // Continuous loop (only if OpenGL available)
-bool loop = false;
+// If true, no output files are generated
+bool loop = true;
 
 // =============================================================================
 // Create ground body
@@ -276,6 +277,14 @@ void CreateObject(ChSystemParallel* system) {
             J = utils::CalcRoundedCylinderGyration(radius, hlen, srad);
             utils::AddRoundedCylinderGeometry(obj.get(), radius, hlen, srad);
         } break;
+        case collision::CONE: {
+            double radius = 0.2;
+            double height = 0.4;
+            rb = utils::CalcConeBradius(radius, height);
+            vol = utils::CalcConeVolume(radius, height);
+            J = utils::CalcConeGyration(radius, height);
+            utils::AddConeGeometry(obj.get(), radius, height);
+        } break;
     }
 
     obj->GetCollisionModel()->BuildModel();
@@ -323,12 +332,14 @@ int main(int argc, char* argv[]) {
 // --------------
 // Create system.
 // --------------
-
+    char title[100];
 #ifdef USE_DEM
-    cout << "Create DEM system" << endl;
+    sprintf(title, "Object Drop >> DEM-P");
+    cout << "Create DEM-P system" << endl;
     ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
 #else
-    cout << "Create DVI system" << endl;
+    sprintf(title, "Object Drop >> DEM-C");
+    cout << "Create DEM-C system" << endl;
     ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
 #endif
 
@@ -352,7 +363,7 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.tolerance = 1e-3;
 
 #ifdef USE_DEM
-    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
+    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
 #else
     msystem->GetSettings()->solver.solver_mode = SLIDING;
     msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
@@ -380,7 +391,7 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_OPENGL
     // Initialize OpenGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.Initialize(1280, 720, "mixerDEM", msystem);
+    gl_window.Initialize(1280, 720, title, msystem);
     gl_window.SetCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
 
     // Let the OpenGL manager run the simulation until interrupted.
