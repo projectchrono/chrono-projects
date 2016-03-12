@@ -10,6 +10,7 @@
 
 set(DEMOS
     demo_crater
+    demo_penetrometer
     demo_foam
     demo_massflow
     demo_objectdrop

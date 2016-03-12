@@ -38,7 +38,7 @@
 
 // Control use of OpenGL run-time rendering
 // Note: CHRONO_OPENGL is defined in ChConfig.h
-#undef CHRONO_OPENGL
+//#undef CHRONO_OPENGL
 
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
@@ -58,7 +58,7 @@ using std::endl;
 // -----------------------------------------------------------------------------
 
 // Comment the following line to use DVI contact
-//#define USE_DEM
+#define USE_DEM
 
 enum ProblemType { SETTLING, DROPPING };
 ProblemType problem = DROPPING;
@@ -106,9 +106,9 @@ ChSystemDEM::TangentialDisplacementModel tangential_displ_mode = ChSystemDEM::Ta
 bool povray_output = true;
 
 #ifdef USE_DEM
-const std::string out_dir = "CRATER_DEM";
+const std::string out_dir = "../PENETRATOR_DEM";
 #else
-const std::string out_dir = "CRATER_DVI";
+const std::string out_dir = "../PENETRATOR_DVI";
 #endif
 
 const std::string pov_dir = out_dir + "/POVRAY";
@@ -133,7 +133,7 @@ float Y_g = 1e8;
 float mu_g = 0.3;
 float cr_g = 0.1;
 
-// Parameters for the falling ball
+// Parameters for the penetrator
 int Id_b = 0;
 double R_b = 2.54e-2 / 2;
 double H_bc1 = 34.39e-3; // cone1 height
@@ -142,10 +142,9 @@ double H_bc2 = 22.10e-3; // cone1 height
 double R_bc2 = 12.76e-3; // cone1 radius
 double rho_b = 700;
 
-
-float Y_b = 1e8;
-float mu_b = 0.3;
-float cr_b = 0.1;
+float Y_b = 1.0e8f;
+float mu_b = 0.4f;
+float cr_b = 0.1f;
 
 // Parameters for the containing bin
 int binId = -200;
@@ -154,9 +153,9 @@ double hDimY = 4e-2;         // depth in y direction
 double hDimZ = 7.5e-2;       // height in z direction
 double hThickness = 0.5e-2;  // wall thickness
 
-float Y_c = 2e6;
-float mu_c = 0.3;
-float cr_c = 0.1;
+float Y_c = 2.0e6f;
+float mu_c = 0.3f;
+float cr_c = 0.1f;
 
 // Number of layers and height of one layer for generator domain
 int numLayers = 10;
@@ -230,77 +229,74 @@ int CreateObjects(ChSystemParallel* msystem) {
 }
 
 // -----------------------------------------------------------------------------
-// Calculate intertia property of the falling object
+// Calculate intertia properties of the falling object
 // -----------------------------------------------------------------------------
-
 void CalculatePenetratorInertia(double & mass, ChVector<> & inertia) {
-	ChVector<> gyr_b;  	// components gyration
-	double vol_b;			// components volume
-	switch (penetGeom) {
-	case P_SPHERE:
-		vol_b = utils::CalcSphereVolume(R_b);
-		gyr_b = utils::CalcSphereGyration(R_b).Get_Diag();
-		mass = rho_b * vol_b;
-		inertia = mass * gyr_b;
-		break;
-	case P_CONE1:
-		// apex angle = 30 de
-		vol_b = utils::CalcConeVolume(R_bc1, H_bc1);
-		gyr_b = utils::CalcConeGyration(R_bc1, H_bc1).Get_Diag();
-		mass = rho_b * vol_b;
-		inertia = mass * gyr_b;
-		break;
-	case P_CONE2:
-		// apex angle = 60 deg
-		vol_b = utils::CalcConeVolume(R_bc2, H_bc2);
-		gyr_b = utils::CalcConeGyration(R_bc2, H_bc2).Get_Diag();
-		mass = rho_b * vol_b;
-		inertia = mass * gyr_b;
-		break;
-	}
-}
-
-// -----------------------------------------------------------------------------
-// Create collision geometry
-// -----------------------------------------------------------------------------
-
-void CreatePenetratorGeometry(std::shared_ptr<ChBody> ball) {
-    ball->GetCollisionModel()->ClearModel();
+    ChVector<> gyr_b;  // components gyration
+    double vol_b;      // components volume
     switch (penetGeom) {
-	case P_SPHERE:
-		utils::AddSphereGeometry(ball.get(), R_b);
-		break;
-	case P_CONE1:
-		// apex angle = 30 de
-		utils::AddConeGeometry(ball.get(), R_bc1, H_bc1);
-		break;
-	case P_CONE2:
-		// apex angle = 60 deg
-		utils::AddConeGeometry(ball.get(), R_bc2, H_bc2);
-		break;
+        case P_SPHERE:
+            vol_b = utils::CalcSphereVolume(R_b);
+            gyr_b = utils::CalcSphereGyration(R_b).Get_Diag();
+            mass = rho_b * vol_b;
+            inertia = mass * gyr_b;
+            break;
+        case P_CONE1:
+            // apex angle = 30 de
+            vol_b = utils::CalcConeVolume(R_bc1, H_bc1);
+            gyr_b = utils::CalcConeGyration(R_bc1, H_bc1).Get_Diag();
+            mass = rho_b * vol_b;
+            inertia = mass * gyr_b;
+            break;
+        case P_CONE2:
+            // apex angle = 60 deg
+            vol_b = utils::CalcConeVolume(R_bc2, H_bc2);
+            gyr_b = utils::CalcConeGyration(R_bc2, H_bc2).Get_Diag();
+            mass = rho_b * vol_b;
+            inertia = mass * gyr_b;
+            break;
 	}
-    ball->GetCollisionModel()->BuildModel();
 }
 
 // -----------------------------------------------------------------------------
-// Create collision geometry
+// Create collision geometry of the falling object
 // -----------------------------------------------------------------------------
+void CreatePenetratorGeometry(std::shared_ptr<ChBody> obj) {
+    obj->GetCollisionModel()->ClearModel();
+    switch (penetGeom) {
+        case P_SPHERE:
+            utils::AddSphereGeometry(obj.get(), R_b);
+            break;
+        case P_CONE1:
+            // apex angle = 30 de
+            utils::AddConeGeometry(obj.get(), R_bc1, H_bc1);
+            break;
+        case P_CONE2:
+            // apex angle = 60 deg
+            utils::AddConeGeometry(obj.get(), R_bc2, H_bc2);
+            break;
+    }
+    obj->GetCollisionModel()->BuildModel();
+}
 
+// -----------------------------------------------------------------------------
+// Calculate falling object height
+// -----------------------------------------------------------------------------
 double RecalcPenetratorLocation(double z) {
-	double locZ = 0;
+    double locZ = 0;
     switch (penetGeom) {
-	case P_SPHERE:
-		locZ = z + R_b + r_g;
-		break;
-	case P_CONE1:
-		// apex angle = 30 de
-		locZ = z + 0.75 * H_bc1 + r_g;
-		break;
-	case P_CONE2:
-		// apex angle = 60 deg
-		locZ = z + 0.75 * H_bc2 + r_g;
-		break;
-	}
+        case P_SPHERE:
+            locZ = z + R_b + r_g;
+            break;
+        case P_CONE1:
+            // apex angle = 30 de
+            locZ = z + 0.75 * H_bc1 + r_g;
+            break;
+        case P_CONE2:
+            // apex angle = 60 deg
+            locZ = z + 0.75 * H_bc2 + r_g;
+            break;
+    }
     return locZ;
 }
 
@@ -329,57 +325,53 @@ double FindLowest(ChSystem* sys) {
     return lowest;
 }
 
-
 // -----------------------------------------------------------------------------
-// Create the falling ball such that its bottom point is at the specified height
+// Create the falling object such that its bottom point is at the specified height
 // and its downward initial velocity has the specified magnitude.
 // -----------------------------------------------------------------------------
-std::shared_ptr<ChBody> CreateFallingBall(ChSystemParallel* msystem) {
-
-
+std::shared_ptr<ChBody> CreatePenetrator(ChSystemParallel* msystem) {
+    // Estimate object initial location and velocity
     double z = FindHighest(msystem);
     double vz = std::sqrt(2 * gravity * h);
     double initLoc = RecalcPenetratorLocation(z);
-    cout << "creating ball at " << initLoc << " and velocity " << vz << endl;
+    cout << "creating object at " << initLoc << " and velocity " << vz << endl;
 
-
-
-// Create a material for the falling ball
+// Create a material for the penetrator
 #ifdef USE_DEM
-    auto mat_b = std::make_shared<ChMaterialSurfaceDEM>();
-    mat_b->SetYoungModulus(1e8f);
-    mat_b->SetFriction(0.4f);
-    mat_b->SetRestitution(0.1f);
+    auto mat = std::make_shared<ChMaterialSurfaceDEM>();
+    mat->SetYoungModulus(Y_b);
+    mat->SetFriction(mu_b);
+    mat->SetRestitution(cr_b);
 #else
-    auto mat_b = std::make_shared<ChMaterialSurface>();
-    mat_b->SetFriction(mu_c);
+    auto mat = std::make_shared<ChMaterialSurface>();
+    mat->SetFriction(mu_b);
 #endif
 
-// Create the falling ball
+// Create the falling object
 #ifdef USE_DEM
-    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
-    ball->SetMaterialSurface(mat_b);
+    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    obj->SetMaterialSurface(mat);
 #else
-    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel);
-    ball->SetMaterialSurface(mat_b);
+    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    obj->SetMaterialSurface(mat);
 #endif
 
-    double mass_b;
-    ChVector<> inertia_b;
-    CalculatePenetratorInertia(mass_b, inertia_b);
-    ball->SetIdentifier(Id_b);
-    ball->SetMass(mass_b);
-    ball->SetInertiaXX(inertia_b);
-    ball->SetPos(ChVector<>(0, 0, initLoc));
-    ball->SetRot(Q_from_AngAxis(-CH_C_PI / 2, VECT_X));
-    ball->SetPos_dt(ChVector<>(0, 0, -vz));
-    ball->SetCollide(true);
-    ball->SetBodyFixed(false);
+    double mass;
+    ChVector<> inertia;
+    CalculatePenetratorInertia(mass, inertia);
+    obj->SetIdentifier(Id_b);
+    obj->SetMass(mass);
+    obj->SetInertiaXX(inertia);
+    obj->SetPos(ChVector<>(0, 0, initLoc));
+    obj->SetRot(Q_from_AngAxis(-CH_C_PI / 2, VECT_X));
+    obj->SetPos_dt(ChVector<>(0, 0, -vz));
+    obj->SetCollide(true);
+    obj->SetBodyFixed(false);
 
-    CreatePenetratorGeometry(ball);
+    CreatePenetratorGeometry(obj);
 
-    msystem->AddBody(ball);
-    return ball;
+    msystem->AddBody(obj);
+    return obj;
 }
 
 // -----------------------------------------------------------------------------
@@ -401,36 +393,50 @@ bool CheckSettled(ChSystem* sys, double threshold) {
     return true;
 }
 
-// =============================================================================
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void SetArgumentsForMbdFromInput(int argc, char* argv[]) {
-	if (argc > 1) {
-		const char* text = argv[1];
-		rho_b = atof(text);
-	}
-	int pType = 0;
-	if (argc > 2){
-		const char* text = argv[2];
-		pType = atoi(text);
-		switch (pType) {
-		case 0:
-			penetGeom = P_SPHERE;
-			break;
-		case 1:
-			penetGeom = P_CONE1;
-			break;
-		case 2:
-			penetGeom = P_CONE2;
-			break;
-		}
-	}
+    if (argc > 1) {
+        const char* text = argv[1];
+        rho_b = atof(text);
+    }
+    int pType = 0;
+    if (argc > 2) {
+        const char* text = argv[2];
+        pType = atoi(text);
+        switch (pType) {
+            case 0:
+                penetGeom = P_SPHERE;
+                break;
+            case 1:
+                penetGeom = P_CONE1;
+                break;
+            case 2:
+                penetGeom = P_CONE2;
+                break;
+        }
+    }
 
-	const std::string simSettings = out_dir + "/simSetting.txt";
-	ChStreamOutAsciiFile sFile(simSettings.c_str());
-	sFile << "density: " << rho_b << " penetrometer shape: " << pType << " (0: sphere, 1: cone1, 2: cone2) \n";
+    const std::string simSettings = out_dir + "/simSetting.txt";
+    ChStreamOutAsciiFile sFile(simSettings.c_str());
+    sFile << "density: " << rho_b << " penetrometer shape: " << pType << " (0: sphere, 1: cone1, 2: cone2) \n";
 }
+
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
-	SetArgumentsForMbdFromInput(argc, argv);
+    // Create output directories.
+    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+        cout << "Error creating directory " << out_dir << endl;
+        return 1;
+    }
+    if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+        cout << "Error creating directory " << pov_dir << endl;
+        return 1;
+    }
+    
+    // Get problem parameters from arguments
+    SetArgumentsForMbdFromInput(argc, argv);
+
 // Create system
 #ifdef USE_DEM
     cout << "Create DEM system" << endl;
@@ -462,7 +468,7 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.tolerance = tolerance;
 
 #ifdef USE_DEM
-    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
+    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
 
     msystem->GetSettings()->solver.contact_force_model = contact_force_model;
     msystem->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
@@ -484,10 +490,10 @@ int main(int argc, char* argv[]) {
     // - Select end simulation time
     // - Select output FPS
     // - Create granular material and container
-    // - Create falling ball
+    // - Create falling object
     double time_end;
     int out_fps;
-    std::shared_ptr<ChBody> ball;
+    std::shared_ptr<ChBody> obj;
 
     if (problem == SETTLING) {
         time_end = time_settling_max;
@@ -505,7 +511,7 @@ int main(int argc, char* argv[]) {
         cout << "Read checkpoint data from " << checkpoint_file;
         utils::ReadCheckpoint(msystem, checkpoint_file);
         cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
-        ball = CreateFallingBall(msystem);
+        obj = CreatePenetrator(msystem);
     }
 
     // Number of steps
@@ -538,7 +544,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef CHRONO_OPENGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.Initialize(1280, 720, "Crater Test", msystem);
+    gl_window.Initialize(1280, 720, "Penetrator Test", msystem);
     gl_window.SetCamera(ChVector<>(0, -10 * hDimY, hDimZ), ChVector<>(0, 0, hDimZ), ChVector<>(0, 0, 1),.02);
     gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif
@@ -569,11 +575,11 @@ int main(int argc, char* argv[]) {
                 cout << msystem->Get_bodylist()->size() << " bodies" << endl;
             }
 
-            // Save current projectile height.
+            // Save current penetrator height.
             if (problem == DROPPING) {
-                hfile << time << "  " << ball->GetPos().z << "\n";
+                hfile << time << "  " << obj->GetPos().z << "\n";
                 hfile.flush();
-                cout << "     Ball height:    " << ball->GetPos().z << endl;
+                cout << "     Penetrator height:    " << obj->GetPos().z << endl;
             }
 
             out_frame++;
