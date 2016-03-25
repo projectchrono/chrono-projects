@@ -75,10 +75,10 @@ int Id_g = 1;
 double r_g = 0.01;
 double rho_g = 2000;
 
-float Y_g = 2e7;
-float mu_g = 0.2;
-float cr_g = 0.1;
-float cohesion_g = 300;
+float Y_g = 2e7f;
+float mu_g = 0.2f;
+float cr_g = 0.1f;
+float cohesion_g = 300.0f;
 
 // Parameters for the containing bin
 int binId = -200;
@@ -87,10 +87,10 @@ double hDimY = 10;        // depth in y direction
 double hDimZ = 1;         // height in z direction
 double hThickness = 0.4;  // wall thickness
 
-float Y_c = 2e6;
-float mu_c = 0.3;
-float cr_c = 0.1;
-float cohesion_c = 5;
+float Y_c = 2e6f;
+float mu_c = 0.3f;
+float cr_c = 0.1f;
+float cohesion_c = 5.0f;
 
 // Particle generator
 utils::Generator* gen;
@@ -109,7 +109,7 @@ int SpawnParticles() {
     ////                     ChVector<>(9, 0, 3),
     ////                     ChVector<>(0, 1, 0.5),
     ////                     ChVector<>(-initVel, 0, 0));
-    gen->createObjectsCylinderX(utils::POISSON_DISK, dist, ChVector<>(9, 0, 3), 0.2, 0, ChVector<>(-initVel, 0, 0));
+    gen->createObjectsCylinderX(utils::POISSON_DISK, dist, ChVector<>(9, 0, 3), 0.2f, 0, ChVector<>(-initVel, 0, 0));
     cout << "  total bodies: " << gen->getTotalNumBodies() << endl;
 
     return gen->getTotalNumBodies();
@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
 
     gen = new utils::Generator(msystem);
 
-    std::shared_ptr<utils::MixtureIngredient>& m1 = gen->AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen->AddMixtureIngredient(utils::SPHERE, 1.0);
     m1->setDefaultMaterialDEM(mat_g);
     m1->setDefaultDensity(rho_g);
     m1->setDefaultSize(r_g);
@@ -174,9 +174,9 @@ int main(int argc, char* argv[]) {
     gen->setBodyIdentifier(Id_g);
 
     // Number of steps
-    int num_steps = std::ceil(time_end / time_step);
-    int out_steps = std::ceil((1 / time_step) / out_fps);
-    int gen_steps = std::ceil(3 * r_g / initVel / time_step);
+    int num_steps = (int)std::ceil(time_end / time_step);
+    int out_steps = (int)std::ceil((1 / time_step) / out_fps);
+    int gen_steps = (int)std::ceil(3 * r_g / initVel / time_step);
 
     // Create output directories.
     if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
@@ -204,7 +204,7 @@ int main(int argc, char* argv[]) {
     ChStreamOutAsciiFile ofile(out_file.c_str());
 
     while (time < time_end) {
-        int numParticles = msystem->Get_bodylist()->size() - 1;
+        int numParticles = (int)msystem->Get_bodylist()->size() - 1;
 
         if (numParticles < maxNumParticles && sim_frame % gen_steps == 0) {
             SpawnParticles();

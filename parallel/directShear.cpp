@@ -173,9 +173,9 @@ double hthick = 1.0 / 2;  // [cm] bin half-thickness of the walls
 
 double h_scaling = 5;  // ratio of shear box height to bin height
 
-float Y_walls = Pa2cgs * 1e7;
-float cr_walls = 0.6;
-float nu_walls = 0.3;
+float Y_walls = (float)(Pa2cgs * 1e7);
+float cr_walls = 0.6f;
+float nu_walls = 0.3f;
 float mu_walls = 0.08f;
 
 int ground_coll_fam = 1;  // collision family for bin contact shapes
@@ -195,9 +195,9 @@ double rho_g = 2.550;  // [g/cm^3] density of granules
 
 double desiredBulkDensity = 1.5;  // [g/cm^3] desired bulk density
 
-float Y_g = Pa2cgs * 4e7;  // (1,000 times softer than experiment on glass beads)
-float cr_g = 0.87;
-float nu_g = 0.22;
+float Y_g = (float)(Pa2cgs * 4e7);  // (1,000 times softer than experiment on glass beads)
+float cr_g = 0.87f;
+float nu_g = 0.22f;
 float mu_g = 0.18f;
 
 // Parameters of the testing ball
@@ -400,7 +400,7 @@ int CreateGranularMaterial(ChSystemParallel* system) {
     // Create the particle generator with a mixture of 100% spheres
     utils::Generator gen(system);
 
-    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
 #ifdef USE_DEM
     m1->setDefaultMaterialDEM(mat_g);
 #else
@@ -505,9 +505,8 @@ void setBulkDensity(ChSystem* sys, double bulkDensity) {
 
     double normalPlateHeight = sys->Get_bodylist()->at(1)->GetPos().z - hdimZ;
     double bottomHeight = 0;
-    int numBodies = sys->Get_bodylist()->size();
     double boxVolume = hdimX * 2 * hdimX * 2 * (normalPlateHeight - bottomHeight);
-    double granularVolume = (numBodies - 3) * vol_g;
+    double granularVolume = (sys->Get_bodylist()->size() - 3) * vol_g;
     double reqDensity = bulkDensity * boxVolume / granularVolume;
     for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
         auto body = (*sys->Get_bodylist())[i];
@@ -516,7 +515,7 @@ void setBulkDensity(ChSystem* sys, double bulkDensity) {
         }
     }
 
-    cout << "N Bodies: " << numBodies << endl;
+    cout << "N Bodies: " << sys->Get_bodylist()->size() << endl;
     cout << "Box Volume: " << boxVolume << endl;
     cout << "Granular Volume: " << granularVolume << endl;
     cout << "Desired bulk density = " << bulkDensity << ", Required Body Density = " << reqDensity << endl;
@@ -773,7 +772,7 @@ int main(int argc, char* argv[]) {
 
     // Circular buffer with highest particle location
     // (only used for SETTLING or PRESSING)
-    int buffer_size = std::ceil(time_min / time_step);
+    int buffer_size = (int)std::ceil(time_min / time_step);
     std::valarray<double> hdata(0.0, buffer_size);
 
     // Create output files
@@ -869,9 +868,9 @@ int main(int argc, char* argv[]) {
         // Record stats about the simulation
         if (sim_frame % write_steps == 0) {
             // write stat info
-            int numIters = msystem->data_manager->measures.solver.maxd_hist.size();
+            size_t numIters = msystem->data_manager->measures.solver.maxd_hist.size();
             double residual = 0;
-            if (numIters)
+            if (numIters != 0)
                 residual = msystem->data_manager->measures.solver.residual;
             statsStream << time << ", " << exec_time << ", " << num_contacts / write_steps << ", " << numIters << ", "
                         << residual << ", " << max_cnstr_viol[0] << ", " << max_cnstr_viol[1] << ", "

@@ -129,9 +129,9 @@ double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
 ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
-float Y_g = 1e8;
-float mu_g = 0.3;
-float cr_g = 0.1;
+float Y_g = 1e8f;
+float mu_g = 0.3f;
+float cr_g = 0.1f;
 
 // Parameters for the penetrator
 int Id_b = 0;
@@ -205,7 +205,7 @@ int CreateObjects(ChSystemParallel* msystem) {
     // Create a mixture entirely made out of spheres
     utils::Generator gen(msystem);
 
-    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
 #ifdef USE_DEM
     m1->setDefaultMaterialDEM(mat_g);
 #else
@@ -515,8 +515,8 @@ int main(int argc, char* argv[]) {
     }
 
     // Number of steps
-    int num_steps = std::ceil(time_end / time_step);
-    int out_steps = std::ceil((1.0 / time_step) / out_fps);
+    int num_steps = (int)std::ceil(time_end / time_step);
+    int out_steps = (int)std::ceil((1.0 / time_step) / out_fps);
 
     // Zero velocity level for settling check
     // (fraction of a grain radius per second)
@@ -545,7 +545,7 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_OPENGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
     gl_window.Initialize(1280, 720, "Penetrator Test", msystem);
-    gl_window.SetCamera(ChVector<>(0, -10 * hDimY, hDimZ), ChVector<>(0, 0, hDimZ), ChVector<>(0, 0, 1),.02);
+    gl_window.SetCamera(ChVector<>(0, -10 * hDimY, hDimZ), ChVector<>(0, 0, hDimZ), ChVector<>(0, 0, 1), 0.02f);
     gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif
 

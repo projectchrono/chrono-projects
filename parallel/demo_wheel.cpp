@@ -72,10 +72,10 @@ double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
 ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
-float Y_g = 2e8;
-float mu_g = 0.5;
-float cr_g = 0.1;
-float cohesion_g = 20;
+float Y_g = 2e8f;
+float mu_g = 0.5f;
+float cr_g = 0.1f;
+float cohesion_g = 20.0f;
 
 // Parameters for the wheel
 const std::string obj_mesh_file("../WHEEL/wheel.obj");
@@ -86,10 +86,10 @@ int Id_w = 0;
 double mass_w = 600;  ////60;
 ChVector<> inertia_w = ChVector<>(1.85, 1.85, 3.675);
 
-float Y_w = 1e8;
-float mu_w = 1.0;
-float cr_w = 0.1;
-float cohesion_w = 20;
+float Y_w = 1e8f;
+float mu_w = 1.0f;
+float cr_w = 0.1f;
+float cohesion_w = 20.0f;
 
 // Parameters for the containing bin
 int binId = -200;
@@ -98,10 +98,10 @@ double hDimY = 1.0;        // width in y direction
 double hDimZ = 0.5;        // height in z direction
 double hThickness = 0.04;  // wall thickness
 
-float Y_c = 2e6;
-float mu_c = 1.0;
-float cr_c = 0.1;
-float cohesion_c = 0;
+float Y_c = 2e6f;
+float mu_c = 1.0f;
+float cr_c = 0.1f;
+float cohesion_c = 0.0f;
 
 // Height of layer for generator domain
 double layerHeight = 1.0;
@@ -126,7 +126,7 @@ int CreateObjects(ChSystemParallel* system) {
     // Create a mixture entirely made out of spheres
     utils::Generator gen(system);
 
-    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
     m1->setDefaultMaterialDEM(mat_g);
     m1->setDefaultDensity(rho_g);
     m1->setDefaultSize(r_g);
@@ -298,8 +298,8 @@ int main(int argc, char* argv[]) {
     msystem->SetStep(time_step);
 
     // Number of steps
-    int num_steps = std::ceil(time_end / time_step);
-    int out_steps = std::ceil((1 / time_step) / out_fps);
+    int num_steps = (int)std::ceil(time_end / time_step);
+    int out_steps = (int)std::ceil((1 / time_step) / out_fps);
 
     // Zero velocity level for settling check (fraction of a grain radius per second)
     double zero_v = 0.9 * r_g;

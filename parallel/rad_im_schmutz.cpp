@@ -114,7 +114,7 @@ double rho_g = 2700;
 float Y_g = 5e7;
 float cr_g = 0.1f;
 float mu_g = 0.4f;
-int desired_num_particles = 10000;
+unsigned int desired_num_particles = 10000;
 
 // -----------------------------------------------------------------------------
 // Parameters for the test rig
@@ -351,7 +351,7 @@ void CreateParticles(ChSystemParallel* system) {
     // Create a mixture entirely made out of spheres.
     utils::Generator gen(system);
 
-    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
 #ifdef USE_DEM
     m1->setDefaultMaterialDEM(mat_g);
 #else
@@ -515,8 +515,8 @@ int main(int argc, char* argv[]) {
     }
 
     // Number of steps.
-    int num_steps = std::ceil(time_end / time_step);
-    int out_steps = std::ceil((1.0 / time_step) / out_fps);
+    int num_steps = (int)std::ceil(time_end / time_step);
+    int out_steps = (int)std::ceil((1.0 / time_step) / out_fps);
 
     // -----------------------
     // Perform the simulation.

@@ -88,9 +88,9 @@ double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
 ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
-float mu_g = 0.8;
+float mu_g = 0.8f;
 
-int num_particles = 100;
+unsigned int num_particles = 100;
 
 // -----------------------------------------------------------------------------
 // Specification of the vehicle model
@@ -113,7 +113,7 @@ ChVector<> initLoc(-hdimX + 2.5, 0, 0.6);
 ChQuaternion<> initRot(1, 0, 0, 0);
 
 // Coefficient of friction
-float mu_t = 0.8;
+float mu_t = 0.8f;
 
 // -----------------------------------------------------------------------------
 // Simulation parameters
@@ -283,7 +283,7 @@ double CreateParticles(ChSystem* system) {
 
     // Create a particle generator and a mixture entirely made out of spheres
     utils::Generator gen(system);
-    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
     m1->setDefaultMaterialDVI(mat_g);
     m1->setDefaultDensity(rho_g);
     m1->setDefaultSize(r_g);

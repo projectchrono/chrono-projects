@@ -98,7 +98,7 @@ int out_fps_dropping = 60;
 // -----------------------------------------------------------------------------
 double r_g = 0.1;
 double rho_g = 2000;
-int desired_num_particles = 1000;
+unsigned int desired_num_particles = 1000;
 
 // -----------------------------------------------------------------------------
 // Parameters for the falling object
@@ -158,7 +158,7 @@ void CreateParticles(ChSystemParallel* system) {
     // Create a mixture entirely made out of spheres.
     utils::Generator gen(system);
 
-    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
 #ifdef USE_DEM
     m1->setDefaultMaterialDEM(mat_g);
 #else
@@ -394,7 +394,6 @@ int main(int argc, char* argv[]) {
 
     double time_end;
     int out_fps;
-    ChBody* ball;
 
     if (problem == SETTLING) {
         time_end = time_settling;
@@ -419,8 +418,8 @@ int main(int argc, char* argv[]) {
     }
 
     // Number of steps.
-    int num_steps = std::ceil(time_end / time_step);
-    int out_steps = std::ceil((1.0 / time_step) / out_fps);
+    int num_steps = (int)std::ceil(time_end / time_step);
+    int out_steps = (int)std::ceil((1.0 / time_step) / out_fps);
 
     // -----------------------
     // Perform the simulation.

@@ -90,11 +90,11 @@ ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
 float cohesion_g = 200;
 
-float Y_g = 1e8;
-float cr_g = 0.1;
-float mu_g = 0.8;
+float Y_g = 1e8f;
+float cr_g = 0.1f;
+float mu_g = 0.8f;
 
-int num_particles = 100000;
+unsigned int num_particles = 100000;
 
 // -----------------------------------------------------------------------------
 // Specification of the vehicle model
@@ -117,9 +117,9 @@ ChVector<> initLoc(-hdimX + 2.5, 0, 0.6);
 ChQuaternion<> initRot(1, 0, 0, 0);
 
 // Contact material properties
-float Y_t = 1e8;
-float cr_t = 0.1;
-float mu_t = 0.8;
+float Y_t = 1e8f;
+float cr_t = 0.1f;
+float mu_t = 0.8f;
 
 // -----------------------------------------------------------------------------
 // Simulation parameters
@@ -261,7 +261,7 @@ double CreateParticles(ChSystem* system) {
 
     // Create a particle generator and a mixture entirely made out of spheres
     utils::Generator gen(system);
-    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
     m1->setDefaultMaterialDEM(mat_g);
     m1->setDefaultDensity(rho_g);
     m1->setDefaultSize(r_g);

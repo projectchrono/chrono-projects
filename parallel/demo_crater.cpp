@@ -127,9 +127,9 @@ double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
 ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
-float Y_g = 1e8;
-float mu_g = 0.3;
-float cr_g = 0.1;
+float Y_g = 1e8f;
+float mu_g = 0.3f;
+float cr_g = 0.1f;
 
 // Parameters for the falling ball
 int Id_b = 0;
@@ -139,9 +139,9 @@ double vol_b = (4.0 / 3) * CH_C_PI * R_b * R_b * R_b;
 double mass_b = rho_b * vol_b;
 ChVector<> inertia_b = 0.4 * mass_b * R_b * R_b * ChVector<>(1, 1, 1);
 
-float Y_b = 1e8;
-float mu_b = 0.3;
-float cr_b = 0.1;
+float Y_b = 1e8f;
+float mu_b = 0.3f;
+float cr_b = 0.1f;
 
 // Parameters for the containing bin
 int binId = -200;
@@ -150,9 +150,9 @@ double hDimY = 4e-2;         // depth in y direction
 double hDimZ = 7.5e-2;       // height in z direction
 double hThickness = 0.5e-2;  // wall thickness
 
-float Y_c = 2e6;
-float mu_c = 0.3;
-float cr_c = 0.1;
+float Y_c = 2e6f;
+float mu_c = 0.3f;
+float cr_c = 0.1f;
 
 // Number of layers and height of one layer for generator domain
 int numLayers = 10;
@@ -202,7 +202,7 @@ int CreateObjects(ChSystemParallel* system) {
     // Create a mixture entirely made out of spheres
     utils::Generator gen(system);
 
-    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
 #ifdef USE_DEM
     m1->setDefaultMaterialDEM(mat_g);
 #else
@@ -404,8 +404,8 @@ int main(int argc, char* argv[]) {
     }
 
     // Number of steps
-    int num_steps = std::ceil(time_end / time_step);
-    int out_steps = std::ceil((1.0 / time_step) / out_fps);
+    int num_steps = (int)std::ceil(time_end / time_step);
+    int out_steps = (int)std::ceil((1.0 / time_step) / out_fps);
 
     // Zero velocity level for settling check
     // (fraction of a grain radius per second)

@@ -596,7 +596,7 @@ int CreateGranularMaterial(ChSystemParallel* system,
     // Create the particle generator with a mixture of 100% spheres
     utils::Generator gen(system);
 
-    std::shared_ptr<utils::MixtureIngredient>& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
     m1->setDefaultMaterialDVI(mat_g);
     m1->setDefaultDensity(rho_g);
     m1->setDefaultSize(r_g);
