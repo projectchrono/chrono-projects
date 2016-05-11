@@ -117,42 +117,26 @@ int main(int argc, char* argv[]) {
 
     // Create and initialize the powertrain system
     SimplePowertrain powertrain(vehicle::GetDataFile(simplepowertrain_file));
-    powertrain.Initialize();
+    powertrain.Initialize(vehicle.GetChassis(), vehicle.GetDriveshaft());
 
     // Create and initialize the tires
     int num_axles = vehicle.GetNumberAxles();
     int num_wheels = 2 * num_axles;
 
-    std::vector<ChSharedPtr<ChTire> > tires(num_wheels);
-
-    switch (tire_model) {
-        case RIGID: {
-            std::vector<ChSharedPtr<RigidTire> > tires_rigid(num_wheels);
-            for (int i = 0; i < num_wheels; i++) {
-                tires_rigid[i] = ChSharedPtr<RigidTire>(new RigidTire(vehicle::GetDataFile(rigidtire_file)));
-                tires_rigid[i]->Initialize(vehicle.GetWheelBody(i));
-                tires[i] = tires_rigid[i];
-            }
-            break;
+    std::vector<std::shared_ptr<ChTire> > tires(num_wheels);
+    for (int i = 0; i < num_wheels; i++) {
+        switch (tire_model) {
+            case RIGID:
+                tires[i] = std::make_shared<RigidTire>(vehicle::GetDataFile(rigidtire_file));
+                break;
+            case LUGRE:
+                tires[i] = std::make_shared<LugreTire>(vehicle::GetDataFile(lugretire_file));
+                break;
+            case FIALA:
+                tires[i] = std::make_shared<FialaTire>(vehicle::GetDataFile(fialatire_file));
+                break;
         }
-        case LUGRE: {
-            std::vector<ChSharedPtr<LugreTire> > tires_lugre(num_wheels);
-            for (int i = 0; i < num_wheels; i++) {
-                tires_lugre[i] = ChSharedPtr<LugreTire>(new LugreTire(vehicle::GetDataFile(lugretire_file)));
-                tires_lugre[i]->Initialize(vehicle.GetWheelBody(i));
-                tires[i] = tires_lugre[i];
-            }
-            break;
-        }
-        case FIALA: {
-            std::vector<ChSharedPtr<FialaTire> > tires_fiala(num_wheels);
-            for (int i = 0; i < num_wheels; i++) {
-                tires_fiala[i] = ChSharedPtr<FialaTire>(new FialaTire(vehicle::GetDataFile(fialatire_file)));
-                tires_fiala[i]->Initialize();
-                tires[i] = tires_fiala[i];
-            }
-            break;
-        }
+        tires[i]->Initialize(vehicle.GetWheelBody(i), VehicleSide(i % 2));
     }
 
     // Create the driver system
@@ -225,12 +209,12 @@ int main(int argc, char* argv[]) {
 
         // Update modules (process inputs from other modules)
         double time = vehicle.GetChTime();
-        driver.Update(time);
-        powertrain.Update(time, throttle_input, driveshaft_speed);
-        vehicle.Update(time, steering_input, braking_input, powertrain_torque, tire_forces);
-        terrain.Update(time);
+        driver.Synchronize(time);
+        powertrain.Synchronize(time, throttle_input, driveshaft_speed);
+        vehicle.Synchronize(time, steering_input, braking_input, powertrain_torque, tire_forces);
+        terrain.Synchronize(time);
         for (int i = 0; i < num_wheels; i++)
-            tires[i]->Update(time, wheel_states[i], terrain);
+            tires[i]->Synchronize(time, wheel_states[i], terrain);
 
         // Advance simulation for one timestep for all modules
         driver.Advance(step_size);

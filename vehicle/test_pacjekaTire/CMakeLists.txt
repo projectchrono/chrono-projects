@@ -1,18 +1,11 @@
-# Require Irrlicht support
-IF(NOT ENABLE_MODULE_IRRLICHT)
-  RETURN()
-ENDIF()
-
 SET(TEST_PROGRAMS
-  test_tire
+  test_VEH_tirePacejka
+  test_VEH_updatePacejka
   )
 
 SET(LIBRARIES
     ChronoEngine
-    ChronoEngine_irrlicht
     ChronoEngine_vehicle)
-
-INCLUDE_DIRECTORIES(${CH_IRRLICHTINC})
 
 # Add executables
 FOREACH(PROGRAM ${TEST_PROGRAMS})
@@ -23,7 +16,7 @@ FOREACH(PROGRAM ${TEST_PROGRAMS})
 
   SET_TARGET_PROPERTIES(${PROGRAM}  PROPERTIES
     FOLDER tests
-    COMPILE_FLAGS "${CH_CXX_FLAGS} ${CH_IRRLICHT_CXX_FLAGS}"
+    COMPILE_FLAGS "${CH_CXX_FLAGS}"
     LINK_FLAGS "${CH_LINKERFLAG_EXE}"
     )
 

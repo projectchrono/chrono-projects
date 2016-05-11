@@ -1,6 +1,5 @@
 SET(TEST_PROGRAMS
-  test_pacTire
-  test_pacUpdate
+  test_VEH_SteeringControl
   )
 
 SET(LIBRARIES

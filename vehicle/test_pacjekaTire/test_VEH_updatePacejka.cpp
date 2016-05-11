@@ -36,7 +36,7 @@ const std::string pacParamFile = vehicle::GetDataFile("hmmwv/pactest.tir");
 // -----------------------------------------------------------------------------
 // Process the specified wheel state using two different ChPacejkaTire functions
 // -----------------------------------------------------------------------------
-void processState(ChSharedPtr<ChPacejkaTire> tire, const WheelState& state, const ChTerrain& terrain) {
+void processState(std::shared_ptr<ChPacejkaTire> tire, const WheelState& state, const ChTerrain& terrain) {
     cout << "--------------------------------------------------" << endl;
     cout << "Position:     " << state.pos.x << "  " << state.pos.y << "  " << state.pos.z << endl;
     cout << "Orientation:  " << state.rot.e0 << "  " << state.rot.e1 << "  " << state.rot.e2 << "  " << state.rot.e3
@@ -45,12 +45,12 @@ void processState(ChSharedPtr<ChPacejkaTire> tire, const WheelState& state, cons
     cout << "Angular vel.: " << state.ang_vel.x << "  " << state.ang_vel.y << "  " << state.ang_vel.z << endl;
     cout << "Wheel omega:  " << state.omega << endl << endl;
 
-    tire->Update(0, state, terrain);
+    tire->Synchronize(0, state, terrain);
     double kappa = tire->get_kappa();
     double alpha = tire->get_alpha();
     double gamma = tire->get_gamma();
     double R_eff = tire->get_tire_rolling_rad();
-    cout << "Update()" << endl;
+    cout << "Synchronize()" << endl;
     cout << "  alpha = " << alpha << " rad = " << alpha* rad2deg << " deg" << endl;
     cout << "  gamma = " << gamma << " rad = " << gamma* rad2deg << " deg" << endl << endl;
     cout << "  R_eff = " << R_eff << endl;
@@ -63,9 +63,11 @@ int main(int argc, char* argv[]) {
     // Flat rigid terrain, height = 0 for all (x,y)
     FlatTerrain flat_terrain(0);
 
-    // Create a Pacejka tire
-    ChSharedPtr<ChPacejkaTire> tire(new ChPacejkaTire("TEST", pacParamFile));
-    tire->Initialize(VehicleSide::LEFT, false);
+    // Create a Pacejka tire and attach it to a dummy wheel body
+    auto wheel = std::make_shared<ChBody>();
+    auto tire = std::make_shared<ChPacejkaTire>("TEST", pacParamFile);
+    tire->SetDrivenWheel(false);
+    tire->Initialize(wheel, LEFT);
 
     // Create different wheel state and let the tire process them
     {
