@@ -34,27 +34,27 @@ static inline void TimingOutput(chrono::ChSystem* mSys, chrono::ChStreamOutAscii
   double STEP = mSys->GetTimerStep();
   double BROD = mSys->GetTimerCollisionBroad();
   double NARR = mSys->GetTimerCollisionNarrow();
-  double LCP = mSys->GetTimerLcp();
+  double SOLVER = mSys->GetTimerSolver();
   double UPDT = mSys->GetTimerUpdate();
   double RESID = 0;
   int REQ_ITS = 0;
   int BODS = mSys->GetNbodies();
   int CNTC = mSys->GetNcontacts();
   if (chrono::ChSystemParallel* parallel_sys = dynamic_cast<chrono::ChSystemParallel*>(mSys)) {
-    RESID = ((chrono::ChLcpSolverParallel*)(mSys->GetLcpSolverSpeed()))->GetResidual();
-    REQ_ITS = ((chrono::ChLcpSolverParallel*)(mSys->GetLcpSolverSpeed()))->GetTotalIterations();
+    RESID = ((chrono::ChIterativeSolverParallel*)(mSys->GetSolverSpeed()))->GetResidual();
+    REQ_ITS = ((chrono::ChIterativeSolverParallel*)(mSys->GetSolverSpeed()))->GetTotalIterations();
     BODS = parallel_sys->GetNbodies();
     CNTC = parallel_sys->GetNcontacts();
   }
 
   if (ofile) {
     char buf[200];
-    sprintf(buf, "%8.5f  %7.4f  %7.4f  %7.4f  %7.4f  %7.4f  %7d  %7d  %7d  %7.4f\n", TIME, STEP, BROD, NARR, LCP, UPDT,
+    sprintf(buf, "%8.5f  %7.4f  %7.4f  %7.4f  %7.4f  %7.4f  %7d  %7d  %7d  %7.4f\n", TIME, STEP, BROD, NARR, SOLVER, UPDT,
             BODS, CNTC, REQ_ITS, RESID);
     *ofile << buf;
   }
 
-  printf("   %8.5f | %7.4f | %7.4f | %7.4f | %7.4f | %7.4f | %7d | %7d | %7d | %7.4f\n", TIME, STEP, BROD, NARR, LCP,
+  printf("   %8.5f | %7.4f | %7.4f | %7.4f | %7.4f | %7.4f | %7d | %7d | %7d | %7.4f\n", TIME, STEP, BROD, NARR, SOLVER,
          UPDT, BODS, CNTC, REQ_ITS, RESID);
 }
 

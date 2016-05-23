@@ -16,7 +16,7 @@
 // =============================================================================
 
 #include "chrono/physics/ChSystem.h"
-#include "chrono/lcp/ChLcpIterativeMINRES.h"
+#include "chrono/solver/ChSolverMINRES.h"
 
 #include "chrono_fea/ChElementSpring.h"
 #include "chrono_fea/ChElementTetra_4.h"
@@ -129,12 +129,12 @@ int main(int argc, char* argv[]) {
     my_system.SetupInitial();
 
     // Perform a linear static analysis
-    my_system.SetLcpSolverType(
-        ChSystem::LCP_ITERATIVE_MINRES);  // <- NEEDED because other solvers can't handle stiffness matrices
-    chrono::ChLcpIterativeMINRES* msolver = (chrono::ChLcpIterativeMINRES*)my_system.GetLcpSolverSpeed();
+    my_system.SetSolverType(
+        ChSystem::SOLVER_MINRES);  // <- NEEDED because other solvers can't handle stiffness matrices
+    ChSolverMINRES* msolver = (ChSolverMINRES*)my_system.GetSolverSpeed();
     msolver->SetDiagonalPreconditioning(true);
     msolver->SetVerbose(true);
-    my_system.SetIterLCPmaxItersSpeed(100);
+    my_system.SetMaxItersSolverSpeed(100);
     my_system.SetTolForce(1e-12);
 
     my_system.DoStaticLinear();
