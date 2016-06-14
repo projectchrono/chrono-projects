@@ -46,9 +46,10 @@
 #include "chrono_fsi/ChFsiTypeConvert.h"
 #include "chrono_fsi/ChParams.cuh"
 #include "chrono_fsi/ChSystemFsi.h"
-#include "chrono_fsi/UtilsFsi/ChUtilsGeneratorFsi.h"
-#include "chrono_fsi/UtilsFsi/ChUtilsPrintSph.h"
-#include "chrono_fsi/include/utils.h"
+#include "chrono_fsi/utils/ChUtilsGeneratorFsi.h"
+#include "chrono_fsi/utils/ChUtilsPrintSph.h"
+#include "chrono_fsi/utils/ChUtilsPrintStruct.h"
+#include "chrono_fsi/custom_math.h"
 
 #define haveFluid 1
 
@@ -73,25 +74,25 @@ const std::string pov_dir_mbd = out_dir + "/povFilesHmmwv";
 bool povray_output = true;
 int out_fps = 30;
 
-Real contact_recovery_speed = 1; ///< recovery speed for MBD
+fsi::Real contact_recovery_speed = 1; ///< recovery speed for MBD
 
 //----------------------------
 // dimention of the box and fluid
 //----------------------------
 
-Real hdimX = 14;  // 5.5;
-Real hdimY = 1.75;
+fsi::Real hdimX = 14;  // 5.5;
+fsi::Real hdimY = 1.75;
 
-Real hthick = 0.25;
-Real basinDepth = 2;
+fsi::Real hthick = 0.25;
+fsi::Real basinDepth = 2;
 
-Real fluidInitDimX = 2;
-Real fluidHeight = 1.4;  // 2.0;
+fsi::Real fluidInitDimX = 2;
+fsi::Real fluidHeight = 1.4;  // 2.0;
 
 //------------------------------------------------------------------
 // Fills in paramsH with simulation parameters.
 //------------------------------------------------------------------
-void SetupParamsH(fsi::SimParams* paramsH, Real hdimX, Real hdimY, Real hthick, Real basinDepth, Real fluidInitDimX, Real fluidHeight) {
+void SetupParamsH(fsi::SimParams* paramsH, fsi::Real hdimX, fsi::Real hdimY, fsi::Real hthick, fsi::Real basinDepth, fsi::Real fluidInitDimX, fsi::Real fluidHeight) {
 	paramsH->sizeScale = 1;  // don't change it.
 	paramsH->HSML = 0.2;
 	paramsH->MULT_INITSPACE = 1.0;
@@ -103,8 +104,8 @@ void SetupParamsH(fsi::SimParams* paramsH, Real hdimX, Real hdimY, Real hthick, 
 	paramsH->LARGE_PRES = 0;
 	paramsH->deltaPress;
 	paramsH->multViscosity_FSI = 1;
-	paramsH->gravity =  mR3(0, 0, -9.81);
-	paramsH->bodyForce3 =  mR3(0, 0, 0);
+	paramsH->gravity =  fsi::mR3(0, 0, -9.81);
+	paramsH->bodyForce3 = fsi::mR3(0, 0, 0);
 	paramsH->rho0 = 1000;
 	paramsH->markerMass = pow(paramsH->MULT_INITSPACE * paramsH->HSML, 3) * paramsH->rho0;
 	paramsH->mu0 = .001;
@@ -122,58 +123,57 @@ void SetupParamsH(fsi::SimParams* paramsH, Real hdimX, Real hdimY, Real hthick, 
 	paramsH->enableAggressiveTweak = 0;
 	paramsH->tweakMultV = 0.1;
 	paramsH->tweakMultRho = .002;
-	paramsH->bceType = ADAMI;  // ADAMI, mORIGINAL
-	paramsH->cMin =  mR3(-hdimX, -hdimY, -basinDepth - hthick);
-	paramsH->cMax =  mR3(hdimX, hdimY, basinDepth);
+	paramsH->bceType = fsi::ADAMI;  // ADAMI, mORIGINAL
+	paramsH->cMin = fsi::mR3(-hdimX, -hdimY, -basinDepth - hthick);
+	paramsH->cMax = fsi::mR3(hdimX, hdimY, basinDepth);
 	//****************************************************************************************
 	// printf("a1  paramsH->cMax.x, y, z %f %f %f,  binSize %f\n", paramsH->cMax.x, paramsH->cMax.y, paramsH->cMax.z, 2 *
 	// paramsH->HSML);
-	 int3 side0 =  mI3(
-			floor((paramsH->cMax.x - paramsH->cMin.x) / (2 * paramsH->HSML)),
-			floor((paramsH->cMax.y - paramsH->cMin.y) / (2 * paramsH->HSML)),
-			floor((paramsH->cMax.z - paramsH->cMin.z) / (2 * paramsH->HSML)));
-	 Real3 binSize3 =  mR3((paramsH->cMax.x - paramsH->cMin.x) / side0.x,
-			(paramsH->cMax.y - paramsH->cMin.y) / side0.y,
-			(paramsH->cMax.z - paramsH->cMin.z) / side0.z);
+	int side0x = floor((paramsH->cMax.x - paramsH->cMin.x) / (2 * paramsH->HSML));
+	int side0y = floor((paramsH->cMax.y - paramsH->cMin.y) / (2 * paramsH->HSML));
+	int side0z = floor((paramsH->cMax.z - paramsH->cMin.z) / (2 * paramsH->HSML));
+
+	fsi::Real3 binSize3 = fsi::mR3((paramsH->cMax.x - paramsH->cMin.x) / side0x,
+			(paramsH->cMax.y - paramsH->cMin.y) / side0y,
+			(paramsH->cMax.z - paramsH->cMin.z) / side0z);
 	paramsH->binSize0 = (binSize3.x > binSize3.y) ? binSize3.x : binSize3.y;
 	//	paramsH->binSize0 = (paramsH->binSize0 > binSize3.z) ? paramsH->binSize0 : binSize3.z;
 	paramsH->binSize0 = binSize3.x; // for effect of distance. Periodic BC in x direction. we do not care about paramsH->cMax y and z.
-	paramsH->cMax = paramsH->cMin + paramsH->binSize0 *  mR3(side0);
+	paramsH->cMax = paramsH->cMin + paramsH->binSize0 *  fsi::mR3(side0x, side0y, side0z);
 	paramsH->boxDims = paramsH->cMax - paramsH->cMin;
 	//****************************************************************************************
-	paramsH->cMinInit =  mR3(-fluidInitDimX, paramsH->cMin.y,
+	paramsH->cMinInit =  fsi::mR3(-fluidInitDimX, paramsH->cMin.y,
 			-basinDepth + 1.0 * paramsH->HSML);  // 3D channel
-	paramsH->cMaxInit =  mR3(fluidInitDimX, paramsH->cMax.y,
+	paramsH->cMaxInit =  fsi::mR3(fluidInitDimX, paramsH->cMax.y,
 			paramsH->cMinInit.z + fluidHeight);
 	//****************************************************************************************
 	//*** initialize straight channel
-	paramsH->straightChannelBoundaryMin = paramsH->cMinInit; // mR3(0, 0, 0);  // 3D channel
-	paramsH->straightChannelBoundaryMax = paramsH->cMaxInit; // SmR3(3, 2, 3) * paramsH->sizeScale;
+	paramsH->straightChannelBoundaryMin = paramsH->cMinInit; // fsi::mR3(0, 0, 0);  // 3D channel
+	paramsH->straightChannelBoundaryMax = paramsH->cMaxInit; // fsi::mR3(3, 2, 3) * paramsH->sizeScale;
 	//************************** modify pressure ***************************
 	//		paramsH->deltaPress = paramsH->rho0 * paramsH->boxDims * paramsH->bodyForce3;  //did not work as I expected
-	paramsH->deltaPress =  mR3(0);//Wrong: 0.9 * paramsH->boxDims * paramsH->bodyForce3; // viscosity and boundary shape should play a roll
+	paramsH->deltaPress =  fsi::mR3(0);//Wrong: 0.9 * paramsH->boxDims * paramsH->bodyForce3; // viscosity and boundary shape should play a roll
 
 	// modify bin size stuff
 	//****************************** bin size adjustement and contact detection stuff *****************************
-	 int3 SIDE =  mI3(
-			int((paramsH->cMax.x - paramsH->cMin.x) / paramsH->binSize0 + .1),
-			int((paramsH->cMax.y - paramsH->cMin.y) / paramsH->binSize0 + .1),
-			int((paramsH->cMax.z - paramsH->cMin.z) / paramsH->binSize0 + .1));
-	 Real mBinSize = paramsH->binSize0; // Best solution in that case may be to change cMax or cMin such that periodic
+	 fsi::Real mBinSize = paramsH->binSize0; // Best solution in that case may be to change cMax or cMin such that periodic
 									  // sides be a multiple of binSize
 	//**********************************************************************************************************
-	paramsH->gridSize = SIDE;
-	// paramsH->numCells = SIDE.x * SIDE.y * SIDE.z;
+	 paramsH->gridSize = fsi::mI3(
+		 int((paramsH->cMax.x - paramsH->cMin.x) / paramsH->binSize0 + .1),
+		 int((paramsH->cMax.y - paramsH->cMin.y) / paramsH->binSize0 + .1),
+		 int((paramsH->cMax.z - paramsH->cMin.z) / paramsH->binSize0 + .1));
+	// paramsH->numCells = paramsH->gridSize.x * paramsH->gridSize.y * paramsH->gridSize.z;
 	paramsH->worldOrigin = paramsH->cMin;
-	paramsH->cellSize =  mR3(mBinSize, mBinSize, mBinSize);
+	paramsH->cellSize =  fsi::mR3(mBinSize, mBinSize, mBinSize);
 
 	std::cout << "******************** paramsH Content" << std::endl;
 	std::cout << "paramsH->sizeScale: " << paramsH->sizeScale << std::endl;
 	std::cout << "paramsH->HSML: " << paramsH->HSML << std::endl;
 	std::cout << "paramsH->bodyForce3: ";
-	printStruct(paramsH->bodyForce3);
+	fsi::utils::printStruct(paramsH->bodyForce3);
 	std::cout << "paramsH->gravity: ";
-	printStruct(paramsH->gravity);
+	fsi::utils::printStruct(paramsH->gravity);
 	std::cout << "paramsH->rho0: " << paramsH->rho0 << std::endl;
 	std::cout << "paramsH->mu0: " << paramsH->mu0 << std::endl;
 	std::cout << "paramsH->v_Max: " << paramsH->v_Max << std::endl;
@@ -185,9 +185,9 @@ void SetupParamsH(fsi::SimParams* paramsH, Real hdimX, Real hdimY, Real hthick, 
 	std::cout << "paramsH->densityReinit: " << paramsH->densityReinit
 			<< std::endl;
 	std::cout << "paramsH->cMin: ";
-	printStruct(paramsH->cMin);
+	fsi::utils::printStruct(paramsH->cMin);
 	std::cout << "paramsH->cMax: ";
-	printStruct(paramsH->cMax);
+	fsi::utils::printStruct(paramsH->cMax);
 	std::cout << "paramsH->MULT_INITSPACE: " << paramsH->MULT_INITSPACE
 			<< std::endl;
 	std::cout << "paramsH->NUM_BOUNDARY_LAYERS: " << paramsH->NUM_BOUNDARY_LAYERS
@@ -201,18 +201,18 @@ void SetupParamsH(fsi::SimParams* paramsH, Real hdimX, Real hdimY, Real hthick, 
 	std::cout << "paramsH->BASEPRES: " << paramsH->BASEPRES << std::endl;
 	std::cout << "paramsH->LARGE_PRES: " << paramsH->LARGE_PRES << std::endl;
 	std::cout << "paramsH->deltaPress: ";
-	printStruct(paramsH->deltaPress);
+	fsi::utils::printStruct(paramsH->deltaPress);
 	std::cout << "paramsH->nPeriod: " << paramsH->nPeriod << std::endl;
 	std::cout << "paramsH->EPS_XSPH: " << paramsH->EPS_XSPH << std::endl;
 	std::cout << "paramsH->multViscosity_FSI: " << paramsH->multViscosity_FSI
 			<< std::endl;
 	std::cout << "paramsH->rigidRadius: ";
-	printStruct(paramsH->rigidRadius);
+	fsi::utils::printStruct(paramsH->rigidRadius);
 	std::cout << "paramsH->binSize0: " << paramsH->binSize0 << std::endl;
 	std::cout << "paramsH->boxDims: ";
-	printStruct(paramsH->boxDims);
+	fsi::utils::printStruct(paramsH->boxDims);
 	std::cout << "paramsH->gridSize: ";
-	printStruct(paramsH->gridSize);
+	fsi::utils::printStruct(paramsH->gridSize);
 	std::cout << "********************" << std::endl;
 }
 
@@ -501,7 +501,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, fsi::C
 	// Add extra collision body to test the collision shape
 	// -----------------------------------------
 	//
-	//  Real rad = 0.1;
+	//  fsi::Real rad = 0.1;
 	//  // NOTE: mass properties and shapes are all for sphere
 	//  double volume = utils::CalcSphereVolume(rad);
 	//  ChVector<> gyration = utils::CalcSphereGyration(rad).Get_Diag();
@@ -510,8 +510,8 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, fsi::C
 	//  double muFriction = 0;
 	//
 	//
-	//  for (Real x = -4; x < 2; x += 0.25) {
-	//    for (Real y = -1; y < 1; y += 0.25) {
+	//  for (fsi::Real x = -4; x < 2; x += 0.25) {
+	//    for (fsi::Real y = -1; y < 1; y += 0.25) {
 	//      auto mball = std::make_shared<ChBody>(new collision::ChCollisionModelParallel);
 	//      ChVector<> pos = ChVector<>(-8.5, .20, 3) + ChVector<>(x, y, 0);
 	//      mball->SetMaterialSurface(mat_g);
@@ -657,11 +657,11 @@ int main(int argc, char* argv[]) {
 		SetupParamsH(paramsH, hdimX, hdimY, hthick, basinDepth, fluidInitDimX, fluidHeight);
 		printSimulationParameters(paramsH);
 #if haveFluid
-		Real initSpace0 = paramsH->MULT_INITSPACE * paramsH->HSML;
+		fsi::Real initSpace0 = paramsH->MULT_INITSPACE * paramsH->HSML;
 		utils::GridSampler<> sampler(initSpace0);
-		chrono::fsi::Real3 boxCenter = chrono::fsi::mR3(0, 0, paramsH->cMin.z + 0.5 * basinDepth);
+		fsi::Real3 boxCenter = chrono::fsi::mR3(0, 0, paramsH->cMin.z + 0.5 * basinDepth);
 		boxCenter.z += 2 * paramsH->HSML;
-		chrono::fsi::Real3 boxHalfDim = chrono::fsi::mR3(1.8, .9 * hdimY, 0.5 * basinDepth);
+		fsi::Real3 boxHalfDim = chrono::fsi::mR3(1.8, .9 * hdimY, 0.5 * basinDepth);
 		utils::Generator::PointVector points = sampler.SampleBox(fsi::ChFsiTypeConvert::Real3ToChVector(boxCenter), fsi::ChFsiTypeConvert::Real3ToChVector(boxHalfDim));
 		int numPart = points.size();
 		for (int i = 0; i < numPart; i++) {
@@ -711,8 +711,11 @@ int main(int argc, char* argv[]) {
 
 	double mTime = 0;
 
-	DOUBLEPRECISION ?
-			printf("Double Precision\n") : printf("Single Precision\n");
+#ifdef CHRONO_FSI_USE_DOUBLE 
+	printf("Double Precision\n");
+#else
+	printf("Single Precision\n");
+#endif
 	int stepEnd = int(paramsH->tFinal / paramsH->dT);
 	for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 		printf("step : %d \n", tStep);
