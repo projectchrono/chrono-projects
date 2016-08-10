@@ -59,6 +59,14 @@ list(APPEND ALL_DLLS "${CHRONO_DLLS}")
 set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 
 #--------------------------------------------------------------
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+  set(WORK_DIR ${PROJECT_BINARY_DIR}/bin/$<CONFIGURATION>)
+else()
+  set(WORK_DIR ${PROJECT_BINARY_DIR}/bin)
+endif()
+
+#--------------------------------------------------------------
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
@@ -79,6 +87,12 @@ foreach(PROGRAM ${DEMOS})
   )
 
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
+
+  # Note: this is not intended to work on Windows!
+  add_test(NAME ${PROGRAM}
+           WORKING_DIRECTORY ${WORK_DIR}
+           COMMAND ${WORK_DIR}/${PROGRAM}
+           )
 
 endforeach(PROGRAM)
 
