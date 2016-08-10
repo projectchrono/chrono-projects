@@ -270,11 +270,10 @@ int main(int argc, char** argv) {
     unsigned int num_particles = gen.getTotalNumBodies();
     std::cout << "Generated particles:  " << num_particles << std::endl;
 
-// -------------------------------
-// Create the visualization window
-// -------------------------------
-
 #ifdef CHRONO_OPENGL
+    // -------------------------------
+    // Create the visualization window
+    // -------------------------------
     if (render) {
         opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
         gl_window.Initialize(1280, 720, "Settling test", system);
@@ -295,14 +294,8 @@ int main(int argc, char** argv) {
 
     TimingHeader();
     while (system->GetChTime() < time_end) {
-        ////timer.reset();
-        ////timer.start();
         system->DoStepDynamics(time_step);
         TimingOutput(system);
-        ////timer.stop();
-        ////cumm_sim_time += timer();
-        ////std::cout << std::fixed << std::setprecision(6) << system->GetChTime() << "  [" << timer.GetTimeSeconds() << "]"
-        ////          << std::endl;
 #ifdef CHRONO_OPENGL
         if (render) {
             opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();

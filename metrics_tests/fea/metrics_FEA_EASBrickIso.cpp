@@ -9,7 +9,7 @@
 // http://projectchrono.org/license-chrono.txt.
 //
 // =============================================================================
-// Authors: Milad Rakhsha, Antonio Recuero, Conlain Kelly
+// Authors: Milad Rakhsha, Antonio Recuero, Conlain Kelly, Radu Serban
 // =============================================================================
 //
 // Unit test for EAS Brick Element
@@ -44,10 +44,7 @@ using namespace chrono::fea;
 // ====================================================================================
 
 double step_size = 1e-3;  // Integration step size
-double precision = 1e-6;  // Precision value used to assess results
-
-int num_steps_GF = 15000;  // Number steps for generating golden file
-int num_steps_UT = 50;     // Number of steps used in unit testing
+int num_steps = 200;      // Number of steps used in testing
 
 // ====================================================================================
 
@@ -76,35 +73,7 @@ class BrickIsoTest : public BaseTest {
 
 const double BrickIsoTest::m_TF = 10;
 
-// ====================================================================================
-
-int main(int argc, char* argv[]) {
-    GetLog() << "-----------------------------------------------------------\n";
-    GetLog() << "     Brick Element Unit Test \n";
-    GetLog() << "-----------------------------------------------------------\n";
-
-    bool passed;
-
-    BrickIsoTest test("utest_FEA_EASBrickIso", "Chrono::FEA");
-    if (argc > 1) {
-        // Generate metrics JSON output files
-        test.setOutDir(argv[1]);
-        test.setVerbose(true);
-        passed = test.run();
-        test.print();
-    } else {
-        // Run in unit test mode
-        passed = test.execute();
-    }
-
-    // Return 0 if test passed
-    return !passed;
-}
-
 bool BrickIsoTest::execute() {
-    // Decide if generating golden file (true) or testing (false)
-    bool output = false;
-
     // Create the physical system
     ChSystem my_system;
 
@@ -272,53 +241,11 @@ bool BrickIsoTest::execute() {
     // Mark completion of system construction
     my_system.SetupInitial();
 
-    // Name of golden file
-    std::string filename = GetChronoDataFile("testing/UT_EASBrickIso.txt");
-
-    // Generate golden file and return
-    if (output) {
-        GetLog() << "Generating golden file\n";
-
-        // Initialize the output stream and set precision.
-        utils::CSV_writer out("\t");
-        out.stream().setf(std::ios::scientific | std::ios::showpos);
-        out.stream().precision(7);
-
-        // Simulate to final time, while saving position of tip node.
-        for (int is = 0; is < num_steps_GF; is++) {
-            nodetip->SetForce(GetTipForce(my_system.GetChTime()));
-            my_system.DoStepDynamics(step_size);
-            out << my_system.GetChTime() << nodetip->GetPos().z << nodetip->GetForce().z << std::endl;
-            std::cout << '\r' << std::fixed << std::setprecision(6) << my_system.GetChTime();
-        }
-
-        // Write results to output file.
-        out.write_to_file(filename);
-        GetLog() << "\nOutput written to: " << filename << "\n";
-
-        return true;
-    }
-
-    // Run unit test
-    GetLog() << "Compare against golden file: " << filename << "\n";
-
-    // Open file and read data
-    std::ifstream infile(GetChronoDataFile("testing/UT_EASBrickIso.txt"), std::ifstream::in);
-    if (!infile.is_open()) {
-        GetLog() << "Cannot open validation file.\n";
-        return false;
-    }
-
-    ChMatrixDynamic<> data(num_steps_GF, 3);
-    for (int x = 0; x < num_steps_GF; x++) {
-        infile >> data[x][0] >> data[x][1] >> data[x][2];
-    }
-
     // Simulate for the specified number of steps, while accumulating number of iterations.
     ChTimer<> timer;
     int num_iterations = 0;
 
-    for (int is = 0; is < num_steps_UT; is++) {
+    for (int is = 0; is < num_steps; is++) {
         nodetip->SetForce(GetTipForce(my_system.GetChTime()));
 
         timer.start();
@@ -327,21 +254,27 @@ bool BrickIsoTest::execute() {
 
         num_iterations += mystepper->GetNumIterations();
 
-        double diff = std::abs(nodetip->GetPos().z - data[is][1]);
         GetLog() << "time = " << my_system.GetChTime() << "\t" << nodetip->GetPos().z << "\n";
-        if (diff > precision) {
-            GetLog() << "Unit test check failed:  |diff| = " << diff << "\n";
-            return false;
-        }
     }
 
     // Report run time and total number of iterations
     GetLog() << "Computation Time: " << timer.GetTimeSeconds() << "   Number of iterations: " << num_iterations << "\n";
-    GetLog() << "Unit test check succeeded \n";
 
     m_execTime = timer.GetTimeSeconds();
     addMetric("num_iterations", num_iterations);
-    addMetric("avg_time_per_step", m_execTime / num_steps_UT);
+    addMetric("avg_time_per_step", m_execTime / num_steps);
 
     return true;
+}
+
+// ====================================================================================
+
+int main(int argc, char* argv[]) {
+    BrickIsoTest test("utest_FEA_EASBrickIso", "Chrono::FEA");
+    test.setOutDir(argv[1]);
+    test.setVerbose(true);
+    bool passed = test.run();
+    test.print();
+
+    return 0;
 }

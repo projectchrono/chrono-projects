@@ -116,35 +116,6 @@ class MeshContactTest : public BaseTest {
 
 // ====================================================================================
 
-int main(int argc, char* argv[]) {
-    bool passed = true;
-
-    MeshContactTest testDEM("utest_FEA_compute_contact_mesh_DEM", "Chrono::FEA", ChMaterialSurfaceBase::DEM);
-    MeshContactTest testDVI("utest_FEA_compute_contact_mesh_DVI", "Chrono::FEA", ChMaterialSurfaceBase::DVI);
-
-    if (argc > 1) {
-        // Generate metrics JSON output files
-        testDEM.setOutDir(argv[1]);
-        testDEM.setVerbose(true);
-        passed &= testDEM.run();
-        testDEM.print();
-
-        // testDVI.setOutDir(argv[1]);
-        // testDVI.setVerbose(true);
-        // passed &= testDVI.run();
-        // testDVI.print();
-    } else {
-        // Run in unit test mode
-        passed &= testDEM.execute();
-        // passed &= testDVI.execute();
-    }
-
-    // Return 0 if all tests passed.
-    return !passed;
-}
-
-// ====================================================================================
-
 bool MeshContactTest::execute() {
     // Create system and contact material.
     ChSystem* system;
@@ -373,4 +344,26 @@ bool MeshContactTest::execute() {
 
     delete system;
     return passed;
+}
+
+// ====================================================================================
+
+int main(int argc, char* argv[]) {
+    bool passed = true;
+
+    MeshContactTest testDEM("utest_FEA_compute_contact_mesh_DEM", "Chrono::FEA", ChMaterialSurfaceBase::DEM);
+    MeshContactTest testDVI("utest_FEA_compute_contact_mesh_DVI", "Chrono::FEA", ChMaterialSurfaceBase::DVI);
+
+    testDEM.setOutDir(argv[1]);
+    testDEM.setVerbose(true);
+    passed &= testDEM.run();
+    testDEM.print();
+
+    // testDVI.setOutDir(argv[1]);
+    // testDVI.setVerbose(true);
+    // passed &= testDVI.run();
+    // testDVI.print();
+
+    // Return 0 if all tests passed.
+    return !passed;
 }

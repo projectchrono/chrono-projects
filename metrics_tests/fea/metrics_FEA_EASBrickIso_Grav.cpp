@@ -9,19 +9,16 @@
 // http://projectchrono.org/license-chrono.txt.
 //
 // =============================================================================
-// Authors: Antonio Recuero, Milad Rakhsha, Conlain Kelly
+// Authors: Antonio Recuero, Milad Rakhsha, Conlain Kelly, Radu Serban
 // =============================================================================
 //
-// Unit test for EAS Brick Element
+// EAS Brick Element
 //
-// This unit test checks the dynamics of a beam made up of 10 brick elemnts.
-// It serves to validate the elastic, isotropic, large deformation internal forces,
-// the element inertia, and this element'sgravity forces.
-//
-// This element is a regular 8-noded trilinear brick element with enhanced assumed
-// strain that alleviates locking. More information on the validation of this element
-// may be found in Chrono's documentation. This simulation excites the beam by applying
-// the sudden action of a gravity field.
+// This test checks the dynamics of a beam made up of 10 brick elements.
+// This element is a regular 8-noded trilinear brick element with enhanced
+// assumed strain that alleviates locking. More information on the validation of
+// this element may be found in Chrono's documentation. This simulation excites
+// the beam by applying the sudden action of a gravity field.
 // =============================================================================
 
 #include <cmath>
@@ -52,9 +49,7 @@ using namespace fea;
 
 bool use_mkl = true;            // Use the MKL solver (if available)
 const double step_size = 1e-3;  // Step size
-double sim_time = 2;            // Simulation time for generation of reference file
-double precision = 1e-7;        // Precision value used to assess results
-const int num_steps_UT = 40;    // Number of time steps for unit test (range 1 to 2000)
+const int num_steps = 200;      // Number of time steps for test
 
 // ====================================================================================
 
@@ -74,53 +69,8 @@ class BrickIso_GravTest : public BaseTest {
     double m_execTime;
 };
 
-// ====================================================================================
-
-int main(int argc, char* argv[]) {
-    bool passed;
-
-    BrickIso_GravTest test("utest_FEA_EASBrickIso_Grav", "Chrono::FEA");
-    if (argc > 1) {
-        // Generate metrics JSON output files
-        test.setOutDir(argv[1]);
-        test.setVerbose(true);
-        passed = test.run();
-        test.print();
-    } else {
-        // Run in unit test mode
-        passed = test.execute();
-    }
-
-    // Return 0 if test passed
-    return !passed;
-}
-
 bool BrickIso_GravTest::execute() {
-    bool output = 0;  // Determines whether it tests (0) or generates golden file (1)
-
-    ChMatrixDynamic<> FileInputMat(2000, 2);
-    if (output) {
-        GetLog() << "Output file: ../TEST_Brick/UT_EASBrickIso_Grav.txt\n";
-    } else {
-        // Utils to open/read files: Load reference solution ("golden") file
-        std::string EASBrick_val_file = GetChronoDataPath() + "testing/" + "UT_EASBrickIso_Grav.txt";
-        std::ifstream fileMid(EASBrick_val_file);
-
-        if (!fileMid.is_open()) {
-            fileMid.open(EASBrick_val_file);
-        }
-        if (!fileMid) {
-            std::cout << "Cannot open validation file.\n";
-            exit(1);
-        }
-        for (int x = 0; x < 2000; x++) {
-            fileMid >> FileInputMat[x][0] >> FileInputMat[x][1];
-        }
-        fileMid.close();
-        GetLog() << "Running in unit test mode.\n";
-    }
     // Create the physical system
-
     ChSystem my_system;
     my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
 
@@ -309,54 +259,27 @@ bool BrickIso_GravTest::execute() {
     ChTimer<> timer;
 
     // Simulation loop
-    if (output) {
-        // Create output directory (if it does not already exist).
-        if (ChFileutils::MakeDirectory("../TEST_Brick") < 0) {
-            GetLog() << "Error creating directory ../TEST_Brick\n";
-            return false;
-        }
-        // Initialize the output stream and set precision.
-        utils::CSV_writer out("\t");
-        out.stream().setf(std::ios::scientific | std::ios::showpos);
-        out.stream().precision(7);
-        int Iterations = 0;
-        // Simulate to final time, while saving position of tip node.
-        while (my_system.GetChTime() < sim_time) {
-            timer.start();
-            my_system.DoStepDynamics(step_size);
-            timer.stop();
-            Iterations += mystepper->GetNumIterations();
-            out << my_system.GetChTime() << nodetip->GetPos().z << std::endl;
-            GetLog() << "time = " << my_system.GetChTime() << "\t" << nodetip->GetPos().z << "\t"
-                     << nodetip->GetForce().z << "\t" << Iterations << "\n";
-        }
-        // Write results to output file.
-        out.write_to_file("../TEST_Brick/UT_EASBrickIso_Grav.txt.txt");
-        addMetric("num_iterations", Iterations);
-    } else {
-        double max_err = 0;
-        for (unsigned int it = 0; it < num_steps_UT; it++) {
-            timer.start();
-            my_system.DoStepDynamics(step_size);
-            timer.stop();
-            std::cout << "time = " << my_system.GetChTime() << "\t" << nodetip->GetPos().z << std::endl;
-            double err = abs(nodetip->GetPos().z - FileInputMat[it][1]);
-            max_err = std::max(max_err, err);
-            if (err > precision) {
-                std::cout << "Unit test check failed -- node_tip: " << nodetip->pos.z
-                          << "  reference: " << FileInputMat[it][1] << std::endl;
-                return false;
-            }
-        }
-
-        std::cout << "Maximum error = " << max_err << std::endl;
-        std::cout << "Unit test check succeeded" << std::endl;
+    for (unsigned int it = 0; it < num_steps; it++) {
+        timer.start();
+        my_system.DoStepDynamics(step_size);
+        timer.stop();
+        std::cout << "time = " << my_system.GetChTime() << "\t" << nodetip->GetPos().z << std::endl;
     }
-    
-    m_execTime = timer.GetTimeSeconds();
-    addMetric("avg_time_per_step", m_execTime / num_steps_UT);
-    addMetric("num_steps", num_steps_UT);
 
+    m_execTime = timer.GetTimeSeconds();
+    addMetric("avg_time_per_step", m_execTime / num_steps);
 
     return true;
+}
+
+// ====================================================================================
+
+int main(int argc, char* argv[]) {
+    BrickIso_GravTest test("utest_FEA_EASBrickIso_Grav", "Chrono::FEA");
+    test.setOutDir(argv[1]);
+    test.setVerbose(true);
+    bool passed = test.run();
+    test.print();
+
+    return 0;
 }
