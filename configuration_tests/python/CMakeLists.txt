@@ -1,5 +1,5 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono PARALLEL module
+# CMake configuration file for projects requiring the Chrono pyparser module
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
@@ -9,38 +9,24 @@
 #--------------------------------------------------------------
 
 set(DEMOS
-    demo_crater
-    demo_penetrometer
-    demo_foam
-    demo_massflow
-    demo_objectdrop
-    demo_shear
-    demo_soilbin
-    demo_suspension
-    demo_wheel
-    directShear
-    mixerDEM
-    pressureSinkage
-    rad_im_schmutz
-    singleWheel
+    demo_PY_pyparser
 )
 
 #--------------------------------------------------------------
 # Find the Chrono package with required components
 #--------------------------------------------------------------
 
-# Invoke find_package in CONFIG mode.
+# Invoke find_package in CONFIG mode
 
 find_package(Chrono
-             COMPONENTS Parallel
-             OPTIONAL_COMPONENTS OpenGL
+             COMPONENTS Python
              CONFIG
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
 
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for PARALLEL projects")
+  message("Could not find requirements for PYPARSER projects")
   return()
 endif()
 
@@ -75,7 +61,7 @@ set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Parallel programs...")
+message(STATUS "Pyparser programs...")
 
 foreach(PROGRAM ${DEMOS})
 

@@ -1,5 +1,5 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono Irrlicht module
+# CMake configuration file for projects requiring the Chrono PARALLEL module
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
@@ -9,26 +9,32 @@
 #--------------------------------------------------------------
 
 set(DEMOS
-    demo_collision
-    demo_inv_pendulum
-    #slider_crank
+    demo_crater
+    demo_massflow
+    demo_penetrometer
+    demo_shear
+    directShear
+    pressureSinkage
+    singleWheel
+    #test_shear
 )
 
 #--------------------------------------------------------------
 # Find the Chrono package with required components
 #--------------------------------------------------------------
 
-# Invoke find_package in CONFIG mode
+# Invoke find_package in CONFIG mode.
 
 find_package(Chrono
-             COMPONENTS Irrlicht
+             COMPONENTS Parallel
+             OPTIONAL_COMPONENTS OpenGL
              CONFIG
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
 
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for IRRLICHT projects")
+  message("Could not find requirements for PARALLEL projects")
   return()
 endif()
 
@@ -60,21 +66,10 @@ list(APPEND ALL_DLLS "${CHRONO_DLLS}")
 set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 
 #--------------------------------------------------------------
-# Compilation flags
-#--------------------------------------------------------------
-
-set(COMPILE_FLAGS ${CHRONO_CXX_FLAGS})
-
-# Disable some warnings triggered by Irrlicht (Windows only)
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    SET(COMPILE_FLAGS "${COMPILE_FLAGS} /wd4275")
-endif()
-
-#--------------------------------------------------------------
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Irrlicht programs...")
+message(STATUS "Granular validation programs...")
 
 foreach(PROGRAM ${DEMOS})
 
@@ -85,9 +80,9 @@ foreach(PROGRAM ${DEMOS})
 
   set_target_properties(${PROGRAM} PROPERTIES
     FOLDER demos
-    COMPILE_FLAGS "${COMPILE_FLAGS}"
+    COMPILE_FLAGS "${CHRONO_CXX_FLAGS}"
     COMPILE_DEFINITIONS "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\""
-    LINK_FLAGS "${COMPILE_FLAGS} ${CHRONO_LINKER_FLAGS}"
+    LINK_FLAGS "${CHRONO_CXX_FLAGS} ${CHRONO_LINKER_FLAGS}"
   )
 
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})

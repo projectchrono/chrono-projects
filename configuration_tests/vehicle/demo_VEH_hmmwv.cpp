@@ -18,7 +18,7 @@
 // The vehicle model uses the utility class ChWheeledVehicleAssembly and is
 // based on JSON specification files from the Chrono data directory.
 //
-// Contact uses the DEM-P (penalty) formulation.
+// Contact uses the DEM-C (complementarity) formulation.
 //
 // The global reference frame has Z up.
 // All units SI.
@@ -50,8 +50,6 @@
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
-
-#include "utils/demo_utils.h"
 
 using namespace chrono;
 using namespace chrono::collision;
@@ -88,13 +86,9 @@ double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
 ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
-float cohesion_g = 200;
-
-float Y_g = 1e8f;
-float cr_g = 0.1f;
 float mu_g = 0.8f;
 
-unsigned int num_particles = 100000;
+unsigned int num_particles = 100;
 
 // -----------------------------------------------------------------------------
 // Specification of the vehicle model
@@ -116,9 +110,7 @@ std::string simplepowertrain_file("hmmwv/powertrain/HMMWV_SimplePowertrain.json"
 ChVector<> initLoc(-hdimX + 2.5, 0, 0.6);
 ChQuaternion<> initRot(1, 0, 0, 0);
 
-// Contact material properties
-float Y_t = 1e8f;
-float cr_t = 0.1f;
+// Coefficient of friction
 float mu_t = 0.8f;
 
 // -----------------------------------------------------------------------------
@@ -144,10 +136,11 @@ double time_step = 2e-4;
 double tolerance = 0.1;
 
 int max_iteration_bilateral = 1000;
+int max_iteration_normal = 0;
+int max_iteration_sliding = 2000;
+int max_iteration_spinning = 0;
 
-// Contact force model
-ChSystemDEM::ContactForceModel contact_force_model = ChSystemDEM::ContactForceModel::Hooke;
-ChSystemDEM::TangentialDisplacementModel tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::OneStep;
+float contact_recovery_speed = -1;
 
 // Periodically monitor maximum bilateral constraint violation
 bool monitor_bilaterals = false;
@@ -156,7 +149,7 @@ int bilateral_frame_interval = 100;
 // Output
 bool povray_output = false;
 
-const std::string out_dir = "../HMMWV_DEM";
+const std::string out_dir = "../HMMWV";
 const std::string pov_dir = out_dir + "/POVRAY";
 
 int out_fps = 60;
@@ -200,9 +193,7 @@ class MyCylindricalTire : public ChTireContactCallback {
         wheelBody->GetCollisionModel()->AddCylinder(0.46, 0.46, width / 2);
         wheelBody->GetCollisionModel()->BuildModel();
 
-        wheelBody->GetMaterialSurfaceDEM()->SetFriction(mu_t);
-        wheelBody->GetMaterialSurfaceDEM()->SetYoungModulus(Y_t);
-        wheelBody->GetMaterialSurfaceDEM()->SetRestitution(cr_t);
+        wheelBody->GetMaterialSurface()->SetFriction(mu_t);
     }
 };
 
@@ -239,9 +230,7 @@ class MyLuggedTire : public ChTireContactCallback {
 
         coll_model->BuildModel();
 
-        wheelBody->GetMaterialSurfaceDEM()->SetFriction(mu_t);
-        wheelBody->GetMaterialSurfaceDEM()->SetYoungModulus(Y_t);
-        wheelBody->GetMaterialSurfaceDEM()->SetRestitution(cr_t);
+        wheelBody->GetMaterialSurface()->SetFriction(mu_t);
     }
 
   private:
@@ -249,15 +238,46 @@ class MyLuggedTire : public ChTireContactCallback {
     int num_hulls;
 };
 
+// Callback class for specifying rigid tire contact model.
+// This version uses a collection of convex contact shapes (meshes).
+// In addition, this version overrides the visualization assets of the provided
+// wheel body with the collision meshes.
+class MyLuggedTire_vis : public ChTireContactCallback {
+  public:
+    MyLuggedTire_vis() {
+        std::string lugged_file("hmmwv/lugged_wheel_section.obj");
+        utils::LoadConvexMesh(vehicle::GetDataFile(lugged_file), lugged_mesh, lugged_convex);
+    }
+
+    virtual void onCallback(std::shared_ptr<ChBody> wheelBody, double radius, double width) {
+        wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
+
+        // Clear any existing assets (will be overriden)
+        wheelBody->GetAssets().clear();
+
+        wheelBody->GetCollisionModel()->ClearModel();
+        for (int j = 0; j < 15; j++) {
+            utils::AddConvexCollisionModel(wheelBody, lugged_mesh, lugged_convex, VNULL,
+                                           Q_from_AngAxis(j * 24 * CH_C_DEG_TO_RAD, VECT_Y), false);
+        }
+        // This cylinder acts like the rims
+        utils::AddCylinderGeometry(wheelBody.get(), 0.223, 0.126);
+        wheelBody->GetCollisionModel()->BuildModel();
+
+        wheelBody->GetMaterialSurface()->SetFriction(mu_t);
+    }
+
+  private:
+    ChConvexDecompositionHACDv2 lugged_convex;
+    geometry::ChTriangleMeshConnected lugged_mesh;
+};
+
 // =============================================================================
 
 double CreateParticles(ChSystem* system) {
     // Create a material
-    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
-    mat_g->SetYoungModulus(Y_g);
+    auto mat_g = std::make_shared<ChMaterialSurface>();
     mat_g->SetFriction(mu_g);
-    mat_g->SetRestitution(cr_g);
-    mat_g->SetAdhesion(cohesion_g);
 
     // Create a particle generator and a mixture entirely made out of spheres
     utils::Generator gen(system);
@@ -310,7 +330,7 @@ int main(int argc, char* argv[]) {
     // Create system.
     // --------------
 
-    ChSystemParallelDEM* system = new ChSystemParallelDEM();
+    ChSystemParallelDVI* system = new ChSystemParallelDVI();
 
     system->Set_G_acc(ChVector<>(0, 0, -9.81));
 
@@ -341,30 +361,31 @@ int main(int argc, char* argv[]) {
     system->GetSettings()->solver.use_full_inertia_tensor = false;
 
     system->GetSettings()->solver.tolerance = tolerance;
-    system->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
 
-    system->GetSettings()->solver.adhesion_force_model = ChSystemDEM::AdhesionForceModel::Constant;
-    system->GetSettings()->solver.contact_force_model = contact_force_model;
-    system->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
+    system->GetSettings()->solver.solver_mode = SLIDING;
+    system->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
+    system->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
+    system->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
+    system->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
+    system->GetSettings()->solver.alpha = 0;
+    system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
+    system->ChangeSolverType(APGD);
 
     system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
-    system->GetSettings()->collision.bins_per_axis = I3(20, 20, 10);
+    system->GetSettings()->collision.collision_envelope = 0.1 * r_g;
+    system->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
 
     // -------------------
     // Create the terrain.
     // -------------------
 
     // Ground body
-    auto ground = std::make_shared<ChBody>(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto ground = std::make_shared<ChBody>(new collision::ChCollisionModelParallel);
     ground->SetIdentifier(-1);
-    ground->SetMass(1000);
     ground->SetBodyFixed(true);
     ground->SetCollide(true);
 
-    ground->GetMaterialSurfaceDEM()->SetFriction(mu_g);
-    ground->GetMaterialSurfaceDEM()->SetYoungModulus(Y_g);
-    ground->GetMaterialSurfaceDEM()->SetRestitution(cr_g);
-    ground->GetMaterialSurfaceDEM()->SetAdhesion(cohesion_g);
+    ground->GetMaterialSurface()->SetFriction(mu_g);
 
     ground->GetCollisionModel()->ClearModel();
 
@@ -442,7 +463,7 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_OPENGL
     // Initialize OpenGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.Initialize(1280, 720, "HMMWV (DEM contact)", system);
+    gl_window.Initialize(1280, 720, "HMMWV (DVI contact)", system);
     gl_window.SetCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
     gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif
@@ -501,9 +522,6 @@ int main(int argc, char* argv[]) {
 #else
         system->DoStepDynamics(time_step);
 #endif
-
-        progressbar(out_steps + sim_frame - next_out_frame + 1, out_steps);
-        ////TimingOutput(system);
 
         // Periodically display maximum constraint violation
         if (monitor_bilaterals && sim_frame % bilateral_frame_interval == 0) {

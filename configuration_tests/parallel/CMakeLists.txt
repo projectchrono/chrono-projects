@@ -1,6 +1,5 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono FEA module
-# and optionally the IRRLICHT module
+# CMake configuration file for projects requiring the Chrono PARALLEL module
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
@@ -9,42 +8,27 @@
 # List of all executables
 #--------------------------------------------------------------
 
-set(DEMOS_BASIC
-    demo_FEAbasic
-)
-
-set(DEMOS_IRR
-    demo_FEAthermal
+set(DEMOS
+    demo_PAR_mixerDEM
 )
 
 #--------------------------------------------------------------
-# Find the Chrono package with required and optional components
+# Find the Chrono package with required components
 #--------------------------------------------------------------
 
-# Invoke find_package in CONFIG mode
+# Invoke find_package in CONFIG mode.
 
 find_package(Chrono
-             COMPONENTS FEA
-             OPTIONAL_COMPONENTS Irrlicht
+             COMPONENTS Parallel
+             OPTIONAL_COMPONENTS OpenGL
              CONFIG
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
 
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for FEA projects")
+  message("Could not find requirements for PARALLEL projects")
   return()
-endif()
-
-#--------------------------------------------------------------
-# Set the list of executables to be created
-#--------------------------------------------------------------
-
-set(DEMOS ${DEMOS_BASIC})
-
-# If the optional component IRRLICHT was found, append to list
-if(${CHRONO_IRRLICHT_FOUND})
-  set(DEMOS ${DEMOS} ${DEMOS_IRR})
 endif()
 
 #--------------------------------------------------------------
@@ -68,28 +52,17 @@ include_directories(
 )
 
 #--------------------------------------------------------------
-# Append to the parent's list of DLLs
+# Append to the parent's list of DLLs (and make it visible up)
 #--------------------------------------------------------------
 
 list(APPEND ALL_DLLS "${CHRONO_DLLS}")
 set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 
 #--------------------------------------------------------------
-# Compilation flags
-#--------------------------------------------------------------
-
-set(COMPILE_FLAGS ${CHRONO_CXX_FLAGS})
-
-# Disable some warnings triggered by Irrlicht (Windows only)
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    SET(COMPILE_FLAGS "${COMPILE_FLAGS} /wd4275")
-endif()
-
-#--------------------------------------------------------------
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "FEA programs...")
+message(STATUS "Parallel programs...")
 
 foreach(PROGRAM ${DEMOS})
 
@@ -100,7 +73,7 @@ foreach(PROGRAM ${DEMOS})
 
   set_target_properties(${PROGRAM} PROPERTIES
     FOLDER demos
-    COMPILE_FLAGS "${COMPILE_FLAGS}"
+    COMPILE_FLAGS "${CHRONO_CXX_FLAGS}"
     COMPILE_DEFINITIONS "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\""
     LINK_FLAGS "${CHRONO_CXX_FLAGS} ${CHRONO_LINKER_FLAGS}"
   )

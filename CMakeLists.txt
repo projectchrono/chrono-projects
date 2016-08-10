@@ -63,53 +63,34 @@ endif()
 #-----------------------------------------------------------------------------
 
 # Options for configuring/building individual sets of programs
-option(ENABLE_IRRLICHT_PROGRAMS "Build the IRRLICHT programs" OFF)
-option(ENABLE_PARALLEL_PROGRAMS "Build the PARALLEL programs" OFF)
-option(ENABLE_VEHICLE_PARALLEL_PROGRAMS "Build the VEHICLE + PARALLEL programs" OFF)
-option(ENABLE_FEA_PROGRAMS "Build the FEA programs" OFF)
-option(ENABLE_FSI_PROGRAMS "Build the FSI programs" OFF)
-option(ENABLE_PYPARSER_PROGRAMS "Build the PYPARSER programs" OFF)
-option(ENABLE_PARALLEL_TESTS_PROGRAMS "Build the PARALLEL TEST programs" OFF)
+option(ENABLE_CONFIG_TESTS "Build the programs for checking Chrono configuration" OFF)
+option(ENABLE_METRICS_TESTS "Build the programs for metrics testing" OFF)
+option(ENABLE_PROJECTS "Build the project programs" OFF)
 
 # Keep track of all DLLs. Each submodule should append to this list.
 list(APPEND ALL_DLLS "")
 
 # Propagate configuration to submodules.
-if(ENABLE_IRRLICHT_PROGRAMS)
-  message(STATUS "==== Chrono IRRLICHT programs ====")
- add_subdirectory(irrlicht)
+if(ENABLE_CONFIG_TESTS)
+  message(STATUS "==== Chrono configuration programs ====")
+  add_subdirectory(configuration_tests)
 endif()
-if(ENABLE_PARALLEL_PROGRAMS)
-  message(STATUS "==== Chrono PARALLEL programs ====")
-  add_subdirectory(parallel)
+if(ENABLE_METRICS_TESTS)
+  message(STATUS "==== Chrono metrics programs ====")
+  add_subdirectory(metrics_tests)
 endif()
-if(ENABLE_VEHICLE_PARALLEL_PROGRAMS)
-  message(STATUS "==== Chrono VEHICLE_PARALLEL programs ====")
-  add_subdirectory(vehicle_parallel)
+if(ENABLE_PROJECTS)
+  message(STATUS "==== Chrono projects ====")
+  add_subdirectory(projects)
 endif()
-if(ENABLE_FEA_PROGRAMS)
-  message(STATUS "==== Chrono FEA programs ====")
-  add_subdirectory(fea)
-endif()
-if(ENABLE_FSI_PROGRAMS)
-  message(STATUS "==== Chrono FSI programs ====")
-  add_subdirectory(fsi)
-endif()
-if(ENABLE_PYPARSER_PROGRAMS)
-  message(STATUS "==== Chrono PYPARSER programs ====")
-  add_subdirectory(pyparser)
-endif()
-#if(ENABLE_PARALLEL_TESTS_PROGRAMS)
-#  add_subdirectory(parallel_tests)
-#endif()
 
-#--------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Copy DLLs
-#--------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
-# Add custom command for copying DLLs to the appropriate binary
-# output folder (on Windows only).
+# Add custom command for copying DLLs to the appropriate binary output folder
+# (on Windows only).
 
 add_DLL_copy_command("${ALL_DLLS}")
 
-
+message("ALL DLLs:  ${ALL_DLLS}")
