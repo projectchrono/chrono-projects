@@ -26,6 +26,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <string>
 
 #include "chrono/core/ChFileutils.h"
 #include "chrono/physics/ChSystem.h"
@@ -270,8 +271,14 @@ bool BrickIsoTest::execute() {
 // ====================================================================================
 
 int main(int argc, char* argv[]) {
+    std::string out_dir = "../METRICS";
+    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+        std::cout << "Error creating directory " << out_dir << std::endl;
+        return 1;
+    }
+    
     BrickIsoTest test("utest_FEA_EASBrickIso", "Chrono::FEA");
-    test.setOutDir(argv[1]);
+    test.setOutDir(out_dir);
     test.setVerbose(true);
     bool passed = test.run();
     test.print();

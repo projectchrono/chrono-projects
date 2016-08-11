@@ -22,7 +22,9 @@
 // =============================================================================
 #include <cstdio>
 #include <cmath>
+#include <string>
 
+#include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChMathematics.h"
 #include "chrono/core/ChVector.h"
 #include "chrono/physics/ChLoadContainer.h"
@@ -210,8 +212,14 @@ bool ANCFBeamTest::execute() {
 // ====================================================================================
 
 int main(int argc, char* argv[]) {
+    std::string out_dir = "../METRICS";
+    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+        std::cout << "Error creating directory " << out_dir << std::endl;
+        return 1;
+    }
+
     ANCFBeamTest test("utest_FEA_ANCFBeam", "Chrono::FEA");
-    test.setOutDir(argv[1]);
+    test.setOutDir(out_dir);
     test.setVerbose(true);
     bool passed = test.run();
     test.print();

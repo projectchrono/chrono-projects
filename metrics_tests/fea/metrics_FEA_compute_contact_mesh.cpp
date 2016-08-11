@@ -23,8 +23,9 @@
 // =============================================================================
 
 #include <vector>
+#include <string>
 
-#include "chrono/ChConfig.h"
+#include "chrono/core/ChFileutils.h"
 #include "chrono/physics/ChContactContainerDEM.h"
 #include "chrono/physics/ChSystemDEM.h"
 #include "chrono/solver/ChSolverDEM.h"
@@ -349,17 +350,23 @@ bool MeshContactTest::execute() {
 // ====================================================================================
 
 int main(int argc, char* argv[]) {
+    std::string out_dir = "../METRICS";
+    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+        std::cout << "Error creating directory " << out_dir << std::endl;
+        return 1;
+    }
+
     bool passed = true;
 
     MeshContactTest testDEM("utest_FEA_compute_contact_mesh_DEM", "Chrono::FEA", ChMaterialSurfaceBase::DEM);
     MeshContactTest testDVI("utest_FEA_compute_contact_mesh_DVI", "Chrono::FEA", ChMaterialSurfaceBase::DVI);
 
-    testDEM.setOutDir(argv[1]);
+    testDEM.setOutDir(out_dir);
     testDEM.setVerbose(true);
     passed &= testDEM.run();
     testDEM.print();
 
-    // testDVI.setOutDir(argv[1]);
+    // testDVI.setOutDir(out_dir);
     // testDVI.setVerbose(true);
     // passed &= testDVI.run();
     // testDVI.print();
