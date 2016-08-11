@@ -100,13 +100,13 @@ int main(int argc, char** argv) {
     // ----------------
 
     // Container dimensions
-    double hdimX = 5.0;
+    double hdimX = 2.0;
     double hdimY = 0.25;
     double hdimZ = 0.5;
     double hthick = 0.25;
 
     // Granular material properties
-    double radius_g = 0.006;
+    double radius_g = 0.05;
     int Id_g = 10000;
     double rho_g = 2500;
     double vol_g = (4.0 / 3) * CH_C_PI * radius_g * radius_g * radius_g;
