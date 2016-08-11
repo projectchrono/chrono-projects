@@ -13,6 +13,12 @@ project(ChronoProjects)
 # Set location of executable
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
+#-----------------------------------------------------------------------------
+# Enable CTest
+#-----------------------------------------------------------------------------
+
+enable_testing()
+include(CTest)
 
 #-----------------------------------------------------------------------------
 # Always use full RPATH (differentiating between the build and install trees)
@@ -92,5 +98,3 @@ endif()
 # (on Windows only).
 
 add_DLL_copy_command("${ALL_DLLS}")
-
-message("ALL DLLs:  ${ALL_DLLS}")
