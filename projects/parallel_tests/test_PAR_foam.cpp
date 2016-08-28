@@ -138,7 +138,7 @@ int main(int argc, char* argv[]) {
     // Edit system settings
     msystem->GetSettings()->solver.tolerance = 1e-4;
 
-    msystem->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
+    msystem->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
 
     msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 

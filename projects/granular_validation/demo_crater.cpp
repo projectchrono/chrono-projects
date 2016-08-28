@@ -355,7 +355,7 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->collision.collision_envelope = 0.05 * r_g;
 #endif
 
-    msystem->GetSettings()->collision.bins_per_axis = I3(20, 20, 20);
+    msystem->GetSettings()->collision.bins_per_axis = vec3(20, 20, 20);
 
     // Depending on problem type:
     // - Select end simulation time
