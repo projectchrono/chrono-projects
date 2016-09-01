@@ -98,7 +98,7 @@ unsigned int num_particles = 100000;
 // Specification of the vehicle model
 // -----------------------------------------------------------------------------
 
-enum WheelType { CYLINDRICAL, LUGGED };
+enum WheelType { CYLINDRICAL, LUGGED, MESHTIRE };
 
 // Type of wheel/tire (controls both contact and visualization)
 WheelType wheel_type = CYLINDRICAL;
@@ -106,6 +106,7 @@ WheelType wheel_type = CYLINDRICAL;
 // JSON files for vehicle model (using different wheel visualization meshes)
 std::string vehicle_file_cyl("hmmwv/vehicle/HMMWV_Vehicle_simple.json");
 std::string vehicle_file_lug("hmmwv/vehicle/HMMWV_Vehicle_simple_lugged.json");
+std::string vehicle_file_mesh("hmmwv/vehicle/HMMWV_Vehicle_simple_mesh.json");
 
 // JSON files for powertrain (simple)
 std::string simplepowertrain_file("hmmwv/powertrain/HMMWV_SimplePowertrain.json");
@@ -201,6 +202,33 @@ class MyCylindricalTire : public ChTireContactCallback {
         wheelBody->GetMaterialSurfaceDEM()->SetFriction(mu_t);
         wheelBody->GetMaterialSurfaceDEM()->SetYoungModulus(Y_t);
         wheelBody->GetMaterialSurfaceDEM()->SetRestitution(cr_t);
+    }
+};
+
+class MyMeshTire : public ChTireContactCallback {
+public:
+    virtual void onCallback(std::shared_ptr<ChBody> wheelBody, double radius, double width) {
+        std::string mesh_file("hmmwv/hmmwv_tire.obj");
+        geometry::ChTriangleMeshConnected trimesh;
+        trimesh.LoadWavefrontMesh(vehicle::GetDataFile(mesh_file), true, false);
+
+        // Set contact model
+        wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
+        wheelBody->GetCollisionModel()->ClearModel();
+        wheelBody->GetCollisionModel()->AddTriangleMesh(trimesh, false, false, ChVector<>(0), ChMatrix33<>(1), 0.01);
+        wheelBody->GetCollisionModel()->BuildModel();
+
+        wheelBody->GetMaterialSurfaceDEM()->SetFriction(mu_t);
+        wheelBody->GetMaterialSurfaceDEM()->SetYoungModulus(Y_t);
+        wheelBody->GetMaterialSurfaceDEM()->SetRestitution(cr_t);
+
+        /*
+        // Clear any existing assets (will be overriden)
+        wheelBody->GetAssets().clear();
+        auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
+        trimesh_shape->SetMesh(trimesh);
+        wheelBody->AddAsset(trimesh_shape);
+        */
     }
 };
 
@@ -410,11 +438,18 @@ int main(int argc, char* argv[]) {
         case CYLINDRICAL: {
             vehicle = new ChWheeledVehicleAssembly(system, vehicle_file_cyl, simplepowertrain_file);
             tire_cb = new MyCylindricalTire();
-        } break;
+            break;
+        }
         case LUGGED: {
             vehicle = new ChWheeledVehicleAssembly(system, vehicle_file_lug, simplepowertrain_file);
             tire_cb = new MyLuggedTire();
-        } break;
+            break;
+        }
+        case MESHTIRE: {
+            vehicle = new ChWheeledVehicleAssembly(system, vehicle_file_mesh, simplepowertrain_file);
+            tire_cb = new MyMeshTire();
+            break;
+        }
     }
 
     vehicle->SetTireContactCallback(tire_cb);
