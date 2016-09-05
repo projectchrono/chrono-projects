@@ -276,8 +276,8 @@ int main(int argc, char* argv[]) {
         std::cout << "Error creating directory " << out_dir << std::endl;
         return 1;
     }
-    
-    BrickIsoTest test("utest_FEA_EASBrickIso", "Chrono::FEA");
+
+    BrickIsoTest test("metrics_FEA_EASBrickIso", "Chrono::FEA");
     test.setOutDir(out_dir);
     test.setVerbose(true);
     bool passed = test.run();

@@ -282,7 +282,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    BrickIso_GravTest test("utest_FEA_EASBrickIso_Grav", "Chrono::FEA");
+    BrickIso_GravTest test("metrics_FEA_EASBrickIso_Grav", "Chrono::FEA");
     test.setOutDir(out_dir);
     test.setVerbose(true);
     bool passed = test.run();

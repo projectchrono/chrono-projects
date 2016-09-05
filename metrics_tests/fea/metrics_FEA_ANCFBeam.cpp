@@ -218,7 +218,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    ANCFBeamTest test("utest_FEA_ANCFBeam", "Chrono::FEA");
+    ANCFBeamTest test("metrics_FEA_ANCFBeam", "Chrono::FEA");
     test.setOutDir(out_dir);
     test.setVerbose(true);
     bool passed = test.run();

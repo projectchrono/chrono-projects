@@ -358,8 +358,8 @@ int main(int argc, char* argv[]) {
 
     bool passed = true;
 
-    MeshContactTest testDEM("utest_FEA_compute_contact_mesh_DEM", "Chrono::FEA", ChMaterialSurfaceBase::DEM);
-    MeshContactTest testDVI("utest_FEA_compute_contact_mesh_DVI", "Chrono::FEA", ChMaterialSurfaceBase::DVI);
+    MeshContactTest testDEM("metrics_FEA_compute_contact_mesh_DEM", "Chrono::FEA", ChMaterialSurfaceBase::DEM);
+    MeshContactTest testDVI("metrics_FEA_compute_contact_mesh_DVI", "Chrono::FEA", ChMaterialSurfaceBase::DVI);
 
     testDEM.setOutDir(out_dir);
     testDEM.setVerbose(true);
