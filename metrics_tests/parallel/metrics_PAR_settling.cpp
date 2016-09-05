@@ -24,9 +24,11 @@
 #include <sstream>
 #include <string>
 #include <valarray>
+#include <cstdlib>
 #include <vector>
 
 #include "chrono/ChConfig.h"
+#include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChTimer.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
@@ -76,24 +78,45 @@ void TimingOutput(chrono::ChSystem* mSys) {
         CNTC = parallel_sys->GetNcontacts();
     }
 
-    printf("   %8.5f | %7.4f | %7.4f | %7.4f | %7.4f | %7.4f | %7d | %7d | %7d | %7.4f |\n", TIME, STEP, BROD, NARR, SOLVER,
-        UPDT, BODS, CNTC, REQ_ITS, RESID);
+    printf("   %8.5f | %7.4f | %7.4f | %7.4f | %7.4f | %7.4f | %7d | %7d | %7d | %7.4f |\n", TIME, STEP, BROD, NARR,
+           SOLVER, UPDT, BODS, CNTC, REQ_ITS, RESID);
 }
 
-// --------------------------------------------------------------------------
+// ====================================================================================
 
-int main(int argc, char** argv) {
-    int num_threads = 4;
-    ChMaterialSurfaceBase::ContactMethod method = ChMaterialSurfaceBase::DEM;
+// Test class
+class PARSettlingTest : public BaseTest {
+  public:
+    PARSettlingTest(const std::string& testName,
+                    const std::string& testProjectName,
+                    ChMaterialSurfaceBase::ContactMethod method,
+                    int num_threads)
+        : BaseTest(testName, testProjectName), m_method(method), m_execTime(0), m_num_threads(num_threads) {}
+
+    ~PARSettlingTest() {}
+
+    // Override corresponding functions in BaseTest
+    virtual bool execute() override;
+    virtual double getExecutionTime() const override { return m_execTime; }
+
+  private:
+    ChMaterialSurfaceBase::ContactMethod m_method;
+    double m_execTime;
+    int m_num_threads;
+};
+
+// ====================================================================================
+
+bool PARSettlingTest::execute() {
     bool use_mat_properties = true;
     bool render = false;
 
     // Get number of threads from arguments (if specified)
-    if (argc > 1) {
-        num_threads = std::stoi(argv[1]);
-    }
+    //    if (argc > 1) {
+    //        m_num_threads = std::stoi(argv[1]);
+    //    }
 
-    std::cout << "Requested number of threads: " << num_threads << std::endl;
+    std::cout << "Requested number of threads: " << m_num_threads << std::endl;
 
     // ----------------
     // Model parameters
@@ -137,9 +160,11 @@ int main(int argc, char** argv) {
 
     // Create system and set method-specific solver settings
     chrono::ChSystemParallel* system;
+    double time_step;
 
-    switch (method) {
+    switch (m_method) {
         case ChMaterialSurfaceBase::DEM: {
+            time_step = 1e-4;
             ChSystemParallelDEM* sys = new ChSystemParallelDEM;
             sys->GetSettings()->solver.contact_force_model = ChSystemDEM::Hooke;
             sys->GetSettings()->solver.tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::OneStep;
@@ -149,6 +174,7 @@ int main(int argc, char** argv) {
             break;
         }
         case ChMaterialSurfaceBase::DVI: {
+            time_step = 1e-3;
             ChSystemParallelDVI* sys = new ChSystemParallelDVI;
             sys->GetSettings()->solver.solver_mode = SLIDING;
             sys->GetSettings()->solver.max_iteration_normal = 0;
@@ -173,10 +199,10 @@ int main(int argc, char** argv) {
     system->GetSettings()->collision.bins_per_axis = I3(binsX, binsY, binsZ);
 
     // Set number of threads
-    system->SetParallelThreadNumber(num_threads);
-    CHOMPfunctions::SetNumThreads(num_threads);
+    system->SetParallelThreadNumber(m_num_threads);
+    CHOMPfunctions::SetNumThreads(m_num_threads);
 
-    // Sanity check: print number of threads in a parallel region
+// Sanity check: print number of threads in a parallel region
 #pragma omp parallel
 #pragma omp master
     { std::cout << "Actual number of OpenMP threads: " << omp_get_num_threads() << std::endl; }
@@ -188,7 +214,7 @@ int main(int argc, char** argv) {
     // Create contact material for terrain
     std::shared_ptr<ChMaterialSurfaceBase> material_terrain;
 
-    switch (method) {
+    switch (m_method) {
         case ChMaterialSurfaceBase::DEM: {
             auto mat_ter = std::make_shared<ChMaterialSurfaceDEM>();
             mat_ter->SetFriction(friction_terrain);
@@ -288,13 +314,17 @@ int main(int argc, char** argv) {
 
     ChTimer<double> timer;
     double cumm_sim_time = 0;
+    int num_steps = 0;
 
-    double time_end = 0.4;
-    double time_step = 1e-4;
+    double time_end = 0.5;
 
     TimingHeader();
     while (system->GetChTime() < time_end) {
+        timer.start();
         system->DoStepDynamics(time_step);
+        timer.stop();
+        num_steps++;
+
         TimingOutput(system);
 #ifdef CHRONO_OPENGL
         if (render) {
@@ -307,6 +337,54 @@ int main(int argc, char** argv) {
         }
 #endif
     }
+
+    system->CalculateContactForces();
+
+    real3 contact_force = system->GetBodyContactForce(container);
+    m_execTime = timer.GetTimeSeconds();
+    addMetric("step_size", time_step);
+    addMetric("vertical_force", contact_force.y);
+    addMetric("avg_time_per_step", m_execTime / num_steps);
+
+    return 0;
+}
+int main(int argc, char** argv) {
+    std::string out_dir = "../METRICS";
+    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+        std::cout << "Error creating directory " << out_dir << std::endl;
+        return 1;
+    }
+
+    bool passed = true;
+
+    PARSettlingTest testDEM2("metrics_PAR_settling_DEM_2", "Chrono::Parallel", ChMaterialSurfaceBase::DEM, 2);
+    PARSettlingTest testDEM4("metrics_PAR_settling_DEM_4", "Chrono::Parallel", ChMaterialSurfaceBase::DEM, 4);
+    PARSettlingTest testDVI2("metrics_PAR_settling_DVI_2", "Chrono::Parallel", ChMaterialSurfaceBase::DVI, 2);
+    PARSettlingTest testDVI4("metrics_PAR_settling_DVI_4", "Chrono::Parallel", ChMaterialSurfaceBase::DVI, 4);
+
+    passed = true;
+    testDEM2.setOutDir(out_dir);
+    testDEM2.setVerbose(true);
+    passed &= testDEM2.run();
+    testDEM2.print();
+
+    passed = true;
+    testDEM4.setOutDir(out_dir);
+    testDEM4.setVerbose(true);
+    passed &= testDEM4.run();
+    testDEM4.print();
+
+    passed = true;
+    testDVI2.setOutDir(out_dir);
+    testDVI2.setVerbose(true);
+    passed &= testDVI2.run();
+    testDVI2.print();
+
+    passed = true;
+    testDVI4.setOutDir(out_dir);
+    testDVI4.setVerbose(true);
+    passed &= testDVI4.run();
+    testDVI4.print();
 
     return 0;
 }
