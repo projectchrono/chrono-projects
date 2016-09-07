@@ -45,7 +45,7 @@ using namespace chrono::fea;
 // ====================================================================================
 
 double step_size = 1e-3;  // Integration step size
-int num_steps = 200;      // Number of steps used in testing
+int num_steps = 500;      // Number of steps used in testing
 
 // ====================================================================================
 
@@ -254,16 +254,16 @@ bool BrickIsoTest::execute() {
         timer.stop();
 
         num_iterations += mystepper->GetNumIterations();
-
-        GetLog() << "time = " << my_system.GetChTime() << "\t" << nodetip->GetPos().z << "\n";
+        std::cout << "time = " << my_system.GetChTime() << "\t" << nodetip->GetPos().z << std::endl;
     }
 
     // Report run time and total number of iterations
-    GetLog() << "Computation Time: " << timer.GetTimeSeconds() << "   Number of iterations: " << num_iterations << "\n";
+    std::cout << "sim time: " << timer.GetTimeSeconds() << " Num iterations: " << num_iterations << std::endl;
 
     m_execTime = timer.GetTimeSeconds();
-    addMetric("num_iterations", num_iterations);
-    addMetric("avg_time_per_step", m_execTime / num_steps);
+    addMetric("tip_y_position (mm)", 1000 * nodetip->GetPos().z);
+    addMetric("avg_num_iterations", (double)num_iterations / num_steps);
+    addMetric("avg_time_per_step (ms)", 1000 * m_execTime / num_steps);
 
     return true;
 }

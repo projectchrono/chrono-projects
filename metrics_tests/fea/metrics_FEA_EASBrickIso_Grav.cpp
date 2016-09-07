@@ -50,7 +50,7 @@ using namespace fea;
 
 bool use_mkl = true;            // Use the MKL solver (if available)
 const double step_size = 1e-3;  // Step size
-const int num_steps = 200;      // Number of time steps for test
+const int num_steps = 500;      // Number of time steps for test
 
 // ====================================================================================
 
@@ -258,17 +258,25 @@ bool BrickIso_GravTest::execute() {
     my_system.SetupInitial();
 
     ChTimer<> timer;
+    int num_iterations = 0;
 
     // Simulation loop
     for (unsigned int it = 0; it < num_steps; it++) {
         timer.start();
         my_system.DoStepDynamics(step_size);
         timer.stop();
+
+        num_iterations += mystepper->GetNumIterations();
         std::cout << "time = " << my_system.GetChTime() << "\t" << nodetip->GetPos().z << std::endl;
     }
 
+    // Report run time and total number of iterations
+    std::cout << "sim time: " << timer.GetTimeSeconds() << " Num iterations: " << num_iterations << std::endl;
+
     m_execTime = timer.GetTimeSeconds();
-    addMetric("avg_time_per_step", m_execTime / num_steps);
+    addMetric("tip_y_position (mm)", 1000 * nodetip->GetPos().z);
+    addMetric("avg_num_iterations", (double)num_iterations / num_steps);
+    addMetric("avg_time_per_step (ms)", 1000 * m_execTime / num_steps);
 
     return true;
 }

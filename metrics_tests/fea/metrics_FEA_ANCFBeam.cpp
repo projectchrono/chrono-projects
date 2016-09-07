@@ -66,7 +66,7 @@ class ANCFBeamTest : public BaseTest {
 bool ANCFBeamTest::execute() {
     // Create a Chrono::Engine physical system
     ChSystem my_system;
-    unsigned int num_steps = 200;
+    unsigned int num_steps = 5000;
 
     // Create a mesh, that is a container for groups of elements and
     // their referenced nodes.
@@ -196,15 +196,21 @@ bool ANCFBeamTest::execute() {
     my_system.SetupInitial();
 
     ChTimer<> timer;
+    ChVector<> displ;
     for (unsigned int it = 0; it < num_steps; it++) {
         timer.start();
         my_system.DoStepDynamics(0.0001);
+        displ = hnodeancf5->GetPos() - ChVector<>(beam_length, 0, 0);
+        ////std::cout << "t = " << my_system.GetChTime();
+        ////std::cout << " [" << displ.x << "," << displ.y << "," << displ.z << "]" << std::endl;
         timer.stop();
     }
 
     m_execTime = timer.GetTimeSeconds();
-    addMetric("num_steps", (int)num_steps);
-    addMetric("avg_time_per_step", m_execTime / num_steps);
+    addMetric("tip_displ_x", displ.x);
+    addMetric("tip_displ_y", displ.y);
+    addMetric("tip_displ_z", displ.z);
+    addMetric("avg_time_per_step (ms)", 1000 * m_execTime / num_steps);
 
     return true;
 }
