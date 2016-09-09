@@ -482,9 +482,10 @@ int main(int argc, char* argv[]) {
 
     // Initialize the vehicle at a height above the terrain.
     vehicle->Initialize(initLoc + ChVector<>(0, 0, vertical_offset), initRot);
+    vehicle->GetVehicle()->SetChassisVisualizationType(VisualizationType::MESH);
 
     // Initially, fix the chassis and wheel bodies (will be released after time_hold).
-    vehicle->GetVehicle()->GetChassis()->SetBodyFixed(true);
+    vehicle->GetVehicle()->GetChassisBody()->SetBodyFixed(true);
     for (int i = 0; i < 2 * vehicle->GetVehicle()->GetNumberAxles(); i++) {
         vehicle->GetVehicle()->GetWheelBody(i)->SetBodyFixed(true);
     }
@@ -534,9 +535,9 @@ int main(int argc, char* argv[]) {
         }
 
         // Release the vehicle chassis at the end of the hold time.
-        if (vehicle->GetVehicle()->GetChassis()->GetBodyFixed() && time > time_hold) {
+        if (vehicle->GetVehicle()->GetChassis()->IsFixed() && time > time_hold) {
             cout << endl << "Release vehicle t = " << time << endl;
-            vehicle->GetVehicle()->GetChassis()->SetBodyFixed(false);
+            vehicle->GetVehicle()->GetChassisBody()->SetBodyFixed(false);
             for (int i = 0; i < 2 * vehicle->GetVehicle()->GetNumberAxles(); i++) {
                 vehicle->GetVehicle()->GetWheelBody(i)->SetBodyFixed(false);
             }
