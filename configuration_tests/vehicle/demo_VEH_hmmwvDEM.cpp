@@ -192,22 +192,28 @@ class MyDriverInputs : public ChDriverInputsCallback {
 // This version uses cylindrical contact shapes.
 class MyCylindricalTire : public ChTireContactCallback {
   public:
-    virtual void onCallback(std::shared_ptr<ChBody> wheelBody, double radius, double width) {
+    virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
         wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
 
         wheelBody->GetCollisionModel()->ClearModel();
-        wheelBody->GetCollisionModel()->AddCylinder(0.46, 0.46, width / 2);
+        wheelBody->GetCollisionModel()->AddCylinder(0.46, 0.46, 0.127);
         wheelBody->GetCollisionModel()->BuildModel();
 
         wheelBody->GetMaterialSurfaceDEM()->SetFriction(mu_t);
         wheelBody->GetMaterialSurfaceDEM()->SetYoungModulus(Y_t);
         wheelBody->GetMaterialSurfaceDEM()->SetRestitution(cr_t);
+
+        auto cyl = std::make_shared<ChCylinderShape>();
+        cyl->GetCylinderGeometry().p1 = ChVector<>(0, 0.127, 0);
+        cyl->GetCylinderGeometry().p2 = ChVector<>(0, -0.127, 0);
+        cyl->GetCylinderGeometry().rad = 0.46;
+        wheelBody->AddAsset(cyl);
     }
 };
 
 class MyMeshTire : public ChTireContactCallback {
 public:
-    virtual void onCallback(std::shared_ptr<ChBody> wheelBody, double radius, double width) {
+    virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
         std::string mesh_file("hmmwv/hmmwv_tire.obj");
         geometry::ChTriangleMeshConnected trimesh;
         trimesh.LoadWavefrontMesh(vehicle::GetDataFile(mesh_file), true, false);
@@ -222,13 +228,9 @@ public:
         wheelBody->GetMaterialSurfaceDEM()->SetYoungModulus(Y_t);
         wheelBody->GetMaterialSurfaceDEM()->SetRestitution(cr_t);
 
-        /*
-        // Clear any existing assets (will be overriden)
-        wheelBody->GetAssets().clear();
         auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
         trimesh_shape->SetMesh(trimesh);
         wheelBody->AddAsset(trimesh_shape);
-        */
     }
 };
 
@@ -243,7 +245,7 @@ class MyLuggedTire : public ChTireContactCallback {
         num_hulls = lugged_convex.GetHullCount();
     }
 
-    virtual void onCallback(std::shared_ptr<ChBody> wheelBody, double radius, double width) {
+    virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
         wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
 
         ChCollisionModelParallel* coll_model = (ChCollisionModelParallel*)wheelBody->GetCollisionModel();
@@ -462,6 +464,9 @@ int main(int argc, char* argv[]) {
     // Initialize the vehicle at a height above the terrain.
     vehicle->Initialize(initLoc + ChVector<>(0, 0, vertical_offset), initRot);
     vehicle->GetVehicle()->SetChassisVisualizationType(VisualizationType::MESH);
+    vehicle->GetVehicle()->SetSuspensionVisualizationType(VisualizationType::PRIMITIVES);
+    vehicle->GetVehicle()->SetSteeringVisualizationType(VisualizationType::PRIMITIVES);
+    vehicle->GetVehicle()->SetWheelVisualizationType(VisualizationType::PRIMITIVES);
 
     // Initially, fix the chassis and wheel bodies (will be released after time_hold).
     vehicle->GetVehicle()->GetChassisBody()->SetBodyFixed(true);
