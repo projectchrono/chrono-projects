@@ -35,6 +35,7 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
+#include "chrono_parallel/solver/ChIterativeSolverParallel.h"
 
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
@@ -193,7 +194,7 @@ bool PARSettlingTest::execute() {
     system->GetSettings()->solver.tolerance = 0.1;
     system->GetSettings()->solver.max_iteration_bilateral = 100;
     system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
-    system->GetSettings()->collision.bins_per_axis = I3(binsX, binsY, binsZ);
+    system->GetSettings()->collision.bins_per_axis = vec3(binsX, binsY, binsZ);
 
     // Set number of threads
     system->SetParallelThreadNumber(m_num_threads);

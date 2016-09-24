@@ -255,7 +255,7 @@ int main(int argc, char* argv[]) {
     my_system->GetSettings()->collision.collision_envelope = 0.05 * radius;
 #endif
 
-    my_system->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
+    my_system->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
     my_system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
 
 // Create a ball material (will be used by balls only)

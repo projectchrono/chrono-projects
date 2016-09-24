@@ -31,7 +31,7 @@
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
-#include "chrono_parallel/collision/ChCNarrowphaseRUtils.h"
+#include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
 
 // Note: CHRONO_OPENGL is defined in ChConfig.h
 #ifdef CHRONO_OPENGL
@@ -376,7 +376,7 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.contact_recovery_speed = 1;
 #endif
 
-    msystem->GetSettings()->collision.bins_per_axis = I3(10, 10, 10);
+    msystem->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
 
     // --------------
     // Create bodies.

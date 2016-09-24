@@ -41,7 +41,7 @@
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
-#include "chrono_parallel/collision/ChCNarrowphaseRUtils.h"
+#include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
 
 // Control use of OpenGL run-time rendering
 // Note: CHRONO_OPENGL is defined in ChConfig.h
@@ -376,7 +376,7 @@ int main(int argc, char* argv[]) {
     system->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 
     system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
-    system->GetSettings()->collision.bins_per_axis = I3(20, 20, 10);
+    system->GetSettings()->collision.bins_per_axis = vec3(20, 20, 10);
 
     // -------------------
     // Create the terrain.
