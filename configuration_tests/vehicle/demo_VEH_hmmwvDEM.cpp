@@ -41,7 +41,7 @@
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
-#include "chrono_parallel/collision/ChCNarrowphaseRUtils.h"
+#include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
 
 // Control use of OpenGL run-time rendering
 // Note: CHRONO_OPENGL is defined in ChConfig.h
@@ -98,7 +98,7 @@ unsigned int num_particles = 100000;
 // Specification of the vehicle model
 // -----------------------------------------------------------------------------
 
-enum WheelType { CYLINDRICAL, LUGGED };
+enum WheelType { CYLINDRICAL, LUGGED, MESHTIRE };
 
 // Type of wheel/tire (controls both contact and visualization)
 WheelType wheel_type = CYLINDRICAL;
@@ -106,6 +106,7 @@ WheelType wheel_type = CYLINDRICAL;
 // JSON files for vehicle model (using different wheel visualization meshes)
 std::string vehicle_file_cyl("hmmwv/vehicle/HMMWV_Vehicle_simple.json");
 std::string vehicle_file_lug("hmmwv/vehicle/HMMWV_Vehicle_simple_lugged.json");
+std::string vehicle_file_mesh("hmmwv/vehicle/HMMWV_Vehicle_simple_mesh.json");
 
 // JSON files for powertrain (simple)
 std::string simplepowertrain_file("hmmwv/powertrain/HMMWV_SimplePowertrain.json");
@@ -191,16 +192,45 @@ class MyDriverInputs : public ChDriverInputsCallback {
 // This version uses cylindrical contact shapes.
 class MyCylindricalTire : public ChTireContactCallback {
   public:
-    virtual void onCallback(std::shared_ptr<ChBody> wheelBody, double radius, double width) {
+    virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
         wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
 
         wheelBody->GetCollisionModel()->ClearModel();
-        wheelBody->GetCollisionModel()->AddCylinder(0.46, 0.46, width / 2);
+        wheelBody->GetCollisionModel()->AddCylinder(0.46, 0.46, 0.127);
         wheelBody->GetCollisionModel()->BuildModel();
 
         wheelBody->GetMaterialSurfaceDEM()->SetFriction(mu_t);
         wheelBody->GetMaterialSurfaceDEM()->SetYoungModulus(Y_t);
         wheelBody->GetMaterialSurfaceDEM()->SetRestitution(cr_t);
+
+        auto cyl = std::make_shared<ChCylinderShape>();
+        cyl->GetCylinderGeometry().p1 = ChVector<>(0, 0.127, 0);
+        cyl->GetCylinderGeometry().p2 = ChVector<>(0, -0.127, 0);
+        cyl->GetCylinderGeometry().rad = 0.46;
+        wheelBody->AddAsset(cyl);
+    }
+};
+
+class MyMeshTire : public ChTireContactCallback {
+public:
+    virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
+        std::string mesh_file("hmmwv/hmmwv_tire.obj");
+        geometry::ChTriangleMeshConnected trimesh;
+        trimesh.LoadWavefrontMesh(vehicle::GetDataFile(mesh_file), true, false);
+
+        // Set contact model
+        wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
+        wheelBody->GetCollisionModel()->ClearModel();
+        wheelBody->GetCollisionModel()->AddTriangleMesh(trimesh, false, false, ChVector<>(0), ChMatrix33<>(1), 0.01);
+        wheelBody->GetCollisionModel()->BuildModel();
+
+        wheelBody->GetMaterialSurfaceDEM()->SetFriction(mu_t);
+        wheelBody->GetMaterialSurfaceDEM()->SetYoungModulus(Y_t);
+        wheelBody->GetMaterialSurfaceDEM()->SetRestitution(cr_t);
+
+        auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
+        trimesh_shape->SetMesh(trimesh);
+        wheelBody->AddAsset(trimesh_shape);
     }
 };
 
@@ -215,7 +245,7 @@ class MyLuggedTire : public ChTireContactCallback {
         num_hulls = lugged_convex.GetHullCount();
     }
 
-    virtual void onCallback(std::shared_ptr<ChBody> wheelBody, double radius, double width) {
+    virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
         wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
 
         ChCollisionModelParallel* coll_model = (ChCollisionModelParallel*)wheelBody->GetCollisionModel();
@@ -346,7 +376,7 @@ int main(int argc, char* argv[]) {
     system->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 
     system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
-    system->GetSettings()->collision.bins_per_axis = I3(20, 20, 10);
+    system->GetSettings()->collision.bins_per_axis = vec3(20, 20, 10);
 
     // -------------------
     // Create the terrain.
@@ -410,11 +440,18 @@ int main(int argc, char* argv[]) {
         case CYLINDRICAL: {
             vehicle = new ChWheeledVehicleAssembly(system, vehicle_file_cyl, simplepowertrain_file);
             tire_cb = new MyCylindricalTire();
-        } break;
+            break;
+        }
         case LUGGED: {
             vehicle = new ChWheeledVehicleAssembly(system, vehicle_file_lug, simplepowertrain_file);
             tire_cb = new MyLuggedTire();
-        } break;
+            break;
+        }
+        case MESHTIRE: {
+            vehicle = new ChWheeledVehicleAssembly(system, vehicle_file_mesh, simplepowertrain_file);
+            tire_cb = new MyMeshTire();
+            break;
+        }
     }
 
     vehicle->SetTireContactCallback(tire_cb);
@@ -426,9 +463,13 @@ int main(int argc, char* argv[]) {
 
     // Initialize the vehicle at a height above the terrain.
     vehicle->Initialize(initLoc + ChVector<>(0, 0, vertical_offset), initRot);
+    vehicle->GetVehicle()->SetChassisVisualizationType(VisualizationType::MESH);
+    vehicle->GetVehicle()->SetSuspensionVisualizationType(VisualizationType::PRIMITIVES);
+    vehicle->GetVehicle()->SetSteeringVisualizationType(VisualizationType::PRIMITIVES);
+    vehicle->GetVehicle()->SetWheelVisualizationType(VisualizationType::PRIMITIVES);
 
     // Initially, fix the chassis and wheel bodies (will be released after time_hold).
-    vehicle->GetVehicle()->GetChassis()->SetBodyFixed(true);
+    vehicle->GetVehicle()->GetChassisBody()->SetBodyFixed(true);
     for (int i = 0; i < 2 * vehicle->GetVehicle()->GetNumberAxles(); i++) {
         vehicle->GetVehicle()->GetWheelBody(i)->SetBodyFixed(true);
     }
@@ -478,9 +519,9 @@ int main(int argc, char* argv[]) {
         }
 
         // Release the vehicle chassis at the end of the hold time.
-        if (vehicle->GetVehicle()->GetChassis()->GetBodyFixed() && time > time_hold) {
+        if (vehicle->GetVehicle()->GetChassis()->IsFixed() && time > time_hold) {
             cout << endl << "Release vehicle t = " << time << endl;
-            vehicle->GetVehicle()->GetChassis()->SetBodyFixed(false);
+            vehicle->GetVehicle()->GetChassisBody()->SetBodyFixed(false);
             for (int i = 0; i < 2 * vehicle->GetVehicle()->GetNumberAxles(); i++) {
                 vehicle->GetVehicle()->GetWheelBody(i)->SetBodyFixed(false);
             }

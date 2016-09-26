@@ -41,7 +41,7 @@
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
-#include "chrono_parallel/collision/ChCNarrowphaseRUtils.h"
+#include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
 
 // Control use of OpenGL run-time rendering
 // Note: CHRONO_OPENGL is defined in ChConfig.h
@@ -199,11 +199,11 @@ class MyDriverInputs : public ChDriverInputsCallback {
 // This version uses cylindrical contact shapes.
 class MyCylindricalTire : public ChTireContactCallback {
   public:
-    virtual void onCallback(std::shared_ptr<ChBody> wheelBody, double radius, double width) {
+    virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
         wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
 
         wheelBody->GetCollisionModel()->ClearModel();
-        wheelBody->GetCollisionModel()->AddCylinder(0.46, 0.46, width / 2);
+        wheelBody->GetCollisionModel()->AddCylinder(0.46, 0.46, 0.127);
         wheelBody->GetCollisionModel()->BuildModel();
 
         wheelBody->GetCollisionModel()->SetFamily(coll_fam_t);
@@ -211,6 +211,12 @@ class MyCylindricalTire : public ChTireContactCallback {
         wheelBody->GetMaterialSurfaceDEM()->SetFriction(mu_t);
         wheelBody->GetMaterialSurfaceDEM()->SetYoungModulus(Y_t);
         wheelBody->GetMaterialSurfaceDEM()->SetRestitution(cr_t);
+ 
+        auto cyl = std::make_shared<ChCylinderShape>();
+        cyl->GetCylinderGeometry().p1 = ChVector<>(0, 0.127, 0);
+        cyl->GetCylinderGeometry().p2 = ChVector<>(0, -0.127, 0);
+        cyl->GetCylinderGeometry().rad = 0.46;
+        wheelBody->AddAsset(cyl);
     }
 };
 
@@ -225,7 +231,7 @@ class MyLuggedTire : public ChTireContactCallback {
         num_hulls = lugged_convex.GetHullCount();
     }
 
-    virtual void onCallback(std::shared_ptr<ChBody> wheelBody, double radius, double width) {
+    virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
         wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
 
         ChCollisionModelParallel* coll_model = (ChCollisionModelParallel*)wheelBody->GetCollisionModel();
@@ -362,6 +368,10 @@ void CreateVehicleAssembly(ChSystem* system, double vertical_offset) {
 
     // Initialize the vehicle at the specified location.
     vehicle_assembly->Initialize(initLoc + ChVector<>(0, 0, vertical_offset), initRot);
+    vehicle_assembly->GetVehicle()->SetChassisVisualizationType(VisualizationType::MESH);
+    vehicle_assembly->GetVehicle()->SetSuspensionVisualizationType(VisualizationType::PRIMITIVES);
+    vehicle_assembly->GetVehicle()->SetSteeringVisualizationType(VisualizationType::PRIMITIVES);
+    vehicle_assembly->GetVehicle()->SetWheelVisualizationType(VisualizationType::PRIMITIVES);
 }
 
 // =============================================================================
@@ -470,7 +480,7 @@ int main(int argc, char* argv[]) {
     system->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 
     system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
-    system->GetSettings()->collision.bins_per_axis = I3(20, 20, 10);
+    system->GetSettings()->collision.bins_per_axis = vec3(20, 20, 10);
 
     // -------------------
     // Create the terrain.
@@ -501,8 +511,8 @@ int main(int argc, char* argv[]) {
     // -------------------
 
     system->GetSettings()->collision.use_aabb_active = true;
-    system->GetSettings()->collision.aabb_min = R3(-hdimX - 2 * hlen, -hdimY, 0);
-    system->GetSettings()->collision.aabb_max = R3(hdimX + 2 * hlen, hdimY, 2 * hdimZ);
+    system->GetSettings()->collision.aabb_min = real3(-hdimX - 2 * hlen, -hdimY, 0);
+    system->GetSettings()->collision.aabb_max = real3(hdimX + 2 * hlen, hdimY, 2 * hdimZ);
 
 // -----------------------
 // Start the simulation.

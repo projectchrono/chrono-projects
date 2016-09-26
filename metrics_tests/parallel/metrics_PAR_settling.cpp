@@ -24,16 +24,18 @@
 #include <sstream>
 #include <string>
 #include <valarray>
+#include <cstdlib>
 #include <vector>
 
 #include "chrono/ChConfig.h"
+#include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChTimer.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
+#include "chrono_parallel/solver/ChIterativeSolverParallel.h"
 
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
@@ -77,24 +79,41 @@ void TimingOutput(chrono::ChSystem* mSys) {
         CNTC = parallel_sys->GetNcontacts();
     }
 
-    printf("   %8.5f | %7.4f | %7.4f | %7.4f | %7.4f | %7.4f | %7d | %7d | %7d | %7.4f |\n", TIME, STEP, BROD, NARR, SOLVER,
-        UPDT, BODS, CNTC, REQ_ITS, RESID);
+    printf("   %8.5f | %7.4f | %7.4f | %7.4f | %7.4f | %7.4f | %7d | %7d | %7d | %7.4f |\n", TIME, STEP, BROD, NARR,
+           SOLVER, UPDT, BODS, CNTC, REQ_ITS, RESID);
 }
 
-// --------------------------------------------------------------------------
+// ====================================================================================
 
-int main(int argc, char** argv) {
-    int num_threads = 4;
-    ChMaterialSurfaceBase::ContactMethod method = ChMaterialSurfaceBase::DEM;
+// Test class
+class PARSettlingTest : public BaseTest {
+  public:
+    PARSettlingTest(const std::string& testName,
+                    const std::string& testProjectName,
+                    ChMaterialSurfaceBase::ContactMethod method,
+                    int num_threads)
+        : BaseTest(testName, testProjectName), m_method(method), m_execTime(0), m_num_threads(num_threads) {}
+
+    ~PARSettlingTest() {}
+
+    // Override corresponding functions in BaseTest
+    virtual bool execute() override;
+    virtual double getExecutionTime() const override { return m_execTime; }
+
+  private:
+    ChMaterialSurfaceBase::ContactMethod m_method;
+    double m_execTime;
+    int m_num_threads;
+};
+
+// ====================================================================================
+
+bool PARSettlingTest::execute() {
     bool use_mat_properties = true;
     bool render = false;
 
-    // Get number of threads from arguments (if specified)
-    if (argc > 1) {
-        num_threads = std::stoi(argv[1]);
-    }
-
-    std::cout << "Requested number of threads: " << num_threads << std::endl;
+    std::cout << "Test: " << getTestName() << std::endl;
+    std::cout << "Requested number of threads: " << m_num_threads << std::endl;
 
     // ----------------
     // Model parameters
@@ -138,9 +157,11 @@ int main(int argc, char** argv) {
 
     // Create system and set method-specific solver settings
     chrono::ChSystemParallel* system;
+    double time_step;
 
-    switch (method) {
+    switch (m_method) {
         case ChMaterialSurfaceBase::DEM: {
+            time_step = 1e-4;
             ChSystemParallelDEM* sys = new ChSystemParallelDEM;
             sys->GetSettings()->solver.contact_force_model = ChSystemDEM::Hooke;
             sys->GetSettings()->solver.tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::OneStep;
@@ -150,6 +171,7 @@ int main(int argc, char** argv) {
             break;
         }
         case ChMaterialSurfaceBase::DVI: {
+            time_step = 1e-3;
             ChSystemParallelDVI* sys = new ChSystemParallelDVI;
             sys->GetSettings()->solver.solver_mode = SLIDING;
             sys->GetSettings()->solver.max_iteration_normal = 0;
@@ -165,7 +187,8 @@ int main(int argc, char** argv) {
         }
     }
 
-    system->Set_G_acc(ChVector<>(0, 0, -9.81));
+    double g = 9.81;
+    system->Set_G_acc(ChVector<>(0, 0, -g));
     system->GetSettings()->perform_thread_tuning = false;
     system->GetSettings()->solver.use_full_inertia_tensor = false;
     system->GetSettings()->solver.tolerance = 0.1;
@@ -174,10 +197,10 @@ int main(int argc, char** argv) {
     system->GetSettings()->collision.bins_per_axis = vec3(binsX, binsY, binsZ);
 
     // Set number of threads
-    system->SetParallelThreadNumber(num_threads);
-    CHOMPfunctions::SetNumThreads(num_threads);
+    system->SetParallelThreadNumber(m_num_threads);
+    CHOMPfunctions::SetNumThreads(m_num_threads);
 
-    // Sanity check: print number of threads in a parallel region
+// Sanity check: print number of threads in a parallel region
 #pragma omp parallel
 #pragma omp master
     { std::cout << "Actual number of OpenMP threads: " << omp_get_num_threads() << std::endl; }
@@ -189,14 +212,14 @@ int main(int argc, char** argv) {
     // Create contact material for terrain
     std::shared_ptr<ChMaterialSurfaceBase> material_terrain;
 
-    switch (method) {
+    switch (m_method) {
         case ChMaterialSurfaceBase::DEM: {
             auto mat_ter = std::make_shared<ChMaterialSurfaceDEM>();
             mat_ter->SetFriction(friction_terrain);
             mat_ter->SetRestitution(restitution_terrain);
             mat_ter->SetYoungModulus(Y_terrain);
             mat_ter->SetPoissonRatio(nu_terrain);
-            mat_ter->SetAdhesion(100.0f);  // TODO
+            mat_ter->SetAdhesion(100.0f);
             mat_ter->SetKn(kn_terrain);
             mat_ter->SetGn(gn_terrain);
             mat_ter->SetKt(kt_terrain);
@@ -270,6 +293,8 @@ int main(int argc, char** argv) {
 
     unsigned int num_particles = gen.getTotalNumBodies();
     std::cout << "Generated particles:  " << num_particles << std::endl;
+    double total_weight = num_particles * (4 * CH_C_PI / 3) * r * r * r * rho_g * g;
+    std::cout << "Total weigth:  " << total_weight << std::endl;
 
 #ifdef CHRONO_OPENGL
     // -------------------------------
@@ -287,27 +312,95 @@ int main(int argc, char** argv) {
     // Simulate system
     // ---------------
 
-    ChTimer<double> timer;
-    double cumm_sim_time = 0;
+    double sim_time = 0;
+    double broad_time = 0;
+    double narrow_time = 0;
+    double update_time = 0;
+    double solve_time = 0;
+    int num_steps = 0;
 
-    double time_end = 0.4;
-    double time_step = 1e-4;
-
-    TimingHeader();
+    ////TimingHeader();
+    double time_end = 0.5;
     while (system->GetChTime() < time_end) {
         system->DoStepDynamics(time_step);
-        TimingOutput(system);
+
+        sim_time += system->GetTimerStep();
+        broad_time += system->GetTimerCollisionBroad();
+        narrow_time += system->GetTimerCollisionNarrow();
+        update_time += system->GetTimerUpdate();
+        solve_time += system->GetTimerSolver();
+        num_steps++;
+
+        ////TimingOutput(system);
+
 #ifdef CHRONO_OPENGL
         if (render) {
             opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
             if (gl_window.Active()) {
                 gl_window.Render();
             } else {
-                return 1;
+                return false;
             }
         }
 #endif
     }
+
+    system->CalculateContactForces();
+    real3 cforce = system->GetBodyContactForce(container);
+    int ncontacts = system->GetNcontacts();
+    std::cout << "Number of contacts:         " << ncontacts << std::endl;
+    std::cout << "Contact force on container: " << cforce.x << "  " << cforce.y << "  " << cforce.z << std::endl;
+    std::cout << "Total simulation time: " << sim_time << std::endl;
+    std::cout << "    Broad phase:       " << broad_time << std::endl;
+    std::cout << "    Narrow phase:      " << narrow_time << std::endl;
+    std::cout << "    Update phase:      " << update_time << std::endl;
+    std::cout << "    Solve phase:       " << solve_time << std::endl;
+
+    m_execTime = sim_time;
+    addMetric("number_contacts", ncontacts);
+    addMetric("vertical_force", cforce.z);
+    addMetric("avg_sim_time_per_step (ms)", 1000 * sim_time / num_steps);
+    addMetric("avg_broad_time_per_step (ms)", 1000 * broad_time / num_steps);
+    addMetric("avg_narrow_time_per_step (ms)", 1000 * narrow_time / num_steps);
+    addMetric("avg_update_time_per_step (ms)", 1000 * update_time / num_steps);
+    addMetric("avg_solve_time_per_step (ms)", 1000 * solve_time / num_steps);
+
+    return true;
+}
+
+int main(int argc, char** argv) {
+    std::string out_dir = "../METRICS";
+    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+        std::cout << "Error creating directory " << out_dir << std::endl;
+        return 1;
+    }
+
+    bool passed = true;
+
+    PARSettlingTest testDEM2("metrics_PAR_settling_DEM_2", "Chrono::Parallel", ChMaterialSurfaceBase::DEM, 2);
+    PARSettlingTest testDEM4("metrics_PAR_settling_DEM_4", "Chrono::Parallel", ChMaterialSurfaceBase::DEM, 4);
+    PARSettlingTest testDVI2("metrics_PAR_settling_DVI_2", "Chrono::Parallel", ChMaterialSurfaceBase::DVI, 2);
+    PARSettlingTest testDVI4("metrics_PAR_settling_DVI_4", "Chrono::Parallel", ChMaterialSurfaceBase::DVI, 4);
+
+    testDEM2.setOutDir(out_dir);
+    testDEM2.setVerbose(true);
+    passed &= testDEM2.run();
+    testDEM2.print();
+
+    testDEM4.setOutDir(out_dir);
+    testDEM4.setVerbose(true);
+    passed &= testDEM4.run();
+    testDEM4.print();
+
+    testDVI2.setOutDir(out_dir);
+    testDVI2.setVerbose(true);
+    passed &= testDVI2.run();
+    testDVI2.print();
+
+    testDVI4.setOutDir(out_dir);
+    testDVI4.setVerbose(true);
+    passed &= testDVI4.run();
+    testDVI4.print();
 
     return 0;
 }

@@ -314,6 +314,7 @@ bool MeshContactTest::execute() {
     // Simulation loop
     // ---------------
     ChTimer<> timer;
+    ChVector<> contact_force;
     int num_steps = 0;
     bool passed = true;
     while (system->GetChTime() < end_time) {
@@ -323,7 +324,7 @@ bool MeshContactTest::execute() {
         timer.stop();
 
         num_steps++;
-        ChVector<> contact_force = ground->GetContactForce();
+        contact_force = ground->GetContactForce();
         GetLog() << "t = " << system->GetChTime()
                  << "  num contacts = " << system->GetContactContainer()->GetNcontacts()
                  << "  force =  " << contact_force.y << "  node y displacement = " << nodeRef->GetPos().y << "\n";
@@ -338,8 +339,10 @@ bool MeshContactTest::execute() {
     }
 
     m_execTime = timer.GetTimeSeconds();
-    addMetric("num_steps", num_steps);
-    addMetric("avg_time_per_step", m_execTime / num_steps);
+    addMetric("number_contacts", system->GetContactContainer()->GetNcontacts());
+    addMetric("contact_force", contact_force.y);
+    addMetric("node displacement (mm)", 1000 * nodeRef->GetPos().y);
+    addMetric("avg_time_per_step (ms)", 1000 * m_execTime / num_steps);
 
     GetLog() << "Test " << (passed ? "PASSED" : "FAILED") << "\n\n\n";
 
@@ -358,8 +361,8 @@ int main(int argc, char* argv[]) {
 
     bool passed = true;
 
-    MeshContactTest testDEM("utest_FEA_compute_contact_mesh_DEM", "Chrono::FEA", ChMaterialSurfaceBase::DEM);
-    MeshContactTest testDVI("utest_FEA_compute_contact_mesh_DVI", "Chrono::FEA", ChMaterialSurfaceBase::DVI);
+    MeshContactTest testDEM("metrics_FEA_compute_contact_mesh_DEM", "Chrono::FEA", ChMaterialSurfaceBase::DEM);
+    MeshContactTest testDVI("metrics_FEA_compute_contact_mesh_DVI", "Chrono::FEA", ChMaterialSurfaceBase::DVI);
 
     testDEM.setOutDir(out_dir);
     testDEM.setVerbose(true);
