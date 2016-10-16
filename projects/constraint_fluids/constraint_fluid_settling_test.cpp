@@ -20,6 +20,7 @@ using namespace chrono;
 using namespace chrono::collision;
 
 double timestep = 1e-3;
+int solver_type = 2;
 ChFluidContainer* fluid_container;
 std::ofstream ofile;
 
@@ -66,6 +67,34 @@ void WriteData(ChSystemParallelDVI* msystem, uint i) {
 
 	ofile << i << " " << iters << " " << residual << " " << dlambda << " " << avg_density << " " << avg_pressure
 		<< " " << KE <<" "<<SOLVER<<std::endl;
+
+	if (i % 100==0) {
+		std::ofstream cfile;
+		switch (solver_type) {
+		case 0:
+			cfile.open("data_fluid_test/fluid_container_data_BB_CONV_"+std::to_string(i)+"_.txt");
+			break;
+		case 1:
+			cfile.open("data_fluid_test/fluid_container_data_APGD_CONV_" + std::to_string(i) + "_.txt");
+			break;
+		case 2:
+			cfile.open("data_fluid_test/fluid_container_data_JACOBI_CONV_" + std::to_string(i) + "_.txt");
+			break;
+		case 3:
+			cfile.open("data_fluid_test/fluid_container_data_GAUSS_SEIDEL_CONV_" + std::to_string(i) + "_.txt");
+			break;
+		default:
+			cfile.open("data_fluid_test/fluid_container_data_APGD_CONV_" + std::to_string(i) + "_.txt");
+			break;
+		}
+
+		for (int k = 0; k < vhist.size(); k++) {
+
+			cfile << vhist[k] << " " << dhist[k] << std::endl;
+		}
+		cfile.close();
+	}
+
 }
 
 void AddContainer(ChSystemParallelDVI* sys) {
@@ -138,7 +167,7 @@ void AddFluid(ChSystemParallelDVI* sys) {
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
 	double time_end = 5;
-	int solver_type = 2;
+	
 	uint max_iteration = 1000;
 	if (argc == 3) {
 		tolerance = tolerances[atoi(argv[1])];
