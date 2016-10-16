@@ -137,7 +137,7 @@ void AddFluid(ChSystemParallelDVI* sys) {
 // Create the system, specify simulation parameters, and run simulation loop.
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
-	double time_end = 10;
+	double time_end = 5;
 	int solver_type = 2;
 	uint max_iteration = 1000;
 	if (argc == 3) {
@@ -164,7 +164,7 @@ int main(int argc, char* argv[]) {
 	msystem.GetSettings()->solver.use_full_inertia_tensor = false;
 	msystem.GetSettings()->solver.contact_recovery_speed = 100000;
 	msystem.GetSettings()->solver.cache_step_length = true;
-	msystem.GetSettings()->min_threads = 8;
+	msystem.GetSettings()->min_threads = 10;
 
 	switch (solver_type) {
 	case 0:
