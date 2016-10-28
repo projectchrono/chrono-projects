@@ -96,5 +96,6 @@ endif()
 
 # Add custom command for copying DLLs to the appropriate binary output folder
 # (on Windows only).
-
-add_DLL_copy_command("${ALL_DLLS}")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	add_DLL_copy_command("${ALL_DLLS}")
+endif()
