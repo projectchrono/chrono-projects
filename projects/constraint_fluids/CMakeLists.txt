@@ -21,7 +21,7 @@ set(DEMOS
 
 find_package(Chrono
              COMPONENTS Parallel
-             OPTIONAL_COMPONENTS OpenGL
+             OPTIONAL_COMPONENTS OpenGL Vehicle 
              CONFIG
 )
 

@@ -61,11 +61,6 @@ using std::endl;
 // USER SETTINGS
 // =============================================================================
 
-// Comment the following line to use Chrono::Parallel
-//#define USE_SEQ
-
-// Comment the following line to use DVI contact
-//#define USE_DEM
 
 // -----------------------------------------------------------------------------
 // Specification of the terrain
@@ -132,7 +127,7 @@ double tolerance = 0.01;
 
 int max_iteration_bilateral = 1000;  // 1000;
 int max_iteration_normal = 0;
-int max_iteration_sliding = 200;  // 2000;
+int max_iteration_sliding = 60;  // 2000;
 int max_iteration_spinning = 0;
 
 float contact_recovery_speed = -1;
@@ -153,15 +148,8 @@ int out_fps = 60;
 
 double CreateParticles(ChSystem* system) {
 	// Create a material
-#ifdef USE_DEM
-	auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
-	mat_g->SetYoungModulus(1e8f);
-	mat_g->SetFriction(mu_g);
-	mat_g->SetRestitution(0.4f);
-#else
 	auto mat_g = std::make_shared<ChMaterialSurface>();
 	mat_g->SetFriction(mu_g);
-#endif
 
 	// Create a particle generator and a mixture entirely made out of spheres
 	utils::Generator gen(system);
@@ -229,28 +217,9 @@ int main(int argc, char* argv[]) {
 	// --------------
 	// Create system.
 	// --------------
-
-#ifdef USE_SEQ
-	// ----  Sequential
-#ifdef USE_DEM
-	std::cout << "Create DEM system" << std::endl;
-	ChSystemDEM* system = new ChSystemDEM();
-#else
-	std::cout << "Create DVI system" << std::endl;
-	ChSystem* system = new ChSystem();
-#endif
-
-#else
 	// ----  Parallel
-#ifdef USE_DEM
-	std::cout << "Create Parallel DEM system" << std::endl;
-	ChSystemParallelDEM* system = new ChSystemParallelDEM();
-#else
 	std::cout << "Create Parallel DVI system" << std::endl;
 	ChSystemParallelDVI* system = new ChSystemParallelDVI();
-#endif
-
-#endif
 
 	system->Set_G_acc(ChVector<>(0, 0, -9.81));
 
@@ -258,19 +227,6 @@ int main(int argc, char* argv[]) {
 	// ---------------------
 	// Edit system settings.
 	// ---------------------
-
-#ifdef USE_SEQ
-
-	////system->SetSolverType(ChSystem::SOLVER_MINRES);
-	system->SetMaxItersSolverSpeed(50);
-	system->SetMaxItersSolverStab(50);
-	////system->SetTol(0);
-	////system->SetMaxPenetrationRecoverySpeed(1.5);
-	////system->SetMinBounceSpeed(2.0);
-	////system->SetSolverOverrelaxationParam(0.8);
-	////system->SetSolverSharpnessParam(1.0);
-
-#else
 
 	// Set number of threads
 	int max_threads = CHOMPfunctions::GetNumProcs();
@@ -287,37 +243,25 @@ int main(int argc, char* argv[]) {
 	system->GetSettings()->solver.use_full_inertia_tensor = false;
 	system->GetSettings()->solver.tolerance = tolerance;
 
-#ifndef USE_DEM
 	system->GetSettings()->solver.solver_mode = SLIDING;
 	system->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
 	system->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
 	system->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
 	system->GetSettings()->solver.alpha = 0;
 	system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-	system->ChangeSolverType(APGD);
+	system->ChangeSolverType(BB);
 	system->GetSettings()->collision.collision_envelope = 0.1 * r_g;
-#else
-	system->GetSettings()->solver.contact_force_model = ChSystemDEM::PlainCoulomb;
-#endif
+
 
 	system->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
-
-#endif
 
 	// -------------------
 	// Create the terrain.
 	// -------------------
 
 	// Contact material
-#ifdef USE_DEM
-	auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
-	mat_g->SetYoungModulus(1e8f);
-	mat_g->SetFriction(mu_g);
-	mat_g->SetRestitution(0.4f);
-#else
 	auto mat_g = std::make_shared<ChMaterialSurface>();
 	mat_g->SetFriction(mu_g);
-#endif
 
 	// Ground body
 	auto ground = std::shared_ptr<ChBody>(system->NewBody());
