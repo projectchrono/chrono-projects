@@ -44,10 +44,13 @@
 // Chrono vehicle header files
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
-
+#include "chrono_vehicle/utils/ChSpeedController.h"
 // M113 model header files
 #include "chrono_models/vehicle/m113/M113_SimplePowertrain.h"
 #include "chrono_models/vehicle/m113/M113_Vehicle.h"
+
+#include "fording_setup.h"
+
 
 using namespace chrono;
 using namespace chrono::collision;
@@ -92,16 +95,15 @@ float mu_g = 0.8f;
 
 unsigned int num_particles = 100; //// 40000;
 
-								  // -----------------------------------------------------------------------------
-								  // Specification of the vehicle model
-								  // -----------------------------------------------------------------------------
-
-								  // Initial vehicle position and orientation
-ChVector<> initLoc(-hdimX + 4.5, 0, 1);
-ChQuaternion<> initRot(1, 0, 0, 0);
+// -----------------------------------------------------------------------------
+// Specification of the vehicle model
+// -----------------------------------------------------------------------------
+// Initial vehicle position and orientation
 
 // Simple powertrain model
 std::string simplepowertrain_file("generic/powertrain/SimplePowertrain.json");
+
+ChSpeedController m_speedPIDVehicle;
 
 // -----------------------------------------------------------------------------
 // Simulation parameters
@@ -114,20 +116,20 @@ int threads = 20;
 bool thread_tuning = false;
 
 // Total simulation duration.
-double time_end = 7;
+double time_end = 20;
 
 // Duration of the "hold time" (vehicle chassis fixed and no driver inputs).
 // This can be used to allow the granular material to settle.
-double time_hold = 0.2;
+double time_hold = 0.1;
 
 // Solver parameters
 double time_step = 1e-3;  // 2e-4;
 
-double tolerance = 0.01;
+double tolerance = 0.001;
 
 int max_iteration_bilateral = 1000;  // 1000;
 int max_iteration_normal = 0;
-int max_iteration_sliding = 60;  // 2000;
+int max_iteration_sliding = 50;  // 2000;
 int max_iteration_spinning = 0;
 
 float contact_recovery_speed = -1;
@@ -136,14 +138,9 @@ float contact_recovery_speed = -1;
 bool monitor_bilaterals = false;
 int bilateral_frame_interval = 100;
 
-// Output directories
-bool povray_output = false;
-
-const std::string out_dir = "../M113_PARALLEL";
-const std::string pov_dir = out_dir + "/POVRAY";
-
 int out_fps = 60;
 
+double target_speed = 2;
 // =============================================================================
 
 double CreateParticles(ChSystem* system) {
@@ -198,21 +195,6 @@ void progressbar(unsigned int x, unsigned int n, unsigned int w = 50) {
 
 // =============================================================================
 int main(int argc, char* argv[]) {
-	// -----------------
-	// Initialize output
-	// -----------------
-
-	if (povray_output) {
-		if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
-			std::cout << "Error creating directory " << out_dir << std::endl;
-			return 1;
-		}
-
-		if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
-			std::cout << "Error creating directory " << pov_dir << std::endl;
-			return 1;
-		}
-	}
 
 	// --------------
 	// Create system.
@@ -227,86 +209,45 @@ int main(int argc, char* argv[]) {
 	// ---------------------
 	// Edit system settings.
 	// ---------------------
-
-	// Set number of threads
-	int max_threads = CHOMPfunctions::GetNumProcs();
-	if (threads > max_threads)
-		threads = max_threads;
-	system->SetParallelThreadNumber(threads);
-	CHOMPfunctions::SetNumThreads(threads);
-	std::cout << "Using " << threads << " threads" << std::endl;
-
-	system->GetSettings()->perform_thread_tuning = thread_tuning;
-
 	// Set solver parameters
-	system->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
-	system->GetSettings()->solver.use_full_inertia_tensor = false;
 	system->GetSettings()->solver.tolerance = tolerance;
-
 	system->GetSettings()->solver.solver_mode = SLIDING;
 	system->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
 	system->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
 	system->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
+	system->GetSettings()->solver.max_iteration_bilateral = 1000;  // make 1000, should be about 220
+	system->GetSettings()->solver.compute_N = false;
 	system->GetSettings()->solver.alpha = 0;
+	system->GetSettings()->solver.cache_step_length = true;
+	system->GetSettings()->solver.use_full_inertia_tensor = false;
 	system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
+	system->GetSettings()->solver.bilateral_clamp_speed = 1e8;
 	system->ChangeSolverType(BB);
+	system->SetLoggingLevel(LOG_INFO);
+	system->SetLoggingLevel(LOG_TRACE);
+
 	system->GetSettings()->collision.collision_envelope = 0.1 * r_g;
 
 
-	system->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
+	system->GetSettings()->collision.bins_per_axis = vec3(100, 20, 25);
+	system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+	system->GetSettings()->collision.fixed_bins = true;
 
 	// -------------------
 	// Create the terrain.
 	// -------------------
 
-	// Contact material
-	auto mat_g = std::make_shared<ChMaterialSurface>();
-	mat_g->SetFriction(mu_g);
+	CreateContainer(system);
 
-	// Ground body
-	auto ground = std::shared_ptr<ChBody>(system->NewBody());
-	ground->SetIdentifier(-1);
-	ground->SetBodyFixed(true);
-	ground->SetCollide(true);
+	dof_container = new ChFluidContainer(system);
+	CreateFluid(system);
 
-	ground->SetMaterialSurface(mat_g);
-
-	ground->GetCollisionModel()->ClearModel();
-
-	// Bottom box
-	utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick),
-		ChQuaternion<>(1, 0, 0, 0), true);
-	if (terrain_type == GRANULAR_TERRAIN) {
-		// Front box
-		utils::AddBoxGeometry(ground.get(), ChVector<>(hthick, hdimY, hdimZ + hthick),
-			ChVector<>(hdimX + hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), visible_walls);
-		// Rear box
-		utils::AddBoxGeometry(ground.get(), ChVector<>(hthick, hdimY, hdimZ + hthick),
-			ChVector<>(-hdimX - hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
-			visible_walls);
-		// Left box
-		utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hthick, hdimZ + hthick),
-			ChVector<>(0, hdimY + hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), visible_walls);
-		// Right box
-		utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hthick, hdimZ + hthick),
-			ChVector<>(0, -hdimY - hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
-			visible_walls);
-	}
-
-	ground->GetCollisionModel()->BuildModel();
-
-	system->AddBody(ground);
-
-	// Create the granular material.
-	double vertical_offset = 0;
-
-	if (terrain_type == GRANULAR_TERRAIN) {
-		vertical_offset = CreateParticles(system);
-	}
 
 	// --------------------------
 	// Construct the M113 vehicle
 	// --------------------------
+
+	m_speedPIDVehicle.SetGains(4.0, 1.0, 0.00);
 
 	// Create and initialize vehicle system
 	M113_Vehicle vehicle(true, TrackShoeType::SINGLE_PIN, system);
@@ -314,7 +255,7 @@ int main(int argc, char* argv[]) {
 
 	vehicle.Initialize(ChCoordsys<>(initLoc, initRot));
 
-	vehicle.SetChassisVisualizationType(VisualizationType::NONE);
+	vehicle.SetChassisVisualizationType(VisualizationType::MESH);
 	vehicle.SetSprocketVisualizationType(VisualizationType::MESH);
 	vehicle.SetIdlerVisualizationType(VisualizationType::MESH);
 	vehicle.SetRoadWheelAssemblyVisualizationType(VisualizationType::MESH);
@@ -327,10 +268,6 @@ int main(int argc, char* argv[]) {
 	// Create the powertrain system
 	M113_SimplePowertrain powertrain;
 	powertrain.Initialize(vehicle.GetChassisBody(), vehicle.GetDriveshaft());
-
-	// Create the driver system
-	ChDataDriver driver(vehicle, vehicle::GetDataFile("M113/driver/Acceleration.txt"));
-	driver.Initialize();
 
 	// ---------------
 	// Simulation loop
@@ -361,11 +298,51 @@ int main(int argc, char* argv[]) {
 	TrackShoeForces shoe_forces_left(vehicle.GetNumTrackShoes(LEFT));
 	TrackShoeForces shoe_forces_right(vehicle.GetNumTrackShoes(RIGHT));
 
+	bool set_time = true;
+
+
 	while (time < time_end) {
 		// Collect output data from modules
-		double throttle_input = driver.GetThrottle();
-		double steering_input = driver.GetSteering();
-		double braking_input = driver.GetBraking();
+		double throttle_input = 0;
+		double steering_input = 0;
+		double braking_input = 0;
+
+		{
+
+			double out_speed = m_speedPIDVehicle.Advance(vehicle, target_speed, time_step);
+			if (time > .5) {
+				ChClampValue(out_speed, -2.0, 2.0);
+			}
+			else {
+				out_speed = 0;
+			}
+
+			if (out_speed > 0) {
+				braking_input = 0;
+				throttle_input = out_speed;
+			}
+			else {
+				// Vehicle moving too fast: apply brakes
+				braking_input = -out_speed;
+				throttle_input = 0;
+			}
+
+			// Stop vehicle at time_brakes [s]
+			if (vehicle.GetChassis()->GetPos().x > dist_end) {
+				braking_input = 1;
+				throttle_input = 0;
+				if (set_time) {
+					real time_end_temp = time + 1;
+					time_end = Max(time_end_temp, time_end);
+					set_time = false;
+				}
+			}
+
+		}
+
+
+
+
 		double powertrain_torque = powertrain.GetOutputTorque();
 		double driveshaft_speed = vehicle.GetDriveshaftSpeed();
 		vehicle.GetTrackShoeStates(LEFT, shoe_states_left);
@@ -383,11 +360,6 @@ int main(int argc, char* argv[]) {
 			cout << "     Steering input: " << steering_input << endl;
 			cout << "     Execution time: " << exec_time << endl;
 
-			if (povray_output) {
-				char filename[100];
-				sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
-				utils::WriteShapesPovray(system, filename);
-			}
 
 			out_frame++;
 			next_out_frame += out_steps;
@@ -401,12 +373,10 @@ int main(int argc, char* argv[]) {
 		}
 
 		// Update modules (process inputs from other modules)
-		driver.Synchronize(time);
 		powertrain.Synchronize(time, throttle_input, driveshaft_speed);
 		vehicle.Synchronize(time, steering_input, braking_input, powertrain_torque, shoe_forces_left, shoe_forces_right);
 
 		// Advance simulation for one timestep for all modules
-		driver.Advance(time_step);
 		powertrain.Advance(time_step);
 		vehicle.Advance(time_step);
 
