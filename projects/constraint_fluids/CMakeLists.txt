@@ -19,6 +19,8 @@ set(DEMOS
 
 # Invoke find_package in CONFIG mode.
 
+find_package(ZLIB REQUIRED)
+
 find_package(Chrono
              COMPONENTS Parallel
              OPTIONAL_COMPONENTS OpenGL Vehicle 
@@ -50,6 +52,7 @@ endif()
 include_directories(
     ${CHRONO_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
+    ${ZLIB_INCLUDE_DIRS}
 )
 
 #--------------------------------------------------------------
@@ -79,7 +82,7 @@ foreach(PROGRAM ${DEMOS})
     LINK_FLAGS "${CHRONO_CXX_FLAGS} ${CHRONO_LINKER_FLAGS}"
   )
 
-  target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
+  target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES} ${ZLIB_LIBRARIES})
 
 endforeach(PROGRAM)
 

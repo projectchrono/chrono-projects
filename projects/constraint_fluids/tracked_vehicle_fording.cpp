@@ -50,7 +50,7 @@
 #include "chrono_models/vehicle/m113/M113_Vehicle.h"
 
 #include "fording_setup.h"
-
+#include "input_output.h"
 
 using namespace chrono;
 using namespace chrono::collision;
@@ -94,7 +94,8 @@ ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 float mu_g = 0.8f;
 
 unsigned int num_particles = 100; //// 40000;
-
+std::vector<real3> forces;
+std::vector<real3> torques;
 // -----------------------------------------------------------------------------
 // Specification of the vehicle model
 // -----------------------------------------------------------------------------
@@ -102,7 +103,7 @@ unsigned int num_particles = 100; //// 40000;
 
 // Simple powertrain model
 std::string simplepowertrain_file("generic/powertrain/SimplePowertrain.json");
-
+std::string data_output_path = "m113_fording/";
 ChSpeedController m_speedPIDVehicle;
 
 // -----------------------------------------------------------------------------
@@ -111,9 +112,6 @@ ChSpeedController m_speedPIDVehicle;
 
 // Desired number of OpenMP threads (will be clamped to maximum available)
 int threads = 20;
-
-// Perform dynamic tuning of number of threads?
-bool thread_tuning = false;
 
 // Total simulation duration.
 double time_end = 20;
@@ -222,12 +220,12 @@ int main(int argc, char* argv[]) {
 	system->GetSettings()->solver.use_full_inertia_tensor = false;
 	system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
 	system->GetSettings()->solver.bilateral_clamp_speed = 1e8;
+	system->GetSettings()->min_threads = threads;
 	system->ChangeSolverType(BB);
 	system->SetLoggingLevel(LOG_INFO);
 	system->SetLoggingLevel(LOG_TRACE);
 
 	system->GetSettings()->collision.collision_envelope = 0.1 * r_g;
-
 
 	system->GetSettings()->collision.bins_per_axis = vec3(100, 20, 25);
 	system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
@@ -341,8 +339,6 @@ int main(int argc, char* argv[]) {
 		}
 
 
-
-
 		double powertrain_torque = powertrain.GetOutputTorque();
 		double driveshaft_speed = vehicle.GetDriveshaftSpeed();
 		vehicle.GetTrackShoeStates(LEFT, shoe_states_left);
@@ -350,16 +346,28 @@ int main(int argc, char* argv[]) {
 
 		// Output
 		if (sim_frame == next_out_frame) {
-			cout << endl;
-			cout << "---- Frame:          " << out_frame + 1 << endl;
-			cout << "     Sim frame:      " << sim_frame << endl;
-			cout << "     Time:           " << time << endl;
-			cout << "     Avg. contacts:  " << num_contacts / out_steps << endl;
-			cout << "     Throttle input: " << throttle_input << endl;
-			cout << "     Braking input:  " << braking_input << endl;
-			cout << "     Steering input: " << steering_input << endl;
-			cout << "     Execution time: " << exec_time << endl;
+			std::cout << "write: " << out_frame << std::endl;
+			forces.resize(0);
+			torques.resize(0);
 
+			system->CalculateContactForces();
+
+			// get total force and torques on tracks and chassis
+			forces.push_back(system->GetBodyContactForce(vehicle.GetChassisBody()->GetId()));
+			torques.push_back(system->GetBodyContactTorque(vehicle.GetChassisBody()->GetId()));
+
+			for (int i = 0; i < vehicle.GetNumTrackShoes(LEFT); i++) {
+				forces.push_back(system->GetBodyContactForce(vehicle.GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()));
+				torques.push_back(system->GetBodyContactTorque(vehicle.GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()));
+			}
+			for (int i = 0; i < vehicle.GetNumTrackShoes(RIGHT); i++) {
+				forces.push_back(system->GetBodyContactForce(vehicle.GetTrackShoe(RIGHT, i)->GetShoeBody()->GetId()));
+				torques.push_back(system->GetBodyContactTorque(vehicle.GetTrackShoe(RIGHT, i)->GetShoeBody()->GetId()));
+			}
+			
+			DumpFluidData(system, data_output_path + "data_" + std::to_string(out_frame) + ".dat", true);
+			DumpAllObjectsWithGeometryPovray(system, data_output_path + "vehicle_" + std::to_string(out_frame) + ".dat", true);
+			WriteTrackedVehicleData(vehicle, powertrain, throttle_input, braking_input, forces, torques, data_output_path + "stats_" + std::to_string(out_frame) + ".dat");
 
 			out_frame++;
 			next_out_frame += out_steps;
@@ -368,7 +376,6 @@ int main(int argc, char* argv[]) {
 
 		// Release the vehicle chassis at the end of the hold time.
 		if (vehicle.GetChassisBody()->GetBodyFixed() && time > time_hold) {
-			std::cout << std::endl << "Release vehicle t = " << time << std::endl;
 			vehicle.GetChassisBody()->SetBodyFixed(false);
 		}
 
@@ -378,21 +385,27 @@ int main(int argc, char* argv[]) {
 
 		// Advance simulation for one timestep for all modules
 		powertrain.Advance(time_step);
-		vehicle.Advance(time_step);
+		//vehicle.Advance(time_step);
+
+		std::shared_ptr<ChTrackDriveline> m_driveline = vehicle.GetDriveline();
+
+		printf("Vspeed: [%f],  Dspeed [%f], motor torque [%f], motor speed [%f] output torque [%f] [%f %f]\n",
+			vehicle.GetVehicleSpeed(), m_driveline->GetDriveshaftSpeed(), powertrain.GetMotorTorque(),
+			powertrain.GetMotorSpeed(), powertrain.GetOutputTorque(), throttle_input, braking_input);
 
 #ifdef CHRONO_OPENGL
-		if (gl_window.Active())
+
+		if (gl_window.Active()) {
+			gl_window.DoStepDynamics(time_step);
 			gl_window.Render();
-		else
+		}
+		else {
 			break;
+		}
+#else
+		system.DoStepDynamics(time_step);
 #endif
 
-		progressbar(out_steps + sim_frame - next_out_frame + 1, out_steps);
-
-		// Periodically display maximum constraint violation
-		if (monitor_bilaterals && sim_frame % bilateral_frame_interval == 0) {
-			vehicle.LogConstraintViolations();
-		}
 
 		// Update counters.
 		time += time_step;
@@ -404,7 +417,6 @@ int main(int argc, char* argv[]) {
 	// Final stats
 	std::cout << "==================================" << std::endl;
 	std::cout << "Simulation time:   " << exec_time << std::endl;
-	std::cout << "Number of threads: " << threads << std::endl;
 
 	return 0;
 }
