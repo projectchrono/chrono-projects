@@ -259,7 +259,16 @@ int main(int argc, char* argv[]) {
 	vehicle.SetRoadWheelAssemblyVisualizationType(VisualizationType::MESH);
 	vehicle.SetTrackShoeVisualizationType(VisualizationType::MESH);
 
-	////vehicle.SetCollide(TrackCollide::NONE);
+	chrono::geometry::ChTriangleMeshConnected chassis_mesh;
+	std::vector<std::vector<ChVector<double> > > chassis_hulls;
+	LoadConvexHull("m113.obj", chassis_mesh, chassis_hulls, VNULL, QUNIT);
+	vehicle.GetChassisBody()->GetAssets().clear();
+	vehicle.GetChassisBody()->GetCollisionModel()->ClearModel();
+	utils::AddConvexCollisionModel(vehicle.GetChassisBody(), chassis_mesh, chassis_hulls, VNULL, QUNIT);
+	vehicle.GetChassisBody()->GetCollisionModel()->BuildModel();
+	vehicle.GetChassisBody()->GetCollisionModel()->SetFamily(4);
+	vehicle.GetChassisBody()->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(4);
+	//vehicle.SetCollide(TrackCollide::NONE);
 	////vehicle.SetCollide(TrackCollide::WHEELS_LEFT | TrackCollide::WHEELS_RIGHT);
 	////vehicle.SetCollide(TrackCollide::ALL & (~TrackCollide::SPROCKET_LEFT) & (~TrackCollide::SPROCKET_RIGHT));
 

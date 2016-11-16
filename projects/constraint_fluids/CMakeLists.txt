@@ -22,8 +22,8 @@ set(DEMOS
 find_package(ZLIB REQUIRED)
 
 find_package(Chrono
-             COMPONENTS Parallel
-             OPTIONAL_COMPONENTS OpenGL Vehicle 
+             COMPONENTS PARALLEL VEHICLE
+             OPTIONAL_COMPONENTS OPENGL  
              CONFIG
 )
 
