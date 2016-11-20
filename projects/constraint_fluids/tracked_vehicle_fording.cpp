@@ -29,7 +29,7 @@
 #include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
 
 // Chrono::Parallel OpenGL header files
-//#undef CHRONO_OPENGL
+#undef CHRONO_OPENGL
 
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
@@ -412,7 +412,7 @@ int main(int argc, char* argv[]) {
 			break;
 		}
 #else
-		system.DoStepDynamics(time_step);
+		system->DoStepDynamics(time_step);
 #endif
 
 
