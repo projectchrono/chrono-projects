@@ -127,7 +127,7 @@ double tolerance = 0.001;
 
 int max_iteration_bilateral = 1000;  // 1000;
 int max_iteration_normal = 0;
-int max_iteration_sliding = 50;  // 2000;
+int max_iteration_sliding = 100;  // 2000;
 int max_iteration_spinning = 0;
 
 float contact_recovery_speed = -1;
