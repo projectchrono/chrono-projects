@@ -8,6 +8,7 @@ option(ENABLE_CONSTRAINT_FLUID_MODELS "Enable the models using constraint fluids
 add_subdirectory(granular_validation)
 add_subdirectory(parallel_tests)
 add_subdirectory(vehicle_tests)
+add_subdirectory(physics_tests)
 
 IF (ENABLE_CONSTRAINT_FLUID_MODELS)
    add_subdirectory(constraint_fluids)
