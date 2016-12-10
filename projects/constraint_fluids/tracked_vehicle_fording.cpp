@@ -46,16 +46,13 @@
 #include "chrono_vehicle/driver/ChDataDriver.h"
 #include "chrono_vehicle/utils/ChSpeedController.h"
 // M113 model header files
-#include "chrono_models/vehicle/m113/M113_SimplePowertrain.h"
-#include "chrono_models/vehicle/m113/M113_Vehicle.h"
 
 #include "fording_setup.h"
 #include "input_output.h"
 
 using namespace chrono;
 using namespace chrono::collision;
-using namespace chrono::vehicle;
-using namespace chrono::vehicle::m113;
+
 
 using std::cout;
 using std::endl;
@@ -123,9 +120,9 @@ double time_hold = 0.1;
 // Solver parameters
 double time_step = 1e-3;  // 2e-4;
 
-double tolerance = 0.001;
+double tolerance = 0.00001;
 
-int max_iteration_bilateral = 1000;  // 1000;
+int max_iteration_bilateral = 2000;  // 1000;
 int max_iteration_normal = 0;
 int max_iteration_sliding = 100;  // 2000;
 int max_iteration_spinning = 0;
@@ -213,7 +210,7 @@ int main(int argc, char* argv[]) {
 	system->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
 	system->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
 	system->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
-	system->GetSettings()->solver.max_iteration_bilateral = 1000;  // make 1000, should be about 220
+	system->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;  // make 1000, should be about 220
 	system->GetSettings()->solver.compute_N = false;
 	system->GetSettings()->solver.alpha = 0;
 	system->GetSettings()->solver.cache_step_length = true;
@@ -247,9 +244,14 @@ int main(int argc, char* argv[]) {
 
 	m_speedPIDVehicle.SetGains(4.0, 1.0, 0.00);
 
+
 	// Create and initialize vehicle system
-	M113_Vehicle vehicle(true, TrackShoeType::SINGLE_PIN, system);
+	M113_Vehicle_Custom vehicle(true, TrackShoeType::SINGLE_PIN, system);
 	////vehicle.SetStepsize(0.0001);
+
+
+
+
 
 	vehicle.Initialize(ChCoordsys<>(initLoc, initRot));
 
@@ -259,15 +261,8 @@ int main(int argc, char* argv[]) {
 	vehicle.SetRoadWheelAssemblyVisualizationType(VisualizationType::MESH);
 	vehicle.SetTrackShoeVisualizationType(VisualizationType::MESH);
 
-	chrono::geometry::ChTriangleMeshConnected chassis_mesh;
-	std::vector<std::vector<ChVector<double> > > chassis_hulls;
-	LoadConvexHull("m113.obj", chassis_mesh, chassis_hulls, VNULL, QUNIT);
-	vehicle.GetChassisBody()->GetAssets().clear();
-	vehicle.GetChassisBody()->GetCollisionModel()->ClearModel();
-	utils::AddConvexCollisionModel(vehicle.GetChassisBody(), chassis_mesh, chassis_hulls, VNULL, QUNIT);
-	vehicle.GetChassisBody()->GetCollisionModel()->BuildModel();
-	vehicle.GetChassisBody()->GetCollisionModel()->SetFamily(4);
-	vehicle.GetChassisBody()->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(4);
+
+
 	//vehicle.SetCollide(TrackCollide::NONE);
 	////vehicle.SetCollide(TrackCollide::WHEELS_LEFT | TrackCollide::WHEELS_RIGHT);
 	////vehicle.SetCollide(TrackCollide::ALL & (~TrackCollide::SPROCKET_LEFT) & (~TrackCollide::SPROCKET_RIGHT));
@@ -403,9 +398,16 @@ int main(int argc, char* argv[]) {
 			powertrain.GetMotorSpeed(), powertrain.GetOutputTorque(), throttle_input, braking_input);
 
 #ifdef CHRONO_OPENGL
+		//gl_window.Pause();
 
 		if (gl_window.Active()) {
-			gl_window.DoStepDynamics(time_step);
+			if (gl_window.DoStepDynamics(time_step)) {
+				// Update counters.
+				time += time_step;
+				sim_frame++;
+				exec_time += system->GetTimerStep();
+				num_contacts += system->GetNcontacts();
+			}
 			gl_window.Render();
 		}
 		else {
@@ -413,14 +415,15 @@ int main(int argc, char* argv[]) {
 		}
 #else
 		system->DoStepDynamics(time_step);
-#endif
-
-
-		// Update counters.
 		time += time_step;
 		sim_frame++;
 		exec_time += system->GetTimerStep();
 		num_contacts += system->GetNcontacts();
+
+#endif
+
+
+
 	}
 
 	// Final stats

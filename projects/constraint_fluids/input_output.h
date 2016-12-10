@@ -15,7 +15,7 @@
 #include "chrono/utils/ChUtilsGenerators.h"
 
 #include "chrono_thirdparty/tinyobjloader/tiny_obj_loader.h"
-
+#include "m113_custom.h"
 using namespace chrono;
 using namespace chrono::collision;
 using namespace chrono::vehicle;
@@ -241,7 +241,7 @@ void static DumpAllObjectsWithGeometryPovray(ChSystem* mSys, std::string filenam
 
 
 void static WriteTrackedVehicleData(
-	M113_Vehicle& vehicle,
+	M113_Vehicle_Custom& vehicle,
 	M113_SimplePowertrain &powertrain, 
 	double throttle,
 	double braking,
@@ -282,30 +282,3 @@ void static WriteTrackedVehicleData(
 	csv_output.CloseFile();
 }
 
-void static LoadConvexHull(const std::string& file_name,
-	geometry::ChTriangleMeshConnected& convex_mesh,
-	std::vector<std::vector<ChVector<double> > >& convex_hulls,
-	const ChVector<>& pos,
-	const ChQuaternion<>& rot) {
-	convex_mesh.LoadWavefrontMesh(file_name, true, false);
-
-	std::vector<tinyobj::shape_t> shapes;
-	std::string err = tinyobj::LoadObj(shapes, file_name.c_str());
-
-	convex_hulls.resize(shapes.size());
-	std::cout << "NUM HULLS: " << shapes.size() << std::endl;
-	for (int i = 0; i < shapes.size(); i++) {
-		convex_hulls[i].resize(shapes[i].mesh.input_pos.size() / 3);
-		std::cout << "HULL: " << i << " "
-			<< shapes[i].mesh.input_pos.size() / 3 << std::endl;
-
-		for (int j = 0; j < shapes[i].mesh.input_pos.size() / 3; j++) {
-			ChVector<double> pos(shapes[i].mesh.input_pos[j * 3 + 0], shapes[i].mesh.input_pos[j * 3 + 1],
-				shapes[i].mesh.input_pos[j * 3 + 2]);
-
-			//std::cout << pos.x << " " << pos.y << " " << pos.z << "\n";
-
-			convex_hulls[i][j] = pos;
-		}
-	}
-}

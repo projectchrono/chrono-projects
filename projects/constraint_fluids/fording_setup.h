@@ -23,10 +23,10 @@ real dim_d = 15 * conversion * 0.5;    // length of bottom default: 100
 real dim_e = 8 * conversion * 0.5;     // full depth of trench
 real dim_w = 14 * conversion * 0.5;    // width of trench default: 20
 real dim_t = 5.0 / 12.0 * conversion;  // wall thickness default : 10
-bool add_top = true;
+bool add_top = false;
 
 // Initial vehicle position and orientation
-ChVector<> initLoc(-(dim_d + (dim_b + dim_c) * 2 + dim_a  * .9)+1, 0, dim_e * 2 + 1.0);
+ChVector<> initLoc( -(dim_d + (dim_b + dim_c) * 2 + dim_a  * .9) + 1.75, 0, dim_e * 2 + 1.0);
 ChQuaternion<> initRot(1, 0, 0, 0);
 double dist_end = (dim_d + (dim_b + dim_c) * 2 + dim_a * 1.6);  // When to apply brakes
 
