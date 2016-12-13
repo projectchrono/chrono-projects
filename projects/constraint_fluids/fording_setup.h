@@ -23,10 +23,10 @@ real dim_d = 15 * conversion * 0.5;    // length of bottom default: 100
 real dim_e = 8 * conversion * 0.5;     // full depth of trench
 real dim_w = 14 * conversion * 0.5;    // width of trench default: 20
 real dim_t = 5.0 / 12.0 * conversion;  // wall thickness default : 10
-bool add_top = false;
+bool add_top = true;
 
 // Initial vehicle position and orientation
-ChVector<> initLoc( -(dim_d + (dim_b + dim_c) * 2 + dim_a  * .9) + 1.75, 0, dim_e * 2 + 1.0);
+ChVector<> initLoc( -(dim_d + (dim_b + dim_c) * 2 + dim_a  * .9) + 1.9, 0, dim_e * 2 + 1.0);
 ChQuaternion<> initRot(1, 0, 0, 0);
 double dist_end = (dim_d + (dim_b + dim_c) * 2 + dim_a * 1.6);  // When to apply brakes
 
@@ -68,9 +68,9 @@ void CreateContainer(ChSystemParallelDVI* system) {
 	AddCylinderGeometry(bottom_plate.get(), dim_t * 1.05, width, Vector(dim_d, 0, 0), Quaternion(1, 0, 0, 0));
 
 	// Side walls
-	AddBoxGeometry(side_plate_1.get(), Vector(dim_d + (dim_b + dim_c + dim_a) * 2, dim_t, dim_e * 2 + dim_t * 2),
+	AddBoxGeometry(side_plate_1.get(), Vector(dim_d + (dim_b + dim_c + dim_a) * 2, dim_t, dim_e * 2.5 + dim_t * 2),
 		Vector(0, +(dim_w + dim_t), dim_e * 2.2), Quaternion(1, 0, 0, 0));
-	AddBoxGeometry(side_plate_2.get(), Vector(dim_d + (dim_b + dim_c + dim_a) * 2, dim_t, dim_e * 2 + dim_t * 2),
+	AddBoxGeometry(side_plate_2.get(), Vector(dim_d + (dim_b + dim_c + dim_a) * 2, dim_t, dim_e * 2.5 + dim_t * 2),
 		Vector(0, -(dim_w + dim_t), dim_e * 2.2), Quaternion(1, 0, 0, 0));
 	// End Platforms
 	AddBoxGeometry(end_plate_1.get(), Vector(dim_a, width, dim_t),
@@ -93,7 +93,7 @@ void CreateContainer(ChSystemParallelDVI* system) {
 	// Top
 	if (add_top) {
 		AddBoxGeometry(bottom_plate.get(), Vector(dim_d + (dim_b + dim_c + dim_a) * 2, width, dim_t),
-			Vector(0, 0, dim_e * 4.2 + dim_t * 2.0), Quaternion(1, 0, 0, 0));
+			Vector(0, 0, dim_e * 4.7 + dim_t * 2.0), Quaternion(1, 0, 0, 0));
 	}
 	// End Caps
 	AddBoxGeometry(end_plate_1.get(), Vector(dim_t * .25, width, dim_e * 1.2 + dim_t * 2.0),

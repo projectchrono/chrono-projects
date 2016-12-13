@@ -43,8 +43,8 @@ public:
 
 		system->Add(m_body);
 
-		m_body->GetCollisionModel()->SetFamily(4);
-		m_body->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(4);
+		//m_body->GetCollisionModel()->SetFamily(4);
+		//m_body->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(4);
 		m_body->SetBodyFixed(m_fixed);
 	
 	}
@@ -73,18 +73,18 @@ public:
 		m_tracks[0]->Initialize(m_chassis->GetBody(), ChVector<>(0, track_offset, 0));
 		m_tracks[1]->Initialize(m_chassis->GetBody(), ChVector<>(0, -track_offset, 0));
 
-		for (int i = 0; i < GetNumTrackShoes(LEFT); i++) {
-			GetTrackShoe(LEFT, i)->GetShoeBody()->GetCollisionModel()->SetFamily(4);
+	//	for (int i = 0; i < GetNumTrackShoes(LEFT); i++) {
+	//		GetTrackShoe(LEFT, i)->GetShoeBody()->GetCollisionModel()->SetFamily(4);
 			//forces.push_back(system->GetBodyContactForce(vehicle.GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()));
 			//torques.push_back(system->GetBodyContactTorque(vehicle.GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()));
-		}
-		for (int i = 0; i < GetNumTrackShoes(RIGHT); i++) {
+	//	}
+	//	for (int i = 0; i < GetNumTrackShoes(RIGHT); i++) {
 
-			GetTrackShoe(RIGHT, i)->GetShoeBody()->GetCollisionModel()->SetFamily(4);
+	//		GetTrackShoe(RIGHT, i)->GetShoeBody()->GetCollisionModel()->SetFamily(4);
 
 			//forces.push_back(system->GetBodyContactForce(vehicle.GetTrackShoe(RIGHT, i)->GetShoeBody()->GetId()));
 			//torques.push_back(system->GetBodyContactTorque(vehicle.GetTrackShoe(RIGHT, i)->GetShoeBody()->GetId()));
-		}
+	//	}
 		// Initialize the driveline subsystem
 		m_driveline->Initialize(m_chassis->GetBody(), m_tracks[0], m_tracks[1]);
 	}

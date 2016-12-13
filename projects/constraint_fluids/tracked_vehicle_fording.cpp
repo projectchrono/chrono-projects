@@ -122,12 +122,12 @@ double time_step = 1e-3;  // 2e-4;
 
 double tolerance = 0.00001;
 
-int max_iteration_bilateral = 2000;  // 1000;
+int max_iteration_bilateral = 1000;  // 1000;
 int max_iteration_normal = 0;
 int max_iteration_sliding = 100;  // 2000;
 int max_iteration_spinning = 0;
 
-float contact_recovery_speed = -1;
+float contact_recovery_speed = 12;
 
 // Periodically monitor maximum bilateral constraint violation
 bool monitor_bilaterals = false;
@@ -256,10 +256,10 @@ int main(int argc, char* argv[]) {
 	vehicle.Initialize(ChCoordsys<>(initLoc, initRot));
 
 	vehicle.SetChassisVisualizationType(VisualizationType::MESH);
-	vehicle.SetSprocketVisualizationType(VisualizationType::MESH);
-	vehicle.SetIdlerVisualizationType(VisualizationType::MESH);
-	vehicle.SetRoadWheelAssemblyVisualizationType(VisualizationType::MESH);
-	vehicle.SetTrackShoeVisualizationType(VisualizationType::MESH);
+	vehicle.SetSprocketVisualizationType(VisualizationType::PRIMITIVES);
+	vehicle.SetIdlerVisualizationType(VisualizationType::PRIMITIVES);
+	vehicle.SetRoadWheelAssemblyVisualizationType(VisualizationType::PRIMITIVES);
+	vehicle.SetTrackShoeVisualizationType(VisualizationType::PRIMITIVES);
 
 
 
