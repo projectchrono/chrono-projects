@@ -27,7 +27,7 @@
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
 #include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
-
+#include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 // Chrono::Parallel OpenGL header files
 #undef CHRONO_OPENGL
 
@@ -115,7 +115,7 @@ double time_end = 20;
 
 // Duration of the "hold time" (vehicle chassis fixed and no driver inputs).
 // This can be used to allow the granular material to settle.
-double time_hold = 0.1;
+double time_hold = 0.0;
 
 // Solver parameters
 double time_step = 1e-3;  // 2e-4;
@@ -255,14 +255,24 @@ int main(int argc, char* argv[]) {
 
 	vehicle.Initialize(ChCoordsys<>(initLoc, initRot));
 
-	vehicle.SetChassisVisualizationType(VisualizationType::MESH);
+	//vehicle.SetChassisVisualizationType(VisualizationType::PRIMITIVES);
 	vehicle.SetSprocketVisualizationType(VisualizationType::PRIMITIVES);
 	vehicle.SetIdlerVisualizationType(VisualizationType::PRIMITIVES);
 	vehicle.SetRoadWheelAssemblyVisualizationType(VisualizationType::PRIMITIVES);
 	vehicle.SetTrackShoeVisualizationType(VisualizationType::PRIMITIVES);
 
 
+/*
+	std::string path_file("paths/straight10km.txt");
+	std::string steering_controller_file("M113/SteeringController_M113_doublelanechange.json");
+	std::string speed_controller_file("M113/SpeedController.json");
 
+	ChBezierCurve* path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
+	ChPathFollowerDriver driver(vehicle, vehicle::GetDataFile(steering_controller_file),
+		vehicle::GetDataFile(speed_controller_file), path, "my_path", target_speed);
+	driver.Initialize();*/
+	
+	//ChVector<> driver_pos = vehicle.GetChassis()->GetLocalDriverCoordsys().pos;
 	//vehicle.SetCollide(TrackCollide::NONE);
 	////vehicle.SetCollide(TrackCollide::WHEELS_LEFT | TrackCollide::WHEELS_RIGHT);
 	////vehicle.SetCollide(TrackCollide::ALL & (~TrackCollide::SPROCKET_LEFT) & (~TrackCollide::SPROCKET_RIGHT));
@@ -308,11 +318,14 @@ int main(int argc, char* argv[]) {
 		double throttle_input = 0;
 		double steering_input = 0;
 		double braking_input = 0;
-
+		//steering_input = driver.GetSteering();
 		{
 
 			double out_speed = m_speedPIDVehicle.Advance(vehicle, target_speed, time_step);
-			if (time > .5) {
+
+			
+
+			if (time > .3) {
 				ChClampValue(out_speed, -2.0, 2.0);
 			}
 			else {
@@ -324,9 +337,11 @@ int main(int argc, char* argv[]) {
 				throttle_input = out_speed;
 			}
 			else {
-				// Vehicle moving too fast: apply brakes
+
 				braking_input = -out_speed;
 				throttle_input = 0;
+				// Vehicle moving too fast: apply brakes
+				//if (braking_input>(-out_speed)) {aa
 			}
 
 			// Stop vehicle at time_brakes [s]
@@ -339,7 +354,7 @@ int main(int argc, char* argv[]) {
 					set_time = false;
 				}
 			}
-
+			//printf("outspeed: %f %f %f %f %f\n", out_speed, throttle_input, braking_input, steering_input, vehicle.GetVehicleSpeed());
 		}
 
 
@@ -386,16 +401,16 @@ int main(int argc, char* argv[]) {
 		// Update modules (process inputs from other modules)
 		powertrain.Synchronize(time, throttle_input, driveshaft_speed);
 		vehicle.Synchronize(time, steering_input, braking_input, powertrain_torque, shoe_forces_left, shoe_forces_right);
-
+		//driver.Synchronize(time);
 		// Advance simulation for one timestep for all modules
 		powertrain.Advance(time_step);
 		//vehicle.Advance(time_step);
 
 		std::shared_ptr<ChTrackDriveline> m_driveline = vehicle.GetDriveline();
 
-		printf("Vspeed: [%f],  Dspeed [%f], motor torque [%f], motor speed [%f] output torque [%f] [%f %f]\n",
+		/*printf("Vspeed: [%f],  Dspeed [%f], motor torque [%f], motor speed [%f] output torque [%f] [%f %f]\n",
 			vehicle.GetVehicleSpeed(), m_driveline->GetDriveshaftSpeed(), powertrain.GetMotorTorque(),
-			powertrain.GetMotorSpeed(), powertrain.GetOutputTorque(), throttle_input, braking_input);
+			powertrain.GetMotorSpeed(), powertrain.GetOutputTorque(), throttle_input, braking_input);*/
 
 #ifdef CHRONO_OPENGL
 		//gl_window.Pause();
