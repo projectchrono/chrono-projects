@@ -25,9 +25,8 @@ public:
 		m_body->SetName("chassis");
 		m_body->SetMass(GetMass());
 		m_body->SetFrame_COG_to_REF(ChFrame<>(GetLocalPosCOM(), ChQuaternion<>(1, 0, 0, 0)));
-		m_body->SetInertiaXX(GetInertia());
+		m_body->SetInertia(GetInertia());
 		
-
 		m_body->SetFrame_REF_to_abs(ChFrame<>(chassisPos));
 		m_body->SetPos_dt(chassisFwdVel * chassisPos.TransformDirectionLocalToParent(ChVector<>(1, 0, 0)));
 
