@@ -28,13 +28,13 @@
 #include <stdio.h>
 #include <cmath>
 
-#include "core/ChFileutils.h"
-#include "core/ChStream.h"
+#include "chrono/core/ChFileutils.h"
+#include "chrono/core/ChStream.h"
 
-#include "physics/ChSystem.h"
+#include "chrono/physics/ChSystem.h"
 
-#include "utils/ChUtilsCreators.h"
-#include "utils/ChUtilsInputOutput.h"
+#include "chrono/utils/ChUtilsCreators.h"
+#include "chrono/utils/ChUtilsInputOutput.h"
 
 using namespace chrono;
 
