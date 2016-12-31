@@ -14,7 +14,6 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 
-#include "chrono_thirdparty/tinyobjloader/tiny_obj_loader.h"
 #include "m113_custom.h"
 using namespace chrono;
 using namespace chrono::collision;

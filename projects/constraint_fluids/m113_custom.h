@@ -5,7 +5,6 @@
 #include "chrono_models/vehicle/m113/M113_TrackAssemblySinglePin.h"
 #include "chrono_models/vehicle/m113/M113_TrackAssemblyDoublePin.h"
 #include "chrono_models/vehicle/m113/M113_SimpleDriveline.h"
-#include "convex_hull.h"
 using namespace chrono::vehicle;
 using namespace chrono::vehicle::m113;
 
@@ -32,7 +31,7 @@ public:
 
 		chrono::geometry::ChTriangleMeshConnected chassis_mesh;
 		std::vector<std::vector<ChVector<double> > > chassis_hulls;
-		LoadConvexHull("m113.obj", chassis_mesh, chassis_hulls, VNULL, QUNIT);
+		utils::LoadConvexHulls("m113.obj", chassis_mesh, chassis_hulls);
 
 		m_body->GetAssets().clear();
 		m_body->GetCollisionModel()->ClearModel();
