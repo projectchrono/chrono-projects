@@ -8,7 +8,6 @@
 using namespace chrono::vehicle;
 using namespace chrono::vehicle::m113;
 
-
 class  M113_Chassis_Custom : public M113_Chassis {
 public:
 
@@ -18,6 +17,8 @@ public:
 		const ChCoordsys<>& chassisPos,  ///< [in] absolute chassis position
 		double chassisFwdVel             ///< [in] initial chassis forward velocity
 		) {
+
+		
 
 		m_body = std::shared_ptr<ChBodyAuxRef>(system->NewBodyAuxRef());
 		m_body->SetIdentifier(0);
@@ -31,7 +32,7 @@ public:
 
 		chrono::geometry::ChTriangleMeshConnected chassis_mesh;
 		std::vector<std::vector<ChVector<double> > > chassis_hulls;
-		utils::LoadConvexHulls("m113.obj", chassis_mesh, chassis_hulls);
+		utils::LoadConvexHulls(vehicle::GetDataFile("M113/Chassis_Hulls.obj"), chassis_mesh, chassis_hulls);
 
 		m_body->GetAssets().clear();
 		m_body->GetCollisionModel()->ClearModel();
@@ -44,21 +45,7 @@ public:
 
 		m_body->SetCollide(true);
 		
-		/*if (ChSystemParallelDVI* system_dvi = dynamic_cast<ChSystemParallelDVI*>(system)) {
-			printf("BodiesAAA: %d\n", system_dvi->data_manager->num_rigid_shapes);
-
-			printf("chassis %d %d\n", system_dvi->data_manager->shape_data.fam_rigid[m_body->GetId()].x, system_dvi->data_manager->shape_data.fam_rigid[m_body->GetId()].y);
-		}*/
-
 		system->Add(m_body);
-
-
-	/*	if (ChSystemParallelDVI* system_dvi = dynamic_cast<ChSystemParallelDVI*>(system)) {
-			printf("BodiesBB: %d\n", system_dvi->data_manager->num_rigid_shapes);
-			
-			printf("chassis %d %d\n", system_dvi->data_manager->shape_data.fam_rigid[m_body->GetId()].x, system_dvi->data_manager->shape_data.fam_rigid[m_body->GetId()].y);
-		}*/
-
 		
 		m_body->SetBodyFixed(m_fixed);
 	
@@ -86,10 +73,6 @@ public:
 		// Initialize the left and right track assemblies.
 		double track_offset = 1.0795;
 
-
-		//8 84 161
-		//14 36 300 568
-
 		if (ChSystemParallelDVI* system_dvi = dynamic_cast<ChSystemParallelDVI*>(m_system)) {
 			
 
@@ -108,38 +91,6 @@ public:
 			}
 		}
 
-
-		//for (int i = 0; i < GetNumTrackShoes(LEFT); i++) {
-
-		//	if (ChSystemParallelDVI* system_dvi = dynamic_cast<ChSystemParallelDVI*>(m_system)) {
-		//		//printf("%d %d\n", system_dvi->data_manager->shape_data.fam_rigid[GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()].x, system_dvi->data_manager->shape_data.fam_rigid[GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()].y);
-		//		int start = system_dvi->data_manager->shape_data.start_rigid[GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()];
-		//		int length = system_dvi->data_manager->shape_data.length_rigid[GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()];
-
-		//		for (int i = start; i < start+length; i++) {
-		//			system_dvi->data_manager->shape_data.fam_rigid[i].x = 1 << 4;
-		//		}
-		//		//printf("%d %d\n", system_dvi->data_manager->shape_data.fam_rigid[GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()].x, system_dvi->data_manager->shape_data.fam_rigid[GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()].y);
-
-		//	}
-		//	//GetTrackShoe(LEFT, i)->GetShoeBody()->GetCollisionModel()->SetFamily(4);
-		//	//forces.push_back(system->GetBodyContactForce(vehicle.GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()));
-		//	//torques.push_back(system->GetBodyContactTorque(vehicle.GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()));
-		//}
-	//	for (int i = 0; i < GetNumTrackShoes(RIGHT); i++) {
-	//		if (ChSystemParallelDVI* system_dvi = dynamic_cast<ChSystemParallelDVI*>(m_system)) {
-	//			int start = system_dvi->data_manager->shape_data.start_rigid[GetTrackShoe(RIGHT, i)->GetShoeBody()->GetId()];
-	//			int length = system_dvi->data_manager->shape_data.length_rigid[GetTrackShoe(RIGHT, i)->GetShoeBody()->GetId()];
-
-	//			for (int i = start; i < start + length; i++) {
-	//				system_dvi->data_manager->shape_data.fam_rigid[i].x = 1 << 4;
-	//			}
-	//		}
-	////		GetTrackShoe(RIGHT, i)->GetShoeBody()->GetCollisionModel()->SetFamily(4);
-
-	//		//forces.push_back(system->GetBodyContactForce(vehicle.GetTrackShoe(RIGHT, i)->GetShoeBody()->GetId()));
-	//		//torques.push_back(system->GetBodyContactTorque(vehicle.GetTrackShoe(RIGHT, i)->GetShoeBody()->GetId()));
-	//	}
 		// Initialize the driveline subsystem
 		m_driveline->Initialize(m_chassis->GetBody(), m_tracks[0], m_tracks[1]);
 	}

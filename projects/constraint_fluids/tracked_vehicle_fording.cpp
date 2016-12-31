@@ -98,8 +98,6 @@ std::vector<real3> torques;
 // -----------------------------------------------------------------------------
 // Initial vehicle position and orientation
 
-// Simple powertrain model
-std::string simplepowertrain_file("generic/powertrain/SimplePowertrain.json");
 std::string data_output_path = "m113_fording/";
 ChSpeedController m_speedPIDVehicle;
 
@@ -257,25 +255,10 @@ int main(int argc, char* argv[]) {
 
 	//vehicle.SetChassisVisualizationType(VisualizationType::PRIMITIVES);
 	vehicle.SetSprocketVisualizationType(VisualizationType::PRIMITIVES);
+	vehicle.SetRoadWheelVisualizationType(VisualizationType::PRIMITIVES);
 	vehicle.SetIdlerVisualizationType(VisualizationType::PRIMITIVES);
 	vehicle.SetRoadWheelAssemblyVisualizationType(VisualizationType::PRIMITIVES);
 	vehicle.SetTrackShoeVisualizationType(VisualizationType::PRIMITIVES);
-
-
-/*
-	std::string path_file("paths/straight10km.txt");
-	std::string steering_controller_file("M113/SteeringController_M113_doublelanechange.json");
-	std::string speed_controller_file("M113/SpeedController.json");
-
-	ChBezierCurve* path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
-	ChPathFollowerDriver driver(vehicle, vehicle::GetDataFile(steering_controller_file),
-		vehicle::GetDataFile(speed_controller_file), path, "my_path", target_speed);
-	driver.Initialize();*/
-	
-	//ChVector<> driver_pos = vehicle.GetChassis()->GetLocalDriverCoordsys().pos;
-	//vehicle.SetCollide(TrackCollide::NONE);
-	////vehicle.SetCollide(TrackCollide::WHEELS_LEFT | TrackCollide::WHEELS_RIGHT);
-	////vehicle.SetCollide(TrackCollide::ALL & (~TrackCollide::SPROCKET_LEFT) & (~TrackCollide::SPROCKET_RIGHT));
 
 	// Create the powertrain system
 	M113_SimplePowertrain powertrain;
