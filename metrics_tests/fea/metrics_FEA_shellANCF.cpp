@@ -15,9 +15,7 @@
 #include "chrono/ChConfig.h"
 #include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChTimer.h"
-#include "chrono/core/ChMapMatrix.h"
 #include "chrono/solver/ChSolverMINRES.h"
-#include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
@@ -56,22 +54,28 @@ enum class solver_type { MINRES, MKL, SUPERLUMT, MUMPS };
 
 int num_threads = 4;      // default number of threads
 double step_size = 1e-3;  // integration step size
-int num_steps = 20;       // number of integration steps
-int skip_steps = 0;       // initial number of steps excluded from timing
+int num_steps = 10;       // number of integration steps
 
-int numDiv_x = 100;  // mesh divisions in X direction
-int numDiv_y = 100;  // mesh divisions in Y direction
+int numDiv_x = 30;  // mesh divisions in X direction
+int numDiv_y = 30;  // mesh divisions in Y direction
 int numDiv_z = 1;    // mesh divisions in Z direction
-
-bool verbose = true;  // verbose output?
 
 // -----------------------------------------------------------------------------
 
 // Test class
 class FEAShellTest : public BaseTest {
   public:
-    FEAShellTest(const std::string& testName, const std::string& testProjectName, bool use_modifiedNewton)
-        : BaseTest(testName, testProjectName), m_execTime(0), m_use_modifiedNewton() {}
+    FEAShellTest(const std::string& testName,
+                 const std::string& testProjectName,
+                 solver_type solver,
+                 bool use_modifiedNewton,
+                 bool verbose_solver)
+        : BaseTest(testName, testProjectName),
+          m_execTime(0),
+          m_solver(solver),
+          m_use_modifiedNewton(use_modifiedNewton),
+          m_use_adaptiveStep(true),
+          m_verbose_solver(verbose_solver) {}
 
     ~FEAShellTest() {}
 
@@ -81,9 +85,10 @@ class FEAShellTest : public BaseTest {
 
   private:
     double m_execTime;
-    solver_type m_solver = solver_type::MINRES;  // use MKL m_solver (if available)
-    bool m_use_adaptiveStep = true;              // allow step size reduction
-    bool m_use_modifiedNewton;                   // use modified Newton method
+    solver_type m_solver;       // use MKL m_solver (if available)
+    bool m_use_adaptiveStep;    // allow step size reduction
+    bool m_use_modifiedNewton;  // use modified Newton method
+    bool m_verbose_solver;      // verbose output from underlying solver
 };
 
 bool FEAShellTest::execute() {
@@ -234,13 +239,11 @@ bool FEAShellTest::execute() {
 #ifdef CHRONO_MKL
             mkl_solver_stab = new ChSolverMKL<>;
             mkl_solver_speed = new ChSolverMKL<>;
-            ////mkl_solver_stab = new ChSolverMKL<ChMapMatrix>;
-            ////mkl_solver_speed = new ChSolverMKL<ChMapMatrix>;
             my_system.ChangeSolverStab(mkl_solver_stab);
             my_system.ChangeSolverSpeed(mkl_solver_speed);
             mkl_solver_speed->SetSparsityPatternLock(true);
             mkl_solver_stab->SetSparsityPatternLock(true);
-            mkl_solver_speed->SetVerbose(verbose);
+            mkl_solver_speed->SetVerbose(m_verbose_solver);
             mkl_solver_speed->ForceSparsityPatternUpdate();
 #endif
             break;
@@ -248,13 +251,11 @@ bool FEAShellTest::execute() {
 #ifdef CHRONO_SUPERLUMT
             superlumt_solver_stab = new ChSolverSuperLUMT<>;
             superlumt_solver_speed = new ChSolverSuperLUMT<>;
-            ////superlumt_solver_stab = new ChSolverSuperLUMT<ChMapMatrix>;
-            ////superlumt_solver_speed = new ChSolverSuperLUMT<ChMapMatrix>;
             my_system.ChangeSolverStab(superlumt_solver_stab);
             my_system.ChangeSolverSpeed(superlumt_solver_speed);
             superlumt_solver_speed->SetSparsityPatternLock(true);
             superlumt_solver_stab->SetSparsityPatternLock(true);
-            superlumt_solver_speed->SetVerbose(verbose);
+            superlumt_solver_speed->SetVerbose(m_verbose_solver);
             superlumt_solver_speed->ForceSparsityPatternUpdate();
 #endif
             break;
@@ -264,7 +265,7 @@ bool FEAShellTest::execute() {
             mumps_solver_speed = new ChSolverMumps;
             my_system.ChangeSolverStab(mumps_solver_stab);
             my_system.ChangeSolverSpeed(mumps_solver_speed);
-            mumps_solver_speed->SetVerbose(verbose);
+            mumps_solver_speed->SetVerbose(m_verbose_solver);
 #endif
             break;
         default:
@@ -282,7 +283,7 @@ bool FEAShellTest::execute() {
     mystepper->SetStepControl(m_use_adaptiveStep);
     mystepper->SetModifiedNewton(m_use_modifiedNewton);
     mystepper->SetScaling(true);
-    mystepper->SetVerbose(verbose);
+    mystepper->SetVerbose(m_verbose_solver);
 
     // Initialize the output stream and set precision.
     utils::CSV_writer out("\t");
@@ -295,15 +296,10 @@ bool FEAShellTest::execute() {
     // Simulation loop
     double time_total = 0;
     double time_setup = 0;
-    double time_setup_assembly = 0;
-    double time_setup_solvercall = 0;
     double time_solve = 0;
-    double time_solve_assembly = 0;
-    double time_solve_solvercall = 0;
     double time_update = 0;
     double time_force = 0;
     double time_jacobian = 0;
-    double time_skipped = 0;
 
     int num_iterations = 0;
     int num_setup_calls = 0;
@@ -312,7 +308,7 @@ bool FEAShellTest::execute() {
     int num_jacobian_calls = 0;
 
     for (int istep = 0; istep < num_steps; istep++) {
-        if (verbose) {
+        if (m_verbose_solver) {
             cout << "-------------------------------------------------------------------" << endl;
             cout << "STEP: " << istep << endl;
         }
@@ -348,57 +344,11 @@ bool FEAShellTest::execute() {
 #endif
         }
 
-        if (istep == skip_steps) {
-            if (verbose)
-                cout << "Resetting counters at step = " << istep << endl;
-            time_skipped = time_total;
-            time_total = 0;
-            time_setup = 0;
-            time_setup_assembly = 0;
-            time_setup_solvercall = 0;
-            time_solve = 0;
-            time_solve_assembly = 0;
-            time_solve_solvercall = 0;
-            time_update = 0;
-            time_force = 0;
-            time_jacobian = 0;
-            num_iterations = 0;
-            num_setup_calls = 0;
-            num_solver_calls = 0;
-            num_force_calls = 0;
-            num_jacobian_calls = 0;
-        }
-
         time_total += my_system.GetTimerStep();
         time_setup += my_system.GetTimerSetup();
         time_solve += my_system.GetTimerSolver();
         time_update += my_system.GetTimerUpdate();
 
-// TODO: if it is OK to move timer in ChSolver we can avoid this switch
-#ifdef CHRONO_MKL
-        if (m_solver == solver_type::MKL) {
-            time_setup_assembly += mkl_solver_speed->GetTimeSetup_Assembly();
-            time_setup_solvercall += mkl_solver_speed->GetTimeSetup_SolverCall();
-            time_solve_assembly += mkl_solver_speed->GetTimeSolve_Assembly();
-            time_solve_solvercall += mkl_solver_speed->GetTimeSolve_SolverCall();
-        }
-#endif
-#ifdef CHRONO_SUPERLUMT
-        if (m_solver == solver_type::SUPERLUMT) {
-            time_setup_assembly += superlumt_solver_speed->GetTimeSetup_Assembly();
-            time_setup_solvercall += superlumt_solver_speed->GetTimeSetup_SolverCall();
-            time_solve_assembly += superlumt_solver_speed->GetTimeSolve_Assembly();
-            time_solve_solvercall += superlumt_solver_speed->GetTimeSolve_SolverCall();
-        }
-#endif
-#ifdef CHRONO_MUMPS
-        if (m_solver == solver_type::MUMPS) {
-            time_setup_assembly += mumps_solver_speed->GetTimeSetup_Assembly();
-            time_setup_solvercall += mumps_solver_speed->GetTimeSetup_SolverCall();
-            time_solve_assembly += mumps_solver_speed->GetTimeSolve_Assembly();
-            time_solve_solvercall += mumps_solver_speed->GetTimeSolve_SolverCall();
-        }
-#endif
         time_force += my_mesh->GetTimeInternalForces();
         time_jacobian += my_mesh->GetTimeJacobianLoad();
 
@@ -411,32 +361,12 @@ bool FEAShellTest::execute() {
 
         const ChVector<>& p = nodetip->GetPos();
 
-        if (verbose) {
+        if (m_verbose_solver) {
             cout << endl;
             cout << "t = " << my_system.GetChTime() << "  ";
             cout << "node: [ " << p.x << " " << p.y << " " << p.z << " ]  " << endl;
             cout << "step:  " << my_system.GetTimerStep() << endl;
             cout << "setup: " << my_system.GetTimerSetup();
-#ifdef CHRONO_MKL
-            if (m_solver == solver_type::MKL) {
-                cout << "  [assembly: " << mkl_solver_speed->GetTimeSetup_Assembly();
-                cout << "  pardiso: " << mkl_solver_speed->GetTimeSetup_SolverCall() << "]";
-            }
-#endif
-#ifdef CHRONO_SUPERLUMT
-            if (m_solver == solver_type::SUPERLUMT) {
-                cout << "  [assembly: " << superlumt_solver_speed->GetTimeSetup_Assembly();
-                cout << "  superlu_mt: " << superlumt_solver_speed->GetTimeSetup_SolverCall() << "]";
-            }
-#endif
-            cout << endl;
-            cout << "solve: " << my_system.GetTimerSolver() << "  ";
-#ifdef CHRONO_MUMPS
-            if (m_solver == solver_type::MUMPS) {
-                cout << "  [assembly: " << mumps_solver_speed->GetTimeSolve_Assembly();
-                cout << "  mumps: " << mumps_solver_speed->GetTimeSolve_SolverCall() << "]";
-            }
-#endif
             cout << endl << endl;
         }
     }
@@ -444,7 +374,7 @@ bool FEAShellTest::execute() {
     double time_other = time_total - time_setup - time_solve - time_update - time_force - time_jacobian;
 
     cout << "-------------------------------------------------------------------" << endl;
-    cout << "Total number of steps:        " << num_steps - skip_steps << endl;
+    cout << "Total number of steps:        " << num_steps << endl;
     cout << "Total number of iterations:   " << num_iterations << endl;
     cout << "Total number of setup calls:  " << num_setup_calls << endl;
     cout << "Total number of m_solver calls: " << num_solver_calls << endl;
@@ -454,38 +384,22 @@ bool FEAShellTest::execute() {
     cout << std::setprecision(3) << std::fixed;
     cout << "Total time: " << time_total << endl;
     cout << "  Setup:    " << time_setup << "\t (" << (time_setup / time_total) * 100 << "%)" << endl;
-    if (m_solver == solver_type::MKL || m_solver == solver_type::SUPERLUMT || m_solver == solver_type::MUMPS) {
-        cout << "    Assembly: " << time_setup_assembly << "\t (" << (time_setup_assembly / time_setup) * 100
-             << "% setup)" << endl;
-        cout << "    SolverCall:  " << time_setup_solvercall << "\t (" << (time_setup_solvercall / time_setup) * 100
-             << "% setup)" << endl;
-    }
     cout << "  Solve:    " << time_solve << "\t (" << (time_solve / time_total) * 100 << "%)" << endl;
-    if (m_solver == solver_type::MKL || m_solver == solver_type::SUPERLUMT || m_solver == solver_type::MUMPS) {
-        cout << "    Assembly: " << time_solve_assembly << "\t (" << (time_solve_assembly / time_solve) * 100
-             << "% solve)" << endl;
-        cout << "    SolverCall:  " << time_solve_solvercall << "\t (" << (time_solve_solvercall / time_solve) * 100
-             << "% solve)" << endl;
-    }
-    if (m_solver == solver_type::MKL || m_solver == solver_type::SUPERLUMT || m_solver == solver_type::MUMPS) {
-        cout << "  [TOT Assembly: " << time_setup_assembly + time_solve_assembly << "\t ("
-             << ((time_setup_assembly + time_solve_assembly) / time_total) * 100 << "% total)]" << endl;
-        cout << "  [TOT SolverCall:  " << time_setup_solvercall + time_solve_solvercall << "\t ("
-             << ((time_setup_solvercall + time_solve_solvercall) / time_total) * 100 << "% total)]" << endl;
-    }
     cout << "  Forces:   " << time_force << "\t (" << (time_force / time_total) * 100 << "%)" << endl;
     cout << "  Jacobian: " << time_jacobian << "\t (" << (time_jacobian / time_total) * 100 << "%)" << endl;
     cout << "  Update:   " << time_update << "\t (" << (time_update / time_total) * 100 << "%)" << endl;
     cout << "  Other:    " << time_other << "\t (" << (time_other / time_total) * 100 << "%)" << endl;
     cout << endl;
-    cout << "Time for skipped steps (" << skip_steps << "): " << time_skipped << endl;
+
     m_execTime = time_total;
+    addMetric("number_iterations", num_iterations);
+    addMetric("tip z displacement (mm)", 1000 * nodetip->GetPos().z);
     addMetric("time_setup", time_setup);
     addMetric("time_solve", time_solve);
     addMetric("time_jacobian", time_jacobian);
     addMetric("time_force", time_force);
-    addMetric("time_update", time_update);
-    addMetric("time_other", time_other);
+
+    return true;
 }
 
 int main(int argc, char* argv[]) {
@@ -505,17 +419,34 @@ int main(int argc, char* argv[]) {
     GetLog() << "No OpenMP\n";
 #endif
 
-    FEAShellTest test_full("metrics_FEA_shellANCF_MINRES_full", "Chrono::FEA", false);
-    FEAShellTest test_modified("metrics_FEA_shellANCF_MINRES_modified", "Chrono::FEA", true);
-    test_full.setOutDir(out_dir);
-    test_full.setVerbose(true);
-    test_full.run();
-    test_full.print();
+    bool verbose_solver = false;
+    bool verbose_test = false;
 
-    test_modified.setOutDir(out_dir);
-    test_modified.setVerbose(true);
-    test_modified.run();
-    test_modified.print();
+    FEAShellTest test_minres_full("metrics_FEA_shellANCF_MINRES_full", "Chrono::FEA", solver_type::MINRES, false, verbose_solver);
+    test_minres_full.setOutDir(out_dir);
+    test_minres_full.setVerbose(verbose_test);
+    test_minres_full.run();
+    test_minres_full.print();
+
+    FEAShellTest test_minres_mod("metrics_FEA_shellANCF_MINRES_modified", "Chrono::FEA", solver_type::MINRES, true, verbose_solver);
+    test_minres_mod.setOutDir(out_dir);
+    test_minres_mod.setVerbose(verbose_test);
+    test_minres_mod.run();
+    test_minres_mod.print();
+
+#ifdef CHRONO_MKL
+    FEAShellTest test_mkl_full("metrics_FEA_shellANCF_MKL_full", "Chrono::FEA", solver_type::MKL, false, verbose_solver);
+    test_mkl_full.setOutDir(out_dir);
+    test_mkl_full.setVerbose(verbose_test);
+    test_mkl_full.run();
+    test_mkl_full.print();
+     
+    FEAShellTest test_mkl_mod("metrics_FEA_shellANCF_MKL_modified", "Chrono::FEA", solver_type::MKL, true, verbose_solver);
+    test_mkl_mod.setOutDir(out_dir);
+    test_mkl_mod.setVerbose(verbose_test);
+    test_mkl_mod.run();
+    test_mkl_mod.print();
+#endif
 
     return 0;
 }
