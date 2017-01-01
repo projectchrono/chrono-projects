@@ -74,7 +74,7 @@ endif()
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Irrlicht programs...")
+message(STATUS "Configurarion tests for Chrono::Irrlicht...")
 
 foreach(PROGRAM ${DEMOS})
 
@@ -94,3 +94,4 @@ foreach(PROGRAM ${DEMOS})
 
 endforeach(PROGRAM)
 
+message(STATUS "")

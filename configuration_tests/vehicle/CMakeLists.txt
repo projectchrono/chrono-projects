@@ -64,7 +64,7 @@ set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-MESSAGE(STATUS "Vehicle_Parallel programs...")
+MESSAGE(STATUS "Configuration tests for Chrono::Vehicle...")
 
 FOREACH(PROGRAM ${DEMOS})
     MESSAGE(STATUS "...add ${PROGRAM}")
@@ -83,3 +83,4 @@ FOREACH(PROGRAM ${DEMOS})
 
 ENDFOREACH(PROGRAM)
 
+message(STATUS "")

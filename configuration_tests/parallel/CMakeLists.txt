@@ -62,7 +62,7 @@ set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Parallel programs...")
+message(STATUS "Configuration tests for Chrono::Parallel...")
 
 foreach(PROGRAM ${DEMOS})
 
@@ -82,3 +82,4 @@ foreach(PROGRAM ${DEMOS})
 
 endforeach(PROGRAM)
 
+message(STATUS "")

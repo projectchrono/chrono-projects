@@ -78,15 +78,15 @@ list(APPEND ALL_DLLS "")
 
 # Propagate configuration to submodules.
 if(ENABLE_CONFIG_TESTS)
-  message(STATUS "==== Chrono configuration programs ====")
+  message(STATUS "==== Chrono configuration programs ====\n")
   add_subdirectory(configuration_tests)
 endif()
 if(ENABLE_METRICS_TESTS)
-  message(STATUS "==== Chrono metrics programs ====")
+  message(STATUS "==== Chrono metrics programs ====\n")
   add_subdirectory(metrics_tests)
 endif()
 if(ENABLE_PROJECTS)
-  message(STATUS "==== Chrono projects ====")
+  message(STATUS "==== Chrono projects ====\n")
   add_subdirectory(projects)
 endif()
 

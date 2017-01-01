@@ -87,3 +87,4 @@ foreach(PROGRAM ${DEMOS})
 
 endforeach(PROGRAM)
 
+message(STATUS "")

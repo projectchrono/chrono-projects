@@ -61,7 +61,7 @@ set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Pyparser programs...")
+message(STATUS "Configuration tests for Chrono::Python...")
 
 foreach(PROGRAM ${DEMOS})
 
@@ -81,3 +81,4 @@ foreach(PROGRAM ${DEMOS})
 
 endforeach(PROGRAM)
 
+message(STATUS "")

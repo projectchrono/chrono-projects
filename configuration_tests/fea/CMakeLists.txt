@@ -89,7 +89,7 @@ endif()
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "FEA programs...")
+message(STATUS "Configuration tests for Chrono::FEA...")
 
 foreach(PROGRAM ${DEMOS})
 
@@ -109,3 +109,4 @@ foreach(PROGRAM ${DEMOS})
 
 endforeach(PROGRAM)
 
+message(STATUS "")

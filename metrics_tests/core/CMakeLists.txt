@@ -113,3 +113,4 @@ foreach(PROGRAM ${TESTS})
 
 endforeach(PROGRAM)
 
+message(STATUS "")
