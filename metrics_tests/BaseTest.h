@@ -58,6 +58,10 @@ class Object {
     }
 
     std::string GetContent() const {
+        if (m_content.str().length() == 1) {
+            return m_content.str() + "}\n";
+        }
+
         // Remove last comma and close the JSON object.
         return m_content.str().substr(0, m_content.str().length() - 1) + "\n}\n";
     }
