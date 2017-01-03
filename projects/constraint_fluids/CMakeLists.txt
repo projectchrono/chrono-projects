@@ -11,6 +11,7 @@
 set(DEMOS
     constraint_fluid_settling_test
     tracked_vehicle_fording
+	humvee_water_tank
 )
 
 #--------------------------------------------------------------
