@@ -21,6 +21,12 @@ enable_testing()
 include(CTest)
 
 #-----------------------------------------------------------------------------
+# Use dependent options
+#-----------------------------------------------------------------------------
+
+include(CMakeDependentOption)
+
+#-----------------------------------------------------------------------------
 # Always use full RPATH (differentiating between the build and install trees)
 #-----------------------------------------------------------------------------
 
@@ -71,7 +77,7 @@ endif()
 # Options for configuring/building individual sets of programs
 option(ENABLE_CONFIG_TESTS "Build the programs for checking Chrono configuration" OFF)
 option(ENABLE_METRICS_TESTS "Build the programs for metrics testing" OFF)
-option(ENABLE_PROJECTS "Build the project programs" OFF)
+
 
 # Keep track of all DLLs. Each submodule should append to this list.
 list(APPEND ALL_DLLS "")
@@ -85,10 +91,9 @@ if(ENABLE_METRICS_TESTS)
   message(STATUS "==== Chrono metrics programs ====\n")
   add_subdirectory(metrics_tests)
 endif()
-if(ENABLE_PROJECTS)
-  message(STATUS "==== Chrono projects ====\n")
-  add_subdirectory(projects)
-endif()
+
+add_subdirectory(projects)
+
 
 #-----------------------------------------------------------------------------
 # Copy DLLs
