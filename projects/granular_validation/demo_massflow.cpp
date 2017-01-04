@@ -22,7 +22,7 @@
 // All units SI.
 // =============================================================================
 
-#include <stdio.h>
+#include <cstdio>
 #include <vector>
 #include <cmath>
 

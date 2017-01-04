@@ -25,7 +25,7 @@
 // The global reference frame has Z up and gravitational acceleration is g=9.81
 // =============================================================================
 
-#include <stdio.h>
+#include <cstdio>
 #include <cmath>
 
 #include "chrono/core/ChFileutils.h"

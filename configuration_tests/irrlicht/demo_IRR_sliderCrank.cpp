@@ -23,7 +23,7 @@
 // The global reference frame has Z up.
 // =============================================================================
 
-#include <stdio.h>
+#include <cstdio>
 #include <cmath>
 
 #include "core/ChFileutils.h"
