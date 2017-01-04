@@ -15,6 +15,7 @@ set(DEMOS
     test_PAR_suspension
     test_PAR_wheel
     test_PAR_radImSchmutz
+    test_PAR_settling
 )
 
 #--------------------------------------------------------------
