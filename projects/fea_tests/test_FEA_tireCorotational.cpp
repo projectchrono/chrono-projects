@@ -48,6 +48,10 @@ using namespace irr;
 #endif
 
 int main(int argc, char* argv[]) {
+    // ---------------------------------
+    // Set path to Chrono data directory
+    // ---------------------------------
+    SetChronoDataPath(CHRONO_DATA_DIR);
 
     // --------------------------
     // Simulation parameters

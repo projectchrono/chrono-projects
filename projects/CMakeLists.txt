@@ -10,6 +10,7 @@ add_subdirectory(parallel_tests)
 add_subdirectory(vehicle_tests)
 add_subdirectory(physics_tests)
 add_subdirectory(core_tests)
+add_subdirectory(fea_tests)
 
 IF (ENABLE_CONSTRAINT_FLUID_MODELS)
    add_subdirectory(constraint_fluids)

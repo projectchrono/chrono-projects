@@ -264,6 +264,9 @@ void test_beam(const std::string& name,  /// test name
 }
 
 int main(int argc, char* argv[]) {
+    // Set path to Chrono data directory
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     test_beam("hinge", ChVector<>(0, 0, -1), 0.005, false, 0.75);
 
     test_beam("cantilever1", ChVector<>(1, 0, 0), 0.1, true, 2.5);

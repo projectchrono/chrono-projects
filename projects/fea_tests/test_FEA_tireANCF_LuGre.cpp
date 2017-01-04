@@ -1196,6 +1196,9 @@ void ReadRestartInput(ChMatrixNM<double, 2, 7>& COORDRigid,
 };
 
 int main(int argc, char* argv[]) {
+    // Set path to Chrono data directory
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     GetLog() << "\n-------------------------------------------------\n";
     GetLog() << "TEST: ANCF Tire (Fixed),  implicit integration \n\n";
 

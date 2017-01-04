@@ -508,6 +508,8 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
 }
 
 int main(int argc, char* argv[]) {
+    // Set path to Chrono data directory
+    SetChronoDataPath(CHRONO_DATA_DIR);
 
     // Definition of the model
     ChSystem my_system;

@@ -490,6 +490,9 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
 }
 
 int main(int argc, char* argv[]) {
+    // Set path to Chrono data directory
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     // Create output directory (if it does not already exist).
     if (output) {
         if (ChFileutils::MakeDirectory("../TEST_SHELL_ANCF") < 0) {

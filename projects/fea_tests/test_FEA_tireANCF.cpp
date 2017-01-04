@@ -12,8 +12,7 @@
 // Authors: Antonio Recuero
 // =============================================================================
 //
-// This test monitors performance of a simple model of a humvee vehicle featuring
-// ANCF, laminated tires
+// This test monitors performance of a single, laminated ANCF humvee tire
 // =============================================================================
 
 #include "chrono/ChConfig.h"
@@ -25,6 +24,7 @@
 #include "chrono/solver/ChSolverMINRES.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsValidation.h"
+
 #include "chrono_fea/ChElementShellANCF.h"
 #include "chrono_fea/ChLinkDirFrame.h"
 #include "chrono_fea/ChLinkPointFrame.h"
@@ -49,7 +49,7 @@ int num_threads = 4;
 double step_size = 0.0002;
 int num_steps = 10;
 
-bool addConstRim = true;  
+bool addConstRim = true;
 bool addBodies = true;
 bool addGroundForces = false;
 bool addSingleLoad = false;
@@ -75,9 +75,9 @@ const double Lwx = 1.60;     // Value of longitudinal distance
 const double Lwy = 1.0;      // Value of lateral distance
 const int NoTires = 4;       // Number of tires. Programmer
 double GroundLoc = -0.0001;  // Ensure there is no contact with ground during test
-double BumpRadius = 0.05;  // changed from 0.035 to 0.05
+double BumpRadius = 0.05;    // changed from 0.035 to 0.05
 double BumpLongLoc = 2.3;
-
+ 
 // Read input file for the comprehensive Humvee tire
 void ReadInputFile(ChMatrixNM<double, 3000, 6>& COORDFlex,
                    ChMatrixNM<double, 3000, 6>& VELCYFlex,
@@ -501,12 +501,17 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
 }
 
 int main(int argc, char* argv[]) {
+    // ---------------------------------
+    // Set path to Chrono data directory
+    // ---------------------------------
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     GetLog() << "Running in performance test mode.\n";
 
-// --------------------------
-// Set number of threads
-// --------------------------
 #ifdef CHRONO_OPENMP_ENABLED
+    // --------------------------
+    // Set number of threads
+    // --------------------------
     int max_threads = CHOMPfunctions::GetNumProcs();
 
     if (num_threads > max_threads)
@@ -516,7 +521,7 @@ int main(int argc, char* argv[]) {
     GetLog() << "Using " << num_threads << " thread(s)\n";
 #else
     GetLog() << "No OpenMP\n";
-#endif
+#endif 
 
     // Definition of the model
     ChSystem my_system;
@@ -538,25 +543,11 @@ int main(int argc, char* argv[]) {
 
     // Create hubs and tire meshes for 4 wheels
     auto Hub_1 = std::make_shared<ChBody>();
-    auto Hub_2 = std::make_shared<ChBody>();
-    auto Hub_3 = std::make_shared<ChBody>();
-    auto Hub_4 = std::make_shared<ChBody>();
-
-    ChVector<> rim_center_1(Lwx, -Lwy, HumveeVertPos);  //
-    ChVector<> rim_center_2(Lwx, Lwy, HumveeVertPos);
-    ChVector<> rim_center_3(-Lwx, Lwy, HumveeVertPos);
-    ChVector<> rim_center_4(-Lwx, -Lwy, HumveeVertPos);
+    ChVector<> rim_center_1(0.0, 0.0, HumveeVertPos);  //
 
     // Create tire meshes
     auto TireMesh1 = std::make_shared<ChMesh>();
-    auto TireMesh2 = std::make_shared<ChMesh>();
-    auto TireMesh3 = std::make_shared<ChMesh>();
-    auto TireMesh4 = std::make_shared<ChMesh>();
-
     MakeANCFHumveeWheel(my_system, TireMesh1, rim_center_1, Hub_1, TirePressure, ForVelocity, 2);
-    MakeANCFHumveeWheel(my_system, TireMesh2, rim_center_2, Hub_2, TirePressure, ForVelocity, 3);
-    MakeANCFHumveeWheel(my_system, TireMesh3, rim_center_3, Hub_3, TirePressure, ForVelocity, 4);
-    MakeANCFHumveeWheel(my_system, TireMesh4, rim_center_4, Hub_4, TirePressure, ForVelocity, 5);
 
     auto mmaterial = std::make_shared<ChMaterialSurface>();
     mmaterial->SetFriction(0.4f);
@@ -593,22 +584,7 @@ int main(int argc, char* argv[]) {
     // Create joints between chassis and hubs
     auto RevTr_1 = std::make_shared<ChLinkRevoluteTranslational>();
     my_system.AddLink(RevTr_1);
-    RevTr_1->Initialize(Hub_1, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), ChVector<>(Lwx, -Lwy, 0.1),
-                        ChVector<>(0, 0, 1), ChVector<>(1, 0, 0), true);
-
-    auto RevTr_2 = std::make_shared<ChLinkRevoluteTranslational>();
-    my_system.AddLink(RevTr_2);
-    RevTr_2->Initialize(Hub_2, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), ChVector<>(Lwx, Lwy, 0.1),
-                        ChVector<>(0, 0, 1), ChVector<>(1, 0, 0), true);
-
-    auto RevTr_3 = std::make_shared<ChLinkRevoluteTranslational>();
-    my_system.AddLink(RevTr_3);
-    RevTr_3->Initialize(Hub_3, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), ChVector<>(-Lwx, Lwy, 0.1),
-                        ChVector<>(0, 0, 1), ChVector<>(1, 0, 0), true);
-
-    auto RevTr_4 = std::make_shared<ChLinkRevoluteTranslational>();
-    my_system.AddLink(RevTr_4);
-    RevTr_4->Initialize(Hub_4, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), ChVector<>(-Lwx, -Lwy, 0.1),
+    RevTr_1->Initialize(Hub_1, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), ChVector<>(0, 0, 0.1),
                         ChVector<>(0, 0, 1), ChVector<>(1, 0, 0), true);
 
     // Spring and damper for secondary suspension: True position vectors are relative
@@ -617,24 +593,6 @@ int main(int argc, char* argv[]) {
     spring1->Set_SpringK(spring_coef);
     spring1->Set_SpringR(damping_coef);
     my_system.AddLink(spring1);
-
-    auto spring2 = std::make_shared<ChLinkSpring>();
-    spring2->Initialize(Hub_2, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(-Lwx, -Lwy, 0), true);
-    spring2->Set_SpringK(spring_coef);
-    spring2->Set_SpringR(damping_coef);
-    my_system.AddLink(spring2);
-
-    auto spring3 = std::make_shared<ChLinkSpring>();
-    spring3->Initialize(Hub_3, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(-Lwx, Lwy, 0), true);
-    spring3->Set_SpringK(spring_coef);
-    spring3->Set_SpringR(damping_coef);
-    my_system.AddLink(spring3);
-
-    auto spring4 = std::make_shared<ChLinkSpring>();
-    spring4->Initialize(Hub_4, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(Lwx, Lwy, 0), true);
-    spring4->Set_SpringK(spring_coef);
-    spring4->Set_SpringR(damping_coef);
-    my_system.AddLink(spring4);
 
     // Create a large cube as a floor.
     auto mrigidBody = std::make_shared<ChBodyEasyBox>(20, 20, 0.00001, 1000,
@@ -699,25 +657,11 @@ int main(int argc, char* argv[]) {
     // Report run time and total number of iterations.
     GetLog() << "Number of iterations: " << num_iterations << "\n";
     GetLog() << "Simulation time:  " << timer() << "\n";
-    GetLog() << "Internal forces ("
-             << TireMesh1->GetNumCallsInternalForces() + TireMesh2->GetNumCallsInternalForces() +
-                    TireMesh3->GetNumCallsInternalForces() + TireMesh4->GetNumCallsInternalForces()
-             << "):  "
-             << TireMesh1->GetTimeInternalForces() + TireMesh2->GetTimeInternalForces() +
-                    TireMesh3->GetTimeInternalForces() + TireMesh4->GetTimeInternalForces()
+    GetLog() << "Internal forces (" << TireMesh1->GetNumCallsInternalForces()
+             << "):  " << TireMesh1->GetTimeInternalForces() << "\n";
+    GetLog() << "Jacobian (" << TireMesh1->GetNumCallsJacobianLoad() << "):  " << TireMesh1->GetTimeJacobianLoad()
              << "\n";
-    GetLog() << "Jacobian ("
-             << TireMesh1->GetNumCallsJacobianLoad() + TireMesh2->GetNumCallsJacobianLoad() +
-                    TireMesh3->GetNumCallsJacobianLoad() + TireMesh4->GetNumCallsJacobianLoad()
-             << "):  "
-             << TireMesh1->GetTimeJacobianLoad() + TireMesh2->GetTimeJacobianLoad() + TireMesh3->GetTimeJacobianLoad() +
-                    TireMesh4->GetTimeJacobianLoad()
-             << "\n";
-    GetLog() << "Extra time:  "
-             << timer() - TireMesh1->GetTimeInternalForces() - TireMesh2->GetTimeInternalForces() -
-                    TireMesh3->GetTimeInternalForces() - TireMesh4->GetTimeInternalForces() -
-                    TireMesh1->GetTimeJacobianLoad() - TireMesh2->GetTimeJacobianLoad() -
-                    TireMesh3->GetTimeJacobianLoad() - TireMesh4->GetTimeJacobianLoad()
+    GetLog() << "Extra time:  " << timer() - TireMesh1->GetTimeInternalForces() - TireMesh1->GetTimeJacobianLoad()
              << "\n";
     getchar();
 
