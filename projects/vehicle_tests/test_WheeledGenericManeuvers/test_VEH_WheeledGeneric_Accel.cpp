@@ -12,7 +12,8 @@
 // Authors: Radu Serban, Mike Taylor
 // =============================================================================
 //
-// Test program for the generic vehicle running a lane change
+// Test program for the generic vehicle running a full throttle straight line
+// acceleration test
 //
 // The vehicle reference frame has Z up, X towards the front of the vehicle, and
 // Y pointing to the left.
@@ -26,6 +27,7 @@
 #include "chrono/physics/ChSystem.h"
 #include "chrono/utils/ChFilters.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/solver/ChSolverMINRES.h"
 
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
@@ -36,6 +38,7 @@
 #include "chrono_models/vehicle/generic/Generic_SimpleMapPowertrain.h"
 #include "chrono_models/vehicle/generic/Generic_FialaTire.h"
 #include "chrono_models/vehicle/generic/Generic_FuncDriver.h"
+#include "chrono_models/vehicle/generic/Generic_Driveline2WD.h"
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 
 // Uncomment the following line to unconditionally disable Irrlicht support
@@ -60,20 +63,24 @@ using namespace chrono::vehicle::generic;
 // =============================================================================
 
 // Initial vehicle position
-ChVector<> initLoc(0, 0, 0.5);
+ChVector<> initLoc(0, 0, 0.6);
 
 // Initial vehicle orientation
 ChQuaternion<> initRot(1, 0, 0, 0);
 
-// Input file names for the path & path-follower driver model
-std::string path_file("paths/ISO_double_lane_change2.txt");
-std::string steering_controller_file("generic/driver/SteeringController_ISO_double_lane_change.json");
-std::string speed_controller_file("generic/driver/SpeedController_ISO_double_lane_change.json");
+double initFwdSpd = 30.0 / 3.6;  // 30kph to m/s
+double target_speed = 10000;     // full throttle test
+int gear = 4;
+
+// Input file names for the path-follower driver model
+std::string steering_controller_file("generic/driver/SteeringController.json");
+std::string speed_controller_file("generic/driver/SpeedController.json");
+std::string path_file("paths/straight10km.txt");
 
 // Rigid terrain dimensions
 double terrainHeight = 0;
-double terrainLength = 500.0;  // size in X direction
-double terrainWidth = 500.0;   // size in Y direction
+double terrainLength = 100.0;  // size in X direction
+double terrainWidth = 100.0;   // size in Y direction
 
 // Simulation step size
 double step_size = 1e-4;
@@ -87,8 +94,11 @@ double output_step_size = 1.0 / 1;  // once a second
 // Point on chassis tracked by the camera (Irrlicht only)
 ChVector<> trackPoint(0.0, 0.0, 1.75);
 
+// Simulation length (set to a negative value to disable for Irrlicht)
+double tend = 20.0;
+
 // Output directories
-const std::string out_dir = "../GENERIC_VEHICLE_LANECHANGE";
+const std::string out_dir = "../GENERIC_VEHICLE_ACCEL";
 const std::string pov_dir = out_dir + "/POVRAY";
 
 // POV-Ray output
@@ -98,26 +108,12 @@ bool povray_output = false;
 bool state_output = true;
 int filter_window_size = 20;
 
-
 // =============================================================================
 
 int main(int argc, char* argv[]) {
-    double target_speed = 60.0 / 3.6;  // kph to m/s
-    int gear = 3;
-    // Simulation length (set to a negative value to disable for Irrlicht)
-    double tend = 15;
-
-    // Check for input arguments for running this test in batch
-    // First argument is the target vehicle speed in m/s
-    // Second argument is the selected gear number
-    // Third argument is the simulation end time in s
-    if (argc > 1)
-        target_speed = std::atof(argv[1]);
-    if (argc > 2)
-        gear = std::atoi(argv[3]);
-    if (argc > 3)
-        tend = std::atof(argv[4]);
-
+    // Set path to Chrono and Chrono::Vehicle data directories
+    SetChronoDataPath(CHRONO_DATA_DIR);
+    vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
 
     // --------------------------
     // Create the various modules
@@ -126,11 +122,36 @@ int main(int argc, char* argv[]) {
     // Create the vehicle: specify if chassis is fixed, the suspension type
     // and the inital forward speed
     Generic_Vehicle vehicle(false, SuspensionType::DOUBLE_WISHBONE);
-    vehicle.Initialize(ChCoordsys<>(initLoc), target_speed);
+    vehicle.Initialize(ChCoordsys<>(initLoc, initRot), initFwdSpd);
     vehicle.SetChassisVisualizationType(VisualizationType::PRIMITIVES);
     vehicle.SetSuspensionVisualizationType(VisualizationType::PRIMITIVES);
     vehicle.SetSteeringVisualizationType(VisualizationType::PRIMITIVES);
     vehicle.SetWheelVisualizationType(VisualizationType::NONE);
+
+    //ChSystem* my_system = vehicle.GetSystem();
+    //my_system->SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_LINEARIZED);
+    //my_system->SetMaxItersSolverSpeed(100);
+    //my_system->SetMaxItersSolverStab(100); //Tasora stepper uses this, Anitescu does not
+    //my_system->SetSolverType(ChSystem::SOLVER_BARZILAIBORWEIN);
+    //my_system->SetTol(1e-6);
+    //my_system->SetTolForce(1e-4);
+
+    //ChSystem* my_system = vehicle.GetSystem();
+    //my_system->SetSolverType(ChSystem::SOLVER_MINRES);
+    //auto msolver = static_cast<ChSolverMINRES*>(my_system->GetSolverSpeed());
+    //msolver->SetDiagonalPreconditioning(true);
+    //my_system->SetMaxItersSolverSpeed(100);
+    //my_system->SetTolForce(1e-6);
+    //my_system->SetIntegrationType(ChSystem::INT_HHT);
+    //auto mystepper = std::static_pointer_cast<ChTimestepperHHT>(my_system->GetTimestepper());
+    //mystepper->SetAlpha(-0.2);
+    //mystepper->SetMaxiters(100);
+    //mystepper->SetAbsTolerances(1e-5);
+    //mystepper->SetMode(ChTimestepperHHT::POSITION);
+    //mystepper->SetStepControl(false);
+    //mystepper->SetModifiedNewton(true);
+    //mystepper->SetScaling(true);
+    //mystepper->SetVerbose(false);
 
     // Create the ground
     RigidTerrain terrain(vehicle.GetSystem());
@@ -138,7 +159,7 @@ int main(int argc, char* argv[]) {
     terrain.SetContactRestitutionCoefficient(0.01f);
     terrain.SetContactMaterialProperties(2e7f, 0.3f);
     terrain.SetColor(ChColor(0.5f, 0.8f, 0.5f));
-    terrain.SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 600, 600);
+    terrain.SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 200);
     terrain.Initialize(terrainHeight, terrainLength, terrainWidth);
 
     // Create and initialize the powertrain system
@@ -168,11 +189,23 @@ int main(int argc, char* argv[]) {
 
     ChBezierCurve* path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
     ChPathFollowerDriver driver(vehicle, vehicle::GetDataFile(steering_controller_file),
-        vehicle::GetDataFile(speed_controller_file), path, "my_path", target_speed);
+                                vehicle::GetDataFile(speed_controller_file), path, "my_path", target_speed);
     driver.Initialize();
 
     // Report out the mass of the entire vehicle to the screen
     std::cout << "Vehicle Mass: " << vehicle.GetVehicleMass() << std::endl;
+
+
+    //// Create the ground body
+    //auto ground = std::make_shared<ChBody>();
+    //vehicle.GetSystem()->AddBody(ground);
+    //ground->SetBodyFixed(true);
+
+    //auto fixedJoint = std::make_shared<ChLinkLockLock>();
+    //fixedJoint->Initialize(vehicle.GetChassisBody(), ground, ChCoordsys<>(initLoc, initRot));
+    //vehicle.GetSystem()->AddLink(fixedJoint);
+
+
 
 #ifdef CHRONO_IRRLICHT
 
@@ -180,7 +213,7 @@ int main(int argc, char* argv[]) {
     // Create the vehicle Irrlicht application
     // ---------------------------------------
 
-    ChWheeledVehicleIrrApp app(&vehicle, &powertrain, L"Generic Wheeled Vehicle Lane Change Test");
+    ChWheeledVehicleIrrApp app(&vehicle, &powertrain, L"Generic Wheeled Vehicle Acceleration Test");
     app.SetSkyBox();
     app.AddTypicalLights(irr::core::vector3df(30.f, -30.f, 100.f), irr::core::vector3df(30.f, 50.f, 100.f), 250, 130);
     app.SetChaseCamera(trackPoint, 6.0, 0.5);
@@ -346,10 +379,10 @@ int main(int argc, char* argv[]) {
                 csv << vehicle.GetDriveline()->GetWheelTorque(WheelID(axle, LEFT));
                 csv << vehicle.GetDriveline()->GetWheelTorque(WheelID(axle, RIGHT));
                 // Tire Slip Angles
-                csv << tire_front_left.GetSlipAngle() << tire_front_left.GetLongitudinalSlip() << tire_front_left.GetCamberAngle();
-                csv << tire_front_right.GetSlipAngle() << tire_front_right.GetLongitudinalSlip() << tire_front_right.GetCamberAngle();
-                csv << tire_rear_left.GetSlipAngle() << tire_rear_left.GetLongitudinalSlip() << tire_rear_left.GetCamberAngle();
-                csv << tire_rear_right.GetSlipAngle() << tire_rear_right.GetLongitudinalSlip() << tire_rear_right.GetCamberAngle();
+                csv << tire_front_left.GetSlipAngle() << tire_front_left.GetLongitudinalSlip();
+                csv << tire_front_right.GetSlipAngle() << tire_front_right.GetLongitudinalSlip();
+                csv << tire_rear_left.GetSlipAngle() << tire_rear_left.GetLongitudinalSlip();
+                csv << tire_rear_right.GetSlipAngle() << tire_rear_right.GetLongitudinalSlip();
                 // Suspension Lengths
                 csv << vehicle.GetShockLength(WheelID(0, LEFT));
                 csv << vehicle.GetShockLength(WheelID(0, RIGHT));
@@ -360,9 +393,15 @@ int main(int argc, char* argv[]) {
                 csv << tire_front_right.GetTireForce().force;
                 csv << tire_rear_left.GetTireForce().force;
                 csv << tire_rear_right.GetTireForce().force;
-                //
-                csv << vehicle.GetChassis()->GetRot();
                 csv << std::endl;
+
+                //std::cout << "T = " << time << "s, NumIterations = " <<mystepper->GetNumIterations()<<std::endl;
+                //std::cout << "T = " << time << "s. "
+                //    << vehicle.GetDriveline()->GetWheelTorque(WheelID(0, LEFT)) << " "
+                //    << vehicle.GetDriveline()->GetWheelTorque(WheelID(0, RIGHT)) << " "
+                //    << vehicle.GetDriveline()->GetWheelTorque(WheelID(1, LEFT)) << " "
+                //    << vehicle.GetDriveline()->GetWheelTorque(WheelID(1, RIGHT)) << " "
+                //    << std::endl;
             }
 
             render_frame++;
@@ -427,7 +466,7 @@ int main(int argc, char* argv[]) {
     }
     if (state_output) {
         char filename[100];
-        sprintf(filename, "%s/output_%dmps_Gear%d_LaneChange.dat", out_dir.c_str(), int(std::round(target_speed)), gear);
+        sprintf(filename, "%s/output_Gear%d.dat", out_dir.c_str(), gear);
         csv.write_to_file(filename);
     }
     return 0;

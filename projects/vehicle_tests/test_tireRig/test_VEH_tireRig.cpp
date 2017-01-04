@@ -288,6 +288,10 @@ utils::CSV_writer OutStream() {
 // =============================================================================
 
 int main() {
+    // Set path to Chrono and Chrono::Vehicle data directories
+    SetChronoDataPath(CHRONO_DATA_DIR);
+    vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
+
     // Create output directories
     out_dir1 = "../Tire_Test_Rig/";
     switch (tire_model) {

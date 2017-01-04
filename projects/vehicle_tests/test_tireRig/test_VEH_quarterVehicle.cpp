@@ -117,6 +117,10 @@ double step_size = 1e-3;  // integration step size
 // Main driver program
 
 int main(int argc, char* argv[]) {
+    // Set path to Chrono and Chrono::Vehicle data directories
+    SetChronoDataPath(CHRONO_DATA_DIR);
+    vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
+
     if (tire_model == TireModelType::ANCF || tire_model == TireModelType::FEA)
         contact_method = ChMaterialSurfaceBase::DEM;
 

@@ -111,6 +111,9 @@ class MyContactReporter : public ChReportContactCallback {
 // Main driver program
 
 int main(int argc, char* argv[]) {
+    // Set path to Chrono and Chrono::Vehicle data directories
+    SetChronoDataPath(CHRONO_DATA_DIR);
+    vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
 
     // Create the mechanical system
     // ----------------------------

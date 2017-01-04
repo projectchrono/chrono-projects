@@ -61,6 +61,9 @@ std::shared_ptr<geometry::ChLinePath> CreateProfile(int num_teeth, double R_T, d
 
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    // Set path to Chrono data directory
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     ChSystem system;
 
     ChIrrApp application(&system, L"Paths", core::dimension2d<u32>(800, 600), false, true);

@@ -38,6 +38,10 @@ using namespace chrono;
 using namespace chrono::vehicle;
 
 int main(int argc, char* argv[]) {
+    // Set path to Chrono and Chrono::Vehicle data directories
+    SetChronoDataPath(CHRONO_DATA_DIR);
+    vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
+
     // Output directory names
     const std::string out_dir = "../PACTEST";
     const std::string pov_dir = out_dir + "/POVRAY";

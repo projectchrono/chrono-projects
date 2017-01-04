@@ -51,7 +51,7 @@
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
-#include "../utils.h"
+#include "../../utils.h"
 
 using namespace chrono;
 using namespace chrono::collision;

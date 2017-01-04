@@ -1,17 +1,7 @@
 #=============================================================================
 # CMake configuration file for projects requiring the Chrono VEHICLE and
-# PARALLEL modules (and optionally the OPENGL module)
-# 
-# Cannot be used stand-alone (but is mostly self-contained).
+# various other modules
 #=============================================================================
-
-#--------------------------------------------------------------
-# List of all executables
-#--------------------------------------------------------------
-
-SET(DEMOS
-    test_VEH_hmmwvDEM_ditch
-)
 
 #--------------------------------------------------------------
 # Find the Chrono package with required components
@@ -20,15 +10,15 @@ SET(DEMOS
 # Invoke find_package in CONFIG mode
 
 find_package(Chrono
-             COMPONENTS Vehicle Parallel
-             OPTIONAL_COMPONENTS OpenGL
+             COMPONENTS Vehicle 
+             OPTIONAL_COMPONENTS Irrlicht FEA MKL Parallel OpenGL
              CONFIG
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
 
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for VEHICLE_PARALLEL projects")
+  message("Could not find requirements for VEHICLE projects")
   return()
 endif()
 
@@ -60,26 +50,29 @@ list(APPEND ALL_DLLS "${CHRONO_DLLS}")
 set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 
 #--------------------------------------------------------------
-# Loop over all demo programs and build them
+# Include subdirectories, based on their dependencies
 #--------------------------------------------------------------
 
-MESSAGE(STATUS "Vehicle_Parallel programs...")
+message(STATUS "Programs...")
+add_subdirectory(test_steeringControl)
+add_subdirectory(test_pacjekaTire)
 
-FOREACH(PROGRAM ${DEMOS})
-    MESSAGE(STATUS "...add ${PROGRAM}")
+if (CHRONO_IRRLICHT_FOUND)
+  message(STATUS "Programs using Chrono::Irrlicht...")
+  add_subdirectory(test_sprocket)
+  add_subdirectory(test_WheeledGenericManeuvers)
+  add_subdirectory(test_tireRig)
+endif()
 
-    ADD_EXECUTABLE(${PROGRAM}  "${PROGRAM}.cpp")
-    SOURCE_GROUP(""  FILES "${PROGRAM}.cpp")
+if (CHRONO_PARALLEL_FOUND)
+  message(STATUS "Programs using Chrono::Parallel...")
+  add_subdirectory(test_HMMWV_parallel)
+endif()
 
-    SET_TARGET_PROPERTIES(${PROGRAM} PROPERTIES
-        FOLDER demos
-        COMPILE_FLAGS "${CHRONO_CXX_FLAGS}"
-        COMPILE_DEFINITIONS "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\";CHRONO_VEHICLE_DATA_DIR=\"${CHRONO_VEHICLE_DATA_DIR}\""
-        LINK_FLAGS "${CHRONO_CXX_FLAGS} ${CHRONO_LINKER_FLAGS}"
-    )
-
-    TARGET_LINK_LIBRARIES(${PROGRAM} ${CHRONO_LIBRARIES})
-
-ENDFOREACH(PROGRAM)
+if (CHRONO_FEA_FOUND AND CHRONO_IRRLICHT_FOUND)
+  message(STATUS "Programs using Chrono::FEA and Chrono::Irrlicht...")
+  add_subdirectory(test_HMMWV)
+  add_subdirectory(test_toroidalTire)
+endif()
 
 message(STATUS "")

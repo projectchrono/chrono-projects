@@ -12,7 +12,7 @@
 // Authors: Radu Serban, Mike Taylor
 // =============================================================================
 //
-// Test program for the generic vehicle running a constant radius turn
+// Test program for the generic vehicle running a lane change
 //
 // The vehicle reference frame has Z up, X towards the front of the vehicle, and
 // Y pointing to the left.
@@ -59,9 +59,16 @@ using namespace chrono::vehicle::generic;
 
 // =============================================================================
 
-// Input file names for the path-follower driver model
-std::string steering_controller_file("generic/driver/SteeringController.json");
-std::string speed_controller_file("generic/driver/SpeedController.json");
+// Initial vehicle position
+ChVector<> initLoc(0, 0, 0.5);
+
+// Initial vehicle orientation
+ChQuaternion<> initRot(1, 0, 0, 0);
+
+// Input file names for the path & path-follower driver model
+std::string path_file("paths/ISO_double_lane_change2.txt");
+std::string steering_controller_file("generic/driver/SteeringController_ISO_double_lane_change.json");
+std::string speed_controller_file("generic/driver/SpeedController_ISO_double_lane_change.json");
 
 // Rigid terrain dimensions
 double terrainHeight = 0;
@@ -80,11 +87,8 @@ double output_step_size = 1.0 / 1;  // once a second
 // Point on chassis tracked by the camera (Irrlicht only)
 ChVector<> trackPoint(0.0, 0.0, 1.75);
 
-// Simulation length (set to a negative value to disable for Irrlicht)
-double tend = 30.0;
-
 // Output directories
-const std::string out_dir = "../GENERIC_VEHICLE_CRC";
+const std::string out_dir = "../GENERIC_VEHICLE_LANECHANGE";
 const std::string pov_dir = out_dir + "/POVRAY";
 
 // POV-Ray output
@@ -94,103 +98,29 @@ bool povray_output = false;
 bool state_output = true;
 int filter_window_size = 20;
 
-// =============================================================================
-
-void CalcControlPoints(double run,
-    double radius,
-    int nturns,
-    std::vector<ChVector<>>& points,
-    std::vector<ChVector<>>& inCV,
-    std::vector<ChVector<>>& outCV) {
-    // Height of path
-    double z = 0.1;
-
-    // Approximate circular path using 4 points
-    double direction = radius > 0 ? 1 : -1;
-    radius = std::abs(radius);
-    double factor = radius * 0.55191502449;
-
-
-    ChVector<> P1(0, direction*radius, z);
-    ChVector<> P1_in = P1 - ChVector<>(factor, 0, 0);
-    ChVector<> P1_out = P1 + ChVector<>(factor, 0, 0);
-
-    ChVector<> P2(radius, 0, z);
-    ChVector<> P2_in = P2 + ChVector<>(0, direction*factor, 0);
-    ChVector<> P2_out = P2 - ChVector<>(0, direction*factor, 0);
-
-    ChVector<> P3(0, -direction*radius, z);
-    ChVector<> P3_in = P3 + ChVector<>(factor, 0, 0);
-    ChVector<> P3_out = P3 - ChVector<>(factor, 0, 0);
-
-    ChVector<> P4(-radius, 0, z);
-    ChVector<> P4_in = P4 - ChVector<>(0, direction*factor, 0);
-    ChVector<> P4_out = P4 + ChVector<>(0, direction*factor, 0);
-
-    // Start point
-    ChVector<> P0(-run, direction*radius, z);
-    ChVector<> P0_in = P0 - ChVector<>(run/2., 0, 0);
-    ChVector<> P0_out = P0 + ChVector<>(run/2., 0, 0);
-
-    points.push_back(P0);
-    inCV.push_back(P0_in);
-    outCV.push_back(P0_out);
-
-    for (int i = 0; i < nturns; i++) {
-        points.push_back(P1);
-        inCV.push_back(P1_in);
-        outCV.push_back(P1_out);
-
-        points.push_back(P2);
-        inCV.push_back(P2_in);
-        outCV.push_back(P2_out);
-
-        points.push_back(P3);
-        inCV.push_back(P3_in);
-        outCV.push_back(P3_out);
-
-        points.push_back(P4);
-        inCV.push_back(P4_in);
-        outCV.push_back(P4_out);
-    }
-
-    points.push_back(P1);
-    inCV.push_back(P1_in);
-    outCV.push_back(P1_out);
-}
-
 
 // =============================================================================
 
 int main(int argc, char* argv[]) {
-    double initFwdSpd = 30.0 / 3.6;  // kph to m/s
-    double finalFwdSpd = 100.0 / 3.6;  // kph to m/s
-    int gear = 4;
-    double cornerRadius = 200;
+    // Set path to Chrono and Chrono::Vehicle data directories
+    SetChronoDataPath(CHRONO_DATA_DIR);
+    vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
+
+    double target_speed = 60.0 / 3.6;  // kph to m/s
+    int gear = 3;
+    // Simulation length (set to a negative value to disable for Irrlicht)
+    double tend = 15;
 
     // Check for input arguments for running this test in batch
-    // First argument is the initial vehicle speed in m/s
-    // Second argument is the target final speed in m/s
-    // Third argument is the selected gear number
-    // Fourth argument is the radius of the turn in m
+    // First argument is the target vehicle speed in m/s
+    // Second argument is the selected gear number
+    // Third argument is the simulation end time in s
     if (argc > 1)
-        initFwdSpd = std::atof(argv[1]);
+        target_speed = std::atof(argv[1]);
     if (argc > 2)
-        finalFwdSpd = std::atof(argv[2]);
-    if (argc > 3)
         gear = std::atoi(argv[3]);
-    if (argc > 4)
-        cornerRadius = std::atof(argv[4]);
-
-    // ------------------------------------
-    // Parameters for the Bezier curve path
-    // ------------------------------------
-
-    double run = 10;
-    int nturns = 1 + int(std::ceil(((finalFwdSpd + initFwdSpd)/2*tend) / (cornerRadius * CH_C_2PI)));
-
-    // Initial vehicle location
-    ChVector<> initLoc(- run -5, cornerRadius, 0.6);
+    if (argc > 3)
+        tend = std::atof(argv[4]);
 
 
     // --------------------------
@@ -200,7 +130,7 @@ int main(int argc, char* argv[]) {
     // Create the vehicle: specify if chassis is fixed, the suspension type
     // and the inital forward speed
     Generic_Vehicle vehicle(false, SuspensionType::DOUBLE_WISHBONE);
-    vehicle.Initialize(ChCoordsys<>(initLoc), initFwdSpd);
+    vehicle.Initialize(ChCoordsys<>(initLoc), target_speed);
     vehicle.SetChassisVisualizationType(VisualizationType::PRIMITIVES);
     vehicle.SetSuspensionVisualizationType(VisualizationType::PRIMITIVES);
     vehicle.SetSteeringVisualizationType(VisualizationType::PRIMITIVES);
@@ -240,14 +170,9 @@ int main(int argc, char* argv[]) {
     // Create the path and the driver system
     // -------------------------------------
 
-    std::vector<ChVector<>> points;
-    std::vector<ChVector<>> inCV;
-    std::vector<ChVector<>> outCV;
-    CalcControlPoints(run, cornerRadius, nturns, points, inCV, outCV);
-    ChBezierCurve path(points, inCV, outCV);
-
+    ChBezierCurve* path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
     ChPathFollowerDriver driver(vehicle, vehicle::GetDataFile(steering_controller_file),
-        vehicle::GetDataFile(speed_controller_file), &path, "my_path", initFwdSpd, false);
+        vehicle::GetDataFile(speed_controller_file), path, "my_path", target_speed);
     driver.Initialize();
 
     // Report out the mass of the entire vehicle to the screen
@@ -259,7 +184,7 @@ int main(int argc, char* argv[]) {
     // Create the vehicle Irrlicht application
     // ---------------------------------------
 
-    ChWheeledVehicleIrrApp app(&vehicle, &powertrain, L"Generic Wheeled Vehicle Constant Radius Cornering Test");
+    ChWheeledVehicleIrrApp app(&vehicle, &powertrain, L"Generic Wheeled Vehicle Lane Change Test");
     app.SetSkyBox();
     app.AddTypicalLights(irr::core::vector3df(30.f, -30.f, 100.f), irr::core::vector3df(30.f, 50.f, 100.f), 250, 130);
     app.SetChaseCamera(trackPoint, 6.0, 0.5);
@@ -483,9 +408,6 @@ int main(int argc, char* argv[]) {
         app.Synchronize("Follower driver", steering_input, throttle_input, braking_input);
 #endif
 
-        //Update for the new target vehicle speed
-        driver.SetDesiredSpeed((finalFwdSpd - initFwdSpd) / tend * time +initFwdSpd);
-
         // Advance simulation for one timestep for all modules
         driver.Advance(step_size);
 
@@ -509,10 +431,7 @@ int main(int argc, char* argv[]) {
     }
     if (state_output) {
         char filename[100];
-        if (cornerRadius>0)
-            sprintf(filename, "%s/output_%dmps_to_%dmps_Gear%d_CW_Rad%dm.dat", out_dir.c_str(), int(std::round(initFwdSpd)), int(std::round(finalFwdSpd)), gear, int(std::round(std::abs(cornerRadius))));
-        else
-            sprintf(filename, "%s/output_%dmps_to_%dmps_Gear%d_CCW_Rad%dm.dat", out_dir.c_str(), int(std::round(initFwdSpd)), int(std::round(finalFwdSpd)), gear, int(std::round(std::abs(cornerRadius))));
+        sprintf(filename, "%s/output_%dmps_Gear%d_LaneChange.dat", out_dir.c_str(), int(std::round(target_speed)), gear);
         csv.write_to_file(filename);
     }
     return 0;

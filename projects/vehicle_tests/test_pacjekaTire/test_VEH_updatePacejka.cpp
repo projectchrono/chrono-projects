@@ -60,6 +60,10 @@ void processState(std::shared_ptr<ChPacejkaTire> tire, const WheelState& state, 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    // Set path to Chrono and Chrono::Vehicle data directories
+    SetChronoDataPath(CHRONO_DATA_DIR);
+    vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
+
     // Flat rigid terrain, height = 0 for all (x,y)
     FlatTerrain flat_terrain(0);
 
