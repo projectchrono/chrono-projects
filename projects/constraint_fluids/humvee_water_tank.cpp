@@ -37,6 +37,9 @@
 
 #include "chrono_parallel/collision/ChCollisionSystemParallel.h"
 
+#include "input_output.h"
+
+#undef CHRONO_OPENGL
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
@@ -120,6 +123,8 @@ std::string gravel_driver_file("humvee_input/straightOrigin.txt");
 std::string steering_controller_file("humvee_input/SteeringController.json");
 std::string speed_controller_file("humvee_input/SpeedController.json");
 
+std::string data_output_path = "";
+
 #define ERASE_MACRO(x, y) x.erase(x.begin() + y);
 #define ERASE_MACRO_LEN(x, y, z) x.erase(x.begin() + y, x.begin() + y + z);
 
@@ -137,8 +142,89 @@ double mass_g = rho_g * vol_g;
 ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
 float mu_g = 0.8f;
+std::vector<real3> forces;
+std::vector<real3> torques;
 
+void static WriteVehicleData(hmmwv::HMMWV_Full& my_hmmwv,
+	double throttle,
+	double braking,
+	std::vector<real3> forces,
+	std::vector<real3> torques,
+	std::string filename) {
+	CSVGen csv_output;
+	csv_output.OpenFile(filename.c_str(), false);
 
+	std::shared_ptr<ChDriveline> m_driveline;
+	std::shared_ptr<ChDoubleWishbone> m_suspension_front, m_suspension_back;
+
+	m_driveline = my_hmmwv.GetVehicle().GetDriveline();
+	m_suspension_front = std::dynamic_pointer_cast<ChDoubleWishbone>(my_hmmwv.GetVehicle().GetSuspension(0));
+	m_suspension_back = std::dynamic_pointer_cast<ChDoubleWishbone>(my_hmmwv.GetVehicle().GetSuspension(1));
+
+	csv_output << my_hmmwv.GetVehicle().GetChassis()->GetPos();
+	csv_output << my_hmmwv.GetVehicle().GetVehicleSpeed();
+	csv_output << m_driveline->GetDriveshaftSpeed();
+	csv_output << my_hmmwv.GetPowertrain().GetMotorTorque();
+	csv_output << my_hmmwv.GetPowertrain().GetMotorSpeed();
+	csv_output << my_hmmwv.GetPowertrain().GetOutputTorque();
+
+	csv_output << throttle;
+	csv_output << braking;
+	csv_output << Length(forces[0]) + Length(forces[1]) + Length(forces[2]) + Length(forces[3]) + Length(forces[4]);
+	csv_output << Length(torques[0]) + Length(torques[1]) + Length(torques[2]) + Length(torques[3]) +
+		Length(torques[4]);
+	csv_output << Length(forces[5]) + Length(forces[6]) + Length(forces[7]) + Length(forces[8]) + Length(forces[9]);
+	csv_output << Length(torques[5]) + Length(torques[6]) + Length(torques[7]) + Length(torques[8]) +
+		Length(torques[9]);
+
+	csv_output << m_driveline->GetWheelTorque(0);
+	csv_output << m_driveline->GetWheelTorque(1);
+	csv_output << m_driveline->GetWheelTorque(2);
+	csv_output << m_driveline->GetWheelTorque(3);
+
+	csv_output << my_hmmwv.GetVehicle().GetWheelLinVel(0);
+	csv_output << my_hmmwv.GetVehicle().GetWheelLinVel(1);
+	csv_output << my_hmmwv.GetVehicle().GetWheelLinVel(2);
+	csv_output << my_hmmwv.GetVehicle().GetWheelLinVel(3);
+
+	csv_output << my_hmmwv.GetVehicle().GetWheelAngVel(0);
+	csv_output << my_hmmwv.GetVehicle().GetWheelAngVel(1);
+	csv_output << my_hmmwv.GetVehicle().GetWheelAngVel(2);
+	csv_output << my_hmmwv.GetVehicle().GetWheelAngVel(3);
+
+	csv_output << m_suspension_front->GetSpringDeformation(LEFT);
+	csv_output << m_suspension_front->GetSpringDeformation(RIGHT);
+	csv_output << m_suspension_back->GetSpringDeformation(LEFT);
+	csv_output << m_suspension_back->GetSpringDeformation(RIGHT);
+	csv_output << m_suspension_front->GetShockLength(LEFT);
+	csv_output << m_suspension_front->GetShockLength(RIGHT);
+	csv_output << m_suspension_back->GetShockLength(LEFT);
+	csv_output << m_suspension_back->GetShockLength(RIGHT);
+
+	csv_output << forces[0];
+	csv_output << forces[1];
+	csv_output << forces[2];
+	csv_output << forces[3];
+	csv_output << forces[4];
+	csv_output << torques[0];
+	csv_output << torques[1];
+	csv_output << torques[2];
+	csv_output << torques[3];
+	csv_output << torques[4];
+	csv_output << forces[5];
+	csv_output << forces[6];
+	csv_output << forces[7];
+	csv_output << forces[8];
+	csv_output << forces[9];
+	csv_output << torques[5];
+	csv_output << torques[6];
+	csv_output << torques[7];
+	csv_output << torques[8];
+	csv_output << torques[9];
+	csv_output.endline();
+	csv_output.CloseFile();
+
+}
 
 void RemoveCollisionModel(ChSystemParallelDVI* system, ChCollisionModel* model) {
 	ChParallelDataManager* data_manager = system->data_manager;
@@ -342,9 +428,9 @@ void CreateGravel(ChSystemParallelDVI* system) {
 
 int main(int argc, char* argv[]) {
 
-	if (argc == 2) {
+	if (argc == 3) {
 		simulation_mode = SimModes(atoi(argv[1]));
-
+		target_speed = atoi(argv[2]) * mph_to_m_s;
 	}
 
 	// --------------
@@ -356,7 +442,6 @@ int main(int argc, char* argv[]) {
 	// ---------------------
 	// Edit system settings.
 	// ---------------------
-	// Set solver parameters
 	system->GetSettings()->solver.tolerance = tolerance;
 	system->GetSettings()->solver.solver_mode = SLIDING;
 	system->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
@@ -380,17 +465,25 @@ int main(int argc, char* argv[]) {
 	system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
 	system->GetSettings()->collision.fixed_bins = true;
 
+	ChBezierCurve* path;
+
 	if (simulation_mode == TURN) {
 		initLoc = ChVector<>(0, 30.48, .6);
+		path = ChBezierCurve::read(circle_file);
+		data_output_path = "humvee_tank_turn_" + std::to_string(target_speed);
 	}
 	else if (simulation_mode == LANE_CHANGE) {
 		initLoc = ChVector<>(-125, -125, .6);
+		path = ChBezierCurve::read(lane_change_file);
+		data_output_path = "humvee_tank_dlc_" + std::to_string(target_speed);
 	}
 	else if (simulation_mode == GRAVEL) {
 		target_speed = 15 * mph_to_m_s;
+		path = ChBezierCurve::read(gravel_driver_file);
+		data_output_path = "humvee_tank_gravel_" + std::to_string(target_speed);
 	}
 	CreateBase(system);
-	//CreateFluid(system);
+	CreateFluid(system);
 
 
 
@@ -406,9 +499,6 @@ int main(int argc, char* argv[]) {
 
 
 	my_hmmwv.Initialize();
-
-
-
 
 	my_hmmwv.SetChassisVisualizationType(chassis_vis_type);
 	my_hmmwv.SetSuspensionVisualizationType(suspension_vis_type);
@@ -455,20 +545,7 @@ int main(int argc, char* argv[]) {
 	// Create the driver system
 	// ------------------------
 
-	ChBezierCurve* path;
-	
-	if (simulation_mode==TURN) {
-		path = ChBezierCurve::read(circle_file);
-		
-	}
-	else if(simulation_mode == LANE_CHANGE) {
-		path = ChBezierCurve::read(lane_change_file);
-	}
-	else if (simulation_mode == GRAVEL) {
-		path = ChBezierCurve::read(gravel_driver_file);
-	}
-
-	ChPathFollowerDriver driver(my_hmmwv.GetVehicle(), steering_controller_file,
+	ChPathFollowerDriver driver(my_hmmwv.GetVehicle(), steering_controller_file, 
 		speed_controller_file, path, "my_path", target_speed, true);
 	driver.Initialize();
 
@@ -479,8 +556,11 @@ int main(int argc, char* argv[]) {
 	double time = 0;
 	double exec_time = 0;
 
-	int sim_frame = 0;
+	int sim_frame = 0, out_frame = 0, next_out_frame = 0;
+	
+	int out_steps = std::ceil((1.0 / time_step) / out_fps);
 
+#ifdef CHRONO_OPENGL
 	opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
 	gl_window.Initialize(1280, 720, "Humvee", system);
 
@@ -489,6 +569,7 @@ int main(int argc, char* argv[]) {
 	gl_window.SetRenderMode(opengl::WIREFRAME);
 
 	gl_window.Pause();
+#endif
 
 	ChVector<> driver_pos = my_hmmwv.GetVehicle().GetChassis()->GetLocalDriverCoordsys().pos;
 
@@ -545,9 +626,28 @@ int main(int argc, char* argv[]) {
 		time += time_step;
 		sim_frame++;
 		exec_time += system->GetTimerStep();
-		num_contacts += system->GetNcontacts();
-	}
+
+		forces.resize(10);
+		torques.resize(10);
+		std::fill(forces.begin(), forces.end(), real3(0));
+		std::fill(torques.begin(), torques.end(), real3(0));
+
+		if (sim_frame == next_out_frame) {
+			std::cout << "write: " << out_frame << std::endl;
+			DumpFluidData(system, data_output_path + "data_" + std::to_string(out_frame) + ".dat", true);
+			
+			DumpAllObjectsWithGeometryPovray(system, data_output_path + "vehicle_" + std::to_string(out_frame) + ".dat", true);
+			WriteVehicleData(my_hmmwv, throttle_input, braking_input, forces, torques, data_output_path + "stats_" + std::to_string(out_frame) + ".dat");
+
+			out_frame++;
+			next_out_frame += out_steps;
+		}
+
 #endif
+
+		
 	}
+	cout << "==================================" << endl;
+	cout << "Simulation time:   " << exec_time << endl;
 return 0;
 }

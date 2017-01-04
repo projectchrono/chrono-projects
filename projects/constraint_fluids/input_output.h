@@ -6,23 +6,15 @@
 #include <thread>
 #include <zlib.h>
 
-#include "chrono_models/vehicle/m113/M113_SimplePowertrain.h"
-#include "chrono_models/vehicle/m113/M113_Vehicle.h"
-
 #include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsGenerators.h"
-
-#include "m113_custom.h"
+#include "chrono_parallel/physics/ChSystemParallel.h"
 using namespace chrono;
 using namespace chrono::collision;
-using namespace chrono::vehicle;
-using namespace chrono::vehicle::m113;
-
 using std::cout;
 using std::endl;
-
 
 class CSVGen {
 public:
@@ -238,46 +230,4 @@ void static DumpAllObjectsWithGeometryPovray(ChSystem* mSys, std::string filenam
 	csv_output.CloseFile();
 }
 
-
-void static WriteTrackedVehicleData(
-	M113_Vehicle_Custom& vehicle,
-	M113_SimplePowertrain &powertrain, 
-	double throttle,
-	double braking,
-	std::vector<real3> forces,
-	std::vector<real3> torques,
-	std::string filename) {
-	CSVGen csv_output;
-	csv_output.OpenFile(filename.c_str(), false);
-
-	std::shared_ptr<ChTrackDriveline> m_driveline = vehicle.GetDriveline();
-
-	csv_output << vehicle.GetChassisBody()->GetPos();
-	csv_output << vehicle.GetVehicleSpeed();
-	csv_output << m_driveline->GetDriveshaftSpeed();
-	csv_output << powertrain.GetMotorTorque();
-	csv_output << powertrain.GetMotorSpeed();
-	csv_output << powertrain.GetOutputTorque();
-
-	csv_output << throttle;
-	csv_output << braking;
-
-	double total_force_len = 0;
-	double total_torque_len = 0;
-	for (int i = 0; i < forces.size(); i++) {
-		total_force_len += Length(forces[i]);
-		total_torque_len += Length(torques[i]);
-	}
-	csv_output << Length(forces[0]);
-	csv_output << Length(torques[0]);
-
-	csv_output << total_force_len;
-	csv_output << total_torque_len;
-
-	csv_output << m_driveline->GetSprocketTorque(LEFT);
-	csv_output << m_driveline->GetSprocketTorque(RIGHT);
-
-	csv_output.endline();
-	csv_output.CloseFile();
-}
 

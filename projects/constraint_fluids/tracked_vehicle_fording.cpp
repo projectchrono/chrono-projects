@@ -49,7 +49,7 @@
 
 #include "fording_setup.h"
 #include "input_output.h"
-
+#include "m113_custom.h"
 using namespace chrono;
 using namespace chrono::collision;
 
@@ -135,6 +135,51 @@ int out_fps = 60;
 
 double target_speed = 2;
 // =============================================================================
+
+
+
+void static WriteTrackedVehicleData(
+	M113_Vehicle_Custom& vehicle,
+	M113_SimplePowertrain &powertrain,
+	double throttle,
+	double braking,
+	std::vector<real3> forces,
+	std::vector<real3> torques,
+	std::string filename) {
+	CSVGen csv_output;
+	csv_output.OpenFile(filename.c_str(), false);
+
+	std::shared_ptr<ChTrackDriveline> m_driveline = vehicle.GetDriveline();
+
+	csv_output << vehicle.GetChassisBody()->GetPos();
+	csv_output << vehicle.GetVehicleSpeed();
+	csv_output << m_driveline->GetDriveshaftSpeed();
+	csv_output << powertrain.GetMotorTorque();
+	csv_output << powertrain.GetMotorSpeed();
+	csv_output << powertrain.GetOutputTorque();
+
+	csv_output << throttle;
+	csv_output << braking;
+
+	double total_force_len = 0;
+	double total_torque_len = 0;
+	for (int i = 0; i < forces.size(); i++) {
+		total_force_len += Length(forces[i]);
+		total_torque_len += Length(torques[i]);
+	}
+	csv_output << Length(forces[0]);
+	csv_output << Length(torques[0]);
+
+	csv_output << total_force_len;
+	csv_output << total_torque_len;
+
+	csv_output << m_driveline->GetSprocketTorque(LEFT);
+	csv_output << m_driveline->GetSprocketTorque(RIGHT);
+
+	csv_output.endline();
+	csv_output.CloseFile();
+}
+
 
 double CreateParticles(ChSystem* system) {
 	// Create a material
