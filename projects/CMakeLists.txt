@@ -29,6 +29,9 @@ cmake_dependent_option(ENABLE_PRJ_PHYSICS_TESTS
 cmake_dependent_option(ENABLE_PRJ_FEA_TESTS 
 	"Enable projects for Chrono::FEA tests" ON
 	"ENABLE_PROJECTS" OFF)
+cmake_dependent_option(ENABLE_PRJ_COSIMULATION 
+	"Enable projects for Chrono::Vehicle cosimulation" ON
+	"ENABLE_PROJECTS" OFF)
 
 if (ENABLE_PRJ_CORE_TESTS)
   add_subdirectory(core_tests)
@@ -52,6 +55,10 @@ endif()
 
 if (ENABLE_PRJ_VEHICLE_TESTS)
   add_subdirectory(vehicle_tests)
+endif()
+
+if (ENABLE_PRJ_COSIMULATION)
+  add_subdirectory(cosimulation)
 endif()
 
 if (ENABLE_CONSTRAINT_FLUID_MODELS)
