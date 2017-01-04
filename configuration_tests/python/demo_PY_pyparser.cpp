@@ -125,7 +125,7 @@ int main(int argc, char* argv[]) {
 
             GetLog() << " t=" << my_system.GetChTime();
 
-            if (!mbody.IsNull())
+            if (!mbody)
                 GetLog() << "  body x=" << mbody->GetPos().x << "\n";
         }
 
