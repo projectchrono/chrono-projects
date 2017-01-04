@@ -470,18 +470,20 @@ int main(int argc, char* argv[]) {
 	if (simulation_mode == TURN) {
 		initLoc = ChVector<>(0, 30.48, .6);
 		path = ChBezierCurve::read(circle_file);
-		data_output_path = "humvee_tank_turn_" + std::to_string(target_speed);
+		data_output_path = "humvee_tank_turn_" + std::to_string(atoi(argv[2]));
 	}
 	else if (simulation_mode == LANE_CHANGE) {
 		initLoc = ChVector<>(-125, -125, .6);
 		path = ChBezierCurve::read(lane_change_file);
-		data_output_path = "humvee_tank_dlc_" + std::to_string(target_speed);
+		data_output_path = "humvee_tank_dlc_" + std::to_string(atoi(argv[2]));
 	}
 	else if (simulation_mode == GRAVEL) {
 		target_speed = 15 * mph_to_m_s;
 		path = ChBezierCurve::read(gravel_driver_file);
-		data_output_path = "humvee_tank_gravel_" + std::to_string(target_speed);
+		data_output_path = "humvee_tank_gravel_" + std::to_string(atoi(argv[2]));
 	}
+
+	std::cout << "writing data to: " << data_output_path << std::endl;
 	CreateBase(system);
 	CreateFluid(system);
 
@@ -513,6 +515,9 @@ int main(int argc, char* argv[]) {
 
 
 	std::shared_ptr<ChBodyAuxRef> m_chassis = my_hmmwv.GetChassisBody();;
+	//add sphere to center to mark chassis pos
+	utils::AddSphereGeometry(m_chassis.get(), .115, ChVector<>(0, 0, 0), QUNIT);
+
 	ChVector<> hdim(.1, .6, .05);
 
 	for (int i = 0; i < m_chassis->GetAssets().size(); i++) {
