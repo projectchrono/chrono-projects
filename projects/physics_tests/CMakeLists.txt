@@ -10,7 +10,10 @@
 #--------------------------------------------------------------
 
 SET(DEMOS
-    rolling_ball
+    test_CH_rolling_ball
+    test_CH_brake
+    test_CH_contact_mesh
+    test_CH_contactDEM
 )
 
 #--------------------------------------------------------------
@@ -20,7 +23,8 @@ SET(DEMOS
 # Invoke find_package in CONFIG mode
 
 find_package(Chrono
-             OPTIONAL_COMPONENTS Irrlicht
+             COMPONENTS Irrlicht
+             OPTIONAL_COMPONENTS MKL
              CONFIG
 )
 
