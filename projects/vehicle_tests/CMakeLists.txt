@@ -67,6 +67,7 @@ endif()
 if (CHRONO_PARALLEL_FOUND)
   message(STATUS "Programs using Chrono::Parallel...")
   add_subdirectory(test_HMMWV_parallel)
+  add_subdirectory(test_M113_parallel)
 endif()
 
 if (CHRONO_FEA_FOUND AND CHRONO_IRRLICHT_FOUND)
