@@ -24,11 +24,33 @@ int solver_type = 2;
 ChFluidContainer* fluid_container;
 std::ofstream ofile;
 
-real tolerances[] = { 100, 10, 1, 1e-1, 1e-3, 1e-5, 1e-8 };
-std::string tol_string[] = { "100", "10", "1", "1e-1", "1e-3", "1e-5", "1e-8" };
 
-real tolerance = tolerances[2];
-std::string tolerance_str = tol_string[2];
+
+
+int setup = 23;
+real scale[] = { 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4 ,4, 4 };
+real iters[] = { 50, 100, 200, 400, 800, 1600,  50, 100, 200, 400, 800, 1600,  50, 100, 200, 400, 800, 1600,  50, 100, 200, 400, 800, 1600 };
+real tolerance =100000;
+uint max_iteration = iters[setup];
+int mult = scale[setup];
+double kernel_radius = .016 * 2;
+double thickness = 0.05;
+
+ChVector<> hdim(kernel_radius * 7, kernel_radius * 7, kernel_radius * 7 * mult);
+
+//std::string tolerance_str = tol_string[2];
+
+//test 1
+//5k, 10k, 15k, 20k
+//constant iteration count, APGD, BB, Jacobi
+
+//test 2
+//5k, 10k, 15k, 20k
+//constant objective, APGD, BB, Jacobi
+
+//store objective function
+//store time taken to solve
+
 
 void WriteData(ChSystemParallelDVI* msystem, uint i) {
 	int iters = ((ChIterativeSolverParallel*)(msystem->GetSolverSpeed()))->GetTotalIterations();
@@ -72,19 +94,19 @@ void WriteData(ChSystemParallelDVI* msystem, uint i) {
 		std::ofstream cfile;
 		switch (solver_type) {
 		case 0:
-			cfile.open("data_fluid_test/fluid_container_data_BB_CONV_"+std::to_string(i)+"_.txt");
+			cfile.open("data_fluid_test/fluid_container_data_BB_CONV_"+std::to_string(setup) + "_" + std::to_string(i) +"_.txt");
 			break;
 		case 1:
-			cfile.open("data_fluid_test/fluid_container_data_APGD_CONV_" + std::to_string(i) + "_.txt");
+			cfile.open("data_fluid_test/fluid_container_data_APGD_CONV_" + std::to_string(setup) + "_" + std::to_string(i) + "_.txt");
 			break;
 		case 2:
-			cfile.open("data_fluid_test/fluid_container_data_JACOBI_CONV_" + std::to_string(i) + "_.txt");
+			cfile.open("data_fluid_test/fluid_container_data_JACOBI_CONV_" + std::to_string(setup) + "_" + std::to_string(i) + "_.txt");
 			break;
 		case 3:
-			cfile.open("data_fluid_test/fluid_container_data_GAUSS_SEIDEL_CONV_" + std::to_string(i) + "_.txt");
+			cfile.open("data_fluid_test/fluid_container_data_GAUSS_SEIDEL_CONV_" + std::to_string(setup) + "_" + std::to_string(i) + "_.txt");
 			break;
 		default:
-			cfile.open("data_fluid_test/fluid_container_data_APGD_CONV_" + std::to_string(i) + "_.txt");
+			cfile.open("data_fluid_test/fluid_container_data_APGD_CONV_" + std::to_string(setup) + "_" + std::to_string(i) + "_.txt");
 			break;
 		}
 
@@ -101,8 +123,7 @@ void AddContainer(ChSystemParallelDVI* sys) {
 	// Create a common material
 	auto mat = std::make_shared<ChMaterialSurface>();
 	mat->SetFriction(1.0);
-	ChVector<> hdim(.175, .175, .65);
-	utils::CreateBoxContainer(sys, 0, mat, hdim, 0.05, Vector(0, 0, -hdim.z - 0.05 * 4), QUNIT, true, false, true,
+	utils::CreateBoxContainer(sys, 0, mat, hdim + ChVector<>(0, 0, kernel_radius * 4), thickness, Vector(0, 0, -hdim.z- kernel_radius), QUNIT, true, false, true,
 		true);
 }
 
@@ -117,7 +138,7 @@ void AddFluid(ChSystemParallelDVI* sys) {
 	fluid_container->rho = 1000;
 	fluid_container->contact_cohesion = 0;
 
-	fluid_container->kernel_radius = .016 * 2;
+	fluid_container->kernel_radius = kernel_radius;
 	fluid_container->mass = .007 * 5.5;
 	fluid_container->viscosity = .01;
 	fluid_container->enable_viscosity = false;
@@ -134,8 +155,7 @@ void AddFluid(ChSystemParallelDVI* sys) {
 
 	real radius = .2;  //*5
 	real dens = 30;
-	real3 num_fluid = real3(10, 10, 10);
-	real3 origin(0, 0, -.2);
+	real3 origin(0, 0, 0);
 	real vol;
 
 	std::vector<real3> pos_fluid;
@@ -145,8 +165,7 @@ void AddFluid(ChSystemParallelDVI* sys) {
 	utils::HCPSampler<> sampler(dist);
 	vol = dist * dist * dist * .6;
 
-	ChVector<> hdim(.15, .15, .6);
-	utils::Generator::PointVector points = sampler.SampleBox(ChVector<>(0, 0, 0), hdim);
+	utils::Generator::PointVector points = sampler.SampleBox(ChVector<>(0, 0, 0), hdim );
 
 	pos_fluid.resize(points.size());
 	vel_fluid.resize(points.size());
@@ -168,11 +187,13 @@ void AddFluid(ChSystemParallelDVI* sys) {
 int main(int argc, char* argv[]) {
 	double time_end = 5;
 	
-	uint max_iteration = 1000;
+	
 	if (argc == 3) {
-		tolerance = tolerances[atoi(argv[1])];
-		tolerance_str = tol_string[atoi(argv[1])];
+		setup = atoi(argv[1]);
 		solver_type = atoi(argv[2]);
+
+		 max_iteration = iters[setup];
+		 mult = scale[setup];
 	}
 
 	// Create system
@@ -189,6 +210,8 @@ int main(int argc, char* argv[]) {
 	msystem.GetSettings()->solver.max_iteration_spinning = 0;
 	msystem.GetSettings()->solver.max_iteration_bilateral = 0;
 	msystem.GetSettings()->solver.tolerance = tolerance;
+	msystem.GetSettings()->solver.test_objective = true;
+	msystem.GetSettings()->solver.tolerance_objective = -tolerance;
 	msystem.GetSettings()->solver.alpha = 0;
 	msystem.GetSettings()->solver.use_full_inertia_tensor = false;
 	msystem.GetSettings()->solver.contact_recovery_speed = 100000;
@@ -198,23 +221,23 @@ int main(int argc, char* argv[]) {
 	switch (solver_type) {
 	case 0:
 		msystem.ChangeSolverType(BB);
-		ofile.open("data_fluid_test/fluid_container_data_BB_" + tolerance_str + ".txt");
+		ofile.open("data_fluid_test/fluid_container_data_BB_" + std::to_string(setup) + ".txt");
 		break;
 	case 1:
 		msystem.ChangeSolverType(APGD);
-		ofile.open("data_fluid_test/fluid_container_data_APGD_" + tolerance_str + ".txt");
+		ofile.open("data_fluid_test/fluid_container_data_APGD_" + std::to_string(setup) + ".txt");
 		break;
 	case 2:
 		msystem.ChangeSolverType(JACOBI);
-		ofile.open("data_fluid_test/fluid_container_data_JACOBI_" + tolerance_str + ".txt");
+		ofile.open("data_fluid_test/fluid_container_data_JACOBI_" + std::to_string(setup) + ".txt");
 		break;
 	case 3:
 		msystem.ChangeSolverType(GAUSS_SEIDEL);
-		ofile.open("data_fluid_test/fluid_container_data_GAUSS_SEIDEL_" + tolerance_str + ".txt");
+		ofile.open("data_fluid_test/fluid_container_data_GAUSS_SEIDEL_" + std::to_string(setup) + ".txt");
 		break;
 	default:
 		msystem.ChangeSolverType(APGD);
-		ofile.open("data_fluid_test/fluid_container_data_APGD_" + tolerance_str + ".txt");
+		ofile.open("data_fluid_test/fluid_container_data_APGD_" + std::to_string(setup) + ".txt");
 		break;
 	}
 
