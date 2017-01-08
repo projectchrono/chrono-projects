@@ -35,7 +35,7 @@
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 
-#include "tests/vehicle/ancfToroidalTire/ANCFToroidalTire.h"
+#include "chrono_vehicle/wheeled_vehicle/tire/ANCFToroidalTire.h"
 #include "../BaseTest.h"
 
 using namespace chrono;
