@@ -45,6 +45,7 @@
 // Chrono vehicle header files
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
+#include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 
 // M113 model header files
 #include "chrono_models/vehicle/m113/M113_Vehicle.h"
@@ -112,6 +113,11 @@ M113Type m113_type = M113_MODIFIED;
 // -----------------------------------------------------------------------------
 // Simulation parameters
 // -----------------------------------------------------------------------------
+
+// Input file names for the path-follower driver model
+std::string steering_controller_file("generic/driver/SteeringController.json");
+std::string speed_controller_file("generic/driver/SpeedController.json");
+std::string path_file("paths/straight10km.txt");
 
 // Desired number of OpenMP threads (will be clamped to maximum available)
 int threads = 20;
@@ -358,10 +364,15 @@ int main(int argc, char* argv[]) {
     // Initialize the powertrain system
     powertrain->Initialize(vehicle->GetChassisBody(), vehicle->GetDriveshaft());
 
-    // Create the driver system
-    MyDriver driver(*vehicle, 0.5);
-    driver.Initialize();
+    // Create the driver system (temporarily 1 for steering 1 for steering & brakes)
+    MyDriver driver_speed(*vehicle, 0.5);
+    driver_speed.Initialize();
 
+	ChBezierCurve* path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
+    ChPathFollowerDriver driver_steering(*vehicle, vehicle::GetDataFile(steering_controller_file),
+                                vehicle::GetDataFile(speed_controller_file), path, "my_path", 0.0);
+    driver_steering.Initialize();
+	
     // ------------------------------------
     // Prepare output directories and files
     // ------------------------------------
@@ -414,9 +425,9 @@ int main(int argc, char* argv[]) {
 
     while (time < time_end) {
         // Collect output data from modules
-        double throttle_input = driver.GetThrottle();
-        double steering_input = driver.GetSteering();
-        double braking_input = driver.GetBraking();
+        double throttle_input = driver_speed.GetThrottle();
+        double steering_input = driver_steering.GetSteering();
+        double braking_input = driver_speed.GetBraking();
         double powertrain_torque = powertrain->GetOutputTorque();
         double driveshaft_speed = vehicle->GetDriveshaftSpeed();
         vehicle->GetTrackShoeStates(LEFT, shoe_states_left);
@@ -469,13 +480,15 @@ int main(int argc, char* argv[]) {
         }
 
         // Update modules (process inputs from other modules)
-        driver.Synchronize(time);
+        driver_speed.Synchronize(time);
+		driver_steering.Synchronize(time);
         powertrain->Synchronize(time, throttle_input, driveshaft_speed);
         vehicle->Synchronize(time, steering_input, braking_input, powertrain_torque, shoe_forces_left,
                             shoe_forces_right);
 
         // Advance simulation for one timestep for all modules
-        driver.Advance(time_step);
+        driver_speed.Advance(time_step);
+		driver_steering.Advance(time_step);
         powertrain->Advance(time_step);
         vehicle->Advance(time_step);
 
