@@ -386,6 +386,13 @@ void CreateBase(ChSystemParallelDVI* system) {
 		//AddBoxGeometry(bottom_plate.get(), Vector(7.5, 2, .1), Vector(4 + 7.5, 0, 0), Quaternion(1, 0, 0, 0));
 
 		AddBoxGeometry(bottom_plate.get(), Vector(8, 2, .1), Vector(4 + 7.5 * 2 + 8.0 , 0, 0), Quaternion(1, 0, 0, 0));
+
+		//extra side plates
+		AddBoxGeometry(bottom_plate.get(), Vector(16, .1, 2), Vector(4 + 7.5, -hdimY- .1, 2-.1), Quaternion(1, 0, 0, 0));
+		AddBoxGeometry(bottom_plate.get(), Vector(16, .1, 2), Vector(4 + 7.5, hdimY+.1, 2-.1), Quaternion(1, 0, 0, 0));
+		//Top
+		AddBoxGeometry(bottom_plate.get(), Vector(16, 2+.1*2, .1), Vector(4 + 7.5, 0, 4-.1), Quaternion(1, 0, 0, 0));
+
 	}
 	
 
@@ -470,17 +477,17 @@ int main(int argc, char* argv[]) {
 	if (simulation_mode == TURN) {
 		initLoc = ChVector<>(0, 30.48, .6);
 		path = ChBezierCurve::read(circle_file);
-		data_output_path = "humvee_tank_turn_" + std::to_string(atoi(argv[2]));
+		data_output_path = "humvee_tank_turn_" + std::to_string(atoi(argv[2])) + "/";
 	}
 	else if (simulation_mode == LANE_CHANGE) {
 		initLoc = ChVector<>(-125, -125, .6);
 		path = ChBezierCurve::read(lane_change_file);
-		data_output_path = "humvee_tank_dlc_" + std::to_string(atoi(argv[2]));
+		data_output_path = "humvee_tank_dlc_" + std::to_string(atoi(argv[2])) + "/";
 	}
 	else if (simulation_mode == GRAVEL) {
-		target_speed = 15 * mph_to_m_s;
+//		target_speed = 15 * mph_to_m_s;
 		path = ChBezierCurve::read(gravel_driver_file);
-		data_output_path = "humvee_tank_gravel_" + std::to_string(atoi(argv[2]));
+		data_output_path = "humvee_tank_gravel_" + std::to_string(atoi(argv[2])) + "/";
 	}
 
 	std::cout << "writing data to: " << data_output_path << std::endl;
@@ -628,9 +635,7 @@ int main(int argc, char* argv[]) {
 		}
 #else
 		system->DoStepDynamics(time_step);
-		time += time_step;
-		sim_frame++;
-		exec_time += system->GetTimerStep();
+		
 
 		forces.resize(10);
 		torques.resize(10);
@@ -647,6 +652,10 @@ int main(int argc, char* argv[]) {
 			out_frame++;
 			next_out_frame += out_steps;
 		}
+
+		time += time_step;
+		sim_frame++;
+		exec_time += system->GetTimerStep();
 
 #endif
 
