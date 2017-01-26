@@ -77,13 +77,9 @@ float mu_g = 0.5f;
 float cr_g = 0.1f;
 float cohesion_g = 20.0f;
 
-// Parameters for the wheel
-const std::string obj_mesh_file("../WHEEL/wheel.obj");
-const std::string mesh_name("wheel");
-const std::string pov_mesh_file("../WHEEL/wheel.inc");
-
+// Parameters for wheel body
 int Id_w = 0;
-double mass_w = 600;  ////60;
+double mass_w = 600;
 ChVector<> inertia_w = ChVector<>(1.85, 1.85, 3.675);
 
 float Y_w = 1e8f;
@@ -93,7 +89,7 @@ float cohesion_w = 20.0f;
 
 // Parameters for the containing bin
 int binId = -200;
-double hDimX = 4.0;        // length in x direction
+double hDimX = 1.0;        // length in x direction
 double hDimY = 1.0;        // width in y direction
 double hDimZ = 0.5;        // height in z direction
 double hThickness = 0.04;  // wall thickness
@@ -148,6 +144,10 @@ int CreateObjects(ChSystemParallel* system) {
 // Create the wheel body at the specified height.
 
 std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
+    // Mesh input file
+    std::string obj_mesh_file = GetChronoDataFile("wheel_view.obj");
+    std::string mesh_name("wheel");
+
     // Create a material for the wheel
     auto mat_w = std::make_shared<ChMaterialSurfaceDEM>();
     mat_w->SetYoungModulus(Y_w);
@@ -169,7 +169,7 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
     wheel->SetBodyFixed(false);
 
     wheel->GetCollisionModel()->ClearModel();
-    utils::AddTriangleMeshGeometry(wheel.get(), obj_mesh_file, mesh_name);
+    utils::AddTriangleMeshGeometry(wheel.get(), GetChronoDataFile("wheel.obj"), mesh_name);
     wheel->GetCollisionModel()->BuildModel();
 
     wheel->SetInertiaXX(inertia_w);
@@ -177,7 +177,7 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
     system->AddBody(wheel);
 
     // Write POV-Ray mesh model.
-    utils::WriteMeshPovray(obj_mesh_file, mesh_name, pov_mesh_file);
+    utils::WriteMeshPovray(obj_mesh_file, mesh_name, out_dir);
 
     return wheel;
 }
@@ -227,6 +227,9 @@ double FindLowest(ChSystem* sys) {
 
 // ========================================================================
 int main(int argc, char* argv[]) {
+    // Set path to Chrono data
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     // Create system
     ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
 
@@ -246,7 +249,7 @@ int main(int argc, char* argv[]) {
     // Edit system settings
     msystem->GetSettings()->solver.tolerance = 1e-3;
 
-    msystem->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
+    msystem->GetSettings()->collision.bins_per_axis = vec3(50, 50, 50);
 
     msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 
