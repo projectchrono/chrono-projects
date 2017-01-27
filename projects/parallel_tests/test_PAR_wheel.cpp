@@ -31,6 +31,8 @@
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
 
+#include "../utils.h"
+
 using namespace chrono;
 using namespace chrono::collision;
 
@@ -50,8 +52,8 @@ int threads = 8;
 
 // Simulation parameters
 double gravity = 9.81;
-double time_step_settling = 4e-5;
-double time_step_simulation = 1e-5;
+double time_step_settling = 1e-4;
+double time_step_simulation = 1e-4;
 double time_settling_min = 0.1;
 double time_settling_max = 5;
 double time_simulation = 10;
@@ -66,7 +68,7 @@ double out_fps = 60;
 
 // Parameters for the granular material
 int Id_g = 100;
-double r_g = 0.02;
+double r_g = 0.04;
 double rho_g = 2500;
 double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
@@ -79,13 +81,13 @@ float cohesion_g = 20.0f;
 
 // Parameters for wheel body
 int Id_w = 0;
-double mass_w = 600;
-ChVector<> inertia_w = ChVector<>(1.85, 1.85, 3.675);
+double mass_w = 100;
+ChVector<> inertia_w = ChVector<>(2, 2, 4);
 
 float Y_w = 1e8f;
 float mu_w = 1.0f;
 float cr_w = 0.1f;
-float cohesion_w = 20.0f;
+float cohesion_w = 0.0f;
 
 // Parameters for the containing bin
 int binId = -200;
@@ -94,13 +96,13 @@ double hDimY = 1.0;        // width in y direction
 double hDimZ = 0.5;        // height in z direction
 double hThickness = 0.04;  // wall thickness
 
-float Y_c = 2e6f;
+float Y_c = 2e8f;
 float mu_c = 1.0f;
 float cr_c = 0.1f;
 float cohesion_c = 0.0f;
 
 // Height of layer for generator domain
-double layerHeight = 1.0;
+double layerHeight = 0.5;
 
 // =======================================================================
 
@@ -169,7 +171,8 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
     wheel->SetBodyFixed(false);
 
     wheel->GetCollisionModel()->ClearModel();
-    utils::AddTriangleMeshGeometry(wheel.get(), GetChronoDataFile("wheel.obj"), mesh_name);
+    utils::AddTriangleMeshGeometry(wheel.get(), obj_mesh_file, mesh_name);
+    //utils::AddCylinderGeometry(wheel.get(), 0.3, 0.1);
     wheel->GetCollisionModel()->BuildModel();
 
     wheel->SetInertiaXX(inertia_w);
@@ -251,7 +254,7 @@ int main(int argc, char* argv[]) {
 
     msystem->GetSettings()->collision.bins_per_axis = vec3(50, 50, 50);
 
-    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
+    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
 
     // Create output directories.
     if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
@@ -317,9 +320,9 @@ int main(int argc, char* argv[]) {
     while (time < time_end) {
         if (sim_frame == next_out_frame) {
             char filename[100];
+
             sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame);
             utils::WriteShapesPovray(msystem, filename);
-            utils::WriteCheckpoint(msystem, checkpoint_file);
 
             cout << " --------------------------------- Output frame:   " << out_frame << endl;
             cout << "                                   Sim frame:      " << sim_frame << endl;
@@ -332,10 +335,16 @@ int main(int argc, char* argv[]) {
                 break;
             }
 
+            // Save checkpoint during settling phase.
+            if (problem == SETTLING) {
+                utils::WriteCheckpoint(msystem, checkpoint_file);
+            }
+
             out_frame++;
             next_out_frame += out_steps;
         }
 
+        //TimingOutput(msystem);
         msystem->DoStepDynamics(time_step);
 
         time += time_step;
