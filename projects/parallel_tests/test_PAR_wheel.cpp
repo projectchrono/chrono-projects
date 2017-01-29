@@ -31,6 +31,8 @@
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
 
+#include "../utils.h"
+
 using namespace chrono;
 using namespace chrono::collision;
 
@@ -38,9 +40,10 @@ using std::cout;
 using std::endl;
 
 // =======================================================================
+// Note: Run first SETTLING phase, which generates checkpoint file
+// SIMULATION phase assumes a checkpoint file exists.
 
 enum ProblemType { SETTLING, SIMULATION };
-
 ProblemType problem = SETTLING;
 
 // =======================================================================
@@ -50,11 +53,13 @@ int threads = 8;
 
 // Simulation parameters
 double gravity = 9.81;
-double time_step_settling = 4e-5;
-double time_step_simulation = 1e-5;
+
 double time_settling_min = 0.1;
 double time_settling_max = 5;
 double time_simulation = 10;
+
+double time_step_penalty = 1e-4;
+double time_step_complementarity = 1e-3;
 
 int max_iteration = 20;
 
@@ -64,9 +69,12 @@ const std::string pov_dir = out_dir + "/POVRAY";
 const std::string checkpoint_file = out_dir + "/settled.dat";
 double out_fps = 60;
 
+// Contact method
+ChMaterialSurfaceBase::ContactMethod method = ChMaterialSurfaceBase::DEM;
+
 // Parameters for the granular material
 int Id_g = 100;
-double r_g = 0.02;
+double r_g = 0.04;
 double rho_g = 2500;
 double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
@@ -77,57 +85,82 @@ float mu_g = 0.5f;
 float cr_g = 0.1f;
 float cohesion_g = 20.0f;
 
-// Parameters for the wheel
-const std::string obj_mesh_file("../WHEEL/wheel.obj");
-const std::string mesh_name("wheel");
-const std::string pov_mesh_file("../WHEEL/wheel.inc");
-
+// Parameters for wheel body
 int Id_w = 0;
-double mass_w = 600;  ////60;
-ChVector<> inertia_w = ChVector<>(1.85, 1.85, 3.675);
+double mass_w = 100;
+ChVector<> inertia_w = ChVector<>(2, 2, 4);
 
 float Y_w = 1e8f;
 float mu_w = 1.0f;
 float cr_w = 0.1f;
-float cohesion_w = 20.0f;
+float cohesion_w = 0.0f;
 
 // Parameters for the containing bin
 int binId = -200;
-double hDimX = 4.0;        // length in x direction
+double hDimX = 1.0;        // length in x direction
 double hDimY = 1.0;        // width in y direction
 double hDimZ = 0.5;        // height in z direction
 double hThickness = 0.04;  // wall thickness
 
-float Y_c = 2e6f;
+float Y_c = 2e8f;
 float mu_c = 1.0f;
 float cr_c = 0.1f;
 float cohesion_c = 0.0f;
 
 // Height of layer for generator domain
-double layerHeight = 1.0;
+double layerHeight = 0.5;
 
 // =======================================================================
 
 int CreateObjects(ChSystemParallel* system) {
-    // Create a material for the granular material
-    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
-    mat_g->SetYoungModulus(Y_g);
-    mat_g->SetFriction(mu_g);
-    mat_g->SetRestitution(cr_g);
-    mat_g->SetAdhesion(cohesion_g);
+    // Create materials for the granular material and the container
+    std::shared_ptr<chrono::ChMaterialSurfaceBase> material_g;
+    std::shared_ptr<chrono::ChMaterialSurfaceBase> material_c;
 
-    // Create a material for the container
-    auto mat_c = std::make_shared<ChMaterialSurfaceDEM>();
-    mat_c->SetYoungModulus(Y_c);
-    mat_c->SetFriction(mu_c);
-    mat_c->SetRestitution(cr_c);
-    mat_c->SetAdhesion(cohesion_c);
+    switch (method) {
+        case ChMaterialSurfaceBase::DEM: {
+            auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
+            mat_g->SetYoungModulus(Y_g);
+            mat_g->SetFriction(mu_g);
+            mat_g->SetRestitution(cr_g);
+            mat_g->SetAdhesion(cohesion_g);
+
+            material_g = mat_g;
+
+            auto mat_c = std::make_shared<ChMaterialSurfaceDEM>();
+            mat_c->SetYoungModulus(Y_c);
+            mat_c->SetFriction(mu_c);
+            mat_c->SetRestitution(cr_c);
+            mat_c->SetAdhesion(cohesion_c);
+
+            material_c = mat_c;
+
+            break;
+        }
+        case ChMaterialSurfaceBase::DVI: {
+            auto mat_g = std::make_shared<ChMaterialSurface>();
+            mat_g->SetFriction(mu_g);
+            mat_g->SetRestitution(cr_g);
+            mat_g->SetCohesion(cohesion_g);
+
+            material_g = mat_g;
+
+            auto mat_c = std::make_shared<ChMaterialSurface>();
+            mat_c->SetFriction(mu_c);
+            mat_c->SetRestitution(cr_c);
+            mat_c->SetCohesion(cohesion_c);
+
+            material_c = mat_c;
+
+            break;
+        }
+    }
 
     // Create a mixture entirely made out of spheres
     utils::Generator gen(system);
 
     std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
-    m1->setDefaultMaterial(mat_g);
+    m1->setDefaultMaterial(material_g);
     m1->setDefaultDensity(rho_g);
     m1->setDefaultSize(r_g);
 
@@ -139,7 +172,7 @@ int CreateObjects(ChSystemParallel* system) {
     cout << "total granules: " << gen.getTotalNumBodies() << endl;
 
     // Create the containing bin
-    utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, binId, material_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 
     return gen.getTotalNumBodies();
 }
@@ -148,17 +181,41 @@ int CreateObjects(ChSystemParallel* system) {
 // Create the wheel body at the specified height.
 
 std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
+    // Mesh input file
+    std::string obj_mesh_file = GetChronoDataFile("wheel_view.obj");
+    std::string mesh_name("wheel");
+
     // Create a material for the wheel
-    auto mat_w = std::make_shared<ChMaterialSurfaceDEM>();
-    mat_w->SetYoungModulus(Y_w);
-    mat_w->SetFriction(mu_w);
-    mat_w->SetRestitution(cr_w);
-    mat_w->SetAdhesion(cohesion_w);
+    std::shared_ptr<chrono::ChMaterialSurfaceBase> material_w;
+
+    switch (method) {
+        case ChMaterialSurfaceBase::DEM: {
+            auto mat_w = std::make_shared<ChMaterialSurfaceDEM>();
+            mat_w->SetYoungModulus(Y_w);
+            mat_w->SetFriction(mu_w);
+            mat_w->SetRestitution(cr_w);
+            mat_w->SetAdhesion(cohesion_w);
+
+            material_w = mat_w;
+
+            break;
+        }
+        case ChMaterialSurfaceBase::DVI: {
+            auto mat_w = std::make_shared<ChMaterialSurface>();
+            mat_w->SetFriction(mu_w);
+            mat_w->SetRestitution(cr_w);
+            mat_w->SetCohesion(cohesion_w);
+
+            material_w = mat_w;
+
+            break;
+        }
+    }
 
     // Create the wheel body
-    auto wheel = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto wheel = std::shared_ptr<ChBody>(system->NewBody());
 
-    wheel->SetMaterialSurface(mat_w);
+    wheel->SetMaterialSurface(material_w);
 
     wheel->SetIdentifier(Id_w);
     wheel->SetMass(mass_w);
@@ -170,6 +227,7 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
 
     wheel->GetCollisionModel()->ClearModel();
     utils::AddTriangleMeshGeometry(wheel.get(), obj_mesh_file, mesh_name);
+    //utils::AddCylinderGeometry(wheel.get(), 0.3, 0.1);
     wheel->GetCollisionModel()->BuildModel();
 
     wheel->SetInertiaXX(inertia_w);
@@ -177,7 +235,7 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
     system->AddBody(wheel);
 
     // Write POV-Ray mesh model.
-    utils::WriteMeshPovray(obj_mesh_file, mesh_name, pov_mesh_file);
+    utils::WriteMeshPovray(obj_mesh_file, mesh_name, out_dir);
 
     return wheel;
 }
@@ -227,28 +285,51 @@ double FindLowest(ChSystem* sys) {
 
 // ========================================================================
 int main(int argc, char* argv[]) {
-    // Create system
-    ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
+    // Set path to Chrono data
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
+    // Create system and set method-specific solver settings
+    ChSystemParallel* system;
+    switch (method) {
+        case ChMaterialSurfaceBase::DEM: {
+            ChSystemParallelDEM* sys = new ChSystemParallelDEM;
+            sys->GetSettings()->solver.contact_force_model = ChSystemDEM::Hertz;
+            sys->GetSettings()->solver.tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::OneStep;
+            sys->GetSettings()->solver.adhesion_force_model = ChSystemDEM::AdhesionForceModel::Constant;
+            sys->GetSettings()->solver.use_material_properties = true;
+
+            system = sys;
+            break;
+        }
+        case ChMaterialSurfaceBase::DVI: {
+            ChSystemParallelDVI* sys = new ChSystemParallelDVI;
+            sys->GetSettings()->solver.solver_type = BB;
+            sys->GetSettings()->solver.solver_mode = SLIDING;
+            sys->GetSettings()->solver.max_iteration_normal = 0;
+            sys->GetSettings()->solver.max_iteration_sliding = 200;
+            sys->GetSettings()->solver.max_iteration_spinning = 0;
+            sys->GetSettings()->solver.alpha = 0;
+            sys->GetSettings()->solver.contact_recovery_speed = -1;
+            sys->GetSettings()->collision.collision_envelope = r_g / 10;
+
+            system = sys;
+            break;
+        }
+    }
+
+    // Set method-independent solver settings
+    system->Set_G_acc(ChVector<>(0, 0, -gravity));
+    system->GetSettings()->solver.use_full_inertia_tensor = false;
+    system->GetSettings()->solver.tolerance = 1e-3;
+    system->GetSettings()->collision.bins_per_axis = vec3(50, 50, 50);
+    system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();
     if (threads > max_threads)
         threads = max_threads;
-    msystem->SetParallelThreadNumber(threads);
+    system->SetParallelThreadNumber(threads);
     omp_set_num_threads(threads);
-
-    // Set gravitational acceleration
-    msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
-
-    // Using constant adhesion model
-    msystem->GetSettings()->solver.adhesion_force_model = ChSystemDEM::AdhesionForceModel::Constant;
-
-    // Edit system settings
-    msystem->GetSettings()->solver.tolerance = 1e-3;
-
-    msystem->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
-
-    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
 
     // Create output directories.
     if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
@@ -261,41 +342,47 @@ int main(int argc, char* argv[]) {
     }
 
     // Depending on problem type:
-    // - Select time step
     // - Select end simulation times
     // - Create granular material and container
     // - Create wheel
-    double time_step;
     double time_end;
     std::shared_ptr<ChBody> wheel;
 
     switch (problem) {
         case SETTLING:
-            time_step = time_step_settling;
             time_end = time_settling_max;
 
             // Create containing bin and the granular material at randomized initial positions
-            CreateObjects(msystem);
+            CreateObjects(system);
 
             break;
 
         case SIMULATION:
-            time_step = time_step_simulation;
             time_end = time_simulation;
 
             // Create the granular material bodies and the container from the checkpoint file.
             cout << "Read checkpoint data from " << checkpoint_file;
-            utils::ReadCheckpoint(msystem, checkpoint_file);
-            cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
+            utils::ReadCheckpoint(system, checkpoint_file);
+            cout << "  done.  Read " << system->Get_bodylist()->size() << " bodies." << endl;
 
             // Create the wheel.
-            double z = FindHighest(msystem);
-            wheel = CreateWheel(msystem, z + r_g + 0.4);
+            double z = FindHighest(system);
+            wheel = CreateWheel(system, z + r_g + 0.4);
 
             break;
     }
 
-    msystem->SetStep(time_step);
+    // Set integration step size
+    double time_step;
+    switch (method) {
+        case ChMaterialSurfaceBase::DEM:
+            time_step = time_step_penalty;
+            break;
+        case ChMaterialSurfaceBase::DVI:
+            time_step = time_step_complementarity;
+            break;
+    }
+    system->SetStep(time_step);
 
     // Number of steps
     int num_steps = (int)std::ceil(time_end / time_step);
@@ -314,9 +401,9 @@ int main(int argc, char* argv[]) {
     while (time < time_end) {
         if (sim_frame == next_out_frame) {
             char filename[100];
+
             sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame);
-            utils::WriteShapesPovray(msystem, filename);
-            utils::WriteCheckpoint(msystem, checkpoint_file);
+            utils::WriteShapesPovray(system, filename);
 
             cout << " --------------------------------- Output frame:   " << out_frame << endl;
             cout << "                                   Sim frame:      " << sim_frame << endl;
@@ -324,29 +411,35 @@ int main(int argc, char* argv[]) {
             cout << "                                   Execution time: " << exec_time << endl;
 
             // Check if already settled.
-            if (problem == SETTLING && time > time_settling_min && CheckSettled(msystem, zero_v)) {
+            if (problem == SETTLING && time > time_settling_min && CheckSettled(system, zero_v)) {
                 cout << "Granular material settled...  time = " << time << endl;
                 break;
+            }
+
+            // Save checkpoint during settling phase.
+            if (problem == SETTLING) {
+                utils::WriteCheckpoint(system, checkpoint_file);
             }
 
             out_frame++;
             next_out_frame += out_steps;
         }
 
-        msystem->DoStepDynamics(time_step);
+        //TimingOutput(msystem);
+        system->DoStepDynamics(time_step);
 
         time += time_step;
         sim_frame++;
-        exec_time += msystem->GetTimerStep();
+        exec_time += system->GetTimerStep();
     }
 
     // Create a checkpoint from the last state
     if (problem == SETTLING)
-        utils::WriteCheckpoint(msystem, checkpoint_file);
+        utils::WriteCheckpoint(system, checkpoint_file);
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies: " << msystem->Get_bodylist()->size() << endl;
+    cout << "Number of bodies: " << system->Get_bodylist()->size() << endl;
     cout << "Simulation time: " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;
 
