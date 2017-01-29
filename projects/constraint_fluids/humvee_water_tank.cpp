@@ -136,12 +136,12 @@ double hthick = 0.1;
 
 int Id_g = 100;
 double r_g = 0.02;
-double rho_g = 2500;
+double rho_g = 9000;
 double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
 ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
-float mu_g = 0.8f;
+float mu_g = 1.0f;
 std::vector<real3> forces;
 std::vector<real3> torques;
 
