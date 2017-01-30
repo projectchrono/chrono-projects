@@ -18,6 +18,9 @@ set(DEMOS
     test_PAR_settling
 )
 
+set(DEMOS_OPENGL
+    test_PAR_active_box
+)
 #--------------------------------------------------------------
 # Find the Chrono package with required components
 #--------------------------------------------------------------
@@ -35,6 +38,10 @@ find_package(Chrono
 if(NOT Chrono_FOUND)
   message("Could not find requirements for PARALLEL projects")
   return()
+endif()
+
+if (CHRONO_OPENGL_FOUND)
+    set(DEMOS ${DEMOS} ${DEMOS_OPENGL})
 endif()
 
 #--------------------------------------------------------------
