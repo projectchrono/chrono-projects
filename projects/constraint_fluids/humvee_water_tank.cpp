@@ -96,10 +96,10 @@ double tolerance = 0.00001;
 
 int max_iteration_bilateral = 1000;  // 1000;
 int max_iteration_normal = 0;
-int max_iteration_sliding = 100;  // 2000;
+int max_iteration_sliding = 200;  // 2000;
 int max_iteration_spinning = 0;
 
-float contact_recovery_speed = 20;
+float contact_recovery_speed = 40;
 
 int threads = 20;
 
@@ -115,7 +115,7 @@ const std::string out_dir = "../HMMWV";
 double rho = 1000;
 double fluid_r = 0.016;
 
-real container_friction = 0.95;
+real container_friction = 1.0;
 
 std::string circle_file("humvee_input/circlepath_100ft_radius.txt");
 std::string lane_change_file("humvee_input/ISO_double_lane_change.txt");
@@ -129,8 +129,8 @@ std::string data_output_path = "";
 #define ERASE_MACRO_LEN(x, y, z) x.erase(x.begin() + y, x.begin() + y + z);
 
 
-double hdimX = 7.5;
-double hdimY = 2.0;
+double hdimX = 4;
+double hdimY = 1.5;
 double hdimZ = 0.1;
 double hthick = 0.1;
 
@@ -385,20 +385,20 @@ void CreateBase(ChSystemParallelDVI* system) {
 
 		//AddBoxGeometry(bottom_plate.get(), Vector(7.5, 2, .1), Vector(4 + 7.5, 0, 0), Quaternion(1, 0, 0, 0));
 
-		AddBoxGeometry(bottom_plate.get(), Vector(8, 2, .1), Vector(4 + 7.5 * 2 + 8.0 , 0, 0), Quaternion(1, 0, 0, 0));
+		AddBoxGeometry(bottom_plate.get(), Vector(4, 2, .1), Vector(4 + hdimX * 2 + 4.0 , 0, 0), Quaternion(1, 0, 0, 0));
 
 		//extra side plates
-		AddBoxGeometry(bottom_plate.get(), Vector(16, .1, 2), Vector(4 + 7.5, -hdimY- .1, 2-.1), Quaternion(1, 0, 0, 0));
-		AddBoxGeometry(bottom_plate.get(), Vector(16, .1, 2), Vector(4 + 7.5, hdimY+.1, 2-.1), Quaternion(1, 0, 0, 0));
+		AddBoxGeometry(bottom_plate.get(), Vector(12.5, .1, 2), Vector(4 + hdimX, -hdimY- .1, 2-.1), Quaternion(1, 0, 0, 0));
+		AddBoxGeometry(bottom_plate.get(), Vector(12.5, .1, 2), Vector(4 + hdimX, hdimY+.1, 2-.1), Quaternion(1, 0, 0, 0));
 		//Top
-		AddBoxGeometry(bottom_plate.get(), Vector(16, 2+.1*2, .1), Vector(4 + 7.5, 0, 4-.1), Quaternion(1, 0, 0, 0));
+		AddBoxGeometry(bottom_plate.get(), Vector(12.5, 2+.1*2, .1), Vector(4 + hdimX, 0, 4-.1), Quaternion(1, 0, 0, 0));
 
 	}
 	
 
 	FinalizeObject(bottom_plate, (ChSystemParallel*)system);
 	if (simulation_mode == GRAVEL) {
-		CreateBoxContainer(system, 1, material, ChVector<>(hdimX, hdimY, hdimZ), hthick, ChVector<>(4+7.5, 0, -hdimZ * 2- hthick));
+		CreateBoxContainer(system, 1, material, ChVector<>(hdimX, hdimY, hdimZ), hthick, ChVector<>(4+ hdimX, 0, -hdimZ * 2- hthick));
 	}
 }
 
@@ -408,22 +408,25 @@ void CreateGravel(ChSystemParallelDVI* system) {
 	mat_g->SetFriction(mu_g);
 
 	utils::Generator gen(system);
-	std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+	std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::BISPHERE, 1.0);
+	//std::shared_ptr<utils::MixtureIngredient> m2 = gen.AddMixtureIngredient(utils::CYLINDER, 1.0);
+	//std::shared_ptr<utils::MixtureIngredient> m3 = gen.AddMixtureIngredient(utils::BOX, 1.0);
+
 	m1->setDefaultMaterial(mat_g);
 	m1->setDefaultDensity(rho_g);
 	m1->setDefaultSize(r_g);
-
+	//m1->setDistributionSize(r_g, r_g, r_g, 1.5 * r_g);
 	// Set starting value for body identifiers
 	gen.setBodyIdentifier(Id_g);
 
 	// Create particles in layers until reaching the desired number of particles
 	double r = 1.01 * r_g;
-	ChVector<> hdims(hdimX - r, hdimY - r, 0);
-	ChVector<> center(4 + 7.5, 0, 6 * r);
+	ChVector<> hdims(hdimX - r*3, hdimY - r*3, 0);
+	ChVector<> center(4 + hdimX, 0, -.2);
 
-	while (gen.getTotalNumBodies() < 240000) {
-		gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
-		center.z -= 2 * r;
+	while (gen.getTotalNumBodies() < 100000) {
+		gen.createObjectsBox(utils::POISSON_DISK, 3 * r, center, hdims);
+		center.z += 2 * r;
 	}
 
 	std::cout << "Created " << gen.getTotalNumBodies() << " particles." << std::endl;
@@ -468,7 +471,7 @@ int main(int argc, char* argv[]) {
 
 	system->GetSettings()->collision.collision_envelope = 0.1 * fluid_r;
 
-	system->GetSettings()->collision.bins_per_axis = vec3(100, 20, 25);
+	system->GetSettings()->collision.bins_per_axis = vec3(300, 40, 50);
 	system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
 	system->GetSettings()->collision.fixed_bins = true;
 
@@ -605,7 +608,7 @@ int main(int argc, char* argv[]) {
 			}
 		}
 		else if (simulation_mode == GRAVEL) {
-			if (com_pos.x>4 + 7.5 * 2 +3) {
+			if (com_pos.x>4 + 4 * 2 +3) {
 				throttle_input = 0;
 				braking_input = 1.0;
 				steering_input = 0;
