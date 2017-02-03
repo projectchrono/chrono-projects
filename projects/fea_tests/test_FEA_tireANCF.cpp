@@ -607,16 +607,13 @@ int main(int argc, char* argv[]) {
 // Set up solver
 #ifdef USE_MKL
     GetLog() << "Using MKL solver\n";
-    ChSolverMKL<>* mkl_solver_stab = new ChSolverMKL<>;
-    ChSolverMKL<>* mkl_solver_speed = new ChSolverMKL<>;
-    my_system.ChangeSolverStab(mkl_solver_stab);
-    my_system.ChangeSolverSpeed(mkl_solver_speed);
-    mkl_solver_speed->SetSparsityPatternLock(true);
-    mkl_solver_stab->SetSparsityPatternLock(true);
+    auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+    mkl_solver->SetSparsityPatternLock(true);
+    my_system.SetSolver(mkl_solver);
 #else
     GetLog() << "Using MINRES solver\n";
-    my_system.SetSolverType(ChSystem::SOLVER_MINRES);
-    ChSolverMINRES* msolver = (ChSolverMINRES*)my_system.GetSolverSpeed();
+    my_system.SetSolverType(ChSolver::MINRES);
+    auto msolver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
     msolver->SetDiagonalPreconditioning(true);
     my_system.SetMaxItersSolverSpeed(100);
     my_system.SetTolForce(1e-10);
@@ -627,8 +624,8 @@ int main(int argc, char* argv[]) {
     my_system.Setup();
     my_system.Update();
 
-    my_system.SetIntegrationType(ChSystem::INT_HHT);
-    // my_system.SetIntegrationType(chrono::ChSystem::INT_EULER_IMPLICIT_LINEARIZED);  // fast, less precise
+    my_system.SetTimestepperType(ChTimestepper::HHT);
+    // my_system.SetTimestepperType(ChTimestepper::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
     auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
     mystepper->SetAlpha(-0.2);  // Important for convergence
     mystepper->SetMaxiters(16);

@@ -195,22 +195,17 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
     my_system.SetupInitial();
 
 #ifdef CHRONO_MKL
-    ChSolverMKL<>* mkl_solver_stab = nullptr;
-    ChSolverMKL<>* mkl_solver_speed = nullptr;
-    ////ChSolverMKL<ChMapMatrix>* mkl_solver_stab = nullptr;
-    ////ChSolverMKL<ChMapMatrix>* mkl_solver_speed = nullptr;
+    std::shared_ptr<ChSolverMKL<>> mkl_solver;
+    ////std::shared_ptr<ChSolverMKL<ChMapMatrix>> mkl_solver;
 #endif
 
 #ifdef CHRONO_SUPERLUMT
-    ChSolverSuperLUMT<>* superlumt_solver_stab = nullptr;
-    ChSolverSuperLUMT<>* superlumt_solver_speed = nullptr;
-    ////ChSolverSuperLUMT<ChMapMatrix>* superlumt_solver_stab = nullptr;
-    ////ChSolverSuperLUMT<ChMapMatrix>* superlumt_solver_speed = nullptr;
+    std::shared_ptr<ChSolverSuperLUMT<>> superlumt_solver;
+    ////std::shared_ptr<ChSolverSuperLUMT<ChMapMatrix>> superlumt_solver;
 #endif
 
 #ifdef CHRONO_MUMPS
-    ChSolverMumps* mumps_solver_stab = nullptr;
-    ChSolverMumps* mumps_solver_speed = nullptr;
+    std::shared_ptr<ChSolverMumps> mumps_solver;
 #endif
 
 
@@ -219,8 +214,8 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
     {
     case solver_type::MINRES:
     {
-        my_system.SetSolverType(ChSystem::SOLVER_MINRES);
-        auto msolver = static_cast<ChSolverMINRES*>(my_system.GetSolverSpeed());
+        my_system.SetSolverType(ChSolver::MINRES);
+        auto msolver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
         msolver->SetDiagonalPreconditioning(true);
         my_system.SetMaxItersSolverSpeed(100);
         my_system.SetTolForce(1e-10);
@@ -228,39 +223,29 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
     break;
     case solver_type::MKL:
 #ifdef CHRONO_MKL
-        mkl_solver_stab = new ChSolverMKL<>;
-        mkl_solver_speed = new ChSolverMKL<>;
-        ////mkl_solver_stab = new ChSolverMKL<ChMapMatrix>;
-        ////mkl_solver_speed = new ChSolverMKL<ChMapMatrix>;
-        my_system.ChangeSolverStab(mkl_solver_stab);
-        my_system.ChangeSolverSpeed(mkl_solver_speed);
-        mkl_solver_speed->SetSparsityPatternLock(true);
-        mkl_solver_stab->SetSparsityPatternLock(true);
-        mkl_solver_speed->SetVerbose(verbose);
-        mkl_solver_speed->ForceSparsityPatternUpdate();
+        mkl_solver = std::make_shared<ChSolverMKL<>>();
+        ////mkl_solver= std::make_shared<ChSolverMKL<ChMapMatrix>>();
+        my_system.SetSolver(mkl_solver);
+        mkl_solver->SetSparsityPatternLock(true);
+        mkl_solver->SetVerbose(verbose);
+        mkl_solver->ForceSparsityPatternUpdate();
 #endif
         break;
     case solver_type::SUPERLUMT:
 #ifdef CHRONO_SUPERLUMT
-        superlumt_solver_stab = new ChSolverSuperLUMT<>;
-        superlumt_solver_speed = new ChSolverSuperLUMT<>;
-        ////superlumt_solver_stab = new ChSolverSuperLUMT<ChMapMatrix>;
-        ////superlumt_solver_speed = new ChSolverSuperLUMT<ChMapMatrix>;
-        my_system.ChangeSolverStab(superlumt_solver_stab);
-        my_system.ChangeSolverSpeed(superlumt_solver_speed);
-        superlumt_solver_speed->SetSparsityPatternLock(true);
-        superlumt_solver_stab->SetSparsityPatternLock(true);
-        superlumt_solver_speed->SetVerbose(verbose);
-        superlumt_solver_speed->ForceSparsityPatternUpdate();
+        superlumt_solver = std::make_shared<ChSolverSuperLUMT<>>();
+        ////superlumt_solver = std::make_shared<ChSolverSuperLUMT<ChMapMatrix>>();
+        my_system.SetSolver(superlumt_solver);
+        superlumt_solver->SetSparsityPatternLock(true);
+        superlumt_solver->SetVerbose(verbose);
+        superlumt_solver->ForceSparsityPatternUpdate();
 #endif
         break;
     case solver_type::MUMPS:
 #ifdef CHRONO_MUMPS
-        mumps_solver_stab = new ChSolverMumps;
-        mumps_solver_speed = new ChSolverMumps;
-        my_system.ChangeSolverStab(mumps_solver_stab);
-        my_system.ChangeSolverSpeed(mumps_solver_speed);
-        mumps_solver_speed->SetVerbose(verbose);
+        mumps_solver = std::make_shared<ChSolverMumps>();
+        my_system.SetSolver(mumps_solver_speed);
+        mumps_solver->SetVerbose(verbose);
 #endif
         break;
     default:
@@ -269,7 +254,7 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
     }
 
     // Set up integrator
-    my_system.SetIntegrationType(ChSystem::INT_HHT);
+    my_system.SetTimestepperType(ChTimestepper::HHT);
     auto mystepper = std::static_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
     mystepper->SetAlpha(-0.2);
     mystepper->SetMaxiters(100);
@@ -318,17 +303,17 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
 
 #ifdef CHRONO_MKL
         if (solver == solver_type::MKL)
-            mkl_solver_speed->ResetTimers();
+            mkl_solver->ResetTimers();
 #endif
 
 #ifdef CHRONO_SUPERLUMT
         if (solver == solver_type::SUPERLUMT)
-            superlumt_solver_speed->ResetTimers();
+            superlumt_solver->ResetTimers();
 #endif
 
 #ifdef CHRONO_MUMPS
         if (solver == solver_type::MUMPS)
-            mumps_solver_speed->ResetTimers();
+            mumps_solver->ResetTimers();
 #endif
 
         my_system.DoStepDynamics(step_size);
@@ -336,12 +321,10 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
         if (istep == 3 && (solver == solver_type::MKL || solver == solver_type::SUPERLUMT))
         {
 #ifdef CHRONO_MKL
-            mkl_solver_speed->SetSparsityPatternLock(true);
-            mkl_solver_stab->SetSparsityPatternLock(true);
+            mkl_solver->SetSparsityPatternLock(true);
 #endif
 #ifdef CHRONO_SUPERLUMT
-            superlumt_solver_speed->SetSparsityPatternLock(true);
-            superlumt_solver_stab->SetSparsityPatternLock(true);
+            superlumt_solver->SetSparsityPatternLock(true);
 #endif
         }
 
@@ -374,26 +357,26 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
         // TODO: if it is OK to move timer in ChSolver we can avoid this switch
 #ifdef CHRONO_MKL
         if (solver == solver_type::MKL) {
-            time_setup_assembly += mkl_solver_speed->GetTimeSetup_Assembly();
-            time_setup_solvercall += mkl_solver_speed->GetTimeSetup_SolverCall();
-            time_solve_assembly += mkl_solver_speed->GetTimeSolve_Assembly();
-            time_solve_solvercall += mkl_solver_speed->GetTimeSolve_SolverCall();
+            time_setup_assembly += mkl_solver->GetTimeSetup_Assembly();
+            time_setup_solvercall += mkl_solver->GetTimeSetup_SolverCall();
+            time_solve_assembly += mkl_solver->GetTimeSolve_Assembly();
+            time_solve_solvercall += mkl_solver->GetTimeSolve_SolverCall();
         }
 #endif
 #ifdef CHRONO_SUPERLUMT
         if (solver == solver_type::SUPERLUMT) {
-            time_setup_assembly += superlumt_solver_speed->GetTimeSetup_Assembly();
-            time_setup_solvercall += superlumt_solver_speed->GetTimeSetup_SolverCall();
-            time_solve_assembly += superlumt_solver_speed->GetTimeSolve_Assembly();
-            time_solve_solvercall += superlumt_solver_speed->GetTimeSolve_SolverCall();
+            time_setup_assembly += superlumt_solver->GetTimeSetup_Assembly();
+            time_setup_solvercall += superlumt_solver->GetTimeSetup_SolverCall();
+            time_solve_assembly += superlumt_solver->GetTimeSolve_Assembly();
+            time_solve_solvercall += superlumt_solver->GetTimeSolve_SolverCall();
         }
 #endif
 #ifdef CHRONO_MUMPS
         if (solver == solver_type::MUMPS) {
-            time_setup_assembly += mumps_solver_speed->GetTimeSetup_Assembly();
-            time_setup_solvercall += mumps_solver_speed->GetTimeSetup_SolverCall();
-            time_solve_assembly += mumps_solver_speed->GetTimeSolve_Assembly();
-            time_solve_solvercall += mumps_solver_speed->GetTimeSolve_SolverCall();
+            time_setup_assembly += mumps_solver->GetTimeSetup_Assembly();
+            time_setup_solvercall += mumps_solver->GetTimeSetup_SolverCall();
+            time_solve_assembly += mumps_solver->GetTimeSolve_Assembly();
+            time_solve_solvercall += mumps_solver->GetTimeSolve_SolverCall();
         }
 #endif
         time_force += my_mesh->GetTimeInternalForces();
@@ -416,22 +399,22 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
             cout << "setup: " << my_system.GetTimerSetup();
 #ifdef CHRONO_MKL
             if (solver == solver_type::MKL) {
-                cout << "  [assembly: " << mkl_solver_speed->GetTimeSetup_Assembly();
-                cout << "  pardiso: " << mkl_solver_speed->GetTimeSetup_SolverCall() <<"]";
+                cout << "  [assembly: " << mkl_solver->GetTimeSetup_Assembly();
+                cout << "  pardiso: " << mkl_solver->GetTimeSetup_SolverCall() <<"]";
             }
 #endif
 #ifdef CHRONO_SUPERLUMT
             if (solver == solver_type::SUPERLUMT) {
-                cout << "  [assembly: " << superlumt_solver_speed->GetTimeSetup_Assembly();
-                cout << "  superlu_mt: " << superlumt_solver_speed->GetTimeSetup_SolverCall() << "]";
+                cout << "  [assembly: " << superlumt_solver->GetTimeSetup_Assembly();
+                cout << "  superlu_mt: " << superlumt_solver->GetTimeSetup_SolverCall() << "]";
             }
 #endif
             cout << endl;
             cout << "solve: " << my_system.GetTimerSolver() << "  ";
 #ifdef CHRONO_MUMPS
             if (solver == solver_type::MUMPS) {
-                cout << "  [assembly: " << mumps_solver_speed->GetTimeSolve_Assembly();
-                cout << "  mumps: " << mumps_solver_speed->GetTimeSolve_SolverCall() << "]";
+                cout << "  [assembly: " << mumps_solver->GetTimeSolve_Assembly();
+                cout << "  mumps: " << mumps_solver->GetTimeSolve_SolverCall() << "]";
             }
 #endif
             cout << endl << endl;

@@ -68,7 +68,7 @@ void TimingOutput(chrono::ChSystem* mSys) {
     int BODS = mSys->GetNbodies();
     int CNTC = mSys->GetNcontacts();
     if (chrono::ChSystemParallel* parallel_sys = dynamic_cast<chrono::ChSystemParallel*>(mSys)) {
-        REQ_ITS = ((chrono::ChIterativeSolverParallel*)(mSys->GetSolverSpeed()))->GetTotalIterations();
+        REQ_ITS = std::static_pointer_cast<chrono::ChIterativeSolverParallel>(mSys->GetSolver())->GetTotalIterations();
     }
 
     printf("   %8.5f | %7.4f | %7.4f | %7.4f | %7.4f | %7.4f | %7d | %7d | %7d | %7.4f |\n", TIME, STEP, BROD, NARR,

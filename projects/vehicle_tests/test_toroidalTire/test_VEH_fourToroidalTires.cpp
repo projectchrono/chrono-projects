@@ -239,8 +239,8 @@ int main(int argc, char* argv[]) {
     switch (solver_type) {
         case MINRES: {
             GetLog() << "Using MINRES solver\n";
-            my_system.SetSolverType(ChSystem::SOLVER_MINRES);
-            ChSolverMINRES* minres_solver = (ChSolverMINRES*)my_system.GetSolverSpeed();
+            my_system.SetSolverType(ChSolver::MINRES);
+            auto minres_solver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
             ////minres_solver->SetDiagonalPreconditioning(true);
             my_system.SetSolverWarmStarting(true);
             my_system.SetMaxItersSolverSpeed(500);
@@ -250,18 +250,15 @@ int main(int argc, char* argv[]) {
         case MKL: {
 #ifdef CHRONO_MKL
             GetLog() << "Using MKL solver\n";
-            ChSolverMKL<>* mkl_solver_stab = new ChSolverMKL<>;
-            ChSolverMKL<>* mkl_solver_speed = new ChSolverMKL<>;
-            my_system.ChangeSolverStab(mkl_solver_stab);
-            my_system.ChangeSolverSpeed(mkl_solver_speed);
-            mkl_solver_speed->SetSparsityPatternLock(true);
-            mkl_solver_stab->SetSparsityPatternLock(true);
+            auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+            mkl_solver->SetSparsityPatternLock(true);
+            my_system.SetSolver(mkl_solver);
 #endif
             break;
         }
     }
 
-    my_system.SetIntegrationType(ChSystem::INT_HHT);
+    my_system.SetTimestepperType(ChTimestepper::HHT);
     auto mystepper = std::static_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
     mystepper->SetAlpha(-0.3);  // Important for convergence
     mystepper->SetMaxiters(11);

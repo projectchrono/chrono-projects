@@ -116,15 +116,12 @@ void test_beam(const std::string& name,  /// test name
     // MKL solver + HHT
     std::cout << "Using HHT + MKL" << std::endl;
 
-    ChSolverMKL<>* mkl_solver_stab = new ChSolverMKL<>;
-    ChSolverMKL<>* mkl_solver_speed = new ChSolverMKL<>;
-    my_system.ChangeSolverStab(mkl_solver_stab);
-    my_system.ChangeSolverSpeed(mkl_solver_speed);
-    mkl_solver_speed->SetSparsityPatternLock(true);
-    mkl_solver_stab->SetSparsityPatternLock(true);
-    mkl_solver_speed->SetVerbose(false);
+    auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+    my_system.SetSolver(mkl_solver);
+    mkl_solver->SetSparsityPatternLock(true);
+    mkl_solver->SetVerbose(false);
 
-    my_system.SetIntegrationType(ChSystem::INT_HHT);
+    my_system.SetTimestepperType(ChTimestepper::HHT);
     auto mystepper = std::static_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
     mystepper->SetAlpha(-0.2);
     mystepper->SetMaxiters(100);
@@ -138,7 +135,7 @@ void test_beam(const std::string& name,  /// test name
     // MINRES solver + Euler
     std::cout << "Using Euler + MINRES" << std::endl;
 
-    my_system.SetSolverType(ChSystem::SOLVER_MINRES);
+    my_system.SetSolverType(ChSolver::MINRES);
     my_system.SetSolverWarmStarting(true);
     my_system.SetMaxItersSolverSpeed(100000);
     my_system.SetTolForce(1e-08);
@@ -146,8 +143,8 @@ void test_beam(const std::string& name,  /// test name
     msolver->SetVerbose(false);
     msolver->SetDiagonalPreconditioning(true);
 
-    // my_system.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_LINEARIZED);
-    my_system.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT);
+    // my_system.SetTimestepperType(ChTimestepper::EULER_IMPLICIT_LINEARIZED);
+    my_system.SetTimestepperType(ChTimestepper::EULER_IMPLICIT);
 #endif
 
     // Simulation loop

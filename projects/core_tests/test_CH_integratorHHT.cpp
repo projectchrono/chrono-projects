@@ -413,16 +413,13 @@ void RigidPendulums() {
 
 // Set MKL solver
 #ifdef CHRONO_MKL
-    ChSolverMKL<>* mkl_solver_stab = new ChSolverMKL<>;
-    ChSolverMKL<>* mkl_solver_speed = new ChSolverMKL<>;
-    system.ChangeSolverStab(mkl_solver_stab);
-    system.ChangeSolverSpeed(mkl_solver_speed);
-    mkl_solver_speed->SetSparsityPatternLock(true);
-    mkl_solver_stab->SetSparsityPatternLock(true);
+    auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+    mkl_solver->SetSparsityPatternLock(true);
+    system.SetSolver(mkl_solver);
 #endif
 
     // Set integrator and modify parameters.
-    system.SetIntegrationType(ChSystem::INT_HHT);
+    system.SetTimestepperType(ChTimestepper::HHT);
     auto integrator = std::static_pointer_cast<ChTimestepperHHT>(system.GetTimestepper());
     integrator->SetMode(mode);
     integrator->SetStepControl(step_control);
