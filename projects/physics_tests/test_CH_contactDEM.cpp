@@ -236,7 +236,7 @@ int main(int argc, char* argv[]) {
     // ----------------------------
 
     auto container = std::make_shared<MyContactContainer>();
-    system.ChangeContactContainer(container);
+    system.SetContactContainer(container);
 
     // -------------------
     // Setup linear solver
