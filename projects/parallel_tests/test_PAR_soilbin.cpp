@@ -203,10 +203,10 @@ void CreateObject(ChSystemParallel* system, double z) {
 // --------------------------
 
 #ifdef USE_DEM
-    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     obj->SetMaterialSurface(mat_o);
 #else
-    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     obj->SetMaterialSurface(mat_o);
 #endif
 

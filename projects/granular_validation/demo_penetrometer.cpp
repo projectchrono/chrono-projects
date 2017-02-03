@@ -345,10 +345,10 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemParallel* msystem) {
 
 // Create the falling object
 #ifdef USE_DEM
-    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     obj->SetMaterialSurface(mat);
 #else
-    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     obj->SetMaterialSurface(mat);
 #endif
 

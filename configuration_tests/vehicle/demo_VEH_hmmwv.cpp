@@ -188,7 +188,7 @@ class MyDriverInputs : public ChDriverInputsCallback {
 class MyCylindricalTire : public ChTireContactCallback {
   public:
     virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
-        wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
+        wheelBody->SetCollisionModel(std::make_shared<collision::ChCollisionModelParallel>());
 
         wheelBody->GetCollisionModel()->ClearModel();
         wheelBody->GetCollisionModel()->AddCylinder(0.46, 0.46, 0.127);
@@ -212,7 +212,7 @@ public:
         trimesh.LoadWavefrontMesh(vehicle::GetDataFile(mesh_file), true, false);
 
         // Set contact model
-        wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
+        wheelBody->SetCollisionModel(std::make_shared<collision::ChCollisionModelParallel>());
         wheelBody->GetCollisionModel()->ClearModel();
         wheelBody->GetCollisionModel()->AddTriangleMesh(trimesh, false, false, ChVector<>(0), ChMatrix33<>(1), 0.01);
         wheelBody->GetCollisionModel()->BuildModel();
@@ -237,9 +237,9 @@ class MyLuggedTire : public ChTireContactCallback {
     }
 
     virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
-        wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
+        auto coll_model = std::make_shared<collision::ChCollisionModelParallel>();
+        wheelBody->SetCollisionModel(coll_model);
 
-        ChCollisionModelParallel* coll_model = (ChCollisionModelParallel*)wheelBody->GetCollisionModel();
         coll_model->ClearModel();
 
         // Assemble the tire contact from 15 segments, properly offset.
@@ -278,7 +278,7 @@ class MyLuggedTire_vis : public ChTireContactCallback {
     }
 
     virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
-        wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
+        wheelBody->SetCollisionModel(std::make_shared<collision::ChCollisionModelParallel>());
 
         // Clear any existing assets (will be overriden)
         wheelBody->GetAssets().clear();
@@ -408,7 +408,7 @@ int main(int argc, char* argv[]) {
     // -------------------
 
     // Ground body
-    auto ground = std::make_shared<ChBody>(new collision::ChCollisionModelParallel);
+    auto ground = std::make_shared<ChBody>(std::make_shared<collision::ChCollisionModelParallel>());
     ground->SetIdentifier(-1);
     ground->SetBodyFixed(true);
     ground->SetCollide(true);

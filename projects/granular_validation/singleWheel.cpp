@@ -218,10 +218,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // ----------------------
 
 #ifdef USE_DEM
-    auto ground = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     ground->SetMaterialSurface(mat_walls);
 #else
-    auto ground = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     ground->SetMaterialSurface(mat_walls);
 #endif
 
@@ -248,10 +248,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // Initially, the wheel is fixed to ground.
 
 #ifdef USE_DEM
-    auto wheel = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     wheel->SetMaterialSurface(mat_walls);
 #else
-    auto wheel = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     wheel->SetMaterialSurface(mat_walls);
 #endif
 
@@ -279,10 +279,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // It is released after the settling phase.
 
 #ifdef USE_DEM
-    auto chassis = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto chassis = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     chassis->SetMaterialSurface(mat_walls);
 #else
-    auto chassis = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto chassis = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     chassis->SetMaterialSurface(mat_walls);
 #endif
 
@@ -308,10 +308,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // It is released after the settling phase.
 
 #ifdef USE_DEM
-    auto axle = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto axle = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     axle->SetMaterialSurface(mat_walls);
 #else
-    auto axle = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto axle = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     axle->SetMaterialSurface(mat_walls);
 #endif
 
@@ -455,10 +455,10 @@ void CreateBall(ChSystemParallel* system) {
 // ---------------
 
 #ifdef USE_DEM
-    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     ball->SetMaterialSurface(mat_g);
 #else
-    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     ball->SetMaterialSurface(mat_g);
 #endif
 

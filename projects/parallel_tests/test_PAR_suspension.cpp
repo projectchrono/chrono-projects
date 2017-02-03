@@ -140,7 +140,7 @@ class MySimpleCar {
 
         // --- The car body ---
 
-        truss = std::make_shared<ChBody>(new ChCollisionModelParallel);
+        truss = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
         truss->SetIdentifier(-1);
         truss->SetMaterialSurface(mat);
         truss->SetMass(2086.524902);
@@ -157,7 +157,7 @@ class MySimpleCar {
         // --- Right Front suspension ---
 
         // ..the car right-front spindle
-        spindleRF = std::make_shared<ChBody>(new ChCollisionModelParallel);
+        spindleRF = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
         spindleRF->SetIdentifier(-2);
         spindleRF->SetMaterialSurface(mat);
         spindleRF->SetMass(14.705);
@@ -171,7 +171,7 @@ class MySimpleCar {
         my_system->AddBody(spindleRF);
 
         // ..the car right-front wheel
-        wheelRF = std::make_shared<ChBody>(new ChCollisionModelParallel);
+        wheelRF = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
         wheelRF->SetIdentifier(-3);
         wheelRF->SetMaterialSurface(mat);
         wheelRF->SetMass(3.0);
@@ -233,7 +233,7 @@ class MySimpleCar {
         // --- Left Front suspension ---
 
         // ..the car left-front spindle
-        spindleLF = std::make_shared<ChBody>(new ChCollisionModelParallel);
+        spindleLF = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
         spindleLF->SetIdentifier(-4);
         spindleLF->SetMaterialSurface(mat);
         spindleLF->SetMass(14.705);
@@ -247,7 +247,7 @@ class MySimpleCar {
         my_system->AddBody(spindleLF);
 
         // ..the car left-front wheel
-        wheelLF = std::make_shared<ChBody>(new ChCollisionModelParallel);
+        wheelLF = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
         wheelLF->SetIdentifier(-5);
         wheelLF->SetMaterialSurface(mat);
         wheelLF->SetMass(3.0);
@@ -309,7 +309,7 @@ class MySimpleCar {
         // --- Right Back suspension ---
 
         // ..the car right-back spindle
-        spindleRB = std::make_shared<ChBody>(new ChCollisionModelParallel);
+        spindleRB = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
         spindleRB->SetIdentifier(-6);
         spindleRB->SetMaterialSurface(mat);
         spindleRB->SetMass(15.91);
@@ -323,7 +323,7 @@ class MySimpleCar {
         my_system->AddBody(spindleRB);
 
         // ..the car right-back wheel
-        wheelRB = std::make_shared<ChBody>(new ChCollisionModelParallel);
+        wheelRB = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
         wheelRB->SetIdentifier(-7);
         wheelRB->SetMaterialSurface(mat);
         wheelRB->SetMass(3.0);
@@ -395,7 +395,7 @@ class MySimpleCar {
         // --- Left Back suspension ---
 
         // ..the car right-back spindle
-        spindleLB = std::make_shared<ChBody>(new ChCollisionModelParallel);
+        spindleLB = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
         spindleLB->SetIdentifier(-8);
         spindleLB->SetMaterialSurface(mat);
         spindleLB->SetMass(15.91);
@@ -409,7 +409,7 @@ class MySimpleCar {
         my_system->AddBody(spindleLB);
 
         // ..the car left-back wheel
-        wheelLB = std::make_shared<ChBody>(new ChCollisionModelParallel);
+        wheelLB = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
         wheelLB->SetIdentifier(-9);
         wheelLB->SetMaterialSurface(mat);
         wheelLB->SetMass(3.0);
@@ -644,7 +644,7 @@ void AddGround(ChSystemParallelDVI* sys) {
     double groundWidth = 5;
     double wallHeight = 6;
     double thickness = 0.1;
-    auto ground = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     ground->SetMaterialSurface(mat);
     ground->SetIdentifier(groundId);
     ground->SetMass(1);

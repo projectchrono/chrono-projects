@@ -288,7 +288,7 @@ int main(int argc, char* argv[]) {
 
     // Create lower bin
 
-    auto bin = std::make_shared<ChBody>(new ChCollisionModelParallel, contact_method);
+    auto bin = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), contact_method);
 
     bin->SetIdentifier(binId);
     bin->SetMass(1);
@@ -318,7 +318,7 @@ int main(int argc, char* argv[]) {
 
     // Create upper shear box
 
-    auto box = std::make_shared<ChBody>(new ChCollisionModelParallel, contact_method);
+    auto box = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), contact_method);
 
     box->SetIdentifier(boxId);
     box->SetMass(1);
@@ -347,7 +347,7 @@ int main(int argc, char* argv[]) {
 
     // Create upper load plate
 
-    auto plate = std::make_shared<ChBody>(new ChCollisionModelParallel, contact_method);
+    auto plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), contact_method);
 
     shear_Area = width * length;
 
@@ -382,7 +382,7 @@ int main(int argc, char* argv[]) {
                 ball_x = 4.0 * radius * (float(j - b / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
                 ball_z = 4.0 * radius * (float(k - c / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
 
-                auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel, contact_method);
+                auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), contact_method);
 
                 ball->SetIdentifier(ballId + 6 * 6 * i + 6 * j + k);
                 ball->SetMass(mass);

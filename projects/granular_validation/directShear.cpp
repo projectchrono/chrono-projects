@@ -233,10 +233,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // ----------------------
 
 #ifdef USE_DEM
-    auto ground = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     ground->SetMaterialSurface(mat_walls);
 #else
-    auto ground = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     ground->SetMaterialSurface(mat_walls);
 #endif
 
@@ -267,10 +267,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // During the shearing phase it may be released (if using an actuator)
 
 #ifdef USE_DEM
-    auto box = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto box = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     box->SetMaterialSurface(mat_walls);
 #else
-    auto box = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto box = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     box->SetMaterialSurface(mat_walls);
 #endif
 
@@ -311,10 +311,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
     double mass = normalPressure * area / gravity;
 
 #ifdef USE_DEM
-    auto plate = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     plate->SetMaterialSurface(mat_walls);
 #else
-    auto plate = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     plate->SetMaterialSurface(mat_walls);
 #endif
 
@@ -450,10 +450,10 @@ void CreateBall(ChSystemParallel* system) {
 // ---------------
 
 #ifdef USE_DEM
-    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     ball->SetMaterialSurface(mat_g);
 #else
-    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     ball->SetMaterialSurface(mat_g);
 #endif
 

@@ -239,10 +239,10 @@ void CreateFallingBall(ChSystemParallel* system, double z, double vz) {
 
 // Create the falling ball
 #ifdef USE_DEM
-    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     ball->SetMaterialSurface(mat_b);
 #else
-    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     ball->SetMaterialSurface(mat_b);
 #endif
 
