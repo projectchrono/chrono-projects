@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
 
     msystem->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
 
-    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
+    msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
 
     // Create a material for the granular material
     auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();

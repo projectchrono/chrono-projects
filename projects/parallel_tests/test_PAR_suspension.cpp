@@ -729,14 +729,14 @@ int main(int argc, char* argv[]) {
     msystem.GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
     msystem.GetSettings()->solver.clamp_bilaterals = clamp_bilaterals;
     msystem.GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
-    msystem.GetSettings()->solver.solver_mode = SLIDING;
+    msystem.GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     msystem.GetSettings()->solver.max_iteration_normal = max_iteration_normal;
     msystem.GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
     msystem.GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
     msystem.GetSettings()->solver.alpha = 0;
     msystem.GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
     msystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
-    msystem.ChangeSolverType(APGDREF);
+    msystem.ChangeSolverType(SolverType::APGDREF);
 
     msystem.GetSettings()->collision.collision_envelope = 0.01;
     msystem.GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);

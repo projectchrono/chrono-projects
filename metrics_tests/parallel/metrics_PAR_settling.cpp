@@ -173,14 +173,14 @@ bool PARSettlingTest::execute() {
         case ChMaterialSurfaceBase::DVI: {
             time_step = 1e-3;
             ChSystemParallelDVI* sys = new ChSystemParallelDVI;
-            sys->GetSettings()->solver.solver_mode = SLIDING;
+            sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
             sys->GetSettings()->solver.max_iteration_normal = 0;
             sys->GetSettings()->solver.max_iteration_sliding = 200;
             sys->GetSettings()->solver.max_iteration_spinning = 0;
             sys->GetSettings()->solver.alpha = 0;
             sys->GetSettings()->solver.contact_recovery_speed = -1;
             sys->GetSettings()->collision.collision_envelope = 0.1 * radius_g;
-            sys->ChangeSolverType(APGD);
+            sys->ChangeSolverType(SolverType::APGD);
             system = sys;
 
             break;
@@ -193,7 +193,7 @@ bool PARSettlingTest::execute() {
     system->GetSettings()->solver.use_full_inertia_tensor = false;
     system->GetSettings()->solver.tolerance = 0.1;
     system->GetSettings()->solver.max_iteration_bilateral = 100;
-    system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+    system->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
     system->GetSettings()->collision.bins_per_axis = vec3(binsX, binsY, binsZ);
 
     // Set number of threads

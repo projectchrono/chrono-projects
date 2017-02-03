@@ -123,14 +123,14 @@ TerrainNode::TerrainNode(Type type,
         }
         case ChMaterialSurfaceBase::DVI: {
             ChSystemParallelDVI* sys = new ChSystemParallelDVI;
-            sys->GetSettings()->solver.solver_mode = SLIDING;
+            sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
             sys->GetSettings()->solver.max_iteration_normal = 0;
             sys->GetSettings()->solver.max_iteration_sliding = 200;
             sys->GetSettings()->solver.max_iteration_spinning = 0;
             sys->GetSettings()->solver.alpha = 0;
             sys->GetSettings()->solver.contact_recovery_speed = -1;
             sys->GetSettings()->collision.collision_envelope = 0.001;
-            sys->ChangeSolverType(APGD);
+            sys->ChangeSolverType(SolverType::APGD);
             m_system = sys;
 
             break;
@@ -143,7 +143,7 @@ TerrainNode::TerrainNode(Type type,
     m_system->GetSettings()->solver.use_full_inertia_tensor = false;
     m_system->GetSettings()->solver.tolerance = 0.1;
     m_system->GetSettings()->solver.max_iteration_bilateral = 100;
-    m_system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+    m_system->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
 
     // Set number of threads
     m_system->SetParallelThreadNumber(num_threads);

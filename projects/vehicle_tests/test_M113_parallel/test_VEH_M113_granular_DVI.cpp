@@ -254,7 +254,7 @@ int main(int argc, char* argv[]) {
     // Set solver parameters
     system.GetSettings()->solver.use_full_inertia_tensor = false;
     system.GetSettings()->solver.tolerance = tolerance;
-    system.GetSettings()->solver.solver_mode = SLIDING;
+    system.GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     system.GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
     system.GetSettings()->solver.max_iteration_normal = max_iteration_normal;
     system.GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
@@ -262,9 +262,9 @@ int main(int argc, char* argv[]) {
     system.GetSettings()->solver.alpha = 0;
     system.GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
     system.GetSettings()->solver.bilateral_clamp_speed = 1e8;
-    system.ChangeSolverType(BB);
+    system.ChangeSolverType(SolverType::BB);
 
-    system.GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+    system.GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
     system.GetSettings()->collision.collision_envelope = 0.001;
 
     system.GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);

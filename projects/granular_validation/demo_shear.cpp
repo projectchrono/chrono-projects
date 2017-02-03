@@ -244,19 +244,19 @@ int main(int argc, char* argv[]) {
     my_system->GetSettings()->solver.contact_force_model = ChSystemDEM::ContactForceModel::Hertz;
     my_system->GetSettings()->solver.tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::MultiStep;
 #else
-    my_system->GetSettings()->solver.solver_mode = SLIDING;
+    my_system->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     my_system->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
     my_system->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
     my_system->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
     my_system->GetSettings()->solver.alpha = 0;
     my_system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-    my_system->ChangeSolverType(APGD);
+    my_system->ChangeSolverType(SolverType::APGD);
 
     my_system->GetSettings()->collision.collision_envelope = 0.05 * radius;
 #endif
 
     my_system->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
-    my_system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+    my_system->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
 
 // Create a ball material (will be used by balls only)
 
