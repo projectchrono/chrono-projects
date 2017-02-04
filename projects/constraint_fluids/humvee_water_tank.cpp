@@ -136,7 +136,7 @@ double hthick = 0.1;
 
 int Id_g = 100;
 double r_g = 0.02;
-double rho_g = 9000;
+double rho_g = 2500;
 double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
 ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
@@ -385,7 +385,7 @@ void CreateBase(ChSystemParallelDVI* system) {
 
 		//AddBoxGeometry(bottom_plate.get(), Vector(7.5, 2, .1), Vector(4 + 7.5, 0, 0), Quaternion(1, 0, 0, 0));
 
-		AddBoxGeometry(bottom_plate.get(), Vector(4, 2, .1), Vector(4 + hdimX * 2 + 4.0 , 0, 0), Quaternion(1, 0, 0, 0));
+		AddBoxGeometry(bottom_plate.get(), Vector(10, 2, .1), Vector(4 + hdimX * 2 + 10.0 , 0, 0), Quaternion(1, 0, 0, 0));
 
 		//extra side plates
 		AddBoxGeometry(bottom_plate.get(), Vector(12.5, .1, 2), Vector(4 + hdimX, -hdimY- .1, 2-.1), Quaternion(1, 0, 0, 0));
