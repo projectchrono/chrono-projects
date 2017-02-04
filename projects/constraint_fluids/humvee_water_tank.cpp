@@ -96,7 +96,7 @@ double tolerance = 0.00001;
 
 int max_iteration_bilateral = 1000;  // 1000;
 int max_iteration_normal = 0;
-int max_iteration_sliding = 200;  // 2000;
+int max_iteration_sliding = 50;  // 2000;
 int max_iteration_spinning = 0;
 
 float contact_recovery_speed = 40;
@@ -481,16 +481,19 @@ int main(int argc, char* argv[]) {
 		initLoc = ChVector<>(0, 30.48, .6);
 		path = ChBezierCurve::read(circle_file);
 		data_output_path = "humvee_tank_turn_" + std::to_string(atoi(argv[2])) + "/";
+		system->GetSettings()->collision.bins_per_axis = vec3(100, 40, 50);
 	}
 	else if (simulation_mode == LANE_CHANGE) {
-		initLoc = ChVector<>(-125, -125, .6);
+		initLoc = ChVector<>(-50, -125, .6);
 		path = ChBezierCurve::read(lane_change_file);
 		data_output_path = "humvee_tank_dlc_" + std::to_string(atoi(argv[2])) + "/";
+		system->GetSettings()->collision.bins_per_axis = vec3(100, 40, 50);
 	}
 	else if (simulation_mode == GRAVEL) {
 //		target_speed = 15 * mph_to_m_s;
 		path = ChBezierCurve::read(gravel_driver_file);
 		data_output_path = "humvee_tank_gravel_" + std::to_string(atoi(argv[2])) + "/";
+		system->GetSettings()->collision.bins_per_axis = vec3(300, 40, 50);
 	}
 
 	std::cout << "writing data to: " << data_output_path << std::endl;
