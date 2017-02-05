@@ -208,64 +208,51 @@ bool FEAShellTest::execute() {
     my_system.SetupInitial();
 
 #ifdef CHRONO_MKL
-    ChSolverMKL<>* mkl_solver_stab = nullptr;
-    ChSolverMKL<>* mkl_solver_speed = nullptr;
-////ChSolverMKL<ChMapMatrix>* mkl_solver_stab = nullptr;
-////ChSolverMKL<ChMapMatrix>* mkl_solver_speed = nullptr;
+    std::shared_ptr<ChSolverMKL<>> mkl_solver;
+////std::shared_ptr<ChSolverMKL<ChMapMatrix>> mkl_solver;
 #endif
 
 #ifdef CHRONO_SUPERLUMT
-    ChSolverSuperLUMT<>* superlumt_solver_stab = nullptr;
-    ChSolverSuperLUMT<>* superlumt_solver_speed = nullptr;
-////ChSolverSuperLUMT<ChMapMatrix>* superlumt_solver_stab = nullptr;
-////ChSolverSuperLUMT<ChMapMatrix>* superlumt_solver_speed = nullptr;
+    std::shared_ptr<ChSolverSuperLUMT<>> superlumt_solver;
+////std::shared_ptr<ChSolverSuperLUMT<ChMapMatrix>> superlumt_solver;
 #endif
 
 #ifdef CHRONO_MUMPS
-    ChSolverMumps* mumps_solver_stab = nullptr;
-    ChSolverMumps* mumps_solver_speed = nullptr;
+    std::shared_ptr<ChSolverMumps> mumps_solver_speed;
 #endif
 
     // Set up solver
     switch (m_solver) {
         case solver_type::MINRES: {
-            my_system.SetSolverType(ChSystem::SOLVER_MINRES);
-            auto msolver = static_cast<ChSolverMINRES*>(my_system.GetSolverSpeed());
+            my_system.SetSolverType(ChSolver::MINRES);
+            auto msolver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
             msolver->SetDiagonalPreconditioning(true);
             my_system.SetMaxItersSolverSpeed(100);
             my_system.SetTolForce(1e-10);
         } break;
         case solver_type::MKL:
 #ifdef CHRONO_MKL
-            mkl_solver_stab = new ChSolverMKL<>;
-            mkl_solver_speed = new ChSolverMKL<>;
-            my_system.ChangeSolverStab(mkl_solver_stab);
-            my_system.ChangeSolverSpeed(mkl_solver_speed);
-            mkl_solver_speed->SetSparsityPatternLock(true);
-            mkl_solver_stab->SetSparsityPatternLock(true);
-            mkl_solver_speed->SetVerbose(m_verbose_solver);
-            mkl_solver_speed->ForceSparsityPatternUpdate();
+            mkl_solver = std::make_shared<ChSolverMKL<>>();
+            my_system.SetSolver(mkl_solver);
+            mkl_solver->SetSparsityPatternLock(true);
+            mkl_solver->SetVerbose(m_verbose_solver);
+            mkl_solver->ForceSparsityPatternUpdate();
 #endif
             break;
         case solver_type::SUPERLUMT:
 #ifdef CHRONO_SUPERLUMT
-            superlumt_solver_stab = new ChSolverSuperLUMT<>;
-            superlumt_solver_speed = new ChSolverSuperLUMT<>;
-            my_system.ChangeSolverStab(superlumt_solver_stab);
-            my_system.ChangeSolverSpeed(superlumt_solver_speed);
-            superlumt_solver_speed->SetSparsityPatternLock(true);
-            superlumt_solver_stab->SetSparsityPatternLock(true);
-            superlumt_solver_speed->SetVerbose(m_verbose_solver);
-            superlumt_solver_speed->ForceSparsityPatternUpdate();
+            superlumt_solver = std::make_shared<ChSolverSuperLUMT<>>();
+            my_system.SetSolver(superlumt_solver);
+            superlumt_solver->SetSparsityPatternLock(true);
+            superlumt_solver->SetVerbose(m_verbose_solver);
+            superlumt_solver->ForceSparsityPatternUpdate();
 #endif
             break;
         case solver_type::MUMPS:
 #ifdef CHRONO_MUMPS
-            mumps_solver_stab = new ChSolverMumps;
-            mumps_solver_speed = new ChSolverMumps;
-            my_system.ChangeSolverStab(mumps_solver_stab);
-            my_system.ChangeSolverSpeed(mumps_solver_speed);
-            mumps_solver_speed->SetVerbose(m_verbose_solver);
+            mumps_solver = std::make_shared<ChSolverMumps>();
+            my_system.SetSolver(mumps_solver);
+            mumps_solver->SetVerbose(m_verbose_solver);
 #endif
             break;
         default:
@@ -274,7 +261,7 @@ bool FEAShellTest::execute() {
     }
 
     // Set up integrator
-    my_system.SetIntegrationType(ChSystem::INT_HHT);
+    my_system.SetTimestepperType(ChTimestepper::HHT);
     auto mystepper = std::static_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
     mystepper->SetAlpha(-0.2);
     mystepper->SetMaxiters(100);
@@ -318,29 +305,29 @@ bool FEAShellTest::execute() {
 
 #ifdef CHRONO_MKL
         if (m_solver == solver_type::MKL)
-            mkl_solver_speed->ResetTimers();
+            mkl_solver->ResetTimers();
 #endif
 
 #ifdef CHRONO_SUPERLUMT
         if (m_solver == solver_type::SUPERLUMT)
-            superlumt_solver_speed->ResetTimers();
+            superlumt_solver->ResetTimers();
 #endif
 
 #ifdef CHRONO_MUMPS
         if (m_solver == solver_type::MUMPS)
-            mumps_solver_speed->ResetTimers();
+            mumps_solver->ResetTimers();
 #endif
 
         my_system.DoStepDynamics(step_size);
 
         if (istep == 3 && (m_solver == solver_type::MKL || m_solver == solver_type::SUPERLUMT)) {
 #ifdef CHRONO_MKL
-            mkl_solver_speed->SetSparsityPatternLock(true);
-            mkl_solver_stab->SetSparsityPatternLock(true);
+            mkl_solver->SetSparsityPatternLock(true);
+            mkl_solver->SetSparsityPatternLock(true);
 #endif
 #ifdef CHRONO_SUPERLUMT
-            superlumt_solver_speed->SetSparsityPatternLock(true);
-            superlumt_solver_stab->SetSparsityPatternLock(true);
+            superlumt_solver->SetSparsityPatternLock(true);
+            superlumt_solver->SetSparsityPatternLock(true);
 #endif
         }
 

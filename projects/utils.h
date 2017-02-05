@@ -41,17 +41,17 @@ static inline void TimingOutput(chrono::ChSystem* mSys, chrono::ChStreamOutAscii
   int BODS = mSys->GetNbodies();
   int CNTC = mSys->GetNcontacts();
   if (chrono::ChSystemParallel* parallel_sys = dynamic_cast<chrono::ChSystemParallel*>(mSys)) {
-    RESID = ((chrono::ChIterativeSolverParallel*)(mSys->GetSolverSpeed()))->GetResidual();
-    REQ_ITS = ((chrono::ChIterativeSolverParallel*)(mSys->GetSolverSpeed()))->GetTotalIterations();
-    BODS = parallel_sys->GetNbodies();
-    CNTC = parallel_sys->GetNcontacts();
+      RESID = std::static_pointer_cast<chrono::ChIterativeSolverParallel>(mSys->GetSolver())->GetResidual();
+      REQ_ITS = std::static_pointer_cast<chrono::ChIterativeSolverParallel>(mSys->GetSolver())->GetTotalIterations();
+      BODS = parallel_sys->GetNbodies();
+      CNTC = parallel_sys->GetNcontacts();
   }
 
   if (ofile) {
-    char buf[200];
-    sprintf(buf, "%8.5f  %7.4f  %7.4f  %7.4f  %7.4f  %7.4f  %7d  %7d  %7d  %7.4f\n", TIME, STEP, BROD, NARR, SOLVER, UPDT,
-            BODS, CNTC, REQ_ITS, RESID);
-    *ofile << buf;
+      char buf[200];
+      sprintf(buf, "%8.5f  %7.4f  %7.4f  %7.4f  %7.4f  %7.4f  %7d  %7d  %7d  %7.4f\n", TIME, STEP, BROD, NARR, SOLVER,
+              UPDT, BODS, CNTC, REQ_ITS, RESID);
+      *ofile << buf;
   }
 
   printf("   %8.5f | %7.4f | %7.4f | %7.4f | %7.4f | %7.4f | %7d | %7d | %7d | %7.4f\n", TIME, STEP, BROD, NARR, SOLVER,

@@ -125,23 +125,20 @@ TireNode::TireNode(const std::string& json_filename, WheelID wheel_id, int num_t
 
 #ifdef CHRONO_MKL
     // Solver settings
-    ChSolverMKL<>* mkl_solver_stab = new ChSolverMKL<>;
-    ChSolverMKL<>* mkl_solver_speed = new ChSolverMKL<>;
-    m_system->ChangeSolverStab(mkl_solver_stab);
-    m_system->ChangeSolverSpeed(mkl_solver_speed);
-    mkl_solver_speed->SetSparsityPatternLock(true);
-    mkl_solver_stab->SetSparsityPatternLock(true);
+    auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+    mkl_solver->SetSparsityPatternLock(true);
+    m_system->SetSolver(mkl_solver);
 #else
     // Solver settings
     m_system->SetMaxItersSolverSpeed(100);
     m_system->SetMaxItersSolverStab(100);
-    m_system->SetSolverType(ChSystem::SOLVER_SOR);
+    m_system->SetSolverType(ChSolver::SOR);
     m_system->SetTol(1e-10);
     m_system->SetTolForce(1e-8);
 #endif
 
     // Integrator settings
-    m_system->SetIntegrationType(ChSystem::INT_HHT);
+    m_system->SetTimestepperType(ChTimestepper::HHT);
     m_integrator = std::static_pointer_cast<ChTimestepperHHT>(m_system->GetTimestepper());
     m_integrator->SetAlpha(-0.2);
     m_integrator->SetMaxiters(50);

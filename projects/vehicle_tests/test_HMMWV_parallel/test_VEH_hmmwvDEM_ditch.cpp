@@ -200,7 +200,7 @@ class MyDriverInputs : public ChDriverInputsCallback {
 class MyCylindricalTire : public ChTireContactCallback {
   public:
     virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
-        wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
+        wheelBody->SetCollisionModel(std::make_shared<collision::ChCollisionModelParallel>());
 
         wheelBody->GetCollisionModel()->ClearModel();
         wheelBody->GetCollisionModel()->AddCylinder(0.46, 0.46, 0.127);
@@ -232,9 +232,9 @@ class MyLuggedTire : public ChTireContactCallback {
     }
 
     virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
-        wheelBody->ChangeCollisionModel(new collision::ChCollisionModelParallel);
+        auto coll_model = std::make_shared<collision::ChCollisionModelParallel>();
+        wheelBody->SetCollisionModel(coll_model);
 
-        ChCollisionModelParallel* coll_model = (ChCollisionModelParallel*)wheelBody->GetCollisionModel();
         coll_model->ClearModel();
 
         // Assemble the tire contact from 15 segments, properly offset.
@@ -318,7 +318,7 @@ void AdjustGroundGeometry(std::shared_ptr<ChBody> ground, double platform_height
 }
 
 void CreatePlatform(ChSystem* system, double platform_height) {
-    auto platform = std::make_shared<ChBody>(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto platform = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     platform->SetIdentifier(-2);
     platform->SetMass(1000);
     platform->SetBodyFixed(true);
@@ -479,7 +479,7 @@ int main(int argc, char* argv[]) {
     system->GetSettings()->solver.contact_force_model = contact_force_model;
     system->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 
-    system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+    system->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
     system->GetSettings()->collision.bins_per_axis = vec3(20, 20, 10);
 
     // -------------------
@@ -487,7 +487,7 @@ int main(int argc, char* argv[]) {
     // -------------------
 
     // Ground body
-    auto ground = std::make_shared<ChBody>(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     ground->SetIdentifier(-1);
     ground->SetMass(1000);
     ground->SetBodyFixed(true);

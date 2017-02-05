@@ -48,9 +48,9 @@ class RigNode : public BaseNode {
     virtual ~RigNode();
 
     /// Set integrator and solver types.
-    /// For the MKL solver, use slv_type = ChSystem::SOLVER_CUSTOM.
-    void SetIntegratorType(chrono::ChSystem::eCh_integrationType int_type,  ///< integrator type (default: HHT)
-                           chrono::ChSystem::eCh_solverType slv_type        ///< solver type (default:: MKL)
+    /// For the MKL solver, use slv_type = ChSolver::CUSTOM.
+    void SetIntegratorType(chrono::ChTimestepper::Type int_type,  ///< integrator type (default: HHT)
+                           chrono::ChSolver::Type slv_type        ///< solver type (default:: MKL)
                            );
 
     /// Set body masses.
@@ -89,8 +89,8 @@ class RigNode : public BaseNode {
     chrono::ChSystemDEM* m_system;  ///< containing system
     bool m_constructed;             ///< system construction completed?
 
-    chrono::ChSystem::eCh_integrationType m_int_type;        ///< integrator type
-    chrono::ChSystem::eCh_solverType m_slv_type;             ///< solver type
+    chrono::ChTimestepper::Type m_int_type;                  ///< integrator type
+    chrono::ChSolver::Type m_slv_type;                       ///< solver type
     std::shared_ptr<chrono::ChTimestepperHHT> m_integrator;  ///< HHT integrator object
 
     std::shared_ptr<chrono::ChBody> m_ground;   ///< ground body

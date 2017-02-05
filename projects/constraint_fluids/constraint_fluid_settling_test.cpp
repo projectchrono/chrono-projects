@@ -53,9 +53,10 @@ ChVector<> hdim(kernel_radius * 7, kernel_radius * 7, kernel_radius * 7 * mult);
 
 
 void WriteData(ChSystemParallelDVI* msystem, uint i) {
-	int iters = ((ChIterativeSolverParallel*)(msystem->GetSolverSpeed()))->GetTotalIterations();
-	const std::vector<double>& vhist = ((ChIterativeSolverParallel*)(msystem->GetSolverSpeed()))->GetViolationHistory();
-	const std::vector<double>& dhist = ((ChIterativeSolverParallel*)(msystem->GetSolverSpeed()))->GetDeltalambdaHistory();
+    auto iter_solver = std::static_pointer_cast<ChIterativeSolverParallel>(msystem->GetSolver());
+    int iters = iter_solver->GetTotalIterations();
+    const std::vector<double>& vhist = iter_solver->GetViolationHistory();
+	const std::vector<double>& dhist = iter_solver->GetDeltalambdaHistory();
 	real residual = vhist.size() > 0 ? vhist.back() : 0.0;
 	real dlambda = dhist.size() > 0 ? dhist.back() : 0.0;
 
@@ -204,7 +205,7 @@ int main(int argc, char* argv[]) {
 	msystem.Set_G_acc(ChVector<>(0, 0, -9.81));
 
 	// Set solver parameters
-	msystem.GetSettings()->solver.solver_mode = SLIDING;
+	msystem.GetSettings()->solver.solver_mode = SolverMode::SLIDING;
 	msystem.GetSettings()->solver.max_iteration_normal = 0;
 	msystem.GetSettings()->solver.max_iteration_sliding = max_iteration;
 	msystem.GetSettings()->solver.max_iteration_spinning = 0;
@@ -220,35 +221,35 @@ int main(int argc, char* argv[]) {
 
 	switch (solver_type) {
 	case 0:
-		msystem.ChangeSolverType(BB);
+		msystem.ChangeSolverType(SolverType::BB);
 		ofile.open("data_fluid_test/fluid_container_data_BB_" + std::to_string(setup) + ".txt");
 		break;
 	case 1:
-		msystem.ChangeSolverType(APGD);
+		msystem.ChangeSolverType(SolverType::APGD);
 		ofile.open("data_fluid_test/fluid_container_data_APGD_" + std::to_string(setup) + ".txt");
 		break;
 	case 2:
-		msystem.ChangeSolverType(JACOBI);
+		msystem.ChangeSolverType(SolverType::JACOBI);
 		ofile.open("data_fluid_test/fluid_container_data_JACOBI_" + std::to_string(setup) + ".txt");
 		break;
 	case 3:
-		msystem.ChangeSolverType(GAUSS_SEIDEL);
+		msystem.ChangeSolverType(SolverType::GAUSS_SEIDEL);
 		ofile.open("data_fluid_test/fluid_container_data_GAUSS_SEIDEL_" + std::to_string(setup) + ".txt");
 		break;
 	default:
-		msystem.ChangeSolverType(APGD);
+		msystem.ChangeSolverType(SolverType::APGD);
 		ofile.open("data_fluid_test/fluid_container_data_APGD_" + std::to_string(setup) + ".txt");
 		break;
 	}
 
-	msystem.GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+	msystem.GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
 
 	AddFluid(&msystem);
 
 	msystem.GetSettings()->collision.collision_envelope = (fluid_container->kernel_radius * .05);
 	msystem.GetSettings()->collision.bins_per_axis = vec3(2, 2, 2);
-	msystem.SetLoggingLevel(LOG_TRACE, true);
-	msystem.SetLoggingLevel(LOG_INFO, true);
+	msystem.SetLoggingLevel(LoggingLevel::LOG_TRACE, true);
+	msystem.SetLoggingLevel(LoggingLevel::LOG_INFO, true);
 	// Create the fixed and moving bodies
 	// ----------------------------------
 	AddContainer(&msystem);

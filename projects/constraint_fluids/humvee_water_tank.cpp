@@ -360,7 +360,7 @@ std::shared_ptr<ChBody> bottom_plate;
 // =============================================================================
 void CreateBase(ChSystemParallelDVI* system) {
 
-	bottom_plate = std::make_shared<ChBody>(new ChCollisionModelParallel);
+	bottom_plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
 	auto material = std::make_shared<ChMaterialSurface>();
 	material->SetFriction(container_friction);
 	material->SetCompliance(1e-9);
@@ -453,7 +453,7 @@ int main(int argc, char* argv[]) {
 	// Edit system settings.
 	// ---------------------
 	system->GetSettings()->solver.tolerance = tolerance;
-	system->GetSettings()->solver.solver_mode = SLIDING;
+	system->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
 	system->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
 	system->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
 	system->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
@@ -465,14 +465,14 @@ int main(int argc, char* argv[]) {
 	system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
 	system->GetSettings()->solver.bilateral_clamp_speed = 1e8;
 	system->GetSettings()->min_threads = threads;
-	system->ChangeSolverType(BB);
-	system->SetLoggingLevel(LOG_INFO);
-	system->SetLoggingLevel(LOG_TRACE);
+	system->ChangeSolverType(SolverType::BB);
+	system->SetLoggingLevel(LoggingLevel::LOG_INFO);
+	system->SetLoggingLevel(LoggingLevel::LOG_TRACE);
 
 	system->GetSettings()->collision.collision_envelope = 0.1 * fluid_r;
 
 	system->GetSettings()->collision.bins_per_axis = vec3(300, 40, 50);
-	system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+	system->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
 	system->GetSettings()->collision.fixed_bins = true;
 
 	ChBezierCurve* path;
@@ -522,7 +522,7 @@ int main(int argc, char* argv[]) {
 	my_hmmwv.SetTireVisualizationType(tire_vis_type);
 
 
-	RemoveCollisionModel(system, my_hmmwv.GetChassisBody()->GetCollisionModel());
+	RemoveCollisionModel(system, my_hmmwv.GetChassisBody()->GetCollisionModel().get());
 	my_hmmwv.GetChassisBody()->GetCollisionModel()->ClearModel();
 	my_hmmwv.GetChassisBody()->GetAssets().clear();
 
@@ -548,8 +548,8 @@ int main(int argc, char* argv[]) {
 
 	my_hmmwv.GetChassisBody()->SetCollide(true);
 	my_hmmwv.GetChassisBody()->GetCollisionModel()->BuildModel();
-	ChCollisionSystemParallel* collision_system = static_cast<ChCollisionSystemParallel*>(system->GetCollisionSystem());
-	collision_system->Add(my_hmmwv.GetChassisBody()->GetCollisionModel());
+    auto collision_system = std::static_pointer_cast<ChCollisionSystemParallel>(system->GetCollisionSystem());
+	collision_system->Add(my_hmmwv.GetChassisBody()->GetCollisionModel().get());
 
 	RigidTerrain terrain(my_hmmwv.GetSystem());
 

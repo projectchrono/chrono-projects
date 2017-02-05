@@ -239,10 +239,10 @@ void CreateFallingBall(ChSystemParallel* system, double z, double vz) {
 
 // Create the falling ball
 #ifdef USE_DEM
-    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     ball->SetMaterialSurface(mat_b);
 #else
-    auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     ball->SetMaterialSurface(mat_b);
 #endif
 
@@ -339,18 +339,18 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.tolerance = tolerance;
 
 #ifdef USE_DEM
-    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
+    msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
 
     msystem->GetSettings()->solver.contact_force_model = contact_force_model;
     msystem->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 #else
-    msystem->GetSettings()->solver.solver_mode = SLIDING;
+    msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
     msystem->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
     msystem->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
     msystem->GetSettings()->solver.alpha = 0;
     msystem->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-    msystem->ChangeSolverType(APGDREF);
+    msystem->ChangeSolverType(SolverType::APGDREF);
 
     msystem->GetSettings()->collision.collision_envelope = 0.05 * r_g;
 #endif

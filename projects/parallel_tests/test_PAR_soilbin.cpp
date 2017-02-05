@@ -203,10 +203,10 @@ void CreateObject(ChSystemParallel* system, double z) {
 // --------------------------
 
 #ifdef USE_DEM
-    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     obj->SetMaterialSurface(mat_o);
 #else
-    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     obj->SetMaterialSurface(mat_o);
 #endif
 
@@ -366,15 +366,15 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.tolerance = 1e-3;
 
 #ifdef USE_DEM
-    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
+    msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
 #else
-    msystem->GetSettings()->solver.solver_mode = SLIDING;
+    msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
     msystem->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
     msystem->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
     msystem->GetSettings()->solver.alpha = 0;
     msystem->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-    msystem->ChangeSolverType(APGDREF);
+    msystem->ChangeSolverType(SolverType::APGDREF);
 
     msystem->GetSettings()->collision.collision_envelope = 0.05 * r_g;
 #endif

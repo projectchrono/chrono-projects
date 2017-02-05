@@ -315,7 +315,7 @@ int main(int argc, char* argv[]) {
     switch (solver_type) {
         case SOR: {
             std::cout << "Using SOR solver\n";
-            system->SetSolverType(ChSystem::SOLVER_SOR);
+            system->SetSolverType(ChSolver::SOR);
             system->SetMaxItersSolverSpeed(100);
             system->SetMaxItersSolverStab(100);
             system->SetTol(1e-10);
@@ -324,8 +324,8 @@ int main(int argc, char* argv[]) {
         }
         case MINRES: {
             std::cout << "Using MINRES solver\n";
-            system->SetSolverType(ChSystem::SOLVER_MINRES);
-            ChSolverMINRES* minres_solver = (ChSolverMINRES*)system->GetSolverSpeed();
+            system->SetSolverType(ChSolver::MINRES);
+            auto minres_solver = std::static_pointer_cast<ChSolverMINRES>(system->GetSolver());
             ////minres_solver->SetDiagonalPreconditioning(true);
             system->SetSolverWarmStarting(true);
             system->SetMaxItersSolverSpeed(500);
@@ -335,12 +335,9 @@ int main(int argc, char* argv[]) {
         case MKL: {
 #ifdef CHRONO_MKL
             std::cout << "Using MKL solver\n";
-            ChSolverMKL<>* mkl_solver_stab = new ChSolverMKL<>;
-            ChSolverMKL<>* mkl_solver_speed = new ChSolverMKL<>;
-            system->ChangeSolverStab(mkl_solver_stab);
-            system->ChangeSolverSpeed(mkl_solver_speed);
-            mkl_solver_speed->SetSparsityPatternLock(true);
-            mkl_solver_stab->SetSparsityPatternLock(true);
+            auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+            mkl_solver->SetSparsityPatternLock(true);
+            system->SetSolver(mkl_solver);
 #endif
             break;
         }
@@ -350,11 +347,11 @@ int main(int argc, char* argv[]) {
     switch (integrator_type) {
         case EULER:
             std::cout << "Using EULER_IMPLICIT_LINEARIZED integrator\n";
-            system->SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_LINEARIZED);
+            system->SetTimestepperType(ChTimestepper::EULER_IMPLICIT_LINEARIZED);
             break;
         case HHT: {
             std::cout << "Using HHT integrator\n";
-            system->SetIntegrationType(ChSystem::INT_HHT);
+            system->SetTimestepperType(ChTimestepper::HHT);
             auto integrator = std::static_pointer_cast<ChTimestepperHHT>(system->GetTimestepper());
             integrator->SetAlpha(-0.2);
             integrator->SetMaxiters(20);

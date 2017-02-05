@@ -345,10 +345,10 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemParallel* msystem) {
 
 // Create the falling object
 #ifdef USE_DEM
-    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     obj->SetMaterialSurface(mat);
 #else
-    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     obj->SetMaterialSurface(mat);
 #endif
 
@@ -464,18 +464,18 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.tolerance = tolerance;
 
 #ifdef USE_DEM
-    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+    msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
 
     msystem->GetSettings()->solver.contact_force_model = contact_force_model;
     msystem->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 #else
-    msystem->GetSettings()->solver.solver_mode = SLIDING;
+    msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
     msystem->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
     msystem->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
     msystem->GetSettings()->solver.alpha = 0;
     msystem->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-    msystem->ChangeSolverType(APGD);
+    msystem->ChangeSolverType(SolverType::APGD);
 
     msystem->GetSettings()->collision.collision_envelope = 0.05 * r_g;
 #endif

@@ -160,7 +160,7 @@ class TireTestCollisionManager : public ChSystem::ChCustomComputeCollisionCallba
             //    vpB: contact point on node
             //    distance: penetration (negative)
             collision::ChCollisionInfo contact;
-            contact.modelA = m_terrain->GetGroundBody()->GetCollisionModel();
+            contact.modelA = m_terrain->GetGroundBody()->GetCollisionModel().get();
             contact.modelB = contact_node->GetCollisionModel();
             contact.vN = normal;
             contact.vpA = P - height * normal;

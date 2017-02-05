@@ -105,9 +105,9 @@ int main(int argc, char* argv[]) {
     application.AssetUpdateAll();
 
     // Set solver
-    ChSolverMINRES* minres_solver = new ChSolverMINRES;
+    auto minres_solver = std::make_shared<ChSolverMINRES>();
     minres_solver->SetDiagonalPreconditioning(true);
-    system.ChangeSolverSpeed(minres_solver);
+    system.SetSolver(minres_solver);
     system.SetMaxItersSolverSpeed(100);
     system.SetTolForce(1e-6);
 

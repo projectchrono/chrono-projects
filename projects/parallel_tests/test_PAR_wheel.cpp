@@ -303,8 +303,8 @@ int main(int argc, char* argv[]) {
         }
         case ChMaterialSurfaceBase::DVI: {
             ChSystemParallelDVI* sys = new ChSystemParallelDVI;
-            sys->GetSettings()->solver.solver_type = BB;
-            sys->GetSettings()->solver.solver_mode = SLIDING;
+            sys->GetSettings()->solver.solver_type = SolverType::BB;
+            sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
             sys->GetSettings()->solver.max_iteration_normal = 0;
             sys->GetSettings()->solver.max_iteration_sliding = 200;
             sys->GetSettings()->solver.max_iteration_spinning = 0;
@@ -322,7 +322,7 @@ int main(int argc, char* argv[]) {
     system->GetSettings()->solver.use_full_inertia_tensor = false;
     system->GetSettings()->solver.tolerance = 1e-3;
     system->GetSettings()->collision.bins_per_axis = vec3(50, 50, 50);
-    system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+    system->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();

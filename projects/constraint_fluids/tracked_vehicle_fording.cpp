@@ -249,7 +249,7 @@ int main(int argc, char* argv[]) {
 	// ---------------------
 	// Set solver parameters
 	system->GetSettings()->solver.tolerance = tolerance;
-	system->GetSettings()->solver.solver_mode = SLIDING;
+	system->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
 	system->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
 	system->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
 	system->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
@@ -261,14 +261,14 @@ int main(int argc, char* argv[]) {
 	system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
 	system->GetSettings()->solver.bilateral_clamp_speed = 1e8;
 	system->GetSettings()->min_threads = threads;
-	system->ChangeSolverType(BB);
-	system->SetLoggingLevel(LOG_INFO);
-	system->SetLoggingLevel(LOG_TRACE);
+	system->ChangeSolverType(SolverType::BB);
+	system->SetLoggingLevel(LoggingLevel::LOG_INFO);
+	system->SetLoggingLevel(LoggingLevel::LOG_TRACE);
 
 	system->GetSettings()->collision.collision_envelope = 0.1 * r_g;
 
 	system->GetSettings()->collision.bins_per_axis = vec3(100, 20, 25);
-	system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+	system->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
 	system->GetSettings()->collision.fixed_bins = true;
 
 	// -------------------

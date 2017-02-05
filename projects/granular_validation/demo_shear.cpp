@@ -244,19 +244,19 @@ int main(int argc, char* argv[]) {
     my_system->GetSettings()->solver.contact_force_model = ChSystemDEM::ContactForceModel::Hertz;
     my_system->GetSettings()->solver.tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::MultiStep;
 #else
-    my_system->GetSettings()->solver.solver_mode = SLIDING;
+    my_system->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     my_system->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
     my_system->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
     my_system->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
     my_system->GetSettings()->solver.alpha = 0;
     my_system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-    my_system->ChangeSolverType(APGD);
+    my_system->ChangeSolverType(SolverType::APGD);
 
     my_system->GetSettings()->collision.collision_envelope = 0.05 * radius;
 #endif
 
     my_system->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
-    my_system->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+    my_system->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
 
 // Create a ball material (will be used by balls only)
 
@@ -288,7 +288,7 @@ int main(int argc, char* argv[]) {
 
     // Create lower bin
 
-    auto bin = std::make_shared<ChBody>(new ChCollisionModelParallel, contact_method);
+    auto bin = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), contact_method);
 
     bin->SetIdentifier(binId);
     bin->SetMass(1);
@@ -318,7 +318,7 @@ int main(int argc, char* argv[]) {
 
     // Create upper shear box
 
-    auto box = std::make_shared<ChBody>(new ChCollisionModelParallel, contact_method);
+    auto box = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), contact_method);
 
     box->SetIdentifier(boxId);
     box->SetMass(1);
@@ -347,7 +347,7 @@ int main(int argc, char* argv[]) {
 
     // Create upper load plate
 
-    auto plate = std::make_shared<ChBody>(new ChCollisionModelParallel, contact_method);
+    auto plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), contact_method);
 
     shear_Area = width * length;
 
@@ -382,7 +382,7 @@ int main(int argc, char* argv[]) {
                 ball_x = 4.0 * radius * (float(j - b / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
                 ball_z = 4.0 * radius * (float(k - c / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
 
-                auto ball = std::make_shared<ChBody>(new ChCollisionModelParallel, contact_method);
+                auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), contact_method);
 
                 ball->SetIdentifier(ballId + 6 * 6 * i + 6 * j + k);
                 ball->SetMass(mass);

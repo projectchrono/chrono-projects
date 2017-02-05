@@ -165,10 +165,10 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 
 // Angled insert
 #ifdef USE_DEM
-    auto insert = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto insert = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     insert->SetMaterialSurface(mat_b);
 #else
-    auto insert = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto insert = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     insert->SetMaterialSurface(mat_b);
 #endif
 
@@ -188,10 +188,10 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 
 // Static slot (back wall)
 #ifdef USE_DEM
-    auto slot = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto slot = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     slot->SetMaterialSurface(mat_b);
 #else
-    auto slot = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto slot = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     slot->SetMaterialSurface(mat_b);
 #endif
 
@@ -211,10 +211,10 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 
 // Lateral walls
 #ifdef USE_DEM
-    auto wall = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto wall = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     wall->SetMaterialSurface(mat_b);
 #else
-    auto wall = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto wall = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     wall->SetMaterialSurface(mat_b);
 #endif
 
@@ -374,15 +374,15 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.use_full_inertia_tensor = false;
 
 #ifdef USE_DEM
-    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
+    msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
 #else
-    msystem->GetSettings()->solver.solver_mode = SLIDING;
+    msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
     msystem->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
     msystem->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
     msystem->GetSettings()->solver.alpha = 0;
     msystem->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-    msystem->ChangeSolverType(APGDREF);
+    msystem->ChangeSolverType(SolverType::APGDREF);
 
     msystem->GetSettings()->collision.collision_envelope = 0.05 * r_g;
 #endif

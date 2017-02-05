@@ -41,6 +41,7 @@
 #endif
 
 using namespace chrono;
+using namespace chrono::collision;
 
 using std::cout;
 using std::endl;
@@ -189,9 +190,9 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
 // Create the ground body
 #ifdef USE_DEM
-    m_ground = std::make_shared<ChBody>(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    m_ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
 #else
-    m_ground = std::make_shared<ChBody>(new collision::ChCollisionModelParallel);
+    m_ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
 #endif
     m_ground->SetIdentifier(-1);
     m_ground->SetBodyFixed(true);
@@ -201,9 +202,9 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
 // Create the sled body
 #ifdef USE_DEM
-    m_sled = std::make_shared<ChBody>(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    m_sled = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
 #else
-    m_sled = std::make_shared<ChBody>(new collision::ChCollisionModelParallel);
+    m_sled = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
 #endif
     m_sled->SetIdentifier(1);
     m_sled->SetMass(mass1);
@@ -238,10 +239,10 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
 // Create the wheel body
 #ifdef USE_DEM
-    m_wheel = std::make_shared<ChBody>(new collision::ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    m_wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     m_wheel->SetMaterialSurface(mat_w);
 #else
-    m_wheel = std::make_shared<ChBody>(new collision::ChCollisionModelParallel);
+    m_wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     m_wheel->SetMaterialSurface(mat_w);
 #endif
     m_wheel->SetIdentifier(2);
@@ -446,15 +447,15 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
 
 #ifdef USE_DEM
-    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_R;
+    msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
 #else
-    msystem->GetSettings()->solver.solver_mode = SLIDING;
+    msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
     msystem->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
     msystem->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
     msystem->GetSettings()->solver.alpha = 0;
     msystem->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-    msystem->ChangeSolverType(APGDREF);
+    msystem->ChangeSolverType(SolverType::APGDREF);
 
     msystem->GetSettings()->collision.collision_envelope = 0.05 * r_g;
 #endif

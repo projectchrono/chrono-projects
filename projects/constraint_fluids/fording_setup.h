@@ -39,15 +39,15 @@ void CreateContainer(ChSystemParallelDVI* system) {
 	real angle = atan(dim_e / (dim_b + dim_c));
 	real width = dim_w + dim_t * 2.0;
 
-	std::shared_ptr<ChBody> bottom_plate = std::make_shared<ChBody>(new ChCollisionModelParallel);
-	std::shared_ptr<ChBody> side_plate_1 = std::make_shared<ChBody>(new ChCollisionModelParallel);
-	std::shared_ptr<ChBody> side_plate_2 = std::make_shared<ChBody>(new ChCollisionModelParallel);
-	std::shared_ptr<ChBody> end_plate_1 = std::make_shared<ChBody>(new ChCollisionModelParallel);
-	std::shared_ptr<ChBody> end_plate_2 = std::make_shared<ChBody>(new ChCollisionModelParallel);
-	std::shared_ptr<ChBody> end_slope_1 = std::make_shared<ChBody>(new ChCollisionModelParallel);
-	std::shared_ptr<ChBody> end_slope_2 = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    std::shared_ptr<ChBody> bottom_plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    std::shared_ptr<ChBody> side_plate_1 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    std::shared_ptr<ChBody> side_plate_2 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    std::shared_ptr<ChBody> end_plate_1 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    std::shared_ptr<ChBody> end_plate_2 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    std::shared_ptr<ChBody> end_slope_1 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    std::shared_ptr<ChBody> end_slope_2 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
 
-	auto material = std::make_shared<ChMaterialSurface>();
+    auto material = std::make_shared<ChMaterialSurface>();
 	material->SetFriction(container_friction);
 	material->SetCompliance(1e-9);
 	material->SetCohesion(0);

@@ -154,24 +154,21 @@ int main(int argc, char* argv[]) {
 
 #ifdef CHRONO_MKL
     // MKL solver settings
-    ChSolverMKL<>* mkl_solver_stab = new ChSolverMKL<>;
-    ChSolverMKL<>* mkl_solver_speed = new ChSolverMKL<>;
-    system->ChangeSolverStab(mkl_solver_stab);
-    system->ChangeSolverSpeed(mkl_solver_speed);
-    mkl_solver_speed->SetSparsityPatternLock(true);
-    mkl_solver_stab->SetSparsityPatternLock(true);
-    mkl_solver_speed->SetVerbose(verbose);
+    auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+    mkl_solver->SetSparsityPatternLock(true);
+    mkl_solver->SetVerbose(verbose);
+    system->SetSolver(mkl_solver);
 #else
     // Default solver settings
     system->SetMaxItersSolverSpeed(100);
     system->SetMaxItersSolverStab(100);
-    system->SetSolverType(ChSystem::SOLVER_SOR);
+    system->SetSolverType(ChSolver::SOR);
     system->SetTol(1e-10);
     system->SetTolForce(1e-8);
 #endif
 
     // Integrator settings
-    system->SetIntegrationType(ChSystem::INT_HHT);
+    system->SetTimestepperType(ChTimestepper::HHT);
     auto integrator = std::static_pointer_cast<ChTimestepperHHT>(system->GetTimestepper());
     integrator->SetAlpha(-0.2);
     integrator->SetMaxiters(50);

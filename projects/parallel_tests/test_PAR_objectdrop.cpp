@@ -117,13 +117,13 @@ void CreateGround(ChSystemParallel* system) {
     mat_g->SetFriction(0.4f);
     mat_g->SetRestitution(0.4f);
 
-    auto ground = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     ground->SetMaterialSurface(mat_g);
 #else
     auto mat_g = std::make_shared<ChMaterialSurface>();
     mat_g->SetFriction(0.4f);
 
-    auto ground = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     ground->SetMaterialSurface(mat_g);
 #endif
 
@@ -211,13 +211,13 @@ void CreateObject(ChSystemParallel* system) {
     mat_o->SetFriction(0.4f);
     mat_o->SetRestitution(0.4f);
 
-    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel, ChMaterialSurfaceBase::DEM);
+    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
     obj->SetMaterialSurface(mat_o);
 #else
     auto mat_o = std::make_shared<ChMaterialSurface>();
     mat_o->SetFriction(0.4f);
 
-    auto obj = std::make_shared<ChBody>(new ChCollisionModelParallel);
+    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     obj->SetMaterialSurface(mat_o);
 #endif
 
@@ -363,15 +363,15 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.tolerance = 1e-3;
 
 #ifdef USE_DEM
-    msystem->GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
+    msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
 #else
-    msystem->GetSettings()->solver.solver_mode = SLIDING;
+    msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
     msystem->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
     msystem->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
     msystem->GetSettings()->solver.alpha = 0;
     msystem->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-    msystem->ChangeSolverType(APGDREF);
+    msystem->ChangeSolverType(SolverType::APGDREF);
 
     msystem->GetSettings()->solver.contact_recovery_speed = 1;
 #endif
