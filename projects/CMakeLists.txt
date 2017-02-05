@@ -61,7 +61,7 @@ if (ENABLE_PRJ_COSIMULATION)
   add_subdirectory(cosimulation)
 endif()
 
-if (ENABLE_CONSTRAINT_FLUID_MODELS)
+if (ENABLE_PRJ_CONSTRAINT_FLUID)
   add_subdirectory(constraint_fluids)
 endif()
 
