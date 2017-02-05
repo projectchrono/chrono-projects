@@ -20,7 +20,14 @@ set(DEMOS
 
 # Invoke find_package in CONFIG mode.
 
+set(ZLIB_ROOT "" CACHE PATH "Where is ZLIB located?")
 find_package(ZLIB REQUIRED)
+
+if (ZLIB_FOUND)
+  message(STATUS "ZLIB include dir: ${ZLIB_INCLUDE_DIRS}")
+else()
+  mark_as_advanced(CLEAR ZLIB_ROOT)
+endif()
 
 find_package(Chrono
              COMPONENTS PARALLEL VEHICLE
