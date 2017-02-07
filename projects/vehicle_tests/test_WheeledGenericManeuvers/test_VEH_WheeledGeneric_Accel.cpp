@@ -129,20 +129,20 @@ int main(int argc, char* argv[]) {
     vehicle.SetWheelVisualizationType(VisualizationType::NONE);
 
     //ChSystem* my_system = vehicle.GetSystem();
-    //my_system->SetTimestepperType(ChTimestepper::EULER_IMPLICIT_LINEARIZED);
+    //my_system->SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
     //my_system->SetMaxItersSolverSpeed(100);
     //my_system->SetMaxItersSolverStab(100); //Tasora stepper uses this, Anitescu does not
-    //my_system->SetSolverType(ChSolver::BARZILAIBORWEIN);
+    //my_system->SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
     //my_system->SetTol(1e-6);
     //my_system->SetTolForce(1e-4);
 
     //ChSystem* my_system = vehicle.GetSystem();
-    //my_system->SetSolverType(ChSolver::MINRES);
+    //my_system->SetSolverType(ChSolver::Type::MINRES);
     //auto msolver = static_cast<ChSolverMINRES*>(my_system->GetSolverSpeed());
     //msolver->SetDiagonalPreconditioning(true);
     //my_system->SetMaxItersSolverSpeed(100);
     //my_system->SetTolForce(1e-6);
-    //my_system->SetTimestepperType(ChTimestepper::HHT);
+    //my_system->SetTimestepperType(ChTimestepper::Type::HHT);
     //auto mystepper = std::static_pointer_cast<ChTimestepperHHT>(my_system->GetTimestepper());
     //mystepper->SetAlpha(-0.2);
     //mystepper->SetMaxiters(100);

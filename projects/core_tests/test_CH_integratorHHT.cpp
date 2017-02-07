@@ -419,7 +419,7 @@ void RigidPendulums() {
 #endif
 
     // Set integrator and modify parameters.
-    system.SetTimestepperType(ChTimestepper::HHT);
+    system.SetTimestepperType(ChTimestepper::Type::HHT);
     auto integrator = std::static_pointer_cast<ChTimestepperHHT>(system.GetTimestepper());
     integrator->SetMode(mode);
     integrator->SetStepControl(step_control);

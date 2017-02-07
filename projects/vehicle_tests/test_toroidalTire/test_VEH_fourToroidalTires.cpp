@@ -239,7 +239,7 @@ int main(int argc, char* argv[]) {
     switch (solver_type) {
         case MINRES: {
             GetLog() << "Using MINRES solver\n";
-            my_system.SetSolverType(ChSolver::MINRES);
+            my_system.SetSolverType(ChSolver::Type::MINRES);
             auto minres_solver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
             ////minres_solver->SetDiagonalPreconditioning(true);
             my_system.SetSolverWarmStarting(true);
@@ -258,7 +258,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    my_system.SetTimestepperType(ChTimestepper::HHT);
+    my_system.SetTimestepperType(ChTimestepper::Type::HHT);
     auto mystepper = std::static_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
     mystepper->SetAlpha(-0.3);  // Important for convergence
     mystepper->SetMaxiters(11);

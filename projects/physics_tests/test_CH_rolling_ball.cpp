@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
     ChSystem system;
     system.Set_G_acc(ChVector<>(0, 0, -9.81));
 
-    system.SetSolverType(ChSolver::APGD);
+    system.SetSolverType(ChSolver::Type::APGD);
     system.SetMaxItersSolverSpeed(1000);
     system.SetTolForce(1e-6);
     system.SetMaxPenetrationRecoverySpeed(0);

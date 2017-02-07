@@ -48,7 +48,7 @@ class RigNode : public BaseNode {
     virtual ~RigNode();
 
     /// Set integrator and solver types.
-    /// For the MKL solver, use slv_type = ChSolver::CUSTOM.
+    /// For the MKL solver, use slv_type = ChSolver::Type::CUSTOM.
     void SetIntegratorType(chrono::ChTimestepper::Type int_type,  ///< integrator type (default: HHT)
                            chrono::ChSolver::Type slv_type        ///< solver type (default:: MKL)
                            );

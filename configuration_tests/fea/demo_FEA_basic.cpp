@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
     my_system.SetupInitial();
 
     // Perform a linear static analysis
-    my_system.SetSolverType(ChSolver::MINRES);
+    my_system.SetSolverType(ChSolver::Type::MINRES);
     auto msolver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
     msolver->SetDiagonalPreconditioning(true);
     msolver->SetVerbose(true);

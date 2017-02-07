@@ -644,8 +644,8 @@ int main(int argc, char* argv[]) {
     my_system.SetSolver(mkl_solver);
     mkl_solver->SetSparsityPatternLock(true);
 
-    my_system.SetTimestepperType(ChTimestepper::HHT);
-    // my_system.SetTimestepperType(ChTimestepper::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
+    my_system.SetTimestepperType(ChTimestepper::Type::HHT);
+    // my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
     auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
     mystepper->SetAlpha(-0.3);  // Important for convergence
     mystepper->SetMaxiters(20);

@@ -132,13 +132,13 @@ TireNode::TireNode(const std::string& json_filename, WheelID wheel_id, int num_t
     // Solver settings
     m_system->SetMaxItersSolverSpeed(100);
     m_system->SetMaxItersSolverStab(100);
-    m_system->SetSolverType(ChSolver::SOR);
+    m_system->SetSolverType(ChSolver::Type::SOR);
     m_system->SetTol(1e-10);
     m_system->SetTolForce(1e-8);
 #endif
 
     // Integrator settings
-    m_system->SetTimestepperType(ChTimestepper::HHT);
+    m_system->SetTimestepperType(ChTimestepper::Type::HHT);
     m_integrator = std::static_pointer_cast<ChTimestepperHHT>(m_system->GetTimestepper());
     m_integrator->SetAlpha(-0.2);
     m_integrator->SetMaxiters(50);

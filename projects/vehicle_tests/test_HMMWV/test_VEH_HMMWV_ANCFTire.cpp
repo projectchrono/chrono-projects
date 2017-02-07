@@ -162,13 +162,13 @@ int main(int argc, char* argv[]) {
     // Default solver settings
     system->SetMaxItersSolverSpeed(100);
     system->SetMaxItersSolverStab(100);
-    system->SetSolverType(ChSolver::SOR);
+    system->SetSolverType(ChSolver::Type::SOR);
     system->SetTol(1e-10);
     system->SetTolForce(1e-8);
 #endif
 
     // Integrator settings
-    system->SetTimestepperType(ChTimestepper::HHT);
+    system->SetTimestepperType(ChTimestepper::Type::HHT);
     auto integrator = std::static_pointer_cast<ChTimestepperHHT>(system->GetTimestepper());
     integrator->SetAlpha(-0.2);
     integrator->SetMaxiters(50);

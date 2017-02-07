@@ -612,7 +612,7 @@ int main(int argc, char* argv[]) {
     my_system.SetSolver(mkl_solver);
 #else
     GetLog() << "Using MINRES solver\n";
-    my_system.SetSolverType(ChSolver::MINRES);
+    my_system.SetSolverType(ChSolver::Type::MINRES);
     auto msolver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
     msolver->SetDiagonalPreconditioning(true);
     my_system.SetMaxItersSolverSpeed(100);
@@ -624,8 +624,8 @@ int main(int argc, char* argv[]) {
     my_system.Setup();
     my_system.Update();
 
-    my_system.SetTimestepperType(ChTimestepper::HHT);
-    // my_system.SetTimestepperType(ChTimestepper::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
+    my_system.SetTimestepperType(ChTimestepper::Type::HHT);
+    // my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
     auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
     mystepper->SetAlpha(-0.2);  // Important for convergence
     mystepper->SetMaxiters(16);

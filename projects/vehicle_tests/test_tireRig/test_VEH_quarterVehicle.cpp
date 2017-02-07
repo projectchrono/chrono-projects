@@ -315,7 +315,7 @@ int main(int argc, char* argv[]) {
     switch (solver_type) {
         case SOR: {
             std::cout << "Using SOR solver\n";
-            system->SetSolverType(ChSolver::SOR);
+            system->SetSolverType(ChSolver::Type::SOR);
             system->SetMaxItersSolverSpeed(100);
             system->SetMaxItersSolverStab(100);
             system->SetTol(1e-10);
@@ -324,7 +324,7 @@ int main(int argc, char* argv[]) {
         }
         case MINRES: {
             std::cout << "Using MINRES solver\n";
-            system->SetSolverType(ChSolver::MINRES);
+            system->SetSolverType(ChSolver::Type::MINRES);
             auto minres_solver = std::static_pointer_cast<ChSolverMINRES>(system->GetSolver());
             ////minres_solver->SetDiagonalPreconditioning(true);
             system->SetSolverWarmStarting(true);
@@ -347,11 +347,11 @@ int main(int argc, char* argv[]) {
     switch (integrator_type) {
         case EULER:
             std::cout << "Using EULER_IMPLICIT_LINEARIZED integrator\n";
-            system->SetTimestepperType(ChTimestepper::EULER_IMPLICIT_LINEARIZED);
+            system->SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
             break;
         case HHT: {
             std::cout << "Using HHT integrator\n";
-            system->SetTimestepperType(ChTimestepper::HHT);
+            system->SetTimestepperType(ChTimestepper::Type::HHT);
             auto integrator = std::static_pointer_cast<ChTimestepperHHT>(system->GetTimestepper());
             integrator->SetAlpha(-0.2);
             integrator->SetMaxiters(20);

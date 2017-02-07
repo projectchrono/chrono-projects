@@ -102,8 +102,8 @@ RigNode::RigNode(double init_vel, double slip, int num_threads)
     // -----------------------------------
     // Default integrator and solver types
     // -----------------------------------
-    m_int_type = ChTimestepper::HHT;
-    m_slv_type = ChSolver::CUSTOM;
+    m_int_type = ChTimestepper::Type::HHT;
+    m_slv_type = ChSolver::Type::CUSTOM;
 
     // ----------------------------------
     // Create the (sequential) DEM system
@@ -164,7 +164,7 @@ void RigNode::Construct() {
     // Change solver and integrator
     // -------------------------------
 
-    if (m_slv_type == ChSolver::CUSTOM) {
+    if (m_slv_type == ChSolver::Type::CUSTOM) {
 #ifdef CHRONO_MKL
         auto mkl_solver = std::make_shared<ChSolverMKL<>>();
         mkl_solver->SetSparsityPatternLock(true);
@@ -179,8 +179,8 @@ void RigNode::Construct() {
     }
 
     switch (m_int_type) {
-        case ChTimestepper::HHT:
-            m_system->SetTimestepperType(ChTimestepper::HHT);
+        case ChTimestepper::Type::HHT:
+            m_system->SetTimestepperType(ChTimestepper::Type::HHT);
             m_integrator = std::static_pointer_cast<ChTimestepperHHT>(m_system->GetTimestepper());
             m_integrator->SetAlpha(-0.2);
             m_integrator->SetMaxiters(50);
@@ -714,7 +714,7 @@ void RigNode::OutputData(int frame) {
         // Solver statistics (for last integration step)
         m_outf << m_system->GetTimerStep() << del << m_system->GetTimerSetup() << del << m_system->GetTimerSolver()
                << del << m_system->GetTimerUpdate() << del;
-        if (m_int_type == ChTimestepper::HHT) {
+        if (m_int_type == ChTimestepper::Type::HHT) {
             m_outf << m_integrator->GetNumIterations() << del << m_integrator->GetNumSetupCalls() << del
                    << m_integrator->GetNumSolveCalls() << del;
         }

@@ -787,10 +787,10 @@ int main() {
     switch (solver_type) {
         case ITSOR: {
             GetLog() << "Using SOLVER_SOR solver\n";
-            my_system->SetTimestepperType(ChTimestepper::EULER_IMPLICIT_LINEARIZED);
+            my_system->SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
             my_system->SetMaxItersSolverSpeed(100);
             my_system->SetMaxItersSolverStab(100);  // Tasora stepper uses this, Anitescu does not
-            my_system->SetSolverType(ChSolver::SOR);
+            my_system->SetSolverType(ChSolver::Type::SOR);
             my_system->SetTol(1e-10);
             my_system->SetTolForce(1e-8);
             break;
@@ -802,7 +802,7 @@ int main() {
             mkl_solver->SetSparsityPatternLock(true);
             my_system->SetSolver(mkl_solver);
 
-            my_system->SetTimestepperType(ChTimestepper::HHT);
+            my_system->SetTimestepperType(ChTimestepper::Type::HHT);
             auto integrator = std::static_pointer_cast<ChTimestepperHHT>(my_system->GetTimestepper());
             integrator->SetAlpha(-0.2);
             integrator->SetMaxiters(50);

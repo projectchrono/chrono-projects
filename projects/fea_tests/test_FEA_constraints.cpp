@@ -121,7 +121,7 @@ void test_beam(const std::string& name,  /// test name
     mkl_solver->SetSparsityPatternLock(true);
     mkl_solver->SetVerbose(false);
 
-    my_system.SetTimestepperType(ChTimestepper::HHT);
+    my_system.SetTimestepperType(ChTimestepper::Type::HHT);
     auto mystepper = std::static_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
     mystepper->SetAlpha(-0.2);
     mystepper->SetMaxiters(100);
@@ -135,7 +135,7 @@ void test_beam(const std::string& name,  /// test name
     // MINRES solver + Euler
     std::cout << "Using Euler + MINRES" << std::endl;
 
-    my_system.SetSolverType(ChSolver::MINRES);
+    my_system.SetSolverType(ChSolver::Type::MINRES);
     my_system.SetSolverWarmStarting(true);
     my_system.SetMaxItersSolverSpeed(100000);
     my_system.SetTolForce(1e-08);
@@ -143,7 +143,7 @@ void test_beam(const std::string& name,  /// test name
     msolver->SetVerbose(false);
     msolver->SetDiagonalPreconditioning(true);
 
-    // my_system.SetTimestepperType(ChTimestepper::EULER_IMPLICIT_LINEARIZED);
+    // my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
     my_system.SetTimestepperType(ChTimestepper::EULER_IMPLICIT);
 #endif
 

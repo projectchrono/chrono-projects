@@ -170,7 +170,7 @@ bool ANCFBeamTest::execute() {
     mloadcontainer->Add(mgravity4);
 
     // Change solver settings
-    my_system.SetSolverType(ChSolver::MINRES);
+    my_system.SetSolverType(ChSolver::Type::MINRES);
     my_system.SetSolverWarmStarting(true);  // this helps a lot to speedup convergence in this class of problems
     my_system.SetMaxItersSolverSpeed(200);
     my_system.SetMaxItersSolverStab(200);
@@ -182,8 +182,8 @@ bool ANCFBeamTest::execute() {
     my_system.SetEndTime(12.5);
 
     // Change type of integrator:
-    my_system.SetTimestepperType(ChTimestepper::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
-    //  my_system.SetTimestepperType(ChTimestepper::HHT);  // precise,slower, might iterate each step
+    my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
+    //  my_system.SetTimestepperType(ChTimestepper::Type::HHT);  // precise,slower, might iterate each step
 
     // if later you want to change integrator settings:
     if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper())) {
