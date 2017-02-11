@@ -327,7 +327,7 @@ void TerrainNode::Construct() {
 
         for (int il = 0; il < m_num_layers; il++) {
             gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
-            center.z += 2 * r;
+            center.z() += 2 * r;
         }
 
         m_num_particles = gen.getTotalNumBodies();
@@ -444,14 +444,14 @@ void TerrainNode::Settle() {
             ChQuaternion<> rot;
             ChVector<> pos_dt;
             ChQuaternion<> rot_dt;
-            iss >> identifier >> pos.x >> pos.y >> pos.z >> rot.e0 >> rot.e1 >> rot.e2 >> rot.e3 >> pos_dt.x >>
-                pos_dt.y >> pos_dt.z >> rot_dt.e0 >> rot_dt.e1 >> rot_dt.e2 >> rot_dt.e3;
+            iss >> identifier >> pos.x() >> pos.y() >> pos.z() >> rot.e0 >> rot.e1 >> rot.e2 >> rot.e3 >> pos_dt.x() >>
+                pos_dt.y() >> pos_dt.z() >> rot_dt.e0 >> rot_dt.e1 >> rot_dt.e2 >> rot_dt.e3;
 
             auto body = (*m_system->Get_bodylist())[ib];
             assert(body->GetIdentifier() == identifier);
-            body->SetPos(ChVector<>(pos.x, pos.y, pos.z));
+            body->SetPos(ChVector<>(pos.x(), pos.y(), pos.z()));
             body->SetRot(ChQuaternion<>(rot.e0, rot.e1, rot.e2, rot.e3));
-            body->SetPos_dt(ChVector<>(pos_dt.x, pos_dt.y, pos_dt.z));
+            body->SetPos_dt(ChVector<>(pos_dt.x(), pos_dt.y(), pos_dt.z()));
             body->SetRot_dt(ChQuaternion<>(rot_dt.e0, rot_dt.e1, rot_dt.e2, rot_dt.e3));
         }
 
@@ -506,8 +506,8 @@ void TerrainNode::Settle() {
 
     // Find "height" of granular material
     for (auto body : *m_system->Get_bodylist()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z > m_init_height)
-            m_init_height = body->GetPos().z;
+        if (body->GetIdentifier() > 0 && body->GetPos().z() > m_init_height)
+            m_init_height = body->GetPos().z();
     }
     m_init_height += m_radius_g;
 }
@@ -795,9 +795,9 @@ void TerrainNode::UpdateFaceProxies() {
         // into the Chrono::Parallel data structures.
         // ATTENTION: It is assumed that no other triangle contact shapes have been added
         // to the system BEFORE those corresponding to the tire mesh faces!
-        shape_data[3 * it + 0] = real3(pA.x - pos.x, pA.y - pos.y, pA.z - pos.z);
-        shape_data[3 * it + 1] = real3(pB.x - pos.x, pB.y - pos.y, pB.z - pos.z);
-        shape_data[3 * it + 2] = real3(pC.x - pos.x, pC.y - pos.y, pC.z - pos.z);
+        shape_data[3 * it + 0] = real3(pA.x() - pos.x(), pA.y() - pos.y(), pA.z() - pos.z());
+        shape_data[3 * it + 1] = real3(pB.x() - pos.x(), pB.y() - pos.y(), pB.z() - pos.z());
+        shape_data[3 * it + 2] = real3(pC.x() - pos.x(), pC.y() - pos.y(), pC.z() - pos.z());
     }
 }
 
@@ -887,9 +887,9 @@ void TerrainNode::ForcesFaceProxies(std::vector<double>& vert_forces, std::vecto
     // Note: could improve efficiency by reserving space for vectors.
     for (auto kv : my_map) {
         vert_indices.push_back(kv.first);
-        vert_forces.push_back(kv.second.x);
-        vert_forces.push_back(kv.second.y);
-        vert_forces.push_back(kv.second.z);
+        vert_forces.push_back(kv.second.x());
+        vert_forces.push_back(kv.second.y());
+        vert_forces.push_back(kv.second.z());
     }
 }
 
@@ -1042,29 +1042,29 @@ void TerrainNode::PrintFaceProxiesContactData() {
 // -----------------------------------------------------------------------------
 void TerrainNode::PrintNodeProxiesUpdateData() {
     auto lowest = std::min_element(m_proxies.begin(), m_proxies.end(), [](const ProxyBody& a, const ProxyBody& b) {
-        return a.m_body->GetPos().z < b.m_body->GetPos().z;
+        return a.m_body->GetPos().z() < b.m_body->GetPos().z();
     });
     const ChVector<>& vel = (*lowest).m_body->GetPos_dt();
-    double height = (*lowest).m_body->GetPos().z;
+    double height = (*lowest).m_body->GetPos().z();
     cout << "[Terrain node] lowest proxy:  index = " << (*lowest).m_index << "  height = " << height
-         << "  velocity = " << vel.x << "  " << vel.y << "  " << vel.z << endl;
+         << "  velocity = " << vel.x() << "  " << vel.y() << "  " << vel.z() << endl;
 }
 
 void TerrainNode::PrintFaceProxiesUpdateData() {
     {
         auto lowest = std::min_element(m_proxies.begin(), m_proxies.end(), [](const ProxyBody& a, const ProxyBody& b) {
-            return a.m_body->GetPos().z < b.m_body->GetPos().z;
+            return a.m_body->GetPos().z() < b.m_body->GetPos().z();
         });
         const ChVector<>& vel = (*lowest).m_body->GetPos_dt();
-        double height = (*lowest).m_body->GetPos().z;
+        double height = (*lowest).m_body->GetPos().z();
         cout << "[Terrain node] lowest proxy:  index = " << (*lowest).m_index << "  height = " << height
-             << "  velocity = " << vel.x << "  " << vel.y << "  " << vel.z << endl;
+             << "  velocity = " << vel.x() << "  " << vel.y() << "  " << vel.z() << endl;
     }
 
     {
         auto lowest = std::min_element(m_vertex_states.begin(), m_vertex_states.end(),
-                                       [](const VertexState& a, const VertexState& b) { return a.pos.z < b.pos.z; });
-        cout << "[Terrain node] lowest vertex:  height = " << (*lowest).pos.z << endl;
+                                       [](const VertexState& a, const VertexState& b) { return a.pos.z() < b.pos.z(); });
+        cout << "[Terrain node] lowest vertex:  height = " << (*lowest).pos.z() << endl;
     }
 }
 
@@ -1072,7 +1072,7 @@ void TerrainNode::PrintFaceProxiesUpdateData() {
 void TerrainNode::PrintMeshUpdateData() {
     cout << "[Terrain node] mesh vertices and faces" << endl;
     std::for_each(m_vertex_states.begin(), m_vertex_states.end(),
-                  [](const VertexState& a) { cout << a.pos.x << "  " << a.pos.y << "  " << a.pos.z << endl; });
+                  [](const VertexState& a) { cout << a.pos.x() << "  " << a.pos.y() << "  " << a.pos.z() << endl; });
 
     std::for_each(m_triangles.begin(), m_triangles.end(),
                   [](const Triangle& a) { cout << a.v1 << "  " << a.v2 << "  " << a.v3 << endl; });

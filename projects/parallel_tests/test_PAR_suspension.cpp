@@ -612,10 +612,10 @@ int CreateGranularMaterial(ChSystemParallel* system,
     ChVector<> hdims(groundWidth - 2 * r, 2 * (pitDepth - 2 * r), pitLength - 2 * r);
     ChVector<> center(0, 0, pitLocation_z + pitLength / 3 - 2 * r);
 
-    // while (center.z < pitDepth)
+    // while (center.z() < pitDepth)
     //{
     gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims / 2);
-    //  center.z += 2 * r;
+    //  center.z() += 2 * r;
     //}
 
     // Return the number of generated particles.

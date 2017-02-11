@@ -267,7 +267,7 @@ int main(int argc, char* argv[]) {
     terrain->SetContactRestitutionCoefficient(0.01f);
     terrain->SetContactMaterialProperties(2e7f, 0.3f);
     terrain->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 4);
-    terrain->Initialize(init_loc.z - tire_radius - tire_offset, terrain_length, terrain_width);
+    terrain->Initialize(init_loc.z() - tire_radius - tire_offset, terrain_length, terrain_width);
 
     // Create joints
     // -------------
@@ -406,7 +406,7 @@ int main(int argc, char* argv[]) {
         wheel_state.rot = wheel->GetRot();           // orientation with respect to global frame
         wheel_state.lin_vel = wheel->GetPos_dt();    // linear velocity, expressed in the global frame
         wheel_state.ang_vel = wheel->GetWvel_par();  // angular velocity, expressed in the global frame
-        wheel_state.omega = wheel->GetWvel_loc().y;  // wheel angular speed about its rotation axis
+        wheel_state.omega = wheel->GetWvel_loc().y();  // wheel angular speed about its rotation axis
 
         // Extract tire forces
         tire_force = tire->GetTireForce();
@@ -434,15 +434,15 @@ int main(int argc, char* argv[]) {
         rF = linkCoordsys.TransformDirectionLocalToParent(rF);
         rT = linkCoordsys.TransformDirectionLocalToParent(rT);
         std::cout << "Joint reaction (in absolute frame)" << std::endl;
-        std::cout << "   force:  " << rF.x << "  " << rF.y << "  " << rF.z << std::endl;
-        std::cout << "   torque: " << rT.x << "  " << rT.y << "  " << rT.z << std::endl;
+        std::cout << "   force:  " << rF.x() << "  " << rF.y() << "  " << rF.z() << std::endl;
+        std::cout << "   torque: " << rT.x() << "  " << rT.y() << "  " << rT.z() << std::endl;
 
         // Report tire forces (as acting on the wheel body).
         tire_force_cosim = tire->GetTireForce(true);
         std::cout << "Tire force (at wheel center)" << std::endl;
-        std::cout << "   point:  " << tire_force_cosim.point.x << "  " << tire_force_cosim.point.y << "  " << tire_force_cosim.point.z << std::endl;
-        std::cout << "   force:  " << tire_force_cosim.force.x << "  " << tire_force_cosim.force.y << "  " << tire_force_cosim.force.z << std::endl;
-        std::cout << "   moment: " << tire_force_cosim.moment.x << "  " << tire_force_cosim.moment.y << "  " << tire_force_cosim.moment.z << std::endl;
+        std::cout << "   point:  " << tire_force_cosim.point.x() << "  " << tire_force_cosim.point.y() << "  " << tire_force_cosim.point.z() << std::endl;
+        std::cout << "   force:  " << tire_force_cosim.force.x() << "  " << tire_force_cosim.force.y() << "  " << tire_force_cosim.force.z() << std::endl;
+        std::cout << "   moment: " << tire_force_cosim.moment.x() << "  " << tire_force_cosim.moment.y() << "  " << tire_force_cosim.moment.z() << std::endl;
 
         std::cout << std::endl;
     }

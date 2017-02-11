@@ -263,7 +263,7 @@ int main(int argc, char** argv) {
 
     for (int il = 0; il < num_layers; il++) {
         gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
-        center.z += 2 * r;
+        center.z() += 2 * r;
     }
 
     unsigned int num_particles = gen.getTotalNumBodies();
@@ -335,8 +335,8 @@ int main(int argc, char** argv) {
             const ChVector<>& vel = granule->GetPos_dt();
             outf << system->GetChTime() << " ";
             outf << system->GetNbodies() << " " << system->GetNcontacts() << " ";
-            outf << pos.x << " " << pos.y << " " << pos.z << " ";
-            outf << vel.x << " " << vel.y << " " << vel.z;
+            outf << pos.x() << " " << pos.y() << " " << pos.z() << " ";
+            outf << vel.x() << " " << vel.y() << " " << vel.z();
             outf << std::endl << std::flush;
         }
 

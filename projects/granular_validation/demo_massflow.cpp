@@ -282,7 +282,7 @@ void CreateParticles(ChSystemParallel* system) {
 
     while (gen.getTotalNumBodies() < desired_num_particles) {
         gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims, vel);
-        center.z += 2 * r;
+        center.z() += 2 * r;
     }
 
     std::cout << "Number of particles: " << gen.getTotalNumBodies() << std::endl;
@@ -309,7 +309,7 @@ int GetNumParticlesBelowHeight(ChSystemParallel* sys, double value) {
     int count = 0;
     for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
         auto body = (*sys->Get_bodylist())[i];
-        if (body->GetIdentifier() > 0 && body->GetPos().z < value)
+        if (body->GetIdentifier() > 0 && body->GetPos().z() < value)
             count++;
     }
     return count;
@@ -319,7 +319,7 @@ int GetNumParticlesAboveHeight(ChSystemParallel* sys, double value) {
     int count = 0;
     for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
         auto body = (*sys->Get_bodylist())[i];
-        if (body->GetIdentifier() > 0 && body->GetPos().z > value)
+        if (body->GetIdentifier() > 0 && body->GetPos().z() > value)
             count++;
     }
     return count;
@@ -457,7 +457,7 @@ int main(int argc, char* argv[]) {
             cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
             cout << "             Execution time: " << exec_time << endl;
 
-            double opening = insert->GetPos().x + 0.5 * height + delta;
+            double opening = insert->GetPos().x() + 0.5 * height + delta;
             int count = GetNumParticlesBelowHeight(msystem, 0);
 
             cout << "             Gap:            " << -opening << endl;

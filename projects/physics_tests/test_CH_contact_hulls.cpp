@@ -26,7 +26,7 @@ using namespace chrono;
 using namespace chrono::irrlicht;
 
 void AddWallBox(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVector<>& loc) {
-    body->GetCollisionModel()->AddBox(dim.x, dim.y, dim.z, loc);
+    body->GetCollisionModel()->AddBox(dim.x(), dim.y(), dim.z(), loc);
 
     auto box = std::make_shared<ChBoxShape>();
     box->GetBoxGeometry().Size = dim;
@@ -55,20 +55,20 @@ void AddWallMesh(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVe
     idx_vertices.resize(num_faces);
     idx_normals.resize(num_faces);
 
-    vertices[0] = ChVector<>(-dim.x, -dim.y, -dim.z) + loc;
-    vertices[1] = ChVector<>(-dim.x, +dim.y, -dim.z) + loc;
-    vertices[2] = ChVector<>(+dim.x, +dim.y, -dim.z) + loc;
-    vertices[3] = ChVector<>(+dim.x, -dim.y, -dim.z) + loc;
+    vertices[0] = ChVector<>(-dim.x(), -dim.y(), -dim.z()) + loc;
+    vertices[1] = ChVector<>(-dim.x(), +dim.y(), -dim.z()) + loc;
+    vertices[2] = ChVector<>(+dim.x(), +dim.y(), -dim.z()) + loc;
+    vertices[3] = ChVector<>(+dim.x(), -dim.y(), -dim.z()) + loc;
     
     normals[0] = ChVector<>(-1, -1, -1).Normalize();
     normals[1] = ChVector<>(-1, +1, -1).Normalize();
     normals[2] = ChVector<>(+1, +1, -1).Normalize();
     normals[3] = ChVector<>(+1, -1, -1).Normalize();
 
-    vertices[4] = ChVector<>(-dim.x, -dim.y, +dim.z) + loc;
-    vertices[5] = ChVector<>(-dim.x, +dim.y, +dim.z) + loc;
-    vertices[6] = ChVector<>(+dim.x, +dim.y, +dim.z) + loc;
-    vertices[7] = ChVector<>(+dim.x, -dim.y, +dim.z) + loc;
+    vertices[4] = ChVector<>(-dim.x(), -dim.y(), +dim.z()) + loc;
+    vertices[5] = ChVector<>(-dim.x(), +dim.y(), +dim.z()) + loc;
+    vertices[6] = ChVector<>(+dim.x(), +dim.y(), +dim.z()) + loc;
+    vertices[7] = ChVector<>(+dim.x(), -dim.y(), +dim.z()) + loc;
 
     normals[4] = ChVector<>(-1, -1, +1).Normalize();
     normals[5] = ChVector<>(-1, +1, +1).Normalize();
@@ -109,14 +109,14 @@ void AddWallMesh(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVe
 void AddWallHull(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVector<>& loc) {
     std::vector<ChVector<>> points;
 
-    points.push_back(ChVector<>(-dim.x, -dim.y, -dim.z) + loc);
-    points.push_back(ChVector<>(-dim.x, +dim.y, -dim.z) + loc);
-    points.push_back(ChVector<>(+dim.x, +dim.y, -dim.z) + loc);
-    points.push_back(ChVector<>(+dim.x, -dim.y, -dim.z) + loc);
-    points.push_back(ChVector<>(-dim.x, -dim.y, +dim.z) + loc);
-    points.push_back(ChVector<>(-dim.x, +dim.y, +dim.z) + loc);
-    points.push_back(ChVector<>(+dim.x, +dim.y, +dim.z) + loc);
-    points.push_back(ChVector<>(+dim.x, -dim.y, +dim.z) + loc);
+    points.push_back(ChVector<>(-dim.x(), -dim.y(), -dim.z()) + loc);
+    points.push_back(ChVector<>(-dim.x(), +dim.y(), -dim.z()) + loc);
+    points.push_back(ChVector<>(+dim.x(), +dim.y(), -dim.z()) + loc);
+    points.push_back(ChVector<>(+dim.x(), -dim.y(), -dim.z()) + loc);
+    points.push_back(ChVector<>(-dim.x(), -dim.y(), +dim.z()) + loc);
+    points.push_back(ChVector<>(-dim.x(), +dim.y(), +dim.z()) + loc);
+    points.push_back(ChVector<>(+dim.x(), +dim.y(), +dim.z()) + loc);
+    points.push_back(ChVector<>(+dim.x(), -dim.y(), +dim.z()) + loc);
 
     body->GetCollisionModel()->AddConvexHull(points);
 

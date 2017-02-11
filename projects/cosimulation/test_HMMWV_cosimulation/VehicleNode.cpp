@@ -127,7 +127,7 @@ void VehicleNode::Initialize() {
     // Set initial vehicle position and orientation
     double y_offset = 0;
     if (m_driver_type == PATH_DRIVER) {
-        y_offset = m_driver_path.getPoint(0).y;
+        y_offset = m_driver_path.getPoint(0).y();
     }
     ChVector<> init_loc(2.75 - init_dim[1], y_offset, 0.52 + init_dim[0]);
     ChQuaternion<> init_rot(1, 0, 0, 0);
@@ -176,9 +176,9 @@ void VehicleNode::Initialize() {
     double bufWS[7];
     for (int iw = 0; iw < m_num_wheels; iw++) {
         WheelState wheel_state = m_vehicle->GetWheelState(WheelID(iw));
-        bufWS[0] = wheel_state.pos.x;
-        bufWS[1] = wheel_state.pos.y;
-        bufWS[2] = wheel_state.pos.z;
+        bufWS[0] = wheel_state.pos.x();
+        bufWS[1] = wheel_state.pos.y();
+        bufWS[2] = wheel_state.pos.z();
         bufWS[3] = wheel_state.rot.e0;
         bufWS[4] = wheel_state.rot.e1;
         bufWS[5] = wheel_state.rot.e2;
@@ -229,19 +229,19 @@ void VehicleNode::Synchronize(int step_number, double time) {
     double bufWS[14];
     for (int iw = 0; iw < m_num_wheels; iw++) {
         WheelState wheel_state = m_vehicle->GetWheelState(WheelID(iw));
-        bufWS[0] = wheel_state.pos.x;
-        bufWS[1] = wheel_state.pos.y;
-        bufWS[2] = wheel_state.pos.z;
+        bufWS[0] = wheel_state.pos.x();
+        bufWS[1] = wheel_state.pos.y();
+        bufWS[2] = wheel_state.pos.z();
         bufWS[3] = wheel_state.rot.e0;
         bufWS[4] = wheel_state.rot.e1;
         bufWS[5] = wheel_state.rot.e2;
         bufWS[6] = wheel_state.rot.e3;
-        bufWS[7] = wheel_state.lin_vel.x;
-        bufWS[8] = wheel_state.lin_vel.y;
-        bufWS[9] = wheel_state.lin_vel.z;
-        bufWS[10] = wheel_state.ang_vel.x;
-        bufWS[11] = wheel_state.ang_vel.y;
-        bufWS[12] = wheel_state.ang_vel.z;
+        bufWS[7] = wheel_state.lin_vel.x();
+        bufWS[8] = wheel_state.lin_vel.y();
+        bufWS[9] = wheel_state.lin_vel.z();
+        bufWS[10] = wheel_state.ang_vel.x();
+        bufWS[11] = wheel_state.ang_vel.y();
+        bufWS[12] = wheel_state.ang_vel.z();
         bufWS[13] = wheel_state.omega;
         MPI_Send(bufWS, 14, MPI_DOUBLE, TIRE_NODE_RANK(iw), iw, MPI_COMM_WORLD);
     }
@@ -293,10 +293,10 @@ void VehicleNode::OutputData(int frame) {
 
         m_outf << m_system->GetChTime() << del;
         m_outf << steering << del << throttle << del << braking << del;
-        m_outf << pos.x << del << pos.y << del << pos.z << del;
+        m_outf << pos.x() << del << pos.y() << del << pos.z() << del;
         m_outf << rot.e0 << del << rot.e1 << del << rot.e2 << del << rot.e3 << del;
-        m_outf << lin_vel.x << del << lin_vel.y << del << lin_vel.z << del;
-        m_outf << ang_vel.x << del << ang_vel.y << del << ang_vel.z << del;
+        m_outf << lin_vel.x() << del << lin_vel.y() << del << lin_vel.z() << del;
+        m_outf << ang_vel.x() << del << ang_vel.y() << del << ang_vel.z() << del;
         m_outf << endl;
     }
 

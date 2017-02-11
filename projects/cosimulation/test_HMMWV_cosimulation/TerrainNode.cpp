@@ -386,7 +386,7 @@ void TerrainNode::Construct() {
 
         for (int il = 0; il < m_num_layers; il++) {
             gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
-            center.z += 2 * r;
+            center.z() += 2 * r;
         }
 
         m_num_particles = gen.getTotalNumBodies();
@@ -505,14 +505,14 @@ void TerrainNode::Settle() {
             ChQuaternion<> rot;
             ChVector<> pos_dt;
             ChQuaternion<> rot_dt;
-            iss >> identifier >> pos.x >> pos.y >> pos.z >> rot.e0 >> rot.e1 >> rot.e2 >> rot.e3 >> pos_dt.x >>
-                pos_dt.y >> pos_dt.z >> rot_dt.e0 >> rot_dt.e1 >> rot_dt.e2 >> rot_dt.e3;
+            iss >> identifier >> pos.x() >> pos.y() >> pos.z() >> rot.e0 >> rot.e1 >> rot.e2 >> rot.e3 >> pos_dt.x() >>
+                pos_dt.y() >> pos_dt.z() >> rot_dt.e0 >> rot_dt.e1 >> rot_dt.e2 >> rot_dt.e3;
 
             auto body = (*m_system->Get_bodylist())[ib];
             assert(body->GetIdentifier() == identifier);
-            body->SetPos(ChVector<>(pos.x, pos.y, pos.z));
+            body->SetPos(ChVector<>(pos.x(), pos.y(), pos.z()));
             body->SetRot(ChQuaternion<>(rot.e0, rot.e1, rot.e2, rot.e3));
-            body->SetPos_dt(ChVector<>(pos_dt.x, pos_dt.y, pos_dt.z));
+            body->SetPos_dt(ChVector<>(pos_dt.x(), pos_dt.y(), pos_dt.z()));
             body->SetRot_dt(ChQuaternion<>(rot_dt.e0, rot_dt.e1, rot_dt.e2, rot_dt.e3));
         }
 
@@ -568,8 +568,8 @@ void TerrainNode::Settle() {
     // Find "height" of granular material
     m_init_height = 0;
     for (auto body : *m_system->Get_bodylist()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z > m_init_height)
-            m_init_height = body->GetPos().z;
+        if (body->GetIdentifier() > 0 && body->GetPos().z() > m_init_height)
+            m_init_height = body->GetPos().z();
     }
     m_init_height += m_radius_g;
 }
@@ -916,9 +916,9 @@ void TerrainNode::UpdateFaceProxies(int which) {
         // ATTENTION: It is assumed that no other triangle contact shapes have been added
         // to the system BEFORE those corresponding to the tire mesh faces!
         unsigned int offset = 3 * m_tire_data[which].m_start_tri + 3 * it;
-        shape_data[offset + 0] = real3(pA.x - pos.x, pA.y - pos.y, pA.z - pos.z);
-        shape_data[offset + 1] = real3(pB.x - pos.x, pB.y - pos.y, pB.z - pos.z);
-        shape_data[offset + 2] = real3(pC.x - pos.x, pC.y - pos.y, pC.z - pos.z);
+        shape_data[offset + 0] = real3(pA.x() - pos.x(), pA.y() - pos.y(), pA.z() - pos.z());
+        shape_data[offset + 1] = real3(pB.x() - pos.x(), pB.y() - pos.y(), pB.z() - pos.z());
+        shape_data[offset + 2] = real3(pC.x() - pos.x(), pC.y() - pos.y(), pC.z() - pos.z());
     }
 }
 
@@ -1010,9 +1010,9 @@ void TerrainNode::ForcesFaceProxies(int which, std::vector<double>& vert_forces,
     // Note: could improve efficiency by reserving space for vectors.
     for (auto kv : my_map) {
         vert_indices.push_back(kv.first);
-        vert_forces.push_back(kv.second.x);
-        vert_forces.push_back(kv.second.y);
-        vert_forces.push_back(kv.second.z);
+        vert_forces.push_back(kv.second.x());
+        vert_forces.push_back(kv.second.y());
+        vert_forces.push_back(kv.second.z());
     }
 }
 

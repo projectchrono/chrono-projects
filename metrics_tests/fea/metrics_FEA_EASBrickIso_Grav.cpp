@@ -264,14 +264,14 @@ bool BrickIso_GravTest::execute() {
         timer.stop();
 
         num_iterations += mystepper->GetNumIterations();
-        std::cout << "time = " << my_system.GetChTime() << "\t" << nodetip->GetPos().z << std::endl;
+        std::cout << "time = " << my_system.GetChTime() << "\t" << nodetip->GetPos().z() << std::endl;
     }
 
     // Report run time and total number of iterations
     std::cout << "sim time: " << timer.GetTimeSeconds() << " Num iterations: " << num_iterations << std::endl;
 
     m_execTime = timer.GetTimeSeconds();
-    addMetric("tip_y_position (mm)", 1000 * nodetip->GetPos().z);
+    addMetric("tip_y_position (mm)", 1000 * nodetip->GetPos().z());
     addMetric("avg_num_iterations", (double)num_iterations / num_steps);
     addMetric("avg_time_per_step (ms)", 1000 * m_execTime / num_steps);
 

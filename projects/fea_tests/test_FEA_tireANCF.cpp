@@ -207,13 +207,13 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
     MyLoadCustomMultiple(std::vector<std::shared_ptr<ChLoadable>>& mloadables) : ChLoadCustomMultiple(mloadables){};
 
     double GroundLocationBump(double GroundLoc, double BumpLoc, ChVector<> NodeLocation, double Amplitude) {
-        if (NodeLocation.y > 0.0 || NodeLocation.x <= (BumpLoc - BumpRadius) ||
-            NodeLocation.x >= (BumpLoc + BumpRadius))  // There is no bump on that side
+        if (NodeLocation.y() > 0.0 || NodeLocation.x() <= (BumpLoc - BumpRadius) ||
+            NodeLocation.x() >= (BumpLoc + BumpRadius))  // There is no bump on that side
         {
             return GroundLoc;
         } else {
             return (GroundLoc +
-                    Amplitude * sin(1 / (2 * BumpRadius) * CH_C_PI * (NodeLocation.x - (BumpLongLoc - BumpRadius))));
+                    Amplitude * sin(1 / (2 * BumpRadius) * CH_C_PI * (NodeLocation.x() - (BumpLongLoc - BumpRadius))));
         }
     };
     virtual void ComputeQ(ChState* state_x,      ///< state position to evaluate Q
@@ -235,8 +235,8 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
         int NoCNodes = 0;
         for (int iii = 0; iii < loadables.size(); iii++) {
             Node1_Pos = state_x->ClipVector(iii * 6, 0);
-            if (Node1_Pos.z < GroundLocationBump(GroundLoc, BumpLongLoc, Node1_Pos, BumpRadius)) {
-                //  chrono::GetLog() << " \n Node1_Pos.z: " << Node1_Pos.z << "\n GroundLoc: " << GroundLoc << "
+            if (Node1_Pos.z() < GroundLocationBump(GroundLoc, BumpLongLoc, Node1_Pos, BumpRadius)) {
+                //  chrono::GetLog() << " \n Node1_Pos.z(): " << Node1_Pos.z() << "\n GroundLoc: " << GroundLoc << "
                 //  Number: " << iii;
                 NoCNodes++;
             }
@@ -254,32 +254,32 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
                 Node1_Vel = state_w->ClipVector(iii * 6, 0);
                 Node1_GradVel = state_w->ClipVector(iii * 6 + 3, 0);
                 double GroundLocZ = GroundLocationBump(GroundLoc, BumpLongLoc, Node1_Pos, BumpRadius);
-                if (Node1_Pos.z < GroundLocZ) {
-                    double Penet = abs(Node1_Pos.z - GroundLocZ);
+                if (Node1_Pos.z() < GroundLocZ) {
+                    double Penet = abs(Node1_Pos.z() - GroundLocZ);
                     // GetLog() << "Node number:  " << iii << ".  "
                     //          << "Penetration:  " << Penet << "\n";
-                    NormalForceNode = KGround * Penet;  // +CGround * abs(Node1_Vel.y*Penet);
+                    NormalForceNode = KGround * Penet;  // +CGround * abs(Node1_Vel.y()*Penet);
                     this->load_Q(iii * 6 + 2) =
-                        NormalForceNode - CGround * (Node1_Vel.z) * abs(Penet);  // Fy (Vertical)
+                        NormalForceNode - CGround * (Node1_Vel.z()) * abs(Penet);  // Fy (Vertical)
                     // Friction forces
                     const double VelLimit = 0.25;
-                    if (abs(Node1_Vel.x) > VelLimit) {
+                    if (abs(Node1_Vel.x()) > VelLimit) {
                         this->load_Q(iii * 6 + 0) =
                             -NormalForceNode * FrictionCoeff *
-                            (Node1_Vel.x / sqrt((pow(Node1_Vel.x, 2) + pow(Node1_Vel.y, 2))));  // Fx (Plane x)
+                            (Node1_Vel.x() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fx (Plane x)
                     } else {
                         this->load_Q(iii * 6 + 0) =
-                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.x) * CH_C_PI_2 / VelLimit) *
-                            (Node1_Vel.x / sqrt((pow(Node1_Vel.x, 2) + pow(Node1_Vel.y, 2))));  // Fx (Plane x)
+                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.x()) * CH_C_PI_2 / VelLimit) *
+                            (Node1_Vel.x() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fx (Plane x)
                     }
-                    if (abs(Node1_Vel.y) > VelLimit) {
+                    if (abs(Node1_Vel.y()) > VelLimit) {
                         this->load_Q(iii * 6 + 1) =
                             -NormalForceNode * FrictionCoeff *
-                            (Node1_Vel.y / sqrt((pow(Node1_Vel.x, 2) + pow(Node1_Vel.y, 2))));  // Fz (Plane y)
+                            (Node1_Vel.y() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fz (Plane y)
                     } else {
                         this->load_Q(iii * 6 + 1) =
-                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.z) * CH_C_PI_2 / VelLimit) *
-                            (Node1_Vel.y / sqrt((pow(Node1_Vel.x, 2) + pow(Node1_Vel.y, 2))));  // Fz (Plane y)
+                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.z()) * CH_C_PI_2 / VelLimit) *
+                            (Node1_Vel.y() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fz (Plane y)
                     }
                 }
             }
@@ -373,7 +373,7 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
     // Create a set of nodes for the tire based on the input data
     for (int i = 0; i < TotalNumNodes; i++) {
         auto node = std::make_shared<ChNodeFEAxyzD>(
-            ChVector<>(COORDFlex(i, 0) + rim_center.x, COORDFlex(i, 1) + rim_center.y, COORDFlex(i, 2)),
+            ChVector<>(COORDFlex(i, 0) + rim_center.x(), COORDFlex(i, 1) + rim_center.y(), COORDFlex(i, 2)),
             ChVector<>(COORDFlex(i, 3), COORDFlex(i, 4), COORDFlex(i, 5)));
         node->SetPos_dt(ChVector<>(VELCYFlex(i, 0), VELCYFlex(i, 1), VELCYFlex(i, 2)));
         node->SetD_dt(ChVector<>(VELCYFlex(i, 3), VELCYFlex(i, 4), VELCYFlex(i, 5)));
@@ -386,9 +386,9 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
     // Check position of the bottom node
     GetLog() << "TotalNumNodes: " << TotalNumNodes << "\n\n";
     auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode((TotalNumElements / 2)));
-    GetLog() << "X : " << nodetip->GetPos().x << " Y : " << nodetip->GetPos().y << " Z : " << nodetip->GetPos().z
+    GetLog() << "X : " << nodetip->GetPos().x() << " Y : " << nodetip->GetPos().y() << " Z : " << nodetip->GetPos().z()
              << "\n\n";
-    GetLog() << "dX : " << nodetip->GetD().x << " dY : " << nodetip->GetD().y << " dZ : " << nodetip->GetD().z
+    GetLog() << "dX : " << nodetip->GetD().x() << " dY : " << nodetip->GetD().y() << " dZ : " << nodetip->GetD().z()
              << "\n\n";
 
     int LayerHist = 0;  // Number of layers in the previous tire sections
@@ -460,7 +460,7 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
     // Add initial velocity to the nodes (for rolling)
     for (unsigned int i = 0; i < TireMesh->GetNnodes(); ++i) {
         ChVector<> node_pos = std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(i))->GetPos();
-        double tang_vel = ForVelocity * (node_pos.z) / (HumveeVertPos);
+        double tang_vel = ForVelocity * (node_pos.z()) / (HumveeVertPos);
         ChVector<> NodeVel(tang_vel, 0, 0.0);
         std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(i))->SetPos_dt(NodeVel);
     }

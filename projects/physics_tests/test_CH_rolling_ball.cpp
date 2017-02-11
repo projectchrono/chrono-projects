@@ -70,10 +70,10 @@ void Output(double time, std::shared_ptr<ChBody> ball, int ncontacts, const ChVe
 
     std::cout << time << "  ";
     std::cout << ncontacts << "     ";
-    std::cout << pos.x << "  " << pos.y << "  " << pos.z << "     ";
-    std::cout << vel.x << " " << vel.y << "  " << vel.z << "     ";
-    std::cout << omg.x << "  " << omg.y << "  " << omg.z << "     ";
-    std::cout << cforce.x << "  " << cforce.y << "  " << cforce.z;
+    std::cout << pos.x() << "  " << pos.y() << "  " << pos.z() << "     ";
+    std::cout << vel.x() << " " << vel.y() << "  " << vel.z() << "     ";
+    std::cout << omg.x() << "  " << omg.y() << "  " << omg.z() << "     ";
+    std::cout << cforce.x() << "  " << cforce.y() << "  " << cforce.z();
     std::cout << std::endl;
 }
 

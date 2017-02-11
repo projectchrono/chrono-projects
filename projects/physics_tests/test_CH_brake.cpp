@@ -135,7 +135,7 @@ int main(int argc, char* argv[]) {
         ChIrrTools::drawAllCOGs(system, application.GetVideoDriver(), 1);
         sprintf(msg, "Time:    %.2f", time);
         font->draw(msg, text_box1, text_col);
-        sprintf(msg, "Omega:   %.2f", wheel->GetWvel_loc().z);
+        sprintf(msg, "Omega:   %.2f", wheel->GetWvel_loc().z());
         font->draw(msg, text_box2, text_col);
         sprintf(msg, "Braking: %.2f", modulation);
         font->draw(msg, text_box3, text_col);
@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
         }
         brake->Set_brake_torque(modulation * max_torque);
 
-        if (monitor && std::abs(wheel->GetWvel_loc().z) < 0.1) {
+        if (monitor && std::abs(wheel->GetWvel_loc().z()) < 0.1) {
             GetLog() << "Wheel stopped at t = " << time << "\n";
             monitor = false;
         }

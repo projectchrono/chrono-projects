@@ -351,7 +351,7 @@ bool FEAShellTest::execute() {
         if (m_verbose_solver) {
             cout << endl;
             cout << "t = " << my_system.GetChTime() << "  ";
-            cout << "node: [ " << p.x << " " << p.y << " " << p.z << " ]  " << endl;
+            cout << "node: [ " << p.x() << " " << p.y() << " " << p.z() << " ]  " << endl;
             cout << "step:  " << my_system.GetTimerStep() << endl;
             cout << "setup: " << my_system.GetTimerSetup();
             cout << endl << endl;
@@ -380,7 +380,7 @@ bool FEAShellTest::execute() {
 
     m_execTime = time_total;
     addMetric("number_iterations", num_iterations);
-    addMetric("tip z displacement (mm)", 1000 * nodetip->GetPos().z);
+    addMetric("tip z displacement (mm)", 1000 * nodetip->GetPos().z());
     addMetric("time_setup", time_setup);
     addMetric("time_solve", time_solve);
     addMetric("time_jacobian", time_jacobian);

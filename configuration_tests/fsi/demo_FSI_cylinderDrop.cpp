@@ -143,8 +143,8 @@ void SetupParamsH(fsi::SimParams* paramsH,
         fsi::mR3((paramsH->cMax.x - paramsH->cMin.x) / side0x, (paramsH->cMax.y - paramsH->cMin.y) / side0y,
                  (paramsH->cMax.z - paramsH->cMin.z) / side0z);
     paramsH->binSize0 = (binSize3.x > binSize3.y) ? binSize3.x : binSize3.y;
-    //	paramsH->binSize0 = (paramsH->binSize0 > binSize3.z) ? paramsH->binSize0
-    //: binSize3.z;
+    //	paramsH->binSize0 = (paramsH->binSize0 > binSize3.z()) ? paramsH->binSize0
+    //: binSize3.z();
     paramsH->binSize0 = binSize3.x;  // for effect of distance. Periodic BC in x
                                      // direction. we do not care about
                                      // paramsH->cMax y and z.
@@ -175,8 +175,8 @@ void SetupParamsH(fsi::SimParams* paramsH,
     paramsH->gridSize = fsi::mI3(int((paramsH->cMax.x - paramsH->cMin.x) / paramsH->binSize0 + .1),
                                  int((paramsH->cMax.y - paramsH->cMin.y) / paramsH->binSize0 + .1),
                                  int((paramsH->cMax.z - paramsH->cMin.z) / paramsH->binSize0 + .1));
-    // paramsH->numCells = paramsH->gridSize.x * paramsH->gridSize.y *
-    // paramsH->gridSize.z;
+    // paramsH->numCells = paramsH->gridSize.x() * paramsH->gridSize.y() *
+    // paramsH->gridSize.z();
     paramsH->worldOrigin = paramsH->cMin;
     paramsH->cellSize = fsi::mR3(mBinSize, mBinSize, mBinSize);
 
@@ -473,22 +473,22 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem,
     //    ChVector<> l_point = body->Point_World2Body(pointPar);
     //    ChVector<> velvel1 = body->RelPoint_AbsSpeed(l_point);
     //    printf("\n\n\n\n\n\n\n\n\n ***********   velocity1  %f %f %f
-    //    \n\n\n\n\n\n\n ", velvel1.x, velvel1.y,
-    //    velvel1.z);
+    //    \n\n\n\n\n\n\n ", velvel1.x(), velvel1.y(),
+    //    velvel1.z());
     //
     //    // method 2
     //    ChVector<> posLoc = ChTransform<>::TransformParentToLocal(pointPar,
     //    body->GetPos(), body->GetRot());
     //    ChVector<> velvel2 = body->PointSpeedLocalToParent(posLoc);
     //    printf("\n\n\n\n\n\n\n\n\n ***********   velocity 2 %f %f %f
-    //    \n\n\n\n\n\n\n ", velvel2.x, velvel2.y,
-    //    velvel2.z);
+    //    \n\n\n\n\n\n\n ", velvel2.x(), velvel2.y(),
+    //    velvel2.z());
     //
     //    // method 3
     //    ChVector<> velvel3 = body->GetPos_dt() + body->GetWvel_par() % pointRel;
     //    printf("\n\n\n\n\n\n\n\n\n ***********   velocity3  %f %f %f
-    //    \n\n\n\n\n\n\n ", velvel3.x, velvel3.y,
-    //    velvel3.z);
+    //    \n\n\n\n\n\n\n ", velvel3.x(), velvel3.y(),
+    //    velvel3.z());
     //    //
 
     int numRigidObjects = mphysicalSystem.Get_bodylist()->size();
@@ -662,7 +662,7 @@ int main(int argc, char* argv[]) {
                                                              fsi::ChFsiTypeConvert::Real3ToChVector(boxHalfDim));
     int numPart = points.size();
     for (int i = 0; i < numPart; i++) {
-        myFsiSystem.GetDataManager()->AddSphMarker(fsi::mR3(points[i].x, points[i].y, points[i].z), fsi::mR3(0),
+        myFsiSystem.GetDataManager()->AddSphMarker(fsi::mR3(points[i].x(), points[i].y(), points[i].z()), fsi::mR3(0),
                                                    fsi::mR4(paramsH->rho0, paramsH->BASEPRES, paramsH->mu0, -1));
     }
 

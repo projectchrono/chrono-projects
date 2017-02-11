@@ -229,10 +229,10 @@ class PendulumProblem : public ChIntegrableIIorder {
         ChMatrixDynamic<> A(3, 3);
         A(0, 0) = c_a * this->M + c_v * (-this->R) + c_x * (-this->K);
         A(1, 1) = c_a * this->M;
-        A(0, 2) = dirpend.x;
-        A(1, 2) = dirpend.y;
-        A(2, 0) = dirpend.x;
-        A(2, 1) = dirpend.y;
+        A(0, 2) = dirpend.x();
+        A(1, 2) = dirpend.y();
+        A(2, 0) = dirpend.x();
+        A(2, 1) = dirpend.y();
         ChVectorDynamic<> w(3);
         ChLinearAlgebra::Solve_LinSys(A, &b, &w);
         Dv(0) = w(0);
@@ -266,8 +266,8 @@ class PendulumProblem : public ChIntegrableIIorder {
                                   ) override {
         ChVector<> dirpend(-mpx, -mpy, 0);
         dirpend.Normalize();
-        R(0) += c * dirpend.x * L(0);
-        R(1) += c * dirpend.y * L(0);
+        R(0) += c * dirpend.x() * L(0);
+        R(1) += c * dirpend.y() * L(0);
     }
 
     ///  Qc += c * C
@@ -449,11 +449,11 @@ void RigidPendulums() {
         num_setup_calls += integrator->GetNumSetupCalls();
         num_solver_calls += integrator->GetNumSolveCalls();
         printf("    %7.4f  %4d", integrator->GetTime(), integrator->GetNumIterations());
-        printf("    %12.8f  %12.8f  %12.8f  %12.8f  %12.8f  %12.8f", pend1->GetPos().x, pend1->GetPos().y,
-               pend1->GetPos_dt().x, pend1->GetPos_dt().y, pend1->GetPos_dtdt().x, pend1->GetPos_dtdt().y);
+        printf("    %12.8f  %12.8f  %12.8f  %12.8f  %12.8f  %12.8f", pend1->GetPos().x(), pend1->GetPos().y(),
+               pend1->GetPos_dt().x(), pend1->GetPos_dt().y(), pend1->GetPos_dtdt().x(), pend1->GetPos_dtdt().y());
         if (double_pend) {
-            printf("    %12.8f  %12.8f  %12.8f  %12.8f  %12.8f  %12.8f\n", pend2->GetPos().x, pend2->GetPos().y,
-                   pend2->GetPos_dt().x, pend2->GetPos_dt().y, pend2->GetPos_dtdt().x, pend2->GetPos_dtdt().y);
+            printf("    %12.8f  %12.8f  %12.8f  %12.8f  %12.8f  %12.8f\n", pend2->GetPos().x(), pend2->GetPos().y(),
+                   pend2->GetPos_dt().x(), pend2->GetPos_dt().y(), pend2->GetPos_dtdt().x(), pend2->GetPos_dtdt().y());
         } else {
             printf("\n");
         }

@@ -333,9 +333,9 @@ int CreateGranularMaterial(ChSystemParallel* system) {
     ChVector<> hdims(hdimX - r, hdimY - r, 0);
     ChVector<> center(0, 0, 2 * r);
 
-    while (center.z < 2 * hdimZ) {
+    while (center.z() < 2 * hdimZ) {
         gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
-        center.z += 2 * r;
+        center.z() += 2 * r;
     }
 
     // Return the number of generated particles.
@@ -400,8 +400,8 @@ void FindHeightRange(ChSystemParallel* sys, double& lowest, double& highest) {
         if (body->GetIdentifier() <= 0)
             continue;
 
-        if (fabs(body->GetPos().x) <= hdimX_p && fabs(body->GetPos().y) <= hdimY_p) {
-            double h = body->GetPos().z;
+        if (fabs(body->GetPos().x()) <= hdimX_p && fabs(body->GetPos().y()) <= hdimY_p) {
+            double h = body->GetPos().z();
             if (h < lowest)
                 lowest = h;
             else if (h > highest)
@@ -419,7 +419,7 @@ void FindHeightRange(ChSystemParallel* sys, double& lowest, double& highest) {
 void setBulkDensity(ChSystem* sys, double bulkDensity) {
     double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 
-    double normalPlateHeight = sys->Get_bodylist()->at(1)->GetPos().z - hdimZ;
+    double normalPlateHeight = sys->Get_bodylist()->at(1)->GetPos().z() - hdimZ;
     double bottomHeight = 0;
     double boxVolume = hdimX * 2 * hdimX * 2 * (normalPlateHeight - bottomHeight);
     double granularVolume = (sys->Get_bodylist()->size() - 3) * vol_g;
@@ -557,7 +557,7 @@ int main(int argc, char* argv[]) {
             FindHeightRange(msystem, lowest, highest);
             ChVector<> pos = loadPlate->GetPos();
             double z_new = highest + 1.01 * r_g;
-            loadPlate->SetPos(ChVector<>(pos.x, pos.y, z_new));
+            loadPlate->SetPos(ChVector<>(pos.x(), pos.y(), z_new));
 
             // Add collision geometry to plate
             loadPlate->GetCollisionModel()->ClearModel();
@@ -598,7 +598,7 @@ int main(int argc, char* argv[]) {
             // Move the load plate just above the test ball.
             ChVector<> pos = loadPlate->GetPos();
             double z_new = 2.1 * radius_ball;
-            loadPlate->SetPos(ChVector<>(pos.x, pos.y, z_new));
+            loadPlate->SetPos(ChVector<>(pos.x(), pos.y(), z_new));
 
             // Add collision geometry to plate
             loadPlate->GetCollisionModel()->ClearModel();
@@ -669,7 +669,7 @@ int main(int argc, char* argv[]) {
             cout << "------------ Output frame:   " << out_frame + 1 << endl;
             cout << "             Sim frame:      " << sim_frame << endl;
             cout << "             Time:           " << time << endl;
-            cout << "             Load plate pos: " << pos_old.z << endl;
+            cout << "             Load plate pos: " << pos_old.z() << endl;
             cout << "             Lowest point:   " << lowest << endl;
             cout << "             Highest point:  " << highest << endl;
             cout << "             Execution time: " << exec_time << endl;
@@ -749,16 +749,16 @@ int main(int argc, char* argv[]) {
             // Get the current reaction force or impose load plate position
             double cnstr_force = 0;
             if (use_actuator) {
-                cnstr_force = actuator->Get_react_force().x;
+                cnstr_force = actuator->Get_react_force().x();
             } else {
-                double zpos_new = pos_old.z + desiredVelocity * time_step;
-                loadPlate->SetPos(ChVector<>(pos_old.x, pos_old.y, zpos_new));
+                double zpos_new = pos_old.z() + desiredVelocity * time_step;
+                loadPlate->SetPos(ChVector<>(pos_old.x(), pos_old.y(), zpos_new));
                 loadPlate->SetPos_dt(ChVector<>(0, 0, desiredVelocity));
             }
 
             if (sim_frame % write_steps == 0) {
-                // std::cout << time << ", " << loadPlate->GetPos().z << ", " << cnstr_force << ", \n";
-                sinkageStream << time << ", " << loadPlate->GetPos().z << ", " << cnstr_force << ", \n";
+                // std::cout << time << ", " << loadPlate->GetPos().z() << ", " << cnstr_force << ", \n";
+                sinkageStream << time << ", " << loadPlate->GetPos().z() << ", " << cnstr_force << ", \n";
                 sinkageStream.GetFstream().flush();
             }
         }

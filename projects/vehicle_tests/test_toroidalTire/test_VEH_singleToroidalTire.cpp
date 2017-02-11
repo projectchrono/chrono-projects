@@ -98,8 +98,8 @@ class MyContactReporter : public ChReportContactCallback {
         ChVector<> force = plane_coord.Matr_x_Vect(react_forces);
         ChVector<> point = (objA == m_ground.get()) ? pA : pB;
         std::cout << "---  " << distance << std::endl;
-        std::cout << "     " << point.x << "  " << point.y << "  " << point.z << std::endl;
-        std::cout << "     " << force.x << "  " << force.y << "  " << force.z << std::endl;
+        std::cout << "     " << point.x() << "  " << point.y() << "  " << point.z() << std::endl;
+        std::cout << "     " << force.x() << "  " << force.y() << "  " << force.z() << std::endl;
 
         return true;
     }
@@ -304,7 +304,7 @@ int main(int argc, char* argv[]) {
         wheel_state.rot = wheel->GetRot();           // orientation with respect to global frame
         wheel_state.lin_vel = wheel->GetPos_dt();    // linear velocity, expressed in the global frame
         wheel_state.ang_vel = wheel->GetWvel_par();  // angular velocity, expressed in the global frame
-        wheel_state.omega = wheel->GetWvel_loc().y;  // wheel angular speed about its rotation axis
+        wheel_state.omega = wheel->GetWvel_loc().y();  // wheel angular speed about its rotation axis
 
         // Extract tire forces
         tire_force = tire->GetTireForce();
@@ -321,7 +321,7 @@ int main(int argc, char* argv[]) {
         tire->Advance(step_size);
         app.DoStep();
 
-        std::cout << "Time: " << system.GetChTime() << "  Wheel center height: " << wheel->GetPos().z << std::endl << std::endl;
+        std::cout << "Time: " << system.GetChTime() << "  Wheel center height: " << wheel->GetPos().z() << std::endl << std::endl;
 
         // Report tire-terrain contacts
         system.GetContactContainer()->ReportAllContacts(&reporter);

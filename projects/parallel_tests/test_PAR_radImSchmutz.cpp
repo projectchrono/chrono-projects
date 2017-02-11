@@ -306,9 +306,9 @@ void Mechanism::WriteResults(ChStreamOutAsciiFile& f, double time) {
     ChVector<> force_bodysys = revCoordsys.TransformDirectionLocalToParent(force_jointsys);
     ChVector<> force_abssys = m_sled->GetCoord().TransformDirectionLocalToParent(force_bodysys);
 
-    f << time << "  " << sled_vel.x << "  " << sled_vel.y << "  " << sled_vel.z << "      " << wheel_vel.x << "  "
-      << wheel_vel.y << "  " << wheel_vel.z << "      " << force_abssys.x << "  " << force_abssys.y << "  "
-      << force_abssys.z << "\n";
+    f << time << "  " << sled_vel.x() << "  " << sled_vel.y() << "  " << sled_vel.z() << "      " << wheel_vel.x() << "  "
+      << wheel_vel.y() << "  " << wheel_vel.z() << "      " << force_abssys.x() << "  " << force_abssys.y() << "  "
+      << force_abssys.z() << "\n";
 }
 
 // =============================================================================
@@ -368,7 +368,7 @@ void CreateParticles(ChSystemParallel* system) {
     while (gen.getTotalNumBodies() < desired_num_particles) {
         gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
         cout << "layer " << layer << "    total particles: " << gen.getTotalNumBodies() << endl;
-        center.z += 2 * r;
+        center.z() += 2 * r;
         layer++;
     }
 }
@@ -385,7 +385,7 @@ void FindRange(ChSystem* sys, double& lowest, double& highest) {
         auto body = (*sys->Get_bodylist())[i];
         if (body->GetIdentifier() < 100)
             continue;
-        double h = body->GetPos().z;
+        double h = body->GetPos().z();
         if (h < lowest)
             lowest = h;
         if (h > highest)
@@ -551,8 +551,8 @@ int main(int argc, char* argv[]) {
             cout << "             Lowest point:   " << lowest << endl;
             cout << "             Highest point:  " << highest << endl;
             if (problem != SETTLING) {
-                cout << "             Sled X vel.   : " << mech->GetSledVelocity().x << endl;
-                cout << "             Wheel X vel.  : " << mech->GetWheelVelocity().x << endl;
+                cout << "             Sled X vel.   : " << mech->GetSledVelocity().x() << endl;
+                cout << "             Wheel X vel.  : " << mech->GetWheelVelocity().x() << endl;
             }
             cout << "             Avg. contacts:  " << num_contacts / out_steps << endl;
             cout << "             Execution time: " << exec_time << endl;

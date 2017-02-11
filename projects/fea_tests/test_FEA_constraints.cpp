@@ -57,7 +57,7 @@ void test_beam(const std::string& name,  /// test name
                double duration           /// simulation length
                ) {
     std::cout << "=== Test " << name << " ===" << std::endl;
-    std::cout << "Beam direction: " << dir.x << " " << dir.y << " " << dir.z << std::endl;
+    std::cout << "Beam direction: " << dir.x() << " " << dir.y() << " " << dir.z() << std::endl;
     std::cout << "Constrain direction? " << constrain_dir << std::endl;
 
     // Create the system
@@ -177,12 +177,12 @@ void test_beam(const std::string& name,  /// test name
     ChVector<> dir1 = node1->GetD();
     ChVector<> pos2 = node2->GetPos();
     std::cout << "\nFinal configuration" << std::endl;
-    std::cout << "  base direction: " << dir1.x << " " << dir1.y << " " << dir1.z << std::endl;
-    std::cout << "  tip position:   " << pos2.x << " " << pos2.y << " " << pos2.z << std::endl;
+    std::cout << "  base direction: " << dir1.x() << " " << dir1.y() << " " << dir1.z() << std::endl;
+    std::cout << "  tip position:   " << pos2.x() << " " << pos2.y() << " " << pos2.z() << std::endl;
 
     std::cout << "\nReaction force and torque on ground (final)" << std::endl;
-    std::cout << "  force:  " << rforce.x << " " << rforce.y << " " << rforce.z << std::endl;
-    std::cout << "  torque: " << rtorque.x << " " << rtorque.y << " " << rtorque.z << std::endl;
+    std::cout << "  force:  " << rforce.x() << " " << rforce.y() << " " << rforce.z() << std::endl;
+    std::cout << "  torque: " << rtorque.x() << " " << rtorque.y() << " " << rtorque.z() << std::endl;
 
     // Final beam configuration
     int num_points = 51;
@@ -208,8 +208,8 @@ void test_beam(const std::string& name,  /// test name
     }
 
     std::cout << "\nRigid body approximation" << std::endl;
-    std::cout << "  force:  " << rforce.x << " " << rforce.y << " " << rforce.z << std::endl;
-    std::cout << "  torque: " << rtorque.x << " " << rtorque.y << " " << rtorque.z << std::endl;
+    std::cout << "  force:  " << rforce.x() << " " << rforce.y() << " " << rforce.z() << std::endl;
+    std::cout << "  torque: " << rtorque.x() << " " << rtorque.y() << " " << rtorque.z() << std::endl;
     std::cout << std::endl << std::endl;
 
 #ifdef CHRONO_POSTPROCESS

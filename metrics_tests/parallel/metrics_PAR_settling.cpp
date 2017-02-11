@@ -288,7 +288,7 @@ bool PARSettlingTest::execute() {
 
     for (int il = 0; il < num_layers; il++) {
         gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
-        center.z += 2 * r;
+        center.z() += 2 * r;
     }
 
     unsigned int num_particles = gen.getTotalNumBodies();
