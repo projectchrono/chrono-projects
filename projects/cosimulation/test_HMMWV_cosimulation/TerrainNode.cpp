@@ -505,15 +505,15 @@ void TerrainNode::Settle() {
             ChQuaternion<> rot;
             ChVector<> pos_dt;
             ChQuaternion<> rot_dt;
-            iss >> identifier >> pos.x() >> pos.y() >> pos.z() >> rot.e0 >> rot.e1 >> rot.e2 >> rot.e3 >> pos_dt.x() >>
-                pos_dt.y() >> pos_dt.z() >> rot_dt.e0 >> rot_dt.e1 >> rot_dt.e2 >> rot_dt.e3;
+            iss >> identifier >> pos.x() >> pos.y() >> pos.z() >> rot.e0() >> rot.e1() >> rot.e2() >> rot.e3() >> pos_dt.x() >>
+                pos_dt.y() >> pos_dt.z() >> rot_dt.e0() >> rot_dt.e1() >> rot_dt.e2() >> rot_dt.e3();
 
             auto body = (*m_system->Get_bodylist())[ib];
             assert(body->GetIdentifier() == identifier);
             body->SetPos(ChVector<>(pos.x(), pos.y(), pos.z()));
-            body->SetRot(ChQuaternion<>(rot.e0, rot.e1, rot.e2, rot.e3));
+            body->SetRot(ChQuaternion<>(rot.e0(), rot.e1(), rot.e2(), rot.e3()));
             body->SetPos_dt(ChVector<>(pos_dt.x(), pos_dt.y(), pos_dt.z()));
-            body->SetRot_dt(ChQuaternion<>(rot_dt.e0, rot_dt.e1, rot_dt.e2, rot_dt.e3));
+            body->SetRot_dt(ChQuaternion<>(rot_dt.e0(), rot_dt.e1(), rot_dt.e2(), rot_dt.e3()));
         }
 
         cout << m_prefix << " read checkpoint <=== " << checkpoint_filename << "   num. particles = " << num_particles

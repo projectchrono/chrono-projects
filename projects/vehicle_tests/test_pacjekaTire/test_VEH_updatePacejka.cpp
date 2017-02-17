@@ -39,7 +39,7 @@ const std::string pacParamFile = vehicle::GetDataFile("hmmwv/pactest.tir");
 void processState(std::shared_ptr<ChPacejkaTire> tire, const WheelState& state, const ChTerrain& terrain) {
     cout << "--------------------------------------------------" << endl;
     cout << "Position:     " << state.pos.x() << "  " << state.pos.y() << "  " << state.pos.z() << endl;
-    cout << "Orientation:  " << state.rot.e0 << "  " << state.rot.e1 << "  " << state.rot.e2 << "  " << state.rot.e3
+    cout << "Orientation:  " << state.rot.e0() << "  " << state.rot.e1() << "  " << state.rot.e2() << "  " << state.rot.e3()
          << endl;
     cout << "Linear vel.:  " << state.lin_vel.x() << "  " << state.lin_vel.y() << "  " << state.lin_vel.z() << endl;
     cout << "Angular vel.: " << state.ang_vel.x() << "  " << state.ang_vel.y() << "  " << state.ang_vel.z() << endl;

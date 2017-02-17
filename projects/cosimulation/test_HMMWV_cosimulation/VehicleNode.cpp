@@ -179,10 +179,10 @@ void VehicleNode::Initialize() {
         bufWS[0] = wheel_state.pos.x();
         bufWS[1] = wheel_state.pos.y();
         bufWS[2] = wheel_state.pos.z();
-        bufWS[3] = wheel_state.rot.e0;
-        bufWS[4] = wheel_state.rot.e1;
-        bufWS[5] = wheel_state.rot.e2;
-        bufWS[6] = wheel_state.rot.e3;
+        bufWS[3] = wheel_state.rot.e0();
+        bufWS[4] = wheel_state.rot.e1();
+        bufWS[5] = wheel_state.rot.e2();
+        bufWS[6] = wheel_state.rot.e3();
         MPI_Send(bufWS, 7, MPI_DOUBLE, TIRE_NODE_RANK(iw), iw, MPI_COMM_WORLD);
     }
 
@@ -232,10 +232,10 @@ void VehicleNode::Synchronize(int step_number, double time) {
         bufWS[0] = wheel_state.pos.x();
         bufWS[1] = wheel_state.pos.y();
         bufWS[2] = wheel_state.pos.z();
-        bufWS[3] = wheel_state.rot.e0;
-        bufWS[4] = wheel_state.rot.e1;
-        bufWS[5] = wheel_state.rot.e2;
-        bufWS[6] = wheel_state.rot.e3;
+        bufWS[3] = wheel_state.rot.e0();
+        bufWS[4] = wheel_state.rot.e1();
+        bufWS[5] = wheel_state.rot.e2();
+        bufWS[6] = wheel_state.rot.e3();
         bufWS[7] = wheel_state.lin_vel.x();
         bufWS[8] = wheel_state.lin_vel.y();
         bufWS[9] = wheel_state.lin_vel.z();
@@ -294,7 +294,7 @@ void VehicleNode::OutputData(int frame) {
         m_outf << m_system->GetChTime() << del;
         m_outf << steering << del << throttle << del << braking << del;
         m_outf << pos.x() << del << pos.y() << del << pos.z() << del;
-        m_outf << rot.e0 << del << rot.e1 << del << rot.e2 << del << rot.e3 << del;
+        m_outf << rot.e0() << del << rot.e1() << del << rot.e2() << del << rot.e3() << del;
         m_outf << lin_vel.x() << del << lin_vel.y() << del << lin_vel.z() << del;
         m_outf << ang_vel.x() << del << ang_vel.y() << del << ang_vel.z() << del;
         m_outf << endl;

@@ -951,24 +951,24 @@ int main() {
             std::cout << "Time: " << simTime << std::endl
                       << "chassis (pos):       " << chassis->GetPos().x() << ", " << chassis->GetPos().y() << ", "
                       << chassis->GetPos().z() << std::endl
-                      << "chassis (rot):       " << chassis->GetRot().e0 << ", " << chassis->GetRot().e1 << ", "
-                      << chassis->GetRot().e2 << ", " << chassis->GetRot().e3 << std::endl
+                      << "chassis (rot):       " << chassis->GetRot().e0() << ", " << chassis->GetRot().e1() << ", "
+                      << chassis->GetRot().e2() << ", " << chassis->GetRot().e3() << std::endl
                       << "set_toe (pos):       " << set_toe->GetPos().x() << ", " << set_toe->GetPos().y() << ", "
                       << set_toe->GetPos().z() << std::endl
-                      << "set_toe (rot):       " << set_toe->GetRot().e0 << ", " << set_toe->GetRot().e1 << ", "
-                      << set_toe->GetRot().e2 << ", " << set_toe->GetRot().e3 << std::endl
+                      << "set_toe (rot):       " << set_toe->GetRot().e0() << ", " << set_toe->GetRot().e1() << ", "
+                      << set_toe->GetRot().e2() << ", " << set_toe->GetRot().e3() << std::endl
                       << "wheel_carrier (pos): " << wheel_carrier->GetPos().x() << ", " << wheel_carrier->GetPos().y()
                       << ", " << wheel_carrier->GetPos().z() << std::endl
-                      << "wheel_carrier (rot): " << wheel_carrier->GetRot().e0 << ", " << wheel_carrier->GetRot().e1
-                      << ", " << wheel_carrier->GetRot().e2 << ", " << wheel_carrier->GetRot().e3 << std::endl
+                      << "wheel_carrier (rot): " << wheel_carrier->GetRot().e0() << ", " << wheel_carrier->GetRot().e1()
+                      << ", " << wheel_carrier->GetRot().e2() << ", " << wheel_carrier->GetRot().e3() << std::endl
                       << "set_camber (pos):    " << set_camber->GetPos().x() << ", " << set_camber->GetPos().y() << ", "
                       << set_camber->GetPos().z() << std::endl
-                      << "set_camber (rot):    " << set_camber->GetRot().e0 << ", " << set_camber->GetRot().e1 << ", "
-                      << set_camber->GetRot().e2 << ", " << set_camber->GetRot().e3 << std::endl
+                      << "set_camber (rot):    " << set_camber->GetRot().e0() << ", " << set_camber->GetRot().e1() << ", "
+                      << set_camber->GetRot().e2() << ", " << set_camber->GetRot().e3() << std::endl
                       << "rim (pos):           " << rim->GetPos().x() << ", " << rim->GetPos().y() << ", "
                       << rim->GetPos().z() << std::endl
-                      << "rim (rot):           " << rim->GetRot().e0 << ", " << rim->GetRot().e1 << ", "
-                      << rim->GetRot().e2 << ", " << rim->GetRot().e3 << std::endl
+                      << "rim (rot):           " << rim->GetRot().e0() << ", " << rim->GetRot().e1() << ", "
+                      << rim->GetRot().e2() << ", " << rim->GetRot().e3() << std::endl
                       << "Tire Force:          " << tireforce.force.x() << ", " << tireforce.force.y() << ", "
                       << tireforce.force.z() << std::endl
                       << "Tire Moment:         " << tireforce.moment.x() << ", " << tireforce.moment.y() << ", "
@@ -977,8 +977,8 @@ int main() {
                       << tireforce.point.z() << std::endl
                       << "Wheel States (pos):     " << wheelstate.pos.x() << ", " << wheelstate.pos.y() << ", "
                       << wheelstate.pos.z() << std::endl
-                      << "Wheel States (rot):     " << wheelstate.rot.e0 << ", " << wheelstate.rot.e1 << ", "
-                      << wheelstate.rot.e2 << wheelstate.rot.e3 << std::endl
+                      << "Wheel States (rot):     " << wheelstate.rot.e0() << ", " << wheelstate.rot.e1() << ", "
+                      << wheelstate.rot.e2() << wheelstate.rot.e3() << std::endl
                       << "Wheel States (lin_vel): " << wheelstate.lin_vel.x() << ", " << wheelstate.lin_vel.y() << ", "
                       << wheelstate.lin_vel.z() << std::endl
                       << "Wheel States (ang_vel,w): " << wheelstate.ang_vel.x() << ", " << wheelstate.ang_vel.y() << ", "

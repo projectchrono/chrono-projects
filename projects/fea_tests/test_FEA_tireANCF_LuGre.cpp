@@ -922,10 +922,10 @@ class ChLoaderLuGre : public ChLoadCustomMultiple {
         RigidPos(0, 1) = mRim->GetPos().x();
         RigidPos(1, 1) = mRim->GetPos().y();
         RigidPos(2, 1) = mRim->GetPos().z();
-        RigidPos(3, 1) = mRim->GetRot().e0;
-        RigidPos(4, 1) = mRim->GetRot().e1;
-        RigidPos(5, 1) = mRim->GetRot().e2;
-        RigidPos(6, 1) = mRim->GetRot().e3;
+        RigidPos(3, 1) = mRim->GetRot().e0();
+        RigidPos(4, 1) = mRim->GetRot().e1();
+        RigidPos(5, 1) = mRim->GetRot().e2();
+        RigidPos(6, 1) = mRim->GetRot().e3();
 
         RigidVel(0, 0) = 0.0;
         RigidVel(1, 0) = 0.0;
@@ -937,10 +937,10 @@ class ChLoaderLuGre : public ChLoadCustomMultiple {
         RigidVel(0, 1) = mRim->GetPos_dt().x();
         RigidVel(1, 1) = mRim->GetPos_dt().y();
         RigidVel(2, 1) = mRim->GetPos_dt().z();
-        RigidVel(3, 1) = mRim->GetRot_dt().e0;
-        RigidVel(4, 1) = mRim->GetRot_dt().e1;
-        RigidVel(5, 1) = mRim->GetRot_dt().e2;
-        RigidVel(6, 1) = mRim->GetRot_dt().e3;
+        RigidVel(3, 1) = mRim->GetRot_dt().e0();
+        RigidVel(4, 1) = mRim->GetRot_dt().e1();
+        RigidVel(5, 1) = mRim->GetRot_dt().e2();
+        RigidVel(6, 1) = mRim->GetRot_dt().e3();
 
         if (state_x && state_w) {
             for (int ie = 0; ie < loadables.size(); ie++)  // Loop over the nodes in the circumferential direction
@@ -1657,10 +1657,10 @@ int main(int argc, char* argv[]) {
         fprintf(outputfile1, "%15.7e  ", Rim->GetPos().x());
         fprintf(outputfile1, "%15.7e  ", Rim->GetPos().y());
         fprintf(outputfile1, "%15.7e  ", Rim->GetPos().z());
-        fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e0);
-        fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e1);
-        fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e2);
-        fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e3);
+        fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e0());
+        fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e1());
+        fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e2());
+        fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e3());
         fprintf(outputfile1, "\n  ");
     }
 
@@ -1771,10 +1771,10 @@ int main(int argc, char* argv[]) {
                     fprintf(outputfile1, "%15.7e  ", Rim->GetPos().x());
                     fprintf(outputfile1, "%15.7e  ", Rim->GetPos().y());
                     fprintf(outputfile1, "%15.7e  ", Rim->GetPos().z());
-                    fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e0);
-                    fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e1);
-                    fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e2);
-                    fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e3);
+                    fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e0());
+                    fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e1());
+                    fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e2());
+                    fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e3());
                     fprintf(outputfile1, "\n  ");
                 }
 
@@ -1897,10 +1897,10 @@ int main(int argc, char* argv[]) {
                 fprintf(outputfile1, "%15.7e  ", Rim->GetPos().x());
                 fprintf(outputfile1, "%15.7e  ", Rim->GetPos().y());
                 fprintf(outputfile1, "%15.7e  ", Rim->GetPos().z());
-                fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e0);
-                fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e1);
-                fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e2);
-                fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e3);
+                fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e0());
+                fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e1());
+                fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e2());
+                fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e3());
                 fprintf(outputfile1, "\n  ");
             }
 
