@@ -124,7 +124,7 @@ void AddContainer(ChSystemParallelDVI* sys) {
 	// Create a common material
 	auto mat = std::make_shared<ChMaterialSurface>();
 	mat->SetFriction(1.0);
-	utils::CreateBoxContainer(sys, 0, mat, hdim + ChVector<>(0, 0, kernel_radius * 4), thickness, Vector(0, 0, -hdim.z- kernel_radius), QUNIT, true, false, true,
+	utils::CreateBoxContainer(sys, 0, mat, hdim + ChVector<>(0, 0, kernel_radius * 4), thickness, Vector(0, 0, -hdim.z()- kernel_radius), QUNIT, true, false, true,
 		true);
 }
 
@@ -171,7 +171,7 @@ void AddFluid(ChSystemParallelDVI* sys) {
 	pos_fluid.resize(points.size());
 	vel_fluid.resize(points.size());
 	for (int i = 0; i < points.size(); i++) {
-		pos_fluid[i] = real3(points[i].x, points[i].y, points[i].z) + origin;
+		pos_fluid[i] = real3(points[i].x(), points[i].y(), points[i].z()) + origin;
 		vel_fluid[i] = real3(0, 0, 0);
 	}
 

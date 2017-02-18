@@ -347,7 +347,7 @@ void CreateFluid(ChSystemParallelDVI* system ) {
 	std::vector<real3> pos_fluid;
 	std::vector<real3> vel_fluid;
 	for (int i = 0; i < points.size(); i++) {
-		pos_fluid.push_back(real3(points[i].x, points[i].y, points[i].z));
+		pos_fluid.push_back(real3(points[i].x(), points[i].y(), points[i].z()));
 		vel_fluid.push_back(real3(0));
 	}
 	fluid_container->AddBodies(pos_fluid, vel_fluid);
@@ -426,12 +426,12 @@ void CreateGravel(ChSystemParallelDVI* system) {
 
 	while (gen.getTotalNumBodies() < 100000) {
 		gen.createObjectsBox(utils::POISSON_DISK, 3 * r, center, hdims);
-		center.z += 2 * r;
+		center.z() += 2 * r;
 	}
 
 	std::cout << "Created " << gen.getTotalNumBodies() << " particles." << std::endl;
 
-	//return center.z;
+	//return center.z();
 
 
 }
@@ -593,7 +593,7 @@ int main(int argc, char* argv[]) {
 
 	while (time < time_end) {
 		if (simulation_mode != GRAVEL) {
-			bottom_plate->SetPos(ChVector<>(my_hmmwv.GetChassis()->GetBody()->GetPos().x, my_hmmwv.GetChassis()->GetBody()->GetPos().y, 0));
+			bottom_plate->SetPos(ChVector<>(my_hmmwv.GetChassis()->GetBody()->GetPos().x(), my_hmmwv.GetChassis()->GetBody()->GetPos().y(), 0));
 		}
 
 		double throttle_input =  driver.GetThrottle();
@@ -602,16 +602,16 @@ int main(int argc, char* argv[]) {
 
 
 		ChVector<> com_pos = my_hmmwv.GetChassis()->GetCOMPos();
-		printf("Chassis: %f %f %f\n", com_pos.x, com_pos.y, com_pos.z);
+		printf("Chassis: %f %f %f\n", com_pos.x(), com_pos.y(), com_pos.z());
 		if (simulation_mode == LANE_CHANGE) {
-			if (com_pos.x>30) {
+			if (com_pos.x() > 30) {
 				throttle_input = 0;
 				braking_input = 1.0;
 				steering_input = 0;
 			}
 		}
 		else if (simulation_mode == GRAVEL) {
-			if (com_pos.x>4 + 4 * 2 +3) {
+			if (com_pos.x() > 4 + 4 * 2 +3) {
 				throttle_input = 0;
 				braking_input = 1.0;
 				steering_input = 0;

@@ -114,10 +114,9 @@ void CreateContainer(ChSystemParallelDVI* system) {
 	Vector side_dim(dim_d + (dim_b + dim_c + dim_a) * 2, dim_t, dim_e * 2 + dim_t * 2);
 	Vector top_dim(dim_d + (dim_b + dim_c + dim_a) * 2, width, dim_t);
 
-	printf("Containment dims: [%f %f %f] [%f %f %f]\n", -side_dim.x, -width, -side_dim.z, side_dim.x, width,
-		side_dim.z);
+    printf("Containment dims: [%f %f %f] [%f %f %f]\n", -side_dim.x(), -width, -side_dim.z(), side_dim.x(), width,
+           side_dim.z());
 }
-
 
 #include "chrono_parallel/physics/Ch3DOFContainer.h"
 
@@ -236,9 +235,9 @@ void CreateFluid(ChSystemParallelDVI* system) {
 	real2 D = real2((-dim_d), dim_t + offset_z);
 
 	for (int i = 0; i < points.size(); i++) {
-		real2 p = real2(points[i].x, points[i].z);
+		real2 p = real2(points[i].x(), points[i].z());
 		if (PointInTriangle(p, A, B, D) || PointInTriangle(p, B, C, D)) {
-			pos_fluid.push_back(real3(points[i].x, points[i].y, points[i].z));
+			pos_fluid.push_back(real3(points[i].x(), points[i].y(), points[i].z()));
 			vel_fluid.push_back(real3(0));
 		}
 	}

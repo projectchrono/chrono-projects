@@ -59,9 +59,9 @@ public:
 	void WriteToken(quaternion token) {
 		ss << token.w << delim << token.x << delim << token.y << delim << token.z << delim;
 	}
-	void WriteToken(ChVector<> token) { ss << token.x << delim << token.y << delim << token.z << delim; }
+	void WriteToken(ChVector<> token) { ss << token.x() << delim << token.y() << delim << token.z() << delim; }
 	void WriteToken(ChQuaternion<> token) {
-		ss << token.e0 << delim << token.e1 << delim << token.e2 << delim << token.e3 << delim;
+		ss << token.e0() << delim << token.e1() << delim << token.e2() << delim << token.e3() << delim;
 	}
 	void WriteToken(std::string token) { ss << token << delim; }
 	void endline() { ss << std::endl; }
@@ -158,9 +158,9 @@ void static DumpAllObjectsWithGeometryPovray(ChSystem* mSys, std::string filenam
 			if (std::dynamic_pointer_cast<ChSphereShape>(asset)) {
 				ChSphereShape* sphere_shape = ((ChSphereShape*)(asset.get()));
 				real radius = sphere_shape->GetSphereGeometry().rad;
-				rad_final.x = radius;
-				rad_final.y = radius;
-				rad_final.z = radius;
+				rad_final.x() = radius;
+				rad_final.y() = radius;
+				rad_final.z() = radius;
 				type = chrono::collision::SPHERE;
 			}
 
@@ -177,17 +177,17 @@ void static DumpAllObjectsWithGeometryPovray(ChSystem* mSys, std::string filenam
 			else if (std::dynamic_pointer_cast<ChCylinderShape>(asset)) {
 				ChCylinderShape* cylinder_shape = ((ChCylinderShape*)(asset.get()));
 				double rad = cylinder_shape->GetCylinderGeometry().rad;
-				double height = cylinder_shape->GetCylinderGeometry().p1.y - cylinder_shape->GetCylinderGeometry().p2.y;
-				rad_final.x = rad;
-				rad_final.y = height;
-				rad_final.z = rad;
+				double height = cylinder_shape->GetCylinderGeometry().p1.y() - cylinder_shape->GetCylinderGeometry().p2.y();
+				rad_final.x() = rad;
+				rad_final.y() = height;
+				rad_final.z() = rad;
 				type = chrono::collision::CYLINDER;
 			}
 			else if (std::dynamic_pointer_cast<ChConeShape>(asset)) {
 				ChConeShape* cone_shape = ((ChConeShape*)(asset.get()));
-				rad_final.x = cone_shape->GetConeGeometry().rad.x;
-				rad_final.y = cone_shape->GetConeGeometry().rad.y;
-				rad_final.z = cone_shape->GetConeGeometry().rad.z;
+				rad_final.x() = cone_shape->GetConeGeometry().rad.x();
+				rad_final.y() = cone_shape->GetConeGeometry().rad.y();
+				rad_final.z() = cone_shape->GetConeGeometry().rad.z();
 				type = chrono::collision::CONE;
 			}
 
@@ -197,27 +197,27 @@ void static DumpAllObjectsWithGeometryPovray(ChSystem* mSys, std::string filenam
 
 			if (std::dynamic_pointer_cast<ChSphereShape>(asset)) {
 				csv_output << type;
-				csv_output << rad_final.x;
+				csv_output << rad_final.x();
 				csv_output.endline();
 			}
 			else if (std::dynamic_pointer_cast<ChEllipsoidShape>(asset)) {
 				csv_output << type;
-				csv_output << real3(rad_final.x, rad_final.y, rad_final.z);
+				csv_output << real3(rad_final.x(), rad_final.y(), rad_final.z());
 				csv_output.endline();
 			}
 			else if (std::dynamic_pointer_cast<ChBoxShape>(asset)) {
 				csv_output << type;
-				csv_output << real3(rad_final.x, rad_final.y, rad_final.z);
+				csv_output << real3(rad_final.x(), rad_final.y(), rad_final.z());
 				csv_output.endline();
 			}
 			else if (std::dynamic_pointer_cast<ChCylinderShape>(asset)) {
 				csv_output << type;
-				csv_output << real2(rad_final.x, rad_final.y);
+				csv_output << real2(rad_final.x(), rad_final.y());
 				csv_output.endline();
 			}
 			else if (std::dynamic_pointer_cast<ChConeShape>(asset)) {
 				csv_output << type;
-				csv_output << real2(rad_final.x, rad_final.y);
+				csv_output << real2(rad_final.x(), rad_final.y());
 				csv_output.endline();
 			}
 			else {
