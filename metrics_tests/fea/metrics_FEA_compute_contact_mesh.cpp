@@ -327,11 +327,11 @@ bool MeshContactTest::execute() {
         contact_force = ground->GetContactForce();
         GetLog() << "t = " << system->GetChTime()
                  << "  num contacts = " << system->GetContactContainer()->GetNcontacts()
-                 << "  force =  " << contact_force.y << "  node y displacement = " << nodeRef->GetPos().y << "\n";
+                 << "  force =  " << contact_force.y() << "  node y displacement = " << nodeRef->GetPos().y() << "\n";
 
         if (system->GetChTime() > start_time) {
-            if (std::abs(1 - std::abs(contact_force.y) / total_weight) > rtol) {
-                GetLog() << "t = " << system->GetChTime() << "  force =  " << contact_force.y << "\n";
+            if (std::abs(1 - std::abs(contact_force.y()) / total_weight) > rtol) {
+                GetLog() << "t = " << system->GetChTime() << "  force =  " << contact_force.y() << "\n";
                 passed = false;
                 break;
             }
@@ -340,8 +340,8 @@ bool MeshContactTest::execute() {
 
     m_execTime = timer.GetTimeSeconds();
     addMetric("number_contacts", system->GetContactContainer()->GetNcontacts());
-    addMetric("contact_force", contact_force.y);
-    addMetric("node displacement (mm)", 1000 * nodeRef->GetPos().y);
+    addMetric("contact_force", contact_force.y());
+    addMetric("node displacement (mm)", 1000 * nodeRef->GetPos().y());
     addMetric("avg_time_per_step (ms)", 1000 * m_execTime / num_steps);
 
     GetLog() << "Test " << (passed ? "PASSED" : "FAILED") << "\n\n\n";

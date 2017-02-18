@@ -461,9 +461,9 @@ void RigNodeRigidTire::InitializeTire() {
     const std::vector<ChVector<>>& vertices = m_tire->GetMeshVertices();
     const std::vector<ChVector<int>>& triangles = m_tire->GetMeshConnectivity();
     for (unsigned int ie = 0; ie < m_tire->GetNumTriangles(); ie++) {
-        int iv1 = triangles[ie].x;
-        int iv2 = triangles[ie].y;
-        int iv3 = triangles[ie].z;
+        int iv1 = triangles[ie].x();
+        int iv2 = triangles[ie].y();
+        int iv3 = triangles[ie].z();
         ChVector<> v1 = vertices[iv1];
         ChVector<> v2 = vertices[iv2];
         ChVector<> v3 = vertices[iv3];
@@ -524,19 +524,19 @@ void RigNodeDeformableTire::Synchronize(int step_number, double time) {
     double* vert_data = new double[2 * 3 * num_vert];
     int* tri_data = new int[3 * num_tri];
     for (unsigned int iv = 0; iv < num_vert; iv++) {
-        vert_data[3 * iv + 0] = vert_pos[iv].x;
-        vert_data[3 * iv + 1] = vert_pos[iv].y;
-        vert_data[3 * iv + 2] = vert_pos[iv].z;
+        vert_data[3 * iv + 0] = vert_pos[iv].x();
+        vert_data[3 * iv + 1] = vert_pos[iv].y();
+        vert_data[3 * iv + 2] = vert_pos[iv].z();
     }
     for (unsigned int iv = 0; iv < num_vert; iv++) {
-        vert_data[3 * num_vert + 3 * iv + 0] = vert_vel[iv].x;
-        vert_data[3 * num_vert + 3 * iv + 1] = vert_vel[iv].y;
-        vert_data[3 * num_vert + 3 * iv + 2] = vert_vel[iv].z;
+        vert_data[3 * num_vert + 3 * iv + 0] = vert_vel[iv].x();
+        vert_data[3 * num_vert + 3 * iv + 1] = vert_vel[iv].y();
+        vert_data[3 * num_vert + 3 * iv + 2] = vert_vel[iv].z();
     }
     for (unsigned int it = 0; it < num_tri; it++) {
-        tri_data[3 * it + 0] = triangles[it].x;
-        tri_data[3 * it + 1] = triangles[it].y;
-        tri_data[3 * it + 2] = triangles[it].z;
+        tri_data[3 * it + 0] = triangles[it].x();
+        tri_data[3 * it + 1] = triangles[it].y();
+        tri_data[3 * it + 2] = triangles[it].z();
     }
     MPI_Send(vert_data, 2 * 3 * num_vert, MPI_DOUBLE, TERRAIN_NODE_RANK, step_number, MPI_COMM_WORLD);
     MPI_Send(tri_data, 3 * num_tri, MPI_INT, TERRAIN_NODE_RANK, step_number, MPI_COMM_WORLD);
@@ -593,19 +593,19 @@ void RigNodeRigidTire::Synchronize(int step_number, double time) {
     double* vert_data = new double[2 * 3 * num_vert];
     int* tri_data = new int[3 * num_tri];
     for (unsigned int iv = 0; iv < num_vert; iv++) {
-        vert_data[3 * iv + 0] = vert_pos[iv].x;
-        vert_data[3 * iv + 1] = vert_pos[iv].y;
-        vert_data[3 * iv + 2] = vert_pos[iv].z;
+        vert_data[3 * iv + 0] = vert_pos[iv].x();
+        vert_data[3 * iv + 1] = vert_pos[iv].y();
+        vert_data[3 * iv + 2] = vert_pos[iv].z();
     }
     for (unsigned int iv = 0; iv < num_vert; iv++) {
-        vert_data[3 * num_vert + 3 * iv + 0] = vert_vel[iv].x;
-        vert_data[3 * num_vert + 3 * iv + 1] = vert_vel[iv].y;
-        vert_data[3 * num_vert + 3 * iv + 2] = vert_vel[iv].z;
+        vert_data[3 * num_vert + 3 * iv + 0] = vert_vel[iv].x();
+        vert_data[3 * num_vert + 3 * iv + 1] = vert_vel[iv].y();
+        vert_data[3 * num_vert + 3 * iv + 2] = vert_vel[iv].z();
     }
     for (unsigned int it = 0; it < num_tri; it++) {
-        tri_data[3 * it + 0] = triangles[it].x;
-        tri_data[3 * it + 1] = triangles[it].y;
-        tri_data[3 * it + 2] = triangles[it].z;
+        tri_data[3 * it + 0] = triangles[it].x();
+        tri_data[3 * it + 1] = triangles[it].y();
+        tri_data[3 * it + 2] = triangles[it].z();
     }
     MPI_Send(vert_data, 2 * 3 * num_vert, MPI_DOUBLE, TERRAIN_NODE_RANK, step_number, MPI_COMM_WORLD);
     MPI_Send(tri_data, 3 * num_tri, MPI_INT, TERRAIN_NODE_RANK, step_number, MPI_COMM_WORLD);
@@ -700,17 +700,17 @@ void RigNode::OutputData(int frame) {
 
         m_outf << m_system->GetChTime() << del;
         // Body states
-        m_outf << rim_pos.x << del << rim_pos.y << del << rim_pos.z << del;
-        m_outf << rim_vel.x << del << rim_vel.y << del << rim_vel.z << del;
-        m_outf << rim_angvel.x << del << rim_angvel.y << del << rim_angvel.z << del;
-        m_outf << chassis_pos.x << del << chassis_pos.y << del << chassis_pos.z << del;
+        m_outf << rim_pos.x() << del << rim_pos.y() << del << rim_pos.z() << del;
+        m_outf << rim_vel.x() << del << rim_vel.y() << del << rim_vel.z() << del;
+        m_outf << rim_angvel.x() << del << rim_angvel.y() << del << rim_angvel.z() << del;
+        m_outf << chassis_pos.x() << del << chassis_pos.y() << del << chassis_pos.z() << del;
         // Joint reactions
-        m_outf << rfrc_prsm.x << del << rfrc_prsm.y << del << rfrc_prsm.z << del;
-        m_outf << rtrq_prsm.x << del << rtrq_prsm.y << del << rtrq_prsm.z << del;
-        m_outf << rfrc_act.x << del << rfrc_act.y << del << rfrc_act.z << del;
-        m_outf << rtrq_act.x << del << rtrq_act.y << del << rtrq_act.z << del;
-        m_outf << rfrc_motor.x << del << rfrc_motor.y << del << rfrc_motor.z << del;
-        m_outf << rtrq_motor.x << del << rtrq_motor.y << del << rtrq_motor.z << del;
+        m_outf << rfrc_prsm.x() << del << rfrc_prsm.y() << del << rfrc_prsm.z() << del;
+        m_outf << rtrq_prsm.x() << del << rtrq_prsm.y() << del << rtrq_prsm.z() << del;
+        m_outf << rfrc_act.x() << del << rfrc_act.y() << del << rfrc_act.z() << del;
+        m_outf << rtrq_act.x() << del << rtrq_act.y() << del << rtrq_act.z() << del;
+        m_outf << rfrc_motor.x() << del << rfrc_motor.y() << del << rfrc_motor.z() << del;
+        m_outf << rtrq_motor.x() << del << rtrq_motor.y() << del << rtrq_motor.z() << del;
         // Solver statistics (for last integration step)
         m_outf << m_system->GetTimerStep() << del << m_system->GetTimerSetup() << del << m_system->GetTimerSolver()
                << del << m_system->GetTimerUpdate() << del;
@@ -828,9 +828,9 @@ void RigNodeDeformableTire::WriteTireMeshInformation(utils::CSV_writer& csv) {
             double dx = element->GetLengthX();
             double dy = element->GetLengthY();
             area += dx * dy / 4;
-            areaX += StrainVector.x * dx * dy / 4;
-            areaY += StrainVector.y * dx * dy / 4;
-            areaZ += StrainVector.z * dx * dy / 4;
+            areaX += StrainVector.x() * dx * dy / 4;
+            areaY += StrainVector.y() * dx * dy / 4;
+            areaZ += StrainVector.z() * dx * dy / 4;
         }
         csv << areaX / area << " " << areaY / area << " " << areaZ / area << endl;
     }
@@ -903,11 +903,11 @@ void RigNodeRigidTire::WriteTireContactInformation(utils::CSV_writer& csv) {
 // -----------------------------------------------------------------------------
 void RigNode::PrintLowestVertex(const std::vector<ChVector<>>& vert_pos, const std::vector<ChVector<>>& vert_vel) {
     auto lowest = std::min_element(vert_pos.begin(), vert_pos.end(),
-                                   [](const ChVector<>& a, const ChVector<>& b) { return a.z < b.z; });
+                                   [](const ChVector<>& a, const ChVector<>& b) { return a.z() < b.z(); });
     int index = lowest - vert_pos.begin();
     const ChVector<>& vel = vert_vel[index];
-    cout << "[Rig node    ] lowest vertex:  index = " << index << "  height = " << (*lowest).z
-         << "  velocity = " << vel.x << "  " << vel.y << "  " << vel.z << endl;
+    cout << "[Rig node    ] lowest vertex:  index = " << index << "  height = " << (*lowest).z()
+         << "  velocity = " << vel.x() << "  " << vel.y() << "  " << vel.z() << endl;
 }
 
 // -----------------------------------------------------------------------------
@@ -915,7 +915,7 @@ void RigNode::PrintLowestVertex(const std::vector<ChVector<>>& vert_pos, const s
 void RigNode::PrintContactData(const std::vector<ChVector<>>& forces, const std::vector<int>& indices) {
     cout << "[Rig node    ] contact forces" << endl;
     for (int i = 0; i < indices.size(); i++) {
-        cout << "  id = " << indices[i] << "  force = " << forces[i].x << "  " << forces[i].y << "  " << forces[i].z
+        cout << "  id = " << indices[i] << "  force = " << forces[i].x() << "  " << forces[i].y() << "  " << forces[i].z()
              << endl;
     }
 }
@@ -931,14 +931,14 @@ void RigNodeDeformableTire::PrintLowestNode() {
     for (unsigned int i = 0; i < num_nodes; ++i) {
         // Ugly casting here. (Note also that we need dynamic downcasting, due to the virtual base)
         auto node = std::dynamic_pointer_cast<fea::ChNodeFEAxyz>(m_tire->GetMesh()->GetNode(i));
-        if (node->GetPos().z < zmin) {
-            zmin = node->GetPos().z;
+        if (node->GetPos().z() < zmin) {
+            zmin = node->GetPos().z();
             index = i;
         }
     }
 
     ChVector<> vel = std::dynamic_pointer_cast<fea::ChNodeFEAxyz>(m_tire->GetMesh()->GetNode(index))->GetPos_dt();
-    cout << "[Rig node    ] lowest node:    index = " << index << "  height = " << zmin << "  velocity = " << vel.x
-        << "  " << vel.y << "  " << vel.z << endl;
+    cout << "[Rig node    ] lowest node:    index = " << index << "  height = " << zmin << "  velocity = " << vel.x()
+        << "  " << vel.y() << "  " << vel.z() << endl;
 }
 

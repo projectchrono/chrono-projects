@@ -423,9 +423,9 @@ int CreateGranularMaterial(ChSystemParallel* system) {
     ChVector<> hdims(hdimX - r, hdimY - r, 0);
     ChVector<> center(0, 0, 2 * r);
 
-    while (center.z < 2 * hdimZ) {
+    while (center.z() < 2 * hdimZ) {
         gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
-        center.z += 2 * r;
+        center.z() += 2 * r;
     }
 
     // Return the number of generated particles.
@@ -487,7 +487,7 @@ void FindHeightRange(ChSystemParallel* sys, double& lowest, double& highest) {
         auto body = (*sys->Get_bodylist())[i];
         if (body->GetIdentifier() <= 0)
             continue;
-        double h = body->GetPos().z;
+        double h = body->GetPos().z();
         if (h < lowest)
             lowest = h;
         else if (h > highest)
@@ -504,7 +504,7 @@ void FindHeightRange(ChSystemParallel* sys, double& lowest, double& highest) {
 void setBulkDensity(ChSystem* sys, double bulkDensity) {
     double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 
-    double normalPlateHeight = sys->Get_bodylist()->at(1)->GetPos().z - hdimZ;
+    double normalPlateHeight = sys->Get_bodylist()->at(1)->GetPos().z() - hdimZ;
     double bottomHeight = 0;
     double boxVolume = hdimX * 2 * hdimX * 2 * (normalPlateHeight - bottomHeight);
     double granularVolume = (sys->Get_bodylist()->size() - 3) * vol_g;
@@ -647,7 +647,7 @@ int main(int argc, char* argv[]) {
             FindHeightRange(msystem, lowest, highest);
             ChVector<> pos = wheel->GetPos();
             double z_new = highest + 1.01 * r_g + wheelRadius;
-            wheel->SetPos(ChVector<>(pos.x, pos.y, z_new));
+            wheel->SetPos(ChVector<>(pos.x(), pos.y(), z_new));
             chassis->SetPos(wheel->GetPos());
             axle->SetPos(wheel->GetPos());
 
@@ -737,8 +737,8 @@ int main(int argc, char* argv[]) {
             // Move the wheel just above the ground.
             ChVector<> pos = wheel->GetPos();
             double z_new = wheelRadius;
-            axle->SetPos(ChVector<>(pos.x, pos.y, z_new));
-            wheel->SetPos(ChVector<>(pos.x, pos.y, z_new));
+            axle->SetPos(ChVector<>(pos.x(), pos.y(), z_new));
+            wheel->SetPos(ChVector<>(pos.x(), pos.y(), z_new));
 
             // Connect the chassis and get a handle to the actuator.
             ConnectChassisToGround(msystem, ground, chassis);
@@ -820,8 +820,8 @@ int main(int argc, char* argv[]) {
             cout << "------------ Output frame:     " << out_frame + 1 << endl;
             cout << "             Sim frame:        " << sim_frame << endl;
             cout << "             Time:             " << time << endl;
-            cout << "             Wheel pos:        " << pos_old.x << endl;
-            cout << "                   vel:        " << vel_old.x << endl;
+            cout << "             Wheel pos:        " << pos_old.x() << endl;
+            cout << "                   vel:        " << vel_old.x() << endl;
             cout << "             Particle lowest:  " << lowest << endl;
             cout << "                      highest: " << highest << endl;
             cout << "             Execution time:   " << exec_time << endl;
@@ -915,15 +915,15 @@ int main(int argc, char* argv[]) {
 
             if (sim_frame % write_steps == 0) {
                 ////cout << "X pos: " << xpos_new << " X react: " << cnstr_force << endl;
-                rollStream << time << ", " << wheel->GetPos().z << ", ";
+                rollStream << time << ", " << wheel->GetPos().z() << ", ";
 
-                rollStream << rforce_chassis.x << ", " << rforce_chassis.y << ", " << rforce_chassis.z << ", ";
-                rollStream << rforce_actuator.x << ", " << rforce_actuator.y << ", " << rforce_actuator.z << ", ";
-                rollStream << rforce_wheel.x << ", " << rforce_wheel.y << ", " << rforce_wheel.z << ", ";
+                rollStream << rforce_chassis.x() << ", " << rforce_chassis.y() << ", " << rforce_chassis.z() << ", ";
+                rollStream << rforce_actuator.x() << ", " << rforce_actuator.y() << ", " << rforce_actuator.z() << ", ";
+                rollStream << rforce_wheel.x() << ", " << rforce_wheel.y() << ", " << rforce_wheel.z() << ", ";
 
-                rollStream << rtorque_chassis.x << ", " << rtorque_chassis.y << ", " << rtorque_chassis.z << ", ";
-                rollStream << rtorque_actuator.x << ", " << rtorque_actuator.y << ", " << rtorque_actuator.z << ", ";
-                rollStream << rtorque_wheel.x << ", " << rtorque_wheel.y << ", " << rtorque_wheel.z << ", \n";
+                rollStream << rtorque_chassis.x() << ", " << rtorque_chassis.y() << ", " << rtorque_chassis.z() << ", ";
+                rollStream << rtorque_actuator.x() << ", " << rtorque_actuator.y() << ", " << rtorque_actuator.z() << ", ";
+                rollStream << rtorque_wheel.x() << ", " << rtorque_wheel.y() << ", " << rtorque_wheel.z() << ", \n";
 
                 rollStream.GetFstream().flush();
             }

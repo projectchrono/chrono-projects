@@ -189,9 +189,9 @@ int main(int argc, char* argv[]) {
 
             int id = it - num_steps_settling;
             data.time[id] = vehicle.GetChTime();
-            data.err_x[id] = vehicle_err.x;
-            data.err_y[id] = vehicle_err.y;
-            data.err_z[id] = vehicle_err.z;
+            data.err_x[id] = vehicle_err.x();
+            data.err_y[id] = vehicle_err.y();
+            data.err_z[id] = vehicle_err.z();
             data.err_speed = speed_err;
         }
 

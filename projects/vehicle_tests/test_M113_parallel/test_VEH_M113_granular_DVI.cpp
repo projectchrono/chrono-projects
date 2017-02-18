@@ -214,13 +214,13 @@ double CreateParticles(ChSystem* system) {
     double layerCount = 0;
     while (layerCount < numLayers) {
         gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
-        center.z += 2 * r;
+        center.z() += 2 * r;
         layerCount++;
     }
 
     std::cout << "Created " << gen.getTotalNumBodies() << " particles." << std::endl;
 
-    return center.z;
+    return center.z();
 }
 
 // =============================================================================
@@ -444,8 +444,8 @@ int main(int argc, char* argv[]) {
         csv << powertrain->GetMotorSpeed() << powertrain->GetMotorTorque();
         csv << powertrain_torque << driveshaft_speed;
         // Chassis Position & Velocity
-        csv << pos_CG.x << pos_CG.y << pos_CG.z;
-        csv << vel_CG.x << vel_CG.y << vel_CG.z;
+        csv << pos_CG.x() << pos_CG.y() << pos_CG.z();
+        csv << vel_CG.x() << vel_CG.y() << vel_CG.z();
         csv << std::endl;
 
         // Output

@@ -416,9 +416,9 @@ int CreateGranularMaterial(ChSystemParallel* system) {
     ChVector<> hdims(hdimX - r, hdimY - r, 0);
     ChVector<> center(0, 0, 2 * r);
 
-    while (center.z < 2 * h_scaling * hdimZ) {
+    while (center.z() < 2 * h_scaling * hdimZ) {
         gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
-        center.z += 2 * r;
+        center.z() += 2 * r;
     }
 
     // Return the number of generated particles.
@@ -482,7 +482,7 @@ void FindHeightRange(ChSystemParallel* sys, double& lowest, double& highest) {
         auto body = (*sys->Get_bodylist())[i];
         if (body->GetIdentifier() <= 0)
             continue;
-        double h = body->GetPos().z;
+        double h = body->GetPos().z();
         if (h < lowest)
             lowest = h;
         else if (h > highest)
@@ -499,7 +499,7 @@ void FindHeightRange(ChSystemParallel* sys, double& lowest, double& highest) {
 void setBulkDensity(ChSystem* sys, double bulkDensity) {
     double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 
-    double normalPlateHeight = sys->Get_bodylist()->at(1)->GetPos().z - hdimZ;
+    double normalPlateHeight = sys->Get_bodylist()->at(1)->GetPos().z() - hdimZ;
     double bottomHeight = 0;
     double boxVolume = hdimX * 2 * hdimX * 2 * (normalPlateHeight - bottomHeight);
     double granularVolume = (sys->Get_bodylist()->size() - 3) * vol_g;
@@ -641,7 +641,7 @@ int main(int argc, char* argv[]) {
             FindHeightRange(msystem, lowest, highest);
             ChVector<> pos = loadPlate->GetPos();
             double z_new = highest + 2 * r_g;
-            loadPlate->SetPos(ChVector<>(pos.x, pos.y, z_new));
+            loadPlate->SetPos(ChVector<>(pos.x(), pos.y(), z_new));
 
             // Connect the load plate to the shear box.
             ConnectLoadPlate(msystem, ground, loadPlate);
@@ -720,7 +720,7 @@ int main(int argc, char* argv[]) {
             // Move the load plate just above the test ball.
             ChVector<> pos = loadPlate->GetPos();
             double z_new = 2.1 * radius_ball;
-            loadPlate->SetPos(ChVector<>(pos.x, pos.y, z_new));
+            loadPlate->SetPos(ChVector<>(pos.x(), pos.y(), z_new));
 
             // If using an actuator, connect the shear box and get a handle to the actuator.
             if (use_actuator) {
@@ -799,8 +799,8 @@ int main(int argc, char* argv[]) {
             cout << "------------ Output frame:     " << out_frame + 1 << endl;
             cout << "             Sim frame:        " << sim_frame << endl;
             cout << "             Time:             " << time << endl;
-            cout << "             Shear box pos:    " << pos_old.x << endl;
-            cout << "                       vel:    " << vel_old.x << endl;
+            cout << "             Shear box pos:    " << pos_old.x() << endl;
+            cout << "                       vel:    " << vel_old.x() << endl;
             cout << "             Particle lowest:  " << lowest << endl;
             cout << "                      highest: " << highest << endl;
             cout << "             Execution time:   " << exec_time << endl;
@@ -900,16 +900,16 @@ int main(int argc, char* argv[]) {
                 rforceA = actuator->Get_react_force();
                 rtorqueA = actuator->Get_react_torque();
             } else {
-                double xpos_new = pos_old.x + desiredVelocity * time_step;
-                shearBox->SetPos(ChVector<>(xpos_new, pos_old.y, pos_old.z));
+                double xpos_new = pos_old.x() + desiredVelocity * time_step;
+                shearBox->SetPos(ChVector<>(xpos_new, pos_old.y(), pos_old.z()));
                 shearBox->SetPos_dt(ChVector<>(desiredVelocity, 0, 0));
             }
 
             if (sim_frame % write_steps == 0) {
                 ////cout << "X pos: " << xpos_new << " X react: " << cnstr_force << endl;
-                shearStream << time << "  " << shearBox->GetPos().x << "     ";
-                shearStream << rforceA.x << "  " << rforceA.y << "  " << rforceA.z << "     ";
-                shearStream << rtorqueA.x << "  " << rtorqueA.y << "  " << rtorqueA.z << "\n";
+                shearStream << time << "  " << shearBox->GetPos().x() << "     ";
+                shearStream << rforceA.x() << "  " << rforceA.y() << "  " << rforceA.z() << "     ";
+                shearStream << rtorqueA.x() << "  " << rtorqueA.y() << "  " << rtorqueA.z() << "\n";
                 shearStream.GetFstream().flush();
             }
         }

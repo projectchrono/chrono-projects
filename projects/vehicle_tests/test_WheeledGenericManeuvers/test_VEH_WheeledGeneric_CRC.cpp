@@ -363,20 +363,20 @@ int main(int argc, char* argv[]) {
         ChVector<> acc_CG = vehicle.GetChassisBody()->GetPos_dtdt();
         acc_CG = vehicle.GetChassisBody()->GetCoord().TransformDirectionParentToLocal(acc_CG);
         ChVector<> acc_driver = vehicle.GetVehicleAcceleration(driver_pos);
-        double fwd_acc_CG = fwd_acc_GC_filter.Add(acc_CG.x);
-        double lat_acc_CG = lat_acc_GC_filter.Add(acc_CG.y);
-        double vert_acc_CG = vert_acc_GC_filter.Add(acc_CG.z);
-        double fwd_acc_driver = fwd_acc_driver_filter.Add(acc_driver.x);
-        double lat_acc_driver = lat_acc_driver_filter.Add(acc_driver.y);
-        double vert_acc_driver = vert_acc_driver_filter.Add(acc_driver.z);
+        double fwd_acc_CG = fwd_acc_GC_filter.Add(acc_CG.x());
+        double lat_acc_CG = lat_acc_GC_filter.Add(acc_CG.y());
+        double vert_acc_CG = vert_acc_GC_filter.Add(acc_CG.z());
+        double fwd_acc_driver = fwd_acc_driver_filter.Add(acc_driver.x());
+        double lat_acc_driver = lat_acc_driver_filter.Add(acc_driver.y());
+        double vert_acc_driver = vert_acc_driver_filter.Add(acc_driver.z());
 
 #ifdef CHRONO_IRRLICHT
         // Update sentinel and target location markers for the path-follower controller.
         // Note that we do this whether or not we are currently using the path-follower driver.
         const ChVector<>& pS = driver.GetSteeringController().GetSentinelLocation();
         const ChVector<>& pT = driver.GetSteeringController().GetTargetLocation();
-        ballS->setPosition(irr::core::vector3df((irr::f32)pS.x, (irr::f32)pS.y, (irr::f32)pS.z));
-        ballT->setPosition(irr::core::vector3df((irr::f32)pT.x, (irr::f32)pT.y, (irr::f32)pT.z));
+        ballS->setPosition(irr::core::vector3df((irr::f32)pS.x(), (irr::f32)pS.y(), (irr::f32)pS.z()));
+        ballT->setPosition(irr::core::vector3df((irr::f32)pT.x(), (irr::f32)pT.y(), (irr::f32)pT.z()));
 #endif
 
         // Render scene
@@ -415,15 +415,15 @@ int main(int argc, char* argv[]) {
                 csv << time << steering_input << throttle_input << braking_input;
                 csv << powertrain.GetMotorSpeed() << powertrain.GetMotorTorque();
                 // Chassis Position, Velocity, & Acceleration (Unfiltered and Filtered)
-                csv << vehicle.GetChassis()->GetPos().x << vehicle.GetChassis()->GetPos().y
-                    << vehicle.GetChassis()->GetPos().z;
-                csv << vel_CG.x << vel_CG.y << vel_CG.z;
-                csv << acc_CG.x << acc_CG.y << acc_CG.z;
+                csv << vehicle.GetChassis()->GetPos().x() << vehicle.GetChassis()->GetPos().y()
+                    << vehicle.GetChassis()->GetPos().z();
+                csv << vel_CG.x() << vel_CG.y() << vel_CG.z();
+                csv << acc_CG.x() << acc_CG.y() << acc_CG.z();
                 csv << fwd_acc_CG << lat_acc_CG << vert_acc_CG;
                 // Driver Position, Velocity, & Acceleration (Unfiltered and Filtered)
-                csv << vehicle.GetDriverPos().x << vehicle.GetDriverPos().y << vehicle.GetDriverPos().z;
-                csv << vel_driver_local.x << vel_driver_local.y << vel_driver_local.z;
-                csv << acc_driver.x << acc_driver.y << acc_driver.z;         // Chassis CSYS
+                csv << vehicle.GetDriverPos().x() << vehicle.GetDriverPos().y() << vehicle.GetDriverPos().z();
+                csv << vel_driver_local.x() << vel_driver_local.y() << vel_driver_local.z();
+                csv << acc_driver.x() << acc_driver.y() << acc_driver.z();         // Chassis CSYS
                 csv << fwd_acc_driver << lat_acc_driver << vert_acc_driver;  // filtered Chassis CSYS
                 // Torque to the rear wheels
                 csv << vehicle.GetDriveline()->GetWheelTorque(WheelID(axle, LEFT));

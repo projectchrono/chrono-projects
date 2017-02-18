@@ -300,7 +300,7 @@ void CreateObject(ChSystemParallel* system) {
     // ------------------
     // Set initial state.
     // ------------------
-    assert(initPos.z > rb);
+    assert(initPos.z() > rb);
 
     obj->SetPos(initPos);
     obj->SetRot(initRot);

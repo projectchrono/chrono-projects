@@ -12,6 +12,7 @@ set(TESTS
     test_CH_function_recorder
     test_CH_SparseMatrix
     test_CH_integratorHHT
+    test_CH_vector
 )
 
 set(TESTS_AVX

@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
             GetLog() << " t=" << my_system.GetChTime();
 
             if (!mbody)
-                GetLog() << "  body x=" << mbody->GetPos().x << "\n";
+                GetLog() << "  body x=" << mbody->GetPos().x() << "\n";
         }
 
     } catch (ChException myerror) {

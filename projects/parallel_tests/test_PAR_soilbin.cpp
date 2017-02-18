@@ -172,7 +172,7 @@ void CreateParticles(ChSystemParallel* system) {
 
     while (gen.getTotalNumBodies() < desired_num_particles) {
         gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
-        center.z += 2 * r;
+        center.z() += 2 * r;
     }
 
     cout << "Number of particles: " << gen.getTotalNumBodies() << endl;
@@ -302,8 +302,8 @@ double FindHighest(ChSystem* sys) {
     double highest = 0;
     for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
         auto body = (*sys->Get_bodylist())[i];
-        if (body->GetIdentifier() > 0 && body->GetPos().z > highest)
-            highest = body->GetPos().z;
+        if (body->GetIdentifier() > 0 && body->GetPos().z() > highest)
+            highest = body->GetPos().z();
     }
     return highest;
 }
@@ -312,8 +312,8 @@ double FindLowest(ChSystem* sys) {
     double lowest = 1000;
     for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
         auto body = (*sys->Get_bodylist())[i];
-        if (body->GetIdentifier() > 0 && body->GetPos().z < lowest)
-            lowest = body->GetPos().z;
+        if (body->GetIdentifier() > 0 && body->GetPos().z() < lowest)
+            lowest = body->GetPos().z();
     }
     return lowest;
 }

@@ -394,7 +394,7 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
         if (verbose) {
             cout << endl;
             cout << "t = " << my_system.GetChTime() << "  ";
-            cout << "node: [ " << p.x << " " << p.y << " " << p.z << " ]  " << endl;
+            cout << "node: [ " << p.x() << " " << p.y() << " " << p.z() << " ]  " << endl;
             cout << "step:  " << my_system.GetTimerStep() << endl;
             cout << "setup: " << my_system.GetTimerSetup();
 #ifdef CHRONO_MKL

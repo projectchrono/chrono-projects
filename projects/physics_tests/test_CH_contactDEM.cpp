@@ -299,7 +299,7 @@ int main(int argc, char* argv[]) {
         application.DrawAll();
 
         system.DoStepDynamics(time_step);
-        if (ball->GetPos().y <= radius) {
+        if (ball->GetPos().y() <= radius) {
             container->ScanContacts(ball);
             GetLog() << "t = " << system.GetChTime() << "  NR iters. = " << integrator->GetNumIterations() << "\n";
         }

@@ -98,9 +98,9 @@ class MyContactReporter : public ChReportContactCallback {
         ChVector<> pointN = (objA == m_ground.get()) ? pB : pA;
         printf("%3d | ", m_num_contacts);
         printf("%+10.5e | ", distance);
-        printf("%+10.5e  %+10.5e  %+10.5e | ", pointT.x, pointT.y, pointT.z);
-        printf("%+10.5e  %+10.5e  %+10.5e | ", pointN.x, pointN.y, pointN.z);
-        printf("%+10.5e  %+10.5e  %+10.5e \n", normal.x, normal.y, normal.z);
+        printf("%+10.5e  %+10.5e  %+10.5e | ", pointT.x(), pointT.y(), pointT.z());
+        printf("%+10.5e  %+10.5e  %+10.5e | ", pointN.x(), pointN.y(), pointN.z());
+        printf("%+10.5e  %+10.5e  %+10.5e \n", normal.x(), normal.y(), normal.z());
 
         // Cache the contact points
         m_terrain_points.push_back(pointT);
@@ -140,8 +140,8 @@ class TireTestCollisionManager : public ChSystem::ChCustomComputeCollisionCallba
             const ChVector<>& P = contact_node->GetNode()->GetPos();
 
             // Represent the terrain as a plane (Q, normal)
-            ChVector<> normal = m_terrain->GetNormal(P.x, P.y);
-            ChVector<> Q(P.x, P.y, m_terrain->GetHeight(P.x, P.y));
+            ChVector<> normal = m_terrain->GetNormal(P.x(), P.y());
+            ChVector<> Q(P.x(), P.y(), m_terrain->GetHeight(P.x(), P.y()));
 
             // Calculate signed height of sphere center above plane
             double height = Vdot(normal, P - Q);
@@ -169,9 +169,9 @@ class TireTestCollisionManager : public ChSystem::ChCustomComputeCollisionCallba
 
             printf("%3d | ", m_num_contacts);
             printf("%+10.5e | ", contact.distance);
-            printf("%+10.5e  %+10.5e  %+10.5e | ", contact.vpA.x, contact.vpA.y, contact.vpA.z);
-            printf("%+10.5e  %+10.5e  %+10.5e | ", contact.vpB.x, contact.vpB.y, contact.vpB.z);
-            printf("%+10.5e  %+10.5e  %+10.5e \n", contact.vN.x, contact.vN.y, contact.vN.z);
+            printf("%+10.5e  %+10.5e  %+10.5e | ", contact.vpA.x(), contact.vpA.y(), contact.vpA.z());
+            printf("%+10.5e  %+10.5e  %+10.5e | ", contact.vpB.x(), contact.vpB.y(), contact.vpB.z());
+            printf("%+10.5e  %+10.5e  %+10.5e \n", contact.vN.x(), contact.vN.y(), contact.vN.z());
 
             // Note: do not register the new contact
             ////system->GetContactContainer()->AddContact(contact);
@@ -255,8 +255,8 @@ int main(int argc, char* argv[]) {
     double z_min = 0;
     for (unsigned int in = 0; in < tire_mesh->GetNnodes(); in++) {
         auto node = std::dynamic_pointer_cast<fea::ChNodeFEAxyz>(tire_mesh->GetNode(in));
-        if (node->GetPos().z < z_min)
-            z_min = node->GetPos().z;
+        if (node->GetPos().z() < z_min)
+            z_min = node->GetPos().z();
     }
 
     // Create the terrain

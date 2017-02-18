@@ -176,8 +176,8 @@ class TireTestContactReporter : public chrono::ChReportContactCallback {
         GetLog() << "Distance: " << distance << "\n";
         ChVector<> force = plane_coord.Matr_x_Vect(react_forces);
         output.open(m_buffer, std::ios::app);
-        output << pA.x << ", " << pA.y << ", " << pA.z << ", " << pB.x << ", " << pB.y << ", " << pB.z << ", "
-               << distance << ", " << force.x << ", " << force.y << ", " << force.z << ", " << std::endl;
+        output << pA.x() << ", " << pA.y() << ", " << pA.z() << ", " << pB.x() << ", " << pB.y() << ", " << pB.z() << ", "
+               << distance << ", " << force.x() << ", " << force.y() << ", " << force.z() << ", " << std::endl;
         output.close();
 
         return true;
@@ -206,8 +206,8 @@ class TireTestCollisionManager : public ChSystem::ChCustomComputeCollisionCallba
             const ChVector<>& P = contact_node->GetNode()->GetPos();
 
             // Represent the terrain as a plane (Q, normal)
-            ChVector<> normal = m_terrain->GetNormal(P.x, P.y);
-            ChVector<> Q(P.x, P.y, m_terrain->GetHeight(P.x, P.y));
+            ChVector<> normal = m_terrain->GetNormal(P.x(), P.y());
+            ChVector<> Q(P.x(), P.y(), m_terrain->GetHeight(P.x(), P.y()));
 
             // Calculate signed height of sphere center above plane
             double height = Vdot(normal, P - Q);
@@ -903,7 +903,7 @@ int main() {
         wheelstate.rot = wheel->GetRot();           // orientation with respect to global frame
         wheelstate.lin_vel = wheel->GetPos_dt();    // linear velocity, expressed in the global frame
         wheelstate.ang_vel = wheel->GetWvel_par();  // angular velocity, expressed in the global frame
-        wheelstate.omega = wheel->GetWvel_loc().y;  // wheel angular speed about its rotation axis
+        wheelstate.omega = wheel->GetWvel_loc().y();  // wheel angular speed about its rotation axis
         // Get tire forces
         tireforce = tire->GetTireForce();
         tireforceprint = tire->GetTireForce(true);
@@ -949,47 +949,47 @@ int main() {
             ReactionLink = linkCoordsys.TransformDirectionLocalToParent(ReactionLink);
 
             std::cout << "Time: " << simTime << std::endl
-                      << "chassis (pos):       " << chassis->GetPos().x << ", " << chassis->GetPos().y << ", "
-                      << chassis->GetPos().z << std::endl
-                      << "chassis (rot):       " << chassis->GetRot().e0 << ", " << chassis->GetRot().e1 << ", "
-                      << chassis->GetRot().e2 << ", " << chassis->GetRot().e3 << std::endl
-                      << "set_toe (pos):       " << set_toe->GetPos().x << ", " << set_toe->GetPos().y << ", "
-                      << set_toe->GetPos().z << std::endl
-                      << "set_toe (rot):       " << set_toe->GetRot().e0 << ", " << set_toe->GetRot().e1 << ", "
-                      << set_toe->GetRot().e2 << ", " << set_toe->GetRot().e3 << std::endl
-                      << "wheel_carrier (pos): " << wheel_carrier->GetPos().x << ", " << wheel_carrier->GetPos().y
-                      << ", " << wheel_carrier->GetPos().z << std::endl
-                      << "wheel_carrier (rot): " << wheel_carrier->GetRot().e0 << ", " << wheel_carrier->GetRot().e1
-                      << ", " << wheel_carrier->GetRot().e2 << ", " << wheel_carrier->GetRot().e3 << std::endl
-                      << "set_camber (pos):    " << set_camber->GetPos().x << ", " << set_camber->GetPos().y << ", "
-                      << set_camber->GetPos().z << std::endl
-                      << "set_camber (rot):    " << set_camber->GetRot().e0 << ", " << set_camber->GetRot().e1 << ", "
-                      << set_camber->GetRot().e2 << ", " << set_camber->GetRot().e3 << std::endl
-                      << "rim (pos):           " << rim->GetPos().x << ", " << rim->GetPos().y << ", "
-                      << rim->GetPos().z << std::endl
-                      << "rim (rot):           " << rim->GetRot().e0 << ", " << rim->GetRot().e1 << ", "
-                      << rim->GetRot().e2 << ", " << rim->GetRot().e3 << std::endl
-                      << "Tire Force:          " << tireforce.force.x << ", " << tireforce.force.y << ", "
-                      << tireforce.force.z << std::endl
-                      << "Tire Moment:         " << tireforce.moment.x << ", " << tireforce.moment.y << ", "
-                      << tireforce.moment.z << std::endl
-                      << "Tire Point:          " << tireforce.point.x << ", " << tireforce.point.y << ", "
-                      << tireforce.point.z << std::endl
-                      << "Wheel States (pos):     " << wheelstate.pos.x << ", " << wheelstate.pos.y << ", "
-                      << wheelstate.pos.z << std::endl
-                      << "Wheel States (rot):     " << wheelstate.rot.e0 << ", " << wheelstate.rot.e1 << ", "
-                      << wheelstate.rot.e2 << wheelstate.rot.e3 << std::endl
-                      << "Wheel States (lin_vel): " << wheelstate.lin_vel.x << ", " << wheelstate.lin_vel.y << ", "
-                      << wheelstate.lin_vel.z << std::endl
-                      << "Wheel States (ang_vel,w): " << wheelstate.ang_vel.x << ", " << wheelstate.ang_vel.y << ", "
-                      << wheelstate.ang_vel.z << ", " << wheelstate.omega << std::endl
-                      << "Wheel Normal:             " << disc_normal.x << ", " << disc_normal.y << ", " << disc_normal.z
+                      << "chassis (pos):       " << chassis->GetPos().x() << ", " << chassis->GetPos().y() << ", "
+                      << chassis->GetPos().z() << std::endl
+                      << "chassis (rot):       " << chassis->GetRot().e0() << ", " << chassis->GetRot().e1() << ", "
+                      << chassis->GetRot().e2() << ", " << chassis->GetRot().e3() << std::endl
+                      << "set_toe (pos):       " << set_toe->GetPos().x() << ", " << set_toe->GetPos().y() << ", "
+                      << set_toe->GetPos().z() << std::endl
+                      << "set_toe (rot):       " << set_toe->GetRot().e0() << ", " << set_toe->GetRot().e1() << ", "
+                      << set_toe->GetRot().e2() << ", " << set_toe->GetRot().e3() << std::endl
+                      << "wheel_carrier (pos): " << wheel_carrier->GetPos().x() << ", " << wheel_carrier->GetPos().y()
+                      << ", " << wheel_carrier->GetPos().z() << std::endl
+                      << "wheel_carrier (rot): " << wheel_carrier->GetRot().e0() << ", " << wheel_carrier->GetRot().e1()
+                      << ", " << wheel_carrier->GetRot().e2() << ", " << wheel_carrier->GetRot().e3() << std::endl
+                      << "set_camber (pos):    " << set_camber->GetPos().x() << ", " << set_camber->GetPos().y() << ", "
+                      << set_camber->GetPos().z() << std::endl
+                      << "set_camber (rot):    " << set_camber->GetRot().e0() << ", " << set_camber->GetRot().e1() << ", "
+                      << set_camber->GetRot().e2() << ", " << set_camber->GetRot().e3() << std::endl
+                      << "rim (pos):           " << rim->GetPos().x() << ", " << rim->GetPos().y() << ", "
+                      << rim->GetPos().z() << std::endl
+                      << "rim (rot):           " << rim->GetRot().e0() << ", " << rim->GetRot().e1() << ", "
+                      << rim->GetRot().e2() << ", " << rim->GetRot().e3() << std::endl
+                      << "Tire Force:          " << tireforce.force.x() << ", " << tireforce.force.y() << ", "
+                      << tireforce.force.z() << std::endl
+                      << "Tire Moment:         " << tireforce.moment.x() << ", " << tireforce.moment.y() << ", "
+                      << tireforce.moment.z() << std::endl
+                      << "Tire Point:          " << tireforce.point.x() << ", " << tireforce.point.y() << ", "
+                      << tireforce.point.z() << std::endl
+                      << "Wheel States (pos):     " << wheelstate.pos.x() << ", " << wheelstate.pos.y() << ", "
+                      << wheelstate.pos.z() << std::endl
+                      << "Wheel States (rot):     " << wheelstate.rot.e0() << ", " << wheelstate.rot.e1() << ", "
+                      << wheelstate.rot.e2() << wheelstate.rot.e3() << std::endl
+                      << "Wheel States (lin_vel): " << wheelstate.lin_vel.x() << ", " << wheelstate.lin_vel.y() << ", "
+                      << wheelstate.lin_vel.z() << std::endl
+                      << "Wheel States (ang_vel,w): " << wheelstate.ang_vel.x() << ", " << wheelstate.ang_vel.y() << ", "
+                      << wheelstate.ang_vel.z() << ", " << wheelstate.omega << std::endl
+                      << "Wheel Normal:             " << disc_normal.x() << ", " << disc_normal.y() << ", " << disc_normal.z()
                       << std::endl
-                      << "Forward Acceleration:             " << rim->GetPos_dtdt().x << "\n"
-                      << "Reaction Force at the Joint:    " << ReactionSpindle(0) << " ... " << ReactionSpindle(1)
-                      << " ... " << ReactionSpindle(2) << "\n"
-                      << "Reaction Force at the Link:    " << ReactionLink(0) << " ... " << ReactionLink(1) << " ... "
-                      << ReactionLink(2) << "\n"
+                      << "Forward Acceleration:             " << rim->GetPos_dtdt().x() << "\n"
+                      << "Reaction Force at the Joint:    " << ReactionSpindle.x() << " ... " << ReactionSpindle.y()
+                      << " ... " << ReactionSpindle.z() << "\n"
+                      << "Reaction Force at the Link:    " << ReactionLink.x() << " ... " << ReactionLink.y() << " ... "
+                      << ReactionLink.z() << "\n"
                       //<< "Tire States (Kappa, Alpha): " << std::dynamic_pointer_cast<FialaTire>(tire)->GetKappa() <<
                       //", " << std::dynamic_pointer_cast<FialaTire>(tire)->GetAlpha()
                       << std::endl
@@ -998,9 +998,9 @@ int main() {
             out_force_moment << simTime << tireforce.force << tireforce.moment << std::endl;
             out_wheelstate << simTime << wheelstate.pos << wheelstate.rot << wheelstate.lin_vel << wheelstate.ang_vel
                            << wheelstate.omega << std::endl;
-            out_tireforce << tireforceprint.point.x << tireforceprint.point.y << tireforceprint.point.z
-                          << tireforceprint.force.x << tireforceprint.force.y << tireforceprint.force.z
-                          << tireforceprint.moment.x << tireforceprint.moment.y << tireforceprint.moment.z << std::endl;
+            out_tireforce << tireforceprint.point.x() << tireforceprint.point.y() << tireforceprint.point.z()
+                          << tireforceprint.force.x() << tireforceprint.force.y() << tireforceprint.force.z()
+                          << tireforceprint.moment.x() << tireforceprint.moment.y() << tireforceprint.moment.z() << std::endl;
             // Increment output time
             outTime += out_step;
             // Write output files
@@ -1087,7 +1087,7 @@ void UpdateVTKFile(std::shared_ptr<fea::ChMesh> m_mesh,
     output << "DATASET UNSTRUCTURED_GRID\nPOINTS " << m_mesh->GetNnodes() << " float\n";
     for (unsigned int i = 0; i < m_mesh->GetNnodes(); i++) {
         auto node = std::dynamic_pointer_cast<ChNodeFEAxyzD>(m_mesh->GetNode(i));
-        output << node->GetPos().x << " " << node->GetPos().y << " " << node->GetPos().z << "\n ";
+        output << node->GetPos().x() << " " << node->GetPos().y() << " " << node->GetPos().z() << "\n ";
     }
     std::ifstream CopyFrom("VTK_ANCFTireAn/Mesh.vtk");
     output << CopyFrom.rdbuf();
@@ -1125,9 +1125,9 @@ void UpdateVTKFile(std::shared_ptr<fea::ChMesh> m_mesh,
             dx = std::dynamic_pointer_cast<ChElementShellANCF>(m_mesh->GetElement(myelemInx))->GetLengthX();
             dy = std::dynamic_pointer_cast<ChElementShellANCF>(m_mesh->GetElement(myelemInx))->GetLengthY();
             myarea += dx * dy / 4;
-            areaAve1 += StrainVector.x * dx * dy / 4;
-            areaAve2 += StrainVector.y * dx * dy / 4;
-            areaAve3 += StrainVector.z * dx * dy / 4;
+            areaAve1 += StrainVector.x() * dx * dy / 4;
+            areaAve2 += StrainVector.y() * dx * dy / 4;
+            areaAve3 += StrainVector.z() * dx * dy / 4;
         }
         output << areaAve1 / myarea << " " << areaAve2 / myarea << " " << areaAve3 / myarea << "\n";
     }

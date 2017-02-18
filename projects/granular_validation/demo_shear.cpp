@@ -125,7 +125,7 @@ double visual_out_step = 1e-1;  // time interval between PovRay outputs
 // Utility for adding (visible or invisible) walls
 // -----------------------------------------------------------------------------
 void AddWall(std::shared_ptr<ChBody>& body, const ChVector<>& dim, const ChVector<>& loc, bool visible) {
-    body->GetCollisionModel()->AddBox(dim.x, dim.y, dim.z, loc);
+    body->GetCollisionModel()->AddBox(dim.x(), dim.y(), dim.z(), loc);
 
     if (visible == true) {
         auto box = std::make_shared<ChBoxShape>();
@@ -456,8 +456,8 @@ int main(int argc, char* argv[]) {
         if (my_system->GetChTime() > begin_shear_time && shearing == false) {
             if (dense == true)
                 material->SetFriction(mu);
-            shear_Height = plate->GetPos().y;
-            shear_Disp = bin->GetPos().z;
+            shear_Height = plate->GetPos().y();
+            shear_Disp = bin->GetPos().z();
             shearing = true;
         }
 
@@ -495,24 +495,24 @@ int main(int argc, char* argv[]) {
 #endif
             force = my_system->GetBodyContactForce(0);
 
-            forceStream << my_system->GetChTime() << "\t" << plate->GetPos().y - bin->GetPos().y << "\t"
-                        << bin->GetPos().x << "\t" << bin->GetPos().y << "\t" << bin->GetPos().z << "\t" << force.x
+            forceStream << my_system->GetChTime() << "\t" << plate->GetPos().y() - bin->GetPos().y() << "\t"
+                        << bin->GetPos().x() << "\t" << bin->GetPos().y() << "\t" << bin->GetPos().z() << "\t" << force.x
                         << "\t" << force.y << "\t" << force.z << "\n";
 
-            cout << my_system->GetChTime() << "\t" << plate->GetPos().y - bin->GetPos().y << "\t" << bin->GetPos().x
-                 << "\t" << bin->GetPos().y << "\t" << bin->GetPos().z << "\t" << force.x << "\t" << force.y << "\t"
+            cout << my_system->GetChTime() << "\t" << plate->GetPos().y() - bin->GetPos().y() << "\t" << bin->GetPos().x()
+                 << "\t" << bin->GetPos().y() << "\t" << bin->GetPos().z() << "\t" << force.x << "\t" << force.y << "\t"
                  << force.z << "\n";
 
             //  Output to shear data file
 
             if (shearing == true) {
-                shearStream << (bin->GetPos().z - shear_Disp) / (2 * radius) << "\t";
+                shearStream << (bin->GetPos().z() - shear_Disp) / (2 * radius) << "\t";
                 shearStream << -force.z / (shear_Area * normal_pressure) << "\t";
-                shearStream << (plate->GetPos().y - shear_Height) / (2 * radius) << "\n";
+                shearStream << (plate->GetPos().y() - shear_Height) / (2 * radius) << "\n";
 
-                cout << (bin->GetPos().z - shear_Disp) / (2 * radius) << "\t";
+                cout << (bin->GetPos().z() - shear_Disp) / (2 * radius) << "\t";
                 cout << -force.z / (shear_Area * normal_pressure) << "\t";
-                cout << (plate->GetPos().y - shear_Height) / (2 * radius) << "\n";
+                cout << (plate->GetPos().y() - shear_Height) / (2 * radius) << "\n";
             }
 
             data_out_frame++;

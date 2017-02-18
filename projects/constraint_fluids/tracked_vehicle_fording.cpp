@@ -203,12 +203,12 @@ double CreateParticles(ChSystem* system) {
 
 	while (gen.getTotalNumBodies() < num_particles) {
 		gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
-		center.z += 2 * r;
+		center.z() += 2 * r;
 	}
 
 	std::cout << "Created " << gen.getTotalNumBodies() << " particles." << std::endl;
 
-	return center.z;
+	return center.z();
 }
 
 // =============================================================================
@@ -373,7 +373,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			// Stop vehicle at time_brakes [s]
-			if (vehicle.GetChassis()->GetPos().x > dist_end) {
+			if (vehicle.GetChassis()->GetPos().x() > dist_end) {
 				braking_input = 1;
 				throttle_input = 0;
 				if (set_time) {

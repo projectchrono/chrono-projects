@@ -401,7 +401,7 @@ int CreateParticles(ChSystem* system) {
 
     while (gen.getTotalNumBodies() < num_particles) {
         gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
-        center.z += 2 * r;
+        center.z() += 2 * r;
     }
 
     return gen.getTotalNumBodies();
@@ -411,8 +411,8 @@ double FindHighestParticle(ChSystem* system) {
     double highest = 0;
     for (size_t i = 0; i < system->Get_bodylist()->size(); ++i) {
         auto body = (*system->Get_bodylist())[i];
-        if (body->GetIdentifier() > 0 && body->GetPos().z > highest)
-            highest = body->GetPos().z;
+        if (body->GetIdentifier() > 0 && body->GetPos().z() > highest)
+            highest = body->GetPos().z();
     }
     return highest;
 }

@@ -202,14 +202,14 @@ bool ANCFBeamTest::execute() {
         my_system.DoStepDynamics(0.0001);
         displ = hnodeancf5->GetPos() - ChVector<>(beam_length, 0, 0);
         ////std::cout << "t = " << my_system.GetChTime();
-        ////std::cout << " [" << displ.x << "," << displ.y << "," << displ.z << "]" << std::endl;
+        ////std::cout << " [" << displ.x() << "," << displ.y() << "," << displ.z() << "]" << std::endl;
         timer.stop();
     }
 
     m_execTime = timer.GetTimeSeconds();
-    addMetric("tip_displ_x", displ.x);
-    addMetric("tip_displ_y", displ.y);
-    addMetric("tip_displ_z", displ.z);
+    addMetric("tip_displ_x", displ.x());
+    addMetric("tip_displ_y", displ.y());
+    addMetric("tip_displ_z", displ.z());
     addMetric("avg_time_per_step (ms)", 1000 * m_execTime / num_steps);
 
     return true;

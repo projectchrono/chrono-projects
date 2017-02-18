@@ -224,8 +224,8 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
         int NoCNodes = 0;
         for (int iii = 0; iii < loadables.size(); iii++) {
             Node1_Pos = state_x->ClipVector(iii * 6, 0);
-            if (Node1_Pos.z < GroundLoc) {
-             //  chrono::GetLog() << " \n Node1_Pos.z: " << Node1_Pos.z << "\n GroundLoc: " << GroundLoc << "  Number: " << iii;
+            if (Node1_Pos.z() < GroundLoc) {
+             //  chrono::GetLog() << " \n Node1_Pos.z(): " << Node1_Pos.z() << "\n GroundLoc: " << GroundLoc << "  Number: " << iii;
                 NoCNodes++;
             }
         }
@@ -241,32 +241,32 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
                 Node1_Grad = state_x->ClipVector(iii * 6 + 3, 0);
                 Node1_Vel = state_w->ClipVector(iii * 6, 0);
                 Node1_GradVel = state_w->ClipVector(iii * 6 + 3, 0);
-                if (Node1_Pos.z < GroundLoc) {
-                    double Penet = abs(Node1_Pos.z - GroundLoc);
+                if (Node1_Pos.z() < GroundLoc) {
+                    double Penet = abs(Node1_Pos.z() - GroundLoc);
                     // GetLog() << "Node number:  " << iii << ".  "
                     //          << "Penetration:  " << Penet << "\n";
-                    NormalForceNode = KGround * Penet;  // +CGround * abs(Node1_Vel.y*Penet);
+                    NormalForceNode = KGround * Penet;  // +CGround * abs(Node1_Vel.y()*Penet);
                     this->load_Q(iii * 6 + 2) =
-                        NormalForceNode - CGround * (Node1_Vel.z) * abs(Penet);  // Fy (Vertical)
+                        NormalForceNode - CGround * (Node1_Vel.z()) * abs(Penet);  // Fy (Vertical)
                     // Friction forces
                     const double VelLimit = 0.1;
-                    if (abs(Node1_Vel.x) > VelLimit) {
+                    if (abs(Node1_Vel.x()) > VelLimit) {
                         this->load_Q(iii * 6 + 0) =
                             -NormalForceNode * FrictionCoeff *
-                            (Node1_Vel.x / sqrt((pow(Node1_Vel.x, 2) + pow(Node1_Vel.y, 2))));  // Fx (Plane x)
+                            (Node1_Vel.x() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fx (Plane x)
                     } else {
                         this->load_Q(iii * 6 + 0) =
-                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.x) * CH_C_PI_2 / VelLimit) *
-                            (Node1_Vel.x / sqrt((pow(Node1_Vel.x, 2) + pow(Node1_Vel.y, 2))));  // Fx (Plane x)
+                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.x()) * CH_C_PI_2 / VelLimit) *
+                            (Node1_Vel.x() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fx (Plane x)
                     }
-                    if (abs(Node1_Vel.y) > VelLimit) {
+                    if (abs(Node1_Vel.y()) > VelLimit) {
                         this->load_Q(iii * 6 + 1) =
                             -NormalForceNode * FrictionCoeff *
-                            (Node1_Vel.y / sqrt((pow(Node1_Vel.x, 2) + pow(Node1_Vel.y, 2))));  // Fz (Plane y)
+                            (Node1_Vel.y() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fz (Plane y)
                     } else {
                         this->load_Q(iii * 6 + 1) =
-                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.z) * CH_C_PI_2 / VelLimit) *
-                            (Node1_Vel.y / sqrt((pow(Node1_Vel.x, 2) + pow(Node1_Vel.y, 2))));  // Fz (Plane y)
+                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.z()) * CH_C_PI_2 / VelLimit) *
+                            (Node1_Vel.y() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fz (Plane y)
                     }
                 }
             }
@@ -359,7 +359,7 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
     // Create a set of nodes for the tire based on the input data
     for (int i = 0; i < TotalNumNodes; i++) {
 
-        auto node = std::make_shared<ChNodeFEAxyzD>(ChVector<>(COORDFlex(i, 0) + rim_center.x, COORDFlex(i, 1) +rim_center.y, COORDFlex(i, 2)),
+        auto node = std::make_shared<ChNodeFEAxyzD>(ChVector<>(COORDFlex(i, 0) + rim_center.x(), COORDFlex(i, 1) +rim_center.y(), COORDFlex(i, 2)),
                               ChVector<>(COORDFlex(i, 3), COORDFlex(i, 4), COORDFlex(i, 5)));
         node->SetPos_dt(ChVector<>(VELCYFlex(i, 0), VELCYFlex(i, 1), VELCYFlex(i, 2)));
         node->SetD_dt(ChVector<>(VELCYFlex(i, 3), VELCYFlex(i, 4), VELCYFlex(i, 5)));
@@ -372,9 +372,9 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
     // Check position of the bottom node
     GetLog() << "TotalNumNodes: " << TotalNumNodes << "\n\n";
     auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode((TotalNumElements / 2)));
-    GetLog() << "X : " << nodetip->GetPos().x << " Y : " << nodetip->GetPos().y << " Z : " << nodetip->GetPos().z
+    GetLog() << "X : " << nodetip->GetPos().x() << " Y : " << nodetip->GetPos().y() << " Z : " << nodetip->GetPos().z()
              << "\n\n";
-    GetLog() << "dX : " << nodetip->GetD().x << " dY : " << nodetip->GetD().y << " dZ : " << nodetip->GetD().z
+    GetLog() << "dX : " << nodetip->GetD().x() << " dY : " << nodetip->GetD().y() << " dZ : " << nodetip->GetD().z()
              << "\n\n";
 
     int LayerHist = 0;  // Number of layers in the previous tire sections
@@ -447,7 +447,7 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
     for (unsigned int i = 0; i < TireMesh->GetNnodes(); ++i) {
         ChVector<> node_pos = std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(i))->GetPos();
         double tang_vel =
-            ForVelocity * (node_pos.z) / (HumveeVertPos);
+            ForVelocity * (node_pos.z()) / (HumveeVertPos);
         ChVector<> NodeVel(tang_vel, 0, 0.0);
         std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(i))->SetPos_dt(NodeVel);
     }
@@ -708,13 +708,13 @@ int main(int argc, char* argv[]) {
             std::cout << "Time t = " << my_system.GetChTime() << "s \n";
             // AccuNoIterations += mystepper->GetNumIterations();
             printf("Vertical position of Tires:      %12.4e       %12.4e       %12.4e       %12.4e  Chassis   \n",
-                   Hub_1->GetPos().y, Hub_2->GetPos().y, Hub_3->GetPos().y, Hub_4->GetPos().y);
+                   Hub_1->GetPos().y(), Hub_2->GetPos().y(), Hub_3->GetPos().y(), Hub_4->GetPos().y());
 
             printf("Longitudinal position of Tires:      %12.4e       %12.4e       %12.4e       %12.4e  Chassis  ",
-                   Hub_1->GetPos().z, Hub_2->GetPos().z, Hub_3->GetPos().z, Hub_4->GetPos().z);
-            out << my_system.GetChTime() << Hub_1->GetPos().x << Hub_1->GetPos().y << Hub_1->GetPos().z
-                << Hub_2->GetPos().x << Hub_2->GetPos().y << Hub_2->GetPos().z << Hub_3->GetPos().x << Hub_3->GetPos().y
-                << Hub_3->GetPos().z << std::endl;
+                   Hub_1->GetPos().z(), Hub_2->GetPos().z(), Hub_3->GetPos().z(), Hub_4->GetPos().z());
+            out << my_system.GetChTime() << Hub_1->GetPos().x() << Hub_1->GetPos().y() << Hub_1->GetPos().z()
+                << Hub_2->GetPos().x() << Hub_2->GetPos().y() << Hub_2->GetPos().z() << Hub_3->GetPos().x() << Hub_3->GetPos().y()
+                << Hub_3->GetPos().z() << std::endl;
             out.write_to_file("../VertPosRim.txt");
         }
     }
@@ -727,7 +727,7 @@ int main(int argc, char* argv[]) {
     for (unsigned int it = 0; it < num_steps; it++) {
         my_system.DoStepDynamics(time_step);
         std::cout << "Time t = " << my_system.GetChTime() << "s \n";
-        // std::cout << "nodetip->pos.z = " << nodetip->pos.z << "\n";
+        // std::cout << "nodetip->pos.z() = " << nodetip->pos.z() << "\n";
         // std::cout << "mystepper->GetNumIterations()= " << mystepper->GetNumIterations() << "\n";
         if (addConstRim) {
             Cp = NodePosRim->GetC();
@@ -736,8 +736,8 @@ int main(int argc, char* argv[]) {
             Cd = NodeDirRim->GetC();
             printf("Direction constraint violations:  %12.4e  %12.4e\n", Cd.GetElement(0, 0), Cd.GetElement(1, 0));
 
-            printf("Vertical position of the rim:  %12.4e m  %12.4e m  %12.4e m  %12.4e m\n", Hub_1->coord.pos.y,
-                   Hub_2->coord.pos.y, Hub_3->coord.pos.y, Hub_4->coord.pos.y);
+            printf("Vertical position of the rim:  %12.4e m  %12.4e m  %12.4e m  %12.4e m\n", Hub_1->coord.pos.y(),
+                   Hub_2->coord.pos.y(), Hub_3->coord.pos.y(), Hub_4->coord.pos.y());
         }
     }
     double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;

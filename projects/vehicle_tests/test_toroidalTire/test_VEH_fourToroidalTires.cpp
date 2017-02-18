@@ -311,13 +311,13 @@ int main(int argc, char* argv[]) {
             std::cout << "Time t = " << my_system.GetChTime() << "s \n";
             // AccuNoIterations += mystepper->GetNumIterations();
             printf("Vertical position of Tires:      %12.4e       %12.4e       %12.4e       %12.4e  Chassis   \n",
-                   Hub_1->GetPos().z, Hub_2->GetPos().z, Hub_3->GetPos().z, Hub_4->GetPos().z);
+                   Hub_1->GetPos().z(), Hub_2->GetPos().z(), Hub_3->GetPos().z(), Hub_4->GetPos().z());
 
             printf("Longitudinal position of Tires:      %12.4e       %12.4e       %12.4e       %12.4e  Chassis  ",
-                   Hub_1->GetPos().x, Hub_2->GetPos().x, Hub_3->GetPos().x, Hub_4->GetPos().x);
-            out << my_system.GetChTime() << Hub_1->GetPos().x << Hub_1->GetPos().y << Hub_1->GetPos().z
-                << Hub_2->GetPos().x << Hub_2->GetPos().y << Hub_2->GetPos().z << Hub_3->GetPos().x << Hub_3->GetPos().y
-                << Hub_3->GetPos().z << std::endl;
+                   Hub_1->GetPos().x(), Hub_2->GetPos().x(), Hub_3->GetPos().x(), Hub_4->GetPos().x());
+            out << my_system.GetChTime() << Hub_1->GetPos().x() << Hub_1->GetPos().y() << Hub_1->GetPos().z()
+                << Hub_2->GetPos().x() << Hub_2->GetPos().y() << Hub_2->GetPos().z() << Hub_3->GetPos().x() << Hub_3->GetPos().y()
+                << Hub_3->GetPos().z() << std::endl;
         }
     }
 
