@@ -129,7 +129,7 @@ void RigNode::SetIntegratorType(ChTimestepper::Type int_type, ChSolver::Type slv
     m_int_type = int_type;
     m_slv_type = slv_type;
 #ifndef CHRONO_MKL
-    m_slv_type = Chsystem::SOLVER_SOR;
+    m_slv_type = ChSolver::Type::SOR;
 #endif
 }
 
