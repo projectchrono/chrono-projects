@@ -359,7 +359,7 @@ void TerrainNode::Construct() {
     // --------------------------
 
     // Granular material properties.
-    m_Id_g = 10000;
+    m_Id_g = 100000;
 
     // Cache the number of bodies that have been added so far to the parallel system.
     // ATTENTION: This will be used to set the state of granular material particles if
