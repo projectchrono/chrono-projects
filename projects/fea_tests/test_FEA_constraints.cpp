@@ -139,12 +139,12 @@ void test_beam(const std::string& name,  /// test name
     my_system.SetSolverWarmStarting(true);
     my_system.SetMaxItersSolverSpeed(100000);
     my_system.SetTolForce(1e-08);
-    ChSolverMINRES* msolver = (ChSolverMINRES*)my_system.GetSolverSpeed();
+    auto msolver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
     msolver->SetVerbose(false);
     msolver->SetDiagonalPreconditioning(true);
 
     // my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
-    my_system.SetTimestepperType(ChTimestepper::EULER_IMPLICIT);
+    my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT);
 #endif
 
     // Simulation loop
