@@ -66,7 +66,7 @@ class VehicleNode : public BaseNode {
     void SetDataDriver(const std::vector<chrono::vehicle::ChDataDriver::Entry>& data);
 
     /// Set path-follower driver.
-    void SetPathDriver(const chrono::ChBezierCurve& path, double target_speed);
+    void SetPathDriver(std::shared_ptr<chrono::ChBezierCurve> path, double target_speed);
 
     /// Initialize this node.
     /// This function allows the node to initialize itself and, optionally, perform an
@@ -100,8 +100,8 @@ class VehicleNode : public BaseNode {
 
     std::vector<chrono::vehicle::ChDataDriver::Entry> m_driver_data;  ///< data points for DATA driver type
 
-    chrono::ChBezierCurve m_driver_path;  ///< path (Bezier curve) for PATH_FOLLOWER driver type
-    double m_driver_target_speed;         ///< target speed for PATH_FOLLOWER driver type
+    std::shared_ptr<chrono::ChBezierCurve> m_driver_path;  ///< path (Bezier curve) for PATH_FOLLOWER driver type
+    double m_driver_target_speed;                          ///< target speed for PATH_FOLLOWER driver type
 
     chrono::vehicle::hmmwv::HMMWV_VehicleFull* m_vehicle;    ///< vehicle system
     chrono::vehicle::hmmwv::HMMWV_Powertrain* m_powertrain;  ///< powertrain system

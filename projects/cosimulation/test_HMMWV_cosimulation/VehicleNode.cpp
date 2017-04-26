@@ -99,7 +99,7 @@ void VehicleNode::SetDataDriver(const std::vector<ChDataDriver::Entry>& data) {
 // -----------------------------------------------------------------------------
 // Specify data for PATH_FOLLOWER driver type
 // -----------------------------------------------------------------------------
-void VehicleNode::SetPathDriver(const ChBezierCurve& path, double target_speed) {
+void VehicleNode::SetPathDriver(std::shared_ptr<chrono::ChBezierCurve> path, double target_speed) {
     m_driver_type = PATH_DRIVER;
     m_driver_path = path;
     m_driver_target_speed = target_speed;
@@ -127,7 +127,7 @@ void VehicleNode::Initialize() {
     // Set initial vehicle position and orientation
     double y_offset = 0;
     if (m_driver_type == PATH_DRIVER) {
-        y_offset = m_driver_path.getPoint(0).y();
+        y_offset = m_driver_path->getPoint(0).y();
     }
     ChVector<> init_loc(2.75 - init_dim[1], y_offset, 0.52 + init_dim[0]);
     ChQuaternion<> init_rot(1, 0, 0, 0);
@@ -153,7 +153,7 @@ void VehicleNode::Initialize() {
             m_driver = new ChDataDriver(*m_vehicle, m_driver_data);
             break;
         case PATH_DRIVER: {
-            auto driver = new ChPathFollowerDriver(*m_vehicle, &m_driver_path, "path", m_driver_target_speed);
+            auto driver = new ChPathFollowerDriver(*m_vehicle, m_driver_path, "path", m_driver_target_speed);
             driver->GetSteeringController().SetLookAheadDistance(5.0);
             driver->GetSteeringController().SetGains(0.5, 0.0, 0.0);
             driver->GetSpeedController().SetGains(0.4, 0.0, 0.0);

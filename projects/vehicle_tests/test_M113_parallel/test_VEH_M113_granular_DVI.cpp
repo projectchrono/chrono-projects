@@ -368,7 +368,7 @@ int main(int argc, char* argv[]) {
     MyDriver driver_speed(*vehicle, 0.5);
     driver_speed.Initialize();
 
-	ChBezierCurve* path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
+	auto path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
     ChPathFollowerDriver driver_steering(*vehicle, vehicle::GetDataFile(steering_controller_file),
                                 vehicle::GetDataFile(speed_controller_file), path, "my_path", 0.0);
     driver_steering.Initialize();

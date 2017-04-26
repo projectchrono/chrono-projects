@@ -74,7 +74,7 @@ set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Parallel tests...")
+message(STATUS "Constraint_fluids tests...")
 
 foreach(PROGRAM ${DEMOS})
 

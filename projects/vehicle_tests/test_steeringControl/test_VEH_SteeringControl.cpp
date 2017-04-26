@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Create the driver system
-    ChBezierCurve* path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
+    auto path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
     ChPathFollowerDriver driver(vehicle, vehicle::GetDataFile(steering_controller_file),
                                 vehicle::GetDataFile(speed_controller_file), path, "my_path", target_speed);
 

@@ -27,7 +27,7 @@
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
 #include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
-#include "chrono_vehicle/driver/ChPathFollowerDriver.h"
+
 // Chrono::Parallel OpenGL header files
 #undef CHRONO_OPENGL
 

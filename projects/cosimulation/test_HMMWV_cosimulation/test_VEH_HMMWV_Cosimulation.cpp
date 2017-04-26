@@ -101,7 +101,7 @@ CSimpleOptA::SOption g_options[] = {{OPT_THREADS_TIRE, "--num-threads-tire", SO_
                                     SO_END_OF_OPTIONS};
 
 // Forward declarations
-void CreateBezierPath(double run, double radius, int nturns, ChBezierCurve& path);
+std::shared_ptr<ChBezierCurve> CreateBezierPath(double run, double radius, int nturns);
 void ShowUsage();
 bool GetProblemSpecs(int argc,
                      char** argv,
@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
     double container_width;
     double container_height;
     double platform_length;
-    ChBezierCurve path;
+    std::shared_ptr<ChBezierCurve> path;
 
     switch (driver_type) {
         case VehicleNode::DEFAULT_DRIVER:
@@ -213,7 +213,7 @@ int main(int argc, char** argv) {
             max_radius = std::max(max_radius, 0.0);
             radius = std::min(radius, max_radius);
 
-            CreateBezierPath(run, radius, nturns, path);
+            path = CreateBezierPath(run, radius, nturns);
 
             break;
         }
@@ -275,7 +275,7 @@ int main(int argc, char** argv) {
             my_terrain->SetPlatformLength(platform_length);
 
             double radius = 0.006;
-            double coh_force = CH_C_PI * radius * radius * coh_pressure;
+            float coh_force = static_cast<float>(CH_C_PI * radius * radius * coh_pressure);
 
             switch (method) {
                 case ChMaterialSurfaceBase::DEM: {
@@ -449,7 +449,7 @@ int main(int argc, char** argv) {
 
 // =============================================================================
 
-void CreateBezierPath(double run, double radius, int nturns, ChBezierCurve& path) {
+std::shared_ptr<ChBezierCurve> CreateBezierPath(double run, double radius, int nturns) {
     double z = 1;
     double factor = radius * (4.0 / 3.0) * std::tan(CH_C_PI / 8);
 
@@ -501,7 +501,7 @@ void CreateBezierPath(double run, double radius, int nturns, ChBezierCurve& path
         outCV.push_back(P4_out);
     }
 
-    path.setPoints(points, inCV, outCV);
+    return std::make_shared<ChBezierCurve>(points, inCV, outCV);
 }
 
 // =============================================================================

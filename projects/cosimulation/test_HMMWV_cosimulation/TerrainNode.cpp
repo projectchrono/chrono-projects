@@ -194,7 +194,7 @@ void TerrainNode::SetContainerDimensions(double length, double width, double hei
 #endif
 }
 
-void TerrainNode::SetPath(const ChBezierCurve& path) {
+void TerrainNode::SetPath(std::shared_ptr<ChBezierCurve> path) {
     m_render_path = true;
     m_path = path;
 }
@@ -312,7 +312,7 @@ void TerrainNode::Construct() {
     // Add path as visualization asset to the container body
     if (m_render_path) {
         auto path_asset = std::make_shared<ChLineShape>();
-        path_asset->SetLineGeometry(std::make_shared<geometry::ChLineBezier>(&m_path));
+        path_asset->SetLineGeometry(std::make_shared<geometry::ChLineBezier>(m_path));
         path_asset->SetColor(ChColor(0.0f, 0.8f, 0.0f));
         path_asset->SetName("path");
         container->AddAsset(path_asset);

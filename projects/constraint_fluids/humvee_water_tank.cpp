@@ -475,7 +475,7 @@ int main(int argc, char* argv[]) {
 	system->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
 	system->GetSettings()->collision.fixed_bins = true;
 
-	ChBezierCurve* path;
+	std::shared_ptr<ChBezierCurve> path;
 
 	if (simulation_mode == TURN) {
 		initLoc = ChVector<>(0, 30.48, .6);
