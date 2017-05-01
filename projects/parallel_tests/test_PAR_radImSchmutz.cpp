@@ -51,8 +51,8 @@ using std::flush;
 // Problem setup
 // -----------------------------------------------------------------------------
 
-// Specify solution method (comment next line for DVI)
-#define USE_DEM
+// Specify solution method (comment next line for NSC)
+#define USE_SMC
 
 // Simulation phase
 enum ProblemType { SETTLING, PUSHING, TESTING };
@@ -81,7 +81,7 @@ bool clamp_bilaterals = false;
 double bilateral_clamp_speed = 1000;
 double tolerance = 1e-3;
 
-#ifdef USE_DEM
+#ifdef USE_SMC
 double time_step = 1e-4;
 int max_iteration_bilateral = 100;
 #else
@@ -94,10 +94,10 @@ float contact_recovery_speed = 1e4;
 #endif
 
 // Output
-#ifdef USE_DEM
-const std::string out_dir = "../SCHMUTZ_DEM";
+#ifdef USE_SMC
+const std::string out_dir = "../SCHMUTZ_SMC";
 #else
-const std::string out_dir = "../SCHMUTZ_DVI";
+const std::string out_dir = "../SCHMUTZ_NSC";
 #endif
 const std::string pov_dir = out_dir + "/POVRAY";
 const std::string checkpoint_file = out_dir + "/settled.dat";
@@ -189,8 +189,8 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
     ChVector<> loc_prismatic = loc_sled - ChVector<>(0, 0, e / 4);
 
 // Create the ground body
-#ifdef USE_DEM
-    m_ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+#ifdef USE_SMC
+    m_ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
 #else
     m_ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
 #endif
@@ -201,8 +201,8 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
     system->AddBody(m_ground);
 
 // Create the sled body
-#ifdef USE_DEM
-    m_sled = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+#ifdef USE_SMC
+    m_sled = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
 #else
     m_sled = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
 #endif
@@ -227,19 +227,19 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
     system->AddBody(m_sled);
 
 // Create a material for the wheel body
-#ifdef USE_DEM
-    auto mat_w = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_w = std::make_shared<ChMaterialSurfaceSMC>();
     mat_w->SetYoungModulus(2e6f);
     mat_w->SetFriction(0.4f);
     mat_w->SetRestitution(0.1f);
 #else
-    auto mat_w = std::make_shared<ChMaterialSurface>();
+    auto mat_w = std::make_shared<ChMaterialSurfaceNSC>();
     mat_w->SetFriction(0.4f);
 #endif
 
 // Create the wheel body
-#ifdef USE_DEM
-    m_wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+#ifdef USE_SMC
+    m_wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
     m_wheel->SetMaterialSurface(mat_w);
 #else
     m_wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -318,15 +318,15 @@ void CreateContainer(ChSystemParallel* system) {
     int id_c = -200;
     double thickness = 0.2;
 
-#ifdef USE_DEM
-    auto mat_c = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_c = std::make_shared<ChMaterialSurfaceSMC>();
     mat_c->SetYoungModulus(2e6f);
     mat_c->SetFriction(0.4f);
     mat_c->SetRestitution(0.1f);
 
     utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(L / 2, W / 2, H / 2), thickness / 2);
 #else
-    auto mat_c = std::make_shared<ChMaterialSurface>();
+    auto mat_c = std::make_shared<ChMaterialSurfaceNSC>();
     mat_c->SetFriction(0.4f);
 
     utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(L / 2, W / 2, H / 2), thickness / 2);
@@ -339,13 +339,13 @@ void CreateContainer(ChSystemParallel* system) {
 // =============================================================================
 void CreateParticles(ChSystemParallel* system) {
 // Create a material for the ball mixture.
-#ifdef USE_DEM
-    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = std::make_shared<ChMaterialSurface>();
+    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -413,12 +413,12 @@ int main(int argc, char* argv[]) {
 // Create system.
 // --------------
 
-#ifdef USE_DEM
-    cout << "Create DEM system" << endl;
-    ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
+#ifdef USE_SMC
+    cout << "Create SMC system" << endl;
+    ChSystemParallelSMC* msystem = new ChSystemParallelSMC();
 #else
-    cout << "Create DVI system" << endl;
-    ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
+    cout << "Create NSC system" << endl;
+    ChSystemParallelNSC* msystem = new ChSystemParallelNSC();
 #endif
 
     msystem->Set_G_acc(ChVector<>(0, 0, -9.81));
@@ -446,7 +446,7 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.clamp_bilaterals = clamp_bilaterals;
     msystem->GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
 
-#ifdef USE_DEM
+#ifdef USE_SMC
     msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
 #else
     msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;

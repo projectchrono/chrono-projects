@@ -75,7 +75,7 @@ bool tire_mesh_wireframe = false;
 // Contact reporter class
 // =============================================================================
 
-class MyContactReporter : public ChReportContactCallback {
+class MyContactReporter : public ChContactContainerBase::ReportContactCallback {
   public:
     MyContactReporter(std::shared_ptr<ChBody> ground) : m_ground(ground), m_num_contacts(0) {}
 
@@ -84,14 +84,14 @@ class MyContactReporter : public ChReportContactCallback {
     const std::vector<ChVector<>>& GetNodePoints() const { return m_node_points; }
 
   private:
-    virtual bool ReportContactCallback(const ChVector<>& pA,
-                                       const ChVector<>& pB,
-                                       const ChMatrix33<>& plane_coord,
-                                       const double& distance,
-                                       const ChVector<>& react_forces,
-                                       const ChVector<>& react_torques,
-                                       ChContactable* objA,
-                                       ChContactable* objB) override {
+    virtual bool OnReportContact(const ChVector<>& pA,
+                                 const ChVector<>& pB,
+                                 const ChMatrix33<>& plane_coord,
+                                 const double& distance,
+                                 const ChVector<>& react_forces,
+                                 const ChVector<>& react_torques,
+                                 ChContactable* objA,
+                                 ChContactable* objB) override {
         m_num_contacts++;
         ChVector<> normal = plane_coord.Get_A_Xaxis();
         ChVector<> pointT = (objA == m_ground.get()) ? pA : pB;
@@ -119,7 +119,7 @@ class MyContactReporter : public ChReportContactCallback {
 // Custom collision detection class
 // =============================================================================
 
-class TireTestCollisionManager : public ChSystem::ChCustomComputeCollisionCallback {
+class TireTestCollisionManager : public ChSystem::CustomCollisionCallback {
   public:
     TireTestCollisionManager(std::shared_ptr<fea::ChContactSurfaceNodeCloud> surface,
                              std::shared_ptr<RigidTerrain> terrain,
@@ -131,7 +131,7 @@ class TireTestCollisionManager : public ChSystem::ChCustomComputeCollisionCallba
     const std::vector<ChVector<>>& GetNodePoints() const { return m_node_points; }
 
   private:
-    virtual void PerformCustomCollision(ChSystem* system) override {
+    virtual void OnCustomCollision(ChSystem* system) override {
         printf("\n>>>> Custom collision detection <<<\n\n");
 
         for (unsigned int in = 0; in < m_surface->GetNnodes(); in++) {
@@ -206,13 +206,13 @@ int main(int argc, char* argv[]) {
     // Create the mechanical system
     // ----------------------------
 
-    ChSystemDEM system;
+    ChSystemSMC system;
     system.Set_G_acc(ChVector<>(0.0, 0.0, 0.0));
 
     // Create the wheel (rim)
     // ----------------------
 
-    auto wheel = std::make_shared<ChBody>(ChMaterialSurfaceBase::DEM);
+    auto wheel = std::make_shared<ChBody>(ChMaterialSurfaceBase::SMC);
     system.AddBody(wheel);
     wheel->SetIdentifier(2);
     wheel->SetName("wheel");
@@ -277,7 +277,7 @@ int main(int argc, char* argv[]) {
 
     // Add custom collision callback
     TireTestCollisionManager collider(surface, terrain, tire->GetContactNodeRadius());
-    system.SetCustomComputeCollisionCallback(&collider);
+    system.RegisterCustomCollisionCallback(&collider);
 
     // Complete system setup
     // ---------------------

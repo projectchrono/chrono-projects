@@ -20,7 +20,7 @@
 // One of the following types of tires can be attached to the wheel body:
 // RIGID, FIALA, LUGRE, or ANCF (toroidal).
 //
-// Either DEM-P or DEM-C contact models can be specified. The integrator can be
+// Either NSC or SMC contact models can be specified. The integrator can be
 // set as either Euler semi-implicit or HHT.  The solver can be one of: SOR,
 // MINRES, or MKL.
 //
@@ -45,6 +45,8 @@
 #include <valarray>
 #include <vector>
 
+#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/solver/ChSolverMINRES.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -75,7 +77,7 @@ using namespace chrono::irrlicht;
 // Global definitions
 
 // Contact method type
-ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::DVI;
+ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::NSC;
 
 // Type of tire model (RIGID, PACEJKA, LUGRE, FIALA, ANCF, FEA)
 TireModelType tire_model = TireModelType::ANCF;
@@ -122,12 +124,13 @@ int main(int argc, char* argv[]) {
     vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
 
     if (tire_model == TireModelType::ANCF || tire_model == TireModelType::FEA)
-        contact_method = ChMaterialSurfaceBase::DEM;
+        contact_method = ChMaterialSurfaceBase::SMC;
 
     // Create the mechanical system
     // ----------------------------
 
-    ChSystem* system = (contact_method == ChMaterialSurfaceBase::DVI) ? new ChSystem : new ChSystemDEM;
+    ChSystem* system = (contact_method == ChMaterialSurfaceBase::NSC) ? static_cast<ChSystem*>(new ChSystemNSC)
+                                                                      : static_cast<ChSystem*>(new ChSystemSMC);
 
     system->Set_G_acc(ChVector<>(0.0, 0.0, -9.8));
 

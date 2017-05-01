@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "chrono/physics/ChLinkLock.h"
-#include "chrono/physics/ChSystemDEM.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono_vehicle/driver/ChDataDriver.h"
@@ -88,7 +88,7 @@ class VehicleNode : public BaseNode {
     virtual void OutputData(int frame) override;
 
   private:
-    chrono::ChSystemDEM* m_system;  ///< containing system
+    chrono::ChSystemSMC* m_system;  ///< containing system
     double m_delay;                 ///< delay in generating driver inputs
 
     bool m_chassis_fixed;   ///< flag indicating whther or not chassis is fixed to ground

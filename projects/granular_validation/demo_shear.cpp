@@ -12,7 +12,7 @@
 // Author: Jonathan Fleischmann, Radu Serban
 // =============================================================================
 //
-// Soft-sphere (DEM) or hard-sphere (DVI) direct shear box validation code.
+// Soft-sphere (SMC) or hard-sphere (NSC) direct shear box validation code.
 // Problem parameters correspond to the Hartl and Ooi (2008) direct shear tests
 // on glass beads.
 //
@@ -58,8 +58,8 @@ using std::endl;
 // Problem definitions
 // -----------------------------------------------------------------------------
 
-// Comment the following line to use DVI contact
-#define USE_DEM
+// Comment the following line to use NSC contact
+#define USE_SMC
 
 // Desired number of OpenMP threads (will be clamped to maximum available)
 int threads = 20;
@@ -68,7 +68,7 @@ int threads = 20;
 bool thread_tuning = false;
 
 // Solver settings
-#ifdef USE_DEM
+#ifdef USE_SMC
 double time_step = 1e-5;
 double tolerance = 0.01;
 int max_iteration_bilateral = 100;
@@ -86,7 +86,7 @@ bool clamp_bilaterals = false;
 double bilateral_clamp_speed = 0.1;
 
 // Simulation parameters
-#ifdef USE_DEM
+#ifdef USE_SMC
 double settling_time = 0.23;
 double begin_shear_time = 2.0;
 double end_simulation_time = 12.0;
@@ -105,10 +105,10 @@ double shear_speed = 0.005;  // m/s
 double normal_pressure = 3.1e3;
 
 // Output
-#ifdef USE_DEM
-const std::string out_dir = "../SHEAR_DEM";
+#ifdef USE_SMC
+const std::string out_dir = "../SHEAR_SMC";
 #else
-const std::string out_dir = "../SHEAR_DVI";
+const std::string out_dir = "../SHEAR_NSC";
 #endif
 
 const std::string pov_dir = out_dir + "/POVRAY";
@@ -207,16 +207,16 @@ int main(int argc, char* argv[]) {
 
 // Create the system
 
-#ifdef USE_DEM
-    cout << "Create DEM system" << endl;
-    const std::string title = "soft-sphere (DEM) direct shear box test";
-    ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::DEM;
-    ChSystemParallelDEM* my_system = new ChSystemParallelDEM();
+#ifdef USE_SMC
+    cout << "Create SMC system" << endl;
+    const std::string title = "soft-sphere (SMC) direct shear box test";
+    ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::SMC;
+    ChSystemParallelSMC* my_system = new ChSystemParallelSMC();
 #else
-    cout << "Create DVI system" << endl;
-    const std::string title = "hard-sphere (DVI) direct shear box test";
-    ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::DVI;
-    ChSystemParallelDVI* my_system = new ChSystemParallelDVI();
+    cout << "Create NSC system" << endl;
+    const std::string title = "hard-sphere (NSC) direct shear box test";
+    ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::NSC;
+    ChSystemParallelNSC* my_system = new ChSystemParallelNSC();
 #endif
 
     my_system->Set_G_acc(ChVector<>(0, -gravity, 0));
@@ -240,9 +240,9 @@ int main(int argc, char* argv[]) {
     my_system->GetSettings()->solver.clamp_bilaterals = clamp_bilaterals;
     my_system->GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
 
-#ifdef USE_DEM
-    my_system->GetSettings()->solver.contact_force_model = ChSystemDEM::ContactForceModel::Hertz;
-    my_system->GetSettings()->solver.tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::MultiStep;
+#ifdef USE_SMC
+    my_system->GetSettings()->solver.contact_force_model = ChSystemSMC::ContactForceModel::Hertz;
+    my_system->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::MultiStep;
 #else
     my_system->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     my_system->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
@@ -260,28 +260,28 @@ int main(int argc, char* argv[]) {
 
 // Create a ball material (will be used by balls only)
 
-#ifdef USE_DEM
-    auto material = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto material = std::make_shared<ChMaterialSurfaceSMC>();
     material->SetYoungModulus(Y);
     material->SetPoissonRatio(nu);
     material->SetRestitution(COR);
     material->SetFriction(mu);
 #else
-    auto material = std::make_shared<ChMaterialSurface>();
+    auto material = std::make_shared<ChMaterialSurfaceNSC>();
     material->SetRestitution(COR);
     material->SetFriction(mu);
 #endif
 
 // Create a material for all objects other than balls
 
-#ifdef USE_DEM
-    auto mat_ext = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_ext = std::make_shared<ChMaterialSurfaceSMC>();
     mat_ext->SetYoungModulus(Y);
     mat_ext->SetPoissonRatio(nu);
     mat_ext->SetRestitution(COR);
     mat_ext->SetFriction(mu_ext);
 #else
-    auto mat_ext = std::make_shared<ChMaterialSurface>();
+    auto mat_ext = std::make_shared<ChMaterialSurfaceNSC>();
     mat_ext->SetRestitution(COR);
     mat_ext->SetFriction(mu_ext);
 #endif
@@ -490,7 +490,7 @@ int main(int argc, char* argv[]) {
         //  Output to files
 
         if (my_system->GetChTime() >= data_out_frame * data_out_step) {
-#ifndef USE_DEM
+#ifndef USE_SMC
             my_system->CalculateContactForces();
 #endif
             force = my_system->GetBodyContactForce(0);

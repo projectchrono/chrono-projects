@@ -17,7 +17,7 @@
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChLoaderUV.h"
 #include "chrono/physics/ChSystem.h"
-#include "chrono/physics/ChSystemDEM.h"
+#include "chrono/physics/ChSystemSMC.h"
 
 #include "chrono_fea/ChElementTetra_4.h"
 #include "chrono_fea/ChMesh.h"
@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
     // Create the physical system
     // --------------------------
 
-    ChSystemDEM my_system;
+    ChSystemSMC my_system;
 
     // Global parameter for tire
     double tire_rad = 0.8;
@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
     ChMatrix33<> tire_alignment(Q_from_AngAxis(CH_C_PI, VECT_Y));
 
     // Contact material
-    auto mysurfmaterial = std::make_shared<ChMaterialSurfaceDEM>();
+    auto mysurfmaterial = std::make_shared<ChMaterialSurfaceSMC>();
     mysurfmaterial->SetYoungModulus(30e4);
     mysurfmaterial->SetFriction(0.3f);
     mysurfmaterial->SetRestitution(0.2f);

@@ -21,7 +21,7 @@
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLoadContainer.h"
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/solver/ChSolverMINRES.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsValidation.h"
@@ -524,7 +524,7 @@ int main(int argc, char* argv[]) {
 #endif
 
     // Definition of the model
-    ChSystem my_system;
+    ChSystemNSC my_system;
     utils::CSV_writer out("\t");
     out.stream().setf(std::ios::scientific | std::ios::showpos);
     out.stream().precision(7);
@@ -563,7 +563,7 @@ int main(int argc, char* argv[]) {
     MakeANCFHumveeWheel(my_system, TireMesh3, rim_center_3, Hub_3, TirePressure, ForVelocity, 4);
     MakeANCFHumveeWheel(my_system, TireMesh4, rim_center_4, Hub_4, TirePressure, ForVelocity, 5);
 
-    auto mmaterial = std::make_shared<ChMaterialSurface>();
+    auto mmaterial = std::make_shared<ChMaterialSurfaceNSC>();
     mmaterial->SetFriction(0.4f);
     mmaterial->SetCompliance(0.0000005f);
     mmaterial->SetComplianceT(0.0000005f);
@@ -648,7 +648,7 @@ int main(int argc, char* argv[]) {
     my_system.Add(mrigidBody);
     mrigidBody->SetPos(ChVector<>(0, 0, GroundLoc));
     mrigidBody->SetBodyFixed(true);
-    mrigidBody->GetMaterialSurface()->SetFriction(0.0);
+    mrigidBody->GetMaterialSurfaceNSC()->SetFriction(0.0);
     my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
 
 // Set up solver

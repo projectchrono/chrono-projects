@@ -18,7 +18,7 @@
 #include "chrono/core/ChMapMatrix.h"
 #include "chrono/solver/ChSolverMINRES.h"
 #include "chrono/physics/ChBodyEasy.h"
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono_fea/ChElementShellANCF.h"
@@ -106,7 +106,7 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
     cout << endl;
 
     // Create the physical system
-    ChSystem my_system;
+    ChSystemNSC my_system;
 
     my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
 

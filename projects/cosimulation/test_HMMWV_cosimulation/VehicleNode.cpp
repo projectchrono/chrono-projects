@@ -26,7 +26,7 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/physics/ChLinkLock.h"
-#include "chrono/physics/ChSystemDEM.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/timestepper/ChState.h"
 #include "chrono/utils/ChUtilsCreators.h"
 
@@ -61,10 +61,10 @@ VehicleNode::VehicleNode()
     m_chassis_fixed = false;
 
     // ----------------------------------
-    // Create the (sequential) DEM system
+    // Create the (sequential) SMC system
     // ----------------------------------
 
-    m_system = new ChSystemDEM;
+    m_system = new ChSystemSMC;
     m_system->Set_G_acc(ChVector<>(0, 0, m_gacc));
 
     // Set number threads

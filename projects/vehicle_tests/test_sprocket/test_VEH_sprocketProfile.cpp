@@ -1,6 +1,6 @@
 #include <cmath>
 
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/physics/ChBody.h"
 
 #include "chrono/geometry/ChLinePath.h"
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
     // Set path to Chrono data directory
     SetChronoDataPath(CHRONO_DATA_DIR);
 
-    ChSystem system;
+    ChSystemNSC system;
 
     ChIrrApp application(&system, L"Paths", core::dimension2d<u32>(800, 600), false, true);
     application.AddTypicalLogo();

@@ -60,8 +60,8 @@ using std::endl;
 // Problem definitions
 // -----------------------------------------------------------------------------
 
-// Comment the following line to use DVI contact
-//#define USE_DEM
+// Comment the following line to use NSC contact
+//#define USE_SMC
 
 enum ProblemType { SETTLING, PRESSING, TESTING };
 
@@ -104,7 +104,7 @@ double time_testing = 2;
 double settling_tol = 0.2;
 
 // Solver settings
-#ifdef USE_DEM
+#ifdef USE_SMC
 double time_step = 1e-5;
 int max_iteration_bilateral = 100;
 #else
@@ -121,16 +121,16 @@ double bilateral_clamp_speed = 10e30;
 double tolerance = 1;
 
 // Contact force model
-#ifdef USE_DEM
-ChSystemDEM::ContactForceModel contact_force_model = ChSystemDEM::ContactForceModel::Hertz;
-ChSystemDEM::TangentialDisplacementModel tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::MultiStep;
+#ifdef USE_SMC
+ChSystemSMC::ContactForceModel contact_force_model = ChSystemSMC::ContactForceModel::Hertz;
+ChSystemSMC::TangentialDisplacementModel tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::MultiStep;
 #endif
 
 // Output
-#ifdef USE_DEM
-const std::string out_dir = "../PRESSURESINKAGE_DEM";
+#ifdef USE_SMC
+const std::string out_dir = "../PRESSURESINKAGE_SMC";
 #else
-const std::string out_dir = "../PRESSURESINKAGE_DVI";
+const std::string out_dir = "../PRESSURESINKAGE_NSC";
 #endif
 
 const std::string pov_dir = out_dir + "/POVRAY";
@@ -202,13 +202,13 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // Create a material for the walls
 // -------------------------------
 
-#ifdef USE_DEM
-    auto mat_walls = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_walls = std::make_shared<ChMaterialSurfaceSMC>();
     mat_walls->SetYoungModulus(Y_walls);
     mat_walls->SetFriction(mu_walls);
     mat_walls->SetRestitution(cr_walls);
 #else
-    auto mat_walls = std::make_shared<ChMaterialSurface>();
+    auto mat_walls = std::make_shared<ChMaterialSurfaceNSC>();
     mat_walls->SetFriction(mu_walls);
 #endif
 
@@ -216,8 +216,8 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // Create the ground body -- always FIRST body in system
 // ----------------------
 
-#ifdef USE_DEM
-    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+#ifdef USE_SMC
+    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
     ground->SetMaterialSurface(mat_walls);
 #else
     auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -246,8 +246,8 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // Initially, the load plate is fixed to ground.
 // It is released after the settling phase.
 
-#ifdef USE_DEM
-    auto plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+#ifdef USE_SMC
+    auto plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
     plate->SetMaterialSurface(mat_walls);
 #else
     auto plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -300,13 +300,13 @@ int CreateGranularMaterial(ChSystemParallel* system) {
 // Create a material for the granular material
 // -------------------------------------------
 
-#ifdef USE_DEM
-    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = std::make_shared<ChMaterialSurface>();
+    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -351,13 +351,13 @@ void CreateBall(ChSystemParallel* system) {
 // Create a material for the ball
 // ------------------------------
 
-#ifdef USE_DEM
-    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = std::make_shared<ChMaterialSurface>();
+    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -365,8 +365,8 @@ void CreateBall(ChSystemParallel* system) {
 // Create the ball
 // ---------------
 
-#ifdef USE_DEM
-    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+#ifdef USE_SMC
+    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
     ball->SetMaterialSurface(mat_g);
 #else
     auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -412,7 +412,7 @@ void FindHeightRange(ChSystemParallel* sys, double& lowest, double& highest) {
 
 // =============================================================================
 //
-//// TODO:  cannot do this with DEM!!!!!
+//// TODO:  cannot do this with SMC!!!!!
 //
 // =============================================================================
 
@@ -454,12 +454,12 @@ int main(int argc, char* argv[]) {
 // Create system
 // -------------
 
-#ifdef USE_DEM
-    cout << "Create DEM system" << endl;
-    ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
+#ifdef USE_SMC
+    cout << "Create SMC system" << endl;
+    ChSystemParallelSMC* msystem = new ChSystemParallelSMC();
 #else
-    cout << "Create DVI system" << endl;
-    ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
+    cout << "Create NSC system" << endl;
+    ChSystemParallelNSC* msystem = new ChSystemParallelNSC();
 #endif
 
     msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
@@ -482,7 +482,7 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.clamp_bilaterals = clamp_bilaterals;
     msystem->GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
 
-#ifdef USE_DEM
+#ifdef USE_SMC
     msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
     msystem->GetSettings()->solver.contact_force_model = contact_force_model;
     msystem->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;

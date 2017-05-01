@@ -15,7 +15,7 @@
 // ChronoFEA demo program for thermal analysis (uses Irrlicht for visualization)
 // =============================================================================
 
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/solver/ChSolverMINRES.h"
 
 #include "chrono_fea/ChElementSpring.h"
@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
     SetChronoDataPath(CHRONO_DATA_DIR);
 
     // Create a Chrono::Engine physical system
-    ChSystem my_system;
+    ChSystemNSC my_system;
 
     // Create the Irrlicht visualization (open the Irrlicht device,
     // bind a simple user interface, etc. etc.)

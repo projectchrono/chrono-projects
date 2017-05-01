@@ -100,11 +100,11 @@ TerrainNode::TerrainNode(Type type,
 
     // Default terrain contact material
     switch (m_method) {
-        case ChMaterialSurfaceBase::DEM:
-            m_material_terrain = std::make_shared<ChMaterialSurfaceDEM>();
+        case ChMaterialSurfaceBase::SMC:
+            m_material_terrain = std::make_shared<ChMaterialSurfaceSMC>();
             break;
-        case ChMaterialSurfaceBase::DVI:
-            m_material_terrain = std::make_shared<ChMaterialSurface>();
+        case ChMaterialSurfaceBase::NSC:
+            m_material_terrain = std::make_shared<ChMaterialSurfaceNSC>();
             break;
     }
 
@@ -114,17 +114,17 @@ TerrainNode::TerrainNode(Type type,
 
     // Create system and set default method-specific solver settings
     switch (m_method) {
-        case ChMaterialSurfaceBase::DEM: {
-            ChSystemParallelDEM* sys = new ChSystemParallelDEM;
-            sys->GetSettings()->solver.contact_force_model = ChSystemDEM::Hertz;
-            sys->GetSettings()->solver.tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::OneStep;
+        case ChMaterialSurfaceBase::SMC: {
+            ChSystemParallelSMC* sys = new ChSystemParallelSMC;
+            sys->GetSettings()->solver.contact_force_model = ChSystemSMC::Hertz;
+            sys->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::OneStep;
             sys->GetSettings()->solver.use_material_properties = true;
             m_system = sys;
 
             break;
         }
-        case ChMaterialSurfaceBase::DVI: {
-            ChSystemParallelDVI* sys = new ChSystemParallelDVI;
+        case ChMaterialSurfaceBase::NSC: {
+            ChSystemParallelNSC* sys = new ChSystemParallelNSC;
             sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
             sys->GetSettings()->solver.max_iteration_normal = 0;
             sys->GetSettings()->solver.max_iteration_sliding = 200;
@@ -212,12 +212,12 @@ void TerrainNode::SetGranularMaterial(double radius, double density, int num_lay
 }
 
 void TerrainNode::UseMaterialProperties(bool flag) {
-    assert(m_system->GetContactMethod() == ChMaterialSurfaceBase::DEM);
+    assert(m_system->GetContactMethod() == ChMaterialSurfaceBase::SMC);
     m_system->GetSettings()->solver.use_material_properties = flag;
 }
 
-void TerrainNode::SetContactForceModel(ChSystemDEM::ContactForceModel model) {
-    assert(m_system->GetContactMethod() == ChMaterialSurfaceBase::DEM);
+void TerrainNode::SetContactForceModel(ChSystemSMC::ContactForceModel model) {
+    assert(m_system->GetContactMethod() == ChMaterialSurfaceBase::SMC);
     m_system->GetSettings()->solver.contact_force_model = model;
 }
 
@@ -409,7 +409,7 @@ void TerrainNode::Construct() {
     outf << "Terrain type = " << (m_type == RIGID ? "RIGID" : "GRANULAR") << endl;
     outf << "System settings" << endl;
     outf << "   Integration step size = " << m_step_size << endl;
-    outf << "   Contact method = " << (m_method == ChMaterialSurfaceBase::DEM ? "DEM" : "DVI") << endl;
+    outf << "   Contact method = " << (m_method == ChMaterialSurfaceBase::SMC ? "SMC" : "NSC") << endl;
     outf << "   Use material properties? " << (m_system->GetSettings()->solver.use_material_properties ? "YES" : "NO")
          << endl;
     outf << "   Collision envelope = " << m_system->GetSettings()->collision.collision_envelope << endl;
@@ -418,8 +418,8 @@ void TerrainNode::Construct() {
     outf << "   wall thickness = " << 2 * m_hthick << endl;
     outf << "Terrain material properties" << endl;
     switch (m_method) {
-        case ChMaterialSurfaceBase::DEM: {
-            auto mat = std::static_pointer_cast<ChMaterialSurfaceDEM>(m_material_terrain);
+        case ChMaterialSurfaceBase::SMC: {
+            auto mat = std::static_pointer_cast<ChMaterialSurfaceSMC>(m_material_terrain);
             outf << "   Coefficient of friction    = " << mat->GetKfriction() << endl;
             outf << "   Coefficient of restitution = " << mat->GetRestitution() << endl;
             outf << "   Young modulus              = " << mat->GetYoungModulus() << endl;
@@ -431,8 +431,8 @@ void TerrainNode::Construct() {
             outf << "   Gt = " << mat->GetGt() << endl;
             break;
         }
-        case ChMaterialSurfaceBase::DVI: {
-            auto mat = std::static_pointer_cast<ChMaterialSurface>(m_material_terrain);
+        case ChMaterialSurfaceBase::NSC: {
+            auto mat = std::static_pointer_cast<ChMaterialSurfaceNSC>(m_material_terrain);
             outf << "   Coefficient of friction    = " << mat->GetKfriction() << endl;
             outf << "   Coefficient of restitution = " << mat->GetRestitution() << endl;
             outf << "   Cohesion force             = " << mat->GetCohesion() << endl;
@@ -656,9 +656,9 @@ void TerrainNode::Initialize() {
         MPI_Recv(mat_props, 8, MPI_FLOAT, TIRE_NODE_RANK(which), 0, MPI_COMM_WORLD, &status_m);
 
         switch (m_method) {
-            case ChMaterialSurfaceBase::DEM: {
+            case ChMaterialSurfaceBase::SMC: {
                 // Properties for tire
-                auto mat_tire = std::make_shared<ChMaterialSurfaceDEM>();
+                auto mat_tire = std::make_shared<ChMaterialSurfaceSMC>();
                 mat_tire->SetFriction(mat_props[0]);
                 mat_tire->SetRestitution(mat_props[1]);
                 mat_tire->SetYoungModulus(mat_props[2]);
@@ -672,8 +672,8 @@ void TerrainNode::Initialize() {
 
                 break;
             }
-            case ChMaterialSurfaceBase::DVI: {
-                auto mat_tire = std::make_shared<ChMaterialSurface>();
+            case ChMaterialSurfaceBase::NSC: {
+                auto mat_tire = std::make_shared<ChMaterialSurfaceNSC>();
                 mat_tire->SetFriction(mat_props[0]);
                 mat_tire->SetRestitution(mat_props[1]);
 

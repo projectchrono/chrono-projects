@@ -19,7 +19,7 @@
 
 #include <cmath>
 
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -1216,7 +1216,7 @@ int main(int argc, char* argv[]) {
     bool output4 = true;
 
     // The physical system: it contains all physical objects.
-    ChSystem my_system;
+    ChSystemNSC my_system;
 
     // Create a mesh, that is a container for groups
     // of elements and their referenced nodes.
@@ -1590,7 +1590,7 @@ int main(int argc, char* argv[]) {
     my_system.Add(mrigidBody);
     mrigidBody->SetPos(ChVector<>(0, 0, ContactZ));
     mrigidBody->SetBodyFixed(true);
-    mrigidBody->GetMaterialSurface()->SetFriction(0.5);
+    mrigidBody->GetMaterialSurfaceNSC()->SetFriction(0.5);
 
 
     application.AssetBindAll();

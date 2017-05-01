@@ -48,8 +48,8 @@ using std::endl;
 // Problem setup
 // -----------------------------------------------------------------------------
 
-// Comment the following line to use DVI contact
-#define USE_DEM
+// Comment the following line to use NSC contact
+#define USE_SMC
 
 // Parameters for the falling object
 collision::ShapeType shape_o = collision::CONE;
@@ -78,7 +78,7 @@ bool thread_tuning = true;
 double time_end = 5;
 
 // Solver parameters
-#ifdef USE_DEM
+#ifdef USE_SMC
 double time_step = 1e-3;
 int max_iteration = 20;
 #else
@@ -90,10 +90,10 @@ float contact_recovery_speed = 0.1;
 #endif
 
 // Output
-#ifdef USE_DEM
-const std::string out_dir = "../OBJECTDROP_DEM";
+#ifdef USE_SMC
+const std::string out_dir = "../OBJECTDROP_SMC";
 #else
-const std::string out_dir = "../OBJECTDROP_DVI";
+const std::string out_dir = "../OBJECTDROP_NSC";
 #endif
 const std::string pov_dir = out_dir + "/POVRAY";
 
@@ -111,16 +111,16 @@ void CreateGround(ChSystemParallel* system) {
 // Create a material and the "ground" body
 // ---------------------------------------
 
-#ifdef USE_DEM
-    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(1e7f);
     mat_g->SetFriction(0.4f);
     mat_g->SetRestitution(0.4f);
 
-    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
     ground->SetMaterialSurface(mat_g);
 #else
-    auto mat_g = std::make_shared<ChMaterialSurface>();
+    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(0.4f);
 
     auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -205,16 +205,16 @@ void CreateObject(ChSystemParallel* system) {
 // Create a material and the falling object.
 // -----------------------------------------
 
-#ifdef USE_DEM
-    auto mat_o = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_o = std::make_shared<ChMaterialSurfaceSMC>();
     mat_o->SetYoungModulus(1e7f);
     mat_o->SetFriction(0.4f);
     mat_o->SetRestitution(0.4f);
 
-    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
     obj->SetMaterialSurface(mat_o);
 #else
-    auto mat_o = std::make_shared<ChMaterialSurface>();
+    auto mat_o = std::make_shared<ChMaterialSurfaceNSC>();
     mat_o->SetFriction(0.4f);
 
     auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -333,14 +333,14 @@ int main(int argc, char* argv[]) {
 // Create system.
 // --------------
     char title[100];
-#ifdef USE_DEM
-    sprintf(title, "Object Drop >> DEM-P");
-    cout << "Create DEM-P system" << endl;
-    ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
+#ifdef USE_SMC
+    sprintf(title, "Object Drop >> SMC");
+    cout << "Create SMC system" << endl;
+    ChSystemParallelSMC* msystem = new ChSystemParallelSMC();
 #else
-    sprintf(title, "Object Drop >> DEM-C");
-    cout << "Create DEM-C system" << endl;
-    ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
+    sprintf(title, "Object Drop >> NSC");
+    cout << "Create NSC system" << endl;
+    ChSystemParallelNSC* msystem = new ChSystemParallelNSC();
 #endif
 
     msystem->Set_G_acc(ChVector<>(0, 0, -9.81));
@@ -362,7 +362,7 @@ int main(int argc, char* argv[]) {
 
     msystem->GetSettings()->solver.tolerance = 1e-3;
 
-#ifdef USE_DEM
+#ifdef USE_SMC
     msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
 #else
     msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;

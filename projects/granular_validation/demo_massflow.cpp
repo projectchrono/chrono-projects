@@ -55,8 +55,8 @@ using std::endl;
 // Problem definitions
 // -----------------------------------------------------------------------------
 
-// Comment the following line to use DVI contact
-#define USE_DEM
+// Comment the following line to use NSC contact
+#define USE_SMC
 
 enum ProblemType { SETTLING, DROPPING };
 
@@ -79,7 +79,7 @@ double time_settling_min = 0.1;
 double time_settling_max = 1.0;
 double time_dropping_max = 6.0;
 
-#ifdef USE_DEM
+#ifdef USE_SMC
 double time_step = 1e-5;
 int max_iteration = 20;
 #else
@@ -95,10 +95,10 @@ double tolerance = 500.0;
 int max_iteration_bilateral = 0;
 
 // Output
-#ifdef USE_DEM
-const std::string out_dir = "../MASSFLOW_DEM";
+#ifdef USE_SMC
+const std::string out_dir = "../MASSFLOW_SMC";
 #else
-const std::string out_dir = "../MASSFLOW_DVI";
+const std::string out_dir = "../MASSFLOW_NSC";
 #endif
 
 const std::string pov_dir = out_dir + "/POVRAY";
@@ -153,19 +153,19 @@ double height_collector = 1.0e-2;  // height of collector walls
 // -----------------------------------------------------------------------------
 ChBody* CreateMechanism(ChSystemParallel* system) {
 // Create the common material
-#ifdef USE_DEM
-    auto mat_b = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_b = std::make_shared<ChMaterialSurfaceSMC>();
     mat_b->SetYoungModulus(Y_c);
     mat_b->SetFriction(mu_c);
     mat_b->SetRestitution(cr_c);
 #else
-    auto mat_b = std::make_shared<ChMaterialSurface>();
+    auto mat_b = std::make_shared<ChMaterialSurfaceNSC>();
     mat_b->SetFriction(mu_c);
 #endif
 
 // Angled insert
-#ifdef USE_DEM
-    auto insert = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+#ifdef USE_SMC
+    auto insert = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
     insert->SetMaterialSurface(mat_b);
 #else
     auto insert = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -187,8 +187,8 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
     system->AddBody(insert);
 
 // Static slot (back wall)
-#ifdef USE_DEM
-    auto slot = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+#ifdef USE_SMC
+    auto slot = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
     slot->SetMaterialSurface(mat_b);
 #else
     auto slot = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -210,8 +210,8 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
     system->AddBody(slot);
 
 // Lateral walls
-#ifdef USE_DEM
-    auto wall = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+#ifdef USE_SMC
+    auto wall = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
     wall->SetMaterialSurface(mat_b);
 #else
     auto wall = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -236,7 +236,7 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
     system->AddBody(wall);
 
 // Containing bin
-#ifdef USE_DEM
+#ifdef USE_SMC
     utils::CreateBoxContainer(system, -3, mat_b,
                               ChVector<>(size_collector / 2, size_collector / 2, height_collector / 2), thickness / 2,
                               ChVector<>(0, 0, -pos_collector));
@@ -255,13 +255,13 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 // -----------------------------------------------------------------------------
 void CreateParticles(ChSystemParallel* system) {
 // Create a material for the granular material
-#ifdef USE_DEM
-    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = std::make_shared<ChMaterialSurface>();
+    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -347,12 +347,12 @@ bool CheckSettled(ChSystemParallel* sys, double threshold) {
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
 // Create system
-#ifdef USE_DEM
-    cout << "Create DEM system" << endl;
-    ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
+#ifdef USE_SMC
+    cout << "Create SMC system" << endl;
+    ChSystemParallelSMC* msystem = new ChSystemParallelSMC();
 #else
-    cout << "Create DVI system" << endl;
-    ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
+    cout << "Create NSC system" << endl;
+    ChSystemParallelNSC* msystem = new ChSystemParallelNSC();
 #endif
 
     // Set number of threads.
@@ -373,7 +373,7 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.tolerance = tolerance;
     msystem->GetSettings()->solver.use_full_inertia_tensor = false;
 
-#ifdef USE_DEM
+#ifdef USE_SMC
     msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
 #else
     msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;

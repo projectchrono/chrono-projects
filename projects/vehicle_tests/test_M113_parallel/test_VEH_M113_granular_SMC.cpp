@@ -45,7 +45,6 @@
 // Chrono vehicle header files
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
-#include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 
 // M113 model header files
 #include "chrono_models/vehicle/m113/M113_Vehicle.h"
@@ -107,17 +106,12 @@ ChVector<> initLoc(-hdimX + 4.5, 0, 1.0);
 ChQuaternion<> initRot(1, 0, 0, 0);
 
 // Vehicle model
-enum M113Type {M113_ORIGINAL, M113_MODIFIED};
+enum M113Type { M113_ORIGINAL, M113_MODIFIED };
 M113Type m113_type = M113_MODIFIED;
 
 // -----------------------------------------------------------------------------
 // Simulation parameters
 // -----------------------------------------------------------------------------
-
-// Input file names for the path-follower driver model
-std::string steering_controller_file("generic/driver/SteeringController.json");
-std::string speed_controller_file("generic/driver/SpeedController.json");
-std::string path_file("paths/straight10km.txt");
 
 // Desired number of OpenMP threads (will be clamped to maximum available)
 int threads = 20;
@@ -133,15 +127,10 @@ double time_end = 7;
 double time_hold = 0.2;
 
 // Solver parameters
-double time_step = 1e-3;
+double time_step = 5e-5;
 double tolerance = 1e-5;
 
 int max_iteration_bilateral = 1000;
-int max_iteration_normal = 0;
-int max_iteration_sliding = 100;
-int max_iteration_spinning = 0;
-
-float contact_recovery_speed = 12;
 
 // Periodically monitor maximum bilateral constraint violation
 bool monitor_bilaterals = false;
@@ -150,7 +139,7 @@ int bilateral_frame_interval = 100;
 // Output directories
 bool povray_output = true;
 
-const std::string out_dir = "../M113_PARALLEL_DVI";
+const std::string out_dir = "../M113_PARALLEL_SMC";
 const std::string pov_dir = out_dir + "/POVRAY";
 
 int out_fps = 60;
@@ -191,10 +180,16 @@ class MyDriver : public ChDriver {
 
 double CreateParticles(ChSystem* system) {
     // Create a material
-    auto mat_g = std::make_shared<ChMaterialSurface>();
+    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(0.0f);
-    mat_g->SetCohesion(coh_force);
+    mat_g->SetYoungModulus(8e5f);
+    mat_g->SetPoissonRatio(0.3f);
+    mat_g->SetAdhesion(coh_force);
+    mat_g->SetKn(1.0e6f);
+    mat_g->SetGn(6.0e1f);
+    mat_g->SetKt(4.0e5f);
+    mat_g->SetGt(4.0e1f);
 
     // Create a particle generator and a mixture entirely made out of spheres
     utils::Generator gen(system);
@@ -236,8 +231,8 @@ int main(int argc, char* argv[]) {
     // Create system and modify settings
     // ---------------------------------
 
-    std::cout << "Create Parallel DVI system" << std::endl;
-    ChSystemParallelDVI system;
+    std::cout << "Create Parallel SMC system" << std::endl;
+    ChSystemParallelSMC system;
 
     system.Set_G_acc(ChVector<>(0, 0, -9.80665));
 
@@ -254,18 +249,12 @@ int main(int argc, char* argv[]) {
     // Set solver parameters
     system.GetSettings()->solver.use_full_inertia_tensor = false;
     system.GetSettings()->solver.tolerance = tolerance;
-    system.GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     system.GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
-    system.GetSettings()->solver.max_iteration_normal = max_iteration_normal;
-    system.GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
-    system.GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
-    system.GetSettings()->solver.alpha = 0;
-    system.GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-    system.GetSettings()->solver.bilateral_clamp_speed = 1e8;
-    system.ChangeSolverType(SolverType::BB);
+    system.GetSettings()->solver.contact_force_model = ChSystemSMC::Hertz;
+    system.GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::OneStep;
+    system.GetSettings()->solver.use_material_properties = true;
 
     system.GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
-    system.GetSettings()->collision.collision_envelope = 0.001;
 
     system.GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
 
@@ -281,8 +270,10 @@ int main(int argc, char* argv[]) {
     // ------------------
 
     // Contact material
-    auto mat_g = std::make_shared<ChMaterialSurface>();
+    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
+    mat_g->SetYoungModulus(1e8f);
     mat_g->SetFriction(mu_g);
+    mat_g->SetRestitution(0.4f);
 
     // Ground body
     auto ground = std::shared_ptr<ChBody>(system.NewBody());
@@ -334,16 +325,16 @@ int main(int argc, char* argv[]) {
 
     // Create and initialize vehicle systems
     switch (m113_type) {
-        case M113_ORIGINAL:
-            std::cout << "Create ORIGINAL M113 model" << std::endl;
-            vehicle = std::unique_ptr<M113_Vehicle>(new M113_Vehicle(true, TrackShoeType::SINGLE_PIN, &system));
-            powertrain = std::unique_ptr<M113_SimplePowertrain>(new M113_SimplePowertrain());
-            break;
-        case M113_MODIFIED:
-            std::cout << "Create MODIFIED M113 model" << std::endl;
-            vehicle = std::unique_ptr<M113a_Vehicle>(new M113a_Vehicle(true, &system));
-            powertrain = std::unique_ptr<M113a_SimplePowertrain>(new M113a_SimplePowertrain());
-            break;
+    case M113_ORIGINAL:
+        std::cout << "Create ORIGINAL M113 model" << std::endl;
+        vehicle = std::unique_ptr<M113_Vehicle>(new M113_Vehicle(true, TrackShoeType::SINGLE_PIN, &system));
+        powertrain = std::unique_ptr<M113_SimplePowertrain>(new M113_SimplePowertrain());
+        break;
+    case M113_MODIFIED:
+        std::cout << "Create MODIFIED M113 model" << std::endl;
+        vehicle = std::unique_ptr<M113a_Vehicle>(new M113a_Vehicle(true, &system));
+        powertrain = std::unique_ptr<M113a_SimplePowertrain>(new M113a_SimplePowertrain());
+        break;
     }
 
     vehicle->SetStepsize(time_step);
@@ -364,15 +355,10 @@ int main(int argc, char* argv[]) {
     // Initialize the powertrain system
     powertrain->Initialize(vehicle->GetChassisBody(), vehicle->GetDriveshaft());
 
-    // Create the driver system (temporarily 1 for steering 1 for steering & brakes)
-    MyDriver driver_speed(*vehicle, 0.5);
-    driver_speed.Initialize();
+    // Create the driver system
+    MyDriver driver(*vehicle, 0.5);
+    driver.Initialize();
 
-	auto path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
-    ChPathFollowerDriver driver_steering(*vehicle, vehicle::GetDataFile(steering_controller_file),
-                                vehicle::GetDataFile(speed_controller_file), path, "my_path", 0.0);
-    driver_steering.Initialize();
-	
     // ------------------------------------
     // Prepare output directories and files
     // ------------------------------------
@@ -425,9 +411,9 @@ int main(int argc, char* argv[]) {
 
     while (time < time_end) {
         // Collect output data from modules
-        double throttle_input = driver_speed.GetThrottle();
-        double steering_input = driver_steering.GetSteering();
-        double braking_input = driver_speed.GetBraking();
+        double throttle_input = driver.GetThrottle();
+        double steering_input = driver.GetSteering();
+        double braking_input = driver.GetBraking();
         double powertrain_torque = powertrain->GetOutputTorque();
         double driveshaft_speed = vehicle->GetDriveshaftSpeed();
         vehicle->GetTrackShoeStates(LEFT, shoe_states_left);
@@ -480,15 +466,13 @@ int main(int argc, char* argv[]) {
         }
 
         // Update modules (process inputs from other modules)
-        driver_speed.Synchronize(time);
-		driver_steering.Synchronize(time);
+        driver.Synchronize(time);
         powertrain->Synchronize(time, throttle_input, driveshaft_speed);
         vehicle->Synchronize(time, steering_input, braking_input, powertrain_torque, shoe_forces_left,
                             shoe_forces_right);
 
         // Advance simulation for one timestep for all modules
-        driver_speed.Advance(time_step);
-		driver_steering.Advance(time_step);
+        driver.Advance(time_step);
         powertrain->Advance(time_step);
         vehicle->Advance(time_step);
 

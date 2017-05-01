@@ -94,7 +94,7 @@ class TerrainNode : public BaseNode {
 
     /// Set the normal contact force model (default: Hertz)
     /// Note that this setting is only relevant when using the penalty method.
-    void SetContactForceModel(chrono::ChSystemDEM::ContactForceModel model);
+    void SetContactForceModel(chrono::ChSystemSMC::ContactForceModel model);
 
     /// Set simulation length for settling of granular material (default: 0.4).
     void SetSettlingTime(double time) { m_time_settling = time; }

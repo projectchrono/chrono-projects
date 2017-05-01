@@ -28,7 +28,7 @@
 #include "chrono/core/ChMathematics.h"
 #include "chrono/core/ChVector.h"
 #include "chrono/physics/ChLoadContainer.h"
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/solver/ChSolverMINRES.h"
 #include "chrono/solver/ChSolverPMINRES.h"
 #include "chrono/timestepper/ChTimestepper.h"
@@ -65,7 +65,7 @@ class ANCFBeamTest : public BaseTest {
 
 bool ANCFBeamTest::execute() {
     // Create a Chrono::Engine physical system
-    ChSystem my_system;
+    ChSystemNSC my_system;
     unsigned int num_steps = 5000;
 
     // Create a mesh, that is a container for groups of elements and

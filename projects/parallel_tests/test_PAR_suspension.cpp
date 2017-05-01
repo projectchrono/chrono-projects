@@ -12,7 +12,7 @@
 // Authors: Daniel Melanz
 // =============================================================================
 //
-// ChronoParallel test program using DVI method for frictional contact.
+// ChronoParallel test program using NSC method for frictional contact.
 //
 // The global reference frame has Y up.
 //
@@ -123,7 +123,7 @@ class MySimpleCar {
     // Build and initialize the car, creating all bodies corresponding to
     // the various parts and adding them to the physical system - also creating
     // and adding constraints to the system.
-    MySimpleCar(ChSystemParallelDVI* my_system) {
+    MySimpleCar(ChSystemParallelNSC* my_system) {
         throttle = 0;  // initially, gas throttle is 0.
         conic_tau = 0.2;
         gear_tau = 0.3;
@@ -135,7 +135,7 @@ class MySimpleCar {
         double angularSpeed = 20;
 
         // Create the wheel material
-        auto mat = std::make_shared<ChMaterialSurface>();
+        auto mat = std::make_shared<ChMaterialSurfaceNSC>();
         mat->SetFriction(1.0);
 
         // --- The car body ---
@@ -586,7 +586,7 @@ int CreateGranularMaterial(ChSystemParallel* system,
     // Create a material for the granular material
     // -------------------------------------------
 
-    auto mat_g = std::make_shared<ChMaterialSurface>();
+    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 
     // ---------------------------------------------
@@ -627,12 +627,12 @@ int CreateGranularMaterial(ChSystemParallel* system,
 // blade attached through a revolute joint to ground. The mixer is constrained
 // to rotate at constant angular velocity.
 // =============================================================================
-void AddGround(ChSystemParallelDVI* sys) {
+void AddGround(ChSystemParallelNSC* sys) {
     // IDs for the two bodies
     int groundId = -200;
 
     // Create a common material
-    auto mat = std::make_shared<ChMaterialSurface>();
+    auto mat = std::make_shared<ChMaterialSurfaceNSC>();
     mat->SetFriction(1.0f);
 
     // Create the containing bin (2 x 2 x 1)
@@ -708,7 +708,7 @@ int main(int argc, char* argv[]) {
     // Create system
     // -------------
 
-    ChSystemParallelDVI msystem;
+    ChSystemParallelNSC msystem;
 
     // Set gravitational acceleration
     msystem.Set_G_acc(ChVector<>(0, -gravity, 0));

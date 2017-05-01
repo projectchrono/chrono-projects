@@ -27,7 +27,7 @@
 
 #include <cmath>
 
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/assets/ChSphereShape.h"
 #include "chrono/assets/ChBoxShape.h"
@@ -186,7 +186,7 @@ int main(int argc, char* argv[]) {
 
     // Create the Chrono physical system
     // ---------------------------------
-    ChSystem system;
+    ChSystemNSC system;
 
     // Create the ground body
     // ----------------------

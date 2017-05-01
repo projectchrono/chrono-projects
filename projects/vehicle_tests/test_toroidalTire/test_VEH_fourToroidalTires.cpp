@@ -118,7 +118,7 @@ int main(int argc, char* argv[]) {
     vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
 
     // Definition of the model
-    ChSystemDEM my_system;
+    ChSystemSMC my_system;
 
     // Body 1: Ground
     BGround = std::make_shared<ChBody>();

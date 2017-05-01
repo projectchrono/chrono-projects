@@ -38,7 +38,8 @@
 #include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChStream.h"
 #include "chrono/core/ChRealtimeStep.h"
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/physics/ChLinkDistance.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono_fea/ChNodeFEAbase.h"
@@ -94,7 +95,7 @@ void UpdateVTKFile(std::shared_ptr<fea::ChMesh> m_mesh,
 // =============================================================================
 
 // Contact method type
-ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::DVI;
+ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::NSC;
 
 // Solver settings
 enum SolverType { ITSOR, MKL };
@@ -130,7 +131,7 @@ std::string out_dir;
 // Custom contact reporter class
 // =============================================================================
 
-class TireTestContactReporter : public chrono::ChReportContactCallback {
+class TireTestContactReporter : public ChContactContainerBase::ReportContactCallback {
   public:
     TireTestContactReporter() : counter(-1) {}
     int counter;
@@ -158,14 +159,14 @@ class TireTestContactReporter : public chrono::ChReportContactCallback {
   private:
     /// Callback, used to report contact points already added to the container.
     /// If it returns false, the contact scanning will be stopped.
-    virtual bool ReportContactCallback(const ChVector<>& pA,
-                                       const ChVector<>& pB,
-                                       const ChMatrix33<>& plane_coord,
-                                       const double& distance,
-                                       const ChVector<>& react_forces,
-                                       const ChVector<>& react_torques,
-                                       ChContactable* modA,
-                                       ChContactable* modB) override {
+    virtual bool OnReportContact(const ChVector<>& pA,
+                                 const ChVector<>& pB,
+                                 const ChMatrix33<>& plane_coord,
+                                 const double& distance,
+                                 const ChVector<>& react_forces,
+                                 const ChVector<>& react_torques,
+                                 ChContactable* modA,
+                                 ChContactable* modB) override {
         // Ignore contacts with zero force.
         if (react_forces.IsNull())
             return true;
@@ -191,7 +192,7 @@ class TireTestContactReporter : public chrono::ChReportContactCallback {
 // Custom collision detection class
 // =============================================================================
 
-class TireTestCollisionManager : public ChSystem::ChCustomComputeCollisionCallback {
+class TireTestCollisionManager : public ChSystem::CustomCollisionCallback {
   public:
     TireTestCollisionManager(std::shared_ptr<fea::ChContactSurfaceNodeCloud> surface,
                              std::shared_ptr<RigidTerrain> terrain,
@@ -199,7 +200,7 @@ class TireTestCollisionManager : public ChSystem::ChCustomComputeCollisionCallba
         : m_surface(surface), m_terrain(terrain), m_radius(radius) {}
 
   private:
-    virtual void PerformCustomCollision(ChSystem* system) override {
+    virtual void OnCustomCollision(ChSystem* system) override {
         for (unsigned int in = 0; in < m_surface->GetNnodes(); in++) {
             // Represent the contact node as a sphere (P, m_radius)
             auto contact_node = std::static_pointer_cast<fea::ChContactNodeXYZsphere>(m_surface->GetNode(in));
@@ -349,17 +350,18 @@ int main() {
     // Create the mechanical system
     // ----------------------------
 
-    // Set contact model to DEM if FEA tire is used
+    // Set contact model to SMC if FEA tire is used
     if (tire_model == TireModelType::ANCF || tire_model == TireModelType::REISSNER || tire_model == TireModelType::FEA) {
-        contact_method = ChMaterialSurfaceBase::DEM;
+        contact_method = ChMaterialSurfaceBase::SMC;
     }
 
-    ChSystem* my_system = (contact_method == ChMaterialSurfaceBase::DVI) ? new ChSystem : new ChSystemDEM;
+    ChSystem* my_system = (contact_method == ChMaterialSurfaceBase::NSC) ? static_cast<ChSystem*>(new ChSystemNSC)
+                                                                         : static_cast<ChSystem*>(new ChSystemSMC);
 
-    if (auto sysDEM = dynamic_cast<chrono::ChSystemDEM*>(my_system)) {
-        sysDEM->SetContactForceModel(ChSystemDEM::ContactForceModel::PlainCoulomb);
+    if (auto sysSMC = dynamic_cast<chrono::ChSystemSMC*>(my_system)) {
+        sysSMC->SetContactForceModel(ChSystemSMC::ContactForceModel::PlainCoulomb);
         collision::ChCollisionModel::SetDefaultSuggestedMargin(0.5);  // Maximum interpenetration allowed
-        sysDEM->UseMaterialProperties(false);
+        sysSMC->UseMaterialProperties(false);
     }
 
     my_system->Set_G_acc(ChVector<>(0.0, 0.0, -g));
@@ -690,7 +692,7 @@ int main() {
     lock_rim_wheel->Initialize(wheel, rim, ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
     my_system->AddLink(lock_rim_wheel);
 
-    // Create the terrain. If FEA, then use triangular mesh for contact and create DEM contact properties
+    // Create the terrain. If FEA, then use triangular mesh for contact and create SMC contact properties
     // ------------------
     std::shared_ptr<ChTerrain> terrain;
     if (terrain_type == RIGID_TERRAIN) {
@@ -708,7 +710,7 @@ int main() {
         fea_terrain->Initialize(ChVector<>(-1.0, -0.3, -1.0), ChVector<>(4.0, 0.5, 1.0 - tire_radius - 0.05),
                                 ChVector<int>(100, 20, 4));  // ChVector<int>(10, 10, 4)
         // Add contact surface mesh.
-        auto mysurfmaterial = std::make_shared<ChMaterialSurfaceDEM>();
+        auto mysurfmaterial = std::make_shared<ChMaterialSurfaceSMC>();
         mysurfmaterial->SetYoungModulus(6e4);
         mysurfmaterial->SetFriction(0.3f);
         mysurfmaterial->SetRestitution(0.2f);
@@ -744,9 +746,9 @@ int main() {
         if (surface && terrain_type == RIGID_TERRAIN) {
             my_collider = new TireTestCollisionManager(surface, std::dynamic_pointer_cast<RigidTerrain>(terrain),
                                                        tire_deform->GetContactNodeRadius());
-            my_system->SetCustomComputeCollisionCallback(my_collider);
+            my_system->RegisterCustomCollisionCallback(my_collider);
         } else if (surface && terrain_type == PLASTIC_FEA) {
-            auto mysurfmaterial = std::make_shared<ChMaterialSurfaceDEM>();
+            auto mysurfmaterial = std::make_shared<ChMaterialSurfaceSMC>();
             mysurfmaterial->SetYoungModulus(6e4);
             mysurfmaterial->SetFriction(0.3f);
             mysurfmaterial->SetRestitution(0.2f);
@@ -758,7 +760,7 @@ int main() {
                 std::dynamic_pointer_cast<fea::ChContactSurfaceNodeCloud>(tire_mesh->GetContactSurface(0));
             tire_mesh->AddContactSurface(surface_ancf);
             surface_ancf->AddAllNodes(0.01);
-            surface_ancf->SetMaterialSurface(mysurfmaterial);  // use the DEM penalty contacts
+            surface_ancf->SetMaterialSurface(mysurfmaterial);  // use the SMC penalty contacts
         } else {
             // GetLog() << "********************************************\n";
             // GetLog() << "Custom collision requires NodeCloud contact!\n";

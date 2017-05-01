@@ -16,7 +16,7 @@
 #include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChTimer.h"
 #include "chrono/solver/ChSolverMINRES.h"
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono_fea/ChElementShellANCF.h"
@@ -119,7 +119,7 @@ bool FEAShellTest::execute() {
     cout << endl;
 
     // Create the physical system
-    ChSystem my_system;
+    ChSystemNSC my_system;
 
     my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
 

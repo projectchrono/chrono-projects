@@ -24,7 +24,7 @@
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLoadContainer.h"
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/solver/ChSolverMINRES.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsValidation.h"
@@ -512,7 +512,7 @@ int main(int argc, char* argv[]) {
     SetChronoDataPath(CHRONO_DATA_DIR);
 
     // Definition of the model
-    ChSystem my_system;
+    ChSystemNSC my_system;
 
     ChIrrApp application(&my_system, L"ANCF Rolling Tire", core::dimension2d<u32>(1080, 800), false);
     // Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
@@ -560,7 +560,7 @@ int main(int argc, char* argv[]) {
     MakeANCFHumveeWheel(my_system, rim_center_4, Hub_4,
         TirePressure, ForVelocity, 5);
 
-    auto mmaterial = std::make_shared<ChMaterialSurface>();
+    auto mmaterial = std::make_shared<ChMaterialSurfaceNSC>();
     mmaterial->SetFriction(0.4f);
     mmaterial->SetCompliance(0.0000005f);
     mmaterial->SetComplianceT(0.0000005f);
@@ -635,7 +635,7 @@ int main(int argc, char* argv[]) {
     my_system.Add(mrigidBody);
     mrigidBody->SetPos(ChVector<>(0, 0, GroundLoc));
     mrigidBody->SetBodyFixed(true);
-    mrigidBody->GetMaterialSurface()->SetFriction(0.0);
+    mrigidBody->GetMaterialSurfaceNSC()->SetFriction(0.0);
     auto mtexture = std::make_shared<ChTexture>(GetChronoDataFile("concrete.jpg").c_str());
     mrigidBody->AddAsset(mtexture);
     

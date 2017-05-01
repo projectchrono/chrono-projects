@@ -57,8 +57,8 @@ using std::endl;
 // Problem definitions
 // -----------------------------------------------------------------------------
 
-// Comment the following line to use DVI contact
-#define USE_DEM
+// Comment the following line to use NSC contact
+#define USE_SMC
 
 enum ProblemType { SETTLING, DROPPING };
 
@@ -81,7 +81,7 @@ double time_settling_min = 0.1;
 double time_settling_max = 0.8;
 double time_dropping = 0.06;
 
-#ifdef USE_DEM
+#ifdef USE_SMC
 double time_step = 1e-5;
 int max_iteration = 20;
 #else
@@ -95,18 +95,18 @@ float contact_recovery_speed = 0.1;
 double tolerance = 1.0;
 
 // Contact force model
-#ifdef USE_DEM
-ChSystemDEM::ContactForceModel contact_force_model = ChSystemDEM::ContactForceModel::Hooke;
-ChSystemDEM::TangentialDisplacementModel tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::MultiStep;
+#ifdef USE_SMC
+ChSystemSMC::ContactForceModel contact_force_model = ChSystemSMC::ContactForceModel::Hooke;
+ChSystemSMC::TangentialDisplacementModel tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::MultiStep;
 #endif
 
 // Output
 bool povray_output = true;
 
-#ifdef USE_DEM
-const std::string out_dir = "../CRATER_DEM";
+#ifdef USE_SMC
+const std::string out_dir = "../CRATER_SMC";
 #else
-const std::string out_dir = "../CRATER_DVI";
+const std::string out_dir = "../CRATER_NSC";
 #endif
 
 const std::string pov_dir = out_dir + "/POVRAY";
@@ -174,28 +174,28 @@ double h = 10e-2;
 // -----------------------------------------------------------------------------
 int CreateObjects(ChSystemParallel* system) {
 // Create the containing bin
-#ifdef USE_DEM
-    auto mat_c = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_c = std::make_shared<ChMaterialSurfaceSMC>();
     mat_c->SetYoungModulus(Y_c);
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
 
     utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 #else
-    auto mat_c = std::make_shared<ChMaterialSurface>();
+    auto mat_c = std::make_shared<ChMaterialSurfaceNSC>();
     mat_c->SetFriction(mu_c);
 
     utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 #endif
 
 // Create a material for the granular material
-#ifdef USE_DEM
-    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = std::make_shared<ChMaterialSurface>();
+    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -227,19 +227,19 @@ int CreateObjects(ChSystemParallel* system) {
 // -----------------------------------------------------------------------------
 void CreateFallingBall(ChSystemParallel* system, double z, double vz) {
 // Create a material for the falling ball
-#ifdef USE_DEM
-    auto mat_b = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_b = std::make_shared<ChMaterialSurfaceSMC>();
     mat_b->SetYoungModulus(1e8f);
     mat_b->SetFriction(0.4f);
     mat_b->SetRestitution(0.1f);
 #else
-    auto mat_b = std::make_shared<ChMaterialSurface>();
+    auto mat_b = std::make_shared<ChMaterialSurfaceNSC>();
     mat_b->SetFriction(mu_c);
 #endif
 
 // Create the falling ball
-#ifdef USE_DEM
-    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+#ifdef USE_SMC
+    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
     ball->SetMaterialSurface(mat_b);
 #else
     auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -309,12 +309,12 @@ bool CheckSettled(ChSystem* sys, double threshold) {
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
 // Create system
-#ifdef USE_DEM
-    cout << "Create DEM system" << endl;
-    ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
+#ifdef USE_SMC
+    cout << "Create SMC system" << endl;
+    ChSystemParallelSMC* msystem = new ChSystemParallelSMC();
 #else
-    cout << "Create DVI system" << endl;
-    ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
+    cout << "Create NSC system" << endl;
+    ChSystemParallelNSC* msystem = new ChSystemParallelNSC();
 #endif
 
     // Debug log messages.
@@ -338,7 +338,7 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.use_full_inertia_tensor = false;
     msystem->GetSettings()->solver.tolerance = tolerance;
 
-#ifdef USE_DEM
+#ifdef USE_SMC
     msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
 
     msystem->GetSettings()->solver.contact_force_model = contact_force_model;

@@ -27,7 +27,7 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/physics/ChLinkLock.h"
-#include "chrono/physics/ChSystemDEM.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/timestepper/ChState.h"
 #include "chrono/utils/ChUtilsCreators.h"
 
@@ -113,10 +113,10 @@ TireNode::TireNode(const std::string& json_filename, WheelID wheel_id, int num_t
     m_tire_pressure = true;
 
     // ----------------------------------
-    // Create the (sequential) DEM system
+    // Create the (sequential) SMC system
     // ----------------------------------
 
-    m_system = new ChSystemDEM;
+    m_system = new ChSystemSMC;
     m_system->Set_G_acc(ChVector<>(0, 0, m_gacc));
 
     // Set number threads
@@ -363,7 +363,7 @@ void TireRigid::Initialize(std::shared_ptr<ChBody> rim,
     surf_props[1] = m_tire->GetNumTriangles();
 
     // Extract tire contact properties
-    auto contact_mat = rim->GetMaterialSurfaceDEM();
+    auto contact_mat = rim->GetMaterialSurfaceSMC();
     mat_props[0] = contact_mat->GetSfriction();
     mat_props[1] = contact_mat->GetRestitution();
     mat_props[2] = contact_mat->GetYoungModulus();

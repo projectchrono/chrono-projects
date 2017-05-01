@@ -73,7 +73,7 @@ DrivelineType drive_type = DrivelineType::AWD;
 // Rigid terrain (RigidTerrain::FLAT, RigidTerrain::HEIGHT_MAP, RigidTerrain::MESH)
 RigidTerrain::Type terrain_model = RigidTerrain::FLAT;
 
-// Use material properties for DEM-P contact method?
+// Use material properties for SMC contact method?
 bool use_mat_properties = true;
 
 // Terrain dimensions (for FLAT terrain)
@@ -142,10 +142,10 @@ int main(int argc, char* argv[]) {
     vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
 
     // ----------------------------------
-    // Create the (sequential) DEM system
+    // Create the (sequential) SMC system
     // ----------------------------------
 
-    ChSystemDEM* system = new ChSystemDEM(use_mat_properties);
+    ChSystemSMC* system = new ChSystemSMC(use_mat_properties);
     system->Set_G_acc(ChVector<>(0, 0, -9.81));
 
     // Set number threads
