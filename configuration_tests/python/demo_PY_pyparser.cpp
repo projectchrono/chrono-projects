@@ -30,7 +30,7 @@
 ///////////////////////////////////////////////////
 
 #include "chrono_python/ChPython.h"
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/physics/ChBodyAuxRef.h"
 #include <iostream>
 #include <sstream>
@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
     // TEST 5   -   load mechanical system, previously saved to disk from SolidWorks add-in
     //
 
-    ChSystem my_system;
+    ChSystemNSC my_system;
 
     try {
         // This is the instruction that loads the .py (as saved from SolidWorks) and
