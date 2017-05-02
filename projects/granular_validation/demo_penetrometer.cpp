@@ -345,7 +345,7 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemParallel* msystem) {
 
 // Create the falling object
 #ifdef USE_SMC
-    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     obj->SetMaterialSurface(mat);
 #else
     auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());

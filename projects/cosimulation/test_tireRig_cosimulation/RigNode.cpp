@@ -203,30 +203,30 @@ void RigNode::Construct() {
     ChVector<> rim_inertia(1, 1, 1);
 
     // Create ground body.
-    m_ground = std::make_shared<ChBody>(ChMaterialSurfaceBase::SMC);
+    m_ground = std::make_shared<ChBody>(ChMaterialSurface::SMC);
     m_ground->SetBodyFixed(true);
     m_system->AddBody(m_ground);
 
     // Create the chassis body.
-    m_chassis = std::make_shared<ChBody>(ChMaterialSurfaceBase::SMC);
+    m_chassis = std::make_shared<ChBody>(ChMaterialSurface::SMC);
     m_chassis->SetMass(m_chassis_mass);
     m_chassis->SetInertiaXX(chassis_inertia);
     m_system->AddBody(m_chassis);
 
     // Create the set toe body.
-    m_set_toe = std::make_shared<ChBody>(ChMaterialSurfaceBase::SMC);
+    m_set_toe = std::make_shared<ChBody>(ChMaterialSurface::SMC);
     m_set_toe->SetMass(m_set_toe_mass);
     m_set_toe->SetInertiaXX(set_toe_inertia);
     m_system->AddBody(m_set_toe);
 
     // Create the rim body.
-    m_rim = std::make_shared<ChBody>(ChMaterialSurfaceBase::SMC);
+    m_rim = std::make_shared<ChBody>(ChMaterialSurface::SMC);
     m_rim->SetMass(m_rim_mass);
     m_rim->SetInertiaXX(rim_inertia);
     m_system->AddBody(m_rim);
 
     // Create the upright body.
-    m_upright = std::make_shared<ChBody>(ChMaterialSurfaceBase::SMC);
+    m_upright = std::make_shared<ChBody>(ChMaterialSurface::SMC);
     m_upright->SetMass(m_upright_mass);
     m_upright->SetInertiaXX(upright_inertia);
     m_system->AddBody(m_upright);

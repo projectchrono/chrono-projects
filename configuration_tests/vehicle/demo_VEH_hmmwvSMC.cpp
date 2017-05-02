@@ -383,7 +383,7 @@ int main(int argc, char* argv[]) {
     // -------------------
 
     // Ground body
-    auto ground = std::make_shared<ChBody>(std::make_shared<collision::ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto ground = std::make_shared<ChBody>(std::make_shared<collision::ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     ground->SetIdentifier(-1);
     ground->SetMass(1000);
     ground->SetBodyFixed(true);

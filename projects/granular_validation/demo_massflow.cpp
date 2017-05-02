@@ -165,7 +165,7 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 
 // Angled insert
 #ifdef USE_SMC
-    auto insert = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto insert = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     insert->SetMaterialSurface(mat_b);
 #else
     auto insert = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -188,7 +188,7 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 
 // Static slot (back wall)
 #ifdef USE_SMC
-    auto slot = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto slot = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     slot->SetMaterialSurface(mat_b);
 #else
     auto slot = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -211,7 +211,7 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 
 // Lateral walls
 #ifdef USE_SMC
-    auto wall = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto wall = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     wall->SetMaterialSurface(mat_b);
 #else
     auto wall = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());

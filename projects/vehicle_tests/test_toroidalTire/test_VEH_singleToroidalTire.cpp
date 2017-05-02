@@ -82,7 +82,7 @@ double step_size = 1e-3;  // integration step size
 // =============================================================================
 // Contact reporter class
 
-class MyContactReporter : public ChContactContainerBase::ReportContactCallback {
+class MyContactReporter : public ChContactContainer::ReportContactCallback {
   public:
     MyContactReporter(std::shared_ptr<ChBody> ground) : m_ground(ground) {}
 
@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
 
     // Create the quarter-vehicle chassis
     // ----------------------------------
-    auto chassis = std::make_shared<ChBody>(ChMaterialSurfaceBase::SMC);
+    auto chassis = std::make_shared<ChBody>(ChMaterialSurface::SMC);
     system.AddBody(chassis);
     chassis->SetIdentifier(1);
     chassis->SetName("chassis");
@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
 
     // Create the wheel (rim)
     // ----------------------
-    auto wheel = std::make_shared<ChBody>(ChMaterialSurfaceBase::SMC);
+    auto wheel = std::make_shared<ChBody>(ChMaterialSurface::SMC);
     system.AddBody(wheel);
     wheel->SetIdentifier(2);
     wheel->SetName("wheel");

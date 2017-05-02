@@ -75,7 +75,7 @@ bool tire_mesh_wireframe = false;
 // Contact reporter class
 // =============================================================================
 
-class MyContactReporter : public ChContactContainerBase::ReportContactCallback {
+class MyContactReporter : public ChContactContainer::ReportContactCallback {
   public:
     MyContactReporter(std::shared_ptr<ChBody> ground) : m_ground(ground), m_num_contacts(0) {}
 
@@ -212,7 +212,7 @@ int main(int argc, char* argv[]) {
     // Create the wheel (rim)
     // ----------------------
 
-    auto wheel = std::make_shared<ChBody>(ChMaterialSurfaceBase::SMC);
+    auto wheel = std::make_shared<ChBody>(ChMaterialSurface::SMC);
     system.AddBody(wheel);
     wheel->SetIdentifier(2);
     wheel->SetName("wheel");

@@ -263,7 +263,7 @@ int main(int argc, char** argv) {
         }
         case TERRAIN_NODE_RANK: {
             auto type = TerrainNode::GRANULAR;
-            auto method = ChMaterialSurfaceBase::SMC;
+            auto method = ChMaterialSurface::SMC;
 
             my_terrain = new TerrainNode(type, method, 4, use_checkpoint, render, nthreads_terrain);
             my_terrain->SetStepSize(step_size);
@@ -278,7 +278,7 @@ int main(int argc, char** argv) {
             float coh_force = static_cast<float>(CH_C_PI * radius * radius * coh_pressure);
 
             switch (method) {
-                case ChMaterialSurfaceBase::SMC: {
+                case ChMaterialSurface::SMC: {
                     auto material = std::make_shared<ChMaterialSurfaceSMC>();
                     material->SetFriction(0.9f);
                     material->SetRestitution(0.0f);
@@ -294,7 +294,7 @@ int main(int argc, char** argv) {
                     my_terrain->SetContactForceModel(ChSystemSMC::PlainCoulomb);
                     break;
                 }
-                case ChMaterialSurfaceBase::NSC: {
+                case ChMaterialSurface::NSC: {
                     auto material = std::make_shared<ChMaterialSurfaceNSC>();
                     material->SetFriction(0.9f);
                     material->SetRestitution(0.0f);

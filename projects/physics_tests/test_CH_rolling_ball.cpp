@@ -41,7 +41,7 @@ using namespace chrono;
 // -----------------------------------------------------------------------------
 // Callback functor for contact reporting
 // -----------------------------------------------------------------------------
-class ContactManager : public ChContactContainerBase::ReportContactCallback {
+class ContactManager : public ChContactContainer::ReportContactCallback {
 public:
     const ChVector<>& GetForce() const { return m_force; }
 
@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
     material->SetFriction(0.2f);
 
     // Ground
-    auto ground = std::make_shared<ChBody>(ChMaterialSurfaceBase::NSC);
+    auto ground = std::make_shared<ChBody>(ChMaterialSurface::NSC);
     system.AddBody(ground);
     ground->SetBodyFixed(true);
 
@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
     ground->AddAsset(box);
 
     // Crank
-    auto ball = std::make_shared<ChBody>(ChMaterialSurfaceBase::NSC);
+    auto ball = std::make_shared<ChBody>(ChMaterialSurface::NSC);
     system.AddBody(ball);
     ball->SetMass(1);
     ball->SetInertiaXX(ChVector<>(0.4, 0.4, 0.4));

@@ -190,7 +190,7 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
 // Create the ground body
 #ifdef USE_SMC
-    m_ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    m_ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
 #else
     m_ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
 #endif
@@ -202,7 +202,7 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
 // Create the sled body
 #ifdef USE_SMC
-    m_sled = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    m_sled = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
 #else
     m_sled = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
 #endif
@@ -239,7 +239,7 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
 // Create the wheel body
 #ifdef USE_SMC
-    m_wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    m_wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     m_wheel->SetMaterialSurface(mat_w);
 #else
     m_wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());

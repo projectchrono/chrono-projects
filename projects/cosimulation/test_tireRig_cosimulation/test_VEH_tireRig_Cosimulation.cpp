@@ -197,7 +197,7 @@ int main(int argc, char** argv) {
         }
         case TERRAIN_NODE_RANK: {
             auto type = TerrainNode::GRANULAR;
-            auto method = ChMaterialSurfaceBase::SMC;
+            auto method = ChMaterialSurface::SMC;
 
             cout << "[Terrain node] rank = " << rank << " running on: " << procname << endl;
             my_terrain = new TerrainNode(type, method, use_checkpoint, render, nthreads_terrain);
@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
             ////my_terrain->EnableSettlingOutput(true);
 
             switch (method) {
-                case ChMaterialSurfaceBase::SMC: {
+                case ChMaterialSurface::SMC: {
                     auto material = std::make_shared<ChMaterialSurfaceSMC>();
                     material->SetFriction(0.9f);
                     material->SetRestitution(0.0f);
@@ -231,7 +231,7 @@ int main(int argc, char** argv) {
                     my_terrain->SetContactForceModel(ChSystemSMC::PlainCoulomb);
                     break;
                 }
-                case ChMaterialSurfaceBase::NSC: {
+                case ChMaterialSurface::NSC: {
                     auto material = std::make_shared<ChMaterialSurfaceNSC>();
                     material->SetFriction(0.9f);
                     material->SetRestitution(0.0f);

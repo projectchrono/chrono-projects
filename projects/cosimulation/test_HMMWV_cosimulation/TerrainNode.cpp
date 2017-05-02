@@ -50,7 +50,7 @@ const std::string TerrainNode::m_checkpoint_filename = "checkpoint.dat";
 // - create the OpenGL visualization window
 // -----------------------------------------------------------------------------
 TerrainNode::TerrainNode(Type type,
-                         ChMaterialSurfaceBase::ContactMethod method,
+                         ChMaterialSurface::ContactMethod method,
                          int num_tires,
                          bool use_checkpoint,
                          bool render,
@@ -100,10 +100,10 @@ TerrainNode::TerrainNode(Type type,
 
     // Default terrain contact material
     switch (m_method) {
-        case ChMaterialSurfaceBase::SMC:
+        case ChMaterialSurface::SMC:
             m_material_terrain = std::make_shared<ChMaterialSurfaceSMC>();
             break;
-        case ChMaterialSurfaceBase::NSC:
+        case ChMaterialSurface::NSC:
             m_material_terrain = std::make_shared<ChMaterialSurfaceNSC>();
             break;
     }
@@ -114,7 +114,7 @@ TerrainNode::TerrainNode(Type type,
 
     // Create system and set default method-specific solver settings
     switch (m_method) {
-        case ChMaterialSurfaceBase::SMC: {
+        case ChMaterialSurface::SMC: {
             ChSystemParallelSMC* sys = new ChSystemParallelSMC;
             sys->GetSettings()->solver.contact_force_model = ChSystemSMC::Hertz;
             sys->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::OneStep;
@@ -123,7 +123,7 @@ TerrainNode::TerrainNode(Type type,
 
             break;
         }
-        case ChMaterialSurfaceBase::NSC: {
+        case ChMaterialSurface::NSC: {
             ChSystemParallelNSC* sys = new ChSystemParallelNSC;
             sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
             sys->GetSettings()->solver.max_iteration_normal = 0;
@@ -212,16 +212,16 @@ void TerrainNode::SetGranularMaterial(double radius, double density, int num_lay
 }
 
 void TerrainNode::UseMaterialProperties(bool flag) {
-    assert(m_system->GetContactMethod() == ChMaterialSurfaceBase::SMC);
+    assert(m_system->GetContactMethod() == ChMaterialSurface::SMC);
     m_system->GetSettings()->solver.use_material_properties = flag;
 }
 
 void TerrainNode::SetContactForceModel(ChSystemSMC::ContactForceModel model) {
-    assert(m_system->GetContactMethod() == ChMaterialSurfaceBase::SMC);
+    assert(m_system->GetContactMethod() == ChMaterialSurface::SMC);
     m_system->GetSettings()->solver.contact_force_model = model;
 }
 
-void TerrainNode::SetMaterialSurface(const std::shared_ptr<ChMaterialSurfaceBase>& mat) {
+void TerrainNode::SetMaterialSurface(const std::shared_ptr<ChMaterialSurface>& mat) {
     assert(mat->GetContactMethod() == m_system->GetContactMethod());
     m_material_terrain = mat;
 }
@@ -409,7 +409,7 @@ void TerrainNode::Construct() {
     outf << "Terrain type = " << (m_type == RIGID ? "RIGID" : "GRANULAR") << endl;
     outf << "System settings" << endl;
     outf << "   Integration step size = " << m_step_size << endl;
-    outf << "   Contact method = " << (m_method == ChMaterialSurfaceBase::SMC ? "SMC" : "NSC") << endl;
+    outf << "   Contact method = " << (m_method == ChMaterialSurface::SMC ? "SMC" : "NSC") << endl;
     outf << "   Use material properties? " << (m_system->GetSettings()->solver.use_material_properties ? "YES" : "NO")
          << endl;
     outf << "   Collision envelope = " << m_system->GetSettings()->collision.collision_envelope << endl;
@@ -418,7 +418,7 @@ void TerrainNode::Construct() {
     outf << "   wall thickness = " << 2 * m_hthick << endl;
     outf << "Terrain material properties" << endl;
     switch (m_method) {
-        case ChMaterialSurfaceBase::SMC: {
+        case ChMaterialSurface::SMC: {
             auto mat = std::static_pointer_cast<ChMaterialSurfaceSMC>(m_material_terrain);
             outf << "   Coefficient of friction    = " << mat->GetKfriction() << endl;
             outf << "   Coefficient of restitution = " << mat->GetRestitution() << endl;
@@ -431,7 +431,7 @@ void TerrainNode::Construct() {
             outf << "   Gt = " << mat->GetGt() << endl;
             break;
         }
-        case ChMaterialSurfaceBase::NSC: {
+        case ChMaterialSurface::NSC: {
             auto mat = std::static_pointer_cast<ChMaterialSurfaceNSC>(m_material_terrain);
             outf << "   Coefficient of friction    = " << mat->GetKfriction() << endl;
             outf << "   Coefficient of restitution = " << mat->GetRestitution() << endl;
@@ -656,7 +656,7 @@ void TerrainNode::Initialize() {
         MPI_Recv(mat_props, 8, MPI_FLOAT, TIRE_NODE_RANK(which), 0, MPI_COMM_WORLD, &status_m);
 
         switch (m_method) {
-            case ChMaterialSurfaceBase::SMC: {
+            case ChMaterialSurface::SMC: {
                 // Properties for tire
                 auto mat_tire = std::make_shared<ChMaterialSurfaceSMC>();
                 mat_tire->SetFriction(mat_props[0]);
@@ -672,7 +672,7 @@ void TerrainNode::Initialize() {
 
                 break;
             }
-            case ChMaterialSurfaceBase::NSC: {
+            case ChMaterialSurface::NSC: {
                 auto mat_tire = std::make_shared<ChMaterialSurfaceNSC>();
                 mat_tire->SetFriction(mat_props[0]);
                 mat_tire->SetRestitution(mat_props[1]);

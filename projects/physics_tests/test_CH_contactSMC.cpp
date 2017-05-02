@@ -177,7 +177,7 @@ int main(int argc, char* argv[]) {
     material->SetGt(gt);
 
     // Create the falling ball
-    auto ball = std::make_shared<ChBody>(ChMaterialSurfaceBase::SMC);
+    auto ball = std::make_shared<ChBody>(ChMaterialSurface::SMC);
 
     ball->SetIdentifier(ballId);
     ball->SetMass(mass);
@@ -205,7 +205,7 @@ int main(int argc, char* argv[]) {
     system.AddBody(ball);
 
     // Create ground
-    auto ground = std::make_shared<ChBody>(ChMaterialSurfaceBase::SMC);
+    auto ground = std::make_shared<ChBody>(ChMaterialSurface::SMC);
 
     ground->SetIdentifier(binId);
     ground->SetMass(1);

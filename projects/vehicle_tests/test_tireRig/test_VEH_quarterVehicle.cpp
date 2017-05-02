@@ -77,7 +77,7 @@ using namespace chrono::irrlicht;
 // Global definitions
 
 // Contact method type
-ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::NSC;
+ChMaterialSurface::ContactMethod contact_method = ChMaterialSurface::NSC;
 
 // Type of tire model (RIGID, PACEJKA, LUGRE, FIALA, ANCF, FEA)
 TireModelType tire_model = TireModelType::ANCF;
@@ -124,12 +124,12 @@ int main(int argc, char* argv[]) {
     vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
 
     if (tire_model == TireModelType::ANCF || tire_model == TireModelType::FEA)
-        contact_method = ChMaterialSurfaceBase::SMC;
+        contact_method = ChMaterialSurface::SMC;
 
     // Create the mechanical system
     // ----------------------------
 
-    ChSystem* system = (contact_method == ChMaterialSurfaceBase::NSC) ? static_cast<ChSystem*>(new ChSystemNSC)
+    ChSystem* system = (contact_method == ChMaterialSurface::NSC) ? static_cast<ChSystem*>(new ChSystemNSC)
                                                                       : static_cast<ChSystem*>(new ChSystemSMC);
 
     system->Set_G_acc(ChVector<>(0.0, 0.0, -9.8));

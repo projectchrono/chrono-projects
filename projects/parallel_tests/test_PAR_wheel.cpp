@@ -70,7 +70,7 @@ const std::string checkpoint_file = out_dir + "/settled.dat";
 double out_fps = 60;
 
 // Contact method
-ChMaterialSurfaceBase::ContactMethod method = ChMaterialSurfaceBase::SMC;
+ChMaterialSurface::ContactMethod method = ChMaterialSurface::SMC;
 
 // Parameters for the granular material
 int Id_g = 100;
@@ -114,11 +114,11 @@ double layerHeight = 0.5;
 
 int CreateObjects(ChSystemParallel* system) {
     // Create materials for the granular material and the container
-    std::shared_ptr<chrono::ChMaterialSurfaceBase> material_g;
-    std::shared_ptr<chrono::ChMaterialSurfaceBase> material_c;
+    std::shared_ptr<chrono::ChMaterialSurface> material_g;
+    std::shared_ptr<chrono::ChMaterialSurface> material_c;
 
     switch (method) {
-        case ChMaterialSurfaceBase::SMC: {
+        case ChMaterialSurface::SMC: {
             auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
             mat_g->SetYoungModulus(Y_g);
             mat_g->SetFriction(mu_g);
@@ -137,7 +137,7 @@ int CreateObjects(ChSystemParallel* system) {
 
             break;
         }
-        case ChMaterialSurfaceBase::NSC: {
+        case ChMaterialSurface::NSC: {
             auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
             mat_g->SetFriction(mu_g);
             mat_g->SetRestitution(cr_g);
@@ -186,10 +186,10 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
     std::string mesh_name("wheel");
 
     // Create a material for the wheel
-    std::shared_ptr<chrono::ChMaterialSurfaceBase> material_w;
+    std::shared_ptr<chrono::ChMaterialSurface> material_w;
 
     switch (method) {
-        case ChMaterialSurfaceBase::SMC: {
+        case ChMaterialSurface::SMC: {
             auto mat_w = std::make_shared<ChMaterialSurfaceSMC>();
             mat_w->SetYoungModulus(Y_w);
             mat_w->SetFriction(mu_w);
@@ -200,7 +200,7 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
 
             break;
         }
-        case ChMaterialSurfaceBase::NSC: {
+        case ChMaterialSurface::NSC: {
             auto mat_w = std::make_shared<ChMaterialSurfaceNSC>();
             mat_w->SetFriction(mu_w);
             mat_w->SetRestitution(cr_w);
@@ -291,7 +291,7 @@ int main(int argc, char* argv[]) {
     // Create system and set method-specific solver settings
     ChSystemParallel* system;
     switch (method) {
-        case ChMaterialSurfaceBase::SMC: {
+        case ChMaterialSurface::SMC: {
             ChSystemParallelSMC* sys = new ChSystemParallelSMC;
             sys->GetSettings()->solver.contact_force_model = ChSystemSMC::Hertz;
             sys->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::OneStep;
@@ -301,7 +301,7 @@ int main(int argc, char* argv[]) {
             system = sys;
             break;
         }
-        case ChMaterialSurfaceBase::NSC: {
+        case ChMaterialSurface::NSC: {
             ChSystemParallelNSC* sys = new ChSystemParallelNSC;
             sys->GetSettings()->solver.solver_type = SolverType::BB;
             sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
@@ -375,10 +375,10 @@ int main(int argc, char* argv[]) {
     // Set integration step size
     double time_step;
     switch (method) {
-        case ChMaterialSurfaceBase::SMC:
+        case ChMaterialSurface::SMC:
             time_step = time_step_penalty;
             break;
-        case ChMaterialSurfaceBase::NSC:
+        case ChMaterialSurface::NSC:
             time_step = time_step_complementarity;
             break;
     }

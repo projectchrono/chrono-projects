@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
     // ---------------------------
     // Contact material properties
     // ---------------------------
-    ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::SMC;
+    ChMaterialSurface::ContactMethod contact_method = ChMaterialSurface::SMC;
     bool use_mat_properties = true;
 
     float object_friction = 0.9f;
@@ -93,10 +93,10 @@ int main(int argc, char* argv[]) {
     ChSystem* system;
 
     switch (contact_method) {
-        case ChMaterialSurfaceBase::NSC:
+        case ChMaterialSurface::NSC:
             system = new ChSystemNSC();
             break;
-        case ChMaterialSurfaceBase::SMC:
+        case ChMaterialSurface::SMC:
             system = new ChSystemSMC(use_mat_properties);
             break;
     }
@@ -131,11 +131,11 @@ int main(int argc, char* argv[]) {
     object->SetBodyFixed(false);
 
     switch (object->GetContactMethod()) {
-        case ChMaterialSurfaceBase::NSC:
+        case ChMaterialSurface::NSC:
             object->GetMaterialSurfaceNSC()->SetFriction(object_friction);
             object->GetMaterialSurfaceNSC()->SetRestitution(object_restitution);
             break;
-        case ChMaterialSurfaceBase::SMC:
+        case ChMaterialSurface::SMC:
             object->GetMaterialSurfaceSMC()->SetFriction(object_friction);
             object->GetMaterialSurfaceSMC()->SetRestitution(object_restitution);
             object->GetMaterialSurfaceSMC()->SetYoungModulus(object_young_modulus);
@@ -174,11 +174,11 @@ int main(int argc, char* argv[]) {
     ground->SetBodyFixed(true);
 
     switch (object->GetContactMethod()) {
-        case ChMaterialSurfaceBase::NSC:
+        case ChMaterialSurface::NSC:
             ground->GetMaterialSurfaceNSC()->SetFriction(ground_friction);
             ground->GetMaterialSurfaceNSC()->SetRestitution(ground_restitution);
             break;
-        case ChMaterialSurfaceBase::SMC:
+        case ChMaterialSurface::SMC:
             ground->GetMaterialSurfaceSMC()->SetFriction(ground_friction);
             ground->GetMaterialSurfaceSMC()->SetRestitution(ground_restitution);
             ground->GetMaterialSurfaceSMC()->SetYoungModulus(ground_young_modulus);

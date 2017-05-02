@@ -218,7 +218,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // ----------------------
 
 #ifdef USE_SMC
-    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     ground->SetMaterialSurface(mat_walls);
 #else
     auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -248,7 +248,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // Initially, the wheel is fixed to ground.
 
 #ifdef USE_SMC
-    auto wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     wheel->SetMaterialSurface(mat_walls);
 #else
     auto wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -279,7 +279,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // It is released after the settling phase.
 
 #ifdef USE_SMC
-    auto chassis = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto chassis = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     chassis->SetMaterialSurface(mat_walls);
 #else
     auto chassis = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -308,7 +308,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // It is released after the settling phase.
 
 #ifdef USE_SMC
-    auto axle = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto axle = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     axle->SetMaterialSurface(mat_walls);
 #else
     auto axle = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -455,7 +455,7 @@ void CreateBall(ChSystemParallel* system) {
 // ---------------
 
 #ifdef USE_SMC
-    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     ball->SetMaterialSurface(mat_g);
 #else
     auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());

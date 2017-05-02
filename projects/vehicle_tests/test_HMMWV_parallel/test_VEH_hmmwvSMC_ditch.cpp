@@ -318,7 +318,7 @@ void AdjustGroundGeometry(std::shared_ptr<ChBody> ground, double platform_height
 }
 
 void CreatePlatform(ChSystem* system, double platform_height) {
-    auto platform = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto platform = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     platform->SetIdentifier(-2);
     platform->SetMass(1000);
     platform->SetBodyFixed(true);
@@ -487,7 +487,7 @@ int main(int argc, char* argv[]) {
     // -------------------
 
     // Ground body
-    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     ground->SetIdentifier(-1);
     ground->SetMass(1000);
     ground->SetBodyFixed(true);

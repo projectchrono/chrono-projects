@@ -210,12 +210,12 @@ int main(int argc, char* argv[]) {
 #ifdef USE_SMC
     cout << "Create SMC system" << endl;
     const std::string title = "soft-sphere (SMC) direct shear box test";
-    ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::SMC;
+    ChMaterialSurface::ContactMethod contact_method = ChMaterialSurface::SMC;
     ChSystemParallelSMC* my_system = new ChSystemParallelSMC();
 #else
     cout << "Create NSC system" << endl;
     const std::string title = "hard-sphere (NSC) direct shear box test";
-    ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::NSC;
+    ChMaterialSurface::ContactMethod contact_method = ChMaterialSurface::NSC;
     ChSystemParallelNSC* my_system = new ChSystemParallelNSC();
 #endif
 

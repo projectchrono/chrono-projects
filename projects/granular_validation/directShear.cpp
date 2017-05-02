@@ -233,7 +233,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // ----------------------
 
 #ifdef USE_SMC
-    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     ground->SetMaterialSurface(mat_walls);
 #else
     auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -267,7 +267,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // During the shearing phase it may be released (if using an actuator)
 
 #ifdef USE_SMC
-    auto box = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto box = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     box->SetMaterialSurface(mat_walls);
 #else
     auto box = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -311,7 +311,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
     double mass = normalPressure * area / gravity;
 
 #ifdef USE_SMC
-    auto plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     plate->SetMaterialSurface(mat_walls);
 #else
     auto plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -450,7 +450,7 @@ void CreateBall(ChSystemParallel* system) {
 // ---------------
 
 #ifdef USE_SMC
-    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     ball->SetMaterialSurface(mat_g);
 #else
     auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());

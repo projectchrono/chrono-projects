@@ -203,7 +203,7 @@ void CreateObject(ChSystemParallel* system, double z) {
 // --------------------------
 
 #ifdef USE_SMC
-    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     obj->SetMaterialSurface(mat_o);
 #else
     auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());

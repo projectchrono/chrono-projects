@@ -90,7 +90,7 @@ class PARSettlingTest : public BaseTest {
   public:
     PARSettlingTest(const std::string& testName,
                     const std::string& testProjectName,
-                    ChMaterialSurfaceBase::ContactMethod method,
+                    ChMaterialSurface::ContactMethod method,
                     int num_threads)
         : BaseTest(testName, testProjectName), m_method(method), m_execTime(0), m_num_threads(num_threads) {}
 
@@ -101,7 +101,7 @@ class PARSettlingTest : public BaseTest {
     virtual double getExecutionTime() const override { return m_execTime; }
 
   private:
-    ChMaterialSurfaceBase::ContactMethod m_method;
+    ChMaterialSurface::ContactMethod m_method;
     double m_execTime;
     int m_num_threads;
 };
@@ -160,7 +160,7 @@ bool PARSettlingTest::execute() {
     double time_step;
 
     switch (m_method) {
-        case ChMaterialSurfaceBase::SMC: {
+        case ChMaterialSurface::SMC: {
             time_step = 1e-4;
             ChSystemParallelSMC* sys = new ChSystemParallelSMC;
             sys->GetSettings()->solver.contact_force_model = ChSystemSMC::Hooke;
@@ -170,7 +170,7 @@ bool PARSettlingTest::execute() {
 
             break;
         }
-        case ChMaterialSurfaceBase::NSC: {
+        case ChMaterialSurface::NSC: {
             time_step = 1e-3;
             ChSystemParallelNSC* sys = new ChSystemParallelNSC;
             sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
@@ -210,10 +210,10 @@ bool PARSettlingTest::execute() {
     // ---------------------
 
     // Create contact material for terrain
-    std::shared_ptr<ChMaterialSurfaceBase> material_terrain;
+    std::shared_ptr<ChMaterialSurface> material_terrain;
 
     switch (m_method) {
-        case ChMaterialSurfaceBase::SMC: {
+        case ChMaterialSurface::SMC: {
             auto mat_ter = std::make_shared<ChMaterialSurfaceSMC>();
             mat_ter->SetFriction(friction_terrain);
             mat_ter->SetRestitution(restitution_terrain);
@@ -229,7 +229,7 @@ bool PARSettlingTest::execute() {
 
             break;
         }
-        case ChMaterialSurfaceBase::NSC: {
+        case ChMaterialSurface::NSC: {
             auto mat_ter = std::make_shared<ChMaterialSurfaceNSC>();
             mat_ter->SetFriction(friction_terrain);
             mat_ter->SetRestitution(restitution_terrain);
@@ -377,10 +377,10 @@ int main(int argc, char** argv) {
 
     bool passed = true;
 
-    PARSettlingTest testDEM2("metrics_PAR_settling_DEM_2", "Chrono::Parallel", ChMaterialSurfaceBase::SMC, 2);
-    PARSettlingTest testDEM4("metrics_PAR_settling_DEM_4", "Chrono::Parallel", ChMaterialSurfaceBase::SMC, 4);
-    PARSettlingTest testDVI2("metrics_PAR_settling_DVI_2", "Chrono::Parallel", ChMaterialSurfaceBase::NSC, 2);
-    PARSettlingTest testDVI4("metrics_PAR_settling_DVI_4", "Chrono::Parallel", ChMaterialSurfaceBase::NSC, 4);
+    PARSettlingTest testDEM2("metrics_PAR_settling_DEM_2", "Chrono::Parallel", ChMaterialSurface::SMC, 2);
+    PARSettlingTest testDEM4("metrics_PAR_settling_DEM_4", "Chrono::Parallel", ChMaterialSurface::SMC, 4);
+    PARSettlingTest testDVI2("metrics_PAR_settling_DVI_2", "Chrono::Parallel", ChMaterialSurface::NSC, 2);
+    PARSettlingTest testDVI4("metrics_PAR_settling_DVI_4", "Chrono::Parallel", ChMaterialSurface::NSC, 4);
 
     testDEM2.setOutDir(out_dir);
     testDEM2.setVerbose(true);

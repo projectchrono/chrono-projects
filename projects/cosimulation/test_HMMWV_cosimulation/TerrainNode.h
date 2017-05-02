@@ -39,7 +39,7 @@ class TerrainNode : public BaseNode {
     enum Type { RIGID, GRANULAR };
 
     TerrainNode(Type type,                                            ///< terrain type (RIGID or GRANULAR)
-                chrono::ChMaterialSurfaceBase::ContactMethod method,  ///< contact method (penalty or complementatiry)
+                chrono::ChMaterialSurface::ContactMethod method,  ///< contact method (penalty or complementatiry)
                 int num_tires,                                        ///< number of vehicle tires
                 bool use_checkpoint,                                  ///< initialize granular terrain from checkpoint
                 bool render,                                          ///< use OpenGL rendering
@@ -82,7 +82,7 @@ class TerrainNode : public BaseNode {
     /// The type of material must be consistent with the contact method (penalty or complementarity)
     /// specified at construction. These parameters characterize the material for the container and
     /// (if applicable) the granular material.  Tire contact material is received from one of the tire nodes.
-    void SetMaterialSurface(const std::shared_ptr<chrono::ChMaterialSurfaceBase>& mat);
+    void SetMaterialSurface(const std::shared_ptr<chrono::ChMaterialSurface>& mat);
 
     /// Specify whether contact coefficients are based on material properties (default: true).
     /// Note that this setting is only relevant when using the penalty method.
@@ -153,7 +153,7 @@ class TerrainNode : public BaseNode {
 
     ///
     struct TireData {
-        std::shared_ptr<chrono::ChMaterialSurfaceBase> m_material_tire;  ///< material properties for proxy bodies
+        std::shared_ptr<chrono::ChMaterialSurface> m_material_tire;  ///< material properties for proxy bodies
         std::vector<ProxyBody> m_proxies;          ///< list of proxy bodies with associated mesh index
         std::vector<VertexState> m_vertex_states;  ///< mesh vertex states
         std::vector<Triangle> m_triangles;         ///< tire mesh connectivity
@@ -168,8 +168,8 @@ class TerrainNode : public BaseNode {
     chrono::ChSystemParallel* m_system;  ///< containing system
     bool m_constructed;                  ///< system construction completed?
 
-    chrono::ChMaterialSurfaceBase::ContactMethod m_method;              ///< contact method (penalty or complementarity)
-    std::shared_ptr<chrono::ChMaterialSurfaceBase> m_material_terrain;  ///< material properties for terrain bodies
+    chrono::ChMaterialSurface::ContactMethod m_method;              ///< contact method (penalty or complementarity)
+    std::shared_ptr<chrono::ChMaterialSurface> m_material_terrain;  ///< material properties for terrain bodies
 
     int m_num_tires;                    ///< number of vehicle tires
     bool m_fixed_proxies;               ///< flag indicating whether or not proxy bodies are fixed to ground

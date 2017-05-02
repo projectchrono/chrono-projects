@@ -50,7 +50,7 @@
 #include "chrono_vehicle/wheeled_vehicle/tire/FialaTire.h"
 #include "chrono_irrlicht/ChIrrApp.h"
 
-#include "chrono/physics/ChContactContainerBase.h"
+#include "chrono/physics/ChContactContainer.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono_fea/ChElementShellANCF.h"
 
@@ -95,7 +95,7 @@ void UpdateVTKFile(std::shared_ptr<fea::ChMesh> m_mesh,
 // =============================================================================
 
 // Contact method type
-ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::NSC;
+ChMaterialSurface::ContactMethod contact_method = ChMaterialSurface::NSC;
 
 // Solver settings
 enum SolverType { ITSOR, MKL };
@@ -131,7 +131,7 @@ std::string out_dir;
 // Custom contact reporter class
 // =============================================================================
 
-class TireTestContactReporter : public ChContactContainerBase::ReportContactCallback {
+class TireTestContactReporter : public ChContactContainer::ReportContactCallback {
   public:
     TireTestContactReporter() : counter(-1) {}
     int counter;
@@ -352,10 +352,10 @@ int main() {
 
     // Set contact model to SMC if FEA tire is used
     if (tire_model == TireModelType::ANCF || tire_model == TireModelType::REISSNER || tire_model == TireModelType::FEA) {
-        contact_method = ChMaterialSurfaceBase::SMC;
+        contact_method = ChMaterialSurface::SMC;
     }
 
-    ChSystem* my_system = (contact_method == ChMaterialSurfaceBase::NSC) ? static_cast<ChSystem*>(new ChSystemNSC)
+    ChSystem* my_system = (contact_method == ChMaterialSurface::NSC) ? static_cast<ChSystem*>(new ChSystemNSC)
                                                                          : static_cast<ChSystem*>(new ChSystemSMC);
 
     if (auto sysSMC = dynamic_cast<chrono::ChSystemSMC*>(my_system)) {

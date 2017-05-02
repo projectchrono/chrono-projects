@@ -100,7 +100,7 @@ class MeshContactTest : public BaseTest {
   public:
     MeshContactTest(const std::string& testName,
                     const std::string& testProjectName,
-                    ChMaterialSurfaceBase::ContactMethod method)
+                    ChMaterialSurface::ContactMethod method)
         : BaseTest(testName, testProjectName), m_method(method), m_execTime(0) {}
 
     ~MeshContactTest() {}
@@ -110,7 +110,7 @@ class MeshContactTest : public BaseTest {
     virtual double getExecutionTime() const override { return m_execTime; }
 
   private:
-    ChMaterialSurfaceBase::ContactMethod m_method;
+    ChMaterialSurface::ContactMethod m_method;
     double m_execTime;
 };
 
@@ -119,10 +119,10 @@ class MeshContactTest : public BaseTest {
 bool MeshContactTest::execute() {
     // Create system and contact material.
     ChSystem* system;
-    std::shared_ptr<ChMaterialSurfaceBase> material;
+    std::shared_ptr<ChMaterialSurface> material;
 
     switch (m_method) {
-        case ChMaterialSurfaceBase::SMC: {
+        case ChMaterialSurface::SMC: {
             GetLog() << "Using PENALTY method.\n";
 
             ChSystemSMC* sys = new ChSystemSMC;
@@ -145,7 +145,7 @@ bool MeshContactTest::execute() {
 
             break;
         }
-        case ChMaterialSurfaceBase::NSC: {
+        case ChMaterialSurface::NSC: {
             GetLog() << "Using COMPLEMENTARITY method.\n";
 
             system = new ChSystemNSC;
@@ -294,7 +294,7 @@ bool MeshContactTest::execute() {
     // Setup integrator
     // ----------------
 
-    if (m_method == ChMaterialSurfaceBase::SMC) {
+    if (m_method == ChMaterialSurface::SMC) {
         GetLog() << "Using HHT integrator.\n";
         system->SetTimestepperType(ChTimestepper::Type::HHT);
         auto integrator = std::static_pointer_cast<ChTimestepperHHT>(system->GetTimestepper());
@@ -360,8 +360,8 @@ int main(int argc, char* argv[]) {
 
     bool passed = true;
 
-    MeshContactTest testDEM("metrics_FEA_compute_contact_mesh_DEM", "Chrono::FEA", ChMaterialSurfaceBase::SMC);
-    MeshContactTest testDVI("metrics_FEA_compute_contact_mesh_DVI", "Chrono::FEA", ChMaterialSurfaceBase::NSC);
+    MeshContactTest testDEM("metrics_FEA_compute_contact_mesh_DEM", "Chrono::FEA", ChMaterialSurface::SMC);
+    MeshContactTest testDVI("metrics_FEA_compute_contact_mesh_DVI", "Chrono::FEA", ChMaterialSurface::NSC);
 
     testDEM.setOutDir(out_dir);
     testDEM.setVerbose(true);

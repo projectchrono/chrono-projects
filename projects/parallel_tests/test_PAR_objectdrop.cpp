@@ -117,7 +117,7 @@ void CreateGround(ChSystemParallel* system) {
     mat_g->SetFriction(0.4f);
     mat_g->SetRestitution(0.4f);
 
-    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     ground->SetMaterialSurface(mat_g);
 #else
     auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
@@ -211,7 +211,7 @@ void CreateObject(ChSystemParallel* system) {
     mat_o->SetFriction(0.4f);
     mat_o->SetRestitution(0.4f);
 
-    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::SMC);
+    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     obj->SetMaterialSurface(mat_o);
 #else
     auto mat_o = std::make_shared<ChMaterialSurfaceNSC>();

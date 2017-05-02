@@ -207,7 +207,7 @@ int main(int argc, char* argv[]) {
     material->SetFriction(0.4f);
 
     // Create the falling ball
-    auto ball = std::make_shared<ChBody>(ChMaterialSurfaceBase::SMC);
+    auto ball = std::make_shared<ChBody>(ChMaterialSurface::SMC);
 
     ball->SetIdentifier(ballId);
     ball->SetMass(mass);
@@ -235,7 +235,7 @@ int main(int argc, char* argv[]) {
     msystem.AddBody(ball);
 
     // Create container
-    auto bin = std::make_shared<ChBody>(ChMaterialSurfaceBase::SMC);
+    auto bin = std::make_shared<ChBody>(ChMaterialSurface::SMC);
 
     bin->SetIdentifier(binId);
     bin->SetMass(1);
