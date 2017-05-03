@@ -33,7 +33,7 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/physics/ChLinkLock.h"
-#include "chrono/physics/ChSystemDEM.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/timestepper/ChState.h"
 #include "chrono/utils/ChUtilsCreators.h"
 
@@ -106,10 +106,10 @@ RigNode::RigNode(double init_vel, double slip, int num_threads)
     m_slv_type = ChSolver::Type::CUSTOM;
 
     // ----------------------------------
-    // Create the (sequential) DEM system
+    // Create the (sequential) SMC system
     // ----------------------------------
 
-    m_system = new ChSystemDEM;
+    m_system = new ChSystemSMC;
     m_system->Set_G_acc(ChVector<>(0, 0, m_gacc));
 
     // Set number threads
@@ -203,30 +203,30 @@ void RigNode::Construct() {
     ChVector<> rim_inertia(1, 1, 1);
 
     // Create ground body.
-    m_ground = std::make_shared<ChBody>(ChMaterialSurfaceBase::DEM);
+    m_ground = std::make_shared<ChBody>(ChMaterialSurface::SMC);
     m_ground->SetBodyFixed(true);
     m_system->AddBody(m_ground);
 
     // Create the chassis body.
-    m_chassis = std::make_shared<ChBody>(ChMaterialSurfaceBase::DEM);
+    m_chassis = std::make_shared<ChBody>(ChMaterialSurface::SMC);
     m_chassis->SetMass(m_chassis_mass);
     m_chassis->SetInertiaXX(chassis_inertia);
     m_system->AddBody(m_chassis);
 
     // Create the set toe body.
-    m_set_toe = std::make_shared<ChBody>(ChMaterialSurfaceBase::DEM);
+    m_set_toe = std::make_shared<ChBody>(ChMaterialSurface::SMC);
     m_set_toe->SetMass(m_set_toe_mass);
     m_set_toe->SetInertiaXX(set_toe_inertia);
     m_system->AddBody(m_set_toe);
 
     // Create the rim body.
-    m_rim = std::make_shared<ChBody>(ChMaterialSurfaceBase::DEM);
+    m_rim = std::make_shared<ChBody>(ChMaterialSurface::SMC);
     m_rim->SetMass(m_rim_mass);
     m_rim->SetInertiaXX(rim_inertia);
     m_system->AddBody(m_rim);
 
     // Create the upright body.
-    m_upright = std::make_shared<ChBody>(ChMaterialSurfaceBase::DEM);
+    m_upright = std::make_shared<ChBody>(ChMaterialSurface::SMC);
     m_upright->SetMass(m_upright_mass);
     m_upright->SetInertiaXX(upright_inertia);
     m_system->AddBody(m_upright);
@@ -492,7 +492,7 @@ void RigNodeRigidTire::InitializeTire() {
     cout << "[Rig node    ] vertices = " << surf_props[0] << "  triangles = " << surf_props[1] << endl;
 
     // Send tire contact material properties
-    auto contact_mat = m_rim->GetMaterialSurfaceDEM();
+    auto contact_mat = m_rim->GetMaterialSurfaceSMC();
     float mat_props[8] = {contact_mat->GetSfriction(),    contact_mat->GetRestitution(), contact_mat->GetYoungModulus(),
                           contact_mat->GetPoissonRatio(), contact_mat->GetKn(),          contact_mat->GetGn(),
                           contact_mat->GetKt(),           contact_mat->GetGt()};

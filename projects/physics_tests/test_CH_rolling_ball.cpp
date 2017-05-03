@@ -31,7 +31,7 @@
 #include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChStream.h"
 
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -41,19 +41,19 @@ using namespace chrono;
 // -----------------------------------------------------------------------------
 // Callback functor for contact reporting
 // -----------------------------------------------------------------------------
-class ContactManager : public chrono::ChReportContactCallback {
+class ContactManager : public ChContactContainer::ReportContactCallback {
 public:
     const ChVector<>& GetForce() const { return m_force; }
 
-private:
-    virtual bool ReportContactCallback(const ChVector<>& pA,
-                                       const ChVector<>& pB,
-                                       const ChMatrix33<>& plane_coord,
-                                       const double& distance,
-                                       const ChVector<>& cforce,
-                                       const ChVector<>& ctorque,
-                                       ChContactable* modA,
-                                       ChContactable* modB) override {
+  private:
+    virtual bool OnReportContact(const ChVector<>& pA,
+                                 const ChVector<>& pB,
+                                 const ChMatrix33<>& plane_coord,
+                                 const double& distance,
+                                 const ChVector<>& cforce,
+                                 const ChVector<>& ctorque,
+                                 ChContactable* modA,
+                                 ChContactable* modB) override {
         m_force = cforce;
         return true;
     }
@@ -83,7 +83,7 @@ void Output(double time, std::shared_ptr<ChBody> ball, int ncontacts, const ChVe
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
     // Create the physical system and set gravity along negative Z
-    ChSystem system;
+    ChSystemNSC system;
     system.Set_G_acc(ChVector<>(0, 0, -9.81));
 
     system.SetSolverType(ChSolver::Type::APGD);
@@ -92,12 +92,12 @@ int main(int argc, char* argv[]) {
     system.SetMaxPenetrationRecoverySpeed(0);
 
     // Create a material (will be used by both objects)
-    auto material = std::make_shared<ChMaterialSurface>();
+    auto material = std::make_shared<ChMaterialSurfaceNSC>();
     material->SetRestitution(0);
     material->SetFriction(0.2f);
 
     // Ground
-    auto ground = std::make_shared<ChBody>(ChMaterialSurfaceBase::DVI);
+    auto ground = std::make_shared<ChBody>(ChMaterialSurface::NSC);
     system.AddBody(ground);
     ground->SetBodyFixed(true);
 
@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
     ground->AddAsset(box);
 
     // Crank
-    auto ball = std::make_shared<ChBody>(ChMaterialSurfaceBase::DVI);
+    auto ball = std::make_shared<ChBody>(ChMaterialSurface::NSC);
     system.AddBody(ball);
     ball->SetMass(1);
     ball->SetInertiaXX(ChVector<>(0.4, 0.4, 0.4));

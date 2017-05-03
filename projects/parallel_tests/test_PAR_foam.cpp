@@ -12,7 +12,7 @@
 // Author: Radu Serban
 // =============================================================================
 //
-// ChronoParallel demo program for cohesive DEM-P granular material simulation.
+// ChronoParallel demo program for cohesive SMC granular material simulation.
 //
 // The global reference frame has Z up.
 // All units SI.
@@ -118,7 +118,7 @@ int SpawnParticles() {
 // ========================================================================
 int main(int argc, char* argv[]) {
     // Create system
-    ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
+    ChSystemParallelSMC* msystem = new ChSystemParallelSMC();
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();
@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
     msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
 
     // Using constant adhesion model
-    msystem->GetSettings()->solver.adhesion_force_model = ChSystemDEM::AdhesionForceModel::Constant;
+    msystem->GetSettings()->solver.adhesion_force_model = ChSystemSMC::AdhesionForceModel::Constant;
 
     // Edit system settings
     msystem->GetSettings()->solver.tolerance = 1e-4;
@@ -143,14 +143,14 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
 
     // Create a material for the granular material
-    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
+    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
     mat_g->SetAdhesion(cohesion_g);
 
     // Create a material for the container
-    auto mat_c = std::make_shared<ChMaterialSurfaceDEM>();
+    auto mat_c = std::make_shared<ChMaterialSurfaceSMC>();
     mat_c->SetYoungModulus(Y_c);
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);

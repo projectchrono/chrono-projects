@@ -13,7 +13,7 @@ SET(DEMOS
     test_CH_rolling_ball
     test_CH_brake
     test_CH_contact_mesh
-    test_CH_contactDEM
+    test_CH_contactSMC
     test_CH_contact_hulls
 )
 

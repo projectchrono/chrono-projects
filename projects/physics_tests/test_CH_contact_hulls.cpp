@@ -17,7 +17,7 @@
 // =============================================================================
 
 #include "chrono/ChConfig.h"
-#include "chrono/physics/ChSystemDEM.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/collision/ChCCollisionUtils.h"
 
 #include "chrono_irrlicht/ChIrrApp.h"
@@ -194,20 +194,20 @@ int main(int argc, char* argv[]) {
     double hthick = 0.2;
 
     // Create the system (Y up)
-    ChSystemDEM msystem;
+    ChSystemSMC msystem;
     msystem.Set_G_acc(ChVector<>(0, gravity, 0));
 
-    msystem.SetContactForceModel(ChSystemDEM::ContactForceModel::Hertz);
-    msystem.SetAdhesionForceModel(ChSystemDEM::AdhesionForceModel::Constant);
+    msystem.SetContactForceModel(ChSystemSMC::ContactForceModel::Hertz);
+    msystem.SetAdhesionForceModel(ChSystemSMC::AdhesionForceModel::Constant);
 
     // Create a material (will be used by both objects)
-    auto material = std::make_shared<ChMaterialSurfaceDEM>();
+    auto material = std::make_shared<ChMaterialSurfaceSMC>();
     material->SetYoungModulus(1.0e7f);
     material->SetRestitution(0.1f);
     material->SetFriction(0.4f);
 
     // Create the falling ball
-    auto ball = std::make_shared<ChBody>(ChMaterialSurfaceBase::DEM);
+    auto ball = std::make_shared<ChBody>(ChMaterialSurface::SMC);
 
     ball->SetIdentifier(ballId);
     ball->SetMass(mass);
@@ -235,7 +235,7 @@ int main(int argc, char* argv[]) {
     msystem.AddBody(ball);
 
     // Create container
-    auto bin = std::make_shared<ChBody>(ChMaterialSurfaceBase::DEM);
+    auto bin = std::make_shared<ChBody>(ChMaterialSurface::SMC);
 
     bin->SetIdentifier(binId);
     bin->SetMass(1);

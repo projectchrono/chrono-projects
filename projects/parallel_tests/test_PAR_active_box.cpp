@@ -32,24 +32,24 @@ using namespace chrono::collision;
 // =============================================================================
 int main(int argc, char* argv[]) {
     bool aabb_active = true;
-    ChMaterialSurfaceBase::ContactMethod method = ChMaterialSurfaceBase::DEM;
+    ChMaterialSurface::ContactMethod method = ChMaterialSurface::SMC;
 
     // Create system and set method-specific solver settings
     ChSystemParallel* system;
     double time_step;
     switch (method) {
-        case ChMaterialSurfaceBase::DEM: {
-            ChSystemParallelDEM* sys = new ChSystemParallelDEM;
-            sys->GetSettings()->solver.contact_force_model = ChSystemDEM::Hertz;
-            sys->GetSettings()->solver.tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::OneStep;
-            sys->GetSettings()->solver.adhesion_force_model = ChSystemDEM::AdhesionForceModel::Constant;
+        case ChMaterialSurface::SMC: {
+            ChSystemParallelSMC* sys = new ChSystemParallelSMC;
+            sys->GetSettings()->solver.contact_force_model = ChSystemSMC::Hertz;
+            sys->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::OneStep;
+            sys->GetSettings()->solver.adhesion_force_model = ChSystemSMC::AdhesionForceModel::Constant;
             sys->GetSettings()->solver.use_material_properties = true;
             system = sys;
             time_step = 1e-3;
             break;
         }
-        case ChMaterialSurfaceBase::DVI: {
-            ChSystemParallelDVI* sys = new ChSystemParallelDVI;
+        case ChMaterialSurface::NSC: {
+            ChSystemParallelNSC* sys = new ChSystemParallelNSC;
             sys->GetSettings()->solver.solver_type = SolverType::BB;
             sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
             sys->GetSettings()->solver.max_iteration_normal = 0;
@@ -79,10 +79,10 @@ int main(int argc, char* argv[]) {
     omp_set_num_threads(threads);
 
     // Create ground body
-    std::shared_ptr<chrono::ChMaterialSurfaceBase> material_g;
+    std::shared_ptr<chrono::ChMaterialSurface> material_g;
     switch (method) {
-        case ChMaterialSurfaceBase::DEM: {
-            auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
+        case ChMaterialSurface::SMC: {
+            auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
             mat_g->SetYoungModulus(1e7f);
             mat_g->SetFriction(0.7f);
             mat_g->SetRestitution(0.5f);
@@ -90,8 +90,8 @@ int main(int argc, char* argv[]) {
             material_g = mat_g;
             break;
         }
-        case ChMaterialSurfaceBase::DVI: {
-            auto mat_g = std::make_shared<ChMaterialSurface>();
+        case ChMaterialSurface::NSC: {
+            auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
             mat_g->SetFriction(0.7f);
             mat_g->SetRestitution(0.5f);
             mat_g->SetCohesion(0.0f);
@@ -111,10 +111,10 @@ int main(int argc, char* argv[]) {
     system->AddBody(ground);
 
     // Create ball body
-    std::shared_ptr<chrono::ChMaterialSurfaceBase> material_b;
+    std::shared_ptr<chrono::ChMaterialSurface> material_b;
     switch (method) {
-        case ChMaterialSurfaceBase::DEM: {
-            auto mat_b = std::make_shared<ChMaterialSurfaceDEM>();
+        case ChMaterialSurface::SMC: {
+            auto mat_b = std::make_shared<ChMaterialSurfaceSMC>();
             mat_b->SetYoungModulus(1e7f);
             mat_b->SetFriction(0.7f);
             mat_b->SetRestitution(0.5f);
@@ -122,8 +122,8 @@ int main(int argc, char* argv[]) {
             material_b = mat_b;
             break;
         }
-        case ChMaterialSurfaceBase::DVI: {
-            auto mat_b = std::make_shared<ChMaterialSurface>();
+        case ChMaterialSurface::NSC: {
+            auto mat_b = std::make_shared<ChMaterialSurfaceNSC>();
             mat_b->SetFriction(0.7f);
             mat_b->SetRestitution(0.5f);
             mat_b->SetCohesion(0.0f);

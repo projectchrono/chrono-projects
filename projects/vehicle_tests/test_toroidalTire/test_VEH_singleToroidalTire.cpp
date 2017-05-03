@@ -82,19 +82,19 @@ double step_size = 1e-3;  // integration step size
 // =============================================================================
 // Contact reporter class
 
-class MyContactReporter : public ChReportContactCallback {
+class MyContactReporter : public ChContactContainer::ReportContactCallback {
   public:
     MyContactReporter(std::shared_ptr<ChBody> ground) : m_ground(ground) {}
 
   private:
-    virtual bool ReportContactCallback(const ChVector<>& pA,
-                                       const ChVector<>& pB,
-                                       const ChMatrix33<>& plane_coord,
-                                       const double& distance,
-                                       const ChVector<>& react_forces,
-                                       const ChVector<>& react_torques,
-                                       ChContactable* objA,
-                                       ChContactable* objB) override {
+    virtual bool OnReportContact(const ChVector<>& pA,
+                                 const ChVector<>& pB,
+                                 const ChMatrix33<>& plane_coord,
+                                 const double& distance,
+                                 const ChVector<>& react_forces,
+                                 const ChVector<>& react_torques,
+                                 ChContactable* objA,
+                                 ChContactable* objB) override {
         ChVector<> force = plane_coord.Matr_x_Vect(react_forces);
         ChVector<> point = (objA == m_ground.get()) ? pA : pB;
         std::cout << "---  " << distance << std::endl;
@@ -118,12 +118,12 @@ int main(int argc, char* argv[]) {
     // Create the mechanical system
     // ----------------------------
 
-    ChSystemDEM system;
+    ChSystemSMC system;
     system.Set_G_acc(ChVector<>(0.0, 0.0, -9.8));
 
     // Create the quarter-vehicle chassis
     // ----------------------------------
-    auto chassis = std::make_shared<ChBody>(ChMaterialSurfaceBase::DEM);
+    auto chassis = std::make_shared<ChBody>(ChMaterialSurface::SMC);
     system.AddBody(chassis);
     chassis->SetIdentifier(1);
     chassis->SetName("chassis");
@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
 
     // Create the wheel (rim)
     // ----------------------
-    auto wheel = std::make_shared<ChBody>(ChMaterialSurfaceBase::DEM);
+    auto wheel = std::make_shared<ChBody>(ChMaterialSurface::SMC);
     system.AddBody(wheel);
     wheel->SetIdentifier(2);
     wheel->SetName("wheel");

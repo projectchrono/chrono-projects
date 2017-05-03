@@ -3,8 +3,8 @@
 #--------------------------------------------------------------
 
 SET(DEMOS
-    test_VEH_M113_granular_DVI
-    test_VEH_M113_granular_DEM
+    test_VEH_M113_granular_NSC
+    test_VEH_M113_granular_SMC
 )
 
 #--------------------------------------------------------------

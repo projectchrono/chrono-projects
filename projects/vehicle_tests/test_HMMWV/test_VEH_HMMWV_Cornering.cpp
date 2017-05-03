@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
 
     // Create the HMMWV vehicle, set parameters, and initialize
     HMMWV_Full my_hmmwv;
-    my_hmmwv.SetContactMethod(ChMaterialSurfaceBase::DEM);
+    my_hmmwv.SetContactMethod(ChMaterialSurface::SMC);
     my_hmmwv.SetChassisFixed(false);
     my_hmmwv.SetInitPosition(ChCoordsys<>(initLoc));
     my_hmmwv.SetInitFwdVel(1.5 * target_speed);

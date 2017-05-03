@@ -26,7 +26,7 @@
 #include <array>
 
 #include "chrono/physics/ChLinkLock.h"
-#include "chrono/physics/ChSystemDEM.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono_fea/ChLoadContactSurfaceMesh.h"
@@ -93,7 +93,7 @@ class TireNode : public BaseNode {
 
     Type m_type;  ///< tire type (FEA, i.e. co-rotational not yet supported)
 
-    chrono::ChSystemDEM* m_system;  ///< containing system
+    chrono::ChSystemSMC* m_system;  ///< containing system
 
     std::shared_ptr<chrono::ChTimestepperHHT> m_integrator;  ///< HHT integrator object
 

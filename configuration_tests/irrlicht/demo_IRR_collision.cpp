@@ -17,7 +17,7 @@
 //   - use Irrlicht to display objects.
 // =============================================================================
 
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChParticlesClones.h"
 #include "chrono/assets/ChTexture.h"
@@ -42,7 +42,7 @@ void create_some_falling_items(ChSystem& mphysicalSystem, ISceneManager* msceneM
                                                               true,   // collide enable?
                                                               true);  // visualization?
         msphereBody->SetPos(ChVector<>(-5 + ChRandom() * 10, 4 + bi * 0.05, -5 + ChRandom() * 10));
-        msphereBody->GetMaterialSurface()->SetFriction(0.2f);
+        msphereBody->GetMaterialSurfaceNSC()->SetFriction(0.2f);
 
         mphysicalSystem.Add(msphereBody);
 
@@ -126,7 +126,7 @@ void create_some_falling_items(ChSystem& mphysicalSystem, ISceneManager* msceneM
                                                         true,      // collide enable?
                                                         true);     // visualization?
     rotatingBody->SetPos(ChVector<>(0, -1.6, 0));
-    rotatingBody->GetMaterialSurface()->SetFriction(0.4f);
+    rotatingBody->GetMaterialSurfaceNSC()->SetFriction(0.4f);
 
     mphysicalSystem.Add(rotatingBody);
 
@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
     SetChronoDataPath(CHRONO_DATA_DIR);
 
     // Create a ChronoENGINE physical system
-    ChSystem mphysicalSystem;
+    ChSystemNSC mphysicalSystem;
 
     // Create the Irrlicht visualization (open the Irrlicht device,
     // bind a simple user interface, etc. etc.)

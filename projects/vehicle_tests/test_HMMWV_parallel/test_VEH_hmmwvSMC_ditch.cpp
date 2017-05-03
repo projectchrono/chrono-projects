@@ -18,7 +18,7 @@
 // The vehicle model uses the utility class ChWheeledVehicleAssembly and is
 // based on JSON specification files from the Chrono data directory.
 //
-// Contact uses the DEM-P (penalty) formulation.
+// Contact uses the SMC (penalty) formulation.
 //
 // The global reference frame has Z up.
 // All units SI.
@@ -150,8 +150,8 @@ double tolerance = 0.1;
 int max_iteration_bilateral = 1000;
 
 // Contact force model
-ChSystemDEM::ContactForceModel contact_force_model = ChSystemDEM::ContactForceModel::Hooke;
-ChSystemDEM::TangentialDisplacementModel tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::OneStep;
+ChSystemSMC::ContactForceModel contact_force_model = ChSystemSMC::ContactForceModel::Hooke;
+ChSystemSMC::TangentialDisplacementModel tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::OneStep;
 
 // Periodically monitor maximum bilateral constraint violation
 bool monitor_bilaterals = false;
@@ -160,7 +160,7 @@ int bilateral_frame_interval = 100;
 // Output
 bool povray_output = false;
 
-const std::string out_dir = "../HMMWV_DEM_DITCH";
+const std::string out_dir = "../HMMWV_SMC_DITCH";
 const std::string pov_dir = out_dir + "/POVRAY";
 
 int out_fps = 60;
@@ -208,9 +208,9 @@ class MyCylindricalTire : public ChTireContactCallback {
 
         wheelBody->GetCollisionModel()->SetFamily(coll_fam_t);
 
-        wheelBody->GetMaterialSurfaceDEM()->SetFriction(mu_t);
-        wheelBody->GetMaterialSurfaceDEM()->SetYoungModulus(Y_t);
-        wheelBody->GetMaterialSurfaceDEM()->SetRestitution(cr_t);
+        wheelBody->GetMaterialSurfaceSMC()->SetFriction(mu_t);
+        wheelBody->GetMaterialSurfaceSMC()->SetYoungModulus(Y_t);
+        wheelBody->GetMaterialSurfaceSMC()->SetRestitution(cr_t);
  
         auto cyl = std::make_shared<ChCylinderShape>();
         cyl->GetCylinderGeometry().p1 = ChVector<>(0, 0.127, 0);
@@ -255,9 +255,9 @@ class MyLuggedTire : public ChTireContactCallback {
 
         coll_model->SetFamily(coll_fam_t);
 
-        wheelBody->GetMaterialSurfaceDEM()->SetFriction(mu_t);
-        wheelBody->GetMaterialSurfaceDEM()->SetYoungModulus(Y_t);
-        wheelBody->GetMaterialSurfaceDEM()->SetRestitution(cr_t);
+        wheelBody->GetMaterialSurfaceSMC()->SetFriction(mu_t);
+        wheelBody->GetMaterialSurfaceSMC()->SetYoungModulus(Y_t);
+        wheelBody->GetMaterialSurfaceSMC()->SetRestitution(cr_t);
     }
 
   private:
@@ -318,16 +318,16 @@ void AdjustGroundGeometry(std::shared_ptr<ChBody> ground, double platform_height
 }
 
 void CreatePlatform(ChSystem* system, double platform_height) {
-    auto platform = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+    auto platform = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     platform->SetIdentifier(-2);
     platform->SetMass(1000);
     platform->SetBodyFixed(true);
     platform->SetCollide(true);
 
-    platform->GetMaterialSurfaceDEM()->SetFriction(mu_g);
-    platform->GetMaterialSurfaceDEM()->SetYoungModulus(Y_g);
-    platform->GetMaterialSurfaceDEM()->SetRestitution(cr_g);
-    platform->GetMaterialSurfaceDEM()->SetAdhesion(cohesion_g);
+    platform->GetMaterialSurfaceSMC()->SetFriction(mu_g);
+    platform->GetMaterialSurfaceSMC()->SetYoungModulus(Y_g);
+    platform->GetMaterialSurfaceSMC()->SetRestitution(cr_g);
+    platform->GetMaterialSurfaceSMC()->SetAdhesion(cohesion_g);
 
     platform->GetCollisionModel()->ClearModel();
 
@@ -378,7 +378,7 @@ void CreateVehicleAssembly(ChSystem* system, double vertical_offset) {
 
 int CreateParticles(ChSystem* system) {
     // Create a material
-    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
+    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
@@ -443,7 +443,7 @@ int main(int argc, char* argv[]) {
     // Create system.
     // --------------
 
-    ChSystemParallelDEM* system = new ChSystemParallelDEM();
+    ChSystemParallelSMC* system = new ChSystemParallelSMC();
 
     system->Set_G_acc(ChVector<>(0, 0, -9.81));
 
@@ -475,7 +475,7 @@ int main(int argc, char* argv[]) {
     system->GetSettings()->solver.tolerance = tolerance;
     system->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
 
-    system->GetSettings()->solver.adhesion_force_model = ChSystemDEM::AdhesionForceModel::Constant;
+    system->GetSettings()->solver.adhesion_force_model = ChSystemSMC::AdhesionForceModel::Constant;
     system->GetSettings()->solver.contact_force_model = contact_force_model;
     system->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 
@@ -487,16 +487,16 @@ int main(int argc, char* argv[]) {
     // -------------------
 
     // Ground body
-    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     ground->SetIdentifier(-1);
     ground->SetMass(1000);
     ground->SetBodyFixed(true);
     ground->SetCollide(true);
 
-    ground->GetMaterialSurfaceDEM()->SetFriction(mu_g);
-    ground->GetMaterialSurfaceDEM()->SetYoungModulus(Y_g);
-    ground->GetMaterialSurfaceDEM()->SetRestitution(cr_g);
-    ground->GetMaterialSurfaceDEM()->SetAdhesion(cohesion_g);
+    ground->GetMaterialSurfaceSMC()->SetFriction(mu_g);
+    ground->GetMaterialSurfaceSMC()->SetYoungModulus(Y_g);
+    ground->GetMaterialSurfaceSMC()->SetRestitution(cr_g);
+    ground->GetMaterialSurfaceSMC()->SetAdhesion(cohesion_g);
 
     CreateGroundGeometry(ground);
 
@@ -521,7 +521,7 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_OPENGL
     // Initialize OpenGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.Initialize(1280, 720, "HMMWV ditch (DEM contact)", system);
+    gl_window.Initialize(1280, 720, "HMMWV ditch (SMC contact)", system);
     gl_window.SetCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
     gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif

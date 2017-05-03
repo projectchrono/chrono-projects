@@ -12,7 +12,7 @@
 #include <cmath>
 
 #include "chrono/solver/ChSolverMINRES.h"
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono_irrlicht/ChIrrApp.h"
 
 using namespace chrono;
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
     // Create the system
     // -----------------
 
-    ChSystem system;
+    ChSystemNSC system;
 
     system.Set_G_acc(ChVector<>(0, gravity, 0));
 

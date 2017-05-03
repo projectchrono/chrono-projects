@@ -11,7 +11,7 @@
 
 SET(DEMOS
     demo_VEH_hmmwv
-    demo_VEH_hmmwvDEM
+    demo_VEH_hmmwvSMC
 )
 
 #--------------------------------------------------------------

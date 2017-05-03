@@ -4,7 +4,7 @@
 #include "chrono/ChConfig.h"
 #include "chrono/core/ChLinearAlgebra.h"
 #include "chrono/core/ChLog.h"
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/timestepper/ChTimestepper.h"
 
 #ifdef CHRONO_MKL
@@ -375,7 +375,7 @@ void RigidPendulums() {
     bool step_control = true;
     bool modified_Newton = true;
 
-    ChSystem system;
+    ChSystemNSC system;
     system.Set_G_acc(ChVector<>(0, -g, 0));
 
     // Bodies

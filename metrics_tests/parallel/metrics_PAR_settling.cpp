@@ -90,7 +90,7 @@ class PARSettlingTest : public BaseTest {
   public:
     PARSettlingTest(const std::string& testName,
                     const std::string& testProjectName,
-                    ChMaterialSurfaceBase::ContactMethod method,
+                    ChMaterialSurface::ContactMethod method,
                     int num_threads)
         : BaseTest(testName, testProjectName), m_method(method), m_execTime(0), m_num_threads(num_threads) {}
 
@@ -101,7 +101,7 @@ class PARSettlingTest : public BaseTest {
     virtual double getExecutionTime() const override { return m_execTime; }
 
   private:
-    ChMaterialSurfaceBase::ContactMethod m_method;
+    ChMaterialSurface::ContactMethod m_method;
     double m_execTime;
     int m_num_threads;
 };
@@ -160,19 +160,19 @@ bool PARSettlingTest::execute() {
     double time_step;
 
     switch (m_method) {
-        case ChMaterialSurfaceBase::DEM: {
+        case ChMaterialSurface::SMC: {
             time_step = 1e-4;
-            ChSystemParallelDEM* sys = new ChSystemParallelDEM;
-            sys->GetSettings()->solver.contact_force_model = ChSystemDEM::Hooke;
-            sys->GetSettings()->solver.tangential_displ_mode = ChSystemDEM::TangentialDisplacementModel::OneStep;
+            ChSystemParallelSMC* sys = new ChSystemParallelSMC;
+            sys->GetSettings()->solver.contact_force_model = ChSystemSMC::Hooke;
+            sys->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::OneStep;
             sys->GetSettings()->solver.use_material_properties = use_mat_properties;
             system = sys;
 
             break;
         }
-        case ChMaterialSurfaceBase::DVI: {
+        case ChMaterialSurface::NSC: {
             time_step = 1e-3;
-            ChSystemParallelDVI* sys = new ChSystemParallelDVI;
+            ChSystemParallelNSC* sys = new ChSystemParallelNSC;
             sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
             sys->GetSettings()->solver.max_iteration_normal = 0;
             sys->GetSettings()->solver.max_iteration_sliding = 200;
@@ -210,11 +210,11 @@ bool PARSettlingTest::execute() {
     // ---------------------
 
     // Create contact material for terrain
-    std::shared_ptr<ChMaterialSurfaceBase> material_terrain;
+    std::shared_ptr<ChMaterialSurface> material_terrain;
 
     switch (m_method) {
-        case ChMaterialSurfaceBase::DEM: {
-            auto mat_ter = std::make_shared<ChMaterialSurfaceDEM>();
+        case ChMaterialSurface::SMC: {
+            auto mat_ter = std::make_shared<ChMaterialSurfaceSMC>();
             mat_ter->SetFriction(friction_terrain);
             mat_ter->SetRestitution(restitution_terrain);
             mat_ter->SetYoungModulus(Y_terrain);
@@ -229,8 +229,8 @@ bool PARSettlingTest::execute() {
 
             break;
         }
-        case ChMaterialSurfaceBase::DVI: {
-            auto mat_ter = std::make_shared<ChMaterialSurface>();
+        case ChMaterialSurface::NSC: {
+            auto mat_ter = std::make_shared<ChMaterialSurfaceNSC>();
             mat_ter->SetFriction(friction_terrain);
             mat_ter->SetRestitution(restitution_terrain);
 
@@ -377,10 +377,10 @@ int main(int argc, char** argv) {
 
     bool passed = true;
 
-    PARSettlingTest testDEM2("metrics_PAR_settling_DEM_2", "Chrono::Parallel", ChMaterialSurfaceBase::DEM, 2);
-    PARSettlingTest testDEM4("metrics_PAR_settling_DEM_4", "Chrono::Parallel", ChMaterialSurfaceBase::DEM, 4);
-    PARSettlingTest testDVI2("metrics_PAR_settling_DVI_2", "Chrono::Parallel", ChMaterialSurfaceBase::DVI, 2);
-    PARSettlingTest testDVI4("metrics_PAR_settling_DVI_4", "Chrono::Parallel", ChMaterialSurfaceBase::DVI, 4);
+    PARSettlingTest testDEM2("metrics_PAR_settling_DEM_2", "Chrono::Parallel", ChMaterialSurface::SMC, 2);
+    PARSettlingTest testDEM4("metrics_PAR_settling_DEM_4", "Chrono::Parallel", ChMaterialSurface::SMC, 4);
+    PARSettlingTest testDVI2("metrics_PAR_settling_DVI_2", "Chrono::Parallel", ChMaterialSurface::NSC, 2);
+    PARSettlingTest testDVI4("metrics_PAR_settling_DVI_4", "Chrono::Parallel", ChMaterialSurface::NSC, 4);
 
     testDEM2.setOutDir(out_dir);
     testDEM2.setVerbose(true);

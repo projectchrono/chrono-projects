@@ -18,7 +18,7 @@
 // The vehicle model uses the utility class ChWheeledVehicleAssembly and is
 // based on JSON specification files from the Chrono data directory.
 //
-// Contact uses the DEM-C (complementarity) formulation.
+// Contact uses the NSC (complementarity) formulation.
 //
 // The global reference frame has Z up.
 // All units SI.
@@ -194,7 +194,7 @@ class MyCylindricalTire : public ChTireContactCallback {
         wheelBody->GetCollisionModel()->AddCylinder(0.46, 0.46, 0.127);
         wheelBody->GetCollisionModel()->BuildModel();
 
-        wheelBody->GetMaterialSurface()->SetFriction(mu_t);
+        wheelBody->GetMaterialSurfaceNSC()->SetFriction(mu_t);
 
         auto cyl = std::make_shared<ChCylinderShape>();
         cyl->GetCylinderGeometry().p1 = ChVector<>(0, 0.127, 0);
@@ -217,7 +217,7 @@ public:
         wheelBody->GetCollisionModel()->AddTriangleMesh(trimesh, false, false, ChVector<>(0), ChMatrix33<>(1), 0.01);
         wheelBody->GetCollisionModel()->BuildModel();
 
-        wheelBody->GetMaterialSurface()->SetFriction(mu_t);
+        wheelBody->GetMaterialSurfaceNSC()->SetFriction(mu_t);
 
         auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
         trimesh_shape->SetMesh(trimesh);
@@ -258,7 +258,7 @@ class MyLuggedTire : public ChTireContactCallback {
 
         coll_model->BuildModel();
 
-        wheelBody->GetMaterialSurface()->SetFriction(mu_t);
+        wheelBody->GetMaterialSurfaceNSC()->SetFriction(mu_t);
     }
 
   private:
@@ -292,7 +292,7 @@ class MyLuggedTire_vis : public ChTireContactCallback {
         utils::AddCylinderGeometry(wheelBody.get(), 0.223, 0.126);
         wheelBody->GetCollisionModel()->BuildModel();
 
-        wheelBody->GetMaterialSurface()->SetFriction(mu_t);
+        wheelBody->GetMaterialSurfaceNSC()->SetFriction(mu_t);
     }
 
   private:
@@ -304,7 +304,7 @@ class MyLuggedTire_vis : public ChTireContactCallback {
 
 double CreateParticles(ChSystem* system) {
     // Create a material
-    auto mat_g = std::make_shared<ChMaterialSurface>();
+    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 
     // Create a particle generator and a mixture entirely made out of spheres
@@ -358,7 +358,7 @@ int main(int argc, char* argv[]) {
     // Create system.
     // --------------
 
-    ChSystemParallelDVI* system = new ChSystemParallelDVI();
+    ChSystemParallelNSC* system = new ChSystemParallelNSC();
 
     system->Set_G_acc(ChVector<>(0, 0, -9.81));
 
@@ -413,7 +413,7 @@ int main(int argc, char* argv[]) {
     ground->SetBodyFixed(true);
     ground->SetCollide(true);
 
-    ground->GetMaterialSurface()->SetFriction(mu_g);
+    ground->GetMaterialSurfaceNSC()->SetFriction(mu_g);
 
     ground->GetCollisionModel()->ClearModel();
 
@@ -502,7 +502,7 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_OPENGL
     // Initialize OpenGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.Initialize(1280, 720, "HMMWV (DVI contact)", system);
+    gl_window.Initialize(1280, 720, "HMMWV (NSC contact)", system);
     gl_window.SetCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
     gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif

@@ -42,7 +42,7 @@
 using namespace chrono;
 using namespace chrono::collision;
 
-const char* out_folder = "../MIXER_DEM/POVRAY";
+const char* out_folder = "../MIXER_SMC/POVRAY";
 
 // -----------------------------------------------------------------------------
 // Generate postprocessing output with current system state.
@@ -59,19 +59,19 @@ void OutputData(ChSystemParallel* sys, int out_frame, double time) {
 // blade attached through a revolute joint to ground. The mixer is constrained
 // to rotate at constant angular velocity.
 // -----------------------------------------------------------------------------
-void AddContainer(ChSystemParallelDEM* sys) {
+void AddContainer(ChSystemParallelSMC* sys) {
     // IDs for the two bodies
     int binId = -200;
     int mixerId = -201;
 
     // Create a common material
-    auto mat = std::make_shared<ChMaterialSurfaceDEM>();
+    auto mat = std::make_shared<ChMaterialSurfaceSMC>();
     mat->SetYoungModulus(2e5f);
     mat->SetFriction(0.4f);
     mat->SetRestitution(0.1f);
 
     // Create the containing bin (2 x 2 x 1)
-    auto bin = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+    auto bin = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     bin->SetMaterialSurface(mat);
     bin->SetIdentifier(binId);
     bin->SetMass(1);
@@ -96,7 +96,7 @@ void AddContainer(ChSystemParallelDEM* sys) {
     sys->AddBody(bin);
 
     // The rotating mixer body (1.6 x 0.2 x 0.4)
-    auto mixer = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+    auto mixer = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     mixer->SetMaterialSurface(mat);
     mixer->SetIdentifier(mixerId);
     mixer->SetMass(10.0);
@@ -128,9 +128,9 @@ void AddContainer(ChSystemParallelDEM* sys) {
 // -----------------------------------------------------------------------------
 // Create the falling spherical objects in a unfiorm rectangular grid.
 // -----------------------------------------------------------------------------
-void AddFallingBalls(ChSystemParallelDEM* sys) {
+void AddFallingBalls(ChSystemParallelSMC* sys) {
     // Common material
-    auto ballMat = std::make_shared<ChMaterialSurfaceDEM>();
+    auto ballMat = std::make_shared<ChMaterialSurfaceSMC>();
     ballMat->SetYoungModulus(2e5f);
     ballMat->SetFriction(0.4f);
     ballMat->SetRestitution(0.1f);
@@ -145,7 +145,7 @@ void AddFallingBalls(ChSystemParallelDEM* sys) {
         for (int iy = -2; iy < 3; iy++) {
             ChVector<> pos(0.4 * ix, 0.4 * iy, 1);
 
-            auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+            auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
             ball->SetMaterialSurface(ballMat);
 
             ball->SetIdentifier(ballId++);
@@ -186,7 +186,7 @@ int main(int argc, char* argv[]) {
     // Create system
     // -------------
 
-    ChSystemParallelDEM msystem;
+    ChSystemParallelSMC msystem;
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();
@@ -219,7 +219,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef CHRONO_OPENGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.Initialize(1280, 720, "mixerDEM", &msystem);
+    gl_window.Initialize(1280, 720, "mixerSMC", &msystem);
     gl_window.SetCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
 
     // Uncomment the following two lines for the OpenGL manager to automatically

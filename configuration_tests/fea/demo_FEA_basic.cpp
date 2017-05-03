@@ -15,7 +15,7 @@
 // ChronoFEA demo program for basic FEA functionality
 // =============================================================================
 
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/solver/ChSolverMINRES.h"
 
 #include "chrono_fea/ChElementSpring.h"
@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
     GetLog() << "LINEAR hexahedral element FEA  \n\n";
 
     // The physical system: it contains all physical objects.
-    ChSystem my_system;
+    ChSystemNSC my_system;
 
     // Create a mesh, that is a container for groups
     // of elements and their referenced nodes.

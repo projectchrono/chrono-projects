@@ -44,8 +44,8 @@ using std::flush;
 // Problem setup
 // -----------------------------------------------------------------------------
 
-// Comment the following line to use DVI contact
-#define USE_DEM
+// Comment the following line to use NSC contact
+#define USE_SMC
 
 // Simulation phase
 enum ProblemType {
@@ -69,7 +69,7 @@ double time_settling = 5;
 double time_dropping = 2;
 
 // Solver parameters
-#ifdef USE_DEM
+#ifdef USE_SMC
 double time_step = 1e-4;
 int max_iteration = 20;
 #else
@@ -81,10 +81,10 @@ float contact_recovery_speed = 0.1;
 #endif
 
 // Output
-#ifdef USE_DEM
-const std::string out_dir = "../SOILBIN_DEM";
+#ifdef USE_SMC
+const std::string out_dir = "../SOILBIN_SMC";
 #else
-const std::string out_dir = "../SOILBIN_DVI";
+const std::string out_dir = "../SOILBIN_NSC";
 #endif
 const std::string pov_dir = out_dir + "/POVRAY";
 const std::string checkpoint_file = out_dir + "/settled.dat";
@@ -124,15 +124,15 @@ void CreateContainer(ChSystemParallel* system) {
     int id_c = -200;
     double hThickness = 0.1;
 
-#ifdef USE_DEM
-    auto mat_c = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_c = std::make_shared<ChMaterialSurfaceSMC>();
     mat_c->SetYoungModulus(2e6f);
     mat_c->SetFriction(0.4f);
     mat_c->SetRestitution(0.1f);
 
     utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 #else
-    auto mat_c = std::make_shared<ChMaterialSurface>();
+    auto mat_c = std::make_shared<ChMaterialSurfaceNSC>();
     mat_c->SetFriction(0.4f);
 
     utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
@@ -145,13 +145,13 @@ void CreateContainer(ChSystemParallel* system) {
 // =============================================================================
 void CreateParticles(ChSystemParallel* system) {
 // Create a material for the ball mixture.
-#ifdef USE_DEM
-    auto mat_g = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(1e8f);
     mat_g->SetFriction(0.4f);
     mat_g->SetRestitution(0.1f);
 #else
-    auto mat_g = std::make_shared<ChMaterialSurface>();
+    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(0.4f);
 #endif
 
@@ -188,13 +188,13 @@ void CreateObject(ChSystemParallel* system, double z) {
 // Create a material for the falling object.
 // -----------------------------------------
 
-#ifdef USE_DEM
-    auto mat_o = std::make_shared<ChMaterialSurfaceDEM>();
+#ifdef USE_SMC
+    auto mat_o = std::make_shared<ChMaterialSurfaceSMC>();
     mat_o->SetYoungModulus(1e8f);
     mat_o->SetFriction(0.4f);
     mat_o->SetRestitution(0.1f);
 #else
-    auto mat_o = std::make_shared<ChMaterialSurface>();
+    auto mat_o = std::make_shared<ChMaterialSurfaceNSC>();
     mat_o->SetFriction(0.4f);
 #endif
 
@@ -202,8 +202,8 @@ void CreateObject(ChSystemParallel* system, double z) {
 // Create the falling object.
 // --------------------------
 
-#ifdef USE_DEM
-    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurfaceBase::DEM);
+#ifdef USE_SMC
+    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     obj->SetMaterialSurface(mat_o);
 #else
     auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
@@ -338,12 +338,12 @@ int main(int argc, char* argv[]) {
 // Create system.
 // --------------
 
-#ifdef USE_DEM
-    cout << "Create DEM system" << endl;
-    ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
+#ifdef USE_SMC
+    cout << "Create SMC system" << endl;
+    ChSystemParallelSMC* msystem = new ChSystemParallelSMC();
 #else
-    cout << "Create DVI system" << endl;
-    ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
+    cout << "Create NSC system" << endl;
+    ChSystemParallelNSC* msystem = new ChSystemParallelNSC();
 #endif
 
     msystem->Set_G_acc(ChVector<>(0, 0, -9.81));
@@ -365,7 +365,7 @@ int main(int argc, char* argv[]) {
 
     msystem->GetSettings()->solver.tolerance = 1e-3;
 
-#ifdef USE_DEM
+#ifdef USE_SMC
     msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
 #else
     msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;

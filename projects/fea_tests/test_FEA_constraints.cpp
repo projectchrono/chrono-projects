@@ -21,7 +21,7 @@
 
 #include "chrono/core/ChMathematics.h"
 #include "chrono/physics/ChLoadContainer.h"
-#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/solver/ChSolverMINRES.h"
 #include "chrono/timestepper/ChTimestepper.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -61,7 +61,7 @@ void test_beam(const std::string& name,  /// test name
     std::cout << "Constrain direction? " << constrain_dir << std::endl;
 
     // Create the system
-    ChSystem my_system;
+    ChSystemNSC my_system;
     double g = 10;
     my_system.Set_G_acc(ChVector<>(0, 0, -g));
 

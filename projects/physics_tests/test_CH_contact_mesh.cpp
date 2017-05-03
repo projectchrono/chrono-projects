@@ -17,7 +17,8 @@
 // =============================================================================
 
 #include "chrono/ChConfig.h"
-#include "chrono/physics/ChSystemDEM.h"
+#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/physics/ChSystemSMC.h"
 
 #include "chrono_irrlicht/ChIrrApp.h"
 
@@ -42,7 +43,7 @@ int main(int argc, char* argv[]) {
     // ---------------------------
     // Contact material properties
     // ---------------------------
-    ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::DEM;
+    ChMaterialSurface::ContactMethod contact_method = ChMaterialSurface::SMC;
     bool use_mat_properties = true;
 
     float object_friction = 0.9f;
@@ -92,11 +93,11 @@ int main(int argc, char* argv[]) {
     ChSystem* system;
 
     switch (contact_method) {
-        case ChMaterialSurfaceBase::DVI:
-            system = new ChSystem();
+        case ChMaterialSurface::NSC:
+            system = new ChSystemNSC();
             break;
-        case ChMaterialSurfaceBase::DEM:
-            system = new ChSystemDEM(use_mat_properties);
+        case ChMaterialSurface::SMC:
+            system = new ChSystemSMC(use_mat_properties);
             break;
     }
 
@@ -130,19 +131,19 @@ int main(int argc, char* argv[]) {
     object->SetBodyFixed(false);
 
     switch (object->GetContactMethod()) {
-        case ChMaterialSurfaceBase::DVI:
-            object->GetMaterialSurface()->SetFriction(object_friction);
-            object->GetMaterialSurface()->SetRestitution(object_restitution);
+        case ChMaterialSurface::NSC:
+            object->GetMaterialSurfaceNSC()->SetFriction(object_friction);
+            object->GetMaterialSurfaceNSC()->SetRestitution(object_restitution);
             break;
-        case ChMaterialSurfaceBase::DEM:
-            object->GetMaterialSurfaceDEM()->SetFriction(object_friction);
-            object->GetMaterialSurfaceDEM()->SetRestitution(object_restitution);
-            object->GetMaterialSurfaceDEM()->SetYoungModulus(object_young_modulus);
-            object->GetMaterialSurfaceDEM()->SetPoissonRatio(object_poisson_ratio);
-            object->GetMaterialSurfaceDEM()->SetKn(object_kn);
-            object->GetMaterialSurfaceDEM()->SetGn(object_gn);
-            object->GetMaterialSurfaceDEM()->SetKt(object_kt);
-            object->GetMaterialSurfaceDEM()->SetGt(object_gt);
+        case ChMaterialSurface::SMC:
+            object->GetMaterialSurfaceSMC()->SetFriction(object_friction);
+            object->GetMaterialSurfaceSMC()->SetRestitution(object_restitution);
+            object->GetMaterialSurfaceSMC()->SetYoungModulus(object_young_modulus);
+            object->GetMaterialSurfaceSMC()->SetPoissonRatio(object_poisson_ratio);
+            object->GetMaterialSurfaceSMC()->SetKn(object_kn);
+            object->GetMaterialSurfaceSMC()->SetGn(object_gn);
+            object->GetMaterialSurfaceSMC()->SetKt(object_kt);
+            object->GetMaterialSurfaceSMC()->SetGt(object_gt);
             break;
     }
 
@@ -173,19 +174,19 @@ int main(int argc, char* argv[]) {
     ground->SetBodyFixed(true);
 
     switch (object->GetContactMethod()) {
-        case ChMaterialSurfaceBase::DVI:
-            ground->GetMaterialSurface()->SetFriction(ground_friction);
-            ground->GetMaterialSurface()->SetRestitution(ground_restitution);
+        case ChMaterialSurface::NSC:
+            ground->GetMaterialSurfaceNSC()->SetFriction(ground_friction);
+            ground->GetMaterialSurfaceNSC()->SetRestitution(ground_restitution);
             break;
-        case ChMaterialSurfaceBase::DEM:
-            ground->GetMaterialSurfaceDEM()->SetFriction(ground_friction);
-            ground->GetMaterialSurfaceDEM()->SetRestitution(ground_restitution);
-            ground->GetMaterialSurfaceDEM()->SetYoungModulus(ground_young_modulus);
-            ground->GetMaterialSurfaceDEM()->SetPoissonRatio(ground_poisson_ratio);
-            ground->GetMaterialSurfaceDEM()->SetKn(ground_kn);
-            ground->GetMaterialSurfaceDEM()->SetGn(ground_gn);
-            ground->GetMaterialSurfaceDEM()->SetKt(ground_kt);
-            ground->GetMaterialSurfaceDEM()->SetGt(ground_gt);
+        case ChMaterialSurface::SMC:
+            ground->GetMaterialSurfaceSMC()->SetFriction(ground_friction);
+            ground->GetMaterialSurfaceSMC()->SetRestitution(ground_restitution);
+            ground->GetMaterialSurfaceSMC()->SetYoungModulus(ground_young_modulus);
+            ground->GetMaterialSurfaceSMC()->SetPoissonRatio(ground_poisson_ratio);
+            ground->GetMaterialSurfaceSMC()->SetKn(ground_kn);
+            ground->GetMaterialSurfaceSMC()->SetGn(ground_gn);
+            ground->GetMaterialSurfaceSMC()->SetKt(ground_kt);
+            ground->GetMaterialSurfaceSMC()->SetGt(ground_gt);
             break;
     }
 
