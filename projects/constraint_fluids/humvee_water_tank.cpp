@@ -85,7 +85,7 @@ TireModelType tire_model = TireModelType::RIGID;
 ChVector<> trackPoint(0.0, 0.0, 1.75);
 
 // Contact method
-ChMaterialSurfaceBase::ContactMethod contact_method = ChMaterialSurfaceBase::DVI;
+ChMaterialSurface::ContactMethod contact_method = ChMaterialSurface::NSC;
 bool contact_vis = false;
 
 // Simulation step sizes
@@ -226,7 +226,7 @@ void static WriteVehicleData(hmmwv::HMMWV_Full& my_hmmwv,
 
 }
 
-void RemoveCollisionModel(ChSystemParallelDVI* system, ChCollisionModel* model) {
+void RemoveCollisionModel(ChSystemParallelNSC* system, ChCollisionModel* model) {
 	ChParallelDataManager* data_manager = system->data_manager;
 #if 1
 	ChCollisionModelParallel* pmodel = static_cast<ChCollisionModelParallel*>(model);
@@ -315,7 +315,7 @@ void RemoveCollisionModel(ChSystemParallelDVI* system, ChCollisionModel* model) 
 ChFluidContainer* fluid_container;
 
 
-void CreateFluid(ChSystemParallelDVI* system ) {
+void CreateFluid(ChSystemParallelNSC* system ) {
 	fluid_container  = new ChFluidContainer(system);
 	fluid_container->kernel_radius = fluid_r;
 	fluid_container->collision_envelope = 0;
@@ -358,7 +358,7 @@ void CreateFluid(ChSystemParallelDVI* system ) {
 }
 std::shared_ptr<ChBody> bottom_plate;
 // =============================================================================
-void CreateBase(ChSystemParallelDVI* system) {
+void CreateBase(ChSystemParallelNSC* system) {
 
 	bottom_plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
 	auto material = std::make_shared<ChMaterialSurface>();
@@ -403,7 +403,7 @@ void CreateBase(ChSystemParallelDVI* system) {
 }
 
 
-void CreateGravel(ChSystemParallelDVI* system) {
+void CreateGravel(ChSystemParallelNSC* system) {
 	auto mat_g = std::make_shared<ChMaterialSurface>();
 	mat_g->SetFriction(mu_g);
 
@@ -446,7 +446,7 @@ int main(int argc, char* argv[]) {
 	// --------------
 	// Create systems
 	// --------------
-	ChSystemParallelDVI* system = new ChSystemParallelDVI();
+	ChSystemParallelNSC* system = new ChSystemParallelNSC();
 	system->Set_G_acc(ChVector<>(0, 0, -9.81));
 
 	// ---------------------
