@@ -37,7 +37,7 @@ endif()
 
 find_package(Chrono
              COMPONENTS Vehicle Parallel FEA
-             OPTIONAL_COMPONENTS MKL OpenGL
+             OPTIONAL_COMPONENTS MKL OpenGL Irrlicht
              CONFIG
 )
 
@@ -81,6 +81,7 @@ set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 
 message(STATUS "Programs...")
 
+add_subdirectory(test_FEA_cosimulation)
 add_subdirectory(test_HMMWV_cosimulation)
 add_subdirectory(test_tireRig_cosimulation)
 
