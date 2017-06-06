@@ -10,15 +10,20 @@
 
 set(TESTS
     test_FEA_shellANCF
-    test_FEA_4HumveeTires
     test_FEA_tireCorotational
     test_FEA_tireANCF
     test_FEA_constraints
 )
 
 set(TESTS_MKL_IRR
+    test_FEA_4HumveeTires
     test_FEA_4HumveeTires_LuGre
     test_FEA_tireANCF_LuGre
+    test_FEA_abaqus_wheels
+)
+
+set(TESTS_MATLAB_IRR
+    test_FEA_miniature
 )
 
 #--------------------------------------------------------------
@@ -29,7 +34,7 @@ set(TESTS_MKL_IRR
 
 find_package(Chrono
              COMPONENTS FEA
-             OPTIONAL_COMPONENTS Irrlicht Postprocess MKL
+             OPTIONAL_COMPONENTS Irrlicht Postprocess MKL Matlab
              CONFIG
 )
 
@@ -44,6 +49,10 @@ endif()
 
 if(CHRONO_IRRLICHT_FOUND AND CHRONO_MKL_FOUND)
   list(APPEND TESTS ${TESTS_MKL_IRR})
+endif()
+
+if (CHRONO_IRRLICHT_FOUND AND CHRONO_MATLAB_FOUND)
+	list(APPEND TESTS ${TESTS_MATLAB_IRR})
 endif()
 
 #--------------------------------------------------------------
