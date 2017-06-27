@@ -22,7 +22,7 @@
 #include "chrono/core/ChMatrixDynamic.h"
 #include "chrono/core/ChLinkedListMatrix.h"
 #include "chrono/core/ChMapMatrix.h"
-#include "chrono/core/ChCSR3Matrix.h"
+#include "chrono/core/ChCSMatrix.h"
 
 using namespace chrono;
 using std::cout;
@@ -73,8 +73,8 @@ void timeSetElement() {
         // Insert non-zero elements in a CSR3 matrix
         // without using sparsity pattern lock
         // -----------------------------------------
-        cout << "ChCSR3Matrix" << endl;
-        ChCSR3Matrix B(n, n);
+        cout << "ChCSMatrix" << endl;
+        ChCSMatrix B(n, n);
 
         cout << "   First insertion: " << nnz << " values" << endl;
         timer.reset();
@@ -110,7 +110,7 @@ void timeSetElement() {
         // using sparsity pattern lock
         // -----------------------------------------
         cout << "ChCSR3Matrix" << endl;
-        ChCSR3Matrix B(n, n);
+        ChCSMatrix B(n, n);
 
         cout << "   First insertion: " << nnz << " values" << endl;
         timer.reset();
@@ -164,7 +164,7 @@ void timeSetElement() {
         cout << "      Time: " << timer() << endl;
 
 
-        ChCSR3Matrix B(n, n);
+        ChCSMatrix B(n, n);
         B.LoadSparsityPattern(SL);
 
         B.SetSparsityPatternLock(true);
