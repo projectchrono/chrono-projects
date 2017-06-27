@@ -68,7 +68,7 @@ std::ofstream simParams;
 // output directories and settings
 //----------------------------
 
-const std::string out_dir = "FSI_OUTPUT";  //"../FSI_OUTPUT";
+const std::string out_dir = "FSI_OUTPUT";
 const std::string pov_dir_fluid = out_dir + "/povFilesFluid";
 const std::string pov_dir_mbd = out_dir + "/povFilesHmmwv";
 bool povray_output = true;
@@ -114,15 +114,15 @@ void SetupParamsH(fsi::SimParams* paramsH,
     paramsH->rho0 = 1000;
     paramsH->markerMass = pow(paramsH->MULT_INITSPACE * paramsH->HSML, 3) * paramsH->rho0;
     paramsH->mu0 = .001;
-    paramsH->v_Max = 1;  // Arman, I changed it to 0.1 for vehicle. Check this
+    paramsH->v_Max = 1;
     paramsH->EPS_XSPH = .5f;
     paramsH->dT = 1e-3;
     paramsH->tFinal = 2;
     paramsH->timePause = 0;
-    paramsH->kdT = 5;  // I don't know what is kdT
+    paramsH->kdT = 5;
     paramsH->gammaBB = 0.5;
-    paramsH->binSize0;     // will be changed
-    paramsH->rigidRadius;  // will be changed
+    paramsH->binSize0;
+    paramsH->rigidRadius;
     paramsH->densityReinit = 0;
     paramsH->enableTweak = 1;
     paramsH->enableAggressiveTweak = 0;
@@ -132,51 +132,43 @@ void SetupParamsH(fsi::SimParams* paramsH,
     paramsH->cMin = fsi::mR3(-hdimX, -hdimY, -basinDepth - hthick);
     paramsH->cMax = fsi::mR3(hdimX, hdimY, basinDepth);
     //****************************************************************************************
-    // printf("a1  paramsH->cMax.x, y, z %f %f %f,  binSize %f\n",
-    // paramsH->cMax.x, paramsH->cMax.y, paramsH->cMax.z, 2 *
-    // paramsH->HSML);
-    int side0x = floor((paramsH->cMax.x - paramsH->cMin.x) / (2 * paramsH->HSML));
-    int side0y = floor((paramsH->cMax.y - paramsH->cMin.y) / (2 * paramsH->HSML));
-    int side0z = floor((paramsH->cMax.z - paramsH->cMin.z) / (2 * paramsH->HSML));
-
+    int3 side0 = mI3(floor((paramsH->cMax.x - paramsH->cMin.x) / (2 * paramsH->HSML)),
+                     floor((paramsH->cMax.y - paramsH->cMin.y) / (2 * paramsH->HSML)),
+                     floor((paramsH->cMax.z - paramsH->cMin.z) / (2 * paramsH->HSML)));
     fsi::Real3 binSize3 =
-        fsi::mR3((paramsH->cMax.x - paramsH->cMin.x) / side0x, (paramsH->cMax.y - paramsH->cMin.y) / side0y,
-                 (paramsH->cMax.z - paramsH->cMin.z) / side0z);
+        fsi::mR3((paramsH->cMax.x - paramsH->cMin.x) / side0.x, (paramsH->cMax.y - paramsH->cMin.y) / side0.y,
+                 (paramsH->cMax.z - paramsH->cMin.z) / side0.z);
     paramsH->binSize0 = (binSize3.x > binSize3.y) ? binSize3.x : binSize3.y;
-    //	paramsH->binSize0 = (paramsH->binSize0 > binSize3.z()) ? paramsH->binSize0
-    //: binSize3.z();
     paramsH->binSize0 = binSize3.x;  // for effect of distance. Periodic BC in x
-                                     // direction. we do not care about
-                                     // paramsH->cMax y and z.
-    paramsH->cMax = paramsH->cMin + paramsH->binSize0 * fsi::mR3(side0x, side0y, side0z);
+    // direction. we do not care about
+    // paramsH->cMax y and z.
+    paramsH->cMax = paramsH->cMin + paramsH->binSize0 * fsi::mR3(side0);
     paramsH->boxDims = paramsH->cMax - paramsH->cMin;
     //****************************************************************************************
     paramsH->cMinInit = fsi::mR3(-fluidInitDimX, paramsH->cMin.y, -basinDepth + 1.0 * paramsH->HSML);  // 3D channel
     paramsH->cMaxInit = fsi::mR3(fluidInitDimX, paramsH->cMax.y, paramsH->cMinInit.z + fluidHeight);
     //****************************************************************************************
     //*** initialize straight channel
-    paramsH->straightChannelBoundaryMin = paramsH->cMinInit;  // fsi::mR3(0, 0, 0);  // 3D channel
-    paramsH->straightChannelBoundaryMax = paramsH->cMaxInit;  // fsi::mR3(3, 2, 3) * paramsH->sizeScale;
+    paramsH->straightChannelBoundaryMin = paramsH->cMinInit;  // mR3(0, 0, 0);  // 3D channel
+    paramsH->straightChannelBoundaryMax = paramsH->cMaxInit;  // SmR3(3, 2, 3) * paramsH->sizeScale;
     //************************** modify pressure ***************************
     //		paramsH->deltaPress = paramsH->rho0 * paramsH->boxDims *
     // paramsH->bodyForce3;  //did not work as I expected
     paramsH->deltaPress = fsi::mR3(0);  // Wrong: 0.9 * paramsH->boxDims *
-                                        // paramsH->bodyForce3; // viscosity and
-                                        // boundary shape should play a roll
+    // paramsH->bodyForce3; // viscosity and
+    // boundary shape should play a roll
 
     // modify bin size stuff
-    //****************************** bin size adjustement and contact detection
-    // stuff *****************************
-    fsi::Real mBinSize = paramsH->binSize0;  // Best solution in that case may be
-                                             // to change cMax or cMin such that
-                                             // periodic
-                                             // sides be a multiple of binSize
+    //*************** bin size adjustment and contact detection *******************************
+    int3 SIDE = mI3(int((paramsH->cMax.x - paramsH->cMin.x) / paramsH->binSize0 + .1),
+                    int((paramsH->cMax.y - paramsH->cMin.y) / paramsH->binSize0 + .1),
+                    int((paramsH->cMax.z - paramsH->cMin.z) / paramsH->binSize0 + .1));
+    fsi::Real mBinSize = paramsH->binSize0;  // Best solution in that case may be to
+    // change cMax or cMin such that periodic
+    // sides be a multiple of binSize
     //**********************************************************************************************************
-    paramsH->gridSize = fsi::mI3(int((paramsH->cMax.x - paramsH->cMin.x) / paramsH->binSize0 + .1),
-                                 int((paramsH->cMax.y - paramsH->cMin.y) / paramsH->binSize0 + .1),
-                                 int((paramsH->cMax.z - paramsH->cMin.z) / paramsH->binSize0 + .1));
-    // paramsH->numCells = paramsH->gridSize.x() * paramsH->gridSize.y() *
-    // paramsH->gridSize.z();
+    paramsH->gridSize = SIDE;
+    // paramsH->numCells = SIDE.x * SIDE.y * SIDE.z;
     paramsH->worldOrigin = paramsH->cMin;
     paramsH->cellSize = fsi::mR3(mBinSize, mBinSize, mBinSize);
 
@@ -224,7 +216,6 @@ void SetupParamsH(fsi::SimParams* paramsH,
 //------------------------------------------------------------------
 // function to set some simulation settings from command line
 //------------------------------------------------------------------
-
 void SetArgumentsForMbdFromInput(int argc,
                                  char* argv[],
                                  int& threads,
@@ -257,7 +248,6 @@ void SetArgumentsForMbdFromInput(int argc,
 //------------------------------------------------------------------
 // function to set the solver setting for the
 //------------------------------------------------------------------
-
 void InitializeMbdPhysicalSystem(ChSystemParallelNSC& mphysicalSystem, ChVector<> gravity, int argc, char* argv[]) {
     // Desired number of OpenMP threads (will be clamped to maximum available)
     int threads = 1;
@@ -270,17 +260,10 @@ void InitializeMbdPhysicalSystem(ChSystemParallelNSC& mphysicalSystem, ChVector<
     int max_iteration_spinning = 0;
     int max_iteration_bilateral = 100;
 
-    // ----------------------
     // Set params from input
-    // ----------------------
-
     SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral,
                                 max_iteration_normal, max_iteration_spinning);
-
-    // ----------------------
     // Set number of threads.
-    // ----------------------
-
     //  omp_get_num_procs();
     int max_threads = omp_get_num_procs();
     if (threads > max_threads)
@@ -293,10 +276,7 @@ void InitializeMbdPhysicalSystem(ChSystemParallelNSC& mphysicalSystem, ChVector<
     mphysicalSystem.GetSettings()->min_threads = std::max(1, threads / 2);
     mphysicalSystem.GetSettings()->max_threads = int(3.0 * threads / 2);
 
-    // ---------------------
     // Print the rest of parameters
-    // ---------------------
-
     simParams << endl
               << " number of threads: " << threads << endl
               << " max_iteration_normal: " << max_iteration_normal << endl
@@ -304,11 +284,7 @@ void InitializeMbdPhysicalSystem(ChSystemParallelNSC& mphysicalSystem, ChVector<
               << " max_iteration_spinning: " << max_iteration_spinning << endl
               << " max_iteration_bilateral: " << max_iteration_bilateral << endl
               << endl;
-
-    // ---------------------
     // Edit mphysicalSystem settings.
-    // ---------------------
-
     double tolerance = 0.1;  // 1e-3;  // Arman, move it to paramsH
     // double collisionEnvelop = 0.04 * paramsH->HSML;
     mphysicalSystem.Set_G_acc(gravity);
@@ -320,10 +296,9 @@ void InitializeMbdPhysicalSystem(ChSystemParallelNSC& mphysicalSystem, ChVector<
     mphysicalSystem.GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;  // max_iteration / 3
     mphysicalSystem.GetSettings()->solver.use_full_inertia_tensor = true;
     mphysicalSystem.GetSettings()->solver.tolerance = tolerance;
-    mphysicalSystem.GetSettings()->solver.alpha = 0;  // Arman, find out what is this
+    mphysicalSystem.GetSettings()->solver.alpha = 0;
     mphysicalSystem.GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
     mphysicalSystem.ChangeSolverType(SolverType::APGD);
-
     mphysicalSystem.GetSettings()->collision.bins_per_axis = vec3(40, 40, 40);
 }
 
@@ -331,7 +306,6 @@ void InitializeMbdPhysicalSystem(ChSystemParallelNSC& mphysicalSystem, ChVector<
 // Create the objects of the MBD system. Rigid bodies, and if fsi, their
 // bce representation are created and added to the systems
 //------------------------------------------------------------------
-
 void CreateMbdPhysicalSystemObjects(ChSystemParallelNSC& mphysicalSystem,
                                     fsi::ChSystemFsi& myFsiSystem,
                                     fsi::SimParams* paramsH) {
@@ -348,9 +322,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelNSC& mphysicalSystem,
     ground->SetIdentifier(-1);
     ground->SetBodyFixed(true);
     ground->SetCollide(true);
-
     ground->SetMaterialSurface(mat_g);
-
     ground->GetCollisionModel()->ClearModel();
 
     // Bottom box
@@ -405,20 +377,14 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelNSC& mphysicalSystem,
 #if haveFluid
 
     // Add ground
-    // ---------------------
-
     // beginning third
     fsi::utils::AddBoxBce(myFsiSystem.GetDataManager(), paramsH, ground, pos1, rot1, size1);
-
     // end third
     fsi::utils::AddBoxBce(myFsiSystem.GetDataManager(), paramsH, ground, pos2, rot2, size2);
-
     // basin
     fsi::utils::AddBoxBce(myFsiSystem.GetDataManager(), paramsH, ground, pos3, rot3, size3);
-
     // slope 1
     fsi::utils::AddBoxBce(myFsiSystem.GetDataManager(), paramsH, ground, pos4, rot4, size4);
-
     // slope 2
     fsi::utils::AddBoxBce(myFsiSystem.GetDataManager(), paramsH, ground, pos5, rot5, size5);
 
@@ -435,13 +401,6 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelNSC& mphysicalSystem,
 
 #endif
 
-    // version 0, create one cylinder // note: rigid body initialization should
-    // come after boundary initialization
-
-    // **************************
-    // **** Test angular velocity
-    // **************************
-
     auto body = std::make_shared<ChBody>(std::make_shared<collision::ChCollisionModelParallel>());
     // body->SetIdentifier(-1);
     body->SetBodyFixed(false);
@@ -451,8 +410,6 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelNSC& mphysicalSystem,
     body->SetRot(Q_from_AngAxis(CH_C_PI / 3, VECT_Y) * Q_from_AngAxis(CH_C_PI / 6, VECT_X) *
                  Q_from_AngAxis(CH_C_PI / 6, VECT_Z));
     //    body->SetWvel_par(ChVector<>(0, 10, 0));  // Arman : note, SetW should
-    //    come after SetRot
-    //
     double sphereRad = 0.3;
     double volume = utils::CalcSphereVolume(sphereRad);
     ChVector<> gyration = utils::CalcSphereGyration(sphereRad).Get_Diag();
@@ -464,75 +421,9 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelNSC& mphysicalSystem,
     body->GetCollisionModel()->ClearModel();
     utils::AddSphereGeometry(body.get(), sphereRad);
     body->GetCollisionModel()->BuildModel();
-    //    // *** keep this: how to calculate the velocity of a marker lying on a
-    //    rigid body
-    //    //
-    //    ChVector<> pointRel = ChVector<>(0, 0, 1);
-    //    ChVector<> pointPar = pointRel + body->GetPos();
-    //    // method 1
-    //    ChVector<> l_point = body->Point_World2Body(pointPar);
-    //    ChVector<> velvel1 = body->RelPoint_AbsSpeed(l_point);
-    //    printf("\n\n\n\n\n\n\n\n\n ***********   velocity1  %f %f %f
-    //    \n\n\n\n\n\n\n ", velvel1.x(), velvel1.y(),
-    //    velvel1.z());
-    //
-    //    // method 2
-    //    ChVector<> posLoc = ChTransform<>::TransformParentToLocal(pointPar,
-    //    body->GetPos(), body->GetRot());
-    //    ChVector<> velvel2 = body->PointSpeedLocalToParent(posLoc);
-    //    printf("\n\n\n\n\n\n\n\n\n ***********   velocity 2 %f %f %f
-    //    \n\n\n\n\n\n\n ", velvel2.x(), velvel2.y(),
-    //    velvel2.z());
-    //
-    //    // method 3
-    //    ChVector<> velvel3 = body->GetPos_dt() + body->GetWvel_par() % pointRel;
-    //    printf("\n\n\n\n\n\n\n\n\n ***********   velocity3  %f %f %f
-    //    \n\n\n\n\n\n\n ", velvel3.x(), velvel3.y(),
-    //    velvel3.z());
-    //    //
 
     int numRigidObjects = mphysicalSystem.Get_bodylist()->size();
     mphysicalSystem.AddBody(body);
-
-    // extra objects
-    // -----------------------------------------
-    // Add extra collision body to test the collision shape
-    // -----------------------------------------
-    //
-    //  fsi::Real rad = 0.1;
-    //  // NOTE: mass properties and shapes are all for sphere
-    //  double volume = utils::CalcSphereVolume(rad);
-    //  ChVector<> gyration = utils::CalcSphereGyration(rad).Get_Diag();
-    //  double density = paramsH->rho0;
-    //  double mass = density * volume;
-    //  double muFriction = 0;
-    //
-    //
-    //  for (fsi::Real x = -4; x < 2; x += 0.25) {
-    //    for (fsi::Real y = -1; y < 1; y += 0.25) {
-    //      auto mball = std::make_shared<ChBody>(std::make_shared<collision::ChCollisionModelParallel>());
-    //      ChVector<> pos = ChVector<>(-8.5, .20, 3) + ChVector<>(x, y, 0);
-    //      mball->SetMaterialSurface(mat_g);
-    //      // body->SetIdentifier(fId);
-    //      mball->SetPos(pos);
-    //      mball->SetCollide(true);
-    //      mball->SetBodyFixed(false);
-    //      mball->SetMass(mass);
-    //      mball->SetInertiaXX(mass * gyration);
-    //
-    //      mball->GetCollisionModel()->ClearModel();
-    //      utils::AddSphereGeometry(mball.get(), rad);  // O
-    //       //
-    //       utils::AddEllipsoidGeometry(body.get(), size);
-    //       // X
-    //
-    //      mball->GetCollisionModel()->SetFamily(100);
-    //      mball->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(100);
-    //
-    //      mball->GetCollisionModel()->BuildModel();
-    //      mphysicalSystem.AddBody(mball);
-    //    }
-    //  }
 }
 
 //------------------------------------------------------------------
@@ -583,7 +474,6 @@ void SavePovFilesMBD(fsi::ChSystemFsi& myFsiSystem,
 // Print the simulation parameters: those pre-set and those set from
 // command line
 //------------------------------------------------------------------
-
 void printSimulationParameters(fsi::SimParams* paramsH) {
     simParams << " time_pause_fluid_external_force: " << paramsH->timePause << endl
               << " contact_recovery_speed: " << contact_recovery_speed << endl
@@ -598,22 +488,12 @@ int main(int argc, char* argv[]) {
     time_t rawtime;
     struct tm* timeinfo;
 
-    //(void) cudaSetDevice(0);
-
     time(&rawtime);
     timeinfo = localtime(&rawtime);
-
-    //****************************************************************************************
-    // Arman take care of this block.
-    // Set path to ChronoVehicle data files
-    //  vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
-    //  vehicle::SetDataPath("/home/arman/Repos/GitBeta/chrono/src/demos/data/");
-    //  SetChronoDataPath(CHRONO_DATA_DIR);
 
     // --------------------------
     // Create output directories.
     // --------------------------
-
     if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
         cout << "Error creating directory " << out_dir << endl;
         return 1;
@@ -641,8 +521,7 @@ int main(int argc, char* argv[]) {
 #if haveFluid
     mHaveFluid = true;
 #endif
-    // ***************************** Create Fluid
-    // ********************************************
+    // *********************************** Create Fluid **************************************
     ChSystemParallelNSC mphysicalSystem;
     fsi::ChSystemFsi myFsiSystem(&mphysicalSystem, mHaveFluid);
     ChVector<> CameraLocation = ChVector<>(0, -10, 0);
@@ -666,58 +545,42 @@ int main(int argc, char* argv[]) {
                                                    fsi::mR4(paramsH->rho0, paramsH->BASEPRES, paramsH->mu0, -1));
     }
 
-    int numPhases = myFsiSystem.GetDataManager()->fsiGeneralData.referenceArray.size();  // Arman TODO: either rely on
-                                                                                         // pointers, or stack
-                                                                                         // entirely, combination of
-                                                                                         // '.' and '->' is not good
+    int numPhases = myFsiSystem.GetDataManager()->fsiGeneralData.referenceArray.size();
     if (numPhases != 0) {
         std::cout << "Error! numPhases is wrong, thrown from main\n" << std::endl;
         std::cin.get();
         return -1;
     } else {
-        myFsiSystem.GetDataManager()->fsiGeneralData.referenceArray.push_back(
-            mI4(0, numPart, -1, -1));  // map fluid -1, Arman : this will later be
-                                       // removed, relying on finalize function and
-                                       // automatic sorting
-        myFsiSystem.GetDataManager()->fsiGeneralData.referenceArray.push_back(
-            mI4(numPart, numPart, 0, 0));  // Arman : delete later
+        myFsiSystem.GetDataManager()->fsiGeneralData.referenceArray.push_back(mI4(0, numPart, -1, -1));
+
+        myFsiSystem.GetDataManager()->fsiGeneralData.referenceArray.push_back(mI4(numPart, numPart, 0, 0));
     }
 #endif
 
-    // ***************************** Create Rigid
-    // ********************************************
-
+    // ***************************** Create Rigid ***************************************
     ChVector<> gravity = ChVector<>(paramsH->gravity.x, paramsH->gravity.y, paramsH->gravity.z);
-    InitializeMbdPhysicalSystem(mphysicalSystem, gravity, argc, argv);
 
-    // This needs to be called after fluid initialization because I am using
+    InitializeMbdPhysicalSystem(mphysicalSystem, gravity, argc, argv);
+    // This needs to be called after fluid initialization because we are using
     // "numObjects.numBoundaryMarkers" inside it
 
+    // Create the objects of the Chsystem (Solid phases) using something like this function
     CreateMbdPhysicalSystemObjects(mphysicalSystem, myFsiSystem, paramsH);
 
+    // You must call the finalize before you start the simulation
     myFsiSystem.Finalize();
 
-    // ***************************** Create Interface
-    // ********************************************
-
-    //    assert(posRadH.size() == numObjects.numAllMarkers && "(2) numObjects is
-    //    not set correctly");
+    // **************************** Create Interface *************************************
     if (myFsiSystem.GetDataManager()->sphMarkersH.posRadH.size() !=
         myFsiSystem.GetDataManager()->numObjects.numAllMarkers) {
         printf("\n\n\n\n Error! (2) numObjects is not set correctly \n\n\n\n");
         return -1;
     }
 
-    //*** Add sph data to the physics system
-
-    cout << " -- ChSystem size : " << mphysicalSystem.Get_bodylist()->size() << endl;
-
-    // ***************************** System Initialize
-    // ********************************************
-    myFsiSystem.InitializeChronoGraphics(CameraLocation, CameraLookAt);
-
+    // Add sph data to the physics system
+    cout << " -- System size : " << mphysicalSystem.Get_bodylist()->size() << endl;
     double mTime = 0;
-
+// ************************** System Initialize **************************************
 #ifdef CHRONO_FSI_USE_DOUBLE
     printf("Double Precision\n");
 #else
@@ -732,10 +595,10 @@ int main(int argc, char* argv[]) {
 #else
         myFsiSystem.DoStepDynamics_ChronoRK2();
 #endif
-
+        double frame_time = 1.0 / out_fps;
+        mTime += paramsH->dT;
         SavePovFilesMBD(myFsiSystem, mphysicalSystem, paramsH, tStep, mTime);
     }
-    //	ClearArraysH(posRadH, velMasH, rhoPresMuH, bodyIndex, referenceArray);
 
     return 0;
 }
