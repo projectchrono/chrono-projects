@@ -34,9 +34,24 @@ static const double rad2deg = 180 / CH_C_PI;
 const std::string pacParamFile = vehicle::GetDataFile("hmmwv/pactest.tir");
 
 // -----------------------------------------------------------------------------
-// Process the specified wheel state using two different ChPacejkaTire functions
+// Wrapper class to allow initialization of a ChPacejkaTire (abstract class)
+
+class PacejkaTire : public ChPacejkaTire {
+  public:
+    PacejkaTire(const std::string& name,              ///< [in] name of this tire
+                const std::string& pacTire_paramFile  ///< [in] name of the parameter file
+                )
+        : ChPacejkaTire(name, pacTire_paramFile) {}
+
+    // Mass and inertia not relevant here.
+    virtual double GetMass() const override { return 1.0; }
+    virtual ChVector<> GetInertia() const override { return ChVector<>(1, 1, 1); }
+};
+
 // -----------------------------------------------------------------------------
-void processState(std::shared_ptr<ChPacejkaTire> tire, const WheelState& state, const ChTerrain& terrain) {
+// Process the specified wheel state using two different PacejkaTire functions
+// -----------------------------------------------------------------------------
+void processState(std::shared_ptr<PacejkaTire> tire, const WheelState& state, const ChTerrain& terrain) {
     cout << "--------------------------------------------------" << endl;
     cout << "Position:     " << state.pos.x() << "  " << state.pos.y() << "  " << state.pos.z() << endl;
     cout << "Orientation:  " << state.rot.e0() << "  " << state.rot.e1() << "  " << state.rot.e2() << "  " << state.rot.e3()
@@ -69,7 +84,7 @@ int main(int argc, char* argv[]) {
 
     // Create a Pacejka tire and attach it to a dummy wheel body
     auto wheel = std::make_shared<ChBody>();
-    auto tire = std::make_shared<ChPacejkaTire>("TEST", pacParamFile);
+    auto tire = std::make_shared<PacejkaTire>("TEST", pacParamFile);
     tire->SetDrivenWheel(false);
     tire->Initialize(wheel, LEFT);
 

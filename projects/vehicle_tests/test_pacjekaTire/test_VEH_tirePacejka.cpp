@@ -37,6 +37,25 @@
 using namespace chrono;
 using namespace chrono::vehicle;
 
+// -----------------------------------------------------------------------------
+// Wrapper class to allow initialization of a ChPacejkaTire (abstract class)
+
+class PacejkaTire : public ChPacejkaTire {
+  public:
+    PacejkaTire(const std::string& name,               ///< [in] name of this tire
+                const std::string& pacTire_paramFile,  ///< [in] name of the parameter file
+                double Fz_override,                    ///< [in] prescribed vertical load
+                bool use_transient_slip = true         ///< [in] indicate if using transient slip model
+                )
+        : ChPacejkaTire(name, pacTire_paramFile, Fz_override, use_transient_slip) {}
+
+    // Mass and inertia not relevant here.
+    virtual double GetMass() const override { return 1.0; }
+    virtual ChVector<> GetInertia() const override { return ChVector<>(1, 1, 1); }
+};
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char* argv[]) {
     // Set path to Chrono and Chrono::Vehicle data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
@@ -72,10 +91,10 @@ int main(int argc, char* argv[]) {
     FlatTerrain flat_terrain(0);
 
     // Create the Pac tires, try to open param file and load empirical constants
-    ChPacejkaTire tire_long("LONGITUDINAL", pacParamFile, F_z, use_transient_slip);
-    ChPacejkaTire tire_lat("LATERAL", pacParamFile, F_z, use_transient_slip);
-    ChPacejkaTire tire_lat_gamma("LATERAL_GAMMA", pacParamFile, F_z, use_transient_slip);
-    ChPacejkaTire tire_combined("COMBINED", pacParamFile, F_z, use_transient_slip);
+    PacejkaTire tire_long("LONGITUDINAL", pacParamFile, F_z, use_transient_slip);
+    PacejkaTire tire_lat("LATERAL", pacParamFile, F_z, use_transient_slip);
+    PacejkaTire tire_lat_gamma("LATERAL_GAMMA", pacParamFile, F_z, use_transient_slip);
+    PacejkaTire tire_combined("COMBINED", pacParamFile, F_z, use_transient_slip);
 
     // Set all tires to be driven
     tire_long.SetDrivenWheel(true);
