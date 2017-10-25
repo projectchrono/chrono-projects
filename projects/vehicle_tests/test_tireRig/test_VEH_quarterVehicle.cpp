@@ -371,10 +371,10 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_FEA
     switch (tire_model) {
         case TireModelType::ANCF:
-            std::cout << "ANCF tire mass = " << std::static_pointer_cast<ChANCFTire>(tire)->GetMass() << std::endl;
+            std::cout << "ANCF tire mass = " << std::static_pointer_cast<ChANCFTire>(tire)->GetTireMass() << std::endl;
             break;
         case TireModelType::FEA:
-            std::cout << "FEA tire mass = " << std::static_pointer_cast<ChFEATire>(tire)->GetMass() << std::endl;
+            std::cout << "FEA tire mass = " << std::static_pointer_cast<ChFEATire>(tire)->GetTireMass() << std::endl;
             break;
     }
 #endif
