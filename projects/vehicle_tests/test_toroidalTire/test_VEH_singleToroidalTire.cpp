@@ -289,7 +289,7 @@ int main(int argc, char* argv[]) {
     // ----------------------
     MyContactReporter reporter(terrain->GetGroundBody());
     WheelState wheel_state;
-    TireForce tire_force;
+    TerrainForce tire_force;
 
     app.SetTimestep(step_size);
 

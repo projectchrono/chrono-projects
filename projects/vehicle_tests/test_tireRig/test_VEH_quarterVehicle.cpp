@@ -393,8 +393,8 @@ int main(int argc, char* argv[]) {
     // Perform the simulation
     // ----------------------
     WheelState wheel_state;
-    TireForce tire_force;
-    TireForce tire_force_cosim;
+    TerrainForce tire_force;
+    TerrainForce tire_force_cosim;
 
     app.SetTimestep(step_size);
 

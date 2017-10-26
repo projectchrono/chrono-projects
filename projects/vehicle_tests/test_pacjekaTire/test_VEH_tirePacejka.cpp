@@ -112,10 +112,10 @@ int main(int argc, char* argv[]) {
     tire_combined.Initialize(wheel, side);
 
     // record pacTire output for each of the 3 slip cases
-    TireForces long_forces(1);
-    TireForces lat_forces(1);
-    TireForces latGamma_forces(1);
-    TireForces combined_forces(1);
+    TerrainForces long_forces(1);
+    TerrainForces lat_forces(1);
+    TerrainForces latGamma_forces(1);
+    TerrainForces combined_forces(1);
 
     // update body state based on varying input variables to pacTire:
     // alpha, kappa and gamma

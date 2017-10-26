@@ -106,8 +106,8 @@ class VehicleNode : public BaseNode {
     chrono::vehicle::hmmwv::HMMWV_VehicleFull* m_vehicle;    ///< vehicle system
     chrono::vehicle::hmmwv::HMMWV_Powertrain* m_powertrain;  ///< powertrain system
 
-    int m_num_wheels;                           ///< number of vehicle wheels
-    chrono::vehicle::TireForces m_tire_forces;  ///< forces received from tire nodes
+    int m_num_wheels;                              ///< number of vehicle wheels
+    chrono::vehicle::TerrainForces m_tire_forces;  ///< forces received from tire nodes
 
     // Private methods
 

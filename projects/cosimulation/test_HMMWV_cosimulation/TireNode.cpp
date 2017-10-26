@@ -387,7 +387,7 @@ void TireNode::Synchronize(int step_number, double time) {
     // -------------------------------
 
     // Get tire force as applied to the rim
-    TireForce tire_force;
+    TerrainForce tire_force;
     m_tire_wrapper->GetTireForce(tire_force);
 
     // Send tire force to the vehicle node
@@ -552,11 +552,11 @@ void TireRigid::SetContactForces(std::shared_ptr<chrono::ChBody> rim,
 // Extract tire force on wheel (SEND to vehicle node)
 // -----------------------------------------------------------------------------
 
-void TireANCF::GetTireForce(chrono::vehicle::TireForce& tire_force) {
+void TireANCF::GetTireForce(chrono::vehicle::TerrainForce& tire_force) {
     tire_force = m_tire->GetTireForce(true);
 }
 
-void TireRigid::GetTireForce(chrono::vehicle::TireForce& tire_force) {
+void TireRigid::GetTireForce(chrono::vehicle::TerrainForce& tire_force) {
     tire_force = m_tire_force;
 }
 

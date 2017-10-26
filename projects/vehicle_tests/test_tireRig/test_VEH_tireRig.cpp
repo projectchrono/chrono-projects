@@ -868,8 +868,8 @@ int main() {
     // Simulation loop
     double simTime = 0;
     double outTime = 0;
-    TireForce tireforce;
-    TireForce tireforceprint;
+    TerrainForce tireforce;
+    TerrainForce tireforceprint;
     WheelState wheelstate;
 
     TireTestContactReporter my_reporter;

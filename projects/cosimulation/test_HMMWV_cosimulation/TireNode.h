@@ -152,7 +152,7 @@ class TireBase {
                                   const std::vector<chrono::ChVector<>>& vert_forces) = 0;
 
     /// Extract and return current tire forces on rim body (SEND to vehicle node).
-    virtual void GetTireForce(chrono::vehicle::TireForce& tire_force) = 0;
+    virtual void GetTireForce(chrono::vehicle::TerrainForce& tire_force) = 0;
 
     /// Callback invoked before taking a new step.
     virtual void OnAdvance() = 0;
@@ -193,7 +193,7 @@ class TireANCF : public TireBase {
                                   const std::vector<chrono::ChVector<>>& vert_pos,
                                   const std::vector<chrono::ChVector<>>& vert_forces) override;
 
-    virtual void GetTireForce(chrono::vehicle::TireForce& tire_force) override;
+    virtual void GetTireForce(chrono::vehicle::TerrainForce& tire_force) override;
 
     virtual void OnAdvance() override;
 
@@ -235,7 +235,7 @@ class TireRigid : public TireBase {
                                   const std::vector<chrono::ChVector<>>& vert_pos,
                                   const std::vector<chrono::ChVector<>>& vert_forces) override;
 
-    virtual void GetTireForce(chrono::vehicle::TireForce& tire_force) override;
+    virtual void GetTireForce(chrono::vehicle::TerrainForce& tire_force) override;
 
     virtual void OnAdvance() override {}
 
@@ -250,7 +250,7 @@ class TireRigid : public TireBase {
 
   private:
     std::shared_ptr<chrono::vehicle::ChRigidTire> m_tire;  ///< rigid tire
-    chrono::vehicle::TireForce m_tire_force;               ///< accumulated tire force
+    chrono::vehicle::TerrainForce m_tire_force;            ///< accumulated tire force
 
     std::vector<std::vector<int>> m_adjElements;  ///< list of neighboring elements for each mesh vertex
     std::vector<double> m_vertexArea;             ///< representative areas for each mesh vertex
