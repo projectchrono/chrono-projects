@@ -908,7 +908,7 @@ int main() {
         wheelstate.omega = wheel->GetWvel_loc().y();  // wheel angular speed about its rotation axis
         // Get tire forces
         tireforce = tire->GetTireForce();
-        tireforceprint = tire->GetTireForce(true);
+        tireforceprint = tire->ReportTireForce(terrain.get());
         // Synchronize tire subsystem
         tire->Synchronize(simTime, wheelstate, *terrain.get());
 

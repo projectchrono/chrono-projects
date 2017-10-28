@@ -553,7 +553,7 @@ void TireRigid::SetContactForces(std::shared_ptr<chrono::ChBody> rim,
 // -----------------------------------------------------------------------------
 
 void TireANCF::GetTireForce(chrono::vehicle::TerrainForce& tire_force) {
-    tire_force = m_tire->GetTireForce(true);
+    tire_force = m_tire->ReportTireForce(nullptr);
 }
 
 void TireRigid::GetTireForce(chrono::vehicle::TerrainForce& tire_force) {

@@ -389,10 +389,10 @@ int main(int argc, char* argv[]) {
                 csv << vehicle.GetShockLength(WheelID(1, LEFT));
                 csv << vehicle.GetShockLength(WheelID(1, RIGHT));
                 // tire normal forces
-                csv << tire_front_left.GetTireForce().force;
-                csv << tire_front_right.GetTireForce().force;
-                csv << tire_rear_left.GetTireForce().force;
-                csv << tire_rear_right.GetTireForce().force;
+                csv << tire_front_left.ReportTireForce(&terrain).force;
+                csv << tire_front_right.ReportTireForce(&terrain).force;
+                csv << tire_rear_left.ReportTireForce(&terrain).force;
+                csv << tire_rear_right.ReportTireForce(&terrain).force;
                 csv << std::endl;
 
                 //std::cout << "T = " << time << "s, NumIterations = " <<mystepper->GetNumIterations()<<std::endl;

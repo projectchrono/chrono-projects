@@ -394,7 +394,7 @@ int main(int argc, char* argv[]) {
     // ----------------------
     WheelState wheel_state;
     TerrainForce tire_force;
-    TerrainForce tire_force_cosim;
+    TerrainForce tire_force_report;
 
     app.SetTimestep(step_size);
 
@@ -441,11 +441,11 @@ int main(int argc, char* argv[]) {
         std::cout << "   torque: " << rT.x() << "  " << rT.y() << "  " << rT.z() << std::endl;
 
         // Report tire forces (as acting on the wheel body).
-        tire_force_cosim = tire->GetTireForce(true);
+        tire_force_report = tire->ReportTireForce(terrain.get());
         std::cout << "Tire force (at wheel center)" << std::endl;
-        std::cout << "   point:  " << tire_force_cosim.point.x() << "  " << tire_force_cosim.point.y() << "  " << tire_force_cosim.point.z() << std::endl;
-        std::cout << "   force:  " << tire_force_cosim.force.x() << "  " << tire_force_cosim.force.y() << "  " << tire_force_cosim.force.z() << std::endl;
-        std::cout << "   moment: " << tire_force_cosim.moment.x() << "  " << tire_force_cosim.moment.y() << "  " << tire_force_cosim.moment.z() << std::endl;
+        std::cout << "   point:  " << tire_force_report.point.x() << "  " << tire_force_report.point.y() << "  " << tire_force_report.point.z() << std::endl;
+        std::cout << "   force:  " << tire_force_report.force.x() << "  " << tire_force_report.force.y() << "  " << tire_force_report.force.z() << std::endl;
+        std::cout << "   moment: " << tire_force_report.moment.x() << "  " << tire_force_report.moment.y() << "  " << tire_force_report.moment.z() << std::endl;
 
         std::cout << std::endl;
     }
