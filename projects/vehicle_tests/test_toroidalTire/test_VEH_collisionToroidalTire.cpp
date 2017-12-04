@@ -123,8 +123,9 @@ class TireTestCollisionManager : public ChSystem::CustomCollisionCallback {
   public:
     TireTestCollisionManager(std::shared_ptr<fea::ChContactSurfaceNodeCloud> surface,
                              std::shared_ptr<RigidTerrain> terrain,
+                             std::shared_ptr<ChBody> ground,
                              double radius)
-        : m_surface(surface), m_terrain(terrain), m_radius(radius), m_num_contacts(0) {}
+        : m_surface(surface), m_terrain(terrain), m_ground(ground), m_radius(radius), m_num_contacts(0) {}
 
     unsigned int GetNumAddedContacts() const { return m_num_contacts; }
     const std::vector<ChVector<>>& GetTerrainPoints() const { return m_terrain_points; }
@@ -160,7 +161,7 @@ class TireTestCollisionManager : public ChSystem::CustomCollisionCallback {
             //    vpB: contact point on node
             //    distance: penetration (negative)
             collision::ChCollisionInfo contact;
-            contact.modelA = m_terrain->GetGroundBody()->GetCollisionModel().get();
+            contact.modelA = m_ground->GetCollisionModel().get();
             contact.modelB = contact_node->GetCollisionModel();
             contact.vN = normal;
             contact.vpA = P - height * normal;
@@ -186,6 +187,7 @@ class TireTestCollisionManager : public ChSystem::CustomCollisionCallback {
 
     std::shared_ptr<fea::ChContactSurfaceNodeCloud> m_surface;
     std::shared_ptr<RigidTerrain> m_terrain;
+    std::shared_ptr<ChBody> m_ground;
     double m_radius;
     unsigned int m_num_contacts;
     std::vector<ChVector<>> m_node_points;
@@ -262,12 +264,15 @@ int main(int argc, char* argv[]) {
     // Create the terrain
     // ------------------
 
+    double terrain_height = z_min - tire_offset;
     auto terrain = std::make_shared<RigidTerrain>(&system);
-    terrain->SetContactFrictionCoefficient(0.9f);
-    terrain->SetContactRestitutionCoefficient(0.01f);
-    terrain->SetContactMaterialProperties(2e7f, 0.3f);
-    ////terrain->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 4);
-    terrain->Initialize(z_min - tire_offset, terrain_length, terrain_width);
+    auto patch = terrain->AddPatch(ChCoordsys<>(ChVector<>(0, 0, terrain_height - 5), QUNIT),
+                                   ChVector<>(terrain_length, terrain_width, 10));
+    patch->SetContactFrictionCoefficient(0.9f);
+    patch->SetContactRestitutionCoefficient(0.01f);
+    patch->SetContactMaterialProperties(2e7f, 0.3f);
+    patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 4);
+    terrain->Initialize();
 
     // Create the custom collision detector
     // ------------------------------------
@@ -276,7 +281,7 @@ int main(int argc, char* argv[]) {
     auto surface = std::dynamic_pointer_cast<fea::ChContactSurfaceNodeCloud>(tire_mesh->GetContactSurface(0));
 
     // Add custom collision callback
-    TireTestCollisionManager collider(surface, terrain, tire->GetContactNodeRadius());
+    TireTestCollisionManager collider(surface, terrain, patch->GetGroundBody(), tire->GetContactNodeRadius());
     system.RegisterCustomCollisionCallback(&collider);
 
     // Complete system setup
@@ -298,7 +303,7 @@ int main(int argc, char* argv[]) {
     system.ComputeCollisions();
 
     // Report tire-terrain contacts
-    MyContactReporter reporter(terrain->GetGroundBody());
+    MyContactReporter reporter(patch->GetGroundBody());
     printf("\n>>>> Default collision detection <<<\n\n");
     system.GetContactContainer()->ReportAllContacts(&reporter);
     printf("\nFound: %d\n\n", system.GetContactContainer()->GetNcontacts());

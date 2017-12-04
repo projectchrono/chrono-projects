@@ -196,8 +196,9 @@ class TireTestCollisionManager : public ChSystem::CustomCollisionCallback {
   public:
     TireTestCollisionManager(std::shared_ptr<fea::ChContactSurfaceNodeCloud> surface,
                              std::shared_ptr<RigidTerrain> terrain,
+                             std::shared_ptr<ChBody> ground,
                              double radius)
-        : m_surface(surface), m_terrain(terrain), m_radius(radius) {}
+        : m_surface(surface), m_terrain(terrain), m_ground(ground), m_radius(radius) {}
 
   private:
     virtual void OnCustomCollision(ChSystem* system) override {
@@ -225,7 +226,7 @@ class TireTestCollisionManager : public ChSystem::CustomCollisionCallback {
             //    vpB: contact point on node
             //    distance: penetration (negative)
             collision::ChCollisionInfo contact;
-            contact.modelA = m_terrain->GetGroundBody()->GetCollisionModel().get();
+            contact.modelA = m_ground->GetCollisionModel().get();
             contact.modelB = contact_node->GetCollisionModel();
             contact.vN = normal;
             contact.vpA = P - height * normal;
@@ -239,6 +240,7 @@ class TireTestCollisionManager : public ChSystem::CustomCollisionCallback {
 
     std::shared_ptr<fea::ChContactSurfaceNodeCloud> m_surface;
     std::shared_ptr<RigidTerrain> m_terrain;
+    std::shared_ptr<ChBody> m_ground;
     double m_radius;
 };
 
@@ -695,13 +697,17 @@ int main() {
     // Create the terrain. If FEA, then use triangular mesh for contact and create SMC contact properties
     // ------------------
     std::shared_ptr<ChTerrain> terrain;
+    std::shared_ptr<RigidTerrain::Patch> patch;
     if (terrain_type == RIGID_TERRAIN) {
+        double terrain_height = -tire_radius + 0.0015;
         auto rigid_terrain = std::make_shared<RigidTerrain>(my_system);
-        rigid_terrain->SetContactFrictionCoefficient(0.9f);
-        rigid_terrain->SetContactRestitutionCoefficient(0.01f);
-        rigid_terrain->SetContactMaterialProperties(2e6f, 0.3f);
-        rigid_terrain->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 4);
-        rigid_terrain->Initialize(-tire_radius + 0.0015, 120, 0.5);
+        patch = rigid_terrain->AddPatch(ChCoordsys<>(ChVector<>(0, 0, terrain_height - 5), QUNIT),
+                                        ChVector<>(120, 0.5, 10));
+        patch->SetContactFrictionCoefficient(0.9f);
+        patch->SetContactRestitutionCoefficient(0.01f);
+        patch->SetContactMaterialProperties(2e6f, 0.3f);
+        patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 4);
+        rigid_terrain->Initialize();
         terrain = rigid_terrain;
     } else if (terrain_type == PLASTIC_FEA) {
 #ifdef CHRONO_FEA
@@ -735,7 +741,7 @@ int main() {
     if (tire_model == TireModelType::ANCF && enable_tire_contact && use_custom_collision) {
         // Disable automatic contact on the ground body
         if (terrain_type == RIGID_TERRAIN) {
-            std::dynamic_pointer_cast<RigidTerrain>(terrain)->GetGroundBody()->SetCollide(false);
+            patch->GetGroundBody()->SetCollide(false);
         }
         // Extract the contact surface from the tire mesh
         auto tire_deform = std::static_pointer_cast<ChDeformableTire>(tire);
@@ -745,7 +751,7 @@ int main() {
         // Add custom collision callback
         if (surface && terrain_type == RIGID_TERRAIN) {
             my_collider = new TireTestCollisionManager(surface, std::dynamic_pointer_cast<RigidTerrain>(terrain),
-                                                       tire_deform->GetContactNodeRadius());
+                                                       patch->GetGroundBody(), tire_deform->GetContactNodeRadius());
             my_system->RegisterCustomCollisionCallback(my_collider);
         } else if (surface && terrain_type == PLASTIC_FEA) {
             auto mysurfmaterial = std::make_shared<ChMaterialSurfaceSMC>();

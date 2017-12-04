@@ -265,12 +265,15 @@ int main(int argc, char* argv[]) {
     // Create the terrain
     // ------------------
 
+    double terrain_height = init_loc.z() - tire_radius - tire_offset;
     auto terrain = std::make_shared<RigidTerrain>(system);
-    terrain->SetContactFrictionCoefficient(0.9f);
-    terrain->SetContactRestitutionCoefficient(0.01f);
-    terrain->SetContactMaterialProperties(2e7f, 0.3f);
-    terrain->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 4);
-    terrain->Initialize(init_loc.z() - tire_radius - tire_offset, terrain_length, terrain_width);
+    auto patch = terrain->AddPatch(ChCoordsys<>(ChVector<>(0, 0, terrain_height - 5), QUNIT),
+                                   ChVector<>(terrain_length, terrain_width, 10));
+    patch->SetContactFrictionCoefficient(0.9f);
+    patch->SetContactRestitutionCoefficient(0.01f);
+    patch->SetContactMaterialProperties(2e7f, 0.3f);
+    patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 4);
+    terrain->Initialize();
 
     // Create joints
     // -------------
@@ -280,7 +283,7 @@ int main(int argc, char* argv[]) {
     auto plane_plane = std::make_shared<ChLinkLockPlanePlane>();
     system->AddLink(plane_plane);
     plane_plane->SetName("plane_plane");
-    plane_plane->Initialize(terrain->GetGroundBody(), chassis, ChCoordsys<>(init_loc, Q_from_AngX(CH_C_PI_2)));
+    plane_plane->Initialize(patch->GetGroundBody(), chassis, ChCoordsys<>(init_loc, Q_from_AngX(CH_C_PI_2)));
 
     // Connect wheel to chassis through a revolute joint.
     // The axis of rotation is along the y global axis.

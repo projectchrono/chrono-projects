@@ -211,12 +211,14 @@ int main(int argc, char* argv[]) {
     // Create the terrain
     // ------------------
 
+    double terrain_height = -TorusRadius - TorusHeight - Clearance;
     auto terrain = std::make_shared<RigidTerrain>(&my_system);
-    terrain->SetContactFrictionCoefficient(0.9f);
-    terrain->SetContactRestitutionCoefficient(0.01f);
-    terrain->SetContactMaterialProperties(2e7f, 0.3f);
-    terrain->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 4);
-    terrain->Initialize(-TorusRadius -TorusHeight -Clearance, 60, 5);
+    auto patch = terrain->AddPatch(ChCoordsys<>(ChVector<>(0, 0, terrain_height - 5), QUNIT), ChVector<>(60, 5, 10));
+    patch->SetContactFrictionCoefficient(0.9f);
+    patch->SetContactRestitutionCoefficient(0.01f);
+    patch->SetContactMaterialProperties(2e7f, 0.3f);
+    patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 4);
+    terrain->Initialize();
 
     my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
 
