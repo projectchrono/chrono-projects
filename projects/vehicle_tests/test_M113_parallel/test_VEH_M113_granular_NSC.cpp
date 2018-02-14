@@ -194,7 +194,7 @@ double CreateParticles(ChSystem* system) {
     auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(0.0f);
-    mat_g->SetCohesion(coh_force);
+    mat_g->SetCohesion(static_cast<float>(coh_force));
 
     // Create a particle generator and a mixture entirely made out of spheres
     utils::Generator gen(system);
@@ -337,12 +337,12 @@ int main(int argc, char* argv[]) {
         case M113_ORIGINAL:
             std::cout << "Create ORIGINAL M113 model" << std::endl;
             vehicle = std::unique_ptr<M113_Vehicle>(new M113_Vehicle(true, TrackShoeType::SINGLE_PIN, &system));
-            powertrain = std::unique_ptr<M113_SimplePowertrain>(new M113_SimplePowertrain());
+            powertrain = std::unique_ptr<M113_SimplePowertrain>(new M113_SimplePowertrain("Powertrain"));
             break;
         case M113_MODIFIED:
             std::cout << "Create MODIFIED M113 model" << std::endl;
             vehicle = std::unique_ptr<M113a_Vehicle>(new M113a_Vehicle(true, &system));
-            powertrain = std::unique_ptr<M113a_SimplePowertrain>(new M113a_SimplePowertrain());
+            powertrain = std::unique_ptr<M113a_SimplePowertrain>(new M113a_SimplePowertrain("Powertrain"));
             break;
     }
 

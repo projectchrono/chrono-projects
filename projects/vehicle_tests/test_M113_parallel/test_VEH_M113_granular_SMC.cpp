@@ -328,12 +328,12 @@ int main(int argc, char* argv[]) {
     case M113_ORIGINAL:
         std::cout << "Create ORIGINAL M113 model" << std::endl;
         vehicle = std::unique_ptr<M113_Vehicle>(new M113_Vehicle(true, TrackShoeType::SINGLE_PIN, &system));
-        powertrain = std::unique_ptr<M113_SimplePowertrain>(new M113_SimplePowertrain());
+        powertrain = std::unique_ptr<M113_SimplePowertrain>(new M113_SimplePowertrain("Powertrain"));
         break;
     case M113_MODIFIED:
         std::cout << "Create MODIFIED M113 model" << std::endl;
         vehicle = std::unique_ptr<M113a_Vehicle>(new M113a_Vehicle(true, &system));
-        powertrain = std::unique_ptr<M113a_SimplePowertrain>(new M113a_SimplePowertrain());
+        powertrain = std::unique_ptr<M113a_SimplePowertrain>(new M113a_SimplePowertrain("Powertrain"));
         break;
     }
 

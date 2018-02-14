@@ -158,6 +158,9 @@ class ChLoaderLuGre : public ChLoadCustomMultiple {
   public:
     ChLoaderLuGre(std::vector<std::shared_ptr<ChLoadable>>& mloadables) : ChLoadCustomMultiple(mloadables){};
 
+    /// "Virtual" copy constructor (covariant return type).
+    virtual ChLoaderLuGre* Clone() const override { return new ChLoaderLuGre(*this); }
+
     std::shared_ptr<ChBody> mRim;
     int NumContact;
     const int NumDofRigid = 14;    // 1 rim, 1 ground, 7 Dofs each

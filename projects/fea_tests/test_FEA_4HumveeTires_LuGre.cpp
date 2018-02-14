@@ -204,6 +204,9 @@ void ReadInputFile(ChMatrixNM<double, 3000, 6> &COORDFlex, ChMatrixNM<double, 30
 class MyLoadCustomMultiple : public ChLoadCustomMultiple {
   public:
     MyLoadCustomMultiple(std::vector<std::shared_ptr<ChLoadable>>& mloadables) : ChLoadCustomMultiple(mloadables){};
+
+    virtual MyLoadCustomMultiple* Clone() const override { return new MyLoadCustomMultiple(*this); }
+
     virtual void ComputeQ(ChState* state_x,      ///< state position to evaluate Q
                           ChStateDelta* state_w  ///< state speed to evaluate Q
                           ) {

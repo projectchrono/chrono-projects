@@ -206,6 +206,8 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
   public:
     MyLoadCustomMultiple(std::vector<std::shared_ptr<ChLoadable>>& mloadables) : ChLoadCustomMultiple(mloadables){};
 
+    virtual MyLoadCustomMultiple* Clone() const override { return new MyLoadCustomMultiple(*this); }
+
     double GroundLocationBump(double GroundLoc, double BumpLoc, ChVector<> NodeLocation, double Amplitude) {
         if (NodeLocation.y() > 0.0 || NodeLocation.x() <= (BumpLoc - BumpRadius) ||
             NodeLocation.x() >= (BumpLoc + BumpRadius))  // There is no bump on that side

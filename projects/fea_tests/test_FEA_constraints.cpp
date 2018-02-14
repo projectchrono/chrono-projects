@@ -192,7 +192,7 @@ void test_beam(const std::string& name,  /// test name
     for (int i = 0; i < num_points; i++) {
         double eta = -1.0 + ((2.0 * i) / (num_points - 1));
         ChQuaternion<> R;
-        beam_elem->EvaluateSectionFrame(eta, displ, P[i], R);
+        beam_elem->EvaluateSectionFrame(eta, P[i], R);
     }
 
     // Estimate reaction force & torque for an equivalent rigid beam.
