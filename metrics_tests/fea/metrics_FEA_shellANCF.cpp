@@ -218,7 +218,7 @@ bool FEAShellTest::execute() {
 #endif
 
 #ifdef CHRONO_MUMPS
-    std::shared_ptr<ChSolverMumps> mumps_solver_speed;
+    std::shared_ptr<ChSolverMumps> mumps_solver;
 #endif
 
     // Set up solver

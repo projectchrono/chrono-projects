@@ -26,7 +26,7 @@ set(DEMOS_BASIC
 
 find_package(Chrono
              COMPONENTS FEA
-             OPTIONAL_COMPONENTS MKL
+             OPTIONAL_COMPONENTS MKL MUMPS
              CONFIG
 )
 

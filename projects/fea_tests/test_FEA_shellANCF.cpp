@@ -244,7 +244,7 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
     case solver_type::MUMPS:
 #ifdef CHRONO_MUMPS
         mumps_solver = std::make_shared<ChSolverMumps>();
-        my_system.SetSolver(mumps_solver_speed);
+        my_system.SetSolver(mumps_solver);
         mumps_solver->SetVerbose(verbose);
 #endif
         break;

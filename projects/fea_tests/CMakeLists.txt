@@ -34,7 +34,7 @@ set(TESTS_MATLAB_IRR
 
 find_package(Chrono
              COMPONENTS FEA
-             OPTIONAL_COMPONENTS Irrlicht Postprocess MKL Matlab
+             OPTIONAL_COMPONENTS Irrlicht Postprocess MKL MUMPS Matlab
              CONFIG
 )
 
