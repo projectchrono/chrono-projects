@@ -394,7 +394,7 @@ mloadcontainer->Add(mrigidmeshload);
             utils::CSV_writer csv(delim);
             csv << triangles.size() << std::endl;
             for (int i = 0; i < triangles.size(); i++) {
-                csv << systemG->Get_bodylist()->at(i)->GetPos() << vert_pos[triangles[i].x()]
+                csv << systemG->Get_bodylist().at(i)->GetPos() << vert_pos[triangles[i].x()]
                     << vert_pos[triangles[i].y()] << vert_pos[triangles[i].z()] << std::endl;
             }
             sprintf(filename, "../POVRAY/triangles_%d.dat", frameIndex);
@@ -450,7 +450,7 @@ mloadcontainer->Add(mrigidmeshload);
         mrigidmeshload->OutputSimpleMesh(vert_pos, vert_vel, triangles);
 
         for (int i = 0; i < triangles.size(); i++) {
-            std::shared_ptr<ChBody> triBody = systemG->Get_bodylist()->at(i);
+            std::shared_ptr<ChBody> triBody = systemG->Get_bodylist().at(i);
             pos = (vert_pos[triangles[i].x()] + vert_pos[triangles[i].y()] + vert_pos[triangles[i].z()]) / 3.0;
             triBody->SetPos(pos);
             vel = (vert_vel[triangles[i].x()] + vert_vel[triangles[i].y()] + vert_vel[triangles[i].z()]) / 3.0;

@@ -300,8 +300,7 @@ void CreateObject(ChSystemParallel* system, double z) {
 // =============================================================================
 double FindHighest(ChSystem* sys) {
     double highest = 0;
-    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        auto body = (*sys->Get_bodylist())[i];
+    for (auto body : sys->Get_bodylist()) {
         if (body->GetIdentifier() > 0 && body->GetPos().z() > highest)
             highest = body->GetPos().z();
     }
@@ -310,8 +309,7 @@ double FindHighest(ChSystem* sys) {
 
 double FindLowest(ChSystem* sys) {
     double lowest = 1000;
-    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        auto body = (*sys->Get_bodylist())[i];
+    for (auto body : sys->Get_bodylist()) {
         if (body->GetIdentifier() > 0 && body->GetPos().z() < lowest)
             lowest = body->GetPos().z();
     }
@@ -405,7 +403,7 @@ int main(int argc, char* argv[]) {
         // Create the granular material and the container from the checkpoint file.
         cout << "Read checkpoint data from " << checkpoint_file;
         utils::ReadCheckpoint(msystem, checkpoint_file);
-        cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
+        cout << "  done.  Read " << msystem->Get_bodylist().size() << " bodies." << endl;
 
         // Create the falling object just above the granular material.
         double z = FindHighest(msystem);
@@ -447,7 +445,7 @@ int main(int argc, char* argv[]) {
             if (problem == SETTLING) {
                 cout << "             Write checkpoint data " << flush;
                 utils::WriteCheckpoint(msystem, checkpoint_file);
-                cout << msystem->Get_bodylist()->size() << " bodies" << endl;
+                cout << msystem->Get_bodylist().size() << " bodies" << endl;
             }
 
             out_frame++;
@@ -468,12 +466,12 @@ int main(int argc, char* argv[]) {
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
         utils::WriteCheckpoint(msystem, checkpoint_file);
-        cout << "  done.  Wrote " << msystem->Get_bodylist()->size() << " bodies." << endl;
+        cout << "  done.  Wrote " << msystem->Get_bodylist().size() << " bodies." << endl;
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies:  " << msystem->Get_bodylist()->size() << endl;
+    cout << "Number of bodies:  " << msystem->Get_bodylist().size() << endl;
     cout << "Lowest position:   " << FindLowest(msystem) << endl;
     cout << "Simulation time:   " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;

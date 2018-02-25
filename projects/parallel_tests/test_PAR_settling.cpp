@@ -276,10 +276,9 @@ int main(int argc, char** argv) {
 
     if (track_granule) {
         int id = Id_g + num_particles / 2;
-        auto bodies = system->Get_bodylist();
-        for (auto body = bodies->begin(); body != bodies->end(); ++body) {
-            if ((*body)->GetIdentifier() == id) {
-                granule = *body;
+        for (auto body : system->Get_bodylist()) {
+            if (body->GetIdentifier() == id) {
+                granule = body;
                 break;
             }
         }

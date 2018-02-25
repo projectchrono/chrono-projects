@@ -269,8 +269,7 @@ void CreateFallingBall(ChSystemParallel* system, double z, double vz) {
 // -----------------------------------------------------------------------------
 double FindHighest(ChSystem* sys) {
     double highest = 0;
-    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        auto body = (*sys->Get_bodylist())[i];
+    for (auto body : sys->Get_bodylist()) {
         if (body->GetIdentifier() > 0 && body->GetPos().z() > highest)
             highest = body->GetPos().z();
     }
@@ -279,8 +278,7 @@ double FindHighest(ChSystem* sys) {
 
 double FindLowest(ChSystem* sys) {
     double lowest = 1000;
-    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        auto body = (*sys->Get_bodylist())[i];
+    for (auto body : sys->Get_bodylist()) {
         if (body->GetIdentifier() > 0 && body->GetPos().z() < lowest)
             lowest = body->GetPos().z();
     }
@@ -294,8 +292,7 @@ double FindLowest(ChSystem* sys) {
 bool CheckSettled(ChSystem* sys, double threshold) {
     double t2 = threshold * threshold;
 
-    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        auto body = (*sys->Get_bodylist())[i];
+    for (auto body : sys->Get_bodylist()) {
         if (body->GetIdentifier() > 0) {
             double vel2 = body->GetPos_dt().Length2();
             if (vel2 > t2)
@@ -373,7 +370,7 @@ int main(int argc, char* argv[]) {
         cout << "Create granular material" << endl;
         // Create the fixed falling ball just below the granular material
         CreateFallingBall(msystem, -3 * R_b, 0);
-        ball = msystem->Get_bodylist()->at(0);
+        ball = msystem->Get_bodylist().at(0);
         ball->SetBodyFixed(true);
         CreateObjects(msystem);
     } else {
@@ -383,14 +380,14 @@ int main(int argc, char* argv[]) {
         // Create the granular material and the container from the checkpoint file.
         cout << "Read checkpoint data from " << checkpoint_file;
         utils::ReadCheckpoint(msystem, checkpoint_file);
-        cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
+        cout << "  done.  Read " << msystem->Get_bodylist().size() << " bodies." << endl;
 
         // Move the falling ball just above the granular material with a velocity
         // given by free fall from the specified height and starting at rest.
         double z = FindHighest(msystem);
         double vz = std::sqrt(2 * gravity * h);
         cout << "Move falling ball with center at " << z + R_b + r_g << " and velocity " << vz << endl;
-        ball = msystem->Get_bodylist()->at(0);
+        ball = msystem->Get_bodylist().at(0);
         ball->SetMass(mass_b);
         ball->SetInertiaXX(inertia_b);
         ball->SetPos(ChVector<>(0, 0, z + r_g + R_b));
@@ -457,7 +454,7 @@ int main(int argc, char* argv[]) {
             if (problem == SETTLING) {
                 cout << "     Write checkpoint data " << flush;
                 utils::WriteCheckpoint(msystem, checkpoint_file);
-                cout << msystem->Get_bodylist()->size() << " bodies" << endl;
+                cout << msystem->Get_bodylist().size() << " bodies" << endl;
             }
 
             // Save current projectile height.
@@ -504,12 +501,12 @@ int main(int argc, char* argv[]) {
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
         utils::WriteCheckpoint(msystem, checkpoint_file);
-        cout << "  done.  Wrote " << msystem->Get_bodylist()->size() << " bodies." << endl;
+        cout << "  done.  Wrote " << msystem->Get_bodylist().size() << " bodies." << endl;
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies:  " << msystem->Get_bodylist()->size() << endl;
+    cout << "Number of bodies:  " << msystem->Get_bodylist().size() << endl;
     cout << "Lowest position:   " << FindLowest(msystem) << endl;
     cout << "Simulation time:   " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;

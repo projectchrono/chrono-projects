@@ -381,8 +381,7 @@ void CreateParticles(ChSystemParallel* system) {
 void FindRange(ChSystem* sys, double& lowest, double& highest) {
     highest = -1000;
     lowest = 1000;
-    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        auto body = (*sys->Get_bodylist())[i];
+    for (auto body : sys->Get_bodylist()) {
         if (body->GetIdentifier() < 100)
             continue;
         double h = body->GetPos().z();
@@ -491,7 +490,7 @@ int main(int argc, char* argv[]) {
             // Create the granular material and the container from the checkpoint file.
             cout << "Read checkpoint data from " << checkpoint_file;
             utils::ReadCheckpoint(msystem, checkpoint_file);
-            cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
+            cout << "  done.  Read " << msystem->Get_bodylist().size() << " bodies." << endl;
 
             // Create the mechanism with the wheel just above the granular material.
             double lowest, highest;
@@ -564,7 +563,7 @@ int main(int argc, char* argv[]) {
             if (problem == SETTLING) {
                 cout << "             Write checkpoint data " << flush;
                 utils::WriteCheckpoint(msystem, checkpoint_file);
-                cout << msystem->Get_bodylist()->size() << " bodies" << endl;
+                cout << msystem->Get_bodylist().size() << " bodies" << endl;
             }
 
             out_frame++;
@@ -600,12 +599,12 @@ int main(int argc, char* argv[]) {
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
         utils::WriteCheckpoint(msystem, checkpoint_file);
-        cout << "  done.  Wrote " << msystem->Get_bodylist()->size() << " bodies." << endl;
+        cout << "  done.  Wrote " << msystem->Get_bodylist().size() << " bodies." << endl;
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies:  " << msystem->Get_bodylist()->size() << endl;
+    cout << "Number of bodies:  " << msystem->Get_bodylist().size() << endl;
     cout << "Simulation time:   " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;
 

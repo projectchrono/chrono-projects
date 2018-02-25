@@ -112,11 +112,10 @@ int main(int argc, char* argv[]) {
         // a ChBodyAuxRef has the name "brick_1-8":
         std::shared_ptr<ChBodyAuxRef> mbody;
         ChSystem::IteratorOtherPhysicsItems myiterp = my_system.IterBeginOtherPhysicsItems();
-        while (myiterp != my_system.IterEndOtherPhysicsItems()) {
-            if ((*myiterp)->GetNameString() == "brick_1-8")
-                mbody = std::dynamic_pointer_cast<ChBodyAuxRef>(*myiterp);
-
-            ++myiterp;
+        for (auto body : my_system.Get_bodylist()) {
+            GetLog() << body->GetNameString().c_str() << "\n";
+            if (body->GetNameString() == "escape_wheel^escapement-1")
+                mbody = std::dynamic_pointer_cast<ChBodyAuxRef>(body);
         }
 
         // perform a small simulation and outputs the coords of brick:

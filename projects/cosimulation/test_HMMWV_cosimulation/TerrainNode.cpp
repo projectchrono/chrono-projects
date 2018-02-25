@@ -497,7 +497,7 @@ void TerrainNode::Settle() {
         }
 
         // Read granular material state from checkpoint
-        for (int ib = m_particles_start_index; ib < m_system->Get_bodylist()->size(); ++ib) {
+        for (int ib = m_particles_start_index; ib < m_system->Get_bodylist().size(); ++ib) {
             std::getline(ifile, line);
             std::istringstream iss(line);
             int identifier;
@@ -508,7 +508,7 @@ void TerrainNode::Settle() {
             iss >> identifier >> pos.x() >> pos.y() >> pos.z() >> rot.e0() >> rot.e1() >> rot.e2() >> rot.e3() >> pos_dt.x() >>
                 pos_dt.y() >> pos_dt.z() >> rot_dt.e0() >> rot_dt.e1() >> rot_dt.e2() >> rot_dt.e3();
 
-            auto body = (*m_system->Get_bodylist())[ib];
+            auto body = m_system->Get_bodylist()[ib];
             assert(body->GetIdentifier() == identifier);
             body->SetPos(ChVector<>(pos.x(), pos.y(), pos.z()));
             body->SetRot(ChQuaternion<>(rot.e0(), rot.e1(), rot.e2(), rot.e3()));
@@ -567,7 +567,7 @@ void TerrainNode::Settle() {
 
     // Find "height" of granular material
     m_init_height = 0;
-    for (auto body : *m_system->Get_bodylist()) {
+    for (auto body : m_system->Get_bodylist()) {
         if (body->GetIdentifier() > 0 && body->GetPos().z() > m_init_height)
             m_init_height = body->GetPos().z();
     }
@@ -1079,7 +1079,7 @@ void TerrainNode::WriteParticleInformation(utils::CSV_writer& csv) {
     csv << m_num_particles << m_radius_g << endl;
 
     // Write particle positions and linear velocities
-    for (auto body : *m_system->Get_bodylist()) {
+    for (auto body : m_system->Get_bodylist()) {
         if (body->GetIdentifier() < m_Id_g)
             continue;
         csv << body->GetIdentifier() << body->GetPos() << body->GetPos_dt() << endl;
@@ -1097,7 +1097,7 @@ void TerrainNode::WriteCheckpoint() {
 
     // Loop over all bodies in the system and write state for granular material bodies.
     // Filter granular material using the body identifier.
-    for (auto body : *m_system->Get_bodylist()) {
+    for (auto body : m_system->Get_bodylist()) {
         if (body->GetIdentifier() < m_Id_g)
             continue;
         csv << body->GetIdentifier() << body->GetPos() << body->GetRot() << body->GetPos_dt() << body->GetRot_dt()

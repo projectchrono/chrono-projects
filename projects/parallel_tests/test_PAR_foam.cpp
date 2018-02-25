@@ -204,7 +204,7 @@ int main(int argc, char* argv[]) {
     ChStreamOutAsciiFile ofile(out_file.c_str());
 
     while (time < time_end) {
-        int numParticles = (int)msystem->Get_bodylist()->size() - 1;
+        int numParticles = (int)msystem->Get_bodylist().size() - 1;
 
         if (numParticles < maxNumParticles && sim_frame % gen_steps == 0) {
             SpawnParticles();
@@ -245,7 +245,7 @@ int main(int argc, char* argv[]) {
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies: " << msystem->Get_bodylist()->size() << endl;
+    cout << "Number of bodies: " << msystem->Get_bodylist().size() << endl;
     cout << "Simulation time: " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;
 

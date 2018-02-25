@@ -394,9 +394,7 @@ void CreateBall(ChSystemParallel* system) {
 void FindHeightRange(ChSystemParallel* sys, double& lowest, double& highest) {
     highest = -1000;
     lowest = 1000;
-    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        auto body = (*sys->Get_bodylist())[i];
-
+    for (auto body : sys->Get_bodylist()) {
         if (body->GetIdentifier() <= 0)
             continue;
 
@@ -419,19 +417,18 @@ void FindHeightRange(ChSystemParallel* sys, double& lowest, double& highest) {
 void setBulkDensity(ChSystem* sys, double bulkDensity) {
     double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 
-    double normalPlateHeight = sys->Get_bodylist()->at(1)->GetPos().z() - hdimZ;
+    double normalPlateHeight = sys->Get_bodylist().at(1)->GetPos().z() - hdimZ;
     double bottomHeight = 0;
     double boxVolume = hdimX * 2 * hdimX * 2 * (normalPlateHeight - bottomHeight);
-    double granularVolume = (sys->Get_bodylist()->size() - 3) * vol_g;
+    double granularVolume = (sys->Get_bodylist().size() - 3) * vol_g;
     double reqDensity = bulkDensity * boxVolume / granularVolume;
-    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        auto body = (*sys->Get_bodylist())[i];
+    for (auto body : sys->Get_bodylist()) {
         if (body->GetIdentifier() > 1) {
             body->SetMass(reqDensity * vol_g);
         }
     }
 
-    cout << "N Bodies: " << sys->Get_bodylist()->size() << endl;
+    cout << "N Bodies: " << sys->Get_bodylist().size() << endl;
     cout << "Box Volume: " << boxVolume << endl;
     cout << "Granular Volume: " << granularVolume << endl;
     cout << "Desired bulk density = " << bulkDensity << ", Required Body Density = " << reqDensity << endl;
@@ -528,8 +525,8 @@ int main(int argc, char* argv[]) {
             CreateMechanismBodies(msystem);
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = msystem->Get_bodylist()->at(0);
-            loadPlate = msystem->Get_bodylist()->at(1);
+            ground = msystem->Get_bodylist().at(0);
+            loadPlate = msystem->Get_bodylist().at(1);
 
             // Create granular material.
             int num_particles = CreateGranularMaterial(msystem);
@@ -546,11 +543,11 @@ int main(int argc, char* argv[]) {
             // Create bodies from checkpoint file.
             cout << "Read checkpoint data from " << settled_ckpnt_file;
             utils::ReadCheckpoint(msystem, settled_ckpnt_file);
-            cout << "  done.  Read " << msystem->Get_bodylist()->size() << " bodies." << endl;
+            cout << "  done.  Read " << msystem->Get_bodylist().size() << " bodies." << endl;
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = msystem->Get_bodylist()->at(0);
-            loadPlate = msystem->Get_bodylist()->at(1);
+            ground = msystem->Get_bodylist().at(0);
+            loadPlate = msystem->Get_bodylist().at(1);
 
             // Move the load plate just above the granular material.
             double highest, lowest;
@@ -592,8 +589,8 @@ int main(int argc, char* argv[]) {
             CreateBall(msystem);
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = msystem->Get_bodylist()->at(0);
-            loadPlate = msystem->Get_bodylist()->at(1);
+            ground = msystem->Get_bodylist().at(0);
+            loadPlate = msystem->Get_bodylist().at(1);
 
             // Move the load plate just above the test ball.
             ChVector<> pos = loadPlate->GetPos();
@@ -688,7 +685,7 @@ int main(int argc, char* argv[]) {
                     utils::WriteCheckpoint(msystem, settled_ckpnt_file);
                 else
                     utils::WriteCheckpoint(msystem, pressed_ckpnt_file);
-                cout << msystem->Get_bodylist()->size() << " bodies" << endl;
+                cout << msystem->Get_bodylist().size() << " bodies" << endl;
             }
 
             // Increment counters
@@ -796,12 +793,12 @@ int main(int argc, char* argv[]) {
             utils::WriteCheckpoint(msystem, settled_ckpnt_file);
         else
             utils::WriteCheckpoint(msystem, pressed_ckpnt_file);
-        cout << msystem->Get_bodylist()->size() << " bodies" << endl;
+        cout << msystem->Get_bodylist().size() << " bodies" << endl;
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies:  " << msystem->Get_bodylist()->size() << endl;
+    cout << "Number of bodies:  " << msystem->Get_bodylist().size() << endl;
     cout << "Simulation time:   " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;
 

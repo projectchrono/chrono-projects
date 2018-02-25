@@ -246,8 +246,7 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
 
 bool CheckSettled(ChSystem* sys, double threshold) {
     double t2 = threshold * threshold;
-    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        auto body = (*sys->Get_bodylist())[i];
+    for (auto body : sys->Get_bodylist()) {
         if (body->GetIdentifier() >= Id_g) {
             double vel2 = body->GetPos_dt().Length2();
             if (vel2 > t2)
@@ -265,8 +264,7 @@ bool CheckSettled(ChSystem* sys, double threshold) {
 
 double FindHighest(ChSystem* sys) {
     double highest = 0;
-    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        auto body = (*sys->Get_bodylist())[i];
+    for (auto body : sys->Get_bodylist()) {
         if (body->GetIdentifier() >= Id_g && body->GetPos().z() > highest)
             highest = body->GetPos().z();
     }
@@ -275,8 +273,7 @@ double FindHighest(ChSystem* sys) {
 
 double FindLowest(ChSystem* sys) {
     double lowest = DBL_MAX;
-    for (size_t i = 0; i < sys->Get_bodylist()->size(); ++i) {
-        auto body = (*sys->Get_bodylist())[i];
+    for (auto body : sys->Get_bodylist()) {
         if (body->GetIdentifier() >= Id_g && body->GetPos().z() < lowest)
             lowest = body->GetPos().z();
     }
@@ -363,7 +360,7 @@ int main(int argc, char* argv[]) {
             // Create the granular material bodies and the container from the checkpoint file.
             cout << "Read checkpoint data from " << checkpoint_file;
             utils::ReadCheckpoint(system, checkpoint_file);
-            cout << "  done.  Read " << system->Get_bodylist()->size() << " bodies." << endl;
+            cout << "  done.  Read " << system->Get_bodylist().size() << " bodies." << endl;
 
             // Create the wheel.
             double z = FindHighest(system);
@@ -439,7 +436,7 @@ int main(int argc, char* argv[]) {
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies: " << system->Get_bodylist()->size() << endl;
+    cout << "Number of bodies: " << system->Get_bodylist().size() << endl;
     cout << "Simulation time: " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;
 
