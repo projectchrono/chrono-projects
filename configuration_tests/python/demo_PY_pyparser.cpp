@@ -111,7 +111,6 @@ int main(int argc, char* argv[]) {
         // names that you see in the CAD interface, for example suppose you know that
         // a ChBodyAuxRef has the name "brick_1-8":
         std::shared_ptr<ChBodyAuxRef> mbody;
-        ChSystem::IteratorOtherPhysicsItems myiterp = my_system.IterBeginOtherPhysicsItems();
         for (auto body : my_system.Get_bodylist()) {
             GetLog() << body->GetNameString().c_str() << "\n";
             if (body->GetNameString() == "escape_wheel^escapement-1")
