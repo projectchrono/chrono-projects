@@ -163,6 +163,7 @@ class TireTestContactReporter : public ChContactContainer::ReportContactCallback
                                  const ChVector<>& pB,
                                  const ChMatrix33<>& plane_coord,
                                  const double& distance,
+                                 const double& eff_radius,
                                  const ChVector<>& react_forces,
                                  const ChVector<>& react_torques,
                                  ChContactable* modA,
