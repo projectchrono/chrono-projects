@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
                     material->SetRestitution(0.0f);
                     material->SetYoungModulus(8e5f);
                     material->SetPoissonRatio(0.3f);
-                    material->SetAdhesion(coh_force);
+                    material->SetAdhesion(static_cast<float>(coh_force));
                     material->SetKn(1.0e6f);
                     material->SetGn(6.0e1f);
                     material->SetKt(4.0e5f);
@@ -235,7 +235,7 @@ int main(int argc, char** argv) {
                     auto material = std::make_shared<ChMaterialSurfaceNSC>();
                     material->SetFriction(0.9f);
                     material->SetRestitution(0.0f);
-                    material->SetCohesion(coh_force);
+                    material->SetCohesion(static_cast<float>(coh_force));
                     my_terrain->SetMaterialSurface(material);
                     break;
                 }

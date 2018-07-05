@@ -150,7 +150,7 @@ int main(int argc, char* argv[]) {
     // Note that not all features of INP files are supported. Also, quadratic tetahedrons are promoted to linear.
     // This is much easier than creating all nodes and elements via C++ programming.
     // Ex. you can generate these .INP files using Abaqus or exporting from the SolidWorks simulation tool.
-    std::vector<std::vector<std::shared_ptr<ChNodeFEAbase>>> node_sets;
+    std::map<std::string, std::vector<std::shared_ptr<ChNodeFEAbase>>> node_sets;
     try {
         ChMeshFileLoader::FromAbaqusFile(my_mesh, GetChronoDataFile("fea/tractor_wheel_coarse.INP").c_str(), mmaterial,
                                          node_sets, tire_center, tire_alignment);

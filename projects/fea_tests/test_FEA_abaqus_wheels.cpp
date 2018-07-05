@@ -61,7 +61,7 @@ void MakeWheel(ChSystemSMC& my_system,
     auto my_mesh = std::make_shared<ChMesh>();
 
     // Load an ABAQUS .INP tetahedron mesh file from disk, defining a tetahedron mesh.
-    std::vector<std::vector<std::shared_ptr<ChNodeFEAbase>>> node_sets;
+    std::map<std::string, std::vector<std::shared_ptr<ChNodeFEAbase>>> node_sets;
 
     try {
         ChMeshFileLoader::FromAbaqusFile(my_mesh, GetChronoDataFile("fea/tractor_wheel_coarse.INP").c_str(), mmaterial,
@@ -111,11 +111,11 @@ void MakeWheel(ChSystemSMC& my_system,
     mrim = mwheel_rim;
 
     // Conect rim and tire using constraints.
-    // Do these constraints where the 2nd node set has been marked in the .INP file.
-    int nodeset_index = 1;
-    for (int i = 0; i < node_sets[nodeset_index].size(); ++i) {
+    // the BC_RIMTIRE nodeset, in the Abaqus INP file, lists the nodes involved
+    auto nodeset_sel = "BC_RIMTIRE";
+    for (auto i = 0; i < node_sets.at(nodeset_sel).size(); ++i) {
         auto mlink = std::make_shared<ChLinkPointFrame>();
-        mlink->Initialize(std::dynamic_pointer_cast<ChNodeFEAxyz>(node_sets[nodeset_index][i]), mwheel_rim);
+        mlink->Initialize(std::dynamic_pointer_cast<ChNodeFEAxyz>(node_sets[nodeset_sel][i]), mwheel_rim);
         my_system.Add(mlink);
     }
 
@@ -124,7 +124,8 @@ void MakeWheel(ChSystemSMC& my_system,
     my_mesh->AddMeshSurface(mmeshsurf);
 
     // In the .INP file there are two additional NSET nodesets, the 1st is used to mark load surface:
-    mmeshsurf->AddFacesFromNodeSet(node_sets[0]);
+    nodeset_sel = "BC_SURF";
+    mmeshsurf->AddFacesFromNodeSet(node_sets[nodeset_sel]);
 
     /// Apply load to all surfaces in the mesh surface
     auto mloadcontainer = std::make_shared<ChLoadContainer>();

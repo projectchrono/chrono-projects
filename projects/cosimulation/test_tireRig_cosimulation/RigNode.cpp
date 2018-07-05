@@ -422,7 +422,7 @@ void RigNodeDeformableTire::InitializeTire() {
             auto node_itr = std::find(mesh->GetNodes().begin(), mesh->GetNodes().end(), node);
             auto iv = std::distance(mesh->GetNodes().begin(), node_itr);
             m_adjElements[iv].push_back(ie);
-            m_adjVertices[ie].push_back(iv);
+            m_adjVertices[ie].push_back(static_cast<int>(iv));
         }
     }
 
@@ -904,7 +904,7 @@ void RigNodeRigidTire::WriteTireContactInformation(utils::CSV_writer& csv) {
 void RigNode::PrintLowestVertex(const std::vector<ChVector<>>& vert_pos, const std::vector<ChVector<>>& vert_vel) {
     auto lowest = std::min_element(vert_pos.begin(), vert_pos.end(),
                                    [](const ChVector<>& a, const ChVector<>& b) { return a.z() < b.z(); });
-    int index = lowest - vert_pos.begin();
+    auto index = lowest - vert_pos.begin();
     const ChVector<>& vel = vert_vel[index];
     cout << "[Rig node    ] lowest vertex:  index = " << index << "  height = " << (*lowest).z()
          << "  velocity = " << vel.x() << "  " << vel.y() << "  " << vel.z() << endl;

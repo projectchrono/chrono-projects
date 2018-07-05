@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     // This is the number of repetition of the operation. Remember that timing only one operation is not accurate
     int ITERATION = 10000;
     ChTimer<double> timer;
-    srand(time(NULL));
+    srand(static_cast<unsigned int>(time(NULL)));
     bool MatrMultiply = false;
     bool MatrMultiplyT = true;
 

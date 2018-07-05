@@ -185,7 +185,7 @@ double CreateParticles(ChSystem* system) {
     mat_g->SetRestitution(0.0f);
     mat_g->SetYoungModulus(8e5f);
     mat_g->SetPoissonRatio(0.3f);
-    mat_g->SetAdhesion(coh_force);
+    mat_g->SetAdhesion(static_cast<float>(coh_force));
     mat_g->SetKn(1.0e6f);
     mat_g->SetGn(6.0e1f);
     mat_g->SetKt(4.0e5f);

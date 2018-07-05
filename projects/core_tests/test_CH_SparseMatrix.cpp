@@ -37,7 +37,7 @@ void timeSetElement() {
 
     // Generate randomized row-column indices in a sparse matrix.
     int n = 10000;
-    int nnz = (n * n) * 0.05;
+    int nnz = (n * n) / 20;
 
     cout << "N   = " << n << endl;
     cout << "NNZ = " << nnz << endl << endl;

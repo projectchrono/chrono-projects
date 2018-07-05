@@ -487,7 +487,7 @@ int main(int argc, char* argv[]) {
 #endif
 
     // Run simulation for specified time.
-    int out_steps = std::ceil((1.0 / time_step) / out_fps);
+    int out_steps = (int)std::ceil((1.0 / time_step) / out_fps);
 
     double time = 0;
     int sim_frame = 0;

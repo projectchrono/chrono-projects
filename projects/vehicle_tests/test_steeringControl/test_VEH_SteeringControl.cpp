@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
             ChVector<> vehicle_target;
             tracker.calcClosestPoint(vehicle_location, vehicle_target);
             ChVector<> vehicle_err = vehicle_target - vehicle_location;
-            float speed_err = target_speed - vehicle.GetVehicleSpeed();
+            double speed_err = target_speed - vehicle.GetVehicleSpeed();
 
             csv << vehicle.GetChTime() << vehicle_location << vehicle_target << vehicle_err << speed_err << std::endl;
 
