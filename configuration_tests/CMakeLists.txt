@@ -8,5 +8,6 @@ add_subdirectory(irrlicht)
 add_subdirectory(parallel)
 add_subdirectory(python)
 add_subdirectory(vehicle)
+add_subdirectory(cascade)
 
 set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
