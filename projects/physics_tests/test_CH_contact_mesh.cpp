@@ -147,15 +147,15 @@ int main(int argc, char* argv[]) {
             break;
     }
 
-    geometry::ChTriangleMeshConnected trimesh;
-    trimesh.LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_tire.obj"), true, false);
+    auto trimesh = std::make_shared<geometry::ChTriangleMeshConnected>();
+    trimesh->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_tire.obj"), true, false);
 
     object->GetCollisionModel()->ClearModel();
     object->GetCollisionModel()->AddTriangleMesh(trimesh, false, false, ChVector<>(0), ChMatrix33<>(1), 0.01);
     object->GetCollisionModel()->BuildModel();
 
     auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
-    trimesh_shape->SetMesh(trimesh);
+    trimesh_shape->SetMesh(*trimesh);
     object->AddAsset(trimesh_shape);
 
     std::shared_ptr<ChColorAsset> mcol(new ChColorAsset);

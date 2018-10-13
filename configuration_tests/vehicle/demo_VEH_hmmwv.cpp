@@ -208,8 +208,8 @@ class MyMeshTire : public ChTireContactCallback {
 public:
     virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
         std::string mesh_file("hmmwv/hmmwv_tire.obj");
-        geometry::ChTriangleMeshConnected trimesh;
-        trimesh.LoadWavefrontMesh(vehicle::GetDataFile(mesh_file), true, false);
+        auto trimesh = std::make_shared<geometry::ChTriangleMeshConnected>();
+        trimesh->LoadWavefrontMesh(vehicle::GetDataFile(mesh_file), true, false);
 
         // Set contact model
         wheelBody->SetCollisionModel(std::make_shared<collision::ChCollisionModelParallel>());
@@ -220,7 +220,7 @@ public:
         wheelBody->GetMaterialSurfaceNSC()->SetFriction(mu_t);
 
         auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
-        trimesh_shape->SetMesh(trimesh);
+        trimesh_shape->SetMesh(*trimesh);
         wheelBody->AddAsset(trimesh_shape);
     }
 };

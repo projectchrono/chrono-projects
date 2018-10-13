@@ -37,20 +37,20 @@ void AddWallBox(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVec
 }
 
 void AddWallMesh(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVector<>& loc) {
-    geometry::ChTriangleMeshConnected trimesh;
+    auto trimesh = std::make_shared<geometry::ChTriangleMeshConnected>();
 
-    std::vector<ChVector<> >& vertices = trimesh.getCoordsVertices();
-    std::vector<ChVector<> >& normals = trimesh.getCoordsNormals();
-    std::vector<ChVector<int> >& idx_vertices = trimesh.getIndicesVertexes();
-    std::vector<ChVector<int> >& idx_normals = trimesh.getIndicesNormals();
+    std::vector<ChVector<> >& vertices = trimesh->getCoordsVertices();
+    std::vector<ChVector<> >& normals = trimesh->getCoordsNormals();
+    std::vector<ChVector<int> >& idx_vertices = trimesh->getIndicesVertexes();
+    std::vector<ChVector<int> >& idx_normals = trimesh->getIndicesNormals();
 
     int num_vert = 8;
     int num_faces = 12;
 
     vertices.resize(num_vert);
     normals.resize(num_vert);
-    trimesh.getCoordsUV().resize(num_vert);
-    trimesh.getCoordsColors().resize(num_vert);
+    trimesh->getCoordsUV().resize(num_vert);
+    trimesh->getCoordsColors().resize(num_vert);
 
     idx_vertices.resize(num_faces);
     idx_normals.resize(num_faces);
@@ -76,7 +76,7 @@ void AddWallMesh(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVe
     normals[7] = ChVector<>(+1, -1, +1).Normalize();
 
     for (int i = 0; i < num_vert; i++) {
-        trimesh.getCoordsColors()[i] = ChVector<float>(0, 0, 1);
+        trimesh->getCoordsColors()[i] = ChVector<float>(0, 0, 1);
     }
 
     idx_vertices[0] = ChVector<int>(0, 1, 3);
@@ -100,7 +100,7 @@ void AddWallMesh(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVe
     body->GetCollisionModel()->AddTriangleMesh(trimesh, true, true, loc);
 
     auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
-    trimesh_shape->SetMesh(trimesh);
+    trimesh_shape->SetMesh(*trimesh);
     body->AddAsset(trimesh_shape);
 
     body->AddAsset(std::make_shared<ChColorAsset>(0.0f, 0.0f, 0.5f));
