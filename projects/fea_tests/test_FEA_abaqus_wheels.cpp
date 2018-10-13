@@ -104,8 +104,8 @@ void MakeWheel(ChSystemSMC& my_system,
     my_system.Add(mwheel_rim);
 
     auto mobjmesh = std::make_shared<ChTriangleMeshShape>();
-    mobjmesh->GetMesh().LoadWavefrontMesh(GetChronoDataFile("fea/tractor_wheel_rim.obj"));
-    mobjmesh->GetMesh().Transform(VNULL, mscale);
+    mobjmesh->GetMesh()->LoadWavefrontMesh(GetChronoDataFile("fea/tractor_wheel_rim.obj"));
+    mobjmesh->GetMesh()->Transform(VNULL, mscale);
     mwheel_rim->AddAsset(mobjmesh);
 
     mrim = mwheel_rim;
@@ -220,8 +220,8 @@ int main(int argc, char* argv[]) {
     my_system.Add(mtruss);
 
     auto mtrussmesh = std::make_shared<ChTriangleMeshShape>();
-    mtrussmesh->GetMesh().LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_chassis_simple.obj"));
-    mtrussmesh->GetMesh().Transform(VNULL, Q_from_AngAxis(CH_C_PI_2, VECT_Z) % Q_from_AngAxis(CH_C_PI_2, VECT_Y));
+    mtrussmesh->GetMesh()->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_chassis_simple.obj"));
+    mtrussmesh->GetMesh()->Transform(VNULL, Q_from_AngAxis(CH_C_PI_2, VECT_Z) % Q_from_AngAxis(CH_C_PI_2, VECT_Y));
     mtruss->AddAsset(mtrussmesh);
 
     // Create a step

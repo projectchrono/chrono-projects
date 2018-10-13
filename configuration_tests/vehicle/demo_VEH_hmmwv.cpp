@@ -220,7 +220,7 @@ public:
         wheelBody->GetMaterialSurfaceNSC()->SetFriction(mu_t);
 
         auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
-        trimesh_shape->SetMesh(*trimesh);
+        trimesh_shape->SetMesh(trimesh);
         wheelBody->AddAsset(trimesh_shape);
     }
 };
@@ -273,8 +273,9 @@ class MyLuggedTire : public ChTireContactCallback {
 class MyLuggedTire_vis : public ChTireContactCallback {
   public:
     MyLuggedTire_vis() {
+        lugged_mesh = std::make_shared<geometry::ChTriangleMeshConnected>();
         std::string lugged_file("hmmwv/lugged_wheel_section.obj");
-        utils::LoadConvexMesh(vehicle::GetDataFile(lugged_file), lugged_mesh, lugged_convex);
+        utils::LoadConvexMesh(vehicle::GetDataFile(lugged_file), *lugged_mesh, lugged_convex);
     }
 
     virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
@@ -297,7 +298,7 @@ class MyLuggedTire_vis : public ChTireContactCallback {
 
   private:
     ChConvexDecompositionHACDv2 lugged_convex;
-    geometry::ChTriangleMeshConnected lugged_mesh;
+    std::shared_ptr<geometry::ChTriangleMeshConnected> lugged_mesh;
 };
 
 // =============================================================================

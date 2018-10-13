@@ -100,7 +100,7 @@ void AddWallMesh(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVe
     body->GetCollisionModel()->AddTriangleMesh(trimesh, true, true, loc);
 
     auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
-    trimesh_shape->SetMesh(*trimesh);
+    trimesh_shape->SetMesh(trimesh);
     body->AddAsset(trimesh_shape);
 
     body->AddAsset(std::make_shared<ChColorAsset>(0.0f, 0.0f, 0.5f));
@@ -122,7 +122,7 @@ void AddWallHull(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVe
 
     auto shape = std::make_shared<ChTriangleMeshShape>();
     collision::ChConvexHullLibraryWrapper lh;
-    lh.ComputeHull(points, shape->GetMesh());
+    lh.ComputeHull(points, *shape->GetMesh());
     body->AddAsset(shape);
 
     body->AddAsset(std::make_shared<ChColorAsset>(0.5f, 0.0f, 0.0f));

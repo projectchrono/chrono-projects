@@ -229,7 +229,7 @@ public:
         wheelBody->GetMaterialSurfaceSMC()->SetRestitution(cr_t);
 
         auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
-        trimesh_shape->SetMesh(*trimesh);
+        trimesh_shape->SetMesh(trimesh);
         wheelBody->AddAsset(trimesh_shape);
     }
 };

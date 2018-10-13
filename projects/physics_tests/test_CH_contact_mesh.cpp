@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
     object->GetCollisionModel()->BuildModel();
 
     auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
-    trimesh_shape->SetMesh(*trimesh);
+    trimesh_shape->SetMesh(trimesh);
     object->AddAsset(trimesh_shape);
 
     std::shared_ptr<ChColorAsset> mcol(new ChColorAsset);
