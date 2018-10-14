@@ -208,8 +208,8 @@ class MyMeshTire : public ChTireContactCallback {
 public:
     virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
         std::string mesh_file("hmmwv/hmmwv_tire.obj");
-        geometry::ChTriangleMeshConnected trimesh;
-        trimesh.LoadWavefrontMesh(vehicle::GetDataFile(mesh_file), true, false);
+        auto trimesh = std::make_shared<geometry::ChTriangleMeshConnected>();
+        trimesh->LoadWavefrontMesh(vehicle::GetDataFile(mesh_file), true, false);
 
         // Set contact model
         wheelBody->SetCollisionModel(std::make_shared<collision::ChCollisionModelParallel>());
@@ -273,8 +273,9 @@ class MyLuggedTire : public ChTireContactCallback {
 class MyLuggedTire_vis : public ChTireContactCallback {
   public:
     MyLuggedTire_vis() {
+        lugged_mesh = std::make_shared<geometry::ChTriangleMeshConnected>();
         std::string lugged_file("hmmwv/lugged_wheel_section.obj");
-        utils::LoadConvexMesh(vehicle::GetDataFile(lugged_file), lugged_mesh, lugged_convex);
+        utils::LoadConvexMesh(vehicle::GetDataFile(lugged_file), *lugged_mesh, lugged_convex);
     }
 
     virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
@@ -297,7 +298,7 @@ class MyLuggedTire_vis : public ChTireContactCallback {
 
   private:
     ChConvexDecompositionHACDv2 lugged_convex;
-    geometry::ChTriangleMeshConnected lugged_mesh;
+    std::shared_ptr<geometry::ChTriangleMeshConnected> lugged_mesh;
 };
 
 // =============================================================================

@@ -190,9 +190,9 @@ int main(int argc, char* argv[]) {
     // -----------------------
 
     {
-        geometry::ChTriangleMeshConnected trimesh;
-        trimesh.LoadWavefrontMesh(GetChronoDataFile("fea/tractor_wheel_rim.obj"), false, false);
-        trimesh.Transform(ChVector<>(0, 0, 0), ChMatrix33<>(CH_C_PI_2, ChVector<>(0, 0, 1)));
+        auto trimesh = std::make_shared<geometry::ChTriangleMeshConnected>();
+        trimesh->LoadWavefrontMesh(GetChronoDataFile("fea/tractor_wheel_rim.obj"), false, false);
+        trimesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(CH_C_PI_2, ChVector<>(0, 0, 1)));
         auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
         trimesh_shape->SetMesh(trimesh);
         wheel->AddAsset(trimesh_shape);

@@ -567,9 +567,9 @@ int main(int argc, char* argv[]) {
     SimpChassis->SetBodyFixed(false);
 
     auto mtrussmesh = std::make_shared<ChTriangleMeshShape>();
-    mtrussmesh->GetMesh().LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_chassis_simple.obj"));
-    // mtrussmesh->GetMesh().Transform(VNULL, Q_from_AngAxis(CH_C_PI_2, VECT_Z) % Q_from_AngAxis(CH_C_PI_2, VECT_Y));
-    mtrussmesh->GetMesh().Transform(VNULL, Q_from_AngX(0));
+    mtrussmesh->GetMesh()->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_chassis_simple.obj"));
+    // mtrussmesh->GetMesh()->Transform(VNULL, Q_from_AngAxis(CH_C_PI_2, VECT_Z) % Q_from_AngAxis(CH_C_PI_2, VECT_Y));
+    mtrussmesh->GetMesh()->Transform(VNULL, Q_from_AngX(0));
     SimpChassis->AddAsset(mtrussmesh);
 
     auto Bump = std::make_shared<ChBody>();
