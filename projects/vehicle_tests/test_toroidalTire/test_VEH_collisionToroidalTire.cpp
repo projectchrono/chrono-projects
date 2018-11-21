@@ -28,7 +28,7 @@
 #include "chrono/assets/ChGlyphs.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-#include "chrono_fea/ChContactSurfaceNodeCloud.h"
+#include "chrono/fea/ChContactSurfaceNodeCloud.h"
 
 #include "chrono_irrlicht/ChIrrApp.h"
 

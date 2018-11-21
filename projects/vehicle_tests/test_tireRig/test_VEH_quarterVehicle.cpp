@@ -60,10 +60,8 @@
 #include "chrono_vehicle/wheeled_vehicle/tire/LugreTire.h"
 #include "chrono_vehicle/wheeled_vehicle/tire/RigidTire.h"
 
-#ifdef CHRONO_FEA
 #include "chrono_vehicle/wheeled_vehicle/tire/ANCFTire.h"
 #include "chrono_vehicle/wheeled_vehicle/tire/FEATire.h"
-#endif
 
 #ifdef CHRONO_MKL
 #include "chrono_mkl/ChSolverMKL.h"
@@ -197,7 +195,6 @@ int main(int argc, char* argv[]) {
             break;
         }
         case TireModelType::ANCF: {
-#ifdef CHRONO_FEA
             auto tire_ancf = std::make_shared<ANCFTire>(vehicle::GetDataFile(ancftire_file));
 
             tire_ancf->EnablePressure(true);
@@ -209,11 +206,9 @@ int main(int argc, char* argv[]) {
             wheel_radius = tire_ancf->GetRimRadius();
             tire_width = tire_ancf->GetWidth();
             tire = tire_ancf;
-#endif
             break;
         }
         case TireModelType::FEA: {
-#ifdef CHRONO_FEA
             auto tire_fea = std::make_shared<FEATire>(vehicle::GetDataFile(featire_file));
 
             tire_fea->EnablePressure(true);
@@ -225,7 +220,6 @@ int main(int argc, char* argv[]) {
             wheel_radius = tire_fea->GetRimRadius();
             tire_width = tire_fea->GetWidth();
             tire = tire_fea;
-#endif
             break;
         }
     }
@@ -371,7 +365,6 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Using step_size = " << step_size << std::endl;
 
-#ifdef CHRONO_FEA
     switch (tire_model) {
         case TireModelType::ANCF:
             std::cout << "ANCF tire mass = " << std::static_pointer_cast<ChANCFTire>(tire)->GetTireMass() << std::endl;
@@ -380,7 +373,6 @@ int main(int argc, char* argv[]) {
             std::cout << "FEA tire mass = " << std::static_pointer_cast<ChFEATire>(tire)->GetTireMass() << std::endl;
             break;
     }
-#endif
 
     // Create the Irrlicht app
     // -----------------------

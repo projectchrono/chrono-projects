@@ -33,7 +33,7 @@ set(TESTS_MATLAB_IRR
 # Invoke find_package in CONFIG mode
 
 find_package(Chrono
-             COMPONENTS FEA
+             COMPONENTS
              OPTIONAL_COMPONENTS Irrlicht Postprocess MKL MUMPS Matlab
              CONFIG
 )

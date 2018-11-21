@@ -24,7 +24,7 @@ set(DEMOS_IRR
 # Invoke find_package in CONFIG mode
 
 find_package(Chrono
-             COMPONENTS FEA
+             COMPONENTS
              OPTIONAL_COMPONENTS Irrlicht
              CONFIG
 )
@@ -89,7 +89,7 @@ endif()
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Configuration tests for Chrono::FEA...")
+message(STATUS "Configuration tests for FEA...")
 
 foreach(PROGRAM ${DEMOS})
 

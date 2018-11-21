@@ -31,8 +31,8 @@
 #include "chrono/timestepper/ChState.h"
 #include "chrono/utils/ChUtilsCreators.h"
 
-#include "chrono_fea/ChLoadContactSurfaceMesh.h"
-#include "chrono_fea/ChElementShellANCF.h"
+#include "chrono/fea/ChLoadContactSurfaceMesh.h"
+#include "chrono/fea/ChElementShellANCF.h"
 
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/wheeled_vehicle/tire/ANCFTire.h"

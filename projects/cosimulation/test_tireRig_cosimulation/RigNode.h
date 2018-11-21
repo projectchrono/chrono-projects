@@ -34,7 +34,7 @@
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-#include "chrono_fea/ChLoadContactSurfaceMesh.h"
+#include "chrono/fea/ChLoadContactSurfaceMesh.h"
 
 #include "chrono_vehicle/wheeled_vehicle/tire/ANCFTire.h"
 #include "chrono_vehicle/wheeled_vehicle/tire/RigidTire.h"

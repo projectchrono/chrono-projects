@@ -33,9 +33,9 @@
 #include "chrono/solver/ChSolverMINRES.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-#include "chrono_fea/ChMesh.h"
-#include "chrono_fea/ChElementBrick.h"
-#include "chrono_fea/ChElementSpring.h"
+#include "chrono/fea/ChMesh.h"
+#include "chrono/fea/ChElementBrick.h"
+#include "chrono/fea/ChElementSpring.h"
 
 #include "../BaseTest.h"
 

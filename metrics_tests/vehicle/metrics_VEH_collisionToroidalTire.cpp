@@ -29,7 +29,7 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/core/ChFileutils.h"
 
-#include "chrono_fea/ChContactSurfaceNodeCloud.h"
+#include "chrono/fea/ChContactSurfaceNodeCloud.h"
 
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleModelData.h"

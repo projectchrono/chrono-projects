@@ -29,7 +29,7 @@ find_package(Chrono
 # If Chrono and/or the required component(s) were not found, return now.
 
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for FEA projects")
+  message("Could not find requirements for CORE metrics")
   return()
 endif()
 

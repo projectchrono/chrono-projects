@@ -1,6 +1,6 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono FEA module
-# and optionally the MKL module
+# CMake configuration file for projects requiring the Chrono Vehicle module
+# and the Irrlicht module
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================

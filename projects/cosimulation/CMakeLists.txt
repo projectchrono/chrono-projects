@@ -2,7 +2,7 @@
 # CMake configuration file for Chrono::Vehicle co-simulation projects.
 # Requirements:
 #    MPI
-#    Chrono::Vehicle, Chrono::Parallel, and Chrono::FEA modules
+#    Chrono::Vehicle and Chrono::Parallel modules
 # Optional modules:
 #    Chrono::MKL and Chrono::OpenGL
 #=============================================================================
@@ -36,7 +36,7 @@ endif()
 # Invoke find_package in CONFIG mode
 
 find_package(Chrono
-             COMPONENTS Vehicle Parallel FEA
+             COMPONENTS Vehicle Parallel
              OPTIONAL_COMPONENTS MKL OpenGL Irrlicht
              CONFIG
 )

@@ -11,7 +11,7 @@
 
 find_package(Chrono
              COMPONENTS Vehicle 
-             OPTIONAL_COMPONENTS Irrlicht FEA MKL Parallel OpenGL
+             OPTIONAL_COMPONENTS Irrlicht MKL Parallel OpenGL
              CONFIG
 )
 
@@ -62,18 +62,14 @@ if (CHRONO_IRRLICHT_FOUND)
   add_subdirectory(test_sprocket)
   add_subdirectory(test_WheeledGenericManeuvers)
   add_subdirectory(test_tireRig)
+  add_subdirectory(test_HMMWV)
+  add_subdirectory(test_toroidalTire)
 endif()
 
 if (CHRONO_PARALLEL_FOUND)
   message(STATUS "Programs using Chrono::Parallel...")
   add_subdirectory(test_HMMWV_parallel)
   add_subdirectory(test_M113_parallel)
-endif()
-
-if (CHRONO_FEA_FOUND AND CHRONO_IRRLICHT_FOUND)
-  message(STATUS "Programs using Chrono::FEA and Chrono::Irrlicht...")
-  add_subdirectory(test_HMMWV)
-  add_subdirectory(test_toroidalTire)
 endif()
 
 message(STATUS "")

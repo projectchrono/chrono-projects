@@ -25,7 +25,7 @@ set(DEMOS_BASIC
 # Invoke find_package in CONFIG mode
 
 find_package(Chrono
-             COMPONENTS FEA
+             COMPONENTS
              OPTIONAL_COMPONENTS MKL MUMPS
              CONFIG
 )
@@ -33,7 +33,7 @@ find_package(Chrono
 # If Chrono and/or the required component(s) were not found, return now.
 
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for FEA projects")
+  message("Could not find requirements for FEA metrics")
   return()
 endif()
 
@@ -98,7 +98,7 @@ endif()
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Metrics tests for Chrono::FEA...")
+message(STATUS "Metrics tests for FEA...")
 
 foreach(PROGRAM ${DEMOS})
 

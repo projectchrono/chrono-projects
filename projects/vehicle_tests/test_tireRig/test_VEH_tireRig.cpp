@@ -42,8 +42,8 @@
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/physics/ChLinkDistance.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
-#include "chrono_fea/ChNodeFEAbase.h"
-#include "chrono_fea/ChContactSurfaceNodeCloud.h"
+#include "chrono/fea/ChNodeFEAbase.h"
+#include "chrono/fea/ChContactSurfaceNodeCloud.h"
 
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
@@ -52,16 +52,14 @@
 
 #include "chrono/physics/ChContactContainer.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
-#include "chrono_fea/ChElementShellANCF.h"
+#include "chrono/fea/ChElementShellANCF.h"
 
-#ifdef CHRONO_FEA
 #include "chrono_vehicle/wheeled_vehicle/tire/ANCFTire.h"
 #include "chrono_vehicle/wheeled_vehicle/tire/ReissnerTire.h"
 #include "chrono_vehicle/wheeled_vehicle/tire/FEATire.h"
 #include "chrono_models/vehicle/hmmwv/HMMWV_ANCFTire.h"
 #include "chrono_models/vehicle/hmmwv/HMMWV_ReissnerTire.h"
 #include "chrono_vehicle/terrain/FEADeformableTerrain.h"
-#endif
 
 #include "chrono_models/vehicle/hmmwv/HMMWV_FialaTire.h"
 
@@ -82,13 +80,11 @@ using namespace chrono::irrlicht;
 using namespace irr;
 using namespace fea;
 
-#ifdef CHRONO_FEA
 // Forward declarations
 void CreateVTKFile(std::shared_ptr<fea::ChMesh> m_mesh, std::vector<std::vector<int>>& NodeNeighborElement);
 void UpdateVTKFile(std::shared_ptr<fea::ChMesh> m_mesh,
                    double simtime,
                    std::vector<std::vector<int>>& NodeNeighborElement);
-#endif
 
 // =============================================================================
 // USER SETTINGS
@@ -415,7 +411,6 @@ int main() {
             break;
         }
         case TireModelType::ANCF: {
-#ifdef CHRONO_FEA
             std::shared_ptr<ChANCFTire> tire_ancf;
             if (use_JSON) {
                 tire_ancf = std::make_shared<ANCFTire>(vehicle::GetDataFile(ancftire_file));
@@ -433,11 +428,9 @@ int main() {
             wheel_radius = tire_ancf->GetRimRadius();
             tire_width = tire_ancf->GetWidth();
             tire = tire_ancf;
-#endif
             break;
         }
         case TireModelType::REISSNER: {
-#ifdef CHRONO_FEA
             std::shared_ptr<ChReissnerTire> tire_reissner;
             if (use_JSON) {
                 tire_reissner = std::make_shared<ReissnerTire>(vehicle::GetDataFile(reissnertire_file));
@@ -455,11 +448,9 @@ int main() {
             wheel_radius = tire_reissner->GetRimRadius();
             tire_width = tire_reissner->GetWidth();
             tire = tire_reissner;
-#endif
             break;
         }
         case TireModelType::FEA: {
-#ifdef CHRONO_FEA
             auto tire_fea = std::make_shared<FEATire>(vehicle::GetDataFile(featire_file));
 
             tire_fea->EnablePressure(enable_tire_pressure);
@@ -472,7 +463,6 @@ int main() {
             wheel_radius = tire_fea->GetRimRadius();
             tire_width = tire_fea->GetWidth();
             tire = tire_fea;
-#endif
             break;
         }
     }
@@ -711,7 +701,6 @@ int main() {
         rigid_terrain->Initialize();
         terrain = rigid_terrain;
     } else if (terrain_type == PLASTIC_FEA) {
-#ifdef CHRONO_FEA
         auto fea_terrain = std::make_shared<FEADeformableTerrain>(my_system);
         fea_terrain->SetSoilParametersFEA(200, 1.379e5, 0.25, 0.0, 50000, 20.0, 2.0);
         fea_terrain->Initialize(ChVector<>(-1.0, -0.3, -1.0), ChVector<>(4.0, 0.5, 1.0 - tire_radius - 0.05),
@@ -730,13 +719,11 @@ int main() {
         my_contactsurface->AddFacesFromBoundary(1.0e-2);  // Sphere swept
         my_contactsurface->SetMaterialSurface(mysurfmaterial);
         terrain = fea_terrain;
-#endif
     }
 
 // Optionally use the custom collision detection class for rigid terrain
 // Otherwise apply node cloud to deformable tire
 // ---------------------------------------------------
-#ifdef CHRONO_FEA
     TireTestCollisionManager* my_collider = NULL;
 
     if (tire_model == TireModelType::ANCF && enable_tire_contact && use_custom_collision) {
@@ -774,7 +761,6 @@ int main() {
             // GetLog() << "********************************************\n";
         }
     }
-#endif
 
     // Complete system construction
     // ----------------------------
@@ -882,7 +868,6 @@ int main() {
     TireTestContactReporter my_reporter;
     double rig_mass = wheel_carrier_mass + set_camber_mass + rim_mass + wheel_mass;
 
-#ifdef CHRONO_FEA
     std::vector<std::vector<int>> NodeNeighborElement;
 
     switch (tire_model) {
@@ -892,7 +877,6 @@ int main() {
             CreateVTKFile(std::dynamic_pointer_cast<ChANCFTire>(tire)->GetMesh(), NodeNeighborElement);
             break;
     }
-#endif
 
 #ifdef USE_IRRLICHT
     while (application->GetDevice()->run()) {
@@ -939,12 +923,10 @@ int main() {
 
         // Ensure that the final data point is recorded.
         if (simTime >= outTime - sim_step / 2) {
-#ifdef CHRONO_FEA
             switch (tire_model) {
                 case TireModelType::ANCF:
                     UpdateVTKFile(std::dynamic_pointer_cast<ChANCFTire>(tire)->GetMesh(), simTime, NodeNeighborElement);
             }
-#endif
             ChMatrix33<> A(wheelstate.rot);
             ChVector<> disc_normal = A.Get_A_Yaxis();
             ChCoordsys<> linkCoordsys = revolute_set_camber_rim->GetLinkRelativeCoords();
@@ -1030,9 +1012,7 @@ int main() {
 
     delete my_system;
 
-#ifdef CHRONO_FEA
     delete my_collider;
-#endif
 
     return 0;
 }
@@ -1041,7 +1021,6 @@ int main() {
 // ----------  Write Mesh Info  -----------------
 // ----------------------------------------------
 
-#ifdef CHRONO_FEA
 
 void CreateVTKFile(std::shared_ptr<fea::ChMesh> m_mesh, std::vector<std::vector<int>>& NodeNeighborElement) {
     // Create connectivity for plotting the tire
@@ -1142,5 +1121,3 @@ void UpdateVTKFile(std::shared_ptr<fea::ChMesh> m_mesh,
     }
     output.close();
 }
-
-#endif  /// CHRONO_FEA
