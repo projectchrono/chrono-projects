@@ -62,7 +62,7 @@ void TimingOutput(chrono::ChSystem* mSys) {
     double STEP = mSys->GetTimerStep();
     double BROD = mSys->GetTimerCollisionBroad();
     double NARR = mSys->GetTimerCollisionNarrow();
-    double SOLVER = mSys->GetTimerSolver();
+    double SOLVER = mSys->GetTimerAdvance();
     double UPDT = mSys->GetTimerUpdate();
     int REQ_ITS = 0;
     int BODS = mSys->GetNbodies();
@@ -324,7 +324,7 @@ int main(int argc, char** argv) {
         cum_sim_time += system->GetTimerStep();
         cum_broad_time += system->GetTimerCollisionBroad();
         cum_narrow_time += system->GetTimerCollisionNarrow();
-        cum_solver_time += system->GetTimerSolver();
+        cum_solver_time += system->GetTimerAdvance();
         cum_update_time += system->GetTimerUpdate();
 
         if (track_granule) {

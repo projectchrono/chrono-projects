@@ -66,7 +66,7 @@ void TimingOutput(chrono::ChSystem* mSys) {
     double STEP = mSys->GetTimerStep();
     double BROD = mSys->GetTimerCollisionBroad();
     double NARR = mSys->GetTimerCollisionNarrow();
-    double SOLVER = mSys->GetTimerSolver();
+    double SOLVER = mSys->GetTimerAdvance();
     double UPDT = mSys->GetTimerUpdate();
     double RESID = 0;
     int REQ_ITS = 0;
@@ -328,7 +328,7 @@ bool PARSettlingTest::execute() {
         broad_time += system->GetTimerCollisionBroad();
         narrow_time += system->GetTimerCollisionNarrow();
         update_time += system->GetTimerUpdate();
-        solve_time += system->GetTimerSolver();
+        solve_time += system->GetTimerAdvance();
         num_steps++;
 
         ////TimingOutput(system);
