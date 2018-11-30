@@ -24,9 +24,6 @@
 // All units SI (CGS, i.e., centimeter - gram - second)
 // =============================================================================
 
-#include "core/ChFileutils.h"
-#include "core/ChStream.h"
-
 #include <iostream>
 #include <vector>
 #include <valarray>
@@ -35,7 +32,6 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
@@ -43,6 +39,8 @@
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
+
+#include "chrono_thirdparty/filesystem/path.h"
 
 // Control use of OpenGL run-time rendering
 // Note: CHRONO_OPENGL is defined in ChConfig.h
@@ -519,11 +517,11 @@ void setBulkDensity(ChSystem* sys, double bulkDensity) {
 
 int main(int argc, char* argv[]) {
     // Create output directories.
-    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+    if (!filesystem::create_directory(filesystem::path(out_dir))) {
         cout << "Error creating directory " << out_dir << endl;
         return 1;
     }
-    if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+    if (!filesystem::create_directory(filesystem::path(pov_dir))) {
         cout << "Error creating directory " << pov_dir << endl;
         return 1;
     }

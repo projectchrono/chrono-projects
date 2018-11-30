@@ -12,7 +12,6 @@
 // Authors: Hammad Mazhar
 // =============================================================================
 
-#include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChStream.h"
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/physics/ChSystem.h"

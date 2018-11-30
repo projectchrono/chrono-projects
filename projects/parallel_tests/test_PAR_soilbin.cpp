@@ -22,7 +22,6 @@
 #include <vector>
 #include <cmath>
 
-#include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsCreators.h"
@@ -32,6 +31,8 @@
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
 #include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
+
+#include "chrono_thirdparty/filesystem/path.h"
 
 using namespace chrono;
 using namespace chrono::collision;
@@ -323,11 +324,11 @@ int main(int argc, char* argv[]) {
     // Create output directories.
     // --------------------------
 
-    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+    if (!filesystem::create_directory(filesystem::path(out_dir))) {
         cout << "Error creating directory " << out_dir << endl;
         return 1;
     }
-    if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+    if (!filesystem::create_directory(filesystem::path(pov_dir))) {
         cout << "Error creating directory " << pov_dir << endl;
         return 1;
     }

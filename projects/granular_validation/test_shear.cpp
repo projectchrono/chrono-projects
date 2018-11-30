@@ -19,9 +19,6 @@
 //
 // =============================================================================
 
-#include "core/ChFileutils.h"
-#include "core/ChStream.h"
-
 #include <iostream>
 #include <vector>
 #include <valarray>
@@ -29,8 +26,7 @@
 #include <sstream>
 #include <cmath>
 
-#include "core/ChFileutils.h"
-#include "core/ChStream.h"
+#include "chrono/core/ChStream.h"
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
@@ -38,6 +34,8 @@
 #include "chrono_utils/ChUtilsCreators.h"
 #include "chrono_utils/ChUtilsGenerators.h"
 #include "chrono_utils/ChUtilsInputOutput.h"
+
+#include "chrono_thirdparty/filesystem/path.h"
 
 // Control use of OpenGL run-time rendering
 //#undef CHRONO_PARALLEL_HAS_OPENGL
@@ -466,12 +464,12 @@ int main(int argc, char* argv[])
   }
 
   // Create output directories.
-  if (ChFileutils::MakeDirectory(data_folder.c_str()) < 0) {
-    cout << "Error creating directory " << out_dir << endl;
+  if (!filesystem::create_directory(filesystem::path(data_folder))) {
+    cout << "Error creating directory " << data_folder << endl;
     return 1;
   }
 
-  if(ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+  if (!filesystem::create_directory(filesystem::path(pov_dir))) {
     cout << "Error creating directory " << pov_dir << endl;
     return 1;
   }

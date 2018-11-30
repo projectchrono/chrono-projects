@@ -21,7 +21,6 @@
 
 #include <array>
 
-#include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/core/ChStream.h"
 #include "chrono/physics/ChSystem.h"

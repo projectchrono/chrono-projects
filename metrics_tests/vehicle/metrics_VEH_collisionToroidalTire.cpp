@@ -27,15 +27,16 @@
 
 #include "chrono/assets/ChGlyphs.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
-#include "chrono/core/ChFileutils.h"
 
 #include "chrono/fea/ChContactSurfaceNodeCloud.h"
 
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
-
 #include "chrono_vehicle/wheeled_vehicle/tire/ANCFToroidalTire.h"
+
+#include "chrono_thirdparty/filesystem/path.h"
+
 #include "../BaseTest.h"
 
 using namespace chrono;
@@ -342,7 +343,7 @@ bool toroidalTireTest::execute() {
 
 int main(int argc, char* argv[]) {
     std::string out_dir = "../METRICS";
-    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+    if (!filesystem::create_directory(filesystem::path(out_dir))) {
         std::cout << "Error creating directory " << out_dir << std::endl;
         return 1;
     }

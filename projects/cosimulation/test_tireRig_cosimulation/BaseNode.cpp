@@ -22,7 +22,8 @@
 // =============================================================================
 
 #include "BaseNode.h"
-#include "chrono/core/ChFileutils.h"
+
+#include "chrono_thirdparty/filesystem/path.h"
 
 const double BaseNode::m_gacc = -9.81;
 
@@ -31,8 +32,7 @@ BaseNode::BaseNode(const std::string& name) : m_name(name), m_step_size(1e-4), m
 void BaseNode::SetOutDir(const std::string& dir_name, const std::string& suffix) {
     m_out_dir = dir_name;
     m_node_out_dir = dir_name + "/" + m_name + suffix;
-
-    if (chrono::ChFileutils::MakeDirectory(m_node_out_dir.c_str()) < 0) {
+    if (!filesystem::create_directory(filesystem::path(m_node_out_dir))) {
         std::cout << "Error creating directory " << m_node_out_dir << std::endl;
         return;
     }

@@ -13,7 +13,6 @@
 #include <string>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChTimer.h"
 #include "chrono/solver/ChSolverMINRES.h"
 #include "chrono/physics/ChSystemNSC.h"
@@ -23,6 +22,8 @@
 #include "chrono/fea/ChLinkDirFrame.h"
 #include "chrono/fea/ChLinkPointFrame.h"
 #include "chrono/fea/ChMesh.h"
+
+#include "chrono_thirdparty/filesystem/path.h"
 
 #include "../BaseTest.h"
 
@@ -391,7 +392,7 @@ bool FEAShellTest::execute() {
 
 int main(int argc, char* argv[]) {
     std::string out_dir = "../METRICS";
-    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+    if (!filesystem::create_directory(filesystem::path(out_dir))) {
         std::cout << "Error creating directory " << out_dir << std::endl;
         return 1;
     }

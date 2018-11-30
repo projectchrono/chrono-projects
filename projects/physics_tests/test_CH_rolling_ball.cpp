@@ -28,7 +28,6 @@
 #include <cstdio>
 #include <cmath>
 
-#include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChStream.h"
 
 #include "chrono/physics/ChSystemNSC.h"

@@ -28,10 +28,10 @@
 #include <omp.h>
 #include "mpi.h"
 
-#include "chrono/core/ChFileutils.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
 
 #include "chrono_thirdparty/SimpleOpt/SimpleOpt.h"
+#include "chrono_thirdparty/filesystem/path.h"
 
 #include "VehicleNode.h"
 #include "TerrainNode.h"
@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
 
     // Prepare output directory.
     if (rank == 0) {
-        if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+        if (!filesystem::create_directory(filesystem::path(out_dir))) {
             cout << "Error creating directory " << out_dir << endl;
             return 1;
         }

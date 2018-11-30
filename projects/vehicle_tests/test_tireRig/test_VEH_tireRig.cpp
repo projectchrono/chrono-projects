@@ -35,7 +35,6 @@
 #include "chrono/ChConfig.h"
 #include <algorithm>
 
-#include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChStream.h"
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/physics/ChSystemNSC.h"
@@ -62,6 +61,8 @@
 #include "chrono_vehicle/terrain/FEADeformableTerrain.h"
 
 #include "chrono_models/vehicle/hmmwv/HMMWV_FialaTire.h"
+
+#include "chrono_thirdparty/filesystem/path.h"
 
 #define USE_IRRLICHT
 
@@ -137,7 +138,7 @@ class TireTestContactReporter : public ChContactContainer::ReportContactCallback
             output.close();
         }
         counter++;
-        if (ChFileutils::MakeDirectory("VTKANCF") < 0) {
+        if (!filesystem::create_directory(filesystem::path("VTKANCF"))) {
             GetLog() << "Error creating directory VTK_Animations\n";
             getchar();
             exit(1);
@@ -309,11 +310,11 @@ int main() {
             break;
     }
 
-    if (ChFileutils::MakeDirectory(out_dir1.c_str()) < 0) {
+    if (!filesystem::create_directory(filesystem::path(out_dir1))) {
         std::cout << "Error creating directory " << out_dir1 << std::endl;
         return 1;
     }
-    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+    if (!filesystem::create_directory(filesystem::path(out_dir))) {
         std::cout << "Error creating directory " << out_dir << std::endl;
         return 1;
     }
@@ -1057,7 +1058,7 @@ void CreateVTKFile(std::shared_ptr<fea::ChMesh> m_mesh, std::vector<std::vector<
     for (unsigned int iele = 0; iele < m_mesh->GetNelements(); iele++) {
         MESH << "9\n";
     }
-    if (ChFileutils::MakeDirectory("VTK_ANCFTireAn") < 0) {
+    if (!filesystem::create_directory(filesystem::path("VTK_ANCFTireAn"))) {
         GetLog() << "Error creating directory VTK_Animations\n";
         getchar();
         exit(1);

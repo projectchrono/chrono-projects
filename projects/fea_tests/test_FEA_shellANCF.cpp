@@ -13,7 +13,6 @@
 #include <string>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChTimer.h"
 #include "chrono/core/ChMapMatrix.h"
 #include "chrono/solver/ChSolverMINRES.h"
@@ -25,6 +24,8 @@
 #include "chrono/fea/ChLinkDirFrame.h"
 #include "chrono/fea/ChLinkPointFrame.h"
 #include "chrono/fea/ChMesh.h"
+
+#include "chrono_thirdparty/filesystem/path.h"
 
 #ifdef CHRONO_MKL
 #include "chrono_mkl/ChSolverMKL.h"
@@ -478,7 +479,7 @@ int main(int argc, char* argv[]) {
 
     // Create output directory (if it does not already exist).
     if (output) {
-        if (ChFileutils::MakeDirectory("../TEST_SHELL_ANCF") < 0) {
+        if (!filesystem::create_directory(filesystem::path("../TEST_SHELL_ANCF"))) {
             GetLog() << "Error creating directory ../TEST_SHELL_ANCF\n";
             return 1;
         }

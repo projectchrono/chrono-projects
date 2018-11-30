@@ -17,8 +17,9 @@
 // =============================================================================
 
 #include "chrono/core/ChMatrixDynamic.h"
-#include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChTimer.h"
+
+#include "chrono_thirdparty/filesystem/path.h"
 
 #include "../BaseTest.h"
 
@@ -125,7 +126,7 @@ bool MatMultAVX::CheckMatMultT(int M, int N, int K) {
 
 int main(int argc, char* argv[]) {
     std::string out_dir = "../METRICS";
-    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+    if (!filesystem::create_directory(filesystem::path(out_dir))) {
         std::cout << "Error creating directory " << out_dir << std::endl;
         return 1;
     }

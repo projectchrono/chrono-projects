@@ -20,7 +20,6 @@
 
 // Chrono::Engine header files
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
@@ -53,6 +52,8 @@
 // M113a model header files
 #include "chrono_models/vehicle/m113a/M113a_Vehicle.h"
 #include "chrono_models/vehicle/m113a/M113a_SimplePowertrain.h"
+
+#include "chrono_thirdparty/filesystem/path.h"
 
 // Utilities
 #include "../../utils.h"
@@ -364,13 +365,13 @@ int main(int argc, char* argv[]) {
     // ------------------------------------
 
     // Create output directories
-    if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
+    if (!filesystem::create_directory(filesystem::path(out_dir))) {
         std::cout << "Error creating directory " << out_dir << std::endl;
         return 1;
     }
 
     if (povray_output) {
-        if (ChFileutils::MakeDirectory(pov_dir.c_str()) < 0) {
+        if (!filesystem::create_directory(filesystem::path(pov_dir))) {
             std::cout << "Error creating directory " << pov_dir << std::endl;
             return 1;
         }

@@ -19,7 +19,6 @@
 
 // Chrono::Engine header files
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 

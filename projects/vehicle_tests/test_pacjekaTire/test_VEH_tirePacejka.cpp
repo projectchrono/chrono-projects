@@ -25,7 +25,6 @@
 
 #include <vector>
 
-#include "chrono/core/ChFileutils.h"
 #include "chrono/core/ChStream.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/physics/ChLinkDistance.h"
