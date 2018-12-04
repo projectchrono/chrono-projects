@@ -10,6 +10,7 @@
 //
 
 #include <algorithm>
+#include <iomanip>
 #include <string>
 
 #include "chrono/ChConfig.h"
