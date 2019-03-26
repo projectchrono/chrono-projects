@@ -35,10 +35,10 @@
 #endif
 
 // Chrono utility header files
-#include "utils/ChUtilsGeometry.h"
-#include "utils/ChUtilsCreators.h"
-#include "utils/ChUtilsGenerators.h"
-#include "utils/ChUtilsInputOutput.h"
+#include "chrono/utils/ChUtilsGeometry.h"
+#include "chrono/utils/ChUtilsCreators.h"
+#include "chrono/utils/ChUtilsGenerators.h"
+#include "chrono/utils/ChUtilsInputOutput.h"
 
 // Chrono vehicle header files
 #include "chrono_vehicle/ChVehicleModelData.h"
@@ -180,9 +180,9 @@ void static WriteTrackedVehicleData(
 }
 
 
-double CreateParticles(ChSystem* system) {
+double CreateParticles(ChSystemParallelNSC* system) {
 	// Create a material
-	auto mat_g = std::make_shared<ChMaterialSurface>();
+	auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
 	mat_g->SetFriction(mu_g);
 
 	// Create a particle generator and a mixture entirely made out of spheres
@@ -238,7 +238,7 @@ int main(int argc, char* argv[]) {
 	// --------------
 	// ----  Parallel
 	std::cout << "Create Parallel DVI system" << std::endl;
-	ChSystemParallelDVI* system = new ChSystemParallelDVI();
+	ChSystemParallelNSC* system = new ChSystemParallelNSC();
 
 	system->Set_G_acc(ChVector<>(0, 0, -9.81));
 
@@ -276,7 +276,6 @@ int main(int argc, char* argv[]) {
 
 	CreateContainer(system);
 
-	dof_container = new ChFluidContainer(system);
 	CreateFluid(system);
 
 
@@ -305,7 +304,7 @@ int main(int argc, char* argv[]) {
 	vehicle.SetTrackShoeVisualizationType(VisualizationType::PRIMITIVES);
 
 	// Create the powertrain system
-	M113_SimplePowertrain powertrain;
+	M113_SimplePowertrain powertrain("powertrain");
 	powertrain.Initialize(vehicle.GetChassisBody(), vehicle.GetDriveshaft());
 
 	// ---------------
@@ -334,8 +333,8 @@ int main(int argc, char* argv[]) {
 	// Inter-module communication data
 	BodyStates shoe_states_left(vehicle.GetNumTrackShoes(LEFT));
 	BodyStates shoe_states_right(vehicle.GetNumTrackShoes(RIGHT));
-	TrackShoeForces shoe_forces_left(vehicle.GetNumTrackShoes(LEFT));
-	TrackShoeForces shoe_forces_right(vehicle.GetNumTrackShoes(RIGHT));
+    TerrainForces shoe_forces_left(vehicle.GetNumTrackShoes(LEFT));
+    TerrainForces shoe_forces_right(vehicle.GetNumTrackShoes(RIGHT));
 
 	bool set_time = true;
 

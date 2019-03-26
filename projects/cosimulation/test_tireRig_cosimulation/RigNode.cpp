@@ -236,9 +236,8 @@ void RigNode::Construct() {
     // -------------------------------
 
     // Connect chassis to set_toe body through an actuated revolute joint.
-    m_slip_motor = std::make_shared<ChLinkEngine>();
+    m_slip_motor = std::make_shared<ChLinkMotorRotationAngle>();
     m_slip_motor->SetName("engine_set_slip");
-    m_slip_motor->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
     m_system->AddLink(m_slip_motor);
 
     // Prismatic constraint on the toe
@@ -258,9 +257,8 @@ void RigNode::Construct() {
     m_system->AddLink(m_prism_axl);
 
     // Connect rim to axle: Impose rotation on the rim
-    m_rev_motor = std::make_shared<ChLinkEngine>();
+    m_rev_motor = std::make_shared<ChLinkMotorRotationAngle>();
     m_rev_motor->SetName("Motor_ang_vel");
-    m_rev_motor->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
     m_system->AddLink(m_rev_motor);
 
     // ---------------
@@ -370,8 +368,8 @@ void RigNode::Initialize() {
     // -----------------------------------
 
     // Revolute engine on set_toe
-    m_slip_motor->Set_rot_funct(std::make_shared<ChFunction_SlipAngle>(0));
-    m_slip_motor->Initialize(m_set_toe, m_chassis, ChCoordsys<>(m_set_toe->GetPos(), QUNIT));
+    m_slip_motor->SetAngleFunction(std::make_shared<ChFunction_SlipAngle>(0));
+    m_slip_motor->Initialize(m_set_toe, m_chassis, ChFrame<>(m_set_toe->GetPos(), QUNIT));
 
     // Prismatic constraint on the toe
     m_prism_vel->Initialize(m_ground, m_chassis, ChCoordsys<>(m_chassis->GetPos(), Q_from_AngY(CH_C_PI_2)));
@@ -385,8 +383,8 @@ void RigNode::Initialize() {
     m_prism_axl->Initialize(m_set_toe, m_upright, ChCoordsys<>(m_set_toe->GetPos(), QUNIT));
 
     // Connect rim to upright: Impose rotation on the rim
-    m_rev_motor->Set_rot_funct(std::make_shared<ChFunction_Ramp>(0, -m_init_vel / tire_radius));
-    m_rev_motor->Initialize(m_rim, m_upright, ChCoordsys<>(m_rim->GetPos(), Q_from_AngAxis(CH_C_PI / 2.0, VECT_X)));
+    m_rev_motor->SetAngleFunction(std::make_shared<ChFunction_Ramp>(0, -m_init_vel / tire_radius));
+    m_rev_motor->Initialize(m_rim, m_upright, ChFrame<>(m_rim->GetPos(), Q_from_AngAxis(CH_C_PI / 2.0, VECT_X)));
 
     // -----------------------------------
     // Initialize the tire

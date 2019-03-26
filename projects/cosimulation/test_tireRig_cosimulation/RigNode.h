@@ -31,6 +31,7 @@
 #include <vector>
 
 #include "chrono/physics/ChLinkLock.h"
+#include "chrono/physics/ChLinkMotorRotationAngle.h"
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
@@ -107,11 +108,11 @@ class RigNode : public BaseNode {
     std::string m_tire_json;  ///< name of tire JSON specification file
     bool m_tire_pressure;     ///< tire pressure enabled?
 
-    std::shared_ptr<chrono::ChLinkEngine> m_slip_motor;         ///< angular motor constraint
+    std::shared_ptr<chrono::ChLinkMotorRotationAngle> m_slip_motor;  ///< angular motor constraint
     std::shared_ptr<chrono::ChLinkLockPrismatic> m_prism_vel;   ///< prismatic joint for chassis linear velocity
     std::shared_ptr<chrono::ChLinkLinActuator> m_lin_actuator;  ///< actuator imposing linear velocity to system
     std::shared_ptr<chrono::ChLinkLockPrismatic> m_prism_axl;   ///< prismatic joint for chassis-axle joint
-    std::shared_ptr<chrono::ChLinkEngine> m_rev_motor;          ///< motor enforcing prescribed rim angular velocity
+    std::shared_ptr<chrono::ChLinkMotorRotationAngle> m_rev_motor;   ///< motor enforcing prescribed rim angular vel
 
     double m_init_vel;  ///< initial wheel forward linear velocity
     double m_slip;      ///< prescribed longitudinal slip for wheel

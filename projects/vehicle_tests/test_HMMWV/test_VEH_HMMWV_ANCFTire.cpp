@@ -39,6 +39,8 @@
 #include "chrono_vehicle/wheeled_vehicle/utils/ChWheeledVehicleIrrApp.h"
 
 #include "chrono_models/vehicle/hmmwv/HMMWV.h"
+#include "chrono_models/vehicle/hmmwv/HMMWV_ANCFTire.h"
+#include "chrono_models/vehicle/hmmwv/HMMWV_RigidTire.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 

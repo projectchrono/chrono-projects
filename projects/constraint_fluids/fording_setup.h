@@ -1,9 +1,9 @@
 
 // Chrono utility header files
-#include "utils/ChUtilsGeometry.h"
-#include "utils/ChUtilsCreators.h"
-#include "utils/ChUtilsGenerators.h"
-#include "utils/ChUtilsInputOutput.h"
+#include "chrono/utils/ChUtilsGeometry.h"
+#include "chrono/utils/ChUtilsCreators.h"
+#include "chrono/utils/ChUtilsGenerators.h"
+#include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
@@ -33,7 +33,7 @@ double dist_end = (dim_d + (dim_b + dim_c) * 2 + dim_a * 1.6);  // When to apply
 real container_friction = 0.8;
 
 
-void CreateContainer(ChSystemParallelDVI* system) {
+void CreateContainer(ChSystemParallelNSC* system) {
 	// the extra .03 makes the slope meet up with the end platform
 	real dim_slope = sqrt(dim_e * dim_e + (dim_b + dim_c) * (dim_b + dim_c));  // + .03;
 	real angle = atan(dim_e / (dim_b + dim_c));
@@ -47,7 +47,7 @@ void CreateContainer(ChSystemParallelDVI* system) {
     std::shared_ptr<ChBody> end_slope_1 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
     std::shared_ptr<ChBody> end_slope_2 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
 
-    auto material = std::make_shared<ChMaterialSurface>();
+    auto material = std::make_shared<ChMaterialSurfaceNSC>();
 	material->SetFriction(container_friction);
 	material->SetCompliance(1e-9);
 	material->SetCohesion(0);
@@ -170,7 +170,7 @@ real TriArea(real2 p0, real2 p1, real2 p2) {
 	return (dArea > 0.0) ? dArea : -dArea;
 }
 
-void CreateFluid(ChSystemParallelDVI* system) {
+void CreateFluid(ChSystemParallelNSC* system) {
 	youngs_modulus = stiffness;
 
 	dof_container->kernel_radius = fluid_r * 2;
@@ -181,43 +181,41 @@ void CreateFluid(ChSystemParallelDVI* system) {
 	dof_container->contact_cohesion = 0;
 	dof_container->contact_mu = contact_mu;
 
-	if (ChFluidContainer* fluid_container = dynamic_cast<ChFluidContainer*>(dof_container)) {
-		fluid_container->alpha = alpha;
-		fluid_container->mass = 1;
-		fluid_container->contact_compliance = contact_compliance;
-		fluid_container->epsilon = 1e-8;
+    if (ChFluidContainer* fluid_container = dynamic_cast<ChFluidContainer*>(dof_container)) {
+        fluid_container->alpha = alpha;
+        fluid_container->mass = 1;
+        fluid_container->contact_compliance = contact_compliance;
+        fluid_container->epsilon = 1e-8;
 
-	}
-	else if (Ch3DOFRigidContainer* fluid_container = dynamic_cast<Ch3DOFRigidContainer*>(dof_container)) {
-		fluid_container->alpha = alpha;
-		fluid_container->mass = 1;
-	}
+    } else if (ChParticleContainer* fluid_container = dynamic_cast<ChParticleContainer*>(dof_container)) {
+        fluid_container->alpha = alpha;
+        fluid_container->mass = 1;
+    }
 
-	if (ChFluidContainer* fluid_container = dynamic_cast<ChFluidContainer*>(dof_container)) {
-		fluid_container->rho = rho;
-		fluid_container->tau = 1e-3 * 2;
+    if (ChFluidContainer* fluid_container = dynamic_cast<ChFluidContainer*>(dof_container)) {
+        fluid_container->rho = rho;
+        fluid_container->tau = 1e-3 * 2;
 
-		fluid_container->viscosity = 1;  // Viscosity of water.
-		fluid_container->enable_viscosity = false;
-		fluid_container->artificial_pressure = false;
-		fluid_container->artificial_pressure_k = .01;
-		fluid_container->artificial_pressure_dq = .2 * fluid_container->kernel_radius;
-		fluid_container->artificial_pressure_n = 4;
+        fluid_container->viscosity = 1;  // Viscosity of water.
+        fluid_container->enable_viscosity = false;
+        fluid_container->artificial_pressure = false;
+        fluid_container->artificial_pressure_k = .01;
+        fluid_container->artificial_pressure_dq = .2 * fluid_container->kernel_radius;
+        fluid_container->artificial_pressure_n = 4;
 
-		dist = fluid_container->kernel_radius * .9;
+        dist = fluid_container->kernel_radius * .9;
 
-	}
-	else if (Ch3DOFRigidContainer* fluid_container = dynamic_cast<Ch3DOFRigidContainer*>(dof_container)) {
-		fluid_container->mu = 0;
-		fluid_container->cohesion = 0;
-		fluid_container->kernel_radius *= .9;
-		fluid_container->mu = 0;
-		fluid_container->compliance = compliance;
-		dist = fluid_container->kernel_radius;
-	}
+    } else if (ChParticleContainer* fluid_container = dynamic_cast<ChParticleContainer*>(dof_container)) {
+        fluid_container->mu = 0;
+        fluid_container->cohesion = 0;
+        fluid_container->kernel_radius *= .9;
+        fluid_container->mu = 0;
+        fluid_container->compliance = compliance;
+        dist = fluid_container->kernel_radius;
+    }
 
-	real offset_z = dof_container->kernel_radius;
-	real height = dim_e * .75;
+    real offset_z = dof_container->kernel_radius;
+    real height = dim_e * .75;
 
 	utils::HCPSampler<> sampler(dist);
 	utils::Generator::PointVector points = sampler.SampleBox(
@@ -241,15 +239,14 @@ void CreateFluid(ChSystemParallelDVI* system) {
 			vel_fluid.push_back(real3(0));
 		}
 	}
-	real vol = dist * dist * dist * .8;
-	mass = rho * vol;
-	std::cout << "fluid_mass: " << mass << " " << pos_fluid.size() << std::endl;
-	if (ChFluidContainer* fluid_container = dynamic_cast<ChFluidContainer*>(dof_container)) {
-		fluid_container->mass = mass;
-		fluid_container->AddBodies(pos_fluid, vel_fluid);
-	}
-	else if (Ch3DOFRigidContainer* fluid_container = dynamic_cast<Ch3DOFRigidContainer*>(dof_container)) {
-		fluid_container->mass = mass;
-		fluid_container->AddBodies(pos_fluid, vel_fluid);
-	}
+    real vol = dist * dist * dist * .8;
+    mass = rho * vol;
+    std::cout << "fluid_mass: " << mass << " " << pos_fluid.size() << std::endl;
+    if (ChFluidContainer* fluid_container = dynamic_cast<ChFluidContainer*>(dof_container)) {
+        fluid_container->mass = mass;
+        fluid_container->AddBodies(pos_fluid, vel_fluid);
+    } else if (ChParticleContainer* fluid_container = dynamic_cast<ChParticleContainer*>(dof_container)) {
+        fluid_container->mass = mass;
+        fluid_container->AddBodies(pos_fluid, vel_fluid);
+    }
 }

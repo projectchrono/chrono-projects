@@ -26,6 +26,7 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
+#include "chrono/physics/ChLinkMotorRotationAngle.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsGenerators.h"
@@ -106,7 +107,7 @@ class MySimpleCar {
     std::shared_ptr<ChLinkDistance> link_distRBL2;
     std::shared_ptr<ChLinkSpring> link_springRB;
     std::shared_ptr<ChLinkDistance> link_distRBlat;
-    std::shared_ptr<ChLinkEngine> link_engineL;
+    std::shared_ptr<ChLinkMotorRotationAngle> link_engineL;
     // .. left back suspension:
     std::shared_ptr<ChBody> spindleLB;
     std::shared_ptr<ChBody> wheelLB;
@@ -117,7 +118,7 @@ class MySimpleCar {
     std::shared_ptr<ChLinkDistance> link_distLBL2;
     std::shared_ptr<ChLinkSpring> link_springLB;
     std::shared_ptr<ChLinkDistance> link_distLBlat;
-    std::shared_ptr<ChLinkEngine> link_engineR;
+    std::shared_ptr<ChLinkMotorRotationAngle> link_engineR;
     // THE FUNCTIONS
 
     // Build and initialize the car, creating all bodies corresponding to
@@ -347,13 +348,11 @@ class MySimpleCar {
         my_system->AddLink(link_revoluteRB);
 
         // .. create the motor transmission joint between the wheel and the truss (assuming small changes of alignment)
-        link_engineR = std::make_shared<ChLinkEngine>();
-        link_engineR->Initialize(wheelRB, truss, ChCoordsys<>(ChVector<>(0.91, -0.026, -1.652965),
+        link_engineR = std::make_shared<ChLinkMotorRotationAngle>();
+        link_engineR->Initialize(wheelRB, truss, ChFrame<>(ChVector<>(0.91, -0.026, -1.652965),
                                                               chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
-        link_engineR->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_CARDANO);  // approx as a double Rzeppa joint
-        // link_engineR->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
-        link_engineR->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-        link_engineR->Set_rot_funct(std::make_shared<ChFunction_Ramp>(0, angularSpeed));
+        link_engineR->SetSpindleConstraint(ChLinkMotorRotation::SpindleConstraint::OLDHAM);  // approx as a double Rzeppa joint
+        link_engineR->SetAngleFunction(std::make_shared<ChFunction_Ramp>(0, angularSpeed));
         my_system->AddLink(link_engineR);
 
         // .. impose distance between two parts (as a massless rod with two spherical joints at the end)
@@ -433,13 +432,11 @@ class MySimpleCar {
         my_system->AddLink(link_revoluteLB);
 
         // .. create the motor transmission joint between the wheel and the truss (assuming small changes of alignment)
-        link_engineL = std::make_shared<ChLinkEngine>();
-        link_engineL->Initialize(wheelLB, truss, ChCoordsys<>(ChVector<>(-0.91, -0.026, -1.652965),
+        link_engineL = std::make_shared<ChLinkMotorRotationAngle>();
+        link_engineL->Initialize(wheelLB, truss, ChFrame<>(ChVector<>(-0.91, -0.026, -1.652965),
                                                               chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
-        link_engineL->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_CARDANO);  // approx as a double Rzeppa joint
-        //    link_engineL->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
-        link_engineL->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-        link_engineL->Set_rot_funct(std::make_shared<ChFunction_Ramp>(0, angularSpeed));
+        link_engineL->SetSpindleConstraint(ChLinkMotorRotation::SpindleConstraint::OLDHAM);  // approx as a double Rzeppa joint
+        link_engineL->SetAngleFunction(std::make_shared<ChFunction_Ramp>(0, angularSpeed));
         my_system->AddLink(link_engineL);
 
         // .. impose distance between two parts (as a massless rod with two spherical joints at the end)
@@ -533,7 +530,7 @@ class MySimpleCar {
         // the speed of the engine transmission shaft is the average of the two wheel speeds,
         // multiplied the conic gear transmission ratio inversed:
         double shaftspeed = (1.0 / this->conic_tau) * 0.5 *
-                            (this->link_engineL->Get_mot_rot_dt() + this->link_engineR->Get_mot_rot_dt());
+                            (this->link_engineL->GetMotorRot_dt() + this->link_engineR->GetMotorRot_dt());
         // The motorspeed is the shaft speed multiplied by gear ratio inversed:
         double motorspeed = (1.0 / this->gear_tau) * shaftspeed;
         // The torque depends on speed-torque curve of the motor: here we assume a
@@ -546,11 +543,6 @@ class MySimpleCar {
         // The torque at wheels - for each wheel, given the differential transmission,
         // it is half of the shaft torque  (multiplied the conic gear transmission ratio)
         double singlewheeltorque = 0.5 * shafttorque * (1.0 / this->conic_tau);
-        // Set the wheel torque in both 'engine' links, connecting the wheels to the truss;
-        if (auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(link_engineL->Get_tor_funct()))
-            mfun->Set_yconst(singlewheeltorque);
-        if (auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(link_engineR->Get_tor_funct()))
-            mfun->Set_yconst(singlewheeltorque);
         // debug:print infos on screen:
         // GetLog() << "motor torque="<< motortorque<< "  speed=" <<
         // motorspeed << "  wheel torque = " << singlewheeltorque << "\n";

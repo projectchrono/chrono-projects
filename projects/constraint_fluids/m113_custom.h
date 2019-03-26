@@ -30,9 +30,9 @@ public:
 		m_body->SetFrame_REF_to_abs(ChFrame<>(chassisPos));
 		m_body->SetPos_dt(chassisFwdVel * chassisPos.TransformDirectionLocalToParent(ChVector<>(1, 0, 0)));
 
-		chrono::geometry::ChTriangleMeshConnected chassis_mesh;
+        auto chassis_mesh = std::make_shared<chrono::geometry::ChTriangleMeshConnected>();
 		std::vector<std::vector<ChVector<double> > > chassis_hulls;
-		utils::LoadConvexHulls(vehicle::GetDataFile("M113/Chassis_Hulls.obj"), chassis_mesh, chassis_hulls);
+		utils::LoadConvexHulls(vehicle::GetDataFile("M113/Chassis_Hulls.obj"), *chassis_mesh, chassis_hulls);
 
 		m_body->GetAssets().clear();
 		m_body->GetCollisionModel()->ClearModel();
@@ -56,7 +56,7 @@ class  M113_Vehicle_Custom : public ChTrackedVehicle {
 public:
 	M113_Vehicle_Custom(bool fixed,
 		TrackShoeType shoe_type,
-		ChMaterialSurfaceBase::ContactMethod contactMethod = ChMaterialSurfaceBase::DVI) : ChTrackedVehicle("M113 Vehicle", contactMethod), m_type(shoe_type) {
+		ChMaterialSurface::ContactMethod contactMethod = ChMaterialSurface::NSC) : ChTrackedVehicle("M113 Vehicle", contactMethod), m_type(shoe_type) {
 		Create(fixed);
 	}
 
@@ -73,7 +73,7 @@ public:
 		// Initialize the left and right track assemblies.
 		double track_offset = 1.0795;
 
-		if (ChSystemParallelDVI* system_dvi = dynamic_cast<ChSystemParallelDVI*>(m_system)) {
+		if (ChSystemParallelNSC* system_dvi = dynamic_cast<ChSystemParallelNSC*>(m_system)) {
 			
 
 			printf("BodiesA: %d\n", system_dvi->data_manager->num_rigid_shapes);

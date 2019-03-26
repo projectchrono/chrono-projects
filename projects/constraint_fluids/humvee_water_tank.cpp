@@ -315,8 +315,10 @@ ChFluidContainer* fluid_container;
 
 
 void CreateFluid(ChSystemParallelNSC* system ) {
-	fluid_container  = new ChFluidContainer(system);
-	fluid_container->kernel_radius = fluid_r;
+    auto fluid_container = std::make_shared<ChFluidContainer>();
+    system->Add3DOFContainer(fluid_container);
+    
+    fluid_container->kernel_radius = fluid_r;
 	fluid_container->collision_envelope = 0;
 	fluid_container->contact_recovery_speed = 20;
 	fluid_container->max_velocity = 20;
@@ -360,7 +362,7 @@ std::shared_ptr<ChBody> bottom_plate;
 void CreateBase(ChSystemParallelNSC* system) {
 
 	bottom_plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
-	auto material = std::make_shared<ChMaterialSurface>();
+	auto material = std::make_shared<ChMaterialSurfaceNSC>();
 	material->SetFriction(container_friction);
 	material->SetCompliance(1e-9);
 	material->SetCohesion(0);
@@ -403,7 +405,7 @@ void CreateBase(ChSystemParallelNSC* system) {
 
 
 void CreateGravel(ChSystemParallelNSC* system) {
-	auto mat_g = std::make_shared<ChMaterialSurface>();
+	auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
 	mat_g->SetFriction(mu_g);
 
 	utils::Generator gen(system);

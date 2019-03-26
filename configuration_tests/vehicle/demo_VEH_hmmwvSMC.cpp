@@ -164,7 +164,7 @@ int out_fps = 60;
 // =============================================================================
 
 // Callback class for providing driver inputs.
-class MyDriverInputs : public ChDriverInputsCallback {
+class MyDriverInputs : public ChWheeledVehicleAssembly::ChDriverInputsCallback {
   public:
     MyDriverInputs(double delay) : m_delay(delay) {}
 
@@ -191,7 +191,7 @@ class MyDriverInputs : public ChDriverInputsCallback {
 
 // Callback class for specifying rigid tire contact model.
 // This version uses cylindrical contact shapes.
-class MyCylindricalTire : public ChTireContactCallback {
+class MyCylindricalTire : public ChWheeledVehicleAssembly::ChTireContactCallback {
   public:
     virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
         wheelBody->SetCollisionModel(std::make_shared<collision::ChCollisionModelParallel>());
@@ -212,7 +212,7 @@ class MyCylindricalTire : public ChTireContactCallback {
     }
 };
 
-class MyMeshTire : public ChTireContactCallback {
+class MyMeshTire : public ChWheeledVehicleAssembly::ChTireContactCallback {
 public:
     virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
         std::string mesh_file("hmmwv/hmmwv_tire.obj");
@@ -237,7 +237,7 @@ public:
 
 // Callback class for specifying rigid tire contact model.
 // This version uses a collection of convex contact shapes (meshes).
-class MyLuggedTire : public ChTireContactCallback {
+class MyLuggedTire : public ChWheeledVehicleAssembly::ChTireContactCallback {
   public:
     MyLuggedTire() {
         std::string lugged_file("hmmwv/lugged_wheel_section.obj");
@@ -433,7 +433,7 @@ int main(int argc, char* argv[]) {
     // -----------------------------------------
 
     ChWheeledVehicleAssembly* vehicle;
-    ChTireContactCallback* tire_cb;
+    ChWheeledVehicleAssembly::ChTireContactCallback* tire_cb;
 
     // Create the vehicle assembly and the callback object for tire contact
     // according to the specified type of tire/wheel.

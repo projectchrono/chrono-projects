@@ -40,6 +40,7 @@
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/physics/ChLinkDistance.h"
+#include "chrono/physics/ChLinkMotorRotationAngle.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/fea/ChNodeFEAbase.h"
 #include "chrono/fea/ChContactSurfaceNodeCloud.h"
@@ -634,11 +635,10 @@ int main() {
     // The revolute joint's axis of rotation will be the Z axis of the specified rotation matrix.
     auto f_slip = std::make_shared<ChFunction_SlipAngle>();
 
-    auto slip_motor = std::make_shared<ChLinkEngine>();
-    slip_motor->Initialize(set_toe, chassis, ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
+    auto slip_motor = std::make_shared<ChLinkMotorRotationAngle>();
+    slip_motor->Initialize(set_toe, chassis, ChFrame<>(ChVector<>(0, 0, 0), QUNIT));
     slip_motor->SetName("engine_set_slip");
-    slip_motor->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-    slip_motor->Set_rot_funct(f_slip);
+    slip_motor->SetAngleFunction(f_slip);
     my_system->AddLink(slip_motor);
 
     // --------------------------------------------
@@ -660,11 +660,10 @@ int main() {
     // The revolute joint's axis of rotation will be the Z axis of the specified rotation matrix.
     auto f_camber = std::make_shared<ChFunction_CamberAngle>();
 
-    auto camber_motor = std::make_shared<ChLinkEngine>();
-    camber_motor->Initialize(set_camber, wheel_carrier, ChCoordsys<>(ChVector<>(0, 0, 0), Q_from_AngY(CH_C_PI_2)));
+    auto camber_motor = std::make_shared<ChLinkMotorRotationAngle>();
+    camber_motor->Initialize(set_camber, wheel_carrier, ChFrame<>(ChVector<>(0, 0, 0), Q_from_AngY(CH_C_PI_2)));
     camber_motor->SetName("engine_set_camber");
-    camber_motor->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-    camber_motor->Set_rot_funct(f_camber);
+    camber_motor->SetAngleFunction(f_camber);
     my_system->AddLink(camber_motor);
 
     // --------------------------------------------
@@ -725,7 +724,7 @@ int main() {
 // Optionally use the custom collision detection class for rigid terrain
 // Otherwise apply node cloud to deformable tire
 // ---------------------------------------------------
-    TireTestCollisionManager* my_collider = NULL;
+    TireTestCollisionManager* my_collider = nullptr;
 
     if (tire_model == TireModelType::ANCF && enable_tire_contact && use_custom_collision) {
         // Disable automatic contact on the ground body

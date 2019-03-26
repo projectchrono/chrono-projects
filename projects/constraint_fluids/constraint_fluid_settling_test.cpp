@@ -52,7 +52,7 @@ ChVector<> hdim(kernel_radius * 7, kernel_radius * 7, kernel_radius * 7 * mult);
 //store time taken to solve
 
 
-void WriteData(ChSystemParallelDVI* msystem, uint i) {
+void WriteData(ChSystemParallelNSC* msystem, uint i) {
     auto iter_solver = std::static_pointer_cast<ChIterativeSolverParallel>(msystem->GetSolver());
     int iters = iter_solver->GetTotalIterations();
     const std::vector<double>& vhist = iter_solver->GetViolationHistory();
@@ -120,9 +120,9 @@ void WriteData(ChSystemParallelDVI* msystem, uint i) {
 
 }
 
-void AddContainer(ChSystemParallelDVI* sys) {
+void AddContainer(ChSystemParallelNSC* sys) {
 	// Create a common material
-	auto mat = std::make_shared<ChMaterialSurface>();
+	auto mat = std::make_shared<ChMaterialSurfaceNSC>();
 	mat->SetFriction(1.0);
 	utils::CreateBoxContainer(sys, 0, mat, hdim + ChVector<>(0, 0, kernel_radius * 4), thickness, Vector(0, 0, -hdim.z()- kernel_radius), QUNIT, true, false, true,
 		true);
@@ -131,8 +131,9 @@ void AddContainer(ChSystemParallelDVI* sys) {
 // -----------------------------------------------------------------------------
 // Create the fluid in the shape of a sphere.
 // -----------------------------------------------------------------------------
-void AddFluid(ChSystemParallelDVI* sys) {
-	fluid_container = new ChFluidContainer(sys);
+void AddFluid(ChSystemParallelNSC* sys) {
+    auto fluid_container = std::make_shared<ChFluidContainer>();
+    sys->Add3DOFContainer(fluid_container);
 
 	fluid_container->tau = timestep * 2;
 	fluid_container->epsilon = 1e-8;
@@ -200,7 +201,7 @@ int main(int argc, char* argv[]) {
 	// Create system
 	// -------------
 
-	ChSystemParallelDVI msystem;
+	ChSystemParallelNSC msystem;
 	// Set gravitational acceleration
 	msystem.Set_G_acc(ChVector<>(0, 0, -9.81));
 

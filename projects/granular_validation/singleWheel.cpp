@@ -34,6 +34,7 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/core/ChStream.h"
+#include "chrono/physics/ChLinkMotorRotationAngle.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -370,11 +371,10 @@ void ConnectChassisToAxle(ChSystemParallel* system, std::shared_ptr<ChBody> chas
 // =============================================================================
 
 void ConnectWheelToAxle(ChSystemParallel* system, std::shared_ptr<ChBody> wheel, std::shared_ptr<ChBody> axle) {
-    auto motor = std::make_shared<ChLinkEngine>();
-    motor->Initialize(wheel, axle, ChCoordsys<>(wheel->GetPos(), chrono::Q_from_AngAxis(CH_C_PI / 2.0, VECT_X)));
+    auto motor = std::make_shared<ChLinkMotorRotationAngle>();
     motor->SetName("engine_wheel_axle");
-    motor->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-    motor->Set_rot_funct(std::make_shared<ChFunction_Ramp>(0, -angVel));
+    motor->Initialize(wheel, axle, ChFrame<>(wheel->GetPos(), chrono::Q_from_AngAxis(CH_C_PI / 2.0, VECT_X)));
+    motor->SetAngleFunction(std::make_shared<ChFunction_Ramp>(0, -angVel));
     system->AddLink(motor);
 }
 
@@ -601,7 +601,7 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<ChLinkLockPrismatic> prismatic_chassis_ground;
     std::shared_ptr<ChLinkLockPrismatic> prismatic_axle_chassis;
     std::shared_ptr<ChLinkLinActuator> actuator;
-    std::shared_ptr<ChLinkEngine> engine_wheel_axle;
+    std::shared_ptr<ChLinkMotorRotationAngle> engine_wheel_axle;
 
     switch (problem) {
         case SETTLING: {
@@ -663,7 +663,7 @@ int main(int argc, char* argv[]) {
             // Connect the axle to the chassis.
             angVel = 0.0;  // Don't rotate the wheel in this stage
             ConnectWheelToAxle(msystem, wheel, axle);
-            engine_wheel_axle = std::static_pointer_cast<ChLinkEngine>(msystem->SearchLink("engine_wheel_axle"));
+            engine_wheel_axle = std::static_pointer_cast<ChLinkMotorRotationAngle>(msystem->SearchLink("engine_wheel_axle"));
 
             // Release the axle.
             wheel->SetBodyFixed(false);
@@ -706,7 +706,7 @@ int main(int argc, char* argv[]) {
 
             // Connect the axle to the chassis.
             ConnectWheelToAxle(msystem, wheel, axle);
-            engine_wheel_axle = std::static_pointer_cast<ChLinkEngine>(msystem->SearchLink("engine_wheel_axle"));
+            engine_wheel_axle = std::static_pointer_cast<ChLinkMotorRotationAngle>(msystem->SearchLink("engine_wheel_axle"));
 
             // Release the axle.
             wheel->SetBodyFixed(false);
@@ -758,7 +758,7 @@ int main(int argc, char* argv[]) {
 
             // Connect the axle to the chassis.
             ConnectWheelToAxle(msystem, wheel, axle);
-            engine_wheel_axle = std::static_pointer_cast<ChLinkEngine>(msystem->SearchLink("engine_wheel_axle"));
+            engine_wheel_axle = std::static_pointer_cast<ChLinkMotorRotationAngle>(msystem->SearchLink("engine_wheel_axle"));
 
             // Release the axle.
             wheel->SetBodyFixed(false);

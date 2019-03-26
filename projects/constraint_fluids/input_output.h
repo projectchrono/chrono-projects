@@ -108,7 +108,7 @@ void static WriteLocalData(const std::string&& filename,
 	bin_output.CloseFile();
 }
 
-void static DumpFluidData(chrono::ChSystemParallelDVI* system, std::string filename, bool binary = true) {
+void static DumpFluidData(chrono::ChSystemParallelNSC* system, std::string filename, bool binary = true) {
 	std::vector<real3> pos_particle;
 	std::vector<real3> vel_particle;
 	int num_particles = system->data_manager->num_fluid_bodies;
@@ -135,8 +135,8 @@ void static DumpAllObjectsWithGeometryPovray(ChSystem* mSys, std::string filenam
 	CSVGen csv_output;
 	csv_output.OpenFile(filename.c_str(), binary);
 
-	for (int i = 0; i < mSys->Get_bodylist()->size(); i++) {  //
-		auto abody = mSys->Get_bodylist()->at(i);             // Get body
+	for (int i = 0; i < mSys->Get_bodylist().size(); i++) {  //
+		auto abody = mSys->Get_bodylist().at(i);             // Get body
 		const Vector pos = abody->GetFrame_REF_to_abs().GetPos();
 		const Vector vel = abody->GetPos_dt();  // Get velocity
 		Quaternion rot = abody->GetFrame_REF_to_abs().GetRot();
