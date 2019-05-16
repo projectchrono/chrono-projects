@@ -98,24 +98,14 @@ int main(int argc, char* argv[]) {
 
     // Create a constraint between a node and the truss
     auto constraint1 = std::make_shared<ChLinkPointFrame>();
-    constraint1->Initialize(my_mesh,  // node container
-                            0,        // index of node in node container
-                            truss);   // body to be connected to
-
     auto constraint2 = std::make_shared<ChLinkPointFrame>();
-    constraint2->Initialize(my_mesh,  // node container
-                            1,        // index of node in node container
-                            truss);   // body to be connected to
-
     auto constraint3 = std::make_shared<ChLinkPointFrame>();
-    constraint3->Initialize(my_mesh,  // node container
-                            2,        // index of node in node container
-                            truss);   // body to be connected to
-
     auto constraint4 = std::make_shared<ChLinkPointFrame>();
-    constraint4->Initialize(my_mesh,  // node container
-                            3,        // index of node in node container
-                            truss);   // body to be connected to
+
+    constraint1->Initialize(mnode1, truss);
+    constraint2->Initialize(mnode2, truss);
+    constraint3->Initialize(mnode3, truss);
+    constraint4->Initialize(mnode4, truss);
 
     my_system.Add(constraint1);
     my_system.Add(constraint2);
