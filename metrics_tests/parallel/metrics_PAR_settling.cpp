@@ -204,7 +204,7 @@ bool PARSettlingTest::execute() {
 // Sanity check: print number of threads in a parallel region
 #pragma omp parallel
 #pragma omp master
-    { std::cout << "Actual number of OpenMP threads: " << omp_get_num_threads() << std::endl; }
+    { std::cout << "Actual number of OpenMP threads: " << CHOMPfunctions::GetNumThreads() << std::endl; }
 
     // ---------------------
     // Create terrain bodies
