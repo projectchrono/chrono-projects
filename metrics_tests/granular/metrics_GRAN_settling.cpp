@@ -156,7 +156,7 @@ void SetupGranTriSystem(ChSystemGranularSMC_trimesh& m_sys) {
     vector<string> mesh_filenames;
     string mesh_filename("../metrics_tests/granular/upward_plane_refined.obj");
 
-    mesh_filenames.push_back(mesh_filename);
+    mesh_filenames.push_back(GetChronoDataFile((mesh_filename));
 
     vector<float3> mesh_scalings;
     float3 scaling = make_float3(box_X / 2, box_Y / 2, 1);
@@ -298,6 +298,9 @@ bool GranSettlingTest::execute() {
 }
 
 int main(int argc, char* argv[]) {
+    // Set the path to the Chrono data folder
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     std::string out_dir = "../METRICS";
     if (!filesystem::create_directory(filesystem::path(out_dir))) {
         std::cout << "Error creating directory " << out_dir << std::endl;

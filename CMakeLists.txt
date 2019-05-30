@@ -94,6 +94,19 @@ endif()
 
 add_subdirectory(projects)
 
+# ------------------------------------------------------------------------------
+# Copy the data folder to the bin directory
+# ------------------------------------------------------------------------------
+
+IF(MSVC)
+  FILE( COPY ${CMAKE_SOURCE_DIR}/data/ DESTINATION ${CMAKE_BINARY_DIR}/bin/data/)
+ELSEIF(XCODE_VERSION)
+  FILE( COPY ${CMAKE_SOURCE_DIR}/data/ DESTINATION ${CMAKE_BINARY_DIR}/bin/data/)
+ELSE()
+  FILE( COPY ${CMAKE_SOURCE_DIR}/data/ DESTINATION ${CMAKE_BINARY_DIR}/data/)
+ENDIF()
+
+SET(CHRONO_DATA_DIR "${CHRONO_DATA_DIR}")
 
 #-----------------------------------------------------------------------------
 # Copy DLLs
