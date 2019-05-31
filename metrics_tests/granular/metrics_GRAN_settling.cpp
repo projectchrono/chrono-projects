@@ -25,6 +25,8 @@
 #include "chrono_granular/physics/ChGranularTriMesh.h"
 #include "chrono_thirdparty/filesystem/path.h"
 
+#include "chrono/physics/ChGlobal.h"
+
 #include "chrono_granular/utils/ChGranularJsonParser.h"
 
 #include "../BaseTest.h"
@@ -156,7 +158,7 @@ void SetupGranTriSystem(ChSystemGranularSMC_trimesh& m_sys) {
     vector<string> mesh_filenames;
     string mesh_filename("../metrics_tests/granular/upward_plane_refined.obj");
 
-    mesh_filenames.push_back(GetChronoDataFile((mesh_filename));
+    mesh_filenames.push_back(GetChronoDataFile(mesh_filename));
 
     vector<float3> mesh_scalings;
     float3 scaling = make_float3(box_X / 2, box_Y / 2, 1);
