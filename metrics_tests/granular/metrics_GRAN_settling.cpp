@@ -40,32 +40,32 @@ using std::string;
 using std::vector;
 
 float sphere_radius = 1;
-float sphere_density = 1.5;
+float sphere_density = 2.5;
 
 float box_X = 220;
 float box_Y = 220;
 float box_Z = 220;
 
-float step_size = 1e-4;
+float step_size = 5e-5;
 float time_end = 1;
 
 float grav_X = 0;
 float grav_Y = 0;
 float grav_Z = -980;
 
-float normalStiffS2S = 1e7;
-float normalStiffS2W = 1e7;
-float normalStiffS2M = 1e7;
-float normalDampS2S = 6e3;
-float normalDampS2W = 6e3;
-float normalDampS2M = 6e3;
+float normalStiffS2S = 5e7;
+float normalStiffS2W = 5e7;
+float normalStiffS2M = 5e7;
+float normalDampS2S = 10000;
+float normalDampS2W = 10000;
+float normalDampS2M = 10000;
 
-float tangentStiffS2S = 1e5;
-float tangentStiffS2M = 1e5;
-float tangentStiffS2W = 1e5;
-float tangentDampS2S = 0;
-float tangentDampS2M = 0;
-float tangentDampS2W = 0;
+float tangentStiffS2S = 2e7;
+float tangentStiffS2M = 2e7;
+float tangentStiffS2W = 2e7;
+float tangentDampS2S = 100;
+float tangentDampS2M = 100;
+float tangentDampS2W = 100;
 
 float cohesion_ratio = 0;
 float adhesion_ratio_s2w = 0;
