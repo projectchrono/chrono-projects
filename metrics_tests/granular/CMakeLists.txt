@@ -89,11 +89,10 @@ foreach(PROGRAM ${DEMOS})
 
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
 
-  # Note: this is not intended to work on Windows!
-  add_test(NAME ${PROGRAM}
-           WORKING_DIRECTORY ${WORK_DIR}
-           COMMAND ${WORK_DIR}/${PROGRAM}
-           )
+  #add_test(NAME ${PROGRAM}
+  #         WORKING_DIRECTORY ${WORK_DIR}
+  #         COMMAND ${WORK_DIR}/${PROGRAM}
+  #         )
 
 endforeach(PROGRAM)
 
