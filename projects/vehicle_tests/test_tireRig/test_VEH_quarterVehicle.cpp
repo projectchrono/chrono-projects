@@ -134,7 +134,7 @@ int main(int argc, char* argv[]) {
 
     // Create the quarter-vehicle chassis
     // ----------------------------------
-    auto chassis = std::make_shared<ChBody>(contact_method);
+    auto chassis = chrono_types::make_shared<ChBody>(contact_method);
     system->AddBody(chassis);
     chassis->SetIdentifier(1);
     chassis->SetName("chassis");
@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
 
     // Create the wheel (rim)
     // ----------------------
-    auto wheel = std::make_shared<ChBody>(contact_method);
+    auto wheel = chrono_types::make_shared<ChBody>(contact_method);
     system->AddBody(wheel);
     wheel->SetIdentifier(2);
     wheel->SetName("wheel");
@@ -168,7 +168,7 @@ int main(int argc, char* argv[]) {
 
     switch (tire_model) {
         case TireModelType::RIGID: {
-            auto tire_rigid = std::make_shared<RigidTire>(vehicle::GetDataFile(rigidtire_file));
+            auto tire_rigid = chrono_types::make_shared<RigidTire>(vehicle::GetDataFile(rigidtire_file));
             tire_rigid->Initialize(wheel, LEFT);
             tire_radius = tire_rigid->GetRadius();
             wheel_radius = tire_radius;
@@ -177,7 +177,7 @@ int main(int argc, char* argv[]) {
             break;
         }
         case TireModelType::LUGRE: {
-            auto tire_lugre = std::make_shared<LugreTire>(vehicle::GetDataFile(lugretire_file));
+            auto tire_lugre = chrono_types::make_shared<LugreTire>(vehicle::GetDataFile(lugretire_file));
             tire_lugre->Initialize(wheel, LEFT);
             tire_radius = tire_lugre->GetRadius();
             wheel_radius = tire_radius;
@@ -186,7 +186,7 @@ int main(int argc, char* argv[]) {
             break;
         }
         case TireModelType::FIALA: {
-            auto tire_fiala = std::make_shared<FialaTire>(vehicle::GetDataFile(fialatire_file));
+            auto tire_fiala = chrono_types::make_shared<FialaTire>(vehicle::GetDataFile(fialatire_file));
             tire_fiala->Initialize(wheel, LEFT);
             tire_radius = tire_fiala->GetRadius();
             wheel_radius = tire_radius;
@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
             break;
         }
         case TireModelType::ANCF: {
-            auto tire_ancf = std::make_shared<ANCFTire>(vehicle::GetDataFile(ancftire_file));
+            auto tire_ancf = chrono_types::make_shared<ANCFTire>(vehicle::GetDataFile(ancftire_file));
 
             tire_ancf->EnablePressure(true);
             tire_ancf->EnableContact(true);
@@ -209,7 +209,7 @@ int main(int argc, char* argv[]) {
             break;
         }
         case TireModelType::FEA: {
-            auto tire_fea = std::make_shared<FEATire>(vehicle::GetDataFile(featire_file));
+            auto tire_fea = chrono_types::make_shared<FEATire>(vehicle::GetDataFile(featire_file));
 
             tire_fea->EnablePressure(true);
             tire_fea->EnableContact(true);
@@ -228,31 +228,31 @@ int main(int argc, char* argv[]) {
     // -------------------------
 
     {
-        auto boxH = std::make_shared<ChBoxShape>();
+        auto boxH = chrono_types::make_shared<ChBoxShape>();
         boxH->GetBoxGeometry().SetLengths(ChVector<>(2, 0.02, 0.02));
         chassis->AddAsset(boxH);
-        auto boxV = std::make_shared<ChBoxShape>();
+        auto boxV = chrono_types::make_shared<ChBoxShape>();
         boxV->GetBoxGeometry().SetLengths(ChVector<>(0.02, 0.02, 2));
         chassis->AddAsset(boxV);
-        auto cyl = std::make_shared<ChCylinderShape>();
+        auto cyl = chrono_types::make_shared<ChCylinderShape>();
         cyl->GetCylinderGeometry().rad = 0.05;
         cyl->GetCylinderGeometry().p1 = ChVector<>(0, 0.55 * tire_width, 0);
         cyl->GetCylinderGeometry().p2 = ChVector<>(0, -0.55 * tire_width, 0);
         chassis->AddAsset(cyl);
-        auto color = std::make_shared<ChColorAsset>(0.4f, 0.5f, 0.6f);
+        auto color = chrono_types::make_shared<ChColorAsset>(0.4f, 0.5f, 0.6f);
         chassis->AddAsset(color);
     }
 
     // Add wheel visualization
     // -----------------------
 
-    auto wheel_cyl = std::make_shared<ChCylinderShape>();
+    auto wheel_cyl = chrono_types::make_shared<ChCylinderShape>();
     wheel_cyl->GetCylinderGeometry().rad = wheel_radius;
     wheel_cyl->GetCylinderGeometry().p1 = ChVector<>(0, tire_width / 2, 0);
     wheel_cyl->GetCylinderGeometry().p2 = ChVector<>(0, -tire_width / 2, 0);
     wheel->AddAsset(wheel_cyl);
 
-    auto tex = std::make_shared<ChTexture>();
+    auto tex = chrono_types::make_shared<ChTexture>();
     tex->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
     wheel->AddAsset(tex);
 
@@ -260,7 +260,7 @@ int main(int argc, char* argv[]) {
     // ------------------
 
     double terrain_height = init_loc.z() - tire_radius - tire_offset;
-    auto terrain = std::make_shared<RigidTerrain>(system);
+    auto terrain = chrono_types::make_shared<RigidTerrain>(system);
     auto patch = terrain->AddPatch(ChCoordsys<>(ChVector<>(0, 0, terrain_height - 5), QUNIT),
                                    ChVector<>(terrain_length, terrain_width, 10));
     patch->SetContactFrictionCoefficient(0.9f);
@@ -274,14 +274,14 @@ int main(int argc, char* argv[]) {
 
     // Connect chassis to ground through a plane-plane joint.
     // The normal to the common plane is along the y global axis.
-    auto plane_plane = std::make_shared<ChLinkLockPlanePlane>();
+    auto plane_plane = chrono_types::make_shared<ChLinkLockPlanePlane>();
     system->AddLink(plane_plane);
     plane_plane->SetName("plane_plane");
     plane_plane->Initialize(patch->GetGroundBody(), chassis, ChCoordsys<>(init_loc, Q_from_AngX(CH_C_PI_2)));
 
     // Connect wheel to chassis through a revolute joint.
     // The axis of rotation is along the y global axis.
-    auto revolute = std::make_shared<ChLinkLockRevolute>();
+    auto revolute = chrono_types::make_shared<ChLinkLockRevolute>();
     system->AddLink(revolute);
     revolute->SetName("revolute");
     revolute->Initialize(chassis, wheel, ChCoordsys<>(init_loc, Q_from_AngX(CH_C_PI_2)));
@@ -335,7 +335,7 @@ int main(int argc, char* argv[]) {
         case MKL: {
 #ifdef CHRONO_MKL
             std::cout << "Using MKL solver\n";
-            auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+            auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
             mkl_solver->SetSparsityPatternLock(true);
             system->SetSolver(mkl_solver);
 #endif

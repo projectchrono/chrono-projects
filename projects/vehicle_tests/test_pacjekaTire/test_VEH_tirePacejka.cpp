@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
     tire_combined.SetDrivenWheel(true);
 
     // Create a dummy wheel body
-    auto wheel = std::make_shared<ChBody>();
+    auto wheel = chrono_types::make_shared<ChBody>();
 
     // Itialize the tires on the left or right side
     tire_long.Initialize(wheel, side);

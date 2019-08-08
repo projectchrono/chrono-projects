@@ -179,14 +179,14 @@ double h = 10e-2;
 int CreateObjects(ChSystemParallel* msystem) {
 // Create the containing bin
 #ifdef USE_SMC
-    auto mat_c = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_c->SetYoungModulus(Y_c);
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
 
     utils::CreateBoxContainer(msystem, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 #else
-    auto mat_c = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_c->SetFriction(mu_c);
 
     utils::CreateBoxContainer(msystem, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
@@ -194,12 +194,12 @@ int CreateObjects(ChSystemParallel* msystem) {
 
 // Create a material for the granular material
 #ifdef USE_SMC
-    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -234,21 +234,21 @@ void CalculatePenetratorInertia(double & mass, ChVector<> & inertia) {
     switch (penetGeom) {
         case P_SPHERE:
             vol_b = utils::CalcSphereVolume(R_b);
-            gyr_b = utils::CalcSphereGyration(R_b).Get_Diag();
+            gyr_b = utils::CalcSphereGyration(R_b).diagonal();
             mass = rho_b * vol_b;
             inertia = mass * gyr_b;
             break;
         case P_CONE1:
             // apex angle = 30 de
             vol_b = utils::CalcConeVolume(R_bc1, H_bc1);
-            gyr_b = utils::CalcConeGyration(R_bc1, H_bc1).Get_Diag();
+            gyr_b = utils::CalcConeGyration(R_bc1, H_bc1).diagonal();
             mass = rho_b * vol_b;
             inertia = mass * gyr_b;
             break;
         case P_CONE2:
             // apex angle = 60 deg
             vol_b = utils::CalcConeVolume(R_bc2, H_bc2);
-            gyr_b = utils::CalcConeGyration(R_bc2, H_bc2).Get_Diag();
+            gyr_b = utils::CalcConeGyration(R_bc2, H_bc2).diagonal();
             mass = rho_b * vol_b;
             inertia = mass * gyr_b;
             break;
@@ -333,21 +333,21 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemParallel* msystem) {
 
 // Create a material for the penetrator
 #ifdef USE_SMC
-    auto mat = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat->SetYoungModulus(Y_b);
     mat->SetFriction(mu_b);
     mat->SetRestitution(cr_b);
 #else
-    auto mat = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat->SetFriction(mu_b);
 #endif
 
 // Create the falling object
 #ifdef USE_SMC
-    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    auto obj = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     obj->SetMaterialSurface(mat);
 #else
-    auto obj = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    auto obj = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     obj->SetMaterialSurface(mat);
 #endif
 

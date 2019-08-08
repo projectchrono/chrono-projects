@@ -66,45 +66,45 @@ void test_beam(const std::string& name,  /// test name
     my_system.Set_G_acc(ChVector<>(0, 0, -g));
 
     // Create the ground body
-    auto ground = std::make_shared<ChBody>();
+    auto ground = chrono_types::make_shared<ChBody>();
     ground->SetBodyFixed(true);
     my_system.AddBody(ground);
 
     // Create the FEA mesh
-    auto mesh = std::make_shared<ChMesh>();
+    auto mesh = chrono_types::make_shared<ChMesh>();
     mesh->SetAutomaticGravity(true);
     my_system.Add(mesh);
 
     const double length = 1.0;
     double diam = 5e-3;
     double rho = 1000;
-    auto msection_cable = std::make_shared<ChBeamSectionCable>();
+    auto msection_cable = chrono_types::make_shared<ChBeamSectionCable>();
     msection_cable->SetDiameter(diam);
     msection_cable->SetYoungModulus(1e7);
     msection_cable->SetI(CH_C_PI / 4.0 * pow(diam / 2, 4));
     msection_cable->SetDensity(rho);
 
     // Create the 2 nodes and 1 beam element
-    auto node1 = std::make_shared<ChNodeFEAxyzD>(ChVector<>(0, 0, 0), dir);
-    auto node2 = std::make_shared<ChNodeFEAxyzD>(length * dir, dir);
+    auto node1 = chrono_types::make_shared<ChNodeFEAxyzD>(ChVector<>(0, 0, 0), dir);
+    auto node2 = chrono_types::make_shared<ChNodeFEAxyzD>(length * dir, dir);
     mesh->AddNode(node1);
     mesh->AddNode(node2);
 
-    auto beam_elem = std::make_shared<ChElementCableANCF>();
+    auto beam_elem = chrono_types::make_shared<ChElementCableANCF>();
     beam_elem->SetNodes(node1, node2);
     beam_elem->SetSection(msection_cable);
     beam_elem->SetAlphaDamp(alpha);
     mesh->AddElement(beam_elem);
 
     // Create a hinge constraint
-    auto point_cnstr = std::make_shared<ChLinkPointFrame>();
+    auto point_cnstr = chrono_types::make_shared<ChLinkPointFrame>();
     point_cnstr->Initialize(node1, ground);
     my_system.Add(point_cnstr);
 
     // Create a direction constraint
     std::shared_ptr<ChLinkDirFrame> dir_cnstr;
     if (constrain_dir) {
-        dir_cnstr = std::make_shared<ChLinkDirFrame>();
+        dir_cnstr = chrono_types::make_shared<ChLinkDirFrame>();
         dir_cnstr->Initialize(node1, ground);
         my_system.Add(dir_cnstr);
     }
@@ -116,7 +116,7 @@ void test_beam(const std::string& name,  /// test name
     // MKL solver + HHT
     std::cout << "Using HHT + MKL" << std::endl;
 
-    auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+    auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
     my_system.SetSolver(mkl_solver);
     mkl_solver->SetSparsityPatternLock(true);
     mkl_solver->SetVerbose(false);
@@ -186,7 +186,7 @@ void test_beam(const std::string& name,  /// test name
 
     // Final beam configuration
     int num_points = 51;
-    ChMatrixDynamic<> displ(beam_elem->GetNdofs(), 1);
+    ChVectorDynamic<> displ(beam_elem->GetNdofs());
     beam_elem->GetStateBlock(displ);
     std::vector<ChVector<>> P(num_points);
     for (int i = 0; i < num_points; i++) {

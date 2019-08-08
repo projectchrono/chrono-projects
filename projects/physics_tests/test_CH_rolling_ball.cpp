@@ -29,7 +29,8 @@
 #include <cmath>
 
 #include "chrono/core/ChStream.h"
-
+#include "chrono/assets/ChBoxShape.h"
+#include "chrono/assets/ChSphereShape.h"
 #include "chrono/physics/ChSystemNSC.h"
 
 #include "chrono/utils/ChUtilsCreators.h"
@@ -92,12 +93,12 @@ int main(int argc, char* argv[]) {
     system.SetMaxPenetrationRecoverySpeed(0);
 
     // Create a material (will be used by both objects)
-    auto material = std::make_shared<ChMaterialSurfaceNSC>();
+    auto material = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     material->SetRestitution(0);
     material->SetFriction(0.2f);
 
     // Ground
-    auto ground = std::make_shared<ChBody>(ChMaterialSurface::NSC);
+    auto ground = chrono_types::make_shared<ChBody>(ChMaterialSurface::NSC);
     system.AddBody(ground);
     ground->SetBodyFixed(true);
 
@@ -107,7 +108,7 @@ int main(int argc, char* argv[]) {
     ground->GetCollisionModel()->AddBox(4, 2, 1, ChVector<>(0, 0, -1));
     ground->GetCollisionModel()->BuildModel();
 
-    auto box = std::make_shared<ChBoxShape>();
+    auto box = chrono_types::make_shared<ChBoxShape>();
     box->GetBoxGeometry().Size = ChVector<>(4, 2, 1);
     box->GetBoxGeometry().Pos = ChVector<>(0, 0, -0.5);
     box->SetColor(ChColor(1, 0, 0));
@@ -115,7 +116,7 @@ int main(int argc, char* argv[]) {
     ground->AddAsset(box);
 
     // Crank
-    auto ball = std::make_shared<ChBody>(ChMaterialSurface::NSC);
+    auto ball = chrono_types::make_shared<ChBody>(ChMaterialSurface::NSC);
     system.AddBody(ball);
     ball->SetMass(1);
     ball->SetInertiaXX(ChVector<>(0.4, 0.4, 0.4));
@@ -128,7 +129,7 @@ int main(int argc, char* argv[]) {
     ball->GetCollisionModel()->AddSphere(1);
     ball->GetCollisionModel()->BuildModel();
 
-    auto sphere = std::make_shared<ChSphereShape>();
+    auto sphere = chrono_types::make_shared<ChSphereShape>();
     sphere->GetSphereGeometry().rad = 1;
     ball->AddAsset(sphere);
 

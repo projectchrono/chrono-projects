@@ -166,7 +166,7 @@ void RigNode::Construct() {
 
     if (m_slv_type == ChSolver::Type::CUSTOM) {
 #ifdef CHRONO_MKL
-        auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+        auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
         mkl_solver->SetSparsityPatternLock(true);
         m_system->SetSolver(mkl_solver);
 #endif
@@ -203,30 +203,30 @@ void RigNode::Construct() {
     ChVector<> rim_inertia(1, 1, 1);
 
     // Create ground body.
-    m_ground = std::make_shared<ChBody>(ChMaterialSurface::SMC);
+    m_ground = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
     m_ground->SetBodyFixed(true);
     m_system->AddBody(m_ground);
 
     // Create the chassis body.
-    m_chassis = std::make_shared<ChBody>(ChMaterialSurface::SMC);
+    m_chassis = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
     m_chassis->SetMass(m_chassis_mass);
     m_chassis->SetInertiaXX(chassis_inertia);
     m_system->AddBody(m_chassis);
 
     // Create the set toe body.
-    m_set_toe = std::make_shared<ChBody>(ChMaterialSurface::SMC);
+    m_set_toe = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
     m_set_toe->SetMass(m_set_toe_mass);
     m_set_toe->SetInertiaXX(set_toe_inertia);
     m_system->AddBody(m_set_toe);
 
     // Create the rim body.
-    m_rim = std::make_shared<ChBody>(ChMaterialSurface::SMC);
+    m_rim = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
     m_rim->SetMass(m_rim_mass);
     m_rim->SetInertiaXX(rim_inertia);
     m_system->AddBody(m_rim);
 
     // Create the upright body.
-    m_upright = std::make_shared<ChBody>(ChMaterialSurface::SMC);
+    m_upright = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
     m_upright->SetMass(m_upright_mass);
     m_upright->SetInertiaXX(upright_inertia);
     m_system->AddBody(m_upright);
@@ -236,28 +236,28 @@ void RigNode::Construct() {
     // -------------------------------
 
     // Connect chassis to set_toe body through an actuated revolute joint.
-    m_slip_motor = std::make_shared<ChLinkMotorRotationAngle>();
+    m_slip_motor = chrono_types::make_shared<ChLinkMotorRotationAngle>();
     m_slip_motor->SetName("engine_set_slip");
     m_system->AddLink(m_slip_motor);
 
     // Prismatic constraint on the toe
-    m_prism_vel = std::make_shared<ChLinkLockPrismatic>();
+    m_prism_vel = chrono_types::make_shared<ChLinkLockPrismatic>();
     m_prism_vel->SetName("Prismatic_chassis_ground");
     m_system->AddLink(m_prism_vel);
 
     // Impose velocity actuation on the prismatic joint
-    m_lin_actuator = std::make_shared<ChLinkLinActuator>();
+    m_lin_actuator = chrono_types::make_shared<ChLinkLinActuator>();
     m_lin_actuator->SetName("Prismatic_actuator");
     m_lin_actuator->Set_lin_offset(1);  // Set actuator distance offset
     m_system->AddLink(m_lin_actuator);
 
     // Prismatic constraint on the toe-axle: Connects chassis to axle
-    m_prism_axl = std::make_shared<ChLinkLockPrismatic>();
+    m_prism_axl = chrono_types::make_shared<ChLinkLockPrismatic>();
     m_prism_axl->SetName("Prismatic_vertical");
     m_system->AddLink(m_prism_axl);
 
     // Connect rim to axle: Impose rotation on the rim
-    m_rev_motor = std::make_shared<ChLinkMotorRotationAngle>();
+    m_rev_motor = chrono_types::make_shared<ChLinkMotorRotationAngle>();
     m_rev_motor->SetName("Motor_ang_vel");
     m_system->AddLink(m_rev_motor);
 
@@ -293,7 +293,7 @@ void RigNode::Construct() {
 // Construct an ANCF tire
 // -----------------------------------------------------------------------------
 void RigNodeDeformableTire::ConstructTire() {
-    m_tire = std::make_shared<ANCFTire>(m_tire_json);
+    m_tire = chrono_types::make_shared<ANCFTire>(m_tire_json);
     m_tire->EnablePressure(m_tire_pressure);
     m_tire->EnableContact(true);
     m_tire->EnableRimConnection(true);
@@ -304,7 +304,7 @@ void RigNodeDeformableTire::ConstructTire() {
 // Construct a Rigid tire with mesh contact
 // -----------------------------------------------------------------------------
 void RigNodeRigidTire::ConstructTire() {
-    m_tire = std::make_shared<RigidTire>(m_tire_json);
+    m_tire = chrono_types::make_shared<RigidTire>(m_tire_json);
     assert(m_tire->UseContactMesh());
 }
 
@@ -368,14 +368,14 @@ void RigNode::Initialize() {
     // -----------------------------------
 
     // Revolute engine on set_toe
-    m_slip_motor->SetAngleFunction(std::make_shared<ChFunction_SlipAngle>(0));
+    m_slip_motor->SetAngleFunction(chrono_types::make_shared<ChFunction_SlipAngle>(0));
     m_slip_motor->Initialize(m_set_toe, m_chassis, ChFrame<>(m_set_toe->GetPos(), QUNIT));
 
     // Prismatic constraint on the toe
     m_prism_vel->Initialize(m_ground, m_chassis, ChCoordsys<>(m_chassis->GetPos(), Q_from_AngY(CH_C_PI_2)));
 
     // Impose velocity actuation on the prismatic joint
-    m_lin_actuator->Set_dist_funct(std::make_shared<ChFunction_Ramp>(0.0, m_init_vel * (1.0 - m_slip)));
+    m_lin_actuator->Set_dist_funct(chrono_types::make_shared<ChFunction_Ramp>(0.0, m_init_vel * (1.0 - m_slip)));
     m_lin_actuator->Initialize(m_ground, m_chassis, false, ChCoordsys<>(m_chassis->GetPos(), QUNIT),
         ChCoordsys<>(m_chassis->GetPos() + ChVector<>(1, 0, 0), QUNIT));
 
@@ -383,7 +383,7 @@ void RigNode::Initialize() {
     m_prism_axl->Initialize(m_set_toe, m_upright, ChCoordsys<>(m_set_toe->GetPos(), QUNIT));
 
     // Connect rim to upright: Impose rotation on the rim
-    m_rev_motor->SetAngleFunction(std::make_shared<ChFunction_Ramp>(0, -m_init_vel / tire_radius));
+    m_rev_motor->SetAngleFunction(chrono_types::make_shared<ChFunction_Ramp>(0, -m_init_vel / tire_radius));
     m_rev_motor->Initialize(m_rim, m_upright, ChFrame<>(m_rim->GetPos(), Q_from_AngAxis(CH_C_PI / 2.0, VECT_X)));
 
     // -----------------------------------
@@ -403,7 +403,7 @@ void RigNodeDeformableTire::InitializeTire() {
 
     // Create a mesh load for contact forces and add it to the tire's load container.
     auto contact_surface = std::static_pointer_cast<fea::ChContactSurfaceMesh>(m_tire->GetContactSurface());
-    m_contact_load = std::make_shared<fea::ChLoadContactSurfaceMesh>(contact_surface);
+    m_contact_load = chrono_types::make_shared<fea::ChLoadContactSurfaceMesh>(contact_surface);
     m_tire->GetLoadContainer()->Add(m_contact_load);
 
     // Preprocess the tire mesh and store neighbor element information for each vertex
@@ -795,9 +795,9 @@ void RigNodeDeformableTire::WriteTireStateInformation(utils::CSV_writer& csv) {
     csv << mesh->GetNnodes() << mesh->GetDOF() << mesh->GetDOF_w() << endl;
 
     // Write mesh vertex positions and velocities
-    for (int ix = 0; ix < x.GetLength(); ix++)
+    for (int ix = 0; ix < x.size(); ix++)
         csv << x(ix) << endl;
-    for (int iv = 0; iv < v.GetLength(); iv++)
+    for (int iv = 0; iv < v.size(); iv++)
         csv << v(iv) << endl;
 }
 

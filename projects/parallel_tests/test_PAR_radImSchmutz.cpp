@@ -22,6 +22,9 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/core/ChStream.h"
+#include "chrono/assets/ChBoxShape.h"
+#include "chrono/assets/ChCapsuleShape.h"
+#include "chrono/assets/ChColorAsset.h"
 #include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
@@ -191,9 +194,9 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
 // Create the ground body
 #ifdef USE_SMC
-    m_ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    m_ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
 #else
-    m_ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    m_ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
 #endif
     m_ground->SetIdentifier(-1);
     m_ground->SetBodyFixed(true);
@@ -203,9 +206,9 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
 // Create the sled body
 #ifdef USE_SMC
-    m_sled = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    m_sled = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
 #else
-    m_sled = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    m_sled = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
 #endif
     m_sled->SetIdentifier(1);
     m_sled->SetMass(mass1);
@@ -215,13 +218,13 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
     m_sled->SetBodyFixed(false);
     m_sled->SetCollide(false);
 
-    auto box_sled = std::make_shared<ChBoxShape>();
+    auto box_sled = chrono_types::make_shared<ChBoxShape>();
     box_sled->GetBoxGeometry().Size = ChVector<>(e, e / 3, e / 3);
     box_sled->Pos = ChVector<>(0, 0, 0);
     box_sled->Rot = ChQuaternion<>(1, 0, 0, 0);
     m_sled->AddAsset(box_sled);
 
-    auto col_sled = std::make_shared<ChColorAsset>();
+    auto col_sled = chrono_types::make_shared<ChColorAsset>();
     col_sled->SetColor(ChColor(0.7f, 0.3f, 0.3f));
     m_sled->AddAsset(col_sled);
 
@@ -229,21 +232,21 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
 // Create a material for the wheel body
 #ifdef USE_SMC
-    auto mat_w = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_w = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_w->SetYoungModulus(2e6f);
     mat_w->SetFriction(0.4f);
     mat_w->SetRestitution(0.1f);
 #else
-    auto mat_w = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_w = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_w->SetFriction(0.4f);
 #endif
 
 // Create the wheel body
 #ifdef USE_SMC
-    m_wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    m_wheel = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     m_wheel->SetMaterialSurface(mat_w);
 #else
-    m_wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    m_wheel = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     m_wheel->SetMaterialSurface(mat_w);
 #endif
     m_wheel->SetIdentifier(2);
@@ -267,26 +270,26 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
     }
     m_wheel->GetCollisionModel()->BuildModel();
 
-    auto cap_wheel = std::make_shared<ChCapsuleShape>();
+    auto cap_wheel = chrono_types::make_shared<ChCapsuleShape>();
     cap_wheel->GetCapsuleGeometry().hlen = (a + c) / 2 - w_w / 4;
     cap_wheel->GetCapsuleGeometry().rad = w_w / 4;
     cap_wheel->Pos = ChVector<>((c - a) / 2, 0, -b);
     cap_wheel->Rot = Q_from_AngZ(CH_C_PI_2);
     m_wheel->AddAsset(cap_wheel);
 
-    auto col_wheel = std::make_shared<ChColorAsset>();
+    auto col_wheel = chrono_types::make_shared<ChColorAsset>();
     col_wheel->SetColor(ChColor(0.3f, 0.3f, 0.7f));
     m_wheel->AddAsset(col_wheel);
 
     system->AddBody(m_wheel);
 
     // Create and initialize translational joint ground - sled
-    m_prismatic = std::make_shared<ChLinkLockPrismatic>();
+    m_prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
     m_prismatic->Initialize(m_ground, m_sled, ChCoordsys<>(loc_prismatic, Q_from_AngY(CH_C_PI_2)));
     system->AddLink(m_prismatic);
 
     // Create and initialize revolute joint sled - wheel
-    m_revolute = std::make_shared<ChLinkLockRevolute>();
+    m_revolute = chrono_types::make_shared<ChLinkLockRevolute>();
     m_revolute->Initialize(m_wheel, m_sled, ChCoordsys<>(loc_revolute, Q_from_AngX(CH_C_PI_2)));
     system->AddLink(m_revolute);
 }
@@ -320,14 +323,14 @@ void CreateContainer(ChSystemParallel* system) {
     double thickness = 0.2;
 
 #ifdef USE_SMC
-    auto mat_c = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_c->SetYoungModulus(2e6f);
     mat_c->SetFriction(0.4f);
     mat_c->SetRestitution(0.1f);
 
     utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(L / 2, W / 2, H / 2), thickness / 2);
 #else
-    auto mat_c = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_c->SetFriction(0.4f);
 
     utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(L / 2, W / 2, H / 2), thickness / 2);
@@ -341,12 +344,12 @@ void CreateContainer(ChSystemParallel* system) {
 void CreateParticles(ChSystemParallel* system) {
 // Create a material for the ball mixture.
 #ifdef USE_SMC
-    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 

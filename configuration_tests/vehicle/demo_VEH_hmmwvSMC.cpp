@@ -194,7 +194,7 @@ class MyDriverInputs : public ChWheeledVehicleAssembly::ChDriverInputsCallback {
 class MyCylindricalTire : public ChWheeledVehicleAssembly::ChTireContactCallback {
   public:
     virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
-        wheelBody->SetCollisionModel(std::make_shared<collision::ChCollisionModelParallel>());
+        wheelBody->SetCollisionModel(chrono_types::make_shared<collision::ChCollisionModelParallel>());
 
         wheelBody->GetCollisionModel()->ClearModel();
         wheelBody->GetCollisionModel()->AddCylinder(0.46, 0.46, 0.127);
@@ -204,7 +204,7 @@ class MyCylindricalTire : public ChWheeledVehicleAssembly::ChTireContactCallback
         wheelBody->GetMaterialSurfaceSMC()->SetYoungModulus(Y_t);
         wheelBody->GetMaterialSurfaceSMC()->SetRestitution(cr_t);
 
-        auto cyl = std::make_shared<ChCylinderShape>();
+        auto cyl = chrono_types::make_shared<ChCylinderShape>();
         cyl->GetCylinderGeometry().p1 = ChVector<>(0, 0.127, 0);
         cyl->GetCylinderGeometry().p2 = ChVector<>(0, -0.127, 0);
         cyl->GetCylinderGeometry().rad = 0.46;
@@ -216,11 +216,11 @@ class MyMeshTire : public ChWheeledVehicleAssembly::ChTireContactCallback {
 public:
     virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
         std::string mesh_file("hmmwv/hmmwv_tire.obj");
-        auto trimesh = std::make_shared<geometry::ChTriangleMeshConnected>();
+        auto trimesh = chrono_types::make_shared<geometry::ChTriangleMeshConnected>();
         trimesh->LoadWavefrontMesh(vehicle::GetDataFile(mesh_file), true, false);
 
         // Set contact model
-        wheelBody->SetCollisionModel(std::make_shared<collision::ChCollisionModelParallel>());
+        wheelBody->SetCollisionModel(chrono_types::make_shared<collision::ChCollisionModelParallel>());
         wheelBody->GetCollisionModel()->ClearModel();
         wheelBody->GetCollisionModel()->AddTriangleMesh(trimesh, false, false, ChVector<>(0), ChMatrix33<>(1), 0.01);
         wheelBody->GetCollisionModel()->BuildModel();
@@ -229,7 +229,7 @@ public:
         wheelBody->GetMaterialSurfaceSMC()->SetYoungModulus(Y_t);
         wheelBody->GetMaterialSurfaceSMC()->SetRestitution(cr_t);
 
-        auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
+        auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
         trimesh_shape->SetMesh(trimesh);
         wheelBody->AddAsset(trimesh_shape);
     }
@@ -247,7 +247,7 @@ class MyLuggedTire : public ChWheeledVehicleAssembly::ChTireContactCallback {
     }
 
     virtual void onCallback(std::shared_ptr<ChBody> wheelBody) {
-        auto coll_model = std::make_shared<collision::ChCollisionModelParallel>();
+        auto coll_model = chrono_types::make_shared<collision::ChCollisionModelParallel>();
         wheelBody->SetCollisionModel(coll_model);
 
         coll_model->ClearModel();
@@ -282,7 +282,7 @@ class MyLuggedTire : public ChWheeledVehicleAssembly::ChTireContactCallback {
 
 double CreateParticles(ChSystem* system) {
     // Create a material
-    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
@@ -384,7 +384,7 @@ int main(int argc, char* argv[]) {
     // -------------------
 
     // Ground body
-    auto ground = std::make_shared<ChBody>(std::make_shared<collision::ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<collision::ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     ground->SetIdentifier(-1);
     ground->SetMass(1000);
     ground->SetBodyFixed(true);

@@ -70,16 +70,16 @@ class ChCoulombFriction : public ChLoadCustomMultiple {
         double Mu;
 
         if (state_x && state_w) {
-            FlexPos.Reset();
-            FlexVel.Reset();
+            FlexPos.setZero();
+            FlexVel.setZero();
             NetContactForce.x() = 0.0;
             NetContactForce.y() = 0.0;
             NetContactForce.z() = 0.0;
             for (int ie = 0; ie < loadables.size(); ie++) {
-                ChVector<> P1 = state_x->ClipVector(6 * ie, 0);
-                ChVector<> P1d = state_x->ClipVector(6 * ie + 3, 0);
-                ChVector<> V1 = state_w->ClipVector(6 * ie, 0);
-                ChVector<> V1d = state_w->ClipVector(6 * ie + 3, 0);
+                ChVector<> P1 = state_x->segment(6 * ie, 3);
+                ChVector<> P1d = state_x->segment(6 * ie + 3, 3);
+                ChVector<> V1 = state_w->segment(6 * ie, 3);
+                ChVector<> V1d = state_w->segment(6 * ie + 3, 3);
 
                 FlexPos(0, ie) = P1.x();
                 FlexPos(1, ie) = P1.y();
@@ -155,6 +155,9 @@ class ChCoulombFriction : public ChLoadCustomMultiple {
 // that the tire is rolling along the global X direction. This needs to be
 // revisited for other scenarios: Integration in vehicle, changes of direction, etc.
 class ChLoaderLuGre : public ChLoadCustomMultiple {
+  public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   public:
     ChLoaderLuGre(std::vector<std::shared_ptr<ChLoadable>>& mloadables) : ChLoadCustomMultiple(mloadables){};
 
@@ -658,7 +661,7 @@ class ChLoaderLuGre : public ChLoadCustomMultiple {
             }
 
             // Position
-            TempVecR.Reset();  //  Locate nodes from a reference within contact patch
+            TempVecR.setZero();  //  Locate nodes from a reference within contact patch
 
             for (int i = 0; i < NumContactNode; i++) {
                 TempVecR(0) = NodePos(i, 0) - DisRigid(0, RimBody);
@@ -948,10 +951,10 @@ class ChLoaderLuGre : public ChLoadCustomMultiple {
         if (state_x && state_w) {
             for (int ie = 0; ie < loadables.size(); ie++)  // Loop over the nodes in the circumferential direction
             {
-                ChVector<> P1 = state_x->ClipVector(6 * ie, 0);
-                ChVector<> P1d = state_x->ClipVector(6 * ie + 3, 0);
-                ChVector<> V1 = state_w->ClipVector(6 * ie, 0);
-                ChVector<> V1d = state_w->ClipVector(6 * ie + 3, 0);
+                ChVector<> P1 = state_x->segment(6 * ie, 3);
+                ChVector<> P1d = state_x->segment(6 * ie + 3, 3);
+                ChVector<> V1 = state_w->segment(6 * ie, 3);
+                ChVector<> V1d = state_w->segment(6 * ie + 3, 3);
 
                 // Set the position and velocty for the node in the entire loop
                 FlexPos(0, ie) = P1.x();
@@ -1007,19 +1010,19 @@ class ChLoaderLuGre : public ChLoadCustomMultiple {
 // Reads the input file for creating the HMMWV tire.
 // Determines initial configuration and the properties
 // of the elements, layers, and materials.
-void ReadInputFile(ChMatrixNM<double, 3000, 6>& COORDFlex,
-                   ChMatrixNM<double, 3000, 6>& VELCYFlex,
-                   ChMatrixNM<int, 2880, 4>& NodesPerElement,
+void ReadInputFile(ChMatrixDynamic<double>& COORDFlex,
+                   ChMatrixDynamic<double>& VELCYFlex,
+                   ChMatrixDynamic<int>& NodesPerElement,
                    int& TotalNumElements,
                    int& NumElements_x,
                    int& NumElements_y,
                    int& TotalNumNodes,
-                   ChMatrixNM<int, 2880, 1>& SectionID,
+                   ChVectorN<int, 2880>& SectionID,
                    ChMatrixNM<double, 15, 2>& LayerPROP,
                    ChMatrixNM<int, 15, 7>& MatID,
                    ChMatrixNM<double, 7, 12>& MPROP,
-                   ChMatrixNM<double, 2880, 2>& ElementLength,
-                   ChMatrixNM<int, 3, 1>& NumLayPerSect) {
+                   ChMatrixDynamic<double>& ElementLength,
+                   ChVectorN<int, 3>& NumLayPerSect) {
     FILE* inputfile;
     char str1[100];
     int numFlexBody = 0;
@@ -1129,9 +1132,9 @@ void ReadInputFile(ChMatrixNM<double, 3000, 6>& COORDFlex,
 void ReadRestartInput(ChMatrixNM<double, 2, 7>& COORDRigid,
                       ChMatrixNM<double, 2, 7>& VELCYRigid,
                       ChMatrixNM<double, 2, 7>& ACCELRigid,
-                      ChMatrixNM<double, 3000, 6>& COORDFlex,
-                      ChMatrixNM<double, 3000, 6>& VELCYFlex,
-                      ChMatrixNM<double, 3000, 6>& ACCELFlex,
+                      ChMatrixDynamic<double>& COORDFlex,
+                      ChMatrixDynamic<double>& VELCYFlex,
+                      ChMatrixDynamic<double>& ACCELFlex,
                       int TotalNumNodes) {
     FILE* inputfile1;
     char str1[100];
@@ -1223,7 +1226,7 @@ int main(int argc, char* argv[]) {
 
     // Create a mesh, that is a container for groups
     // of elements and their referenced nodes.
-    auto my_mesh = std::make_shared<ChMesh>();
+    auto my_mesh = chrono_types::make_shared<ChMesh>();
     // Visualization:
     ChIrrApp application(&my_system, L"ANCF Rolling Tire", core::dimension2d<u32>(1080, 800), false);
     // Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
@@ -1240,23 +1243,25 @@ int main(int argc, char* argv[]) {
 
     int TotalNumNodes;
     // Matricies to hold the state informatino for the nodes and rigid bodies
-    ChMatrixNM<double, 3000, 6> COORDFlex;
-    ChMatrixNM<double, 3000, 6> VELCYFlex;
-    ChMatrixNM<double, 3000, 6> ACCELFlex;
+    ChMatrixDynamic<double> COORDFlex(3000, 6);
+    ChMatrixDynamic<double> VELCYFlex(3000, 6);
+    ChMatrixDynamic<double> ACCELFlex(3000, 6);
+
     ChMatrixNM<double, 2, 7> COORDRigid;
     ChMatrixNM<double, 2, 7> VELCYRigid;
     ChMatrixNM<double, 2, 7> ACCELRigid;
 
-    ChMatrixNM<int, 2880, 4> NodesPerElement;  // Defines the connectivity between the elements and nodes
-    ChMatrixNM<double, 2880, 2> ElemLength;    // X and Y dimensions of the shell elements
+    ChMatrixDynamic<int> NodesPerElement(2880, 4);  // Defines the connectivity between the elements and nodes
+    ChMatrixDynamic<double> ElemLength(2880, 2);    // X and Y dimensions of the shell elements
+
     int TotalNumElements;
     int NumElements_x;
     int NumElements_y;
-    ChMatrixNM<int, 2880, 1> SectionID;  // Catagorizes which tire section the elements are a part of
+    ChVectorN<int, 2880> SectionID;  // Catagorizes which tire section the elements are a part of
     ChMatrixNM<double, 15, 2> LayPROP;   // Thickness and ply angles of the layered elements
     ChMatrixNM<int, 15, 7> MatID;        // Catagorizes the material of each layer
     ChMatrixNM<double, 7, 12> MPROP;     // Material properties
-    ChMatrixNM<int, 3, 1> NumLayPerSection;
+    ChVectorN<int, 3> NumLayPerSection;
     int NumCont = 0;        // Number of nodes in contact with the ground
     double ContactZ = 0.0;  // Vertical location of the flat ground
     ChVector<> NetContact;  // Net contact forces
@@ -1281,18 +1286,18 @@ int main(int argc, char* argv[]) {
     // i=1: Steel belt in rubber matrix
     // i=2: Rubber
 
-    std::vector<std::shared_ptr<ChMaterialShellANCF>> MaterialList(MPROP.GetRows());
-    for (int i = 0; i < MPROP.GetRows(); i++) {
+    std::vector<std::shared_ptr<ChMaterialShellANCF>> MaterialList(MPROP.rows());
+    for (int i = 0; i < MPROP.rows(); i++) {
         double rho = MPROP(i, 0);
         ChVector<double> E(MPROP(i, 1), MPROP(i, 2), MPROP(i, 3));
         ChVector<double> nu(MPROP(i, 4), MPROP(i, 5), MPROP(i, 6));
         ChVector<double> G(MPROP(i, 7), MPROP(i, 8), MPROP(i, 9));
-        MaterialList[i] = std::make_shared<ChMaterialShellANCF>(rho, E, nu, G);
+        MaterialList[i] = chrono_types::make_shared<ChMaterialShellANCF>(rho, E, nu, G);
     }
 
     // Create a set of nodes for the tire based on the input data
     for (int i = 0; i < TotalNumNodes; i++) {
-        auto node = std::make_shared<ChNodeFEAxyzD>(ChVector<>(COORDFlex(i, 0), COORDFlex(i, 1), COORDFlex(i, 2)),
+        auto node = chrono_types::make_shared<ChNodeFEAxyzD>(ChVector<>(COORDFlex(i, 0), COORDFlex(i, 1), COORDFlex(i, 2)),
                               ChVector<>(COORDFlex(i, 3), COORDFlex(i, 4), COORDFlex(i, 5)));
         node->SetPos_dt(ChVector<>(VELCYFlex(i, 0), VELCYFlex(i, 1), VELCYFlex(i, 2)));
         node->SetD_dt(ChVector<>(VELCYFlex(i, 3), VELCYFlex(i, 4), VELCYFlex(i, 5)));
@@ -1318,7 +1323,7 @@ int main(int argc, char* argv[]) {
 
     // Create all elements of the tire
     for (int i = 0; i < TotalNumElements; i++) {
-        auto element = std::make_shared<ChElementShellANCF>();
+        auto element = chrono_types::make_shared<ChElementShellANCF>();
         element->SetNodes(std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(NodesPerElement(i, 0) - 1)),
             std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(NodesPerElement(i, 1) - 1)),
             std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(NodesPerElement(i, 2) - 1)),
@@ -1356,7 +1361,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Create rim body
-    auto Rim = std::make_shared<ChBody>();
+    auto Rim = chrono_types::make_shared<ChBody>();
     my_system.Add(Rim);
     Rim->SetBodyFixed(false);
     Rim->SetPos(ChVector<>(0.0, 0.0, 0.4673));
@@ -1376,7 +1381,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Create ground body
-    auto Ground = std::make_shared<ChBody>();
+    auto Ground = chrono_types::make_shared<ChBody>();
     Ground->SetBodyFixed(true);
     Ground->SetPos(ChVector<>(0.0, 0.0, -0.02));
     Ground->SetRot(ChQuaternion<>(1.0, 0.0, 0.0, 0.0));
@@ -1388,7 +1393,7 @@ int main(int argc, char* argv[]) {
 
     // First: loads must be added to "load containers",
     // and load containers must be added to your ChSystem
-    auto Mloadcontainer = std::make_shared<ChLoadContainer>();
+    auto Mloadcontainer = chrono_types::make_shared<ChLoadContainer>();
 
     ////// LuGre Load Class initialization
     std::vector<std::shared_ptr<ChLoaderLuGre>> LoadList(NumElements_y + 1);
@@ -1399,7 +1404,7 @@ int main(int argc, char* argv[]) {
             mnodelist.push_back(FrictionNode);
         }
 
-        LoadList[i] = std::make_shared<ChLoaderLuGre>(mnodelist);
+        LoadList[i] = chrono_types::make_shared<ChLoaderLuGre>(mnodelist);
         LoadList[i]->ContactLine = ContactZ;
         LoadList[i]->NumContact = NumCont;
         LoadList[i]->mRim = Rim;
@@ -1429,7 +1434,7 @@ int main(int argc, char* argv[]) {
             ChVectorDynamic<>& F,        ///< Result F vector here, size must be = n.field coords.of loadable
             ChVectorDynamic<>* state_x,  ///< if != 0, update state (pos. part) to this, then evaluate F
             ChVectorDynamic<>* state_w   ///< if != 0, update state (speed part) to this, then evaluate F
-            ) {
+        ) {
             ChVector<> Position1;
             ChVector<> Gradient1;
             ChVector<> Position2;
@@ -1441,41 +1446,36 @@ int main(int argc, char* argv[]) {
             double PressureVal = 220e3;  // Pressure
 
             if (state_x && state_w) {
-                Position1 = state_x->ClipVector(0, 0);
-                Gradient1 = state_x->ClipVector(3, 0);
-                Position2 = state_x->ClipVector(6, 0);
-                Gradient2 = state_x->ClipVector(9, 0);
-                Position3 = state_x->ClipVector(12, 0);
-                Gradient3 = state_x->ClipVector(15, 0);
-                Position4 = state_x->ClipVector(18, 0);
-                Gradient4 = state_x->ClipVector(21, 0);
+                Position1 = state_x->segment(0, 3);
+                Gradient1 = state_x->segment(3, 3);
+                Position2 = state_x->segment(6, 3);
+                Gradient2 = state_x->segment(9, 3);
+                Position3 = state_x->segment(12, 3);
+                Gradient3 = state_x->segment(15, 3);
+                Position4 = state_x->segment(18, 3);
+                Gradient4 = state_x->segment(21, 3);
 
                 ChMatrixNM<double, 1, 8> Nx;
                 ChMatrixNM<double, 1, 8> N;
                 ChMatrixNM<double, 1, 8> Ny;
                 ChMatrixNM<double, 1, 8> Nz;
                 ChMatrixNM<double, 3, 8> d;
-                (d).PasteVector(Position1, 0, 0);
-                (d).PasteVector(Gradient1, 0, 1);
-                (d).PasteVector(Position2, 0, 2);
-                (d).PasteVector(Gradient2, 0, 3);
-                (d).PasteVector(Position3, 0, 4);
-                (d).PasteVector(Gradient3, 0, 5);
-                (d).PasteVector(Position4, 0, 6);
-                (d).PasteVector(Gradient4, 0, 7);
+                d.col(0) = Position1.eigen();
+                d.col(1) = Gradient1.eigen();
+                d.col(2) = Position2.eigen();
+                d.col(3) = Gradient2.eigen();
+                d.col(4) = Position3.eigen();
+                d.col(5) = Gradient3.eigen();
+                d.col(6) = Position4.eigen();
+                d.col(7) = Gradient4.eigen();
                 m_element->ShapeFunctions(N, U, V, 0);
                 m_element->ShapeFunctionsDerivativeX(Nx, U, V, 0);
                 m_element->ShapeFunctionsDerivativeY(Ny, U, V, 0);
                 m_element->ShapeFunctionsDerivativeZ(Nz, U, V, 0);
 
-                ChMatrixNM<double, 1, 3> Nx_d;
-                Nx_d.MatrMultiplyT(Nx, d);
-
-                ChMatrixNM<double, 1, 3> Ny_d;
-                Ny_d.MatrMultiplyT(Ny, d);
-
-                ChMatrixNM<double, 1, 3> Nz_d;
-                Nz_d.MatrMultiplyT(Nz, d);
+                ChMatrixNM<double, 1, 3> Nx_d = Nx * d.transpose();
+                ChMatrixNM<double, 1, 3> Ny_d = Ny * d.transpose();
+                ChMatrixNM<double, 1, 3> Nz_d = Nz * d.transpose();
 
                 ChMatrixNM<double, 3, 3> rd;
                 rd(0, 0) = Nx_d(0, 0);
@@ -1494,8 +1494,10 @@ int main(int argc, char* argv[]) {
                 G1xG2[2] = rd(0, 0) * rd(1, 1) - rd(1, 0) * rd(0, 1);
                 G1xG2.Normalize();
                 FPressure = -G1xG2 * PressureVal;
+            } else {
+                FPressure = ChVector<>(0);
             }
-            F.PasteVector(FPressure, 0, 0);
+            F.segment(0, 3) = FPressure.eigen();
         }
     };
 
@@ -1504,7 +1506,7 @@ int main(int argc, char* argv[]) {
     // It is created using templates, that is instancing a ChLoad<a_loader_class>()
     // initiate for loop for all the elements
     for (int NoElmPre = 0; NoElmPre < TotalNumElements; NoElmPre++) {
-        auto PressureElement = std::make_shared<ChLoad<MyPressureLoad > >(std::static_pointer_cast<ChElementShellANCF>(my_mesh->GetElement(NoElmPre)));
+        auto PressureElement = chrono_types::make_shared<ChLoad<MyPressureLoad > >(std::static_pointer_cast<ChElementShellANCF>(my_mesh->GetElement(NoElmPre)));
         Mloadcontainer->Add(PressureElement);  // do not forget to add the load to the load container.
     }
 
@@ -1527,12 +1529,12 @@ int main(int argc, char* argv[]) {
             ConstrainedNode = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(i));
 
             // Add position constraints
-            constraint = std::make_shared<ChLinkPointFrame>(); 
+            constraint = chrono_types::make_shared<ChLinkPointFrame>(); 
             constraint->Initialize(ConstrainedNode, Rim);
             my_system.Add(constraint);
 
             // Add rotation constraints
-            constraintD = std::make_shared<ChLinkDirFrame>();
+            constraintD = chrono_types::make_shared<ChLinkDirFrame>();
             constraintD->Initialize(ConstrainedNode, Rim);
             constraintD->SetDirectionInAbsoluteCoords(ConstrainedNode->GetD());
             my_system.Add(constraintD);
@@ -1540,7 +1542,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Constrain only the lateral displacement of the Rim
-    constraintLateral = std::make_shared<ChLinkLockPointPlane>(); 
+    constraintLateral = chrono_types::make_shared<ChLinkLockPointPlane>(); 
     my_system.AddLink(constraintLateral);
     constraintLateral->Initialize(Rim, Ground, ChCoordsys<>(Rim->GetPos(), Q_from_AngX(CH_C_PI_2)));
 
@@ -1548,7 +1550,7 @@ int main(int argc, char* argv[]) {
     my_system.SetupInitial();
 
     // Use the MKL Solver
-    auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+    auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
     mkl_solver->SetSparsityPatternLock(true);
     my_system.SetSolver(mkl_solver);
     my_system.Update();
@@ -1565,23 +1567,23 @@ int main(int argc, char* argv[]) {
     mystepper->SetScaling(true);
 
     // Visualization
-    // auto mobjmesh = std::make_shared<ChObjShapeFile>();
+    // auto mobjmesh = chrono_types::make_shared<ChObjShapeFile>();
     // mobjmesh->SetFilename(GetChronoDataFile("fea/tractor_wheel_rim.obj"));
     // Rim->AddAsset(mobjmesh);
 
     double start = std::clock();
-    auto mvisualizemeshC = std::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
+    auto mvisualizemeshC = chrono_types::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
     mvisualizemeshC->SetFEMglyphType(ChVisualizationFEAmesh::E_GLYPH_NODE_DOT_POS);
     mvisualizemeshC->SetFEMdataType(ChVisualizationFEAmesh::E_PLOT_NONE);
     mvisualizemeshC->SetSymbolsThickness(0.003);
     my_mesh->AddAsset(mvisualizemeshC);
 
-    auto mvisualizemeshwire = std::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
+    auto mvisualizemeshwire = chrono_types::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
     mvisualizemeshwire->SetFEMdataType(ChVisualizationFEAmesh::E_PLOT_NONE);
     mvisualizemeshwire->SetWireframe(true);
     my_mesh->AddAsset(mvisualizemeshwire);
 
-    auto mvisualizemesh = std::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
+    auto mvisualizemesh = chrono_types::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
     mvisualizemesh->SetFEMdataType(ChVisualizationFEAmesh::E_PLOT_NODE_SPEED_NORM);
     mvisualizemesh->SetColorscaleMinMax(0.0, 30);
     mvisualizemesh->SetSmoothFaces(true);
@@ -1589,7 +1591,7 @@ int main(int argc, char* argv[]) {
 
 
     // Create the a plane using body of 'box' type:
-    auto mrigidBody = std::make_shared<ChBodyEasyBox>(10, 10, 0.000001, 1000, false, true);
+    auto mrigidBody = chrono_types::make_shared<ChBodyEasyBox>(10, 10, 0.000001, 1000, false, true);
     my_system.Add(mrigidBody);
     mrigidBody->SetPos(ChVector<>(0, 0, ContactZ));
     mrigidBody->SetBodyFixed(true);

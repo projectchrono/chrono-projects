@@ -54,14 +54,14 @@ int main(int argc, char* argv[]) {
 
 
     // Create ground
-    auto ground = std::make_shared<ChBody>();
+    auto ground = chrono_types::make_shared<ChBody>();
     system.AddBody(ground);
     ground->SetIdentifier(0);
     ground->SetCollide(false);
     ground->SetBodyFixed(true);
 
     // Create wheel
-    auto wheel = std::make_shared<ChBody>();
+    auto wheel = chrono_types::make_shared<ChBody>();
     system.AddBody(wheel);
     wheel->SetIdentifier(1);
     wheel->SetMass(100);
@@ -71,23 +71,23 @@ int main(int argc, char* argv[]) {
     wheel->SetCollide(false);
     wheel->SetBodyFixed(false);
 
-    auto cyl = std::make_shared<ChCylinderShape>();
+    auto cyl = chrono_types::make_shared<ChCylinderShape>();
     cyl->GetCylinderGeometry().rad = 0.2;
     cyl->GetCylinderGeometry().p1 = ChVector<>(0, 0, -0.05);
     cyl->GetCylinderGeometry().p2 = ChVector<>(0, 0,  0.05);
     wheel->AddAsset(cyl);
 
-    auto texture = std::make_shared<ChTexture>();
+    auto texture = chrono_types::make_shared<ChTexture>();
     texture->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
     wheel->AddAsset(texture);
 
     // Revolute joint
-    auto joint = std::make_shared<ChLinkLockRevolute>();
+    auto joint = chrono_types::make_shared<ChLinkLockRevolute>();
     system.AddLink(joint);
     joint->Initialize(ground, wheel, ChCoordsys<>(init_pos, init_rot));
 
     // Brake
-    auto brake = std::make_shared<ChLinkBrake>();
+    auto brake = chrono_types::make_shared<ChLinkBrake>();
     system.AddLink(brake);
 
     // Equivalent ways of initializing the brake link
@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
     application.AssetUpdateAll();
 
     // Set solver
-    auto minres_solver = std::make_shared<ChSolverMINRES>();
+    auto minres_solver = chrono_types::make_shared<ChSolverMINRES>();
     minres_solver->SetDiagonalPreconditioning(true);
     system.SetSolver(minres_solver);
     system.SetMaxItersSolverSpeed(100);

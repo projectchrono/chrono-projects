@@ -176,14 +176,14 @@ double h = 10e-2;
 int CreateObjects(ChSystemParallel* system) {
 // Create the containing bin
 #ifdef USE_SMC
-    auto mat_c = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_c->SetYoungModulus(Y_c);
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
 
     utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 #else
-    auto mat_c = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_c->SetFriction(mu_c);
 
     utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
@@ -191,12 +191,12 @@ int CreateObjects(ChSystemParallel* system) {
 
 // Create a material for the granular material
 #ifdef USE_SMC
-    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -229,21 +229,21 @@ int CreateObjects(ChSystemParallel* system) {
 void CreateFallingBall(ChSystemParallel* system, double z, double vz) {
 // Create a material for the falling ball
 #ifdef USE_SMC
-    auto mat_b = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_b = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_b->SetYoungModulus(1e8f);
     mat_b->SetFriction(0.4f);
     mat_b->SetRestitution(0.1f);
 #else
-    auto mat_b = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_b = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_b->SetFriction(mu_c);
 #endif
 
 // Create the falling ball
 #ifdef USE_SMC
-    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     ball->SetMaterialSurface(mat_b);
 #else
-    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     ball->SetMaterialSurface(mat_b);
 #endif
 

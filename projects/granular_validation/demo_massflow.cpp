@@ -155,21 +155,21 @@ double height_collector = 1.0e-2;  // height of collector walls
 ChBody* CreateMechanism(ChSystemParallel* system) {
 // Create the common material
 #ifdef USE_SMC
-    auto mat_b = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_b = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_b->SetYoungModulus(Y_c);
     mat_b->SetFriction(mu_c);
     mat_b->SetRestitution(cr_c);
 #else
-    auto mat_b = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_b = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_b->SetFriction(mu_c);
 #endif
 
 // Angled insert
 #ifdef USE_SMC
-    auto insert = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    auto insert = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     insert->SetMaterialSurface(mat_b);
 #else
-    auto insert = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    auto insert = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     insert->SetMaterialSurface(mat_b);
 #endif
 
@@ -189,10 +189,10 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 
 // Static slot (back wall)
 #ifdef USE_SMC
-    auto slot = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    auto slot = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     slot->SetMaterialSurface(mat_b);
 #else
-    auto slot = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    auto slot = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     slot->SetMaterialSurface(mat_b);
 #endif
 
@@ -212,10 +212,10 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 
 // Lateral walls
 #ifdef USE_SMC
-    auto wall = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    auto wall = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     wall->SetMaterialSurface(mat_b);
 #else
-    auto wall = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    auto wall = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     wall->SetMaterialSurface(mat_b);
 #endif
 
@@ -257,12 +257,12 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 void CreateParticles(ChSystemParallel* system) {
 // Create a material for the granular material
 #ifdef USE_SMC
-    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 

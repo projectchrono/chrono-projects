@@ -18,7 +18,7 @@
 
 #include <iostream>
 
-#include "chrono/physics/ChGlobal.h"
+#include "chrono/core/ChGlobal.h"
 
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/terrain/FlatTerrain.h"
@@ -83,8 +83,8 @@ int main(int argc, char* argv[]) {
     FlatTerrain flat_terrain(0);
 
     // Create a Pacejka tire and attach it to a dummy wheel body
-    auto wheel = std::make_shared<ChBody>();
-    auto tire = std::make_shared<PacejkaTire>("TEST", pacParamFile);
+    auto wheel = chrono_types::make_shared<ChBody>();
+    auto tire = chrono_types::make_shared<PacejkaTire>("TEST", pacParamFile);
     tire->SetDrivenWheel(false);
     tire->Initialize(wheel, LEFT);
 

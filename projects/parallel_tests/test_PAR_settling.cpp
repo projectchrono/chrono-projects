@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
 
     switch (method) {
         case ChMaterialSurface::SMC: {
-            auto mat_ter = std::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_ter = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             mat_ter->SetFriction(friction_terrain);
             mat_ter->SetRestitution(restitution_terrain);
             mat_ter->SetYoungModulus(Y_terrain);
@@ -204,7 +204,7 @@ int main(int argc, char** argv) {
             break;
         }
         case ChMaterialSurface::NSC: {
-            auto mat_ter = std::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_ter = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             mat_ter->SetFriction(friction_terrain);
             mat_ter->SetRestitution(restitution_terrain);
             mat_ter->SetCohesion(coh_force_terrain);

@@ -92,7 +92,7 @@ void MakeANCFWheel(ChSystem& my_system,
     Hub_1->SetWvel_par(ChVector<>(0, ForVelocity / (TorusRadius + TorusHeight), 0));
 
     // Create the tire
-    auto tire = std::make_shared<ANCFToroidalTire>("ANCF_Tire");
+    auto tire = chrono_types::make_shared<ANCFToroidalTire>("ANCF_Tire");
 
     tire->EnablePressure(true);
     tire->EnableContact(true);
@@ -121,7 +121,7 @@ int main(int argc, char* argv[]) {
     ChSystemSMC my_system;
 
     // Body 1: Ground
-    BGround = std::make_shared<ChBody>();
+    BGround = chrono_types::make_shared<ChBody>();
     my_system.AddBody(BGround);
     BGround->SetIdentifier(1);
     BGround->SetBodyFixed(true);
@@ -133,10 +133,10 @@ int main(int argc, char* argv[]) {
     BGround->SetRot(rot);
 
     // Create hubs and tire meshes for 4 wheels
-    auto Hub_1 = std::make_shared<ChBody>();
-    auto Hub_2 = std::make_shared<ChBody>();
-    auto Hub_3 = std::make_shared<ChBody>();
-    auto Hub_4 = std::make_shared<ChBody>();
+    auto Hub_1 = chrono_types::make_shared<ChBody>();
+    auto Hub_2 = chrono_types::make_shared<ChBody>();
+    auto Hub_3 = chrono_types::make_shared<ChBody>();
+    auto Hub_4 = chrono_types::make_shared<ChBody>();
 
     ChVector<> rim_center_1(Lwx, Lwy, 0.0);
     ChVector<> rim_center_2(Lwx, -Lwy, 0.0);
@@ -152,13 +152,13 @@ int main(int argc, char* argv[]) {
     MakeANCFWheel(my_system, rim_center_4, Hub_4, N_DivDiameter, N_DivThread, TorusRadius, TorusHeight, TirePressure,
                   ForVelocity, 5);
 
-    SimpChassis = std::make_shared<ChBody>();
+    SimpChassis = chrono_types::make_shared<ChBody>();
     SimpChassis->SetCollide(false);
     SimpChassis->SetMass(1500);
     my_system.AddBody(SimpChassis);
 
     // Visualization
-    auto mobjmesh = std::make_shared<ChObjShapeFile>();
+    auto mobjmesh = chrono_types::make_shared<ChObjShapeFile>();
     mobjmesh->SetFilename(GetChronoDataFile("vehicle/hmmwv/hmmwv_chassis_simple.obj").c_str());
     SimpChassis->AddAsset(mobjmesh);
     SimpChassis->SetPos(ChVector<>(0, 0, 0));
@@ -166,43 +166,43 @@ int main(int argc, char* argv[]) {
     SimpChassis->SetBodyFixed(false);
 
     // Create joints between chassis and hubs
-    auto RevTr_1 = std::make_shared<ChLinkRevoluteTranslational>();
+    auto RevTr_1 = chrono_types::make_shared<ChLinkRevoluteTranslational>();
     my_system.AddLink(RevTr_1);
     RevTr_1->Initialize(Hub_1, SimpChassis, false, ChVector<>(Lwx, Lwy, 0.0), ChVector<>(0, 1, 0),
                         ChVector<>(Lwx, Lwy, 0.1), ChVector<>(0, 0, 1), ChVector<>(1, 0, 0), true);
-    auto RevTr_2 = std::make_shared<ChLinkRevoluteTranslational>();
+    auto RevTr_2 = chrono_types::make_shared<ChLinkRevoluteTranslational>();
     my_system.AddLink(RevTr_2);
     RevTr_2->Initialize(Hub_2, SimpChassis, false, ChVector<>(Lwx, -Lwy, 0.0), ChVector<>(0, 1, 0),
                         ChVector<>(Lwx, -Lwy, 0.1), ChVector<>(0, 0, 1), ChVector<>(1, 0, 0), true);
-    auto RevTr_3 = std::make_shared<ChLinkRevoluteTranslational>();
+    auto RevTr_3 = chrono_types::make_shared<ChLinkRevoluteTranslational>();
     my_system.AddLink(RevTr_3);
     RevTr_3->Initialize(Hub_3, SimpChassis, false, ChVector<>(-Lwx, -Lwy, 0.0), ChVector<>(0, 1, 0),
                         ChVector<>(-Lwx, -Lwy, 0.1), ChVector<>(0, 0, 1), ChVector<>(1, 0, 0), true);
-    auto RevTr_4 = std::make_shared<ChLinkRevoluteTranslational>();
+    auto RevTr_4 = chrono_types::make_shared<ChLinkRevoluteTranslational>();
     my_system.AddLink(RevTr_4);
     RevTr_4->Initialize(Hub_4, SimpChassis, false, ChVector<>(-Lwx, Lwy, 0.0), ChVector<>(0, 1, 0),
                         ChVector<>(-Lwx, Lwy, 0.1), ChVector<>(0, 0, 1), ChVector<>(1, 0, 0), true);
 
     // Spring and damper for secondary suspension: True position vectors are relative
-    auto spring1 = std::make_shared<ChLinkSpring>();
+    auto spring1 = chrono_types::make_shared<ChLinkSpring>();
     spring1->Initialize(Hub_1, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(Lwx, Lwy, 0.2), true);
     spring1->Set_SpringK(spring_coef);
     spring1->Set_SpringR(damping_coef);
     my_system.AddLink(spring1);
 
-    auto spring2 = std::make_shared<ChLinkSpring>();
+    auto spring2 = chrono_types::make_shared<ChLinkSpring>();
     spring2->Initialize(Hub_2, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(Lwx, -Lwy, 0.2), true);
     spring2->Set_SpringK(spring_coef);
     spring2->Set_SpringR(damping_coef);
     my_system.AddLink(spring2);
 
-    auto spring3 = std::make_shared<ChLinkSpring>();
+    auto spring3 = chrono_types::make_shared<ChLinkSpring>();
     spring3->Initialize(Hub_3, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(-Lwx, -Lwy, 0.2), true);
     spring3->Set_SpringK(spring_coef);
     spring3->Set_SpringR(damping_coef);
     my_system.AddLink(spring3);
 
-    auto spring4 = std::make_shared<ChLinkSpring>();
+    auto spring4 = chrono_types::make_shared<ChLinkSpring>();
     spring4->Initialize(Hub_4, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(-Lwx, Lwy, 0.2), true);
     spring4->Set_SpringK(spring_coef);
     spring4->Set_SpringR(damping_coef);
@@ -212,7 +212,7 @@ int main(int argc, char* argv[]) {
     // ------------------
 
     double terrain_height = -TorusRadius - TorusHeight - Clearance;
-    auto terrain = std::make_shared<RigidTerrain>(&my_system);
+    auto terrain = chrono_types::make_shared<RigidTerrain>(&my_system);
     auto patch = terrain->AddPatch(ChCoordsys<>(ChVector<>(0, 0, terrain_height - 5), QUNIT), ChVector<>(60, 5, 10));
     patch->SetContactFrictionCoefficient(0.9f);
     patch->SetContactRestitutionCoefficient(0.01f);
@@ -252,7 +252,7 @@ int main(int argc, char* argv[]) {
         case MKL: {
 #ifdef CHRONO_MKL
             GetLog() << "Using MKL solver\n";
-            auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+            auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
             mkl_solver->SetSparsityPatternLock(true);
             my_system.SetSolver(mkl_solver);
 #endif

@@ -6,11 +6,20 @@
 #include <thread>
 #include <zlib.h>
 
+#include "chrono/assets/ChVisualization.h"
+#include "chrono/assets/ChSphereShape.h"
+#include "chrono/assets/ChEllipsoidShape.h"
+#include "chrono/assets/ChBoxShape.h"
+#include "chrono/assets/ChConeShape.h"
+#include "chrono/assets/ChCylinderShape.h"
+
 #include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsGenerators.h"
+
 #include "chrono_parallel/physics/ChSystemParallel.h"
+
 using namespace chrono;
 using namespace chrono::collision;
 using std::cout;

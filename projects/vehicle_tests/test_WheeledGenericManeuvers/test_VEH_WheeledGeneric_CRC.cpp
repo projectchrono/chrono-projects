@@ -251,7 +251,7 @@ int main(int argc, char* argv[]) {
     std::vector<ChVector<>> inCV;
     std::vector<ChVector<>> outCV;
     CalcControlPoints(run, cornerRadius, nturns, points, inCV, outCV);
-    auto path = std::make_shared<ChBezierCurve>(points, inCV, outCV);
+    auto path = chrono_types::make_shared<ChBezierCurve>(points, inCV, outCV);
 
     ChPathFollowerDriver driver(vehicle, vehicle::GetDataFile(steering_controller_file),
                                 vehicle::GetDataFile(speed_controller_file), path, "my_path", initFwdSpd, false);

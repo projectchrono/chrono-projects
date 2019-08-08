@@ -19,9 +19,6 @@
 #include <iostream>
 
 #include "chrono/core/ChTimer.h"
-#include "chrono/core/ChMatrixDynamic.h"
-#include "chrono/core/ChLinkedListMatrix.h"
-#include "chrono/core/ChMapMatrix.h"
 #include "chrono/core/ChCSMatrix.h"
 
 using namespace chrono;
@@ -54,19 +51,6 @@ void timeSetElement() {
         row_indices[i] = gen();
         col_indices[i] = gen();
     }
-
-    /*
-    // Insert non-zero elements in a LinkedList sparse matrix.
-    ChLinkedListMatrix A(n, n);
-    timer.reset();
-    timer.start();
-    for (int i = 0; i < nnz; i++) {
-    A.SetElement(row_indices[i], col_indices[i], 1.0);
-    }
-    timer.stop();
-    cout << "Time LinkedList matrix: " << timer() << endl;
-    */
-
 
     {
         // -----------------------------------------
@@ -183,42 +167,6 @@ void timeSetElement() {
         cout << "      Time: " << timer() << endl;
         cout << endl;
     }
-
-    {
-        // -----------------------------------------
-        // Insert non-zero elements in a Map matrix
-        // -----------------------------------------
-        cout << "MapMatrix" << endl;
-        ChMapMatrix C(n, n);
-        std::vector<int> ia;
-        std::vector<int> ja;
-        std::vector<double> vals;
-
-        cout << "   First insertion: " << nnz << " values" << endl;
-        timer.reset();
-        timer.start();
-        for (int i = 0; i < nnz; i++) {
-            C.SetElement(row_indices[i], col_indices[i], 1.0);
-        }
-        C.ConvertToCSR(ia, ja, vals);
-        timer.stop();
-        cout << "      NNZ:  " << C.GetNNZ() << endl;
-        cout << "      Time: " << timer() << endl;
-
-        cout << "   Second insertion: " << nnz << " values" << endl;
-        C.Reset(n, n);
-        timer.reset();
-        timer.start();
-        for (int i = 0; i < nnz; i++) {
-            C.SetElement(row_indices[i], col_indices[i], 2.0);
-        }
-        C.ConvertToCSR(ia, ja, vals);
-        timer.stop();
-        cout << "      NNZ:  " << C.GetNNZ() << endl;
-        cout << "      Time: " << timer() << endl;
-        cout << endl;
-    }
-
 }
 
 

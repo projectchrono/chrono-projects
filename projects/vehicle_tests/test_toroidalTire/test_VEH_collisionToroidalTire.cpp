@@ -215,7 +215,7 @@ int main(int argc, char* argv[]) {
     // Create the wheel (rim)
     // ----------------------
 
-    auto wheel = std::make_shared<ChBody>(ChMaterialSurface::SMC);
+    auto wheel = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
     system.AddBody(wheel);
     wheel->SetIdentifier(2);
     wheel->SetName("wheel");
@@ -229,7 +229,7 @@ int main(int argc, char* argv[]) {
     // Create the tire
     // ---------------
 
-    auto tire = std::make_shared<ANCFToroidalTire>("ANCF_Tire");
+    auto tire = chrono_types::make_shared<ANCFToroidalTire>("ANCF_Tire");
 
     tire->EnablePressure(true);
     tire->EnableRimConnection(true);
@@ -266,7 +266,7 @@ int main(int argc, char* argv[]) {
     // ------------------
 
     double terrain_height = z_min - tire_offset;
-    auto terrain = std::make_shared<RigidTerrain>(&system);
+    auto terrain = chrono_types::make_shared<RigidTerrain>(&system);
     auto patch = terrain->AddPatch(ChCoordsys<>(ChVector<>(0, 0, terrain_height - 5), QUNIT),
                                    ChVector<>(terrain_length, terrain_width, 10));
     patch->SetContactFrictionCoefficient(0.9f);
@@ -327,7 +327,7 @@ int main(int argc, char* argv[]) {
             break;
     }
 
-    auto glyph_points = std::make_shared<ChGlyphs>();
+    auto glyph_points = chrono_types::make_shared<ChGlyphs>();
     glyph_points->Reserve(2 * npoints);
     glyph_points->SetGlyphsSize(point_size);
     for (unsigned int ip = 0; ip < npoints; ip++) {

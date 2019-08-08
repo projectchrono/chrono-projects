@@ -174,7 +174,7 @@ class TireTestContactReporter : public ChContactContainer::ReportContactCallback
         // GetLog() << "These are interpenetrations ... " << distance << " \n";
         // GetLog() << "These are forces ... " << plane_coord.Matr_x_Vect(react_forces) << " \n";
         GetLog() << "Distance: " << distance << "\n";
-        ChVector<> force = plane_coord.Matr_x_Vect(react_forces);
+        ChVector<> force = plane_coord * react_forces;
         output.open(m_buffer, std::ios::app);
         output << pA.x() << ", " << pA.y() << ", " << pA.z() << ", " << pB.x() << ", " << pB.y() << ", " << pB.z() << ", "
                << distance << ", " << force.x() << ", " << force.y() << ", " << force.z() << ", " << std::endl;
@@ -370,7 +370,7 @@ int main() {
     // Create the rim body
     // -------------------
 
-    auto rim = std::make_shared<ChBody>();
+    auto rim = chrono_types::make_shared<ChBody>();
     rim->SetPos(ChVector<>(0, 0, 0));
     rim->SetRot(QUNIT);
     rim->SetMass(rim_mass);
@@ -379,12 +379,12 @@ int main() {
     rim->SetPos_dt(ChVector<>(desired_speed, 0, 0));
 
     my_system->AddBody(rim);
-    auto cyl_rim = std::make_shared<ChCylinderShape>();
+    auto cyl_rim = chrono_types::make_shared<ChCylinderShape>();
     cyl_rim->GetCylinderGeometry().p1 = ChVector<>(0, -.25, 0);
     cyl_rim->GetCylinderGeometry().p2 = ChVector<>(0, 0.25, 0);
     cyl_rim->GetCylinderGeometry().rad = 0.1;
     rim->AddAsset(cyl_rim);
-    auto tex_rim = std::make_shared<ChTexture>();
+    auto tex_rim = chrono_types::make_shared<ChTexture>();
     tex_rim->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
     rim->AddAsset(tex_rim);
 
@@ -400,9 +400,9 @@ int main() {
         case TireModelType::FIALA: {
             std::shared_ptr<ChFialaTire> tire_fiala;
             if (use_JSON) {
-                tire_fiala = std::make_shared<FialaTire>(vehicle::GetDataFile(fiala_testfile));
+                tire_fiala = chrono_types::make_shared<FialaTire>(vehicle::GetDataFile(fiala_testfile));
             } else {
-                tire_fiala = std::make_shared<hmmwv::HMMWV_FialaTire>("Fiala tire");
+                tire_fiala = chrono_types::make_shared<hmmwv::HMMWV_FialaTire>("Fiala tire");
             }
             tire_fiala->Initialize(rim, LEFT);
             tire_fiala->SetVisualizationType(VisualizationType::PRIMITIVES);
@@ -415,9 +415,9 @@ int main() {
         case TireModelType::ANCF: {
             std::shared_ptr<ChANCFTire> tire_ancf;
             if (use_JSON) {
-                tire_ancf = std::make_shared<ANCFTire>(vehicle::GetDataFile(ancftire_file));
+                tire_ancf = chrono_types::make_shared<ANCFTire>(vehicle::GetDataFile(ancftire_file));
             } else {
-                tire_ancf = std::make_shared<hmmwv::HMMWV_ANCFTire>("ANCF tire");
+                tire_ancf = chrono_types::make_shared<hmmwv::HMMWV_ANCFTire>("ANCF tire");
             }
 
             tire_ancf->EnablePressure(enable_tire_pressure);
@@ -435,9 +435,9 @@ int main() {
         case TireModelType::REISSNER: {
             std::shared_ptr<ChReissnerTire> tire_reissner;
             if (use_JSON) {
-                tire_reissner = std::make_shared<ReissnerTire>(vehicle::GetDataFile(reissnertire_file));
+                tire_reissner = chrono_types::make_shared<ReissnerTire>(vehicle::GetDataFile(reissnertire_file));
             } else {
-                tire_reissner = std::make_shared<hmmwv::HMMWV_ReissnerTire>("Reissner tire");
+                tire_reissner = chrono_types::make_shared<hmmwv::HMMWV_ReissnerTire>("Reissner tire");
             }
 
             tire_reissner->EnablePressure(enable_tire_pressure);
@@ -453,7 +453,7 @@ int main() {
             break;
         }
         case TireModelType::FEA: {
-            auto tire_fea = std::make_shared<FEATire>(vehicle::GetDataFile(featire_file));
+            auto tire_fea = chrono_types::make_shared<FEATire>(vehicle::GetDataFile(featire_file));
 
             tire_fea->EnablePressure(enable_tire_pressure);
             tire_fea->EnableContact(enable_tire_contact);
@@ -472,7 +472,7 @@ int main() {
     // Create the Chassis Body
     // -----------------------
 
-    auto chassis = std::make_shared<ChBody>();
+    auto chassis = chrono_types::make_shared<ChBody>();
     chassis->SetPos(ChVector<>(0, 0, 0));
     chassis->SetRot(QUNIT);
     chassis->SetPos_dt(desired_speed * ChVector<>(1, 0, 0));
@@ -481,19 +481,19 @@ int main() {
     chassis->SetPos_dt(ChVector<>(desired_speed, 0, 0));
     my_system->AddBody(chassis);
     // Add some geometry to the chassis body for visualizing the carrier
-    auto box_chassis = std::make_shared<ChBoxShape>();
+    auto box_chassis = chrono_types::make_shared<ChBoxShape>();
     box_chassis->GetBoxGeometry().Size = ChVector<>(.25, .005, .005);
     box_chassis->Pos = ChVector<>(0, 0, tire_radius);
     box_chassis->Rot = QUNIT;
     chassis->AddAsset(box_chassis);
-    auto col_chassis = std::make_shared<ChColorAsset>();
+    auto col_chassis = chrono_types::make_shared<ChColorAsset>();
     col_chassis->SetColor(ChColor(1.0f, 0.5f, 0.0f));
     chassis->AddAsset(col_chassis);
 
     // Create the set_toe body
     // -----------------------
 
-    auto set_toe = std::make_shared<ChBody>();
+    auto set_toe = chrono_types::make_shared<ChBody>();
     set_toe->SetPos(ChVector<>(0, 0, 0));
     set_toe->SetRot(QUNIT);
     set_toe->SetMass(set_toe_mass);
@@ -501,19 +501,19 @@ int main() {
     set_toe->SetPos_dt(ChVector<>(desired_speed, 0, 0));
     my_system->AddBody(set_toe);
     // Add some geometry to the set_toe body for visualizing the carrier
-    auto box_set_toe = std::make_shared<ChBoxShape>();
+    auto box_set_toe = chrono_types::make_shared<ChBoxShape>();
     box_set_toe->GetBoxGeometry().Size = ChVector<>(.2, .007, .007);
     box_set_toe->Pos = ChVector<>(0, 0, tire_radius);
     box_set_toe->Rot = QUNIT;
     set_toe->AddAsset(box_set_toe);
-    auto col_set_toe = std::make_shared<ChColorAsset>();
+    auto col_set_toe = chrono_types::make_shared<ChColorAsset>();
     col_set_toe->SetColor(ChColor(0.0f, 0.0f, 1.0f));
     set_toe->AddAsset(col_set_toe);
 
     // Create the wheel_carrier body
     // -----------------------------
 
-    auto wheel_carrier = std::make_shared<ChBody>();
+    auto wheel_carrier = chrono_types::make_shared<ChBody>();
     wheel_carrier->SetPos(ChVector<>(0, 0, 0));
     wheel_carrier->SetRot(QUNIT);
     wheel_carrier->SetMass(wheel_carrier_mass);
@@ -521,19 +521,19 @@ int main() {
     wheel_carrier->SetPos_dt(ChVector<>(desired_speed, 0, 0));
     my_system->AddBody(wheel_carrier);
     // Add some geometry to the set_toe body for visualizing the carrier
-    auto box_wheel_carrier = std::make_shared<ChBoxShape>();
+    auto box_wheel_carrier = chrono_types::make_shared<ChBoxShape>();
     box_wheel_carrier->GetBoxGeometry().Size = ChVector<>(.15, .009, .009);
     box_wheel_carrier->Pos = ChVector<>(0, 0, tire_radius);
     box_wheel_carrier->Rot = QUNIT;
     wheel_carrier->AddAsset(box_wheel_carrier);
-    auto col_wheel_carrier = std::make_shared<ChColorAsset>();
+    auto col_wheel_carrier = chrono_types::make_shared<ChColorAsset>();
     col_wheel_carrier->SetColor(ChColor(0.0f, 1.0f, 0.0f));
     wheel_carrier->AddAsset(col_wheel_carrier);
 
     // Create the set_camber body
     // --------------------------
 
-    auto set_camber = std::make_shared<ChBody>();
+    auto set_camber = chrono_types::make_shared<ChBody>();
     set_camber->SetPos(ChVector<>(0, 0, 0));
     set_camber->SetRot(QUNIT);
     set_camber->SetMass(set_camber_mass);
@@ -541,21 +541,21 @@ int main() {
     set_camber->SetPos_dt(ChVector<>(desired_speed, 0, 0));
     my_system->AddBody(set_camber);
     // Add some geometry to the set_toe body for visualizing the carrier
-    auto box_set_camber = std::make_shared<ChBoxShape>();
+    auto box_set_camber = chrono_types::make_shared<ChBoxShape>();
     box_set_camber->GetBoxGeometry().Size = ChVector<>(.13, .011, .011);
     box_set_camber->Pos = ChVector<>(0, 0, tire_radius);
     box_set_camber->Rot = QUNIT;
     set_camber->AddAsset(box_set_camber);
-    auto col_set_camber = std::make_shared<ChColorAsset>();
+    auto col_set_camber = chrono_types::make_shared<ChColorAsset>();
     col_set_camber->SetColor(ChColor(1.0f, 0.0f, 0.0f));
     set_camber->AddAsset(col_set_camber);
     // Create the ground body.
-    auto ground = std::make_shared<ChBody>();
+    auto ground = chrono_types::make_shared<ChBody>();
     ground->SetBodyFixed(true);
     ground->SetCollide(false);
     my_system->AddBody(ground);
     // Add some geometry to the ground body for visualizing the road
-    /*auto box_gnd = std::make_shared<ChBoxShape>();
+    /*auto box_gnd = chrono_types::make_shared<ChBoxShape>();
     box_gnd->GetBoxGeometry().Size = ChVector<>(1, .2, .0005);
     box_gnd->Pos = ChVector<>(0, 0, -tire_radius);
     box_gnd->Rot = QUNIT;
@@ -564,7 +564,7 @@ int main() {
     rim->SetWvel_par(ChVector<>(0, desired_speed / tire_radius, 0));
 
     // Create the wheel body
-    auto wheel = std::make_shared<ChBody>();
+    auto wheel = chrono_types::make_shared<ChBody>();
     wheel->SetPos(ChVector<>(0, 0, 0));
     wheel->SetRot(QUNIT);
     wheel->SetMass(wheel_mass);
@@ -574,12 +574,12 @@ int main() {
     my_system->AddBody(wheel);
     if (tire_model != TireModelType::ANCF && tire_model != TireModelType::FEA &&
         tire_model != TireModelType::REISSNER && tire_model != TireModelType::LUGRE) {
-        auto cyl_wheel = std::make_shared<ChCylinderShape>();
+        auto cyl_wheel = chrono_types::make_shared<ChCylinderShape>();
         cyl_wheel->GetCylinderGeometry().p1 = ChVector<>(0, -tire_width / 2, 0);
         cyl_wheel->GetCylinderGeometry().p2 = ChVector<>(0, tire_width / 2, 0);
         cyl_wheel->GetCylinderGeometry().rad = tire_radius;
         wheel->AddAsset(cyl_wheel);
-        auto tex_wheel = std::make_shared<ChTexture>();
+        auto tex_wheel = chrono_types::make_shared<ChTexture>();
         tex_wheel->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
         wheel->AddAsset(tex_wheel);
     }
@@ -604,7 +604,7 @@ int main() {
     // call) so that the link coordinate system is expressed in the ground frame.
     // The prismatic degree of freedom is along the Z-axis of the specified coordinate system
 
-    auto prismatic_gnd_chassis = std::make_shared<ChLinkLockPrismatic>();
+    auto prismatic_gnd_chassis = chrono_types::make_shared<ChLinkLockPrismatic>();
     prismatic_gnd_chassis->Initialize(chassis, ground, ChCoordsys<>(ChVector<>(0, 0, 0), Q_from_AngY(CH_C_PI_2)));
     my_system->AddLink(prismatic_gnd_chassis);
 
@@ -612,14 +612,14 @@ int main() {
     //   y(t) = 0 + t * desiredSpeed
     //   y'(t) = desiredSpeed
 
-    auto long_actuator_fun = std::make_shared<ChFunction_Ramp>(0.0, desired_speed);
+    auto long_actuator_fun = chrono_types::make_shared<ChFunction_Ramp>(0.0, desired_speed);
 
     // Create the linear actuator, connecting the plate to the ground.
     // Here, we set the plate as the master body (second one in the initialization
     // call) so that the link coordinate system is expressed in the plate body
     // frame.
 
-    auto actuator = std::make_shared<ChLinkLinActuator>();
+    auto actuator = chrono_types::make_shared<ChLinkLinActuator>();
     ChVector<> pt1 = ChVector<>(0, 0, 0);
     actuator->Initialize(ground, chassis, false, ChCoordsys<>(pt1, QUNIT),
                          ChCoordsys<>(pt1 + ChVector<>(1, 0, 0), QUNIT));
@@ -633,9 +633,9 @@ int main() {
     // --------------------------------------------
     // Create the Slip motor (Revolute joint) between the chassis body and the set_toe body
     // The revolute joint's axis of rotation will be the Z axis of the specified rotation matrix.
-    auto f_slip = std::make_shared<ChFunction_SlipAngle>();
+    auto f_slip = chrono_types::make_shared<ChFunction_SlipAngle>();
 
-    auto slip_motor = std::make_shared<ChLinkMotorRotationAngle>();
+    auto slip_motor = chrono_types::make_shared<ChLinkMotorRotationAngle>();
     slip_motor->Initialize(set_toe, chassis, ChFrame<>(ChVector<>(0, 0, 0), QUNIT));
     slip_motor->SetName("engine_set_slip");
     slip_motor->SetAngleFunction(f_slip);
@@ -648,7 +648,7 @@ int main() {
     // This joint imposes the normal force of the system.
     // Downwards normal force = Desired normal force (downwards) - weight of the remaining bodies
 
-    auto prismatic_set_toe_wheel_carrier = std::make_shared<ChLinkLockPrismatic>();
+    auto prismatic_set_toe_wheel_carrier = chrono_types::make_shared<ChLinkLockPrismatic>();
     prismatic_set_toe_wheel_carrier->Initialize(wheel_carrier, set_toe,
                                                 ChCoordsys<>(ChVector<>(0, 0, tire_radius), QUNIT));
     my_system->AddLink(prismatic_set_toe_wheel_carrier);
@@ -658,9 +658,9 @@ int main() {
     // --------------------------------------------
     // Create the Camber motor (Revolute joint) between the wheel_carrier body and the set_camber
     // The revolute joint's axis of rotation will be the Z axis of the specified rotation matrix.
-    auto f_camber = std::make_shared<ChFunction_CamberAngle>();
+    auto f_camber = chrono_types::make_shared<ChFunction_CamberAngle>();
 
-    auto camber_motor = std::make_shared<ChLinkMotorRotationAngle>();
+    auto camber_motor = chrono_types::make_shared<ChLinkMotorRotationAngle>();
     camber_motor->Initialize(set_camber, wheel_carrier, ChFrame<>(ChVector<>(0, 0, 0), Q_from_AngY(CH_C_PI_2)));
     camber_motor->SetName("engine_set_camber");
     camber_motor->SetAngleFunction(f_camber);
@@ -673,7 +673,7 @@ int main() {
     // reference frame. The revolute joint's axis of rotation will be the Z axis
     // of the specified rotation matrix.
 
-    auto revolute_set_camber_rim = std::make_shared<ChLinkLockRevolute>();
+    auto revolute_set_camber_rim = chrono_types::make_shared<ChLinkLockRevolute>();
     revolute_set_camber_rim->Initialize(rim, set_camber, ChCoordsys<>(ChVector<>(0, 0, 0), Q_from_AngX(CH_C_PI_2)));
     my_system->AddLink(revolute_set_camber_rim);
 
@@ -681,7 +681,7 @@ int main() {
     // rim           ==lock==>         wheel
     // --------------------------------------------
 
-    auto lock_rim_wheel = std::make_shared<ChLinkLockLock>();
+    auto lock_rim_wheel = chrono_types::make_shared<ChLinkLockLock>();
     lock_rim_wheel->Initialize(wheel, rim, ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
     my_system->AddLink(lock_rim_wheel);
 
@@ -691,7 +691,7 @@ int main() {
     std::shared_ptr<RigidTerrain::Patch> patch;
     if (terrain_type == RIGID_TERRAIN) {
         double terrain_height = -tire_radius + 0.0015;
-        auto rigid_terrain = std::make_shared<RigidTerrain>(my_system);
+        auto rigid_terrain = chrono_types::make_shared<RigidTerrain>(my_system);
         patch = rigid_terrain->AddPatch(ChCoordsys<>(ChVector<>(0, 0, terrain_height - 5), QUNIT),
                                         ChVector<>(120, 0.5, 10));
         patch->SetContactFrictionCoefficient(0.9f);
@@ -701,12 +701,12 @@ int main() {
         rigid_terrain->Initialize();
         terrain = rigid_terrain;
     } else if (terrain_type == PLASTIC_FEA) {
-        auto fea_terrain = std::make_shared<FEADeformableTerrain>(my_system);
+        auto fea_terrain = chrono_types::make_shared<FEADeformableTerrain>(my_system);
         fea_terrain->SetSoilParametersFEA(200, 1.379e5, 0.25, 0.0, 50000, 20.0, 2.0);
         fea_terrain->Initialize(ChVector<>(-1.0, -0.3, -1.0), ChVector<>(4.0, 0.5, 1.0 - tire_radius - 0.05),
                                 ChVector<int>(100, 20, 4));  // ChVector<int>(10, 10, 4)
         // Add contact surface mesh.
-        auto mysurfmaterial = std::make_shared<ChMaterialSurfaceSMC>();
+        auto mysurfmaterial = chrono_types::make_shared<ChMaterialSurfaceSMC>();
         mysurfmaterial->SetYoungModulus(6e4);
         mysurfmaterial->SetFriction(0.3f);
         mysurfmaterial->SetRestitution(0.2f);
@@ -742,7 +742,7 @@ int main() {
                                                        patch->GetGroundBody(), tire_deform->GetContactNodeRadius());
             my_system->RegisterCustomCollisionCallback(my_collider);
         } else if (surface && terrain_type == PLASTIC_FEA) {
-            auto mysurfmaterial = std::make_shared<ChMaterialSurfaceSMC>();
+            auto mysurfmaterial = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             mysurfmaterial->SetYoungModulus(6e4);
             mysurfmaterial->SetFriction(0.3f);
             mysurfmaterial->SetRestitution(0.2f);
@@ -793,7 +793,7 @@ int main() {
         case MKL: {
 #ifdef CHRONO_MKL
             GetLog() << "Using MKL solver\n";
-            auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+            auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
             mkl_solver->SetSparsityPatternLock(true);
             my_system->SetSolver(mkl_solver);
 

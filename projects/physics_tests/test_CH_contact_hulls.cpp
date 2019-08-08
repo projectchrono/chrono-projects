@@ -28,16 +28,16 @@ using namespace chrono::irrlicht;
 void AddWallBox(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVector<>& loc) {
     body->GetCollisionModel()->AddBox(dim.x(), dim.y(), dim.z(), loc);
 
-    auto box = std::make_shared<ChBoxShape>();
+    auto box = chrono_types::make_shared<ChBoxShape>();
     box->GetBoxGeometry().Size = dim;
     box->GetBoxGeometry().Pos = loc;
     body->AddAsset(box);
 
-    body->AddAsset(std::make_shared<ChColorAsset>(0.5f, 0.5f, 0.0f));
+    body->AddAsset(chrono_types::make_shared<ChColorAsset>(0.5f, 0.5f, 0.0f));
 }
 
 void AddWallMesh(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVector<>& loc) {
-    auto trimesh = std::make_shared<geometry::ChTriangleMeshConnected>();
+    auto trimesh = chrono_types::make_shared<geometry::ChTriangleMeshConnected>();
 
     std::vector<ChVector<> >& vertices = trimesh->getCoordsVertices();
     std::vector<ChVector<> >& normals = trimesh->getCoordsNormals();
@@ -99,11 +99,11 @@ void AddWallMesh(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVe
 
     body->GetCollisionModel()->AddTriangleMesh(trimesh, true, true, loc);
 
-    auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
+    auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
     trimesh_shape->SetMesh(trimesh);
     body->AddAsset(trimesh_shape);
 
-    body->AddAsset(std::make_shared<ChColorAsset>(0.0f, 0.0f, 0.5f));
+    body->AddAsset(chrono_types::make_shared<ChColorAsset>(0.0f, 0.0f, 0.5f));
 }
 
 void AddWallHull(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVector<>& loc) {
@@ -120,12 +120,12 @@ void AddWallHull(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVe
 
     body->GetCollisionModel()->AddConvexHull(points);
 
-    auto shape = std::make_shared<ChTriangleMeshShape>();
+    auto shape = chrono_types::make_shared<ChTriangleMeshShape>();
     collision::ChConvexHullLibraryWrapper lh;
     lh.ComputeHull(points, *shape->GetMesh());
     body->AddAsset(shape);
 
-    body->AddAsset(std::make_shared<ChColorAsset>(0.5f, 0.0f, 0.0f));
+    body->AddAsset(chrono_types::make_shared<ChColorAsset>(0.5f, 0.0f, 0.0f));
 }
 
 void BuildContainerBoxes(std::shared_ptr<ChBody> body, double hdimX, double hdimY, double hdimZ, double hthick) {
@@ -201,13 +201,13 @@ int main(int argc, char* argv[]) {
     msystem.SetAdhesionForceModel(ChSystemSMC::AdhesionForceModel::Constant);
 
     // Create a material (will be used by both objects)
-    auto material = std::make_shared<ChMaterialSurfaceSMC>();
+    auto material = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     material->SetYoungModulus(1.0e7f);
     material->SetRestitution(0.1f);
     material->SetFriction(0.4f);
 
     // Create the falling ball
-    auto ball = std::make_shared<ChBody>(ChMaterialSurface::SMC);
+    auto ball = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
 
     ball->SetIdentifier(ballId);
     ball->SetMass(mass);
@@ -224,18 +224,18 @@ int main(int argc, char* argv[]) {
     ball->GetCollisionModel()->AddSphere(radius);
     ball->GetCollisionModel()->BuildModel();
 
-    auto sphere = std::make_shared<ChSphereShape>();
+    auto sphere = chrono_types::make_shared<ChSphereShape>();
     sphere->GetSphereGeometry().rad = radius;
     ball->AddAsset(sphere);
 
-    auto mtexture = std::make_shared<ChTexture>();
+    auto mtexture = chrono_types::make_shared<ChTexture>();
     mtexture->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
     ball->AddAsset(mtexture);
 
     msystem.AddBody(ball);
 
     // Create container
-    auto bin = std::make_shared<ChBody>(ChMaterialSurface::SMC);
+    auto bin = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
 
     bin->SetIdentifier(binId);
     bin->SetMass(1);

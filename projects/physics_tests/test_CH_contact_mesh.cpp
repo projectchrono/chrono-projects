@@ -147,14 +147,14 @@ int main(int argc, char* argv[]) {
             break;
     }
 
-    auto trimesh = std::make_shared<geometry::ChTriangleMeshConnected>();
+    auto trimesh = chrono_types::make_shared<geometry::ChTriangleMeshConnected>();
     trimesh->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_tire.obj"), true, false);
 
     object->GetCollisionModel()->ClearModel();
     object->GetCollisionModel()->AddTriangleMesh(trimesh, false, false, ChVector<>(0), ChMatrix33<>(1), 0.01);
     object->GetCollisionModel()->BuildModel();
 
-    auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
+    auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
     trimesh_shape->SetMesh(trimesh);
     object->AddAsset(trimesh_shape);
 
@@ -194,7 +194,7 @@ int main(int argc, char* argv[]) {
     ground->GetCollisionModel()->AddBox(width, length, thickness, ChVector<>(0, 0, -thickness));
     ground->GetCollisionModel()->BuildModel();
 
-    auto box = std::make_shared<ChBoxShape>();
+    auto box = chrono_types::make_shared<ChBoxShape>();
     box->GetBoxGeometry().Size = ChVector<>(width, length, thickness);
     box->GetBoxGeometry().Pos = ChVector<>(0, 0, -thickness);
     ground->AddAsset(box);

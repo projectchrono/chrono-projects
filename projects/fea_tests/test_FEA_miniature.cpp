@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
     ChVector<> vP(0, -Rpinion - hbarW * 0.5, 0);
 
     // Create a truss:
-    auto body_truss = std::make_shared<ChBody>();
+    auto body_truss = chrono_types::make_shared<ChBody>();
 
     body_truss->SetBodyFixed(true);
 
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
 
     /*
     // Attach a 'box' shape asset for visualization.
-    auto mboxtruss = std::make_shared<ChBoxShape>();
+    auto mboxtruss = chrono_types::make_shared<ChBoxShape>();
     mboxtruss->GetBoxGeometry().Pos  = ChVector<>(-0.01, 0,0);
     mboxtruss->GetBoxGeometry().SetLengths( ChVector<>(0.02, 0.2, 0.1) );
     body_truss->AddAsset(mboxtruss);
@@ -101,11 +101,11 @@ int main(int argc, char* argv[]) {
 
     // Create a FEM mesh, that is a container for groups
     // of elements and their referenced nodes.
-    auto my_mesh = std::make_shared<ChMesh>();
+    auto my_mesh = chrono_types::make_shared<ChMesh>();
 
     // Create the horizontal beams
 
-    auto msectionH = std::make_shared<ChBeamSectionAdvanced>();
+    auto msectionH = chrono_types::make_shared<ChBeamSectionAdvanced>();
 
     msectionH->SetDensity(7000);  //***TEST*** must be 7k
     msectionH->SetYoungModulus(200.0e9);
@@ -148,7 +148,7 @@ int main(int argc, char* argv[]) {
 
     // Create the vertical flexible beams
 
-    auto msectionV = std::make_shared<ChBeamSectionAdvanced>();
+    auto msectionV = chrono_types::make_shared<ChBeamSectionAdvanced>();
 
     msectionV->SetDensity(7000);  //***TEST*** must be 7k
     msectionV->SetYoungModulus(200.0e9);
@@ -228,14 +228,14 @@ int main(int argc, char* argv[]) {
     // postprocessor that can handle a coloured ChTriangleMeshShape).
     // Do not forget AddAsset() at the end!
 
-    auto mvisualizebeamA = std::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
+    auto mvisualizebeamA = chrono_types::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
     mvisualizebeamA->SetFEMdataType(ChVisualizationFEAmesh::E_PLOT_NODE_SPEED_NORM);  // E_PLOT_ELEM_BEAM_MZ);
     mvisualizebeamA->SetColorscaleMinMax(-30, 30);
     mvisualizebeamA->SetSmoothFaces(true);
     mvisualizebeamA->SetWireframe(false);
     my_mesh->AddAsset(mvisualizebeamA);
 
-    auto mvisualizebeamC = std::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
+    auto mvisualizebeamC = chrono_types::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
     mvisualizebeamC->SetFEMglyphType(ChVisualizationFEAmesh::E_GLYPH_NODE_CSYS);
     mvisualizebeamC->SetFEMdataType(ChVisualizationFEAmesh::E_PLOT_NONE);
     mvisualizebeamC->SetSymbolsThickness(0.001);
@@ -248,48 +248,48 @@ int main(int argc, char* argv[]) {
     //
 
     if (!simple_rack) {
-        auto rack = std::make_shared<ChBodyEasyBox>(hbarL2, hbarW, thickZ, 7000, false);
+        auto rack = chrono_types::make_shared<ChBodyEasyBox>(hbarL2, hbarW, thickZ, 7000, false);
         rack->SetPos(0.5 * (vBl + vCl));
         my_system.Add(rack);
 
-        auto constr_B = std::make_shared<ChLinkMateGeneric>();
+        auto constr_B = chrono_types::make_shared<ChLinkMateGeneric>();
         constr_B->Initialize(node_Bl, rack, false, node_Bl->Frame(), node_Bl->Frame());
         my_system.Add(constr_B);
 
-        auto constr_C = std::make_shared<ChLinkMateGeneric>();
+        auto constr_C = chrono_types::make_shared<ChLinkMateGeneric>();
         constr_C->Initialize(node_Cl, rack, false, node_Cl->Frame(), node_Cl->Frame());
         my_system.Add(constr_C);
 
-        auto balance = std::make_shared<ChBodyEasyCylinder>(Rbalance, Wbalance, 7000, false);
+        auto balance = chrono_types::make_shared<ChBodyEasyCylinder>(Rbalance, Wbalance, 7000, false);
         balance->SetPos(vP + ChVector<>(0, 0, -OffPin));
         balance->SetRot(Q_from_AngAxis(CH_C_PI_2, VECT_X));
         for (int i = 0; i < 6; ++i) {
             double phi = CH_C_2PI * (i / 6.0);
-            auto vshape = std::make_shared<ChCylinderShape>();
+            auto vshape = chrono_types::make_shared<ChCylinderShape>();
             vshape->GetCylinderGeometry().p1 =
                 ChVector<>(sin(phi) * Rbalance * 0.8, Wbalance, cos(phi) * Rbalance * 0.8);
             vshape->GetCylinderGeometry().p2 = vshape->GetCylinderGeometry().p1 + ChVector<>(0, 2 * Wbalance, 0);
             vshape->GetCylinderGeometry().rad = Rbalance * 0.1;
             balance->AddAsset(vshape);
         }
-        auto vshaft = std::make_shared<ChCylinderShape>();
+        auto vshaft = chrono_types::make_shared<ChCylinderShape>();
         vshaft->GetCylinderGeometry().p1 = vP + ChVector<>(0, -OffPin * 10, 0);
         vshaft->GetCylinderGeometry().p2 = vP + ChVector<>(0, OffPin * 10, 0);
         vshaft->GetCylinderGeometry().rad = Rpinion;
         balance->AddAsset(vshaft);
-        auto mcol = std::make_shared<ChColorAsset>();
+        auto mcol = chrono_types::make_shared<ChColorAsset>();
         mcol->SetColor(ChColor(0.5f, 0.9f, 0.9f));
         balance->AddAsset(mcol);
 
         my_system.Add(balance);
 
-        auto revolute = std::make_shared<ChLinkLockRevolute>();
+        auto revolute = chrono_types::make_shared<ChLinkLockRevolute>();
         std::shared_ptr<ChBody> mbalance = balance;
         revolute->Initialize(mbalance, body_truss, ChCoordsys<>(vP + ChVector<>(0, 0, -0.01)));
 
         my_system.Add(revolute);
 
-        auto constr_rack = std::make_shared<ChLinkRackpinion>();
+        auto constr_rack = chrono_types::make_shared<ChLinkRackpinion>();
         constr_rack->Initialize(balance, rack, false, ChFrame<>(), ChFrame<>());
 
         ChFrameMoving<> f_pin_abs(vP);
@@ -337,7 +337,7 @@ int main(int argc, char* argv[]) {
 
     //***TEST***
     ChMatlabEngine matlab_engine;
-    auto matlab_solver = std::make_shared<ChSolverMatlab>(matlab_engine);
+    auto matlab_solver = chrono_types::make_shared<ChSolverMatlab>(matlab_engine);
     my_system.SetSolver(matlab_solver);
 
     my_system.Set_G_acc(ChVector<>(0, 0, 0));

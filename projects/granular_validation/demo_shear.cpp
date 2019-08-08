@@ -32,6 +32,8 @@
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/assets/ChSphereShape.h"
+#include "chrono/assets/ChBoxShape.h"
 
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
@@ -129,7 +131,7 @@ void AddWall(std::shared_ptr<ChBody>& body, const ChVector<>& dim, const ChVecto
     body->GetCollisionModel()->AddBox(dim.x(), dim.y(), dim.z(), loc);
 
     if (visible == true) {
-        auto box = std::make_shared<ChBoxShape>();
+        auto box = chrono_types::make_shared<ChBoxShape>();
         box->GetBoxGeometry().Size = dim;
         box->Pos = loc;
         box->SetColor(ChColor(1, 0, 0));
@@ -262,13 +264,13 @@ int main(int argc, char* argv[]) {
 // Create a ball material (will be used by balls only)
 
 #ifdef USE_SMC
-    auto material = std::make_shared<ChMaterialSurfaceSMC>();
+    auto material = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     material->SetYoungModulus(Y);
     material->SetPoissonRatio(nu);
     material->SetRestitution(COR);
     material->SetFriction(mu);
 #else
-    auto material = std::make_shared<ChMaterialSurfaceNSC>();
+    auto material = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     material->SetRestitution(COR);
     material->SetFriction(mu);
 #endif
@@ -276,20 +278,20 @@ int main(int argc, char* argv[]) {
 // Create a material for all objects other than balls
 
 #ifdef USE_SMC
-    auto mat_ext = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_ext = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_ext->SetYoungModulus(Y);
     mat_ext->SetPoissonRatio(nu);
     mat_ext->SetRestitution(COR);
     mat_ext->SetFriction(mu_ext);
 #else
-    auto mat_ext = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_ext = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_ext->SetRestitution(COR);
     mat_ext->SetFriction(mu_ext);
 #endif
 
     // Create lower bin
 
-    auto bin = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), contact_method);
+    auto bin = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), contact_method);
 
     bin->SetIdentifier(binId);
     bin->SetMass(1);
@@ -319,7 +321,7 @@ int main(int argc, char* argv[]) {
 
     // Create upper shear box
 
-    auto box = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), contact_method);
+    auto box = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), contact_method);
 
     box->SetIdentifier(boxId);
     box->SetMass(1);
@@ -348,7 +350,7 @@ int main(int argc, char* argv[]) {
 
     // Create upper load plate
 
-    auto plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), contact_method);
+    auto plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), contact_method);
 
     shear_Area = width * length;
 
@@ -383,7 +385,7 @@ int main(int argc, char* argv[]) {
                 ball_x = 4.0 * radius * (float(j - b / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
                 ball_z = 4.0 * radius * (float(k - c / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
 
-                auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), contact_method);
+                auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), contact_method);
 
                 ball->SetIdentifier(ballId + 6 * 6 * i + 6 * j + k);
                 ball->SetMass(mass);
@@ -399,7 +401,7 @@ int main(int argc, char* argv[]) {
                 ball->GetCollisionModel()->SetFamily(4);
                 ball->GetCollisionModel()->BuildModel();
 
-                auto sphere = std::make_shared<ChSphereShape>();
+                auto sphere = chrono_types::make_shared<ChSphereShape>();
 
                 sphere->GetSphereGeometry().rad = radius;
                 sphere->SetColor(ChColor(1, 0, 1));
@@ -415,7 +417,7 @@ int main(int argc, char* argv[]) {
     // specified joint coordinate system.  Here, we apply the 'z2y' rotation to
     // align it with the Y axis of the global reference frame.
 
-    auto prismatic_plate_box = std::make_shared<ChLinkLockPrismatic>();
+    auto prismatic_plate_box = chrono_types::make_shared<ChLinkLockPrismatic>();
     prismatic_plate_box->SetName("prismatic_plate_box");
     prismatic_plate_box->Initialize(plate, box, ChCoordsys<>(ChVector<>(0, 0, 0), z2y));
     my_system->AddLink(prismatic_plate_box);

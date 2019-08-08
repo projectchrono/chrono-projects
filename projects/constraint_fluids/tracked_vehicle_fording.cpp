@@ -182,7 +182,7 @@ void static WriteTrackedVehicleData(
 
 double CreateParticles(ChSystemParallelNSC* system) {
 	// Create a material
-	auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
+	auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
 	mat_g->SetFriction(mu_g);
 
 	// Create a particle generator and a mixture entirely made out of spheres

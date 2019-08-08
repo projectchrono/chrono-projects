@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
     ChMatrix33<> tire_alignment(Q_from_AngAxis(CH_C_PI, VECT_Y));
 
     // Contact material
-    auto mysurfmaterial = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mysurfmaterial = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mysurfmaterial->SetYoungModulus(30e4);
     mysurfmaterial->SetFriction(0.3f);
     mysurfmaterial->SetRestitution(0.2f);
@@ -122,14 +122,14 @@ int main(int argc, char* argv[]) {
     // ---------------
 
     // Mesh material
-    auto mesh_material = std::make_shared<ChContinuumElastic>();
+    auto mesh_material = chrono_types::make_shared<ChContinuumElastic>();
     mesh_material->Set_E(0.016e9);  // rubber 0.01e9, steel 200e9
     mesh_material->Set_v(0.4);
     mesh_material->Set_RayleighDampingK(0.004);
     mesh_material->Set_density(1000);
 
     // Create tire mesh from ABAQUS input file
-    auto my_mesh = std::make_shared<ChMesh>();
+    auto my_mesh = chrono_types::make_shared<ChMesh>();
     std::map<std::string, std::vector<std::shared_ptr<ChNodeFEAbase>>> node_sets;
 
     try {
@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
 
     // Mesh visualization
     if (visualization) {
-        auto mvisualizemesh = std::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
+        auto mvisualizemesh = chrono_types::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
         mvisualizemesh->SetFEMdataType(ChVisualizationFEAmesh::E_PLOT_NODE_SPEED_NORM);
         mvisualizemesh->SetColorscaleMinMax(0.0, 10);
         mvisualizemesh->SetSmoothFaces(true);
@@ -159,7 +159,7 @@ int main(int argc, char* argv[]) {
     // Create the contact surface
     if (include_tire_contact) {
         // In this case it is a ChContactSurfaceNodeCloud, so just pass  all nodes to it.
-        auto mcontactsurf = std::make_shared<ChContactSurfaceNodeCloud>();
+        auto mcontactsurf = chrono_types::make_shared<ChContactSurfaceNodeCloud>();
         my_mesh->AddContactSurface(mcontactsurf);
         mcontactsurf->AddAllNodes();
         mcontactsurf->SetMaterialSurface(mysurfmaterial);
@@ -168,7 +168,7 @@ int main(int argc, char* argv[]) {
     // Create tire pressure load
     if (include_tire_pressure) {
         // Create a mesh surface, for applying loads:
-        auto mmeshsurf = std::make_shared<ChMeshSurface>();
+        auto mmeshsurf = chrono_types::make_shared<ChMeshSurface>();
         my_mesh->AddMeshSurface(mmeshsurf);
 
         // In the .INP file there are two additional NSET nodesets, the 1st is used to mark load surface:
@@ -176,12 +176,12 @@ int main(int argc, char* argv[]) {
         mmeshsurf->AddFacesFromNodeSet(node_sets[nodeset_sel]);
 
         // Apply load to all surfaces in the mesh surface
-        auto mloadcontainer = std::make_shared<ChLoadContainer>();
+        auto mloadcontainer = chrono_types::make_shared<ChLoadContainer>();
         my_system.Add(mloadcontainer);
 
         for (int i = 0; i < mmeshsurf->GetFacesList().size(); ++i) {
             auto aface = std::shared_ptr<ChLoadableUV>(mmeshsurf->GetFacesList()[i]);
-            auto faceload = std::make_shared<ChLoad< ChLoaderPressure > >(aface);
+            auto faceload = chrono_types::make_shared<ChLoad< ChLoaderPressure > >(aface);
             faceload->loader.SetPressure(10000); // low pressure... the tire has no ply!
             mloadcontainer->Add(faceload);
         }
@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
 
     // Create the rim body
     if (include_wheel_body) {
-        auto wheel = std::make_shared<ChBody>();
+        auto wheel = chrono_types::make_shared<ChBody>();
         wheel->SetMass(80);
         wheel->SetInertiaXX(ChVector<>(60, 60, 60));
         wheel->SetPos(tire_center);
@@ -205,7 +205,7 @@ int main(int argc, char* argv[]) {
         my_system.Add(wheel);
 
         if (visualization) {
-            auto mobjmesh = std::make_shared<ChObjShapeFile>();
+            auto mobjmesh = chrono_types::make_shared<ChObjShapeFile>();
             mobjmesh->SetFilename(GetChronoDataFile("fea/tractor_wheel_rim.obj"));
             wheel->AddAsset(mobjmesh);
         }
@@ -214,20 +214,20 @@ int main(int argc, char* argv[]) {
         // the BC_RIMTIRE nodeset, in the Abaqus INP file, lists the nodes involved
         auto nodeset_sel = "BC_RIMTIRE";
         for (auto i = 0; i < node_sets.at(nodeset_sel).size(); ++i) {
-            auto mlink = std::make_shared<ChLinkPointFrame>();
+            auto mlink = chrono_types::make_shared<ChLinkPointFrame>();
             mlink->Initialize(std::dynamic_pointer_cast<ChNodeFEAxyz>(node_sets[nodeset_sel][i]), wheel);
             my_system.Add(mlink);
         }
     }
 
     // Create ground
-    auto mfloor = std::make_shared<ChBodyEasyBox>(2, 0.2, 6, 2700, true);
+    auto mfloor = chrono_types::make_shared<ChBodyEasyBox>(2, 0.2, 6, 2700, true);
     mfloor->SetBodyFixed(true);
     mfloor->SetMaterialSurface(mysurfmaterial);
     my_system.Add(mfloor);
 
     if (visualization) {
-        auto mtexture = std::make_shared<ChTexture>();
+        auto mtexture = chrono_types::make_shared<ChTexture>();
         mtexture->SetTextureFilename(GetChronoDataFile("concrete.jpg"));
         mfloor->AddAsset(mtexture);
     }
@@ -235,7 +235,7 @@ int main(int argc, char* argv[]) {
     // Create obstacles
     if (include_obstacles) {
         for (int i = 0; i < 150; ++i) {
-            auto mcube = std::make_shared<ChBodyEasyBox>(0.18, 0.04, 0.18, 2700, true);
+            auto mcube = chrono_types::make_shared<ChBodyEasyBox>(0.18, 0.04, 0.18, 2700, true);
             ChQuaternion<> vrot;
             vrot.Q_from_AngAxis(ChRandom() * CH_C_2PI, VECT_Y);
             mcube->Move(ChCoordsys<>(VNULL, vrot));
@@ -244,7 +244,7 @@ int main(int argc, char* argv[]) {
             my_system.Add(mcube);
 
             if (visualization) {
-                auto mcubecol = std::make_shared<ChColorAsset>();
+                auto mcubecol = chrono_types::make_shared<ChColorAsset>();
                 mcubecol->SetColor(ChColor(0.3f, 0.3f, 0.3f));
                 mcube->AddAsset(mcubecol);
             }
@@ -276,7 +276,7 @@ int main(int argc, char* argv[]) {
         case MKL: {
 #ifdef CHRONO_MKL
             GetLog() << "Using MKL solver\n";
-            auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+            auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
             mkl_solver->SetSparsityPatternLock(true);
             my_system.SetSolver(mkl_solver);
 #endif

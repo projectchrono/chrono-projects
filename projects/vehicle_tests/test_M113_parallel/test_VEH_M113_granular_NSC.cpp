@@ -192,7 +192,7 @@ class MyDriver : public ChDriver {
 
 double CreateParticles(ChSystem* system) {
     // Create a material
-    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(0.0f);
     mat_g->SetCohesion(static_cast<float>(coh_force));
@@ -282,7 +282,7 @@ int main(int argc, char* argv[]) {
     // ------------------
 
     // Contact material
-    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 
     // Ground body

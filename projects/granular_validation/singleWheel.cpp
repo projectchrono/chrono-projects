@@ -207,11 +207,11 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // -------------------------------
 
 #ifdef USE_SMC
-    auto mat_walls = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_walls = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_walls->SetYoungModulus(Y_walls);
     mat_walls->SetFriction(mu_walls);
 #else
-    auto mat_walls = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_walls = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_walls->SetFriction(mu_walls);
 #endif
 
@@ -220,10 +220,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // ----------------------
 
 #ifdef USE_SMC
-    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     ground->SetMaterialSurface(mat_walls);
 #else
-    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     ground->SetMaterialSurface(mat_walls);
 #endif
 
@@ -250,10 +250,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // Initially, the wheel is fixed to ground.
 
 #ifdef USE_SMC
-    auto wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    auto wheel = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     wheel->SetMaterialSurface(mat_walls);
 #else
-    auto wheel = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    auto wheel = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     wheel->SetMaterialSurface(mat_walls);
 #endif
 
@@ -281,10 +281,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // It is released after the settling phase.
 
 #ifdef USE_SMC
-    auto chassis = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    auto chassis = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     chassis->SetMaterialSurface(mat_walls);
 #else
-    auto chassis = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    auto chassis = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     chassis->SetMaterialSurface(mat_walls);
 #endif
 
@@ -310,10 +310,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // It is released after the settling phase.
 
 #ifdef USE_SMC
-    auto axle = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    auto axle = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     axle->SetMaterialSurface(mat_walls);
 #else
-    auto axle = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    auto axle = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     axle->SetMaterialSurface(mat_walls);
 #endif
 
@@ -337,15 +337,15 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // =============================================================================
 
 void ConnectChassisToGround(ChSystemParallel* system, std::shared_ptr<ChBody> ground, std::shared_ptr<ChBody> chassis) {
-    auto prismatic = std::make_shared<ChLinkLockPrismatic>();
+    auto prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
     prismatic->Initialize(ground, chassis, ChCoordsys<>(chassis->GetPos(), Q_from_AngY(CH_C_PI_2)));
     prismatic->SetName("prismatic_chassis_ground");
     system->AddLink(prismatic);
 
     velocity = angVel * wheelRadius * (1.0 - wheelSlip);
-    auto actuator_fun = std::make_shared<ChFunction_Ramp>(0.0, velocity);
+    auto actuator_fun = chrono_types::make_shared<ChFunction_Ramp>(0.0, velocity);
 
-    auto actuator = std::make_shared<ChLinkLinActuator>();
+    auto actuator = chrono_types::make_shared<ChLinkLinActuator>();
     actuator->Initialize(ground, chassis, false, ChCoordsys<>(chassis->GetPos(), QUNIT),
                          ChCoordsys<>(chassis->GetPos() + ChVector<>(1, 0, 0), QUNIT));
     actuator->SetName("actuator");
@@ -360,7 +360,7 @@ void ConnectChassisToGround(ChSystemParallel* system, std::shared_ptr<ChBody> gr
 // =============================================================================
 
 void ConnectChassisToAxle(ChSystemParallel* system, std::shared_ptr<ChBody> chassis, std::shared_ptr<ChBody> axle) {
-    auto prismatic = std::make_shared<ChLinkLockPrismatic>();
+    auto prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
     prismatic->Initialize(chassis, axle, ChCoordsys<>(chassis->GetPos(), QUNIT));
     prismatic->SetName("prismatic_axle_chassis");
     system->AddLink(prismatic);
@@ -371,10 +371,10 @@ void ConnectChassisToAxle(ChSystemParallel* system, std::shared_ptr<ChBody> chas
 // =============================================================================
 
 void ConnectWheelToAxle(ChSystemParallel* system, std::shared_ptr<ChBody> wheel, std::shared_ptr<ChBody> axle) {
-    auto motor = std::make_shared<ChLinkMotorRotationAngle>();
+    auto motor = chrono_types::make_shared<ChLinkMotorRotationAngle>();
     motor->SetName("engine_wheel_axle");
     motor->Initialize(wheel, axle, ChFrame<>(wheel->GetPos(), chrono::Q_from_AngAxis(CH_C_PI / 2.0, VECT_X)));
-    motor->SetAngleFunction(std::make_shared<ChFunction_Ramp>(0, -angVel));
+    motor->SetAngleFunction(chrono_types::make_shared<ChFunction_Ramp>(0, -angVel));
     system->AddLink(motor);
 }
 
@@ -393,11 +393,11 @@ int CreateGranularMaterial(ChSystemParallel* system) {
 // -------------------------------------------
 
 #ifdef USE_SMC
-    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
 #else
-    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -443,11 +443,11 @@ void CreateBall(ChSystemParallel* system) {
 // ------------------------------
 
 #ifdef USE_SMC
-    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
 #else
-    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -456,10 +456,10 @@ void CreateBall(ChSystemParallel* system) {
 // ---------------
 
 #ifdef USE_SMC
-    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     ball->SetMaterialSurface(mat_g);
 #else
-    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     ball->SetMaterialSurface(mat_g);
 #endif
 

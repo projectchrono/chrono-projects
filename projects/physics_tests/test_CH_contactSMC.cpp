@@ -64,8 +64,8 @@ public:
 
                 ChMatrixNM<double, 6, 6> Kball;
                 ChMatrixNM<double, 6, 6> Rball;
-                Kball.PasteClippedMatrix(*K, iball * 6, iball * 6, 6, 6, 0, 0);
-                Rball.PasteClippedMatrix(*R, iball * 6, iball * 6, 6, 6, 0, 0);
+                Kball = K->block(iball * 6, iball * 6, 6, 6);
+                Rball = R->block(iball * 6, iball * 6, 6, 6);
 
                 GetLog() << "Kball = " << Kball << "\n";
                 GetLog() << "Rball = " << Rball << "\n";
@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
     application.SetContactsDrawMode(ChIrrTools::eCh_ContactsDrawMode::CONTACT_FORCES);
 
     // Create a material (will be used by both objects)
-    auto material = std::make_shared<ChMaterialSurfaceSMC>();
+    auto material = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     material->SetYoungModulus(young_modulus);
     material->SetRestitution(restitution);
     material->SetFriction(friction);
@@ -177,7 +177,7 @@ int main(int argc, char* argv[]) {
     material->SetGt(gt);
 
     // Create the falling ball
-    auto ball = std::make_shared<ChBody>(ChMaterialSurface::SMC);
+    auto ball = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
 
     ball->SetIdentifier(ballId);
     ball->SetMass(mass);
@@ -194,18 +194,18 @@ int main(int argc, char* argv[]) {
     ball->GetCollisionModel()->AddSphere(radius);
     ball->GetCollisionModel()->BuildModel();
 
-    auto sphere = std::make_shared<ChSphereShape>();
+    auto sphere = chrono_types::make_shared<ChSphereShape>();
     sphere->GetSphereGeometry().rad = radius;
     ball->AddAsset(sphere);
 
-    auto mtexture = std::make_shared<ChTexture>();
+    auto mtexture = chrono_types::make_shared<ChTexture>();
     mtexture->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
     ball->AddAsset(mtexture);
 
     system.AddBody(ball);
 
     // Create ground
-    auto ground = std::make_shared<ChBody>(ChMaterialSurface::SMC);
+    auto ground = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
 
     ground->SetIdentifier(binId);
     ground->SetMass(1);
@@ -219,7 +219,7 @@ int main(int argc, char* argv[]) {
     ground->GetCollisionModel()->AddBox(width, thickness, length, ChVector<>(0, -thickness, 0));
     ground->GetCollisionModel()->BuildModel();
 
-    auto box = std::make_shared<ChBoxShape>();
+    auto box = chrono_types::make_shared<ChBoxShape>();
     box->GetBoxGeometry().Size = ChVector<>(width, thickness, length);
     box->GetBoxGeometry().Pos = ChVector<>(0, -thickness, 0);
     ground->AddAsset(box);
@@ -234,7 +234,7 @@ int main(int argc, char* argv[]) {
     // Use custom contact container
     // ----------------------------
 
-    auto container = std::make_shared<MyContactContainer>();
+    auto container = chrono_types::make_shared<MyContactContainer>();
     system.SetContactContainer(container);
 
     // -------------------
@@ -258,7 +258,7 @@ int main(int argc, char* argv[]) {
         }
         case MINRES_SOLVER: {
             GetLog() << "Using MINRES solver.\n";
-            auto minres_solver = std::make_shared<ChSolverMINRES>();
+            auto minres_solver = chrono_types::make_shared<ChSolverMINRES>();
             minres_solver->SetDiagonalPreconditioning(true);
             system.SetSolver(minres_solver);
             system.SetMaxItersSolverSpeed(100);
@@ -268,7 +268,7 @@ int main(int argc, char* argv[]) {
         case MKL_SOLVER: {
 #ifdef CHRONO_MKL
             GetLog() << "Using MKL solver.\n";
-            auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+            auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
             mkl_solver->SetSparsityPatternLock(true);
             system.SetSolver(mkl_solver);
 #endif

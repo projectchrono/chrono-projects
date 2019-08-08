@@ -99,10 +99,10 @@ TerrainNode::TerrainNode(Type type,
     // Default terrain contact material
     switch (m_method) {
         case ChMaterialSurface::SMC:
-            m_material_terrain = std::make_shared<ChMaterialSurfaceSMC>();
+            m_material_terrain = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             break;
         case ChMaterialSurface::NSC:
-            m_material_terrain = std::make_shared<ChMaterialSurfaceNSC>();
+            m_material_terrain = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             break;
     }
 
@@ -290,7 +290,7 @@ void TerrainNode::Construct() {
         ground->SetCollide(false);
         m_system->AddBody(ground);
 
-        auto weld = std::make_shared<ChLinkLockLock>();
+        auto weld = chrono_types::make_shared<ChLinkLockLock>();
         weld->Initialize(ground, container, ChCoordsys<>(VNULL, QUNIT));
         m_system->AddLink(weld);
     }
@@ -565,7 +565,7 @@ void TerrainNode::Initialize() {
     switch (m_method) {
         case ChMaterialSurface::SMC: {
             // Properties for tire
-            auto mat_tire = std::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_tire = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             mat_tire->SetFriction(mat_props[0]);
             mat_tire->SetRestitution(mat_props[1]);
             mat_tire->SetYoungModulus(mat_props[2]);
@@ -580,7 +580,7 @@ void TerrainNode::Initialize() {
             break;
         }
         case ChMaterialSurface::NSC: {
-            auto mat_tire = std::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_tire = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             mat_tire->SetFriction(mat_props[0]);
             mat_tire->SetRestitution(mat_props[1]);
 

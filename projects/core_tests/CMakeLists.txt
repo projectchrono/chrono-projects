@@ -15,10 +15,6 @@ set(TESTS
     test_CH_vector
 )
 
-set(TESTS_AVX
-    test_CH_AVX
-)
-
 #--------------------------------------------------------------
 # Find the Chrono package with required components
 #--------------------------------------------------------------
@@ -35,12 +31,6 @@ find_package(Chrono
 if(NOT Chrono_FOUND)
   message("Could not find requirements for CORE projects")
   return()
-endif()
-
-# If Chrono was configured with AVX support, include AVX tests.
-
-if(CHRONO_AVX_FOUND)
-  list(APPEND TESTS ${TESTS_AVX})
 endif()
 
 #--------------------------------------------------------------

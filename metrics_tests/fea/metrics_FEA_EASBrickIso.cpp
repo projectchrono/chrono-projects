@@ -80,7 +80,7 @@ bool BrickIsoTest::execute() {
     ChSystemNSC my_system;
 
     // Create a mesh, a container for groups of elements and their referenced nodes.
-    auto my_mesh = std::make_shared<ChMesh>();
+    auto my_mesh = chrono_types::make_shared<ChMesh>();
     int numFlexBody = 1;
     // Geometry of the plate
     double plate_lenght_x = 1;
@@ -119,7 +119,7 @@ bool BrickIsoTest::execute() {
         MPROP(i, 2) = 0.3;      // nu
     }
 
-    auto mmaterial = std::make_shared<ChContinuumElastic>();
+    auto mmaterial = chrono_types::make_shared<ChContinuumElastic>();
     mmaterial->Set_RayleighDampingK(0.0);
     mmaterial->Set_RayleighDampingM(0.0);
     mmaterial->Set_density(MPROP(0, 0));
@@ -174,7 +174,7 @@ bool BrickIsoTest::execute() {
     // Add the nodes to the mesh
     int i = 0;
     while (i < TotalNumNodes) {
-        auto node = std::make_shared<ChNodeFEAxyz>(ChVector<>(COORDFlex(i, 0), COORDFlex(i, 1), COORDFlex(i, 2)));
+        auto node = chrono_types::make_shared<ChNodeFEAxyz>(ChVector<>(COORDFlex(i, 0), COORDFlex(i, 1), COORDFlex(i, 2)));
         node->SetMass(0.0);
         // Fix nodes clamped to the ground
         my_mesh->AddNode(node);
@@ -189,12 +189,12 @@ bool BrickIsoTest::execute() {
 
     int elemcount = 0;
     while (elemcount < TotalNumElements) {
-        auto element = std::make_shared<ChElementBrick>();
-        ChMatrixNM<double, 3, 1> InertFlexVec;  // read element length, used in ChElementBrick
-        InertFlexVec.Reset();
-        InertFlexVec(0, 0) = ElemLengthXY(elemcount, 0);
-        InertFlexVec(1, 0) = ElemLengthXY(elemcount, 1);
-        InertFlexVec(2, 0) = ElemLengthXY(elemcount, 2);
+        auto element = chrono_types::make_shared<ChElementBrick>();
+        ChVectorN<double, 3> InertFlexVec;  // read element length, used in ChElementBrick
+        InertFlexVec.setZero();
+        InertFlexVec(0) = ElemLengthXY(elemcount, 0);
+        InertFlexVec(1) = ElemLengthXY(elemcount, 1);
+        InertFlexVec(2) = ElemLengthXY(elemcount, 2);
         element->SetInertFlexVec(InertFlexVec);
         element->SetNodes(std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(NumNodes(elemcount, 0))),
                           std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(NumNodes(elemcount, 1))),
@@ -209,11 +209,11 @@ bool BrickIsoTest::execute() {
         element->SetElemNum(elemcount);   // for EAS
         element->SetGravityOn(false);     // turn gravity on/off from within the element
         element->SetMooneyRivlin(false);  // turn on/off Mooney Rivlin (Linear Isotropic by default)
-        ChMatrixNM<double, 9, 1> stock_alpha_EAS;
-        stock_alpha_EAS.Reset();
-        element->SetStockAlpha(stock_alpha_EAS(0, 0), stock_alpha_EAS(1, 0), stock_alpha_EAS(2, 0),
-                               stock_alpha_EAS(3, 0), stock_alpha_EAS(4, 0), stock_alpha_EAS(5, 0),
-                               stock_alpha_EAS(6, 0), stock_alpha_EAS(7, 0), stock_alpha_EAS(8, 0));
+        ChVectorN<double, 9> stock_alpha_EAS;
+        stock_alpha_EAS.setZero();
+        element->SetStockAlpha(stock_alpha_EAS(0), stock_alpha_EAS(1), stock_alpha_EAS(2),
+                               stock_alpha_EAS(3), stock_alpha_EAS(4), stock_alpha_EAS(5),
+                               stock_alpha_EAS(6), stock_alpha_EAS(7), stock_alpha_EAS(8));
         my_mesh->AddElement(element);
         elemcount++;
     }

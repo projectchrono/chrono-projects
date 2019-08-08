@@ -132,13 +132,13 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < num_wheels; i++) {
         switch (tire_model) {
             case TireModelType::RIGID:
-                tires[i] = std::make_shared<RigidTire>(vehicle::GetDataFile(rigidtire_file));
+                tires[i] = chrono_types::make_shared<RigidTire>(vehicle::GetDataFile(rigidtire_file));
                 break;
             case TireModelType::LUGRE:
-                tires[i] = std::make_shared<LugreTire>(vehicle::GetDataFile(lugretire_file));
+                tires[i] = chrono_types::make_shared<LugreTire>(vehicle::GetDataFile(lugretire_file));
                 break;
             case TireModelType::FIALA:
-                tires[i] = std::make_shared<FialaTire>(vehicle::GetDataFile(fialatire_file));
+                tires[i] = chrono_types::make_shared<FialaTire>(vehicle::GetDataFile(fialatire_file));
                 break;
         }
         tires[i]->Initialize(vehicle.GetWheelBody(i), VehicleSide(i % 2));

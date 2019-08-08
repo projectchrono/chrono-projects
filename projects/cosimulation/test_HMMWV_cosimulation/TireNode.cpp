@@ -125,7 +125,7 @@ TireNode::TireNode(const std::string& json_filename, WheelID wheel_id, int num_t
 
 #ifdef CHRONO_MKL
     // Solver settings
-    auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+    auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
     mkl_solver->SetSparsityPatternLock(true);
     m_system->SetSolver(mkl_solver);
 #else
@@ -261,7 +261,7 @@ void TireNode::Initialize() {
 // -----------------------------------------------------------------------------
 
 TireANCF::TireANCF(const std::string& json, bool enable_pressure) {
-    m_tire = std::make_shared<ANCFTire>(json);
+    m_tire = chrono_types::make_shared<ANCFTire>(json);
     m_tire->EnablePressure(enable_pressure);
     m_tire->EnableContact(true);
     m_tire->EnableRimConnection(true);
@@ -269,7 +269,7 @@ TireANCF::TireANCF(const std::string& json, bool enable_pressure) {
 }
 
 TireRigid::TireRigid(const std::string& json) {
-    m_tire = std::make_shared<RigidTire>(json);
+    m_tire = chrono_types::make_shared<RigidTire>(json);
     assert(m_tire->UseContactMesh());
 }
 
@@ -286,7 +286,7 @@ void TireANCF::Initialize(std::shared_ptr<ChBody> rim,
 
     // Create a mesh load for contact forces and add it to the tire's load container
     auto contact_surface = std::static_pointer_cast<fea::ChContactSurfaceMesh>(m_tire->GetContactSurface());
-    m_contact_load = std::make_shared<fea::ChLoadContactSurfaceMesh>(contact_surface);
+    m_contact_load = chrono_types::make_shared<fea::ChLoadContactSurfaceMesh>(contact_surface);
     m_tire->GetLoadContainer()->Add(m_contact_load);
 
     // Preprocess the tire mesh and store neighbor element information for each vertex
@@ -666,9 +666,9 @@ void TireANCF::WriteStateInformation(utils::CSV_writer& csv) {
     csv << mesh->GetNnodes() << mesh->GetDOF() << mesh->GetDOF_w() << endl;
 
     // Write mesh vertex positions and velocities
-    for (int ix = 0; ix < x.GetLength(); ix++)
+    for (int ix = 0; ix < x.size(); ix++)
         csv << x(ix) << endl;
-    for (int iv = 0; iv < v.GetLength(); iv++)
+    for (int iv = 0; iv < v.size(); iv++)
         csv << v(iv) << endl;
 }
 

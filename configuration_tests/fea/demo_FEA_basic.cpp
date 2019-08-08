@@ -39,11 +39,11 @@ int main(int argc, char* argv[]) {
 
     // Create a mesh, that is a container for groups
     // of elements and their referenced nodes.
-    auto my_mesh = std::make_shared<ChMesh>();
+    auto my_mesh = chrono_types::make_shared<ChMesh>();
 
     // Create a material, that must be assigned to each element,
     // and set its parameters
-    auto mmaterial = std::make_shared<ChContinuumElastic>();
+    auto mmaterial = chrono_types::make_shared<ChContinuumElastic>();
     mmaterial->Set_E(207e6);
     mmaterial->Set_v(0.3);
 
@@ -54,14 +54,14 @@ int main(int argc, char* argv[]) {
     double sx = 0.01;
     double sy = 0.10;
     double sz = 0.01;
-    auto mnode1 = std::make_shared<ChNodeFEAxyz>(ChVector<>(0, 0, 0));
-    auto mnode2 = std::make_shared<ChNodeFEAxyz>(ChVector<>(0, 0, sz));
-    auto mnode3 = std::make_shared<ChNodeFEAxyz>(ChVector<>(sx, 0, sz));
-    auto mnode4 = std::make_shared<ChNodeFEAxyz>(ChVector<>(sx, 0, 0));
-    auto mnode5 = std::make_shared<ChNodeFEAxyz>(ChVector<>(0, sy, 0));
-    auto mnode6 = std::make_shared<ChNodeFEAxyz>(ChVector<>(0, sy, sz));
-    auto mnode7 = std::make_shared<ChNodeFEAxyz>(ChVector<>(sx, sy, sz));
-    auto mnode8 = std::make_shared<ChNodeFEAxyz>(ChVector<>(sx, sy, 0));
+    auto mnode1 = chrono_types::make_shared<ChNodeFEAxyz>(ChVector<>(0, 0, 0));
+    auto mnode2 = chrono_types::make_shared<ChNodeFEAxyz>(ChVector<>(0, 0, sz));
+    auto mnode3 = chrono_types::make_shared<ChNodeFEAxyz>(ChVector<>(sx, 0, sz));
+    auto mnode4 = chrono_types::make_shared<ChNodeFEAxyz>(ChVector<>(sx, 0, 0));
+    auto mnode5 = chrono_types::make_shared<ChNodeFEAxyz>(ChVector<>(0, sy, 0));
+    auto mnode6 = chrono_types::make_shared<ChNodeFEAxyz>(ChVector<>(0, sy, sz));
+    auto mnode7 = chrono_types::make_shared<ChNodeFEAxyz>(ChVector<>(sx, sy, sz));
+    auto mnode8 = chrono_types::make_shared<ChNodeFEAxyz>(ChVector<>(sx, sy, 0));
 
     // For example, set applied forces to nodes:
     mnode5->SetForce(ChVector<>(0, -1000, 0));
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
 
     // Create the tetrahedron element, and assign
     // it nodes and material
-    auto melement1 = std::make_shared<ChElementHexa_8>();
+    auto melement1 = chrono_types::make_shared<ChElementHexa_8>();
     melement1->SetNodes(mnode1, mnode2, mnode3, mnode4, mnode5, mnode6, mnode7, mnode8);
     melement1->SetMaterial(mmaterial);
 
@@ -92,15 +92,15 @@ int main(int argc, char* argv[]) {
     my_system.Add(my_mesh);
 
     // Create also a truss
-    auto truss = std::make_shared<ChBody>();
+    auto truss = chrono_types::make_shared<ChBody>();
     my_system.Add(truss);
     truss->SetBodyFixed(true);
 
     // Create a constraint between a node and the truss
-    auto constraint1 = std::make_shared<ChLinkPointFrame>();
-    auto constraint2 = std::make_shared<ChLinkPointFrame>();
-    auto constraint3 = std::make_shared<ChLinkPointFrame>();
-    auto constraint4 = std::make_shared<ChLinkPointFrame>();
+    auto constraint1 = chrono_types::make_shared<ChLinkPointFrame>();
+    auto constraint2 = chrono_types::make_shared<ChLinkPointFrame>();
+    auto constraint3 = chrono_types::make_shared<ChLinkPointFrame>();
+    auto constraint4 = chrono_types::make_shared<ChLinkPointFrame>();
 
     constraint1->Initialize(mnode1, truss);
     constraint2->Initialize(mnode2, truss);

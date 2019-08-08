@@ -22,6 +22,7 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
+#include "chrono/assets/ChBoxShape.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_opengl/ChOpenGLWindow.h"
@@ -82,7 +83,7 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<chrono::ChMaterialSurface> material_g;
     switch (method) {
         case ChMaterialSurface::SMC: {
-            auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             mat_g->SetYoungModulus(1e7f);
             mat_g->SetFriction(0.7f);
             mat_g->SetRestitution(0.5f);
@@ -91,7 +92,7 @@ int main(int argc, char* argv[]) {
             break;
         }
         case ChMaterialSurface::NSC: {
-            auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             mat_g->SetFriction(0.7f);
             mat_g->SetRestitution(0.5f);
             mat_g->SetCohesion(0.0f);
@@ -114,7 +115,7 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<chrono::ChMaterialSurface> material_b;
     switch (method) {
         case ChMaterialSurface::SMC: {
-            auto mat_b = std::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_b = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             mat_b->SetYoungModulus(1e7f);
             mat_b->SetFriction(0.7f);
             mat_b->SetRestitution(0.5f);
@@ -123,7 +124,7 @@ int main(int argc, char* argv[]) {
             break;
         }
         case ChMaterialSurface::NSC: {
-            auto mat_b = std::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_b = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             mat_b->SetFriction(0.7f);
             mat_b->SetRestitution(0.5f);
             mat_b->SetCohesion(0.0f);
@@ -149,7 +150,7 @@ int main(int argc, char* argv[]) {
     system->GetSettings()->collision.aabb_min = bmin;
     system->GetSettings()->collision.aabb_max = bmax;
 
-    auto bbox = std::make_shared<ChBoxShape>();
+    auto bbox = chrono_types::make_shared<ChBoxShape>();
     real3 bsize = 0.5 * (bmax - bmin);
     real3 bpos = 0.5 * (bmax + bmin);
     bbox->GetBoxGeometry().Size = ChVector<>(bsize.x, bsize.y, bsize.z);

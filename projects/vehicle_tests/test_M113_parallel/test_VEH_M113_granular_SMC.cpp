@@ -181,7 +181,7 @@ class MyDriver : public ChDriver {
 
 double CreateParticles(ChSystem* system) {
     // Create a material
-    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(0.0f);
     mat_g->SetYoungModulus(8e5f);
@@ -271,7 +271,7 @@ int main(int argc, char* argv[]) {
     // ------------------
 
     // Contact material
-    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(1e8f);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(0.4f);

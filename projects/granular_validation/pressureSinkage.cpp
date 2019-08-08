@@ -203,12 +203,12 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // -------------------------------
 
 #ifdef USE_SMC
-    auto mat_walls = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_walls = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_walls->SetYoungModulus(Y_walls);
     mat_walls->SetFriction(mu_walls);
     mat_walls->SetRestitution(cr_walls);
 #else
-    auto mat_walls = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_walls = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_walls->SetFriction(mu_walls);
 #endif
 
@@ -217,10 +217,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // ----------------------
 
 #ifdef USE_SMC
-    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     ground->SetMaterialSurface(mat_walls);
 #else
-    auto ground = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     ground->SetMaterialSurface(mat_walls);
 #endif
 
@@ -247,10 +247,10 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // It is released after the settling phase.
 
 #ifdef USE_SMC
-    auto plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    auto plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     plate->SetMaterialSurface(mat_walls);
 #else
-    auto plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    auto plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     plate->SetMaterialSurface(mat_walls);
 #endif
 
@@ -269,14 +269,14 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // =============================================================================
 
 void ConnectLoadPlate(ChSystemParallel* system, std::shared_ptr<ChBody> ground, std::shared_ptr<ChBody> plate) {
-    auto prismatic = std::make_shared<ChLinkLockPrismatic>();
+    auto prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
     prismatic->Initialize(ground, plate, ChCoordsys<>(ChVector<>(0, 0, 2 * hdimZ), QUNIT));
     prismatic->SetName("prismatic");
     system->AddLink(prismatic);
 
-    auto actuator_fun = std::make_shared<ChFunction_Ramp>(0.0, desiredVelocity);
+    auto actuator_fun = chrono_types::make_shared<ChFunction_Ramp>(0.0, desiredVelocity);
 
-    auto actuator = std::make_shared<ChLinkLinActuator>();
+    auto actuator = chrono_types::make_shared<ChLinkLinActuator>();
     ChVector<> pt1(0, 0, 2 * hdimZ + 1);
     ChVector<> pt2(0, 0, 2 * hdimZ);
     actuator->Initialize(ground, plate, false, ChCoordsys<>(pt1, QUNIT), ChCoordsys<>(pt2, QUNIT));
@@ -301,12 +301,12 @@ int CreateGranularMaterial(ChSystemParallel* system) {
 // -------------------------------------------
 
 #ifdef USE_SMC
-    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -352,12 +352,12 @@ void CreateBall(ChSystemParallel* system) {
 // ------------------------------
 
 #ifdef USE_SMC
-    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -366,10 +366,10 @@ void CreateBall(ChSystemParallel* system) {
 // ---------------
 
 #ifdef USE_SMC
-    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
+    auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
     ball->SetMaterialSurface(mat_g);
 #else
-    auto ball = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     ball->SetMaterialSurface(mat_g);
 #endif
 
@@ -762,13 +762,13 @@ int main(int argc, char* argv[]) {
 
         // Find maximum constraint violation
         if (prismatic) {
-            ChMatrix<>* C = prismatic->GetC();
+            ChVectorDynamic<> C = prismatic->GetC();
             for (int i = 0; i < 5; i++)
-                max_cnstr_viol[0] = std::max(max_cnstr_viol[0], std::abs(C->GetElement(i, 0)));
+                max_cnstr_viol[0] = std::max(max_cnstr_viol[0], std::abs(C(i)));
         }
         if (actuator) {
-            ChMatrix<>* C = actuator->GetC();
-            max_cnstr_viol[1] = std::max(max_cnstr_viol[2], std::abs(C->GetElement(0, 0)));
+            ChVectorDynamic<> C = actuator->GetC();
+            max_cnstr_viol[1] = std::max(max_cnstr_viol[2], std::abs(C(0)));
         }
 
         // Increment counters

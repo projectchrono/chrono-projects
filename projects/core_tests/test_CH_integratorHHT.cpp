@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChLinearAlgebra.h"
 #include "chrono/core/ChLog.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/timestepper/ChTimestepper.h"
@@ -234,7 +233,7 @@ class PendulumProblem : public ChIntegrableIIorder {
         A(2, 0) = dirpend.x();
         A(2, 1) = dirpend.y();
         ChVectorDynamic<> w(3);
-        ChLinearAlgebra::Solve_LinSys(A, &b, &w);
+        w = A.colPivHouseholderQr().solve(b);
         Dv(0) = w(0);
         Dv(1) = w(1);
         L(0) = -w(2);  // note assume result sign in multiplier is flipped
@@ -379,19 +378,19 @@ void RigidPendulums() {
     system.Set_G_acc(ChVector<>(0, -g, 0));
 
     // Bodies
-    auto ground = std::make_shared<ChBody>();
+    auto ground = chrono_types::make_shared<ChBody>();
     ground->SetIdentifier(-1);
     ground->SetBodyFixed(true);
     system.AddBody(ground);
 
-    auto pend1 = std::make_shared<ChBody>();
+    auto pend1 = chrono_types::make_shared<ChBody>();
     pend1->SetIdentifier(1);
     pend1->SetMass(m1);
     pend1->SetInertiaXX(ChVector<>(1, 1, J1));
     pend1->SetPos(ChVector<>(l1 / 2, 0, 0));
     system.AddBody(pend1);
 
-    auto pend2 = std::make_shared<ChBody>();
+    auto pend2 = chrono_types::make_shared<ChBody>();
     if (double_pend) {
         pend2->SetIdentifier(2);
         pend2->SetMass(m2);
@@ -401,11 +400,11 @@ void RigidPendulums() {
     }
 
     // Joints
-    auto revolute1 = std::make_shared<ChLinkLockRevolute>();
+    auto revolute1 = chrono_types::make_shared<ChLinkLockRevolute>();
     revolute1->Initialize(ground, pend1, ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
     system.AddLink(revolute1);
 
-    auto revolute2 = std::make_shared<ChLinkLockRevolute>();
+    auto revolute2 = chrono_types::make_shared<ChLinkLockRevolute>();
     if (double_pend) {
         revolute2->Initialize(pend1, pend2, ChCoordsys<>(ChVector<>(l1, 0, 0), QUNIT));
         system.AddLink(revolute2);
@@ -413,7 +412,7 @@ void RigidPendulums() {
 
 // Set MKL solver
 #ifdef CHRONO_MKL
-    auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+    auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
     mkl_solver->SetSparsityPatternLock(true);
     system.SetSolver(mkl_solver);
 #endif

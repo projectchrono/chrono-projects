@@ -28,6 +28,7 @@
 #include "mpi.h"
 
 #include "chrono/ChConfig.h"
+#include "chrono/assets/ChBoxShape.h"
 #include "chrono/geometry/ChLineBezier.h"
 #include "chrono/assets/ChLineShape.h"
 
@@ -101,10 +102,10 @@ TerrainNode::TerrainNode(Type type,
     // Default terrain contact material
     switch (m_method) {
         case ChMaterialSurface::SMC:
-            m_material_terrain = std::make_shared<ChMaterialSurfaceSMC>();
+            m_material_terrain = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             break;
         case ChMaterialSurface::NSC:
-            m_material_terrain = std::make_shared<ChMaterialSurfaceNSC>();
+            m_material_terrain = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             break;
     }
 
@@ -311,8 +312,8 @@ void TerrainNode::Construct() {
 
     // Add path as visualization asset to the container body
     if (m_render_path) {
-        auto path_asset = std::make_shared<ChLineShape>();
-        path_asset->SetLineGeometry(std::make_shared<geometry::ChLineBezier>(m_path));
+        auto path_asset = chrono_types::make_shared<ChLineShape>();
+        path_asset->SetLineGeometry(chrono_types::make_shared<geometry::ChLineBezier>(m_path));
         path_asset->SetColor(ChColor(0.0f, 0.8f, 0.0f));
         path_asset->SetName("path");
         container->AddAsset(path_asset);
@@ -341,14 +342,14 @@ void TerrainNode::Construct() {
 
         m_platform->SetBodyFixed(false);
 
-        auto weld_p = std::make_shared<ChLinkLockLock>();
+        auto weld_p = chrono_types::make_shared<ChLinkLockLock>();
         weld_p->Initialize(ground, m_platform, ChCoordsys<>(VNULL, QUNIT));
         m_system->AddLink(weld_p);
 
         if (m_type == RIGID) {
             container->SetBodyFixed(false);
 
-            auto weld_c = std::make_shared<ChLinkLockLock>();
+            auto weld_c = chrono_types::make_shared<ChLinkLockLock>();
             weld_c->Initialize(ground, container, ChCoordsys<>(VNULL, QUNIT));
             m_system->AddLink(weld_c);
         }
@@ -613,7 +614,7 @@ void TerrainNode::Initialize() {
     shape_data[0] = box_hdims;
 
     m_platform->GetAssets().clear();
-    auto box_vis = std::make_shared<ChBoxShape>();
+    auto box_vis = chrono_types::make_shared<ChBoxShape>();
     box_vis->GetBoxGeometry().Size = ChVector<>(box_hdims.x, box_hdims.y, box_hdims.z);
     box_vis->Pos = ChVector<>(box_pos.x, box_pos.y, box_pos.z);
     m_platform->AddAsset(box_vis);
@@ -658,7 +659,7 @@ void TerrainNode::Initialize() {
         switch (m_method) {
             case ChMaterialSurface::SMC: {
                 // Properties for tire
-                auto mat_tire = std::make_shared<ChMaterialSurfaceSMC>();
+                auto mat_tire = chrono_types::make_shared<ChMaterialSurfaceSMC>();
                 mat_tire->SetFriction(mat_props[0]);
                 mat_tire->SetRestitution(mat_props[1]);
                 mat_tire->SetYoungModulus(mat_props[2]);
@@ -673,7 +674,7 @@ void TerrainNode::Initialize() {
                 break;
             }
             case ChMaterialSurface::NSC: {
-                auto mat_tire = std::make_shared<ChMaterialSurfaceNSC>();
+                auto mat_tire = chrono_types::make_shared<ChMaterialSurfaceNSC>();
                 mat_tire->SetFriction(mat_props[0]);
                 mat_tire->SetRestitution(mat_props[1]);
 

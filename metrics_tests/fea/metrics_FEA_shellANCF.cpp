@@ -126,7 +126,7 @@ bool FEAShellTest::execute() {
     my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
 
     // Create a mesh, that is a container for groups of elements and their referenced nodes.
-    auto my_mesh = std::make_shared<ChMesh>();
+    auto my_mesh = chrono_types::make_shared<ChMesh>();
 
     // Geometry of the plate
     double plate_lenght_x = 1.0;
@@ -157,7 +157,7 @@ bool FEAShellTest::execute() {
         double dir_z = 1;
 
         // Create the node
-        auto node = std::make_shared<ChNodeFEAxyzD>(ChVector<>(loc_x, loc_y, loc_z), ChVector<>(dir_x, dir_y, dir_z));
+        auto node = chrono_types::make_shared<ChNodeFEAxyzD>(ChVector<>(loc_x, loc_y, loc_z), ChVector<>(dir_x, dir_y, dir_z));
         node->SetMass(0);
         // Fix all nodes along the axis X=0
         if (i % (numDiv_x + 1) == 0)
@@ -172,7 +172,7 @@ bool FEAShellTest::execute() {
     double rho = 500;
     double E = 2.1e7;
     double nu = 0.3;
-    auto mat = std::make_shared<ChMaterialShellANCF>(rho, E, nu);
+    auto mat = chrono_types::make_shared<ChMaterialShellANCF>(rho, E, nu);
 
     // Create the elements
     for (int i = 0; i < TotalNumElements; i++) {
@@ -183,7 +183,7 @@ bool FEAShellTest::execute() {
         int node3 = (i / (numDiv_x)) * (N_x) + i % numDiv_x + N_x;
 
         // Create the element and set its nodes.
-        auto element = std::make_shared<ChElementShellANCF>();
+        auto element = chrono_types::make_shared<ChElementShellANCF>();
         element->SetNodes(std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(node0)),
                           std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(node1)),
                           std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(node2)),
@@ -234,7 +234,7 @@ bool FEAShellTest::execute() {
         } break;
         case solver_type::MKL:
 #ifdef CHRONO_MKL
-            mkl_solver = std::make_shared<ChSolverMKL<>>();
+            mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
             my_system.SetSolver(mkl_solver);
             mkl_solver->SetSparsityPatternLock(true);
             mkl_solver->SetVerbose(m_verbose_solver);
@@ -243,7 +243,7 @@ bool FEAShellTest::execute() {
             break;
         case solver_type::SUPERLUMT:
 #ifdef CHRONO_SUPERLUMT
-            superlumt_solver = std::make_shared<ChSolverSuperLUMT<>>();
+            superlumt_solver = chrono_types::make_shared<ChSolverSuperLUMT<>>();
             my_system.SetSolver(superlumt_solver);
             superlumt_solver->SetSparsityPatternLock(true);
             superlumt_solver->SetVerbose(m_verbose_solver);
@@ -252,7 +252,7 @@ bool FEAShellTest::execute() {
             break;
         case solver_type::MUMPS:
 #ifdef CHRONO_MUMPS
-            mumps_solver = std::make_shared<ChSolverMumps>();
+            mumps_solver = chrono_types::make_shared<ChSolverMumps>();
             my_system.SetSolver(mumps_solver);
             mumps_solver->SetVerbose(m_verbose_solver);
 #endif

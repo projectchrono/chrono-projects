@@ -38,7 +38,7 @@ void create_some_falling_items(ChSystem& mphysicalSystem, ISceneManager* msceneM
     for (int bi = 0; bi < 29; bi++) {
         // Create a bunch of ChronoENGINE rigid bodies (spheres and
         // boxes etc.) which will fall..
-        auto msphereBody = std::make_shared<ChBodyEasySphere>(1.1,    // radius size
+        auto msphereBody = chrono_types::make_shared<ChBodyEasySphere>(1.1,    // radius size
                                                               1000,   // density
                                                               true,   // collide enable?
                                                               true);  // visualization?
@@ -48,11 +48,11 @@ void create_some_falling_items(ChSystem& mphysicalSystem, ISceneManager* msceneM
         mphysicalSystem.Add(msphereBody);
 
         // optional, attach a texture for better visualization
-        auto mtexture = std::make_shared<ChTexture>();
+        auto mtexture = chrono_types::make_shared<ChTexture>();
         mtexture->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
         msphereBody->AddAsset(mtexture);
 
-        auto mboxBody = std::make_shared<ChBodyEasyBox>(1.5, 1.5, 1.5,  // x,y,z size
+        auto mboxBody = chrono_types::make_shared<ChBodyEasyBox>(1.5, 1.5, 1.5,  // x,y,z size
                                                         100,            // density
                                                         true,           // collide enable?
                                                         true);          // visualization?
@@ -61,11 +61,11 @@ void create_some_falling_items(ChSystem& mphysicalSystem, ISceneManager* msceneM
         mphysicalSystem.Add(mboxBody);
 
         // optional, attach a texture for better visualization
-        auto mtexturebox = std::make_shared<ChTexture>();
+        auto mtexturebox = chrono_types::make_shared<ChTexture>();
         mtexturebox->SetTextureFilename(GetChronoDataFile("cubetexture_bluwhite.png"));
         mboxBody->AddAsset(mtexturebox);
 
-        auto mcylBody = std::make_shared<ChBodyEasyCylinder>(0.75, 0.5,  // radius, height
+        auto mcylBody = chrono_types::make_shared<ChBodyEasyCylinder>(0.75, 0.5,  // radius, height
                                                              100,        // density
                                                              true,       // collide enable?
                                                              true);      // visualization?
@@ -74,7 +74,7 @@ void create_some_falling_items(ChSystem& mphysicalSystem, ISceneManager* msceneM
         mphysicalSystem.Add(mcylBody);
 
         // optional, attach a texture for better visualization
-        auto mtexturecyl = std::make_shared<ChTexture>();
+        auto mtexturecyl = chrono_types::make_shared<ChTexture>();
         mtexturecyl->SetTextureFilename(GetChronoDataFile("pinkwhite.png"));
         mcylBody->AddAsset(mtexturecyl);
     }
@@ -82,38 +82,38 @@ void create_some_falling_items(ChSystem& mphysicalSystem, ISceneManager* msceneM
     // Create the five walls of the rectangular container, using
     // fixed rigid bodies of 'box' type:
 
-    auto floorBody = std::make_shared<ChBodyEasyBox>(20, 1, 20, 1000, true, true);
+    auto floorBody = chrono_types::make_shared<ChBodyEasyBox>(20, 1, 20, 1000, true, true);
     floorBody->SetPos(ChVector<>(0, -5, 0));
     floorBody->SetBodyFixed(true);
 
     mphysicalSystem.Add(floorBody);
 
-    auto wallBody1 = std::make_shared<ChBodyEasyBox>(1, 10, 20.99, 1000, true, true);
+    auto wallBody1 = chrono_types::make_shared<ChBodyEasyBox>(1, 10, 20.99, 1000, true, true);
     wallBody1->SetPos(ChVector<>(-10, 0, 0));
     wallBody1->SetBodyFixed(true);
 
     mphysicalSystem.Add(wallBody1);
 
-    auto wallBody2 = std::make_shared<ChBodyEasyBox>(1, 10, 20.99, 1000, true, true);
+    auto wallBody2 = chrono_types::make_shared<ChBodyEasyBox>(1, 10, 20.99, 1000, true, true);
     wallBody2->SetPos(ChVector<>(10, 0, 0));
     wallBody2->SetBodyFixed(true);
 
     mphysicalSystem.Add(wallBody2);
 
-    auto wallBody3 = std::make_shared<ChBodyEasyBox>(20.99, 10, 1, 1000, true, true);
+    auto wallBody3 = chrono_types::make_shared<ChBodyEasyBox>(20.99, 10, 1, 1000, true, true);
     wallBody3->SetPos(ChVector<>(0, 0, -10));
     wallBody3->SetBodyFixed(true);
 
     mphysicalSystem.Add(wallBody3);
 
-    auto wallBody4 = std::make_shared<ChBodyEasyBox>(20.99, 10, 1, 1000, true, true);
+    auto wallBody4 = chrono_types::make_shared<ChBodyEasyBox>(20.99, 10, 1, 1000, true, true);
     wallBody4->SetPos(ChVector<>(0, 0, 10));
     wallBody4->SetBodyFixed(true);
 
     mphysicalSystem.Add(wallBody4);
 
     // optional, attach  textures for better visualization
-    auto mtexturewall = std::make_shared<ChTexture>();
+    auto mtexturewall = chrono_types::make_shared<ChTexture>();
     mtexturewall->SetTextureFilename(GetChronoDataFile("concrete.jpg"));
     wallBody1->AddAsset(mtexturewall);  // note: most assets can be shared
     wallBody2->AddAsset(mtexturewall);
@@ -122,7 +122,7 @@ void create_some_falling_items(ChSystem& mphysicalSystem, ISceneManager* msceneM
     floorBody->AddAsset(mtexturewall);
 
     // Add the rotating mixer
-    auto rotatingBody = std::make_shared<ChBodyEasyBox>(10, 5, 1,  // x,y,z size
+    auto rotatingBody = chrono_types::make_shared<ChBodyEasyBox>(10, 5, 1,  // x,y,z size
                                                         4000,      // density
                                                         true,      // collide enable?
                                                         true);     // visualization?
@@ -132,9 +132,9 @@ void create_some_falling_items(ChSystem& mphysicalSystem, ISceneManager* msceneM
     mphysicalSystem.Add(rotatingBody);
 
     // .. an engine between mixer and truss
-    auto my_motor = std::make_shared<ChLinkMotorRotationSpeed>();
+    auto my_motor = chrono_types::make_shared<ChLinkMotorRotationSpeed>();
     my_motor->Initialize(rotatingBody, floorBody, ChFrame<>(ChVector<>(0, 0, 0), Q_from_AngAxis(CH_C_PI_2, VECT_X)));
-    auto mfun = std::make_shared<ChFunction_Const>(CH_C_PI / 2.0);  // speed w=90°/s
+    auto mfun = chrono_types::make_shared<ChFunction_Const>(CH_C_PI / 2.0);  // speed w=90°/s
     my_motor->SetSpeedFunction(mfun);
     mphysicalSystem.AddLink(my_motor);
 }

@@ -122,7 +122,7 @@ void WriteData(ChSystemParallelNSC* msystem, uint i) {
 
 void AddContainer(ChSystemParallelNSC* sys) {
 	// Create a common material
-	auto mat = std::make_shared<ChMaterialSurfaceNSC>();
+	auto mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
 	mat->SetFriction(1.0);
 	utils::CreateBoxContainer(sys, 0, mat, hdim + ChVector<>(0, 0, kernel_radius * 4), thickness, Vector(0, 0, -hdim.z()- kernel_radius), QUNIT, true, false, true,
 		true);
@@ -132,7 +132,7 @@ void AddContainer(ChSystemParallelNSC* sys) {
 // Create the fluid in the shape of a sphere.
 // -----------------------------------------------------------------------------
 void AddFluid(ChSystemParallelNSC* sys) {
-    auto fluid_container = std::make_shared<ChFluidContainer>();
+    auto fluid_container = chrono_types::make_shared<ChFluidContainer>();
     sys->Add3DOFContainer(fluid_container);
 
 	fluid_container->tau = timestep * 2;

@@ -76,7 +76,7 @@ bool BrickIso_GravTest::execute() {
     ChSystemNSC my_system;
     my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
 
-    auto my_mesh = std::make_shared<ChMesh>();
+    auto my_mesh = chrono_types::make_shared<ChMesh>();
 
     // Dimensions of the plate
     double plate_lenght_x = 1;
@@ -173,7 +173,7 @@ bool BrickIso_GravTest::execute() {
     // Adding the nodes to the mesh
     int i = 0;
     while (i < TotalNumNodes) {
-        auto node = std::make_shared<ChNodeFEAxyz>(ChVector<>(COORDFlex(i, 0), COORDFlex(i, 1), COORDFlex(i, 2)));
+        auto node = chrono_types::make_shared<ChNodeFEAxyz>(ChVector<>(COORDFlex(i, 0), COORDFlex(i, 1), COORDFlex(i, 2)));
         node->SetMass(0.0);
         my_mesh->AddNode(node);
         if (NDR(i, 0) == 1 && NDR(i, 1) == 1 && NDR(i, 2) == 1) {
@@ -187,12 +187,12 @@ bool BrickIso_GravTest::execute() {
 
     int elemcount = 0;
     while (elemcount < TotalNumElements) {
-        auto element = std::make_shared<ChElementBrick>();
-        ChMatrixNM<double, 3, 1> InertFlexVec;  // Read element length, used in ChElementBrick
-        InertFlexVec.Reset();
-        InertFlexVec(0, 0) = ElemLengthXY(elemcount, 0);
-        InertFlexVec(1, 0) = ElemLengthXY(elemcount, 1);
-        InertFlexVec(2, 0) = ElemLengthXY(elemcount, 2);
+        auto element = chrono_types::make_shared<ChElementBrick>();
+        ChVectorN<double, 3> InertFlexVec;  // Read element length, used in ChElementBrick
+        InertFlexVec.setZero();
+        InertFlexVec(0) = ElemLengthXY(elemcount, 0);
+        InertFlexVec(1) = ElemLengthXY(elemcount, 1);
+        InertFlexVec(2) = ElemLengthXY(elemcount, 2);
         element->SetInertFlexVec(InertFlexVec);
         // Note we change the order of the nodes to comply with the arrangement of shape functions
         element->SetNodes(std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(NumNodes(elemcount, 0))),
@@ -209,11 +209,11 @@ bool BrickIso_GravTest::execute() {
         element->SetMooneyRivlin(false);  // Turn on/off Mooney Rivlin (Linear Isotropic by default)
         // element->SetMRCoefficients(551584.0, 137896.0); // Set two coefficients for Mooney-Rivlin
 
-        ChMatrixNM<double, 9, 1> stock_alpha_EAS;
-        stock_alpha_EAS.Reset();
-        element->SetStockAlpha(stock_alpha_EAS(0, 0), stock_alpha_EAS(1, 0), stock_alpha_EAS(2, 0),
-                               stock_alpha_EAS(3, 0), stock_alpha_EAS(4, 0), stock_alpha_EAS(5, 0),
-                               stock_alpha_EAS(6, 0), stock_alpha_EAS(7, 0), stock_alpha_EAS(8, 0));
+        ChVectorN<double, 9> stock_alpha_EAS;
+        stock_alpha_EAS.setZero();
+        element->SetStockAlpha(stock_alpha_EAS(0), stock_alpha_EAS(1), stock_alpha_EAS(2),
+                               stock_alpha_EAS(3), stock_alpha_EAS(4), stock_alpha_EAS(5),
+                               stock_alpha_EAS(6), stock_alpha_EAS(7), stock_alpha_EAS(8));
         my_mesh->AddElement(element);
         elemcount++;
     }
@@ -230,7 +230,7 @@ bool BrickIso_GravTest::execute() {
     // Setup solver
     if (use_mkl) {
 #ifdef CHRONO_MKL
-        auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+        auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
         mkl_solver->SetSparsityPatternLock(true);
         mkl_solver->SetVerbose(true);
         my_system.SetSolver(mkl_solver);

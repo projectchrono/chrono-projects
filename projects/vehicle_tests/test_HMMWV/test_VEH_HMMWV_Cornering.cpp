@@ -186,7 +186,7 @@ int main(int argc, char* argv[]) {
     std::vector<ChVector<>> inCV;
     std::vector<ChVector<>> outCV;
     CalcControlPoints(run, radius, offset, nturns, points, inCV, outCV);
-    auto path = std::make_shared<ChBezierCurve>(points, inCV, outCV);
+    auto path = chrono_types::make_shared<ChBezierCurve>(points, inCV, outCV);
 
     ChPathFollowerDriver driver(my_hmmwv.GetVehicle(), path, "my_path", target_speed);
     driver.GetSteeringController().SetLookAheadDistance(look_ahead_dist);

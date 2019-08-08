@@ -144,14 +144,14 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
 
     // Create a material for the granular material
-    auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
     mat_g->SetAdhesion(cohesion_g);
 
     // Create a material for the container
-    auto mat_c = std::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_c->SetYoungModulus(Y_c);
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);

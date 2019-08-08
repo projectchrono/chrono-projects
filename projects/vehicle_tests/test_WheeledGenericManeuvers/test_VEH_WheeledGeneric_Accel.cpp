@@ -200,11 +200,11 @@ int main(int argc, char* argv[]) {
 
 
     //// Create the ground body
-    //auto ground = std::make_shared<ChBody>();
+    //auto ground = chrono_types::make_shared<ChBody>();
     //vehicle.GetSystem()->AddBody(ground);
     //ground->SetBodyFixed(true);
 
-    //auto fixedJoint = std::make_shared<ChLinkLockLock>();
+    //auto fixedJoint = chrono_types::make_shared<ChLinkLockLock>();
     //fixedJoint->Initialize(vehicle.GetChassisBody(), ground, ChCoordsys<>(initLoc, initRot));
     //vehicle.GetSystem()->AddLink(fixedJoint);
 

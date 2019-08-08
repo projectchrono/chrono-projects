@@ -96,7 +96,7 @@ class MyContactReporter : public ChContactContainer::ReportContactCallback {
                                  const ChVector<>& react_torques,
                                  ChContactable* objA,
                                  ChContactable* objB) override {
-        ChVector<> force = plane_coord.Matr_x_Vect(react_forces);
+        ChVector<> force = plane_coord * react_forces;
         ChVector<> point = (objA == m_ground.get()) ? pA : pB;
         std::cout << "---  " << distance << std::endl;
         std::cout << "     " << point.x() << "  " << point.y() << "  " << point.z() << std::endl;
@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
 
     // Create the quarter-vehicle chassis
     // ----------------------------------
-    auto chassis = std::make_shared<ChBody>(ChMaterialSurface::SMC);
+    auto chassis = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
     system.AddBody(chassis);
     chassis->SetIdentifier(1);
     chassis->SetName("chassis");
@@ -137,7 +137,7 @@ int main(int argc, char* argv[]) {
 
     // Create the wheel (rim)
     // ----------------------
-    auto wheel = std::make_shared<ChBody>(ChMaterialSurface::SMC);
+    auto wheel = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
     system.AddBody(wheel);
     wheel->SetIdentifier(2);
     wheel->SetName("wheel");
@@ -151,8 +151,8 @@ int main(int argc, char* argv[]) {
     // Create the tire
     // ---------------
 
-    //auto tire = std::make_shared<ANCFToroidalTire>("ANCF_Tire");
-    auto tire = std::make_shared<ReissnerToroidalTire>("Reissner_Tire");
+    //auto tire = chrono_types::make_shared<ANCFToroidalTire>("ANCF_Tire");
+    auto tire = chrono_types::make_shared<ReissnerToroidalTire>("Reissner_Tire");
 
     tire->EnablePressure(true);
     tire->EnableContact(true);
@@ -171,18 +171,18 @@ int main(int argc, char* argv[]) {
     // -------------------------
 
     {
-        auto boxH = std::make_shared<ChBoxShape>();
+        auto boxH = chrono_types::make_shared<ChBoxShape>();
         boxH->GetBoxGeometry().SetLengths(ChVector<>(2, 0.02, 0.02));
         chassis->AddAsset(boxH);
-        auto boxV = std::make_shared<ChBoxShape>();
+        auto boxV = chrono_types::make_shared<ChBoxShape>();
         boxV->GetBoxGeometry().SetLengths(ChVector<>(0.02, 0.02, 2));
         chassis->AddAsset(boxV);
-        auto cyl = std::make_shared<ChCylinderShape>();
+        auto cyl = chrono_types::make_shared<ChCylinderShape>();
         cyl->GetCylinderGeometry().rad = 0.05;
         cyl->GetCylinderGeometry().p1 = ChVector<>(0, 0.55 * tire_width, 0);
         cyl->GetCylinderGeometry().p1 = ChVector<>(0, -0.55 * tire_width, 0);
         chassis->AddAsset(cyl);
-        auto color = std::make_shared<ChColorAsset>(0.4f, 0.5f, 0.6f);
+        auto color = chrono_types::make_shared<ChColorAsset>(0.4f, 0.5f, 0.6f);
         chassis->AddAsset(color);
     }
 
@@ -190,14 +190,14 @@ int main(int argc, char* argv[]) {
     // -----------------------
 
     {
-        auto trimesh = std::make_shared<geometry::ChTriangleMeshConnected>();
+        auto trimesh = chrono_types::make_shared<geometry::ChTriangleMeshConnected>();
         trimesh->LoadWavefrontMesh(GetChronoDataFile("fea/tractor_wheel_rim.obj"), false, false);
         trimesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(CH_C_PI_2, ChVector<>(0, 0, 1)));
-        auto trimesh_shape = std::make_shared<ChTriangleMeshShape>();
+        auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
         trimesh_shape->SetMesh(trimesh);
         wheel->AddAsset(trimesh_shape);
 
-        auto color = std::make_shared<ChColorAsset>(0.95f, 0.82f, 0.38f);
+        auto color = chrono_types::make_shared<ChColorAsset>(0.95f, 0.82f, 0.38f);
         wheel->AddAsset(color);
     }
 
@@ -205,7 +205,7 @@ int main(int argc, char* argv[]) {
     // ------------------
 
     double terrain_height = -tire_radius - tire_offset;
-    auto terrain = std::make_shared<RigidTerrain>(&system);
+    auto terrain = chrono_types::make_shared<RigidTerrain>(&system);
     auto patch = terrain->AddPatch(ChCoordsys<>(ChVector<>(0, 0, terrain_height - 5), QUNIT),
                                    ChVector<>(terrain_length, terrain_width, 10));
     patch->SetContactFrictionCoefficient(0.9f);
@@ -219,7 +219,7 @@ int main(int argc, char* argv[]) {
 
     // Connect chassis to ground through a plane-plane joint.
     // The normal to the common plane is along the y global axis.
-    auto plane_plane = std::make_shared<ChLinkLockPlanePlane>();
+    auto plane_plane = chrono_types::make_shared<ChLinkLockPlanePlane>();
     system.AddLink(plane_plane);
     plane_plane->SetName("plane_plane");
     plane_plane->Initialize(patch->GetGroundBody(), chassis,
@@ -227,7 +227,7 @@ int main(int argc, char* argv[]) {
 
     // Connect wheel to chassis through a revolute joint.
     // The axis of rotation is along the y global axis.
-    auto revolute = std::make_shared<ChLinkLockRevolute>();
+    auto revolute = chrono_types::make_shared<ChLinkLockRevolute>();
     system.AddLink(revolute);
     revolute->SetName("revolute");
     revolute->Initialize(chassis, wheel, ChCoordsys<>(ChVector<>(0, 0, 0), Q_from_AngX(CH_C_PI_2)));
@@ -260,7 +260,7 @@ int main(int argc, char* argv[]) {
         case MKL: {
 #ifdef CHRONO_MKL
             GetLog() << "Using MKL solver\n";
-            auto mkl_solver = std::make_shared<ChSolverMKL<>>();
+            auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
             mkl_solver->SetSparsityPatternLock(true);
             system.SetSolver(mkl_solver);
 #endif

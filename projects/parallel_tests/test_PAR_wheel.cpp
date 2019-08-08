@@ -120,7 +120,7 @@ int CreateObjects(ChSystemParallel* system) {
 
     switch (method) {
         case ChMaterialSurface::SMC: {
-            auto mat_g = std::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             mat_g->SetYoungModulus(Y_g);
             mat_g->SetFriction(mu_g);
             mat_g->SetRestitution(cr_g);
@@ -128,7 +128,7 @@ int CreateObjects(ChSystemParallel* system) {
 
             material_g = mat_g;
 
-            auto mat_c = std::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             mat_c->SetYoungModulus(Y_c);
             mat_c->SetFriction(mu_c);
             mat_c->SetRestitution(cr_c);
@@ -139,14 +139,14 @@ int CreateObjects(ChSystemParallel* system) {
             break;
         }
         case ChMaterialSurface::NSC: {
-            auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             mat_g->SetFriction(mu_g);
             mat_g->SetRestitution(cr_g);
             mat_g->SetCohesion(cohesion_g);
 
             material_g = mat_g;
 
-            auto mat_c = std::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_c = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             mat_c->SetFriction(mu_c);
             mat_c->SetRestitution(cr_c);
             mat_c->SetCohesion(cohesion_c);
@@ -191,7 +191,7 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
 
     switch (method) {
         case ChMaterialSurface::SMC: {
-            auto mat_w = std::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_w = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             mat_w->SetYoungModulus(Y_w);
             mat_w->SetFriction(mu_w);
             mat_w->SetRestitution(cr_w);
@@ -202,7 +202,7 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
             break;
         }
         case ChMaterialSurface::NSC: {
-            auto mat_w = std::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_w = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             mat_w->SetFriction(mu_w);
             mat_w->SetRestitution(cr_w);
             mat_w->SetCohesion(cohesion_w);

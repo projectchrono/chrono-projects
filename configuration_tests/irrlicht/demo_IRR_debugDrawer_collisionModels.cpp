@@ -90,31 +90,31 @@ int main(int argc, char* argv[]) {
     ChIrrWizard::add_typical_Lights(application.GetDevice());
     ChIrrWizard::add_typical_Camera(application.GetDevice(), core::vector3df(0, 10, 5));
 
-    auto ground = std::make_shared<ChBodyEasyBox>(10, 3, 10, 100, true, true);
+    auto ground = chrono_types::make_shared<ChBodyEasyBox>(10, 3, 10, 100, true, true);
     ground->SetBodyFixed(true);
     ground->SetPos(ChVector<>(0.0, 0.0, 0.0));
     my_system.AddBody(ground);
-    ground->AddAsset(std::make_shared<ChColorAsset>(0.3f, 0.2f, 0.2f));
+    ground->AddAsset(chrono_types::make_shared<ChColorAsset>(0.3f, 0.2f, 0.2f));
 
-    auto cyl1 = std::make_shared<ChBodyEasyCylinder>(0.5, 1.0, 100, true, true);
+    auto cyl1 = chrono_types::make_shared<ChBodyEasyCylinder>(0.5, 1.0, 100, true, true);
     cyl1->SetPos(ChVector<>(0.0, 3.0, 0.0));
     my_system.AddBody(cyl1);
-    cyl1->AddAsset(std::make_shared<ChColorAsset>(0.2f, 0.2f, 0.3f));
+    cyl1->AddAsset(chrono_types::make_shared<ChColorAsset>(0.2f, 0.2f, 0.3f));
 
-    auto box1 = std::make_shared<ChBodyEasyBox>(0.5, 0.5, 0.5, 100, true, true);
+    auto box1 = chrono_types::make_shared<ChBodyEasyBox>(0.5, 0.5, 0.5, 100, true, true);
     box1->SetPos(ChVector<>(0.2, 1.0, 0.0));
     my_system.AddBody(box1);
-    box1->AddAsset(std::make_shared<ChColorAsset>(0.2f, 0.2f, 0.3f));
+    box1->AddAsset(chrono_types::make_shared<ChColorAsset>(0.2f, 0.2f, 0.3f));
 
-    auto sphere = std::make_shared<ChBodyEasySphere>(0.25, 100.0, true, true);
+    auto sphere = chrono_types::make_shared<ChBodyEasySphere>(0.25, 100.0, true, true);
     sphere->SetPos(ChVector<>(-0.2, 1.0, 1.0));
     my_system.AddBody(sphere);
-    sphere->AddAsset(std::make_shared<ChColorAsset>(0.2f, 0.2f, 0.3f));
+    sphere->AddAsset(chrono_types::make_shared<ChColorAsset>(0.2f, 0.2f, 0.3f));
 
-    auto ellipse = std::make_shared<ChBodyEasyEllipsoid>(ChVector<>(0.2, 0.4, 0.6),  100.0, true, true);
+    auto ellipse = chrono_types::make_shared<ChBodyEasyEllipsoid>(ChVector<>(0.2, 0.4, 0.6),  100.0, true, true);
     ellipse->SetPos(ChVector<>(0.2, 1.0, -1.0));
     my_system.AddBody(ellipse);
-    ellipse->AddAsset(std::make_shared<ChColorAsset>(0.2f, 0.2f, 0.3f));
+    ellipse->AddAsset(chrono_types::make_shared<ChColorAsset>(0.2f, 0.2f, 0.3f));
 
     application.AssetBindAll();
     application.AssetUpdateAll();
