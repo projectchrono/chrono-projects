@@ -82,7 +82,5 @@ set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 message(STATUS "Programs...")
 
 add_subdirectory(test_FEA_cosimulation)
-add_subdirectory(test_HMMWV_cosimulation)
-add_subdirectory(test_tireRig_cosimulation)
 
 message(STATUS "")

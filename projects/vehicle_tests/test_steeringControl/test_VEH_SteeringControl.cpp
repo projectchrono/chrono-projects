@@ -121,27 +121,35 @@ int main(int argc, char* argv[]) {
     RigidTerrain terrain(vehicle.GetSystem(), vehicle::GetDataFile(rigidterrain_file));
 
     // Create and initialize the powertrain system
-    SimplePowertrain powertrain(vehicle::GetDataFile(simplepowertrain_file));
-    powertrain.Initialize(vehicle.GetChassisBody(), vehicle.GetDriveshaft());
+    auto powertrain = chrono_types::make_shared<SimplePowertrain>(vehicle::GetDataFile(simplepowertrain_file));
+    vehicle.InitializePowertrain(powertrain);
 
     // Create and initialize the tires
-    int num_axles = vehicle.GetNumberAxles();
-    int num_wheels = 2 * num_axles;
-
-    std::vector<std::shared_ptr<ChTire> > tires(num_wheels);
-    for (int i = 0; i < num_wheels; i++) {
+    for (auto& axle : vehicle.GetAxles()) {
         switch (tire_model) {
-            case TireModelType::RIGID:
-                tires[i] = chrono_types::make_shared<RigidTire>(vehicle::GetDataFile(rigidtire_file));
+            default:
+            case TireModelType::RIGID: {
+                auto tireL = chrono_types::make_shared<RigidTire>(vehicle::GetDataFile(rigidtire_file));
+                auto tireR = chrono_types::make_shared<RigidTire>(vehicle::GetDataFile(rigidtire_file));
+                vehicle.InitializeTire(tireL, axle->m_wheels[0], VisualizationType::MESH);
+                vehicle.InitializeTire(tireR, axle->m_wheels[1], VisualizationType::MESH);
                 break;
-            case TireModelType::LUGRE:
-                tires[i] = chrono_types::make_shared<LugreTire>(vehicle::GetDataFile(lugretire_file));
+            }
+            case TireModelType::FIALA: {
+                auto tireL = chrono_types::make_shared<FialaTire>(vehicle::GetDataFile(fialatire_file));
+                auto tireR = chrono_types::make_shared<FialaTire>(vehicle::GetDataFile(fialatire_file));
+                vehicle.InitializeTire(tireL, axle->m_wheels[0], VisualizationType::MESH);
+                vehicle.InitializeTire(tireR, axle->m_wheels[1], VisualizationType::MESH);
                 break;
-            case TireModelType::FIALA:
-                tires[i] = chrono_types::make_shared<FialaTire>(vehicle::GetDataFile(fialatire_file));
+            }
+            case TireModelType::LUGRE: {
+                auto tireL = chrono_types::make_shared<LugreTire>(vehicle::GetDataFile(lugretire_file));
+                auto tireR = chrono_types::make_shared<LugreTire>(vehicle::GetDataFile(lugretire_file));
+                vehicle.InitializeTire(tireL, axle->m_wheels[0], VisualizationType::MESH);
+                vehicle.InitializeTire(tireR, axle->m_wheels[1], VisualizationType::MESH);
                 break;
+            }
         }
-        tires[i]->Initialize(vehicle.GetWheelBody(i), VehicleSide(i % 2));
     }
 
     // Create the driver system
@@ -162,15 +170,6 @@ int main(int argc, char* argv[]) {
     csv.stream().precision(6);
 
     Data data(num_steps);
-
-    // Inter-module communication data
-    TerrainForces tire_forces(num_wheels);
-    WheelStates wheel_states(num_wheels);
-    double driveshaft_speed;
-    double powertrain_torque;
-    double throttle_input;
-    double steering_input;
-    double braking_input;
 
     std::cout << "Total number of steps:  " << num_steps_settling + num_steps << std::endl;
     for (int it = 0; it < num_steps_settling + num_steps; it++) {
@@ -197,38 +196,23 @@ int main(int argc, char* argv[]) {
         }
 
         // Collect output data from modules (for inter-module communication)
+        ChDriver::Inputs driver_inputs = driver.GetInputs();
         if (settling) {
-            throttle_input = 0;
-            steering_input = 0;
-            braking_input = 0;
-        } else {
-            throttle_input = driver.GetThrottle();
-            steering_input = driver.GetSteering();
-            braking_input = driver.GetBraking();
-        }
-        powertrain_torque = powertrain.GetOutputTorque();
-        driveshaft_speed = vehicle.GetDriveshaftSpeed();
-        for (int i = 0; i < num_wheels; i++) {
-            tire_forces[i] = tires[i]->GetTireForce();
-            wheel_states[i] = vehicle.GetWheelState(i);
+            driver_inputs.m_throttle = 0;
+            driver_inputs.m_steering = 0;
+            driver_inputs.m_braking = 0;
         }
 
         // Update modules (process inputs from other modules)
         double time = vehicle.GetChTime();
         driver.Synchronize(time);
-        powertrain.Synchronize(time, throttle_input, driveshaft_speed);
-        vehicle.Synchronize(time, steering_input, braking_input, powertrain_torque, tire_forces);
+        vehicle.Synchronize(time, driver_inputs, terrain);
         terrain.Synchronize(time);
-        for (int i = 0; i < num_wheels; i++)
-            tires[i]->Synchronize(time, wheel_states[i], terrain);
 
         // Advance simulation for one timestep for all modules
         driver.Advance(step_size);
-        powertrain.Advance(step_size);
         vehicle.Advance(step_size);
         terrain.Advance(step_size);
-        for (int i = 0; i < num_wheels; i++)
-            tires[i]->Advance(step_size);
 
         std::cout << '\r' << std::fixed << std::setprecision(6) << time << "  (" << it << ")" << std::flush;
     }

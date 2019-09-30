@@ -26,7 +26,3 @@ Various programs to test linking against different Chrono modules.
 
 * demo_PY_pyparser
 
-### Vehicle module
-
-* demo_VEH_hmmwv
-* demo_VEH_hmmwvDEM

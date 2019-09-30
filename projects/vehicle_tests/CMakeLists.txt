@@ -55,20 +55,17 @@ set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 
 message(STATUS "Programs...")
 add_subdirectory(test_steeringControl)
-add_subdirectory(test_pacjekaTire)
+#add_subdirectory(test_pacjekaTire)
 
 if (CHRONO_IRRLICHT_FOUND)
   message(STATUS "Programs using Chrono::Irrlicht...")
   add_subdirectory(test_sprocket)
   add_subdirectory(test_WheeledGenericManeuvers)
-  add_subdirectory(test_tireRig)
   add_subdirectory(test_HMMWV)
-  add_subdirectory(test_toroidalTire)
 endif()
 
 if (CHRONO_PARALLEL_FOUND)
   message(STATUS "Programs using Chrono::Parallel...")
-  add_subdirectory(test_HMMWV_parallel)
   add_subdirectory(test_M113_parallel)
 endif()
 

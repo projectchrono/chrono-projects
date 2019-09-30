@@ -330,20 +330,20 @@ int main(int argc, char* argv[]) {
     // Construct the M113 vehicle
     // --------------------------
 
-    std::unique_ptr<ChTrackedVehicle> vehicle;
-    std::unique_ptr<ChPowertrain> powertrain;
+    std::shared_ptr<ChTrackedVehicle> vehicle;
+    std::shared_ptr<ChPowertrain> powertrain;
 
     // Create and initialize vehicle systems
     switch (m113_type) {
         case M113_ORIGINAL:
             std::cout << "Create ORIGINAL M113 model" << std::endl;
-            vehicle = std::unique_ptr<M113_Vehicle>(new M113_Vehicle(true, TrackShoeType::SINGLE_PIN, &system));
-            powertrain = std::unique_ptr<M113_SimplePowertrain>(new M113_SimplePowertrain("Powertrain"));
+            vehicle = chrono_types::make_shared<M113_Vehicle>(true, TrackShoeType::SINGLE_PIN, &system);
+            powertrain = chrono_types::make_shared<M113_SimplePowertrain>("Powertrain");
             break;
         case M113_MODIFIED:
             std::cout << "Create MODIFIED M113 model" << std::endl;
-            vehicle = std::unique_ptr<M113a_Vehicle>(new M113a_Vehicle(true, &system));
-            powertrain = std::unique_ptr<M113a_SimplePowertrain>(new M113a_SimplePowertrain("Powertrain"));
+            vehicle = chrono_types::make_shared<M113a_Vehicle>(true, &system);
+            powertrain = chrono_types::make_shared<M113a_SimplePowertrain>("Powertrain");
             break;
     }
 
@@ -363,7 +363,7 @@ int main(int argc, char* argv[]) {
     ////vehicle->SetCollide(TrackCollide::ALL & (~TrackCollide::SPROCKET_LEFT) & (~TrackCollide::SPROCKET_RIGHT));
 
     // Initialize the powertrain system
-    powertrain->Initialize(vehicle->GetChassisBody(), vehicle->GetDriveshaft());
+    vehicle->InitializePowertrain(powertrain);
 
     // Create the driver system (temporarily 1 for steering 1 for steering & brakes)
     MyDriver driver_speed(*vehicle, 0.5);
@@ -426,11 +426,10 @@ int main(int argc, char* argv[]) {
 
     while (time < time_end) {
         // Collect output data from modules
-        double throttle_input = driver_speed.GetThrottle();
-        double steering_input = driver_steering.GetSteering();
-        double braking_input = driver_speed.GetBraking();
-        double powertrain_torque = powertrain->GetOutputTorque();
-        double driveshaft_speed = vehicle->GetDriveshaftSpeed();
+        ChDriver::Inputs driver_inputs;
+        driver_inputs.m_throttle = driver_speed.GetThrottle();
+        driver_inputs.m_braking = driver_speed.GetBraking();
+        driver_inputs.m_steering = driver_steering.GetSteering();
         vehicle->GetTrackShoeStates(LEFT, shoe_states_left);
         vehicle->GetTrackShoeStates(RIGHT, shoe_states_right);
 
@@ -439,11 +438,11 @@ int main(int argc, char* argv[]) {
         vel_CG = vehicle->GetChassisBody()->GetCoord().TransformDirectionParentToLocal(vel_CG);
 
         // Vehicle and Control Values
-        csv << time << steering_input << throttle_input << braking_input;
+        csv << time << driver_inputs.m_steering << driver_inputs.m_throttle << driver_inputs.m_braking;
         csv << vehicle->GetTrackAssembly(LEFT)->GetSprocket()->GetAxleSpeed()
             << vehicle->GetTrackAssembly(RIGHT)->GetSprocket()->GetAxleSpeed();
         csv << powertrain->GetMotorSpeed() << powertrain->GetMotorTorque();
-        csv << powertrain_torque << driveshaft_speed;
+        csv << powertrain->GetOutputTorque() << vehicle->GetDriveshaftSpeed();
         // Chassis Position & Velocity
         csv << pos_CG.x() << pos_CG.y() << pos_CG.z();
         csv << vel_CG.x() << vel_CG.y() << vel_CG.z();
@@ -456,9 +455,9 @@ int main(int argc, char* argv[]) {
             std::cout << "     Sim frame:      " << sim_frame << std::endl;
             std::cout << "     Time:           " << time << std::endl;
             std::cout << "     Avg. contacts:  " << num_contacts / out_steps << std::endl;
-            std::cout << "     Throttle input: " << throttle_input << std::endl;
-            std::cout << "     Braking input:  " << braking_input << std::endl;
-            std::cout << "     Steering input: " << steering_input << std::endl;
+            std::cout << "     Throttle input: " << driver_inputs.m_throttle << std::endl;
+            std::cout << "     Braking input:  " << driver_inputs.m_braking << std::endl;
+            std::cout << "     Steering input: " << driver_inputs.m_steering << std::endl;
             std::cout << "     Execution time: " << exec_time << std::endl;
 
             if (povray_output) {
@@ -483,14 +482,11 @@ int main(int argc, char* argv[]) {
         // Update modules (process inputs from other modules)
         driver_speed.Synchronize(time);
 		driver_steering.Synchronize(time);
-        powertrain->Synchronize(time, throttle_input, driveshaft_speed);
-        vehicle->Synchronize(time, steering_input, braking_input, powertrain_torque, shoe_forces_left,
-                            shoe_forces_right);
+        vehicle->Synchronize(time, driver_inputs, shoe_forces_left, shoe_forces_right);
 
         // Advance simulation for one timestep for all modules
         driver_speed.Advance(time_step);
 		driver_steering.Advance(time_step);
-        powertrain->Advance(time_step);
         vehicle->Advance(time_step);
 
 #ifdef CHRONO_OPENGL

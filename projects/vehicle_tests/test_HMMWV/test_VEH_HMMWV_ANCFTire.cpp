@@ -205,23 +205,15 @@ int main(int argc, char* argv[]) {
     // Downcast tires (if needed)
     switch (tire_model) {
         case TireModelType::ANCF: {
-            HMMWV_ANCFTire* tire_FL = static_cast<HMMWV_ANCFTire*>(my_hmmwv.GetTire(FRONT_LEFT));
-            HMMWV_ANCFTire* tire_FR = static_cast<HMMWV_ANCFTire*>(my_hmmwv.GetTire(FRONT_RIGHT));
-            HMMWV_ANCFTire* tire_RL = static_cast<HMMWV_ANCFTire*>(my_hmmwv.GetTire(REAR_LEFT));
-            HMMWV_ANCFTire* tire_RR = static_cast<HMMWV_ANCFTire*>(my_hmmwv.GetTire(REAR_RIGHT));
+            my_hmmwv.GetVehicle().GetWheel(0, LEFT)->GetTire();
+            auto tire_FL = std::static_pointer_cast<HMMWV_ANCFTire>(my_hmmwv.GetVehicle().GetWheel(0, LEFT)->GetTire());
+            auto tire_FR = std::static_pointer_cast<HMMWV_ANCFTire>(my_hmmwv.GetVehicle().GetWheel(0, LEFT)->GetTire());
+            auto tire_RL = std::static_pointer_cast<HMMWV_ANCFTire>(my_hmmwv.GetVehicle().GetWheel(0, LEFT)->GetTire());
+            auto tire_RR = std::static_pointer_cast<HMMWV_ANCFTire>(my_hmmwv.GetVehicle().GetWheel(0, LEFT)->GetTire());
             ////tire_FL->EnablePressure(false);
             ////tire_FR->EnablePressure(false);
             ////tire_RL->EnablePressure(false);
             ////tire_RR->EnablePressure(false);
-
-            break;
-        }
-        case TireModelType::RIGID:
-        case TireModelType::RIGID_MESH: {
-            HMMWV_RigidTire* tire_FL = static_cast<HMMWV_RigidTire*>(my_hmmwv.GetTire(FRONT_LEFT));
-            HMMWV_RigidTire* tire_FR = static_cast<HMMWV_RigidTire*>(my_hmmwv.GetTire(FRONT_RIGHT));
-            HMMWV_RigidTire* tire_RL = static_cast<HMMWV_RigidTire*>(my_hmmwv.GetTire(REAR_LEFT));
-            HMMWV_RigidTire* tire_RR = static_cast<HMMWV_RigidTire*>(my_hmmwv.GetTire(REAR_RIGHT));
 
             break;
         }
@@ -254,7 +246,7 @@ int main(int argc, char* argv[]) {
     terrain.Initialize();
 
     // Create the vehicle Irrlicht interface
-    ChWheeledVehicleIrrApp app(&my_hmmwv.GetVehicle(), &my_hmmwv.GetPowertrain(), L"HMMWV ANCF tires Test");
+    ChWheeledVehicleIrrApp app(&my_hmmwv.GetVehicle(), L"HMMWV ANCF tires Test");
     app.SetSkyBox();
     app.AddTypicalLights(irr::core::vector3df(30.f, -30.f, 100.f), irr::core::vector3df(30.f, 50.f, 100.f), 250, 130);
     app.SetChaseCamera(trackPoint, 6.0, 0.5);
@@ -335,16 +327,14 @@ int main(int argc, char* argv[]) {
             my_hmmwv.DebugLog(OUT_SPRINGS | OUT_SHOCKS | OUT_CONSTRAINTS);
         }
 
-        // Collect output data from modules (for inter-module communication)
-        double throttle_input = driver.GetThrottle();
-        double steering_input = driver.GetSteering();
-        double braking_input = driver.GetBraking();
+        // Driver inputs
+        ChDriver::Inputs driver_inputs = driver.GetInputs();
 
         // Update modules (process inputs from other modules)
         driver.Synchronize(time);
         terrain.Synchronize(time);
-        my_hmmwv.Synchronize(time, steering_input, braking_input, throttle_input, terrain);
-        app.Synchronize("", steering_input, throttle_input, braking_input);
+        my_hmmwv.Synchronize(time, driver_inputs, terrain);
+        app.Synchronize("", driver_inputs);
 
         // Advance simulation for one timestep for all modules
         driver.Advance(step_size);
