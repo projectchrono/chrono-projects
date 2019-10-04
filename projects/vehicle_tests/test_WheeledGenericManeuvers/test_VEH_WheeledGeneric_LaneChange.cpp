@@ -242,15 +242,6 @@ int main(int argc, char* argv[]) {
     vehicle.LogHardpointLocations();
 #endif
 
-    // Inter-module communication data
-    TerrainForces tire_forces(4);
-    WheelState wheel_states[4];
-    double driveshaft_speed;
-    double powertrain_torque;
-    double throttle_input;
-    double steering_input;
-    double braking_input;
-
     // Number of simulation steps between two 3D view render frames
     int render_steps = (int)std::ceil(render_step_size / step_size);
 
@@ -333,7 +324,7 @@ int main(int argc, char* argv[]) {
                 int axle = vehicle.GetDriveline()->GetDrivenAxleIndexes()[0];
 
                 // Vehicle and Control Values
-                csv << time << steering_input << throttle_input << braking_input;
+                csv << time << driver_inputs.m_steering << driver_inputs.m_throttle << driver_inputs.m_braking;
                 csv << powertrain->GetMotorSpeed() << powertrain->GetMotorTorque();
                 // Chassis Position, Velocity, & Acceleration (Unfiltered and Filtered)
                 csv << vehicle.GetChassis()->GetPos().x() << vehicle.GetChassis()->GetPos().y()
