@@ -21,7 +21,6 @@
 
 #include "chrono/assets/ChTexture.h"
 #include "chrono/core/ChMathematics.h"
-#include "chrono/core/ChRealtimeStep.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChSystemNSC.h"

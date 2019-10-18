@@ -23,7 +23,6 @@
 ////unsigned int fp_control_state = _controlfp(_EM_INEXACT, _MCW_EM);
 
 #include "chrono/core/ChStream.h"
-#include "chrono/core/ChRealtimeStep.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 

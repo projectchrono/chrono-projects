@@ -24,7 +24,6 @@
 #include <sstream>
 #include <fstream>
 
-#include "chrono/core/ChRealtimeStep.h"
 #include "chrono/geometry/ChLineBezier.h"
 #include "chrono/assets/ChLineShape.h"
 #include "chrono/utils/ChUtilsInputOutput.h"

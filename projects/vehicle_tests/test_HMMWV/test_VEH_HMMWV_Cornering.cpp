@@ -234,7 +234,6 @@ int main(int argc, char* argv[]) {
     int render_steps = (int)std::ceil(render_step_size / step_size);
 
     // Initialize simulation frame counter and simulation time
-    ChRealtimeStepTimer realtime_timer;
     int sim_frame = 0;
     int render_frame = 0;
 

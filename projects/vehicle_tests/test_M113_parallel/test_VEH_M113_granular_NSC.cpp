@@ -347,7 +347,6 @@ int main(int argc, char* argv[]) {
             break;
     }
 
-    vehicle->SetStepsize(time_step);
     vehicle->Initialize(ChCoordsys<>(initLoc + ChVector<>(0.0, 0.0, vertical_offset), initRot));
 
     // Set visualization type for subsystems

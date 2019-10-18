@@ -18,7 +18,6 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/core/ChMathematics.h"
-#include "chrono/core/ChRealtimeStep.h"
 #include "chrono/assets/ChCylinderShape.h"
 #include "chrono/assets/ChTriangleMeshShape.h"
 #include "chrono/physics/ChBodyEasy.h"
