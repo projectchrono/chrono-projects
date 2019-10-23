@@ -193,9 +193,6 @@ bool ANCFBeamTest::execute() {
         mystepper->SetAbsTolerances(1e-14);
     }
 
-    // Mark completion of system construction
-    my_system.SetupInitial();
-
     ChTimer<> timer;
     ChVector<> displ;
     for (unsigned int it = 0; it < num_steps; it++) {

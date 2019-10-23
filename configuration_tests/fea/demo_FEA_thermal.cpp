@@ -150,10 +150,6 @@ int main(int argc, char* argv[]) {
     mvisualizemeshC->SetZbufferHide(false);
     my_mesh->AddAsset(mvisualizemeshC);
 
-    // ==IMPORTANT!== Mark completion of system construction
-    my_system.SetupInitial();
-
-
     // ==IMPORTANT!== Use this function for adding a ChIrrNodeAsset to all items
     // in the system. These ChIrrNodeAsset assets are 'proxies' to the Irrlicht meshes.
     // If you need a finer control on which item really needs a visualization proxy in

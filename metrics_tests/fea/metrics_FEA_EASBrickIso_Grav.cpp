@@ -252,9 +252,6 @@ bool BrickIso_GravTest::execute() {
     mystepper->SetMode(ChTimestepperHHT::POSITION);
     mystepper->SetScaling(true);
 
-    // Mark completion of system construction
-    my_system.SetupInitial();
-
     ChTimer<> timer;
     int num_iterations = 0;
 

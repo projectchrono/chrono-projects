@@ -686,8 +686,6 @@ int main(int argc, char* argv[]) {
     application.AssetBindAll();
     application.AssetUpdateAll();
 
-
-    my_system.SetupInitial();
     my_system.Setup();
     my_system.Update();
 

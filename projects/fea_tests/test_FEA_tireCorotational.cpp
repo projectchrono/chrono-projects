@@ -251,9 +251,6 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // Mark completion of system construction
-    my_system.SetupInitial();
-
     // ----------------------------
     // Set up solver and integrator
     // ----------------------------

@@ -239,9 +239,6 @@ mloadcontainer->Add(mrigidmeshload);
     application.AddShadowAll();
 #endif
 
-    // ==IMPORTANT!== Mark completion of system construction
-    my_system.SetupInitial();
-
     //
     // THE SOFT-REAL-TIME CYCLE
     //

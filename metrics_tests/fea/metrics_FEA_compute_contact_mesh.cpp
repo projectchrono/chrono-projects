@@ -261,9 +261,6 @@ bool MeshContactTest::execute() {
     // Remember to add the mesh to the system!
     system->Add(my_mesh);
 
-    // Mark completion of system construction
-    system->SetupInitial();
-
     // Create container box
     auto ground = utils::CreateBoxContainer(system, binId, material, ChVector<>(bin_width, bin_length, 200 * dy),
                                             bin_thickness, ChVector<>(0, -1.5 * m_contact_node_radius, 0),

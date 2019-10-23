@@ -671,8 +671,6 @@ int main(int argc, char* argv[]) {
     my_system.SetTolForce(1e-10);
 #endif
 
-    // Mark completion of system construction
-    my_system.SetupInitial();
     my_system.Setup();
     my_system.Update();
 

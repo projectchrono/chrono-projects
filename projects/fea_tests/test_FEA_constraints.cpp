@@ -109,9 +109,6 @@ void test_beam(const std::string& name,  /// test name
         my_system.Add(dir_cnstr);
     }
 
-    // Mark completion of system construction
-    my_system.SetupInitial();
-
 #ifdef CHRONO_MKL
     // MKL solver + HHT
     std::cout << "Using HHT + MKL" << std::endl;

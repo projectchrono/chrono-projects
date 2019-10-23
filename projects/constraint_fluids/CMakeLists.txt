@@ -25,6 +25,7 @@ find_package(ZLIB REQUIRED)
 
 if (ZLIB_FOUND)
   message(STATUS "ZLIB include dir: ${ZLIB_INCLUDE_DIRS}")
+  message(STATUS "ZLIB library:    ${ZLIB_LIBRARIES}")
 else()
   mark_as_advanced(CLEAR ZLIB_ROOT)
 endif()

@@ -192,9 +192,6 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
     // Remember to add the mesh to the system!
     my_system.Add(my_mesh);
 
-    // Mark completion of system construction
-    my_system.SetupInitial();
-
 #ifdef CHRONO_MKL
     std::shared_ptr<ChSolverMKL<>> mkl_solver;
     ////std::shared_ptr<ChSolverMKL<ChMapMatrix>> mkl_solver;

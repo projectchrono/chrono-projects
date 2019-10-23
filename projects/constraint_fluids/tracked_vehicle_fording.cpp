@@ -23,9 +23,9 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 // Chrono::Parallel header files
+#include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
-#include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
 
 // Chrono::Parallel OpenGL header files
 #undef CHRONO_OPENGL
@@ -35,9 +35,9 @@
 #endif
 
 // Chrono utility header files
-#include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
+#include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 // Chrono vehicle header files
@@ -52,14 +52,12 @@
 using namespace chrono;
 using namespace chrono::collision;
 
-
 using std::cout;
 using std::endl;
 
 // =============================================================================
 // USER SETTINGS
 // =============================================================================
-
 
 // -----------------------------------------------------------------------------
 // Specification of the terrain
@@ -74,7 +72,7 @@ TerrainType terrain_type = RIGID_TERRAIN;
 bool visible_walls = false;
 
 // Dimensions
-double hdimX = 5.5; //// 2.5;
+double hdimX = 5.5;  //// 2.5;
 double hdimY = 2.5;
 double hdimZ = 0.5;
 double hthick = 0.25;
@@ -89,7 +87,7 @@ ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
 float mu_g = 0.8f;
 
-unsigned int num_particles = 100; //// 40000;
+unsigned int num_particles = 100;  //// 40000;
 std::vector<real3> forces;
 std::vector<real3> torques;
 // -----------------------------------------------------------------------------
@@ -135,79 +133,74 @@ int out_fps = 60;
 double target_speed = 2;
 // =============================================================================
 
+void static WriteTrackedVehicleData(M113_Vehicle_Custom& vehicle,
+                                    ChDriver::Inputs driver_inputs,
+                                    std::vector<real3> forces,
+                                    std::vector<real3> torques,
+                                    std::string filename) {
+    CSVGen csv_output;
+    csv_output.OpenFile(filename.c_str(), false);
 
+    auto m_driveline = vehicle.GetDriveline();
+    auto m_powertrain = vehicle.GetPowertrain();
 
-void static WriteTrackedVehicleData(
-	M113_Vehicle_Custom& vehicle,
-	M113_SimplePowertrain &powertrain,
-	double throttle,
-	double braking,
-	std::vector<real3> forces,
-	std::vector<real3> torques,
-	std::string filename) {
-	CSVGen csv_output;
-	csv_output.OpenFile(filename.c_str(), false);
+    csv_output << vehicle.GetChassisBody()->GetPos();
+    csv_output << vehicle.GetVehicleSpeed();
+    csv_output << m_driveline->GetDriveshaftSpeed();
+    csv_output << m_powertrain->GetMotorTorque();
+    csv_output << m_powertrain->GetMotorSpeed();
+    csv_output << m_powertrain->GetOutputTorque();
 
-	std::shared_ptr<ChTrackDriveline> m_driveline = vehicle.GetDriveline();
+    csv_output << driver_inputs.m_throttle;
+    csv_output << driver_inputs.m_braking;
 
-	csv_output << vehicle.GetChassisBody()->GetPos();
-	csv_output << vehicle.GetVehicleSpeed();
-	csv_output << m_driveline->GetDriveshaftSpeed();
-	csv_output << powertrain.GetMotorTorque();
-	csv_output << powertrain.GetMotorSpeed();
-	csv_output << powertrain.GetOutputTorque();
+    double total_force_len = 0;
+    double total_torque_len = 0;
+    for (int i = 0; i < forces.size(); i++) {
+        total_force_len += Length(forces[i]);
+        total_torque_len += Length(torques[i]);
+    }
+    csv_output << Length(forces[0]);
+    csv_output << Length(torques[0]);
 
-	csv_output << throttle;
-	csv_output << braking;
+    csv_output << total_force_len;
+    csv_output << total_torque_len;
 
-	double total_force_len = 0;
-	double total_torque_len = 0;
-	for (int i = 0; i < forces.size(); i++) {
-		total_force_len += Length(forces[i]);
-		total_torque_len += Length(torques[i]);
-	}
-	csv_output << Length(forces[0]);
-	csv_output << Length(torques[0]);
+    csv_output << m_driveline->GetSprocketTorque(LEFT);
+    csv_output << m_driveline->GetSprocketTorque(RIGHT);
 
-	csv_output << total_force_len;
-	csv_output << total_torque_len;
-
-	csv_output << m_driveline->GetSprocketTorque(LEFT);
-	csv_output << m_driveline->GetSprocketTorque(RIGHT);
-
-	csv_output.endline();
-	csv_output.CloseFile();
+    csv_output.endline();
+    csv_output.CloseFile();
 }
 
-
 double CreateParticles(ChSystemParallelNSC* system) {
-	// Create a material
-	auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
-	mat_g->SetFriction(mu_g);
+    // Create a material
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    mat_g->SetFriction(mu_g);
 
-	// Create a particle generator and a mixture entirely made out of spheres
-	utils::Generator gen(system);
-	std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
-	m1->setDefaultMaterial(mat_g);
-	m1->setDefaultDensity(rho_g);
-	m1->setDefaultSize(r_g);
+    // Create a particle generator and a mixture entirely made out of spheres
+    utils::Generator gen(system);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    m1->setDefaultMaterial(mat_g);
+    m1->setDefaultDensity(rho_g);
+    m1->setDefaultSize(r_g);
 
-	// Set starting value for body identifiers
-	gen.setBodyIdentifier(Id_g);
+    // Set starting value for body identifiers
+    gen.setBodyIdentifier(Id_g);
 
-	// Create particles in layers until reaching the desired number of particles
-	double r = 1.01 * r_g;
-	ChVector<> hdims(hdimX - r, hdimY - r, 0);
-	ChVector<> center(0, 0, 2 * r);
+    // Create particles in layers until reaching the desired number of particles
+    double r = 1.01 * r_g;
+    ChVector<> hdims(hdimX - r, hdimY - r, 0);
+    ChVector<> center(0, 0, 2 * r);
 
-	while (gen.getTotalNumBodies() < num_particles) {
-		gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
-		center.z() += 2 * r;
-	}
+    while (gen.getTotalNumBodies() < num_particles) {
+        gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
+        center.z() += 2 * r;
+    }
 
-	std::cout << "Created " << gen.getTotalNumBodies() << " particles." << std::endl;
+    std::cout << "Created " << gen.getTotalNumBodies() << " particles." << std::endl;
 
-	return center.z();
+    return center.z();
 }
 
 // =============================================================================
@@ -216,260 +209,224 @@ double CreateParticles(ChSystemParallelNSC* system) {
 // of '=' characters corresponding to 100%.
 
 void progressbar(unsigned int x, unsigned int n, unsigned int w = 50) {
-	if ((x != n) && (x % (n / 100 + 1) != 0))
-		return;
+    if ((x != n) && (x % (n / 100 + 1) != 0))
+        return;
 
-	float ratio = x / (float)n;
-	unsigned int c = (unsigned int)(ratio * w);
+    float ratio = x / (float)n;
+    unsigned int c = (unsigned int)(ratio * w);
 
-	std::cout << std::setw(3) << (int)(ratio * 100) << "% [";
-	for (unsigned int x = 0; x < c; x++)
-		std::cout << "=";
-	for (unsigned int x = c; x < w; x++)
-		std::cout << " ";
-	std::cout << "]\r" << std::flush;
+    std::cout << std::setw(3) << (int)(ratio * 100) << "% [";
+    for (unsigned int x = 0; x < c; x++)
+        std::cout << "=";
+    for (unsigned int x = c; x < w; x++)
+        std::cout << " ";
+    std::cout << "]\r" << std::flush;
 }
 
 // =============================================================================
 int main(int argc, char* argv[]) {
+    // --------------
+    // Create system.
+    // --------------
+    // ----  Parallel
+    std::cout << "Create Parallel DVI system" << std::endl;
+    ChSystemParallelNSC* system = new ChSystemParallelNSC();
 
-	// --------------
-	// Create system.
-	// --------------
-	// ----  Parallel
-	std::cout << "Create Parallel DVI system" << std::endl;
-	ChSystemParallelNSC* system = new ChSystemParallelNSC();
+    system->Set_G_acc(ChVector<>(0, 0, -9.81));
 
-	system->Set_G_acc(ChVector<>(0, 0, -9.81));
+    // ---------------------
+    // Edit system settings.
+    // ---------------------
+    // Set solver parameters
+    system->GetSettings()->solver.tolerance = tolerance;
+    system->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
+    system->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
+    system->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
+    system->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
+    system->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;  // make 1000, should be about 220
+    system->GetSettings()->solver.compute_N = false;
+    system->GetSettings()->solver.alpha = 0;
+    system->GetSettings()->solver.cache_step_length = true;
+    system->GetSettings()->solver.use_full_inertia_tensor = false;
+    system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
+    system->GetSettings()->solver.bilateral_clamp_speed = 1e8;
+    system->GetSettings()->min_threads = threads;
+    system->ChangeSolverType(SolverType::BB);
+    system->SetLoggingLevel(LoggingLevel::LOG_INFO);
+    system->SetLoggingLevel(LoggingLevel::LOG_TRACE);
 
+    system->GetSettings()->collision.collision_envelope = 0.1 * r_g;
 
-	// ---------------------
-	// Edit system settings.
-	// ---------------------
-	// Set solver parameters
-	system->GetSettings()->solver.tolerance = tolerance;
-	system->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
-	system->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
-	system->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
-	system->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
-	system->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;  // make 1000, should be about 220
-	system->GetSettings()->solver.compute_N = false;
-	system->GetSettings()->solver.alpha = 0;
-	system->GetSettings()->solver.cache_step_length = true;
-	system->GetSettings()->solver.use_full_inertia_tensor = false;
-	system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-	system->GetSettings()->solver.bilateral_clamp_speed = 1e8;
-	system->GetSettings()->min_threads = threads;
-	system->ChangeSolverType(SolverType::BB);
-	system->SetLoggingLevel(LoggingLevel::LOG_INFO);
-	system->SetLoggingLevel(LoggingLevel::LOG_TRACE);
+    system->GetSettings()->collision.bins_per_axis = vec3(100, 20, 25);
+    system->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
+    system->GetSettings()->collision.fixed_bins = true;
 
-	system->GetSettings()->collision.collision_envelope = 0.1 * r_g;
+    // -------------------
+    // Create the terrain.
+    // -------------------
 
-	system->GetSettings()->collision.bins_per_axis = vec3(100, 20, 25);
-	system->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
-	system->GetSettings()->collision.fixed_bins = true;
+    CreateContainer(system);
 
-	// -------------------
-	// Create the terrain.
-	// -------------------
+    CreateFluid(system);
 
-	CreateContainer(system);
+    // --------------------------
+    // Construct the M113 vehicle
+    // --------------------------
 
-	CreateFluid(system);
+    m_speedPIDVehicle.SetGains(4.0, 1.0, 0.00);
 
+    // Create and initialize vehicle system
+    M113_Vehicle_Custom vehicle(true, TrackShoeType::SINGLE_PIN, system);
+    ////vehicle.SetStepsize(0.0001);
 
-	// --------------------------
-	// Construct the M113 vehicle
-	// --------------------------
+    vehicle.Initialize(ChCoordsys<>(initLoc, initRot));
 
-	m_speedPIDVehicle.SetGains(4.0, 1.0, 0.00);
+    // vehicle.SetChassisVisualizationType(VisualizationType::PRIMITIVES);
+    vehicle.SetSprocketVisualizationType(VisualizationType::PRIMITIVES);
+    vehicle.SetRoadWheelVisualizationType(VisualizationType::PRIMITIVES);
+    vehicle.SetIdlerVisualizationType(VisualizationType::PRIMITIVES);
+    vehicle.SetRoadWheelAssemblyVisualizationType(VisualizationType::PRIMITIVES);
+    vehicle.SetTrackShoeVisualizationType(VisualizationType::PRIMITIVES);
 
+    // Create the powertrain system
+    auto powertrain = chrono_types::make_shared<M113_SimplePowertrain>("powertrain");
+    vehicle.InitializePowertrain(powertrain);
 
-	// Create and initialize vehicle system
-	M113_Vehicle_Custom vehicle(true, TrackShoeType::SINGLE_PIN, system);
-	////vehicle.SetStepsize(0.0001);
-
-
-
-
-
-	vehicle.Initialize(ChCoordsys<>(initLoc, initRot));
-
-	//vehicle.SetChassisVisualizationType(VisualizationType::PRIMITIVES);
-	vehicle.SetSprocketVisualizationType(VisualizationType::PRIMITIVES);
-	vehicle.SetRoadWheelVisualizationType(VisualizationType::PRIMITIVES);
-	vehicle.SetIdlerVisualizationType(VisualizationType::PRIMITIVES);
-	vehicle.SetRoadWheelAssemblyVisualizationType(VisualizationType::PRIMITIVES);
-	vehicle.SetTrackShoeVisualizationType(VisualizationType::PRIMITIVES);
-
-	// Create the powertrain system
-	M113_SimplePowertrain powertrain("powertrain");
-	powertrain.Initialize(vehicle.GetChassisBody(), vehicle.GetDriveshaft());
-
-	// ---------------
-	// Simulation loop
-	// ---------------
+    // ---------------
+    // Simulation loop
+    // ---------------
 
 #ifdef CHRONO_OPENGL
-	// Initialize OpenGL
-	opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-	gl_window.Initialize(1280, 720, "M113", system);
-	gl_window.SetCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
-	gl_window.SetRenderMode(opengl::WIREFRAME);
+    // Initialize OpenGL
+    opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
+    gl_window.Initialize(1280, 720, "M113", system);
+    gl_window.SetCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
+    gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif
 
-	// Number of simulation steps between two 3D view render frames
-	int out_steps = (int)std::ceil((1.0 / time_step) / out_fps);
+    // Number of simulation steps between two 3D view render frames
+    int out_steps = (int)std::ceil((1.0 / time_step) / out_fps);
 
-	// Run simulation for specified time.
-	double time = 0;
-	int sim_frame = 0;
-	int out_frame = 0;
-	int next_out_frame = 0;
-	double exec_time = 0;
-	int num_contacts = 0;
+    // Run simulation for specified time.
+    double time = 0;
+    int sim_frame = 0;
+    int out_frame = 0;
+    int next_out_frame = 0;
+    double exec_time = 0;
+    int num_contacts = 0;
 
-	// Inter-module communication data
-	BodyStates shoe_states_left(vehicle.GetNumTrackShoes(LEFT));
-	BodyStates shoe_states_right(vehicle.GetNumTrackShoes(RIGHT));
+    // Inter-module communication data
+    BodyStates shoe_states_left(vehicle.GetNumTrackShoes(LEFT));
+    BodyStates shoe_states_right(vehicle.GetNumTrackShoes(RIGHT));
     TerrainForces shoe_forces_left(vehicle.GetNumTrackShoes(LEFT));
     TerrainForces shoe_forces_right(vehicle.GetNumTrackShoes(RIGHT));
 
-	bool set_time = true;
+    bool set_time = true;
 
+    while (time < time_end) {
+        // Driver inputs
+        ChDriver::Inputs driver_inputs = {0, 0, 0};
+        {
+            double out_speed = m_speedPIDVehicle.Advance(vehicle, target_speed, time_step);
 
-	while (time < time_end) {
-		// Collect output data from modules
-		double throttle_input = 0;
-		double steering_input = 0;
-		double braking_input = 0;
-		//steering_input = driver.GetSteering();
-		{
+            if (time > .3) {
+                ChClampValue(out_speed, -2.0, 2.0);
+            } else {
+                out_speed = 0;
+            }
 
-			double out_speed = m_speedPIDVehicle.Advance(vehicle, target_speed, time_step);
+            if (out_speed > 0) {
+                driver_inputs.m_braking = 0;
+                driver_inputs.m_throttle = out_speed;
+            } else {
+                driver_inputs.m_braking = -out_speed;
+                driver_inputs.m_throttle = 0;
+            }
 
-			
+            if (vehicle.GetChassis()->GetPos().x() > dist_end) {
+                driver_inputs.m_braking = 1;
+                driver_inputs.m_throttle = 0;
+                if (set_time) {
+                    real time_end_temp = time + 1;
+                    time_end = Max(time_end_temp, time_end);
+                    set_time = false;
+                }
+            }
+        }
 
-			if (time > .3) {
-				ChClampValue(out_speed, -2.0, 2.0);
-			}
-			else {
-				out_speed = 0;
-			}
+        double powertrain_torque = powertrain->GetOutputTorque();
+        double driveshaft_speed = vehicle.GetDriveshaftSpeed();
+        vehicle.GetTrackShoeStates(LEFT, shoe_states_left);
+        vehicle.GetTrackShoeStates(RIGHT, shoe_states_right);
 
-			if (out_speed > 0) {
-				braking_input = 0;
-				throttle_input = out_speed;
-			}
-			else {
+        // Output
+        if (sim_frame == next_out_frame) {
+            std::cout << "write: " << out_frame << std::endl;
+            forces.resize(0);
+            torques.resize(0);
 
-				braking_input = -out_speed;
-				throttle_input = 0;
-				// Vehicle moving too fast: apply brakes
-				//if (braking_input>(-out_speed)) {aa
-			}
+            system->CalculateContactForces();
 
-			// Stop vehicle at time_brakes [s]
-			if (vehicle.GetChassis()->GetPos().x() > dist_end) {
-				braking_input = 1;
-				throttle_input = 0;
-				if (set_time) {
-					real time_end_temp = time + 1;
-					time_end = Max(time_end_temp, time_end);
-					set_time = false;
-				}
-			}
-			//printf("outspeed: %f %f %f %f %f\n", out_speed, throttle_input, braking_input, steering_input, vehicle.GetVehicleSpeed());
-		}
+            // get total force and torques on tracks and chassis
+            forces.push_back(system->GetBodyContactForce(vehicle.GetChassisBody()->GetId()));
+            torques.push_back(system->GetBodyContactTorque(vehicle.GetChassisBody()->GetId()));
 
+            for (int i = 0; i < vehicle.GetNumTrackShoes(LEFT); i++) {
+                forces.push_back(system->GetBodyContactForce(vehicle.GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()));
+                torques.push_back(system->GetBodyContactTorque(vehicle.GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()));
+            }
+            for (int i = 0; i < vehicle.GetNumTrackShoes(RIGHT); i++) {
+                forces.push_back(system->GetBodyContactForce(vehicle.GetTrackShoe(RIGHT, i)->GetShoeBody()->GetId()));
+                torques.push_back(system->GetBodyContactTorque(vehicle.GetTrackShoe(RIGHT, i)->GetShoeBody()->GetId()));
+            }
 
-		double powertrain_torque = powertrain.GetOutputTorque();
-		double driveshaft_speed = vehicle.GetDriveshaftSpeed();
-		vehicle.GetTrackShoeStates(LEFT, shoe_states_left);
-		vehicle.GetTrackShoeStates(RIGHT, shoe_states_right);
+            DumpFluidData(system, data_output_path + "data_" + std::to_string(out_frame) + ".dat", true);
+            DumpAllObjectsWithGeometryPovray(system, data_output_path + "vehicle_" + std::to_string(out_frame) + ".dat",
+                                             true);
+            WriteTrackedVehicleData(vehicle, driver_inputs, forces, torques,
+                                    data_output_path + "stats_" + std::to_string(out_frame) + ".dat");
 
-		// Output
-		if (sim_frame == next_out_frame) {
-			std::cout << "write: " << out_frame << std::endl;
-			forces.resize(0);
-			torques.resize(0);
+            out_frame++;
+            next_out_frame += out_steps;
+            num_contacts = 0;
+        }
 
-			system->CalculateContactForces();
+        // Release the vehicle chassis at the end of the hold time.
+        if (vehicle.GetChassisBody()->GetBodyFixed() && time > time_hold) {
+            vehicle.GetChassisBody()->SetBodyFixed(false);
+        }
 
-			// get total force and torques on tracks and chassis
-			forces.push_back(system->GetBodyContactForce(vehicle.GetChassisBody()->GetId()));
-			torques.push_back(system->GetBodyContactTorque(vehicle.GetChassisBody()->GetId()));
-
-			for (int i = 0; i < vehicle.GetNumTrackShoes(LEFT); i++) {
-				forces.push_back(system->GetBodyContactForce(vehicle.GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()));
-				torques.push_back(system->GetBodyContactTorque(vehicle.GetTrackShoe(LEFT, i)->GetShoeBody()->GetId()));
-			}
-			for (int i = 0; i < vehicle.GetNumTrackShoes(RIGHT); i++) {
-				forces.push_back(system->GetBodyContactForce(vehicle.GetTrackShoe(RIGHT, i)->GetShoeBody()->GetId()));
-				torques.push_back(system->GetBodyContactTorque(vehicle.GetTrackShoe(RIGHT, i)->GetShoeBody()->GetId()));
-			}
-			
-			DumpFluidData(system, data_output_path + "data_" + std::to_string(out_frame) + ".dat", true);
-			DumpAllObjectsWithGeometryPovray(system, data_output_path + "vehicle_" + std::to_string(out_frame) + ".dat", true);
-			WriteTrackedVehicleData(vehicle, powertrain, throttle_input, braking_input, forces, torques, data_output_path + "stats_" + std::to_string(out_frame) + ".dat");
-
-			out_frame++;
-			next_out_frame += out_steps;
-			num_contacts = 0;
-		}
-
-		// Release the vehicle chassis at the end of the hold time.
-		if (vehicle.GetChassisBody()->GetBodyFixed() && time > time_hold) {
-			vehicle.GetChassisBody()->SetBodyFixed(false);
-		}
-
-		// Update modules (process inputs from other modules)
-		powertrain.Synchronize(time, throttle_input, driveshaft_speed);
-		vehicle.Synchronize(time, steering_input, braking_input, powertrain_torque, shoe_forces_left, shoe_forces_right);
-		//driver.Synchronize(time);
-		// Advance simulation for one timestep for all modules
-		powertrain.Advance(time_step);
-		//vehicle.Advance(time_step);
-
-		std::shared_ptr<ChTrackDriveline> m_driveline = vehicle.GetDriveline();
-
-		/*printf("Vspeed: [%f],  Dspeed [%f], motor torque [%f], motor speed [%f] output torque [%f] [%f %f]\n",
-			vehicle.GetVehicleSpeed(), m_driveline->GetDriveshaftSpeed(), powertrain.GetMotorTorque(),
-			powertrain.GetMotorSpeed(), powertrain.GetOutputTorque(), throttle_input, braking_input);*/
+        vehicle.Synchronize(time, driver_inputs, shoe_forces_left, shoe_forces_right);
+        vehicle.Advance(time_step);
 
 #ifdef CHRONO_OPENGL
-		//gl_window.Pause();
+        // gl_window.Pause();
 
-		if (gl_window.Active()) {
-			if (gl_window.DoStepDynamics(time_step)) {
-				// Update counters.
-				time += time_step;
-				sim_frame++;
-				exec_time += system->GetTimerStep();
-				num_contacts += system->GetNcontacts();
-			}
-			gl_window.Render();
-		}
-		else {
-			break;
-		}
+        if (gl_window.Active()) {
+            if (gl_window.DoStepDynamics(time_step)) {
+                // Update counters.
+                time += time_step;
+                sim_frame++;
+                exec_time += system->GetTimerStep();
+                num_contacts += system->GetNcontacts();
+            }
+            gl_window.Render();
+        } else {
+            break;
+        }
 #else
-		system->DoStepDynamics(time_step);
-		time += time_step;
-		sim_frame++;
-		exec_time += system->GetTimerStep();
-		num_contacts += system->GetNcontacts();
+        system->DoStepDynamics(time_step);
+        time += time_step;
+        sim_frame++;
+        exec_time += system->GetTimerStep();
+        num_contacts += system->GetNcontacts();
 
 #endif
+    }
 
+    // Final stats
+    std::cout << "==================================" << std::endl;
+    std::cout << "Simulation time:   " << exec_time << std::endl;
 
-
-	}
-
-	// Final stats
-	std::cout << "==================================" << std::endl;
-	std::cout << "Simulation time:   " << exec_time << std::endl;
-
-	return 0;
+    return 0;
 }

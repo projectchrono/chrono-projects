@@ -240,9 +240,6 @@ bool BrickIsoTest::execute() {
     mystepper->SetMode(ChTimestepperHHT::POSITION);
     mystepper->SetScaling(true);
 
-    // Mark completion of system construction
-    my_system.SetupInitial();
-
     // Simulate for the specified number of steps, while accumulating number of iterations.
     ChTimer<> timer;
     int num_iterations = 0;

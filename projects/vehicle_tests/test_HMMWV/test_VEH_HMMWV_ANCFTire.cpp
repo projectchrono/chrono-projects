@@ -276,12 +276,6 @@ int main(int argc, char* argv[]) {
     MyDriver driver(my_hmmwv.GetVehicle(), 0.5);
     driver.Initialize();
 
-    // ----------------------------
-    // Complete system construction
-    // ----------------------------
-
-    system->SetupInitial();
-
     // ---------------
     // Simulation loop
     // ---------------
