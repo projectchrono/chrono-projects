@@ -156,8 +156,8 @@ int main(int argc, char* argv[]) {
 
 #ifdef CHRONO_MKL
     // MKL solver settings
-    auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
-    mkl_solver->SetSparsityPatternLock(true);
+    auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
+    mkl_solver->LockSparsityPattern(true);
     mkl_solver->SetVerbose(verbose);
     system->SetSolver(mkl_solver);
 #else

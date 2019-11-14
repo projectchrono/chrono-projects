@@ -1547,8 +1547,8 @@ int main(int argc, char* argv[]) {
     constraintLateral->Initialize(Rim, Ground, ChCoordsys<>(Rim->GetPos(), Q_from_AngX(CH_C_PI_2)));
 
     // Use the MKL Solver
-    auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
-    mkl_solver->SetSparsityPatternLock(true);
+    auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
+    mkl_solver->LockSparsityPattern(true);
     my_system.SetSolver(mkl_solver);
     my_system.Update();
 

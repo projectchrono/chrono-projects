@@ -412,8 +412,8 @@ void RigidPendulums() {
 
 // Set MKL solver
 #ifdef CHRONO_MKL
-    auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
-    mkl_solver->SetSparsityPatternLock(true);
+    auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
+    mkl_solver->LockSparsityPattern(true);
     system.SetSolver(mkl_solver);
 #endif
 

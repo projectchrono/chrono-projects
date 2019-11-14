@@ -654,9 +654,9 @@ int main(int argc, char* argv[]) {
     mrigidBody->AddAsset(mtexture);
     
     my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
-    auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
+    auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
     my_system.SetSolver(mkl_solver);
-    mkl_solver->SetSparsityPatternLock(true);
+    mkl_solver->LockSparsityPattern(true);
 
     my_system.SetTimestepperType(ChTimestepper::Type::HHT);
     // my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise

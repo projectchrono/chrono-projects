@@ -341,9 +341,9 @@ int main(int argc, char* argv[]) {
         my_system.SetTolForce(1e-10);
     */
     // Change solver to pluggable MKL
-    auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
+    auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
     my_system.SetSolver(mkl_solver);
-    mkl_solver->SetSparsityPatternLock(true);
+    mkl_solver->LockSparsityPattern(true);
     my_system.Update();
 
     // Change type of integrator:

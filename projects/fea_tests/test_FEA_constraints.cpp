@@ -113,9 +113,9 @@ void test_beam(const std::string& name,  /// test name
     // MKL solver + HHT
     std::cout << "Using HHT + MKL" << std::endl;
 
-    auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
+    auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
     my_system.SetSolver(mkl_solver);
-    mkl_solver->SetSparsityPatternLock(true);
+    mkl_solver->LockSparsityPattern(true);
     mkl_solver->SetVerbose(false);
 
     my_system.SetTimestepperType(ChTimestepper::Type::HHT);

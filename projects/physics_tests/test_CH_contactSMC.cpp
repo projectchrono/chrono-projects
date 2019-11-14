@@ -268,8 +268,8 @@ int main(int argc, char* argv[]) {
         case MKL_SOLVER: {
 #ifdef CHRONO_MKL
             GetLog() << "Using MKL solver.\n";
-            auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
-            mkl_solver->SetSparsityPatternLock(true);
+            auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
+            mkl_solver->LockSparsityPattern(true);
             system.SetSolver(mkl_solver);
 #endif
             break;

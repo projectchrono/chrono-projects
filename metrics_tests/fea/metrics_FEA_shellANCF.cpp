@@ -32,10 +32,6 @@
 #include "chrono_mkl/ChSolverMKL.h"
 #endif
 
-#ifdef CHRONO_SUPERLUMT
-#include "chrono_superlumt/ChSolverSuperLUMT.h"
-#endif
-
 #ifdef CHRONO_MUMPS
 #include "chrono_mumps/ChSolverMumps.h"
 #endif
@@ -50,7 +46,7 @@ using namespace chrono::fea;
 using std::cout;
 using std::endl;
 
-enum class solver_type { MINRES, MKL, SUPERLUMT, MUMPS };
+enum class solver_type { MINRES, MKL, MUMPS };
 
 // -----------------------------------------------------------------------------
 
@@ -103,9 +99,6 @@ bool FEAShellTest::execute() {
             break;
         case solver_type::MKL:
             cout << "MKL";
-            break;
-        case solver_type::SUPERLUMT:
-            cout << "SUPERLUMT";
             break;
         case solver_type::MUMPS:
             cout << "MUMPS";
@@ -207,13 +200,7 @@ bool FEAShellTest::execute() {
     my_system.Add(my_mesh);
 
 #ifdef CHRONO_MKL
-    std::shared_ptr<ChSolverMKL<>> mkl_solver;
-////std::shared_ptr<ChSolverMKL<ChMapMatrix>> mkl_solver;
-#endif
-
-#ifdef CHRONO_SUPERLUMT
-    std::shared_ptr<ChSolverSuperLUMT<>> superlumt_solver;
-////std::shared_ptr<ChSolverSuperLUMT<ChMapMatrix>> superlumt_solver;
+    std::shared_ptr<ChSolverMKL> mkl_solver;
 #endif
 
 #ifdef CHRONO_MUMPS
@@ -231,20 +218,11 @@ bool FEAShellTest::execute() {
         } break;
         case solver_type::MKL:
 #ifdef CHRONO_MKL
-            mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
+            mkl_solver = chrono_types::make_shared<ChSolverMKL>();
             my_system.SetSolver(mkl_solver);
-            mkl_solver->SetSparsityPatternLock(true);
+            mkl_solver->LockSparsityPattern(true);
             mkl_solver->SetVerbose(m_verbose_solver);
             mkl_solver->ForceSparsityPatternUpdate();
-#endif
-            break;
-        case solver_type::SUPERLUMT:
-#ifdef CHRONO_SUPERLUMT
-            superlumt_solver = chrono_types::make_shared<ChSolverSuperLUMT<>>();
-            my_system.SetSolver(superlumt_solver);
-            superlumt_solver->SetSparsityPatternLock(true);
-            superlumt_solver->SetVerbose(m_verbose_solver);
-            superlumt_solver->ForceSparsityPatternUpdate();
 #endif
             break;
         case solver_type::MUMPS:
@@ -307,11 +285,6 @@ bool FEAShellTest::execute() {
             mkl_solver->ResetTimers();
 #endif
 
-#ifdef CHRONO_SUPERLUMT
-        if (m_solver == solver_type::SUPERLUMT)
-            superlumt_solver->ResetTimers();
-#endif
-
 #ifdef CHRONO_MUMPS
         if (m_solver == solver_type::MUMPS)
             mumps_solver->ResetTimers();
@@ -319,14 +292,9 @@ bool FEAShellTest::execute() {
 
         my_system.DoStepDynamics(step_size);
 
-        if (istep == 3 && (m_solver == solver_type::MKL || m_solver == solver_type::SUPERLUMT)) {
+        if (istep == 3 && m_solver == solver_type::MKL) {
 #ifdef CHRONO_MKL
-            mkl_solver->SetSparsityPatternLock(true);
-            mkl_solver->SetSparsityPatternLock(true);
-#endif
-#ifdef CHRONO_SUPERLUMT
-            superlumt_solver->SetSparsityPatternLock(true);
-            superlumt_solver->SetSparsityPatternLock(true);
+            mkl_solver->LockSparsityPattern(true);
 #endif
         }
 

@@ -659,9 +659,9 @@ int main(int argc, char* argv[]) {
 // Set up solver
 #ifdef USE_MKL
     GetLog() << "Using MKL solver\n";
-    auto mkl_solver = chrono_types::make_shared<ChSolverMKL<>>();
+    auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
     my_system.SetSolver(mkl_solver);
-    mkl_solver->SetSparsityPatternLock(true);
+    mkl_solver->LockSparsityPattern(true);
 #else
     GetLog() << "Using MINRES solver\n";
     my_system.SetSolverType(ChSolver::Type::MINRES);
