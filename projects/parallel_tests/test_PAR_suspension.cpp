@@ -85,7 +85,7 @@ class MySimpleCar {
     std::shared_ptr<ChLinkDistance> link_distRFU2;
     std::shared_ptr<ChLinkDistance> link_distRFL1;
     std::shared_ptr<ChLinkDistance> link_distRFL2;
-    std::shared_ptr<ChLinkSpring> link_springRF;
+    std::shared_ptr<ChLinkTSDA> link_springRF;
     std::shared_ptr<ChLinkDistance> link_distRSTEER;
     // .. left front suspension:
     std::shared_ptr<ChBody> spindleLF;
@@ -95,7 +95,7 @@ class MySimpleCar {
     std::shared_ptr<ChLinkDistance> link_distLFU2;
     std::shared_ptr<ChLinkDistance> link_distLFL1;
     std::shared_ptr<ChLinkDistance> link_distLFL2;
-    std::shared_ptr<ChLinkSpring> link_springLF;
+    std::shared_ptr<ChLinkTSDA> link_springLF;
     std::shared_ptr<ChLinkDistance> link_distLSTEER;
     // .. right back suspension:
     std::shared_ptr<ChBody> spindleRB;
@@ -105,7 +105,7 @@ class MySimpleCar {
     std::shared_ptr<ChLinkDistance> link_distRBU2;
     std::shared_ptr<ChLinkDistance> link_distRBL1;
     std::shared_ptr<ChLinkDistance> link_distRBL2;
-    std::shared_ptr<ChLinkSpring> link_springRB;
+    std::shared_ptr<ChLinkTSDA> link_springRB;
     std::shared_ptr<ChLinkDistance> link_distRBlat;
     std::shared_ptr<ChLinkMotorRotationAngle> link_engineL;
     // .. left back suspension:
@@ -116,7 +116,7 @@ class MySimpleCar {
     std::shared_ptr<ChLinkDistance> link_distLBU2;
     std::shared_ptr<ChLinkDistance> link_distLBL1;
     std::shared_ptr<ChLinkDistance> link_distLBL2;
-    std::shared_ptr<ChLinkSpring> link_springLB;
+    std::shared_ptr<ChLinkTSDA> link_springLB;
     std::shared_ptr<ChLinkDistance> link_distLBlat;
     std::shared_ptr<ChLinkMotorRotationAngle> link_engineR;
     // THE FUNCTIONS
@@ -217,12 +217,12 @@ class MySimpleCar {
         my_system->AddLink(link_distRFL2);
 
         // .. create the spring between the truss and the spindle
-        link_springRF = chrono_types::make_shared<ChLinkSpring>();
+        link_springRF = chrono_types::make_shared<ChLinkTSDA>();
         link_springRF->Initialize(truss, spindleRF, false, ChVector<>(0.498, 0.323, 1.792965),
                                   ChVector<>(0.543, -0.047, 1.785965));
-        link_springRF->Set_SpringK(167062.000);
-        link_springRF->Set_SpringR(frontDamping);
-        link_springRF->Set_SpringRestLength(0.339);
+        link_springRF->SetSpringCoefficient(167062.000);
+        link_springRF->SetDampingCoefficient(frontDamping);
+        link_springRF->SetRestLength(0.339);
         my_system->AddLink(link_springRF);
 
         // .. create the rod for steering the wheel
@@ -293,12 +293,12 @@ class MySimpleCar {
         my_system->AddLink(link_distLFL2);
 
         // .. create the spring between the truss and the spindle
-        link_springLF = chrono_types::make_shared<ChLinkSpring>();
+        link_springLF = chrono_types::make_shared<ChLinkTSDA>();
         link_springLF->Initialize(truss, spindleLF, false, ChVector<>(-0.498, 0.323, 1.792965),
                                   ChVector<>(-0.543, -0.047, 1.785965));
-        link_springLF->Set_SpringK(167062.000);
-        link_springLF->Set_SpringR(frontDamping);
-        link_springLF->Set_SpringRestLength(0.339);
+        link_springLF->SetSpringCoefficient(167062.000);
+        link_springLF->SetDampingCoefficient(frontDamping);
+        link_springLF->SetRestLength(0.339);
         my_system->AddLink(link_springLF);
 
         // .. create the rod for steering the wheel
@@ -377,12 +377,12 @@ class MySimpleCar {
         my_system->AddLink(link_distRBL2);
 
         // .. create the spring between the truss and the spindle
-        link_springRB = chrono_types::make_shared<ChLinkSpring>();
+        link_springRB = chrono_types::make_shared<ChLinkTSDA>();
         link_springRB->Initialize(truss, spindleRB, false, ChVector<>(0.498, 0.323, -1.79297),
                                   ChVector<>(0.544, -0.038, -1.78597));
-        link_springRB->Set_SpringK(369149.000);
-        link_springRB->Set_SpringR(rearDamping);
-        link_springRB->Set_SpringRestLength(0.382);
+        link_springRB->SetSpringCoefficient(369149.000);
+        link_springRB->SetDampingCoefficient(rearDamping);
+        link_springRB->SetRestLength(0.382);
         my_system->AddLink(link_springRB);
 
         // .. create the rod for avoid the steering of the wheel
@@ -461,12 +461,12 @@ class MySimpleCar {
         my_system->AddLink(link_distLBL2);
 
         // .. create the spring between the truss and the spindle
-        link_springLB = chrono_types::make_shared<ChLinkSpring>();
+        link_springLB = chrono_types::make_shared<ChLinkTSDA>();
         link_springLB->Initialize(truss, spindleLB, false, ChVector<>(-0.498, 0.323, -1.79297),
                                   ChVector<>(-0.544, -0.038, -1.78597));
-        link_springLB->Set_SpringK(369149.000);
-        link_springLB->Set_SpringR(rearDamping);
-        link_springLB->Set_SpringRestLength(0.382);
+        link_springLB->SetSpringCoefficient(369149.000);
+        link_springLB->SetDampingCoefficient(rearDamping);
+        link_springLB->SetRestLength(0.382);
         my_system->AddLink(link_springLB);
 
         // .. create the rod for avoid the steering of the wheel

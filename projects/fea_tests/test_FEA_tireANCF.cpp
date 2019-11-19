@@ -595,10 +595,10 @@ int main(int argc, char* argv[]) {
                         ChVector<>(0, 0, 1), ChVector<>(1, 0, 0), true);
 
     // Spring and damper for secondary suspension: True position vectors are relative
-    auto spring1 = chrono_types::make_shared<ChLinkSpring>();
+    auto spring1 = chrono_types::make_shared<ChLinkTSDA>();
     spring1->Initialize(Hub_1, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(Lwx, -Lwy, 0), true);
-    spring1->Set_SpringK(spring_coef);
-    spring1->Set_SpringR(damping_coef);
+    spring1->SetSpringCoefficient(spring_coef);
+    spring1->SetDampingCoefficient(damping_coef);
     my_system.AddLink(spring1);
 
     // Create a large cube as a floor.
