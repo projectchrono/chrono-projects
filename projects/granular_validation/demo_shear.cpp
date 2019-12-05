@@ -229,7 +229,6 @@ int main(int argc, char* argv[]) {
     int max_threads = omp_get_num_procs();
     if (threads > max_threads)
         threads = max_threads;
-    my_system->SetParallelThreadNumber(threads);
     omp_set_num_threads(threads);
 
     my_system->GetSettings()->max_threads = threads;

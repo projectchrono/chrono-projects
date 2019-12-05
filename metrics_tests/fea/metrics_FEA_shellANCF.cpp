@@ -15,7 +15,7 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/core/ChTimer.h"
-#include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
@@ -210,11 +210,12 @@ bool FEAShellTest::execute() {
     // Set up solver
     switch (m_solver) {
         case solver_type::MINRES: {
-            my_system.SetSolverType(ChSolver::Type::MINRES);
-            auto msolver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
-            msolver->SetDiagonalPreconditioning(true);
-            my_system.SetMaxItersSolverSpeed(100);
-            my_system.SetTolForce(1e-10);
+            auto solver = chrono_types::make_shared<ChSolverMINRES>();
+            solver->SetMaxIterations(100);
+            solver->EnableDiagonalPreconditioner(true);
+            solver->SetVerbose(false);
+            my_system.SetSolver(solver);
+            my_system.SetSolverForceTolerance(1e-9);
         } break;
         case solver_type::MKL:
 #ifdef CHRONO_MKL

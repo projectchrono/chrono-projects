@@ -433,7 +433,7 @@ int main(int argc, char* argv[]) {
     // and precise (although it is not fit for frictional collisions):
 
     my_system.SetSolverType(ChSolver::Type::MINRES);
-    my_system.SetMaxItersSolverSpeed(44);
+    my_system.SetSolverMaxIterations(44);
 
     //
     // THE SOFT-REAL-TIME CYCLE, SHOWING THE SIMULATION

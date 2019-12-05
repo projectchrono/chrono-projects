@@ -54,7 +54,7 @@ ChVector<> hdim(kernel_radius * 7, kernel_radius * 7, kernel_radius * 7 * mult);
 
 void WriteData(ChSystemParallelNSC* msystem, uint i) {
     auto iter_solver = std::static_pointer_cast<ChIterativeSolverParallel>(msystem->GetSolver());
-    int iters = iter_solver->GetTotalIterations();
+    int iters = iter_solver->GetIterations();
     const std::vector<double>& vhist = iter_solver->GetViolationHistory();
 	const std::vector<double>& dhist = iter_solver->GetDeltalambdaHistory();
 	real residual = vhist.size() > 0 ? vhist.back() : 0.0;

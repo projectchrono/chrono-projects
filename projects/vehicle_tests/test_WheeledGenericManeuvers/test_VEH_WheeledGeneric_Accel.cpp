@@ -26,7 +26,7 @@
 #include "chrono/physics/ChSystem.h"
 #include "chrono/utils/ChFilters.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
-#include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/solver/ChIterativeSolverLS.h"
 
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
@@ -131,28 +131,9 @@ int main(int argc, char* argv[]) {
 
     //ChSystem* my_system = vehicle.GetSystem();
     //my_system->SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
-    //my_system->SetMaxItersSolverSpeed(100);
-    //my_system->SetMaxItersSolverStab(100); //Tasora stepper uses this, Anitescu does not
     //my_system->SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
-    //my_system->SetTol(1e-6);
-    //my_system->SetTolForce(1e-4);
-
-    //ChSystem* my_system = vehicle.GetSystem();
-    //my_system->SetSolverType(ChSolver::Type::MINRES);
-    //auto msolver = static_cast<ChSolverMINRES*>(my_system->GetSolverSpeed());
-    //msolver->SetDiagonalPreconditioning(true);
-    //my_system->SetMaxItersSolverSpeed(100);
-    //my_system->SetTolForce(1e-6);
-    //my_system->SetTimestepperType(ChTimestepper::Type::HHT);
-    //auto mystepper = std::static_pointer_cast<ChTimestepperHHT>(my_system->GetTimestepper());
-    //mystepper->SetAlpha(-0.2);
-    //mystepper->SetMaxiters(100);
-    //mystepper->SetAbsTolerances(1e-5);
-    //mystepper->SetMode(ChTimestepperHHT::POSITION);
-    //mystepper->SetStepControl(false);
-    //mystepper->SetModifiedNewton(true);
-    //mystepper->SetScaling(true);
-    //mystepper->SetVerbose(false);
+    //my_system->SetSolverMaxIterations(100);
+    //my_system->SetSolverTolerance(1e-6);
 
     // Create the ground
     RigidTerrain terrain(vehicle.GetSystem());

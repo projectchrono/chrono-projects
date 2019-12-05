@@ -12,7 +12,7 @@
 #include "chrono/ChConfig.h"
 #include "chrono/assets/ChColorAsset.h"
 #include "chrono/assets/ChTexture.h"
-#include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChLoaderUV.h"
@@ -263,11 +263,12 @@ int main(int argc, char* argv[]) {
     switch (solver_type) {
         case MINRES: {
             GetLog() << "Using MINRES solver\n";
-            my_system.SetSolverType(ChSolver::Type::MINRES);
-            auto minres_solver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
-            my_system.SetSolverWarmStarting(true);
-            my_system.SetMaxItersSolverSpeed(40);
-            my_system.SetTolForce(1e-10);
+            auto solver = chrono_types::make_shared<ChSolverMINRES>();
+            solver->EnableWarmStart(true);
+            solver->SetMaxIterations(40);
+            solver->SetVerbose(false);
+            my_system.SetSolver(solver);
+            my_system.SetSolverForceTolerance(1e-10);
             break;
         }
         case MKL: {

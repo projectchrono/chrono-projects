@@ -68,7 +68,7 @@ void TimingOutput(chrono::ChSystem* mSys) {
     int BODS = mSys->GetNbodies();
     int CNTC = mSys->GetNcontacts();
     if (chrono::ChSystemParallel* parallel_sys = dynamic_cast<chrono::ChSystemParallel*>(mSys)) {
-        REQ_ITS = std::static_pointer_cast<chrono::ChIterativeSolverParallel>(mSys->GetSolver())->GetTotalIterations();
+        REQ_ITS = std::static_pointer_cast<chrono::ChIterativeSolverParallel>(mSys->GetSolver())->GetIterations();
     }
 
     printf("   %8.5f | %7.4f | %7.4f | %7.4f | %7.4f | %7.4f | %7d | %7d | %7d |\n", TIME, STEP, BROD, NARR,
@@ -171,7 +171,6 @@ int main(int argc, char** argv) {
     system->GetSettings()->collision.bins_per_axis = vec3(binsX, binsY, binsZ);
 
     // Set number of threads
-    system->SetParallelThreadNumber(num_threads);
     CHOMPfunctions::SetNumThreads(num_threads);
 
     // Sanity check: print number of threads in a parallel region

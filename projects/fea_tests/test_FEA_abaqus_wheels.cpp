@@ -22,7 +22,7 @@
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChLinkMate.h"
 #include "chrono/physics/ChLinkLock.h"
-#include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/solver/ChIterativeSolverLS.h"
 
 #include "chrono/fea/ChElementTetra_4.h"
 #include "chrono/fea/ChMesh.h"
@@ -334,11 +334,13 @@ int main(int argc, char* argv[]) {
     //
 
     /*
-            // Change solver to embedded MINRES
-        my_system.SetSolverType(ChSolver::Type::MINRES);
-        my_system.SetSolverWarmStarting(true);  // this helps a lot to speedup convergence in this class of problems
-        my_system.SetMaxItersSolverSpeed(90);
-        my_system.SetTolForce(1e-10);
+        // Change solver to embedded MINRES
+        auto solver = chrono_types::make_shared<ChSolverMINRES>();
+        solver->EnableWarmStart(true);
+        solver->SetMaxIterations(90);
+        solver->SetVerbose(false);
+        my_system.SetSolver(solver);
+        my_system.SetSolverForceTolerance(1e-10);
     */
     // Change solver to pluggable MKL
     auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();

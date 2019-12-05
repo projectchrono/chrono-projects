@@ -26,7 +26,7 @@
 #include <string>
 
 #include "chrono/physics/ChSystemNSC.h"
-#include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono/fea/ChElementBar.h"
@@ -236,11 +236,12 @@ bool BrickIso_GravTest::execute() {
         my_system.SetSolver(mkl_solver);
 #endif
     } else {
-        my_system.SetSolverType(ChSolver::Type::MINRES);
-        auto msolver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
-        msolver->SetDiagonalPreconditioning(true);
-        my_system.SetMaxItersSolverSpeed(10000);
-        my_system.SetTolForce(1e-09);
+        auto solver = chrono_types::make_shared<ChSolverMINRES>();
+        solver->SetMaxIterations(200);
+        solver->EnableDiagonalPreconditioner(true);
+        solver->SetVerbose(false);
+        my_system.SetSolver(solver);
+        my_system.SetSolverForceTolerance(1e-9);
     }
 
     // Setup integrator

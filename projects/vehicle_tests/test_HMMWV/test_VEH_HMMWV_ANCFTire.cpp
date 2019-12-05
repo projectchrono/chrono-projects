@@ -151,7 +151,6 @@ int main(int argc, char* argv[]) {
     system->Set_G_acc(ChVector<>(0, 0, -9.81));
 
     // Set number threads
-    system->SetParallelThreadNumber(num_threads);
     CHOMPfunctions::SetNumThreads(num_threads);
 
 #ifdef CHRONO_MKL
@@ -162,10 +161,9 @@ int main(int argc, char* argv[]) {
     system->SetSolver(mkl_solver);
 #else
     // Default solver settings
-    system->SetMaxItersSolverSpeed(100);
-    system->SetMaxItersSolverStab(100);
-    system->SetSolverType(ChSolver::Type::SOR);
-    system->SetTol(1e-10);
+    system->SetSolverType(ChSolver::Type::PSOR);
+    system->SetSolverMaxIterations(100);
+    system->SetSolverTolerance(1e-10);
     system->SetTolForce(1e-8);
 #endif
 

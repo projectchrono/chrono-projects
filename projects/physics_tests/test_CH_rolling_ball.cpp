@@ -88,8 +88,8 @@ int main(int argc, char* argv[]) {
     system.Set_G_acc(ChVector<>(0, 0, -9.81));
 
     system.SetSolverType(ChSolver::Type::APGD);
-    system.SetMaxItersSolverSpeed(1000);
-    system.SetTolForce(1e-6);
+    system.SetSolverMaxIterations(1000);
+    system.SetSolverTolerance(1e-9);
     system.SetMaxPenetrationRecoverySpeed(0);
 
     // Create a material (will be used by both objects)

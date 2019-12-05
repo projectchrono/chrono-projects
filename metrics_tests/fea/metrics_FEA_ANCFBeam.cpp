@@ -28,8 +28,7 @@
 #include "chrono/core/ChVector.h"
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChSystemNSC.h"
-#include "chrono/solver/ChSolverMINRES.h"
-#include "chrono/solver/ChSolverPMINRES.h"
+#include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/timestepper/ChTimestepper.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsValidation.h"
@@ -171,14 +170,13 @@ bool ANCFBeamTest::execute() {
     mloadcontainer->Add(mgravity4);
 
     // Change solver settings
-    my_system.SetSolverType(ChSolver::Type::MINRES);
-    my_system.SetSolverWarmStarting(true);  // this helps a lot to speedup convergence in this class of problems
-    my_system.SetMaxItersSolverSpeed(200);
-    my_system.SetMaxItersSolverStab(200);
-    my_system.SetTolForce(1e-14);
-    auto msolver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
-    msolver->SetVerbose(false);
-    msolver->SetDiagonalPreconditioning(true);
+    auto solver = chrono_types::make_shared<ChSolverMINRES>();
+    solver->SetMaxIterations(200);
+    solver->EnableWarmStart(true);
+    solver->EnableDiagonalPreconditioner(true);
+    solver->SetVerbose(false);
+    my_system.SetSolver(solver);
+    my_system.SetSolverForceTolerance(1e-10);
 
     my_system.SetEndTime(12.5);
 

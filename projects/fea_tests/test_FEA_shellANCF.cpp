@@ -15,7 +15,7 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/core/ChTimer.h"
-#include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -189,36 +189,34 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
 
 
     // Set up solver
-    switch (solver)
-    {
-    case solver_type::MINRES:
-    {
-        my_system.SetSolverType(ChSolver::Type::MINRES);
-        auto msolver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
-        msolver->SetDiagonalPreconditioning(true);
-        my_system.SetMaxItersSolverSpeed(100);
-        my_system.SetTolForce(1e-10);
-    }
-    break;
-    case solver_type::MKL:
+    switch (solver) {
+        case solver_type::MINRES: {
+            auto solver = chrono_types::make_shared<ChSolverMINRES>();
+            solver->EnableDiagonalPreconditioner(true);
+            solver->SetMaxIterations(100);
+            solver->SetVerbose(true);
+            my_system.SetSolver(solver);
+            my_system.SetSolverForceTolerance(1e-10);
+        } break;
+        case solver_type::MKL:
 #ifdef CHRONO_MKL
-        mkl_solver = chrono_types::make_shared<ChSolverMKL>();
-        my_system.SetSolver(mkl_solver);
-        mkl_solver->LockSparsityPattern(true);
-        mkl_solver->SetVerbose(verbose);
-        mkl_solver->ForceSparsityPatternUpdate();
+            mkl_solver = chrono_types::make_shared<ChSolverMKL>();
+            my_system.SetSolver(mkl_solver);
+            mkl_solver->LockSparsityPattern(true);
+            mkl_solver->SetVerbose(verbose);
+            mkl_solver->ForceSparsityPatternUpdate();
 #endif
-        break;
-    case solver_type::MUMPS:
+            break;
+        case solver_type::MUMPS:
 #ifdef CHRONO_MUMPS
-        mumps_solver = chrono_types::make_shared<ChSolverMumps>();
-        my_system.SetSolver(mumps_solver);
-        mumps_solver->SetVerbose(verbose);
+            mumps_solver = chrono_types::make_shared<ChSolverMumps>();
+            my_system.SetSolver(mumps_solver);
+            mumps_solver->SetVerbose(verbose);
 #endif
-        break;
-    default:
-        std::cout << "No solver set up" << std::endl;
-        break;
+            break;
+        default:
+            std::cout << "No solver set up" << std::endl;
+            break;
     }
 
     // Set up integrator

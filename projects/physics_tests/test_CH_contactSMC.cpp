@@ -10,7 +10,7 @@
 //
 
 #include "chrono/ChConfig.h"
-#include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/physics/ChContactContainerSMC.h"
 #include "chrono/physics/ChSystemSMC.h"
 
@@ -252,17 +252,17 @@ int main(int argc, char* argv[]) {
     switch (solver_type) {
         case DEFAULT_SOLVER: {
             GetLog() << "Using DEFAULT solver.\n";
-            system.SetMaxItersSolverSpeed(100);
-            system.SetTolForce(1e-6);
+            system.SetSolverMaxIterations(100);
+            system.SetSolverForceTolerance(1e-6);
             break;
         }
         case MINRES_SOLVER: {
             GetLog() << "Using MINRES solver.\n";
             auto minres_solver = chrono_types::make_shared<ChSolverMINRES>();
-            minres_solver->SetDiagonalPreconditioning(true);
+            minres_solver->EnableDiagonalPreconditioner(true);
+            minres_solver->SetMaxIterations(100);
             system.SetSolver(minres_solver);
-            system.SetMaxItersSolverSpeed(100);
-            system.SetTolForce(1e-6);
+            system.SetSolverForceTolerance(1e-6);
             break;
         }
         case MKL_SOLVER: {

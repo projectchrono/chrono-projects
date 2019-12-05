@@ -16,7 +16,7 @@
 // =============================================================================
 
 #include "chrono/physics/ChSystemNSC.h"
-#include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/solver/ChIterativeSolverLS.h"
 
 #include "chrono/fea/ChElementSpring.h"
 #include "chrono/fea/ChElementBar.h"
@@ -166,9 +166,11 @@ int main(int argc, char* argv[]) {
     // THE SOFT-REAL-TIME CYCLE
     //
 
-    my_system.SetSolverType(ChSolver::Type::MINRES);
-    my_system.SetSolverWarmStarting(false);  // this helps a lot to speedup convergence in this class of problems
-    my_system.SetMaxItersSolverSpeed(160);
+    auto solver = chrono_types::make_shared<ChSolverMINRES>();
+    solver->EnableWarmStart(true);
+    solver->SetMaxIterations(160);
+    my_system.SetSolver(solver);
+
     my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
 
     // Note: if you are interested only in a single LINEAR STATIC solution

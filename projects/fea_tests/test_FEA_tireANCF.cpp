@@ -22,7 +22,7 @@
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChSystemNSC.h"
-#include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsValidation.h"
 
@@ -619,11 +619,12 @@ int main(int argc, char* argv[]) {
     my_system.SetSolver(mkl_solver);
 #else
     GetLog() << "Using MINRES solver\n";
-    my_system.SetSolverType(ChSolver::Type::MINRES);
-    auto msolver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
-    msolver->SetDiagonalPreconditioning(true);
-    my_system.SetMaxItersSolverSpeed(100);
-    my_system.SetTolForce(1e-10);
+    auto solver = chrono_types::make_shared<ChSolverMINRES>();
+    solver->EnableDiagonalPreconditioner(true);
+    solver->SetMaxIterations(100);
+    solver->SetVerbose(false);
+    my_system.SetSolver(solver);
+    my_system.SetSolverForceTolerance(1e-10);
 #endif
 
     my_system.Setup();

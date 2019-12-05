@@ -22,7 +22,7 @@
 #include "chrono/core/ChMathematics.h"
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChSystemNSC.h"
-#include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/timestepper/ChTimestepper.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
@@ -131,14 +131,13 @@ void test_beam(const std::string& name,  /// test name
 #else
     // MINRES solver + Euler
     std::cout << "Using Euler + MINRES" << std::endl;
-
-    my_system.SetSolverType(ChSolver::Type::MINRES);
-    my_system.SetSolverWarmStarting(true);
-    my_system.SetMaxItersSolverSpeed(100000);
-    my_system.SetTolForce(1e-08);
-    auto msolver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
-    msolver->SetVerbose(false);
-    msolver->SetDiagonalPreconditioning(true);
+    auto solver = chrono_types::make_shared<ChSolverMINRES>();
+    solver->EnableDiagonalPreconditioner(true);
+    solver->EnableWarmStart(true);
+    solver->SetMaxIterations(200);
+    solver->SetVerbose(false);
+    my_system.SetSolver(solver);
+    my_system.SetSolverForceTolerance(1e-10);
 
     // my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
     my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT);

@@ -23,7 +23,7 @@
 #include "chrono/physics/ChLinkRackpinion.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/assets/ChVisualization.h"
-#include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/solver/ChIterativeSolverLS.h"
 
 #include "chrono/fea/ChElementBeamEuler.h"
 #include "chrono/fea/ChBuilderBeam.h"
@@ -323,14 +323,13 @@ int main(int argc, char* argv[]) {
     // THE SOFT-REAL-TIME CYCLE
     //
 
-    my_system.SetSolverType(ChSolver::Type::MINRES);
-    my_system.SetSolverWarmStarting(true);
-    my_system.SetMaxItersSolverSpeed(400);
-    my_system.SetMaxItersSolverStab(400);
-    my_system.SetTolForce(1e-25);
-    auto msolver = std::static_pointer_cast<ChSolverMINRES>(my_system.GetSolver());
-    msolver->SetVerbose(true);
-    msolver->SetDiagonalPreconditioning(false);
+    auto solver = chrono_types::make_shared<ChSolverMINRES>();
+    solver->EnableDiagonalPreconditioner(false);
+    solver->EnableWarmStart(true);
+    solver->SetMaxIterations(400);
+    solver->SetVerbose(true);
+    my_system.SetSolver(solver);
+    my_system.SetSolverForceTolerance(1e-12);
 
     //***TEST***
     ChMatlabEngine matlab_engine;
