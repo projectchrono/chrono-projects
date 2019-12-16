@@ -9,9 +9,9 @@
 #--------------------------------------------------------------
 
 set(DEMOS
-    constraint_fluid_settling_test
-    tracked_vehicle_fording
-	humvee_water_tank
+    test_CNFL_settling_test
+    test_CNFL_tracked_vehicle_fording
+	  test_CNFL_humvee_water_tank
 )
 
 #--------------------------------------------------------------

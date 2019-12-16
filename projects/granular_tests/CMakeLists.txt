@@ -1,5 +1,5 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono PARALLEL module
+# CMake configuration file for projects requiring the Chrono Granular module.
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
@@ -9,32 +9,24 @@
 #--------------------------------------------------------------
 
 set(DEMOS
-    demo_crater
-    demo_massflow
-    demo_penetrometer
-    demo_shear
-    directShear
-    pressureSinkage
-    singleWheel
-    #test_shear
+
 )
 
 #--------------------------------------------------------------
-# Find the Chrono package with required components
+# Find the Chrono package with required and optional components
 #--------------------------------------------------------------
 
-# Invoke find_package in CONFIG mode.
+# Invoke find_package in CONFIG mode
 
 find_package(Chrono
-             COMPONENTS Parallel
-             OPTIONAL_COMPONENTS OpenGL
+             COMPONENTS Granular
              CONFIG
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
 
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for PARALLEL projects")
+  message("Could not find requirements for GRANULAR projects")
   return()
 endif()
 
@@ -59,17 +51,28 @@ include_directories(
 )
 
 #--------------------------------------------------------------
-# Append to the parent's list of DLLs (and make it visible up)
+# Append to the parent's list of DLLs
 #--------------------------------------------------------------
 
 list(APPEND ALL_DLLS "${CHRONO_DLLS}")
 set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 
 #--------------------------------------------------------------
+# Compilation flags
+#--------------------------------------------------------------
+
+set(COMPILE_FLAGS ${CHRONO_CXX_FLAGS})
+
+# Disable some warnings triggered by Irrlicht (Windows only)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    SET(COMPILE_FLAGS "${COMPILE_FLAGS} /wd4275")
+endif()
+
+#--------------------------------------------------------------
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Granular validation programs...")
+message(STATUS "Projects for Chrono::Granular...")
 
 foreach(PROGRAM ${DEMOS})
 
@@ -80,7 +83,7 @@ foreach(PROGRAM ${DEMOS})
 
   set_target_properties(${PROGRAM} PROPERTIES
     FOLDER demos
-    COMPILE_FLAGS "${CHRONO_CXX_FLAGS}"
+    COMPILE_FLAGS "${COMPILE_FLAGS}"
     COMPILE_DEFINITIONS "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\""
     LINK_FLAGS "${CHRONO_CXX_FLAGS} ${CHRONO_LINKER_FLAGS}"
   )
