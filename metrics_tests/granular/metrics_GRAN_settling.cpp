@@ -25,7 +25,7 @@
 #include "chrono_granular/physics/ChGranularTriMesh.h"
 #include "chrono_thirdparty/filesystem/path.h"
 
-#include "chrono/physics/ChGlobal.h"
+#include "chrono/core/ChGlobal.h"
 
 #include "chrono_granular/utils/ChGranularJsonParser.h"
 

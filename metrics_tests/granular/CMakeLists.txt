@@ -9,8 +9,8 @@
 #--------------------------------------------------------------
 
 set(DEMOS
-    metrics_GRAN_settling
-    metrics_GRAN_suite
+    #metrics_GRAN_settling
+    #metrics_GRAN_suite
 )
 
 #--------------------------------------------------------------
@@ -61,8 +61,7 @@ set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 #--------------------------------------------------------------
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-  message(SEND_ERROR "Chrono::Granular does not support Windows at this time.")
-  return()	
+  set(WORK_DIR ${PROJECT_BINARY_DIR}/bin/$<CONFIGURATION>)
 else()
   set(WORK_DIR ${PROJECT_BINARY_DIR}/bin)
 endif()
