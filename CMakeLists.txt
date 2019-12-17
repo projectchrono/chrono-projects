@@ -117,6 +117,7 @@ ELSE()
 ENDIF()
 
 SET(CHRONO_DATA_DIR "${CHRONO_DATA_DIR}")
+SET(PROJECTS_DATA_DIR "${CMAKE_SOURCE_DIR}/data/" CACHE INTERNAL "")
 
 #-----------------------------------------------------------------------------
 # Copy DLLs

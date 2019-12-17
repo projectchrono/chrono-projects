@@ -11,7 +11,7 @@
 // =============================================================================
 // Authors: Conlain Kelly, Nic Olsen
 // =============================================================================
-// Chrono::Granular metrics test suite of various parameters
+// Chrono::Granular metrics test of various parameters
 // =============================================================================
 
 #include <fstream>
@@ -20,18 +20,15 @@
 
 #include "chrono/core/ChTimer.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-
+#include "chrono_granular/api/ChApiGranularChrono.h"
 #include "chrono_granular/physics/ChGranular.h"
-
 #include "chrono_thirdparty/SimpleOpt/SimpleOpt.h"
 #include "chrono_thirdparty/filesystem/path.h"
-
-#include "../BaseTest.h"
 
 using namespace chrono;
 using namespace chrono::granular;
 
-std::string output_prefix = "./results";
+std::string output_prefix = "../results";
 std::string delim = "--------------------------------";
 
 // Default values
@@ -63,22 +60,6 @@ int fps = 50;
 // assume we run for at least one frame
 float frame_step = 1.0f / fps;
 
-// Test class
-class GranSuiteTest : public BaseTest {
-  public:
-    GranSuiteTest(const std::string& testName, const std::string& testProjectName)
-        : BaseTest(testName, testProjectName), m_execTime(0) {}
-
-    ~GranSuiteTest() {}
-
-    // Override corresponding functions in BaseTest
-    virtual bool execute() override;
-    virtual double getExecutionTime() const override { return m_execTime; }
-
-  private:
-    double m_execTime;
-};
-
 void setupBasicSystem(ChSystemGranularSMC& gran_sys, float3 box_size) {
     gran_sys.set_K_n_SPH2SPH(normalStiffness_S2S);
     gran_sys.set_K_n_SPH2WALL(normalStiffness_S2W);
@@ -91,7 +72,6 @@ void setupBasicSystem(ChSystemGranularSMC& gran_sys, float3 box_size) {
     gran_sys.set_Cohesion_ratio(0);
     gran_sys.set_Adhesion_ratio_S2W(0);
     gran_sys.set_gravitational_acceleration(0.f, 0.f, grav_acceleration);
-    gran_sys.setOutputDirectory(output_prefix);
     gran_sys.setOutputMode(write_mode);
 
     // Fill the bottom half with material
@@ -99,10 +79,12 @@ void setupBasicSystem(ChSystemGranularSMC& gran_sys, float3 box_size) {
     ChVector<float> center(0, 0, -.25 * box_size.z);
     ChVector<float> hdims(box_size.x / 2 - ballRadius, box_size.y / 2 - ballRadius, box_size.z / 4 - ballRadius);
     std::vector<ChVector<float>> body_points = sampler.SampleBox(center, hdims);
-    gran_sys.setParticlePositions(body_points);
+    ChGranularSMC_API apiSMC;
+    apiSMC.setGranSystem(&gran_sys);
+    apiSMC.setElemsPositions(body_points);
 
     gran_sys.set_BD_Fixed(true);
-    gran_sys.setVerbose(GRAN_VERBOSITY::QUIET);
+    gran_sys.setVerbose(GRAN_VERBOSITY::INFO);
 
     gran_sys.set_fixed_stepSize(timestep);
 }
@@ -224,53 +206,42 @@ double runSingleStepTest() {
     return runGranularSystem(gran_sys, "singlestep_euler");
 }
 
-// run all tests
-bool GranSuiteTest::execute() {
-    // run a small frictionless test to make sure everything is warmed up
-    runWarmupTest();
-    // these are all the metrics tests to run
-    double time_nofric = 0;
-    double time_singlestep = 0;
-    double time_nofricChung = 0;
-    double time_nofricCenteredDiff = 0;
-    double time_multistep = 0;
-
-    time_nofric = runFrictionlessTest();
-    time_singlestep = runSingleStepTest();
-    time_nofricChung = runFrictionlessChung();
-    time_nofricCenteredDiff = runFrictionlessCenteredDiff();
-    time_multistep = runMultistepTest();
-
-    addMetric("time_frictionless_euler", time_nofric);
-    addMetric("time_frictionless_chung", time_singlestep);
-    addMetric("time_single_step_euler", time_nofricChung);
-    addMetric("time_frictionless_CD", time_nofricCenteredDiff);
-    addMetric("time_multistep_euler", time_multistep);
-
-    std::cout << "Running metrics suite!" << std::endl;
-    std::cout << "Frictionless took " << time_nofric << " seconds!" << std::endl;
-    std::cout << "Chung took " << time_nofricChung << " seconds!" << std::endl;
-    std::cout << "CenteredDiff took " << time_nofricCenteredDiff << " seconds!" << std::endl;
-    std::cout << "Single Step took " << time_singlestep << " seconds!" << std::endl;
-    std::cout << "Multistep took " << time_multistep << " seconds!" << std::endl;
-
-    return true;
-}
-
 int main(int argc, char* argv[]) {
-    filesystem::create_directory(filesystem::path(output_prefix));
-
-    std::string out_dir = "../METRICS";
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
-        std::cout << "Error creating directory " << out_dir << std::endl;
-        return 1;
+    if (argc > 3) {
+        std::cout << "usage: " + std::string(argv[0]) + " [<results_log_file>]" << std::endl;
     }
 
-    GranSuiteTest test("metrics_GRAN_suite", "Chrono::Granular");
-    test.setOutDir(out_dir);
-    test.setVerbose(true);
-    bool passed = test.run();
-    test.print();
+    filesystem::create_directory(filesystem::path(output_prefix));
 
+    // run on frictionless test to make sure everything is warmed up
+    runWarmupTest();
+    //
+    double nofric = 0;
+    double singlestep = 0;
+    double nofricChung = 0;
+    double nofricCenteredDiff = 0;
+    double multistep = 0;
+
+    nofric = runFrictionlessTest();
+    singlestep = runSingleStepTest();
+    // nofricChung = runFrictionlessChung();
+    nofricCenteredDiff = runFrictionlessCenteredDiff();
+    multistep = runMultistepTest();
+
+    std::cout << "Running metrics suite!" << std::endl;
+    std::cout << "Frictionless took " << nofric << " seconds!" << std::endl;
+    std::cout << "Chung took " << nofricChung << " seconds!" << std::endl;
+    std::cout << "CenteredDiff took " << nofricCenteredDiff << " seconds!" << std::endl;
+    std::cout << "Single Step took " << singlestep << " seconds!" << std::endl;
+    std::cout << "Multistep took " << multistep << " seconds!" << std::endl;
+
+    if (argc == 2) {
+        std::ofstream ofile(argv[1], std::ofstream::app);
+        ofile << "Running test suite!" << std::endl;
+
+        ofile << "Frictionless took " << nofric << " seconds!" << std::endl;
+        ofile << "Single Step took " << singlestep << " seconds!" << std::endl;
+        ofile << "Multistep took " << multistep << " seconds!" << std::endl;
+    }
     return 0;
 }

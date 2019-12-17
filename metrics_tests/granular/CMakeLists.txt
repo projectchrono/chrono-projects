@@ -9,8 +9,8 @@
 #--------------------------------------------------------------
 
 set(DEMOS
-    #metrics_GRAN_settling
-    #metrics_GRAN_suite
+    metrics_GRAN_settling
+    metrics_GRAN_suite
 )
 
 #--------------------------------------------------------------
@@ -82,16 +82,16 @@ foreach(PROGRAM ${DEMOS})
   set_target_properties(${PROGRAM} PROPERTIES
     FOLDER demos
     COMPILE_FLAGS "${CHRONO_CXX_FLAGS}"
-    COMPILE_DEFINITIONS "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\""
+    COMPILE_DEFINITIONS "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\";PROJECTS_DATA_DIR=\"${PROJECTS_DATA_DIR}\""
     LINK_FLAGS "${CHRONO_CXX_FLAGS} ${CHRONO_LINKER_FLAGS}"
   )
 
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
 
-  #add_test(NAME ${PROGRAM}
-  #         WORKING_DIRECTORY ${WORK_DIR}
-  #         COMMAND ${WORK_DIR}/${PROGRAM}
-  #         )
+  add_test(NAME ${PROGRAM}
+           WORKING_DIRECTORY ${WORK_DIR}
+           COMMAND ${WORK_DIR}/${PROGRAM}
+           )
 
 endforeach(PROGRAM)
 

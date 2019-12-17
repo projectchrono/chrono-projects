@@ -9,7 +9,19 @@
 #--------------------------------------------------------------
 
 set(DEMOS
+        demo_GRAN_DamBreak
+        demo_GRAN_Bucket
+        demo_GRAN_rover
 
+        test_GRAN_directshear
+        test_GRAN_mixer
+        test_GRAN_Coneflow
+        test_GRAN_commvessels
+        test_GRAN_bulkcompress
+        
+        metrics_GRAN_milsettle
+        
+        utest_GRAN_testsuite
 )
 
 #--------------------------------------------------------------
@@ -20,11 +32,11 @@ set(DEMOS
 
 find_package(Chrono
              COMPONENTS Granular
+             OPTIONAL_COMPONENTS Vehicle
              CONFIG
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
-
 if(NOT Chrono_FOUND)
   message("Could not find requirements for GRANULAR projects")
   return()
@@ -44,6 +56,7 @@ endif()
 # 
 # (B) Path to the top of the source tree for this project
 # - for access to utility headers
+
 
 include_directories(
     ${CHRONO_INCLUDE_DIRS}
@@ -80,11 +93,10 @@ foreach(PROGRAM ${DEMOS})
 
   add_executable(${PROGRAM}  "${PROGRAM}.cpp")
   source_group(""  FILES "${PROGRAM}.cpp")
-
   set_target_properties(${PROGRAM} PROPERTIES
     FOLDER demos
     COMPILE_FLAGS "${COMPILE_FLAGS}"
-    COMPILE_DEFINITIONS "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\""
+    COMPILE_DEFINITIONS "PROJECTS_DATA_DIR=\"${PROJECTS_DATA_DIR}\";CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\""
     LINK_FLAGS "${CHRONO_CXX_FLAGS} ${CHRONO_LINKER_FLAGS}"
   )
 
@@ -93,3 +105,9 @@ foreach(PROGRAM ${DEMOS})
 endforeach(PROGRAM)
 
 message(STATUS "")
+
+if (CHRONO_VEHICLE_FOUND)
+    message(STATUS "Programs using Chrono::Vehicles...")
+    add_subdirectory(HMMWV)
+    add_subdirectory(robosimian)
+endif()
