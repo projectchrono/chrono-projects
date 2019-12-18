@@ -105,12 +105,12 @@ int maxNumParticles = 100000;
 int SpawnParticles() {
     double dist = 2 * 0.99 * r_g;
 
-    ////gen->createObjectsBox(utils::POISSON_DISK,
+    ////gen->createObjectsBox(utils::SamplingType::POISSON_DISK,
     ////                     dist,
     ////                     ChVector<>(9, 0, 3),
     ////                     ChVector<>(0, 1, 0.5),
     ////                     ChVector<>(-initVel, 0, 0));
-    gen->createObjectsCylinderX(utils::POISSON_DISK, dist, ChVector<>(9, 0, 3), 0.2f, 0, ChVector<>(-initVel, 0, 0));
+    gen->createObjectsCylinderX(utils::SamplingType::POISSON_DISK, dist, ChVector<>(9, 0, 3), 0.2f, 0, ChVector<>(-initVel, 0, 0));
     cout << "  total bodies: " << gen->getTotalNumBodies() << endl;
 
     return gen->getTotalNumBodies();
@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
 
     gen = new utils::Generator(msystem);
 
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen->AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen->AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
     m1->setDefaultMaterial(mat_g);
     m1->setDefaultDensity(rho_g);
     m1->setDefaultSize(r_g);

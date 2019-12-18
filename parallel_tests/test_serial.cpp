@@ -119,7 +119,7 @@ int CreateGranularMaterial(ChSystem* system,
   // Create the particle generator with a mixture of 100% spheres
   utils::Generator gen(system);
 
-  utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+  utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
   m1->setDefaultMaterialDVI(mat_g);
   m1->setDefaultDensity(rho_g);
   m1->setDefaultSize(r_g);
@@ -136,7 +136,7 @@ int CreateGranularMaterial(ChSystem* system,
   ChVector<> center(0, 0, 2 * r);
 
   while (center.z < 2 * hdimZ) {
-    gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
+    gen.createObjectsBox(utils::SamplingType::POISSON_DISK, 2 * r, center, hdims);
     center.z += 2 * r;
   }
 

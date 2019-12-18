@@ -247,7 +247,7 @@ int main(int argc, char** argv) {
 
     // Create a particle generator and a mixture entirely made out of spheres
     utils::Generator gen(system);
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
     m1->setDefaultMaterial(material_terrain);
     m1->setDefaultDensity(rho_g);
     m1->setDefaultSize(radius_g);
@@ -261,7 +261,7 @@ int main(int argc, char** argv) {
     ChVector<> center(0, 0, 2 * r);
 
     for (int il = 0; il < num_layers; il++) {
-        gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
+        gen.createObjectsBox(utils::SamplingType::POISSON_DISK, 2 * r, center, hdims);
         center.z() += 2 * r;
     }
 

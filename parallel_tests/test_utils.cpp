@@ -115,19 +115,19 @@ void checkGenerators() {
   // CHECK GENERATOR
   utils::Generator gen(msystem);
 
-  utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 0.1);
+  utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 0.1);
   m1->setDefaultSize(radius);
   m1->setDistributionDensity(1000, 600, 500, 3000);
 
-  utils::MixtureIngredientPtr& m2 = gen.AddMixtureIngredient(utils::BOX, 0.25);
+  utils::MixtureIngredientPtr& m2 = gen.AddMixtureIngredient(utils::MixtureType::BOX, 0.25);
   m2->setDefaultSize(radius);
   m2->setDefaultDensity(1000);
 
-  utils::MixtureIngredientPtr& m3 = gen.AddMixtureIngredient(utils::ELLIPSOID, 0.15);
+  utils::MixtureIngredientPtr& m3 = gen.AddMixtureIngredient(utils::MixtureType::ELLIPSOID, 0.15);
   m3->setDefaultSize(radius);
   m3->setDefaultDensity(2000);
 
-  gen.createObjectsBox(utils::POISSON_DISK, radius, ChVector<>(0, 0, 2), ChVector<>(3, 3, 0));
+  gen.createObjectsBox(utils::SamplingType::POISSON_DISK, radius, ChVector<>(0, 0, 2), ChVector<>(3, 3, 0));
 
   std::cout << "Total mass: " << gen.getTotalMass() << "  Total volume: " << gen.getTotalVolume() << std::endl;
 
