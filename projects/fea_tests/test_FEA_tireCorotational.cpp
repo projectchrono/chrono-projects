@@ -12,6 +12,7 @@
 #include "chrono/ChConfig.h"
 #include "chrono/assets/ChColorAsset.h"
 #include "chrono/assets/ChTexture.h"
+#include "chrono/assets/ChObjShapeFile.h"
 #include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLoadContainer.h"
