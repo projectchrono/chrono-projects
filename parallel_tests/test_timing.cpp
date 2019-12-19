@@ -64,13 +64,14 @@ int CreateObjects(ChSystemParallel* system) {
   // Create a mixture entirely made out of spheres
   utils::Generator gen(system);
 
-  utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+  utils::MixtureIngredientPtr& m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
   m1->setDefaultMaterialDEM(ballMixMat);
   m1->setDefaultDensity(density);
   m1->setDefaultSize(radius);
 
   // Generate the objects
-  gen.createObjectsBox(utils::POISSON_DISK, 2 * radius, ChVector<>(0, 0, 2.5), ChVector<>(0.8 * hDimX, 0.8 * hDimY, 1));
+  gen.createObjectsBox(utils::SamplingType::POISSON_DISK, 2 * radius, ChVector<>(0, 0, 2.5),
+                       ChVector<>(0.8 * hDimX, 0.8 * hDimY, 1));
 
   // Create the containing bin
   ChSharedPtr<ChMaterialSurfaceDEM> binMat;

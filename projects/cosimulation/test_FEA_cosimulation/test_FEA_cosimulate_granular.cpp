@@ -342,7 +342,7 @@ mloadcontainer->Add(mrigidmeshload);
     double r = 0.1;  // 0.02;//
     double shapeRatio = 0.4;
     utils::Generator gen(systemG);
-    auto m1 = gen.AddMixtureIngredient(utils::ELLIPSOID, 1.0);
+    auto m1 = gen.AddMixtureIngredient(utils::MixtureType::ELLIPSOID, 1.0);
     m1->setDefaultMaterial(triMat);
     m1->setDefaultDensity(2500);
     m1->setDefaultSize(ChVector<>(r, r * shapeRatio, r));
@@ -350,7 +350,7 @@ mloadcontainer->Add(mrigidmeshload);
     gen.setBodyIdentifier(triId);
     ChVector<> hdims(1 - r * 1.01, 0.5, 1 - r * 1.01);
     ChVector<> center(0, 0, 0);
-    gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
+    gen.createObjectsBox(utils::SamplingType::POISSON_DISK, 2 * r, center, hdims);
 
 #ifdef CHRONO_OPENGL
     // Initialize OpenGL

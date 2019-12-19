@@ -395,9 +395,9 @@ void CreateGravel(ChSystemParallelNSC* system) {
     mat_g->SetFriction(mu_g);
 
     utils::Generator gen(system);
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::BISPHERE, 1.0);
-    // std::shared_ptr<utils::MixtureIngredient> m2 = gen.AddMixtureIngredient(utils::CYLINDER, 1.0);
-    // std::shared_ptr<utils::MixtureIngredient> m3 = gen.AddMixtureIngredient(utils::BOX, 1.0);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::BISPHERE, 1.0);
+    // std::shared_ptr<utils::MixtureIngredient> m2 = gen.AddMixtureIngredient(utils::MixtureType::CYLINDER, 1.0);
+    // std::shared_ptr<utils::MixtureIngredient> m3 = gen.AddMixtureIngredient(utils::MixtureType::BOX, 1.0);
 
     m1->setDefaultMaterial(mat_g);
     m1->setDefaultDensity(rho_g);
@@ -412,7 +412,7 @@ void CreateGravel(ChSystemParallelNSC* system) {
     ChVector<> center(4 + hdimX, 0, -.2);
 
     while (gen.getTotalNumBodies() < 100000) {
-        gen.createObjectsBox(utils::POISSON_DISK, 3 * r, center, hdims);
+        gen.createObjectsBox(utils::SamplingType::POISSON_DISK, 3 * r, center, hdims);
         center.z() += 2 * r;
     }
 

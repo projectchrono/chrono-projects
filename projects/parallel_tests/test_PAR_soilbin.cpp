@@ -159,7 +159,7 @@ void CreateParticles(ChSystemParallel* system) {
     // Create a mixture entirely made out of spheres.
     utils::Generator gen(system);
 
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
     m1->setDefaultMaterial(mat_g);
     m1->setDefaultDensity(rho_g);
     m1->setDefaultSize(r_g);
@@ -172,7 +172,7 @@ void CreateParticles(ChSystemParallel* system) {
     ChVector<> center(0, 0, 2 * r);
 
     while (gen.getTotalNumBodies() < desired_num_particles) {
-        gen.createObjectsBox(utils::POISSON_DISK, 2 * r, center, hdims);
+        gen.createObjectsBox(utils::SamplingType::POISSON_DISK, 2 * r, center, hdims);
         center.z() += 2 * r;
     }
 

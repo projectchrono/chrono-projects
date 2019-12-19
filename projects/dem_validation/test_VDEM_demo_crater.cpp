@@ -203,7 +203,7 @@ int CreateObjects(ChSystemParallel* system) {
     // Create a mixture entirely made out of spheres
     utils::Generator gen(system);
 
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::SPHERE, 1.0);
+    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
     m1->setDefaultMaterial(mat_g);
     m1->setDefaultDensity(rho_g);
     m1->setDefaultSize(r_g);
@@ -214,7 +214,7 @@ int CreateObjects(ChSystemParallel* system) {
 
     for (int i = 0; i < numLayers; i++) {
         double center = r + layerHeight / 2 + i * (2 * r + layerHeight);
-        gen.createObjectsBox(utils::POISSON_DISK, 2 * r, ChVector<>(0, 0, center),
+        gen.createObjectsBox(utils::SamplingType::POISSON_DISK, 2 * r, ChVector<>(0, 0, center),
                              ChVector<>(hDimX - r, hDimY - r, layerHeight / 2));
         cout << "Layer " << i << "  total bodies: " << gen.getTotalNumBodies() << endl;
     }
