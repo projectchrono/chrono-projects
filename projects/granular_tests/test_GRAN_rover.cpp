@@ -84,7 +84,7 @@ double terrain_height_offset = 0;
 
 enum RUN_MODE { SETTLING = 0, TESTING = 1 };
 
-std::string chassis_filename = granular::GetDataFile("demo_GRAN_rover/MER_body.obj");  // For output only
+std::string chassis_filename = granular::GetDataFile("test_GRAN_rover/MER_body.obj");  // For output only
 
 enum ROVER_BODY_ID { WHEEL_FRONT_LEFT, WHEEL_FRONT_RIGHT, WHEEL_REAR_LEFT, WHEEL_REAR_RIGHT };
 
@@ -100,7 +100,7 @@ std::vector<float> mesh_inflation_radii;
 // y is height, x and z are radial
 // starts as height=1, diameter = 1
 
-std::string wheel_filename = granular::GetDataFile("demo_GRAN_rover/wheel_scaled.obj");
+std::string wheel_filename = granular::GetDataFile("test_GRAN_rover/wheel_scaled.obj");
 
 void ShowUsage(std::string name) {
     std::cout << "usage: " + name +

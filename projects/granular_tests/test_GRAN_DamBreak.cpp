@@ -11,7 +11,7 @@
 // =============================================================================
 // Authors: Conlain Kelly, Nic Olsen
 // =============================================================================
-// Chrono::Granular demo program using SMC method for frictional contact for a
+// Chrono::Granular test program using SMC method for frictional contact for a
 // Dam Break Simulation
 // =============================================================================
 

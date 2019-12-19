@@ -9,19 +9,16 @@
 #--------------------------------------------------------------
 
 set(DEMOS
-        demo_GRAN_DamBreak
-        demo_GRAN_Bucket
-        demo_GRAN_rover
-
+        test_GRAN_DamBreak
+        test_GRAN_Bucket
+        test_GRAN_rover
         test_GRAN_directshear
         test_GRAN_mixer
         test_GRAN_Coneflow
         test_GRAN_commvessels
         test_GRAN_bulkcompress
-        
-        metrics_GRAN_milsettle
-        
-        utest_GRAN_testsuite
+        test_GRAN_milsettle
+        test_GRAN_testsuite
 )
 
 #--------------------------------------------------------------
@@ -109,5 +106,4 @@ message(STATUS "")
 if (CHRONO_VEHICLE_FOUND)
     message(STATUS "Programs using Chrono::Vehicles...")
     add_subdirectory(HMMWV)
-    add_subdirectory(robosimian)
 endif()
