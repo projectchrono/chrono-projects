@@ -1,0 +1,34 @@
+{
+	"sphere_radius": 1.0,
+	"sphere_density": 2.5,
+
+	"step_size": 5e-5,
+	"time_end": 0.3,
+
+	"grav_X": 0,
+	"grav_Y": 0,
+	"grav_Z": -980,
+
+	"normalStiffS2S": 1e7,
+	"normalStiffS2W": 1e7,
+	"normalDampS2S": 1000,
+	"normalDampS2W": 1000,
+
+	/* Fix these somewhere... */
+	"tangentStiffS2S" : 1e6,
+	"tangentStiffS2W" : 1e6,
+
+	/* TODO later tests */
+	"tangentDampS2S": 0,
+	"tangentDampS2W": 0,
+	
+    "static_friction_coeffS2S": 0.5,
+	"static_friction_coeffS2W": 0.5,
+
+	"cohesion_ratio": 0,
+    "adhesion_ratio_s2w": 0,
+    
+	"verbose": 1,
+	"psi_T": 32,
+	"write_mode": "csv"
+}

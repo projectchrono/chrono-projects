@@ -19,6 +19,8 @@ set(DEMOS
         test_GRAN_bulkcompress
         test_GRAN_milsettle
         test_GRAN_testsuite
+        test_GRAN_normal
+        test_GRAN_incline
 )
 
 #--------------------------------------------------------------
