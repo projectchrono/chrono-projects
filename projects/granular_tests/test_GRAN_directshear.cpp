@@ -140,17 +140,7 @@ void SetupGranSystem(ChGranularChronoTriMeshAPI& apiSMC_TriMesh, sim_param_holde
     mesh_masses.push_back(1000);
     mesh_masses.push_back(plate_mass);
 
-    std::vector<bool> mesh_inflated;
-    std::vector<float> mesh_inflation_radii;
-    mesh_inflated.push_back(false);
-    mesh_inflated.push_back(false);
-    mesh_inflated.push_back(false);
-    mesh_inflation_radii.push_back(0);
-    mesh_inflation_radii.push_back(0);
-    mesh_inflation_radii.push_back(0);
-
-    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses, mesh_inflated,
-                               mesh_inflation_radii);
+    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
 }
 
 void SetInitialMeshes(double* meshPosRot, float* meshVel, const std::shared_ptr<ChBody> plate) {

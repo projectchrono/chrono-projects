@@ -229,8 +229,6 @@ void run_ROTF_MESH() {
     std::vector<ChMatrix33<float>> mesh_rotscales;
     std::vector<float3> mesh_translations;
     std::vector<float> mesh_masses;
-    std::vector<bool> mesh_inflated;
-    std::vector<float> mesh_inflation_radii;
 
     ChMatrix33<float> mesh_scaling = ChMatrix33<float>(ChVector<float>(100, 100, 100));
 
@@ -239,18 +237,13 @@ void run_ROTF_MESH() {
     mesh_rotscales.push_back(mesh_scaling);
     mesh_translations.push_back(make_float3(0, 0, 0));
     mesh_masses.push_back(10.f);
-    mesh_inflated.push_back(false);
-    mesh_inflation_radii.push_back(0);
 
     mesh_filenames.push_back(granular::GetDataFile("test_GRAN_testsuite/square_plane_fine.obj"));
     mesh_rotscales.push_back(mesh_scaling);
     mesh_translations.push_back(make_float3(0, 0, 0));
     mesh_masses.push_back(10.f);
-    mesh_inflated.push_back(false);
-    mesh_inflation_radii.push_back(0);
 
-    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses, mesh_inflated,
-                               mesh_inflation_radii);
+    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
 
     // Finalize settings and initialize for runtime
     gran_sys.set_friction_mode(chrono::granular::GRAN_FRICTION_MODE::MULTI_STEP);
@@ -357,8 +350,6 @@ void run_PYRAMID_MESH() {
     std::vector<ChMatrix33<float>> mesh_rotscales;
     std::vector<float3> mesh_translations;
     std::vector<float> mesh_masses;
-    std::vector<bool> mesh_inflated;
-    std::vector<float> mesh_inflation_radii;
 
     ChMatrix33<float> mesh_scaling = ChMatrix33<float>(ChVector<float>(1, 1, 1));
     // make two plane meshes, one for ramp and one for bottom
@@ -366,10 +357,7 @@ void run_PYRAMID_MESH() {
     mesh_rotscales.push_back(mesh_scaling);
     mesh_translations.push_back(make_float3(0, 0, 0));
     mesh_masses.push_back(10.f);
-    mesh_inflated.push_back(false);
-    mesh_inflation_radii.push_back(0);
-    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses, mesh_inflated,
-                               mesh_inflation_radii);
+    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
 
     gran_sys.set_friction_mode(chrono::granular::GRAN_FRICTION_MODE::MULTI_STEP);
     gran_sys.set_rolling_mode(chrono::granular::GRAN_ROLLING_MODE::NO_RESISTANCE);
@@ -446,13 +434,7 @@ void run_MESH_STEP() {
     std::vector<float> mesh_masses;
     mesh_masses.push_back(step_mass);
 
-    std::vector<bool> mesh_inflated;
-    mesh_inflated.push_back(false);
-
-    std::vector<float> mesh_inflation_radii;
-    mesh_inflation_radii.push_back(0);
-    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses, mesh_inflated,
-                               mesh_inflation_radii);
+    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
 
     // Fill domain with particles
     std::vector<ChVector<float>> body_points;
@@ -541,13 +523,7 @@ void run_MESH_FORCE() {
     float mass = 1;
     mesh_masses.push_back(mass);
 
-    std::vector<bool> mesh_inflated;
-    std::vector<float> mesh_inflation_radii;
-    mesh_inflated.push_back(false);
-    mesh_inflation_radii.push_back(0);
-
-    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses, mesh_inflated,
-                               mesh_inflation_radii);
+    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
 
     unsigned int nSoupFamilies = gran_sys.getNumTriangleFamilies();
     std::cout << nSoupFamilies << " soup families" << std::endl;

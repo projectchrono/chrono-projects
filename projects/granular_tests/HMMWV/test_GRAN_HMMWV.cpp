@@ -222,15 +222,11 @@ int main(int argc, char* argv[]) {
         wheel_mesh_filename, hmmwv.GetVehicle().GetWheel(rear_axle, RIGHT)));
 
     // Add wheel masses
-    std::vector<bool> mesh_inflated;
-    std::vector<float> mesh_inflation_radii;
     const unsigned int num_mesh_bodies = 4;
     for (unsigned int i = 0; i < num_mesh_bodies; i++) {
         mesh_masses.push_back(wheel_mass);
         mesh_scalings.push_back(scaling);
         mesh_filenames.push_back(gran_collision_bodies[i].first);
-        mesh_inflated.push_back(false);
-        mesh_inflation_radii.push_back(0);
     }
 
     double max_gran_z = -1000000;
@@ -323,7 +319,7 @@ int main(int argc, char* argv[]) {
     gran_sys.set_static_friction_coeff_SPH2WALL(mu_static);
     gran_sys.set_static_friction_coeff_SPH2MESH(mu_static);
 
-    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_scalings, mesh_masses, mesh_inflated, mesh_inflation_radii);
+    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_scalings, mesh_masses);
 
     // Output preferences
     if (run_mode == RUN_MODE::SETTLING) {

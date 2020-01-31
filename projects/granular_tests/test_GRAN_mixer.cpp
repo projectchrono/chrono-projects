@@ -223,13 +223,7 @@ int main(int argc, char* argv[]) {
     float mixer_mass = 10;
     mesh_masses.push_back(mixer_mass);
 
-    std::vector<bool> mesh_inflated;
-    std::vector<float> mesh_inflation_radii;
-    mesh_inflated.push_back(false);
-    mesh_inflation_radii.push_back(0);
-
-    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses, mesh_inflated,
-                               mesh_inflation_radii);
+    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
 
     unsigned int nSoupFamilies = gran_sys.getNumTriangleFamilies();
     std::cout << nSoupFamilies << " soup families" << std::endl;

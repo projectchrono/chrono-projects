@@ -170,12 +170,7 @@ int main(int argc, char* argv[]) {
     mesh_translations.push_back(make_float3(0, 0, 0));
     mesh_masses.push_back(mass);
 
-    std::vector<bool> mesh_inflated;
-    mesh_inflated.push_back(false);
-    std::vector<float> mesh_inflation_radii;
-    mesh_inflation_radii.push_back(0);
-    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses, mesh_inflated,
-                               mesh_inflation_radii);
+    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
 
     double* meshPosRot = new double[7];
     float* meshVel = new float[6]();

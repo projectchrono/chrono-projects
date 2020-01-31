@@ -109,13 +109,7 @@ void SetupGranTriSystem(ChGranularChronoTriMeshAPI& apiSMC_TriMesh, sim_param_ho
     std::vector<float> mesh_masses;
     mesh_masses.push_back(block_mass);
 
-    std::vector<bool> mesh_inflated;
-    std::vector<float> mesh_inflation_radii;
-    mesh_inflated.push_back(false);
-    mesh_inflation_radii.push_back(0);
-
-    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses, mesh_inflated,
-                               mesh_inflation_radii);
+    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
 }
 
 double RunTest(sim_param_holder& params, RUN_MODE run_mode) {
