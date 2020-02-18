@@ -72,8 +72,8 @@ PowertrainModelType powertrain_model = PowertrainModelType::SHAFTS;
 // Drive type (FWD, RWD, or AWD)
 DrivelineType drive_type = DrivelineType::AWD;
 
-// Rigid terrain (RigidTerrain::FLAT, RigidTerrain::HEIGHT_MAP, RigidTerrain::MESH)
-RigidTerrain::Type terrain_model = RigidTerrain::BOX;
+// Rigid terrain (RigidTerrain::PatchType::FLAT, RigidTerrain::PatchType::HEIGHT_MAP, RigidTerrain::PatchType::MESH)
+RigidTerrain::PatchType terrain_model = RigidTerrain::PatchType::BOX;
 
 // Use material properties for SMC contact method?
 bool use_mat_properties = true;
@@ -220,17 +220,17 @@ int main(int argc, char* argv[]) {
     RigidTerrain terrain(my_hmmwv.GetSystem());
     std::shared_ptr<RigidTerrain::Patch> patch;
     switch (terrain_model) {
-        case RigidTerrain::BOX:
+        case RigidTerrain::PatchType::BOX:
             patch = terrain.AddPatch(ChCoordsys<>(ChVector<>(0, 0, terrainHeight - 5), QUNIT),
                                      ChVector<>(terrainLength, terrainWidth, 10));
             patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 200);
             break;
-        case RigidTerrain::HEIGHT_MAP:
+        case RigidTerrain::PatchType::HEIGHT_MAP:
             patch = terrain.AddPatch(CSYSNORM, vehicle::GetDataFile("terrain/height_maps/test64.bmp"), "test64", 128,
                                      128, 0, 4);
             patch->SetTexture(vehicle::GetDataFile("terrain/textures/grass.jpg"), 16, 16);
             break;
-        case RigidTerrain::MESH:
+        case RigidTerrain::PatchType::MESH:
             patch = terrain.AddPatch(CSYSNORM, vehicle::GetDataFile("terrain/meshes/test.obj"), "test_mesh");
             patch->SetTexture(vehicle::GetDataFile("terrain/textures/grass.jpg"), 100, 100);
             break;
