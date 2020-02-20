@@ -94,8 +94,6 @@ std::vector<string> mesh_filenames;
 std::vector<ChMatrix33<float>> mesh_rotscales;
 std::vector<float3> mesh_translations;
 std::vector<float> mesh_masses;
-std::vector<bool> mesh_inflated;
-std::vector<float> mesh_inflation_radii;
 
 // y is height, x and z are radial
 // starts as height=1, diameter = 1
@@ -169,8 +167,6 @@ void addWheelBody(ChSystemNSC& rover_sys,
     rover_sys.AddLink(motor);
 
     mesh_masses.push_back(wheel_mass);
-    mesh_inflated.push_back(false);
-    mesh_inflation_radii.push_back(0);
     mesh_rotscales.push_back(wheel_scaling);
     mesh_filenames.push_back(wheel_filename);
     mesh_translations.push_back(make_float3(0, 0, 0));
@@ -334,8 +330,7 @@ int main(int argc, char* argv[]) {
     addWheelBody(rover_sys, chassis_body, ChVector<>(rear_wheel_offset_x, -rear_wheel_offset_y, wheel_offset_z));
 
     // Load in meshes
-    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses, mesh_inflated,
-                               mesh_inflation_radii);
+    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
 
     gran_sys.setOutputMode(params.write_mode);
     gran_sys.setVerbose(params.verbose);
