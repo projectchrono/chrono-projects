@@ -89,9 +89,6 @@ int main(int argc, char* argv[]) {
     gran_sys.setOutputFlags(GRAN_OUTPUT_FLAGS::VEL_COMPONENTS |
                             GRAN_OUTPUT_FLAGS::FIXITY);  // NOTE: original test used custom FORCE_COMPONENTS output
 
-    // gran_sys.setOutputFlags(GRAN_OUTPUT_FLAGS::VEL_COMPONENTS | GRAN_OUTPUT_FLAGS::FORCE_COMPONENTS |
-    //                         GRAN_OUTPUT_FLAGS::FIXITY);
-
     gran_sys.set_friction_mode(GRAN_FRICTION_MODE::FRICTIONLESS);
     gran_sys.set_timeIntegrator(GRAN_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
 

@@ -170,7 +170,7 @@ void run_ROTF() {
     // Finalize settings and initialize for runtime
 
     gran_sys.set_friction_mode(chrono::granular::GRAN_FRICTION_MODE::MULTI_STEP);
-    gran_sys.set_rolling_mode(chrono::granular::GRAN_ROLLING_MODE::CONSTANT_TORQUE);
+    gran_sys.set_rolling_mode(chrono::granular::GRAN_ROLLING_MODE::NO_RESISTANCE);
     gran_sys.initialize();
 
     float reaction_forces[3] = {0, 0, 0};
@@ -247,7 +247,7 @@ void run_ROTF_MESH() {
 
     // Finalize settings and initialize for runtime
     gran_sys.set_friction_mode(chrono::granular::GRAN_FRICTION_MODE::MULTI_STEP);
-    gran_sys.set_rolling_mode(chrono::granular::GRAN_ROLLING_MODE::CONSTANT_TORQUE);
+    gran_sys.set_rolling_mode(chrono::granular::GRAN_ROLLING_MODE::NO_RESISTANCE);
     gran_sys.initialize();
 
     unsigned int nSoupFamilies = gran_sys.getNumTriangleFamilies();
