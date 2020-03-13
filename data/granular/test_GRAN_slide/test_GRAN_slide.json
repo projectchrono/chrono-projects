@@ -2,8 +2,8 @@
 	"sphere_radius": 1.0,
 	"sphere_density": 2.5,
 
-	"step_size": 5e-6, /*5e-5,*/
-	"time_end": 1.0,
+	"step_size": 1e-5, /*5e-5,*/
+	"time_end": 0.3,
 
 	"normalStiffS2S": 1e7,
 	"normalStiffS2W": 1e7,

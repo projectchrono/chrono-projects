@@ -31,13 +31,13 @@ enum RUN_MODE { FRICTIONLESS = 0, ZERO_FRICTION = 1, SMALL_FRICTION = 2, LARGE_F
 float mu_small = 1e-5f;
 float mu_large = 0.5;
 
-bool axis_aligned = true;
+bool axis_aligned = false;
 ChVector<float> sphere_pos(0, 0, 0);
-ChVector<float> v_init(1, -1, 0);
+ChVector<float> v_init(10, -10, 0);
 
 void ShowUsage(std::string name) {
     std::cout << "usage: " + name +
-                     " <json_file> <output_dir> <psi_L> <run_mode: 0-fricitonless, 1-zero_friction, 2-small_friction, "
+                     " <json_file> <output_dir> <psi_L> <run_mode: 0-frictionless, 1-zero_friction, 2-small_friction, "
                      "3-large_friction>"
               << std::endl;
 }
@@ -70,20 +70,24 @@ int main(int argc, char* argv[]) {
 
     switch (run_mode) {
         case RUN_MODE::FRICTIONLESS: {
+            std::cout << "Frictionless" << std::endl;
             gran_sys.set_friction_mode(GRAN_FRICTION_MODE::FRICTIONLESS);
             break;
         }
         case RUN_MODE::ZERO_FRICTION: {
+            std::cout << "Zero Friction" << std::endl;
             gran_sys.set_friction_mode(GRAN_FRICTION_MODE::MULTI_STEP);
             params.static_friction_coeffS2W = 0.f;
             break;
         }
         case RUN_MODE::SMALL_FRICTION: {
+            std::cout << "Small Friction " << mu_small << std::endl;
             gran_sys.set_friction_mode(GRAN_FRICTION_MODE::MULTI_STEP);
             params.static_friction_coeffS2W = mu_small;
             break;
         }
         case RUN_MODE::LARGE_FRICTION: {
+            std::cout << "Large Friction " << mu_large << std::endl;
             gran_sys.set_friction_mode(GRAN_FRICTION_MODE::MULTI_STEP);
             params.static_friction_coeffS2W = mu_large;
             break;
@@ -92,6 +96,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (axis_aligned) {
+        std::cout << "Axis Aligned" << std::endl;
         params.grav_X = 0;
         params.grav_Y = 0;
         params.grav_Z = -980;
@@ -160,8 +165,7 @@ int main(int argc, char* argv[]) {
     gran_sys.setVerbose(params.verbose);
     gran_sys.initialize();
 
-    // int fps = 10000;
-    int fps = 100;
+    int fps = 1000;
     float frame_step = 1.f / fps;
     float curr_time = 0;
     int currframe = 0;
