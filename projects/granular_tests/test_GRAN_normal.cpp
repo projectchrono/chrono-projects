@@ -86,8 +86,9 @@ int main(int argc, char* argv[]) {
 
     gran_sys.set_gravitational_acceleration(params.grav_X, params.grav_Y, params.grav_Z);
     gran_sys.setOutputMode(params.write_mode);
-    gran_sys.setOutputFlags(GRAN_OUTPUT_FLAGS::VEL_COMPONENTS |
-                            GRAN_OUTPUT_FLAGS::FIXITY);  // NOTE: original test used custom FORCE_COMPONENTS output
+    gran_sys.setOutputFlags(
+        GRAN_OUTPUT_FLAGS::VEL_COMPONENTS | GRAN_OUTPUT_FLAGS::FIXITY |
+        GRAN_OUTPUT_FLAGS::FORCE_COMPONENTS);  // NOTE: original test used custom FORCE_COMPONENTS output
 
     gran_sys.set_friction_mode(GRAN_FRICTION_MODE::FRICTIONLESS);
     gran_sys.set_timeIntegrator(GRAN_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
