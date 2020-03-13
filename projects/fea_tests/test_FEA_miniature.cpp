@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
     msectionH->SetAsRectangularSection(hbarW, thickZ);
     msectionH->SetBeamRaleyghDamping(0.00);
 
-    ChBuilderBeam builder;
+    ChBuilderBeamEuler builder;
 
     builder.BuildBeam(my_mesh,               // the mesh where to put the created nodes and elements
                       msectionH,             // the ChBeamSectionAdvanced to use for the ChElementBeamEuler elements
