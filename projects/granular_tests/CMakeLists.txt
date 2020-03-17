@@ -21,6 +21,7 @@ set(DEMOS
         test_GRAN_testsuite
         test_GRAN_normal
         test_GRAN_slide
+        test_GRAN_roll
         test_GRAN_incline
 )
 
