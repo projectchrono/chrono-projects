@@ -2,8 +2,8 @@
 	"sphere_radius": 1.0,
 	"sphere_density": 2.5,
 
-	"step_size": 1e-5, /*5e-5,*/
-	"time_end": 0.3,
+	"step_size": 1e-5,
+	"time_end": 0.45,
 
 	"normalStiffS2S": 1e7,
 	"normalStiffS2W": 1e7,
@@ -13,14 +13,13 @@
 	"tangentStiffS2S" : 1e5,
 	"tangentStiffS2W" : 1e5,
 
-	/* TODO later tests */
 	"tangentDampS2S": 1000,
 	"tangentDampS2W": 1000,
 	
 	"cohesion_ratio": 0,
     "adhesion_ratio_s2w": 0,
     
-	"verbose": 1,
+	"verbose": 0,
 	"psi_T": 32,
 	"write_mode": "csv"
 }

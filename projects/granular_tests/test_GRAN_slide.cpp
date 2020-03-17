@@ -55,9 +55,9 @@ int main(int argc, char* argv[]) {
 
     RUN_MODE run_mode = (RUN_MODE)std::stoi(argv[4]);
 
-    params.box_X = 10;
-    params.box_Y = 10;
-    params.box_Z = 10;
+    params.box_X = 15;
+    params.box_Y = 15;
+    params.box_Z = 15;
 
     // Angle gravity
     params.grav_X = -565.80;
