@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
     params.rolling_friction_coeffS2S = mu_roll;
     params.rolling_friction_coeffS2W = mu_roll;
 
-    params.box_X = 15;  // TODO this will likely need to be bigger to reach a stop
+    params.box_X = 15;
     params.box_Y = 15;
     params.box_Z = 15;
 
