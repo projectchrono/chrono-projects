@@ -23,6 +23,7 @@ set(DEMOS
         test_GRAN_slide
         test_GRAN_roll
         test_GRAN_incline
+        test_GRAN_repose
 )
 
 #--------------------------------------------------------------
