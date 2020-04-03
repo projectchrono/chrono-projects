@@ -212,17 +212,11 @@ void CreateMechanismBodies(ChSystemParallel* system) {
     mat_walls->SetFriction(mu_walls);
 #endif
 
-// ----------------------
-// Create the ground body -- always FIRST body in system
-// ----------------------
+    // ----------------------
+    // Create the ground body -- always FIRST body in system
+    // ----------------------
 
-#ifdef USE_SMC
-    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    ground->SetMaterialSurface(mat_walls);
-#else
     auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    ground->SetMaterialSurface(mat_walls);
-#endif
 
     ground->SetIdentifier(Id_ground);
     ground->SetBodyFixed(true);
@@ -230,29 +224,23 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 
     // Attach geometry of the containing bin
     ground->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
-    utils::AddBoxGeometry(ground.get(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
-    utils::AddBoxGeometry(ground.get(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
-    utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
-    utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, hdimY + hthick, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
+    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, hdimY + hthick, hdimZ));
     ground->GetCollisionModel()->BuildModel();
 
     system->AddBody(ground);
 
-// ---------------------
-// Create the plate body -- always SECOND body in the system
-// ---------------------
+    // ---------------------
+    // Create the plate body -- always SECOND body in the system
+    // ---------------------
 
-// Initially, the load plate is fixed to ground.
-// It is released after the settling phase.
+    // Initially, the load plate is fixed to ground.
+    // It is released after the settling phase.
 
-#ifdef USE_SMC
-    auto plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    plate->SetMaterialSurface(mat_walls);
-#else
     auto plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    plate->SetMaterialSurface(mat_walls);
-#endif
 
     plate->SetIdentifier(Id_plate);
     plate->SetMass(1);
@@ -361,17 +349,11 @@ void CreateBall(ChSystemParallel* system) {
     mat_g->SetFriction(mu_g);
 #endif
 
-// ---------------
-// Create the ball
-// ---------------
+    // ---------------
+    // Create the ball
+    // ---------------
 
-#ifdef USE_SMC
-    auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    ball->SetMaterialSurface(mat_g);
-#else
     auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    ball->SetMaterialSurface(mat_g);
-#endif
 
     ball->SetIdentifier(Id_ball);
     ball->SetMass(mass_ball);
@@ -380,7 +362,7 @@ void CreateBall(ChSystemParallel* system) {
     ball->SetBodyFixed(false);
 
     ball->GetCollisionModel()->ClearModel();
-    utils::AddSphereGeometry(ball.get(), radius_ball);
+    utils::AddSphereGeometry(ball.get(), mat_g, radius_ball);
     ball->GetCollisionModel()->BuildModel();
 
     system->AddBody(ball);
@@ -501,6 +483,16 @@ int main(int argc, char* argv[]) {
     // Problem set up
     // --------------
 
+#ifdef USE_SMC
+    auto mat_plate = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    mat_plate->SetYoungModulus(Y_walls);
+    mat_plate->SetFriction(mu_walls);
+    mat_plate->SetRestitution(cr_walls);
+#else
+    auto mat_plate = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    mat_plate->SetFriction(mu_walls);
+#endif
+
     // Depending on problem type:
     // - Select end simulation time
     // - Select output FPS
@@ -557,7 +549,7 @@ int main(int argc, char* argv[]) {
 
             // Add collision geometry to plate
             loadPlate->GetCollisionModel()->ClearModel();
-            utils::AddBoxGeometry(loadPlate.get(), ChVector<>(hdimX_p, hdimY_p, hdimZ_p),
+            utils::AddBoxGeometry(loadPlate.get(), mat_plate, ChVector<>(hdimX_p, hdimY_p, hdimZ_p),
                                   ChVector<>(0, 0, hdimZ_p));
             loadPlate->GetCollisionModel()->BuildModel();
 
@@ -598,7 +590,7 @@ int main(int argc, char* argv[]) {
 
             // Add collision geometry to plate
             loadPlate->GetCollisionModel()->ClearModel();
-            utils::AddBoxGeometry(loadPlate.get(), ChVector<>(hdimX_p, hdimY_p, hdimZ_p),
+            utils::AddBoxGeometry(loadPlate.get(), mat_plate, ChVector<>(hdimX_p, hdimY_p, hdimZ_p),
                                   ChVector<>(0, 0, hdimZ_p));
             loadPlate->GetCollisionModel()->BuildModel();
 

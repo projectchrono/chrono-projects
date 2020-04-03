@@ -33,8 +33,6 @@
 #include "chrono/fea/ChLinkPointFrame.h"
 #include "chrono/fea/ChMesh.h"
 #include "chrono/fea/ChVisualizationFEAmesh.h"
-#include "chrono_irrlicht/ChBodySceneNode.h"
-#include "chrono_irrlicht/ChBodySceneNodeTools.h"
 #include "chrono_irrlicht/ChIrrApp.h"
 #include "chrono_irrlicht/ChIrrAppInterface.h"
 #include "chrono_mkl/ChSolverMKL.h"
@@ -581,11 +579,10 @@ int main(int argc, char* argv[]) {
     mmaterial->SetDampingF(0.2f);
 
     SimpChassis = chrono_types::make_shared<ChBodyEasyBox>(2.4, 1.1, 0.2,  // x,y,z size
-                                                  2800,           // density
-                                                  false,          // collide enable?
-                                                  true);          // visualization?
+                                                           2800,           // density
+                                                           true,           // visualization?
+                                                           false);         // collision?
     my_system.AddBody(SimpChassis);
-    SimpChassis->SetMaterialSurface(mmaterial);  // use shared surface properties
     // optional, attach a texture for better visualization
     auto mtexturebox = chrono_types::make_shared<ChTexture>();
     mtexturebox->SetTextureFilename(GetChronoDataFile("cubetexture_bluwhite.png"));
@@ -643,13 +640,10 @@ int main(int argc, char* argv[]) {
 
     // Create a large cube as a floor.
 
-    auto mrigidBody = chrono_types::make_shared<ChBodyEasyBox>(10,10,0.00001, 1000,
-                                                        false, // no collide
-                                                        true); // visualize
+    auto mrigidBody = chrono_types::make_shared<ChBodyEasyBox>(10, 10, 0.00001, 1000, true, false);
     my_system.Add(mrigidBody);
     mrigidBody->SetPos(ChVector<>(0, 0, GroundLoc));
     mrigidBody->SetBodyFixed(true);
-    mrigidBody->GetMaterialSurfaceNSC()->SetFriction(0.0);
     auto mtexture = chrono_types::make_shared<ChTexture>(GetChronoDataFile("concrete.jpg").c_str());
     mrigidBody->AddAsset(mtexture);
     

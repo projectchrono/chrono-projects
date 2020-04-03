@@ -30,8 +30,32 @@ ChVector<> initLoc( -(dim_d + (dim_b + dim_c) * 2 + dim_a  * .9) + 1.9, 0, dim_e
 ChQuaternion<> initRot(1, 0, 0, 0);
 double dist_end = (dim_d + (dim_b + dim_c) * 2 + dim_a * 1.6);  // When to apply brakes
 
-real container_friction = 0.8;
+float container_friction = 0.8f;
 
+void InitializeObject(std::shared_ptr<ChBody> body,
+                      double mass,
+                      const ChVector<>& pos,
+                      const ChQuaternion<>& rot,
+                      bool collide,
+                      bool fixed,
+                      int collision_family,
+                      int do_not_collide_with) {
+    body->SetMass(mass);
+    body->SetPos(pos);
+    body->SetRot(rot);
+    body->SetCollide(collide);
+    body->SetBodyFixed(fixed);
+    body->GetCollisionModel()->ClearModel();
+    body->GetCollisionModel()->SetFamily(collision_family);
+    body->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(do_not_collide_with);
+}
+
+void FinalizeObject(std::shared_ptr<ChBody> body, ChSystem* system) {
+    assert(body->GetContactMethod() == system->GetContactMethod());
+
+    body->GetCollisionModel()->BuildModel();
+    system->AddBody(body);
+}
 
 void CreateContainer(ChSystemParallelNSC* system) {
 	// the extra .03 makes the slope meet up with the end platform
@@ -49,57 +73,57 @@ void CreateContainer(ChSystemParallelNSC* system) {
 
     auto material = std::make_shared<ChMaterialSurfaceNSC>();
 	material->SetFriction(container_friction);
-	material->SetCompliance(1e-9);
-	material->SetCohesion(0);
+	material->SetCompliance(1e-9f);
+	material->SetCohesion(0.0f);
 
 	Vector c_pos = Vector(0, 0, 0);
-	InitializeObject(bottom_plate, 1, material, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
-	InitializeObject(side_plate_1, 1, material, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
-	InitializeObject(side_plate_2, 1, material, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
-	InitializeObject(end_plate_1, 1, material, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
-	InitializeObject(end_plate_2, 1, material, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
-	InitializeObject(end_slope_1, 1, material, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
-	InitializeObject(end_slope_2, 1, material, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
+	InitializeObject(bottom_plate, 1, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
+	InitializeObject(side_plate_1, 1, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
+	InitializeObject(side_plate_2, 1, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
+	InitializeObject(end_plate_1, 1, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
+	InitializeObject(end_plate_2, 1, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
+	InitializeObject(end_slope_1, 1, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
+	InitializeObject(end_slope_2, 1, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
 
 	// Bottom plate
-	AddBoxGeometry(bottom_plate.get(), Vector(dim_d * 1.1, width, dim_t), Vector(0, 0, 0), Quaternion(1, 0, 0, 0));
+	AddBoxGeometry(bottom_plate.get(), material, Vector(dim_d * 1.1, width, dim_t), Vector(0, 0, 0), Quaternion(1, 0, 0, 0));
 	// Bottom Plate Edge
-	AddCylinderGeometry(bottom_plate.get(), dim_t * 1.05, width, Vector(-dim_d, 0, 0), Quaternion(1, 0, 0, 0));
-	AddCylinderGeometry(bottom_plate.get(), dim_t * 1.05, width, Vector(dim_d, 0, 0), Quaternion(1, 0, 0, 0));
+	AddCylinderGeometry(bottom_plate.get(), material, dim_t * 1.05, width, Vector(-dim_d, 0, 0), Quaternion(1, 0, 0, 0));
+	AddCylinderGeometry(bottom_plate.get(), material, dim_t * 1.05, width, Vector(dim_d, 0, 0), Quaternion(1, 0, 0, 0));
 
 	// Side walls
-	AddBoxGeometry(side_plate_1.get(), Vector(dim_d + (dim_b + dim_c + dim_a) * 2, dim_t, dim_e * 2.5 + dim_t * 2),
+	AddBoxGeometry(side_plate_1.get(), material, Vector(dim_d + (dim_b + dim_c + dim_a) * 2, dim_t, dim_e * 2.5 + dim_t * 2),
 		Vector(0, +(dim_w + dim_t), dim_e * 2.2), Quaternion(1, 0, 0, 0));
-	AddBoxGeometry(side_plate_2.get(), Vector(dim_d + (dim_b + dim_c + dim_a) * 2, dim_t, dim_e * 2.5 + dim_t * 2),
+	AddBoxGeometry(side_plate_2.get(), material, Vector(dim_d + (dim_b + dim_c + dim_a) * 2, dim_t, dim_e * 2.5 + dim_t * 2),
 		Vector(0, -(dim_w + dim_t), dim_e * 2.2), Quaternion(1, 0, 0, 0));
 	// End Platforms
-	AddBoxGeometry(end_plate_1.get(), Vector(dim_a, width, dim_t),
+	AddBoxGeometry(end_plate_1.get(), material, Vector(dim_a, width, dim_t),
 		Vector(+(dim_d + dim_c * 2 + dim_b * 2 + dim_a), 0, dim_e * 2.0), Quaternion(1, 0, 0, 0));
-	AddBoxGeometry(end_plate_2.get(), Vector(dim_a, width, dim_t),
+	AddBoxGeometry(end_plate_2.get(), material, Vector(dim_a, width, dim_t),
 		Vector(-(dim_d + dim_c * 2 + dim_b * 2 + dim_a), 0, dim_e * 2.0), Quaternion(1, 0, 0, 0));
 	// Slopes
-	AddBoxGeometry(end_slope_1.get(), Vector(dim_slope, dim_w + dim_t * 2.0, dim_t),
+	AddBoxGeometry(end_slope_1.get(), material, Vector(dim_slope, dim_w + dim_t * 2.0, dim_t),
 		Vector(+(dim_d + (dim_c + dim_b) + sin(angle) * dim_t * 0.5), 0, dim_e),
 		Q_from_AngAxis(-angle, VECT_Y));
-	AddBoxGeometry(end_slope_2.get(), Vector(dim_slope, dim_w + dim_t * 2.0, dim_t),
+	AddBoxGeometry(end_slope_2.get(), material, Vector(dim_slope, dim_w + dim_t * 2.0, dim_t),
 		Vector(-(dim_d + (dim_c + dim_b) + sin(angle) * dim_t * 0.5), 0, dim_e),
 		Q_from_AngAxis(+angle, VECT_Y));
 
 	// Slope-platform edge
-	AddCylinderGeometry(end_plate_1.get(), dim_t * 1.02, width,
+	AddCylinderGeometry(end_plate_1.get(), material, dim_t * 1.02, width,
 		Vector(+(dim_d + dim_c * 2 + dim_b * 2), 0, dim_e * 2.0), Quaternion(1, 0, 0, 0));
-	AddCylinderGeometry(end_plate_2.get(), dim_t * 1.02, width,
+	AddCylinderGeometry(end_plate_2.get(), material, dim_t * 1.02, width,
 		Vector(-(dim_d + dim_c * 2 + dim_b * 2), 0, dim_e * 2.0), Quaternion(1, 0, 0, 0));
 	// Top
 	if (add_top) {
-		AddBoxGeometry(bottom_plate.get(), Vector(dim_d + (dim_b + dim_c + dim_a) * 2, width, dim_t),
+		AddBoxGeometry(bottom_plate.get(), material, Vector(dim_d + (dim_b + dim_c + dim_a) * 2, width, dim_t),
 			Vector(0, 0, dim_e * 4.7 + dim_t * 2.0), Quaternion(1, 0, 0, 0));
 	}
 	// End Caps
-	AddBoxGeometry(end_plate_1.get(), Vector(dim_t * .25, width, dim_e * 1.2 + dim_t * 2.0),
+	AddBoxGeometry(end_plate_1.get(), material, Vector(dim_t * .25, width, dim_e * 1.2 + dim_t * 2.0),
 		Vector(+(dim_d + dim_c * 2 + dim_b * 2 + dim_a * 2), 0, dim_e * 3.1 + dim_t),
 		Quaternion(1, 0, 0, 0));
-	AddBoxGeometry(end_plate_2.get(), Vector(dim_t * .25, width, dim_e * 1.2 + dim_t * 2.0),
+	AddBoxGeometry(end_plate_2.get(), material, Vector(dim_t * .25, width, dim_e * 1.2 + dim_t * 2.0),
 		Vector(-(dim_d + dim_c * 2 + dim_b * 2 + dim_a * 2), 0, dim_e * 3.1 + dim_t),
 		Quaternion(1, 0, 0, 0));
 

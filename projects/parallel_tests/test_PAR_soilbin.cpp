@@ -105,7 +105,7 @@ unsigned int desired_num_particles = 1000;
 // Parameters for the falling object
 // -----------------------------------------------------------------------------
 // Shape of dropped object
-collision::ShapeType shape_o = collision::ROUNDEDCYL;
+ChCollisionShape::Type shape_o = ChCollisionShape::Type::ROUNDEDCYL;
 
 ChQuaternion<> initRot(1.0, 0.0, 0.0, 0.0);
 ChVector<> initLinVel(0.0, 0.0, 0.0);
@@ -199,17 +199,11 @@ void CreateObject(ChSystemParallel* system, double z) {
     mat_o->SetFriction(0.4f);
 #endif
 
-// --------------------------
-// Create the falling object.
-// --------------------------
+    // --------------------------
+    // Create the falling object.
+    // --------------------------
 
-#ifdef USE_SMC
-    auto obj = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    obj->SetMaterialSurface(mat_o);
-#else
     auto obj = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    obj->SetMaterialSurface(mat_o);
-#endif
 
     obj->SetIdentifier(0);
     obj->SetCollide(true);
@@ -217,6 +211,7 @@ void CreateObject(ChSystemParallel* system, double z) {
 
     // ----------------------------------------------------
     // Depending on the shape of the falling object,
+    //    - Calculate bounding radius, volume, and gyration
     //    - Calculate bounding radius, volume, and gyration
     //    - Set contact and visualization shape
     // ----------------------------------------------------
@@ -228,44 +223,44 @@ void CreateObject(ChSystemParallel* system, double z) {
     obj->GetCollisionModel()->ClearModel();
 
     switch (shape_o) {
-        case collision::SPHERE: {
+        case ChCollisionShape::Type::SPHERE: {
             double radius = 0.5;
             rb = utils::CalcSphereBradius(radius);
             vol = utils::CalcSphereVolume(radius);
             J = utils::CalcSphereGyration(radius);
-            utils::AddSphereGeometry(obj.get(), radius);
+            utils::AddSphereGeometry(obj.get(), mat_o, radius);
         } break;
-        case collision::BOX: {
+        case ChCollisionShape::Type::BOX: {
             ChVector<> hdims(0.5, 0.75, 1.0);
             rb = utils::CalcBoxBradius(hdims);
             vol = utils::CalcBoxVolume(hdims);
             J = utils::CalcBoxGyration(hdims);
-            utils::AddBoxGeometry(obj.get(), hdims);
+            utils::AddBoxGeometry(obj.get(), mat_o, hdims);
         } break;
-        case collision::CAPSULE: {
+        case ChCollisionShape::Type::CAPSULE: {
             double radius = 0.25;
             double hlen = 0.5;
             rb = utils::CalcCapsuleBradius(radius, hlen);
             vol = utils::CalcCapsuleVolume(radius, hlen);
             J = utils::CalcCapsuleGyration(radius, hlen);
-            utils::AddCapsuleGeometry(obj.get(), radius, hlen);
+            utils::AddCapsuleGeometry(obj.get(), mat_o, radius, hlen);
         } break;
-        case collision::CYLINDER: {
+        case ChCollisionShape::Type::CYLINDER: {
             double radius = 0.25;
             double hlen = 0.5;
             rb = utils::CalcCylinderBradius(radius, hlen);
             vol = utils::CalcCylinderVolume(radius, hlen);
             J = utils::CalcCylinderGyration(radius, hlen);
-            utils::AddCylinderGeometry(obj.get(), radius, hlen);
+            utils::AddCylinderGeometry(obj.get(), mat_o, radius, hlen);
         } break;
-        case collision::ROUNDEDCYL: {
+        case ChCollisionShape::Type::ROUNDEDCYL: {
             double radius = 0.25;
             double hlen = 0.1;
             double srad = 0.1;
             rb = utils::CalcRoundedCylinderBradius(radius, hlen, srad);
             vol = utils::CalcRoundedCylinderVolume(radius, hlen, srad);
             J = utils::CalcRoundedCylinderGyration(radius, hlen, srad);
-            utils::AddRoundedCylinderGeometry(obj.get(), radius, hlen, srad);
+            utils::AddRoundedCylinderGeometry(obj.get(), mat_o, radius, hlen, srad);
         } break;
     }
 

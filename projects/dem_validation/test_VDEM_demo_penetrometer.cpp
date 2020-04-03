@@ -258,19 +258,19 @@ void CalculatePenetratorInertia(double & mass, ChVector<> & inertia) {
 // -----------------------------------------------------------------------------
 // Create collision geometry of the falling object
 // -----------------------------------------------------------------------------
-void CreatePenetratorGeometry(std::shared_ptr<ChBody> obj) {
+void CreatePenetratorGeometry(std::shared_ptr<ChBody> obj, std::shared_ptr<ChMaterialSurface> mat) {
     obj->GetCollisionModel()->ClearModel();
     switch (penetGeom) {
         case P_SPHERE:
-            utils::AddSphereGeometry(obj.get(), R_b);
+            utils::AddSphereGeometry(obj.get(), mat, R_b);
             break;
         case P_CONE1:
             // apex angle = 30 de
-            utils::AddConeGeometry(obj.get(), R_bc1, H_bc1);
+            utils::AddConeGeometry(obj.get(), mat, R_bc1, H_bc1);
             break;
         case P_CONE2:
             // apex angle = 60 deg
-            utils::AddConeGeometry(obj.get(), R_bc2, H_bc2);
+            utils::AddConeGeometry(obj.get(), mat, R_bc2, H_bc2);
             break;
     }
     obj->GetCollisionModel()->BuildModel();
@@ -342,14 +342,8 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemParallel* msystem) {
     mat->SetFriction(mu_b);
 #endif
 
-// Create the falling object
-#ifdef USE_SMC
-    auto obj = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    obj->SetMaterialSurface(mat);
-#else
+    // Create the falling object
     auto obj = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    obj->SetMaterialSurface(mat);
-#endif
 
     double mass;
     ChVector<> inertia;
@@ -363,7 +357,7 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemParallel* msystem) {
     obj->SetCollide(true);
     obj->SetBodyFixed(false);
 
-    CreatePenetratorGeometry(obj);
+    CreatePenetratorGeometry(obj, mat);
 
     msystem->AddBody(obj);
     return obj;

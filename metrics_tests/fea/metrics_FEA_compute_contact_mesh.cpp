@@ -101,7 +101,7 @@ class MeshContactTest : public BaseTest {
   public:
     MeshContactTest(const std::string& testName,
                     const std::string& testProjectName,
-                    ChMaterialSurface::ContactMethod method)
+                    ChContactMethod method)
         : BaseTest(testName, testProjectName), m_method(method), m_execTime(0) {}
 
     ~MeshContactTest() {}
@@ -111,7 +111,7 @@ class MeshContactTest : public BaseTest {
     virtual double getExecutionTime() const override { return m_execTime; }
 
   private:
-    ChMaterialSurface::ContactMethod m_method;
+    ChContactMethod m_method;
     double m_execTime;
 };
 
@@ -123,7 +123,7 @@ bool MeshContactTest::execute() {
     std::shared_ptr<ChMaterialSurface> material;
 
     switch (m_method) {
-        case ChMaterialSurface::SMC: {
+        case ChContactMethod::SMC: {
             GetLog() << "Using PENALTY method.\n";
 
             ChSystemSMC* sys = new ChSystemSMC;
@@ -146,7 +146,7 @@ bool MeshContactTest::execute() {
 
             break;
         }
-        case ChMaterialSurface::NSC: {
+        case ChContactMethod::NSC: {
             GetLog() << "Using COMPLEMENTARITY method.\n";
 
             system = new ChSystemNSC;
@@ -250,10 +250,9 @@ bool MeshContactTest::execute() {
     mysurfmaterial->SetGn(gn);
     mysurfmaterial->SetGt(gt);
 
-    auto contact_surf = chrono_types::make_shared<ChContactSurfaceNodeCloud>();
+    auto contact_surf = chrono_types::make_shared<ChContactSurfaceNodeCloud>(mysurfmaterial);
     my_mesh->AddContactSurface(contact_surf);
     contact_surf->AddAllNodes(m_contact_node_radius);
-    contact_surf->SetMaterialSurface(mysurfmaterial);
 
     // Switch off mesh class gravity (ANCF shell elements have a custom implementation)
     my_mesh->SetAutomaticGravity(false);
@@ -292,7 +291,7 @@ bool MeshContactTest::execute() {
     // Setup integrator
     // ----------------
 
-    if (m_method == ChMaterialSurface::SMC) {
+    if (m_method == ChContactMethod::SMC) {
         GetLog() << "Using HHT integrator.\n";
         system->SetTimestepperType(ChTimestepper::Type::HHT);
         auto integrator = std::static_pointer_cast<ChTimestepperHHT>(system->GetTimestepper());
@@ -358,8 +357,8 @@ int main(int argc, char* argv[]) {
 
     bool passed = true;
 
-    MeshContactTest testDEM("metrics_FEA_compute_contact_mesh_DEM", "Chrono::FEA", ChMaterialSurface::SMC);
-    MeshContactTest testDVI("metrics_FEA_compute_contact_mesh_DVI", "Chrono::FEA", ChMaterialSurface::NSC);
+    MeshContactTest testDEM("metrics_FEA_compute_contact_mesh_DEM", "Chrono::FEA", ChContactMethod::SMC);
+    MeshContactTest testDVI("metrics_FEA_compute_contact_mesh_DVI", "Chrono::FEA", ChContactMethod::NSC);
 
     testDEM.setOutDir(out_dir);
     testDEM.setVerbose(true);

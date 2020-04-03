@@ -76,6 +76,9 @@ int main(int argc, char* argv[]) {
     application.SetSymbolscale(0.2);
     application.SetContactsDrawMode(ChIrrTools::eCh_ContactsDrawMode::CONTACT_NORMALS);
 
+    // Create a shared material (default properties)
+    auto mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+
     // ----------------------
     // Create the ground body
     // ----------------------
@@ -109,8 +112,8 @@ int main(int argc, char* argv[]) {
     gear->GetCollisionModel()->SetSafeMargin(0.02);
     gear->SetCollide(true);
     gear->GetCollisionModel()->ClearModel();
-    gear->GetCollisionModel()->Add2Dpath(gear_profile, ChVector<>(0, 0, separation / 2));
-    gear->GetCollisionModel()->Add2Dpath(gear_profile, ChVector<>(0, 0, -separation / 2));
+    gear->GetCollisionModel()->Add2Dpath(mat, gear_profile, ChVector<>(0, 0, separation / 2));
+    gear->GetCollisionModel()->Add2Dpath(mat, gear_profile, ChVector<>(0, 0, -separation / 2));
     gear->GetCollisionModel()->BuildModel();
 
     // Add ChLineShape visualization asset to gear
@@ -159,8 +162,8 @@ int main(int argc, char* argv[]) {
     pin->GetCollisionModel()->SetSafeMargin(0.02);
     pin->SetCollide(true);
     pin->GetCollisionModel()->ClearModel();
-    pin->GetCollisionModel()->Add2Dpath(pin_profile, ChVector<>(0, 0, separation / 2));
-    pin->GetCollisionModel()->Add2Dpath(pin_profile, ChVector<>(0, 0, -separation / 2));
+    pin->GetCollisionModel()->Add2Dpath(mat, pin_profile, ChVector<>(0, 0, separation / 2));
+    pin->GetCollisionModel()->Add2Dpath(mat, pin_profile, ChVector<>(0, 0, -separation / 2));
     //pin->GetCollisionModel()->AddCylinder(pin_radius, pin_radius, pin_hlen);
     pin->GetCollisionModel()->BuildModel();
 

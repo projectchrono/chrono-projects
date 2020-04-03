@@ -202,9 +202,9 @@ double radius_ball = 0.1 * wheelRadius;  // [cm] radius of testing ball
 // =============================================================================
 
 void CreateMechanismBodies(ChSystemParallel* system) {
-// -------------------------------
-// Create a material for the walls
-// -------------------------------
+    // -------------------------------
+    // Create a material for the walls
+    // -------------------------------
 
 #ifdef USE_SMC
     auto mat_walls = chrono_types::make_shared<ChMaterialSurfaceSMC>();
@@ -215,17 +215,11 @@ void CreateMechanismBodies(ChSystemParallel* system) {
     mat_walls->SetFriction(mu_walls);
 #endif
 
-// ----------------------
-// Create the ground body -- always FIRST body in system
-// ----------------------
+    // ----------------------
+    // Create the ground body -- always FIRST body in system
+    // ----------------------
 
-#ifdef USE_SMC
-    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    ground->SetMaterialSurface(mat_walls);
-#else
     auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    ground->SetMaterialSurface(mat_walls);
-#endif
 
     ground->SetIdentifier(Id_ground);
     ground->SetBodyFixed(true);
@@ -234,28 +228,22 @@ void CreateMechanismBodies(ChSystemParallel* system) {
     // Attach geometry of the containing bin.  Disable contact ground-shearBox
     // and ground-loadPlate.
     ground->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
-    utils::AddBoxGeometry(ground.get(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
-    utils::AddBoxGeometry(ground.get(), ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
-    utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
-    utils::AddBoxGeometry(ground.get(), ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, hdimY + hthick, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
+    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, hdimY + hthick, hdimZ));
     ground->GetCollisionModel()->BuildModel();
 
     system->AddBody(ground);
 
-// --------------------
-// Create the wheel -- always SECOND body in system
-// --------------------
+    // --------------------
+    // Create the wheel -- always SECOND body in system
+    // --------------------
 
-// Initially, the wheel is fixed to ground.
+    // Initially, the wheel is fixed to ground.
 
-#ifdef USE_SMC
-    auto wheel = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    wheel->SetMaterialSurface(mat_walls);
-#else
     auto wheel = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    wheel->SetMaterialSurface(mat_walls);
-#endif
 
     // Set wheel starting pos, near back of the containing bin
     double hdimX_w = -hdimX + 1.01 * wheelRadius;
@@ -268,25 +256,19 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 
     // Add geometry of the wheel.
     wheel->GetCollisionModel()->ClearModel();
-    utils::AddCylinderGeometry(wheel.get(), wheelRadius, wheelWidth / 2, ChVector<>(0, 0, 0), QUNIT);
+    utils::AddCylinderGeometry(wheel.get(), mat_walls, wheelRadius, wheelWidth / 2, ChVector<>(0, 0, 0), QUNIT);
     wheel->GetCollisionModel()->BuildModel();
 
     system->AddBody(wheel);
 
-// ---------------------
-// Create the chassis -- always THIRD body in the system
-// ---------------------
+    // ---------------------
+    // Create the chassis -- always THIRD body in the system
+    // ---------------------
 
-// Initially, the chassis is fixed to ground.
-// It is released after the settling phase.
+    // Initially, the chassis is fixed to ground.
+    // It is released after the settling phase.
 
-#ifdef USE_SMC
-    auto chassis = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    chassis->SetMaterialSurface(mat_walls);
-#else
     auto chassis = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    chassis->SetMaterialSurface(mat_walls);
-#endif
 
     chassis->SetIdentifier(Id_chassis);
     chassis->SetMass(1.0);
@@ -296,26 +278,20 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 
     // Add geometry of the wheel.
     chassis->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(chassis.get(), ChVector<>(.1 * wheelRadius, .1 * wheelRadius, .1 * wheelRadius),
+    utils::AddBoxGeometry(chassis.get(), mat_walls, ChVector<>(.1 * wheelRadius, .1 * wheelRadius, .1 * wheelRadius),
                           ChVector<>(0, 0, 0));
     chassis->GetCollisionModel()->BuildModel();
 
     system->AddBody(chassis);
 
-// ---------------------
-// Create the axle -- always FOURTH body in the system
-// ---------------------
+    // ---------------------
+    // Create the axle -- always FOURTH body in the system
+    // ---------------------
 
-// Initially, the axle is fixed to ground.
-// It is released after the settling phase.
+    // Initially, the axle is fixed to ground.
+    // It is released after the settling phase.
 
-#ifdef USE_SMC
-    auto axle = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    axle->SetMaterialSurface(mat_walls);
-#else
     auto axle = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    axle->SetMaterialSurface(mat_walls);
-#endif
 
     axle->SetIdentifier(Id_axle);
     axle->SetMass(wheelWeight / gravity);
@@ -325,7 +301,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 
     // Add geometry of the wheel.
     axle->GetCollisionModel()->ClearModel();
-    utils::AddSphereGeometry(axle.get(), 0.1 * wheelRadius, ChVector<>(0, 0, 0));
+    utils::AddSphereGeometry(axle.get(), mat_walls, 0.1 * wheelRadius, ChVector<>(0, 0, 0));
     axle->GetCollisionModel()->BuildModel();
 
     system->AddBody(axle);
@@ -438,9 +414,9 @@ int CreateGranularMaterial(ChSystemParallel* system) {
 // =============================================================================
 
 void CreateBall(ChSystemParallel* system) {
-// ------------------------------
-// Create a material for the ball
-// ------------------------------
+    // ------------------------------
+    // Create a material for the ball
+    // ------------------------------
 
 #ifdef USE_SMC
     auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
@@ -451,17 +427,11 @@ void CreateBall(ChSystemParallel* system) {
     mat_g->SetFriction(mu_g);
 #endif
 
-// ---------------
-// Create the ball
-// ---------------
+    // ---------------
+    // Create the ball
+    // ---------------
 
-#ifdef USE_SMC
-    auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    ball->SetMaterialSurface(mat_g);
-#else
     auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    ball->SetMaterialSurface(mat_g);
-#endif
 
     ball->SetIdentifier(Id_ball);
     ball->SetMass(mass_ball);
@@ -470,7 +440,7 @@ void CreateBall(ChSystemParallel* system) {
     ball->SetBodyFixed(false);
 
     ball->GetCollisionModel()->ClearModel();
-    utils::AddSphereGeometry(ball.get(), radius_ball);
+    utils::AddSphereGeometry(ball.get(), mat_g, radius_ball);
     ball->GetCollisionModel()->BuildModel();
 
     system->AddBody(ball);

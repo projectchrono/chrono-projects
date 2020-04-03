@@ -98,14 +98,13 @@ int main(int argc, char* argv[]) {
     material->SetFriction(0.2f);
 
     // Ground
-    auto ground = chrono_types::make_shared<ChBody>(ChMaterialSurface::NSC);
+    auto ground = chrono_types::make_shared<ChBody>();
     system.AddBody(ground);
     ground->SetBodyFixed(true);
 
     ground->SetCollide(true);
-    ground->SetMaterialSurface(material);
     ground->GetCollisionModel()->ClearModel();
-    ground->GetCollisionModel()->AddBox(4, 2, 1, ChVector<>(0, 0, -1));
+    ground->GetCollisionModel()->AddBox(material, 4, 2, 1, ChVector<>(0, 0, -1));
     ground->GetCollisionModel()->BuildModel();
 
     auto box = chrono_types::make_shared<ChBoxShape>();
@@ -116,7 +115,7 @@ int main(int argc, char* argv[]) {
     ground->AddAsset(box);
 
     // Crank
-    auto ball = chrono_types::make_shared<ChBody>(ChMaterialSurface::NSC);
+    auto ball = chrono_types::make_shared<ChBody>();
     system.AddBody(ball);
     ball->SetMass(1);
     ball->SetInertiaXX(ChVector<>(0.4, 0.4, 0.4));
@@ -124,9 +123,8 @@ int main(int argc, char* argv[]) {
     ball->SetPos_dt(ChVector<>(2, 0, 0));
 
     ball->SetCollide(true);
-    ball->SetMaterialSurface(material);
     ball->GetCollisionModel()->ClearModel();
-    ball->GetCollisionModel()->AddSphere(1);
+    ball->GetCollisionModel()->AddSphere(material, 1);
     ball->GetCollisionModel()->BuildModel();
 
     auto sphere = chrono_types::make_shared<ChSphereShape>();

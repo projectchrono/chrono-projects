@@ -2,7 +2,7 @@
 // PROJECT CHRONO - http://projectchrono.org
 //
 // Copyright (c) 2014 projectchrono.org
-// All right reserved.
+// All rights reserved.
 //
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file at the top level of the distribution and at
@@ -28,32 +28,19 @@
 #include <vector>
 #include <cmath>
 
+#include "chrono_parallel/physics/ChSystemParallel.h"
+
 #include "chrono/ChConfig.h"
 #include "chrono/physics/ChLinkMotorRotationAngle.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-#include "chrono_parallel/physics/ChSystemParallel.h"
-
-// Note: CHRONO_OPENGL is defined in ChConfig.h
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
 using namespace chrono;
 using namespace chrono::collision;
-
-const char* out_folder = "../MIXER_SMC/POVRAY";
-
-// -----------------------------------------------------------------------------
-// Generate postprocessing output with current system state.
-// -----------------------------------------------------------------------------
-void OutputData(ChSystemParallel* sys, int out_frame, double time) {
-    char filename[100];
-    sprintf(filename, "%s/data_%03d.dat", out_folder, out_frame);
-    utils::WriteShapesPovray(sys, filename);
-    std::cout << "time = " << time << std::flush << std::endl;
-}
 
 // -----------------------------------------------------------------------------
 // Create a bin consisting of five boxes attached to the ground and a mixer
@@ -72,8 +59,7 @@ void AddContainer(ChSystemParallelSMC* sys) {
     mat->SetRestitution(0.1f);
 
     // Create the containing bin (2 x 2 x 1)
-    auto bin = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    bin->SetMaterialSurface(mat);
+    auto bin = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     bin->SetIdentifier(binId);
     bin->SetMass(1);
     bin->SetPos(ChVector<>(0, 0, 0));
@@ -85,11 +71,15 @@ void AddContainer(ChSystemParallelSMC* sys) {
     double hthick = 0.1;
 
     bin->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(bin.get(), ChVector<>(hdim.x(), hdim.y(), hthick), ChVector<>(0, 0, -hthick));
-    utils::AddBoxGeometry(bin.get(), ChVector<>(hthick, hdim.y(), hdim.z()), ChVector<>(-hdim.x() - hthick, 0, hdim.z()));
-    utils::AddBoxGeometry(bin.get(), ChVector<>(hthick, hdim.y(), hdim.z()), ChVector<>(hdim.x() + hthick, 0, hdim.z()));
-    utils::AddBoxGeometry(bin.get(), ChVector<>(hdim.x(), hthick, hdim.z()), ChVector<>(0, -hdim.y() - hthick, hdim.z()));
-    utils::AddBoxGeometry(bin.get(), ChVector<>(hdim.x(), hthick, hdim.z()), ChVector<>(0, hdim.y() + hthick, hdim.z()));
+    utils::AddBoxGeometry(bin.get(), mat, ChVector<>(hdim.x(), hdim.y(), hthick), ChVector<>(0, 0, -hthick));
+    utils::AddBoxGeometry(bin.get(), mat, ChVector<>(hthick, hdim.y(), hdim.z()),
+                          ChVector<>(-hdim.x() - hthick, 0, hdim.z()));
+    utils::AddBoxGeometry(bin.get(), mat, ChVector<>(hthick, hdim.y(), hdim.z()),
+                          ChVector<>(hdim.x() + hthick, 0, hdim.z()));
+    utils::AddBoxGeometry(bin.get(), mat, ChVector<>(hdim.x(), hthick, hdim.z()),
+                          ChVector<>(0, -hdim.y() - hthick, hdim.z()));
+    utils::AddBoxGeometry(bin.get(), mat, ChVector<>(hdim.x(), hthick, hdim.z()),
+                          ChVector<>(0, hdim.y() + hthick, hdim.z()));
     bin->GetCollisionModel()->SetFamily(1);
     bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
     bin->GetCollisionModel()->BuildModel();
@@ -97,8 +87,8 @@ void AddContainer(ChSystemParallelSMC* sys) {
     sys->AddBody(bin);
 
     // The rotating mixer body (1.6 x 0.2 x 0.4)
-    auto mixer = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    mixer->SetMaterialSurface(mat);
+    auto mixer =
+        chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     mixer->SetIdentifier(mixerId);
     mixer->SetMass(10.0);
     mixer->SetInertiaXX(ChVector<>(50, 50, 50));
@@ -109,7 +99,7 @@ void AddContainer(ChSystemParallelSMC* sys) {
     ChVector<> hsize(0.8, 0.1, 0.2);
 
     mixer->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(mixer.get(), hsize);
+    utils::AddBoxGeometry(mixer.get(), mat, hsize);
     mixer->GetCollisionModel()->SetFamily(2);
     mixer->GetCollisionModel()->BuildModel();
 
@@ -142,9 +132,7 @@ void AddFallingBalls(ChSystemParallelSMC* sys) {
         for (int iy = -2; iy < 3; iy++) {
             ChVector<> pos(0.4 * ix, 0.4 * iy, 1);
 
-            auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-            ball->SetMaterialSurface(ballMat);
-
+            auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
             ball->SetIdentifier(ballId++);
             ball->SetMass(mass);
             ball->SetInertiaXX(inertia);
@@ -154,7 +142,7 @@ void AddFallingBalls(ChSystemParallelSMC* sys) {
             ball->SetCollide(true);
 
             ball->GetCollisionModel()->ClearModel();
-            utils::AddSphereGeometry(ball.get(), radius);
+            utils::AddSphereGeometry(ball.get(), ballMat, radius);
             ball->GetCollisionModel()->BuildModel();
 
             sys->AddBody(ball);
@@ -166,6 +154,8 @@ void AddFallingBalls(ChSystemParallelSMC* sys) {
 // Create the system, specify simulation parameters, and run simulation loop.
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
+
     int threads = 8;
 
     // Simulation parameters
@@ -186,10 +176,10 @@ int main(int argc, char* argv[]) {
     ChSystemParallelSMC msystem;
 
     // Set number of threads.
-    int max_threads = omp_get_num_procs();
+    int max_threads = CHOMPfunctions::GetNumProcs();
     if (threads > max_threads)
         threads = max_threads;
-    omp_set_num_threads(threads);
+    CHOMPfunctions::SetNumThreads(threads);
 
     // Set gravitational acceleration
     msystem.Set_G_acc(ChVector<>(0, 0, -gravity));
@@ -216,7 +206,8 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_OPENGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
     gl_window.Initialize(1280, 720, "mixerSMC", &msystem);
-    gl_window.SetCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
+    gl_window.SetCamera(ChVector<>(0, -3, 2), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
+    gl_window.SetRenderMode(opengl::WIREFRAME);
 
     // Uncomment the following two lines for the OpenGL manager to automatically
     // run the simulation in an infinite loop.
@@ -233,15 +224,9 @@ int main(int argc, char* argv[]) {
     }
 #else
     // Run simulation for specified time
-    int num_steps = std::ceil(time_end / time_step);
-    int out_steps = std::ceil((1 / time_step) / out_fps);
-    int out_frame = 0;
+    int num_steps = (int)std::ceil(time_end / time_step);
     double time = 0;
     for (int i = 0; i < num_steps; i++) {
-        if (i % out_steps == 0) {
-            OutputData(&msystem, out_frame, time);
-            out_frame++;
-        }
         msystem.DoStepDynamics(time_step);
         time += time_step;
     }

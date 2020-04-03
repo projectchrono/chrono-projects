@@ -18,15 +18,15 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/physics/ChSystemSMC.h"
-#include "chrono/collision/ChCCollisionUtils.h"
+#include "chrono/collision/ChCollisionUtils.h"
 
 #include "chrono_irrlicht/ChIrrApp.h"
 
 using namespace chrono;
 using namespace chrono::irrlicht;
 
-void AddWallBox(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVector<>& loc) {
-    body->GetCollisionModel()->AddBox(dim.x(), dim.y(), dim.z(), loc);
+void AddWallBox(std::shared_ptr<ChBody> body, std::shared_ptr<ChMaterialSurface> mat, const ChVector<>& dim, const ChVector<>& loc) {
+    body->GetCollisionModel()->AddBox(mat, dim.x(), dim.y(), dim.z(), loc);
 
     auto box = chrono_types::make_shared<ChBoxShape>();
     box->GetBoxGeometry().Size = dim;
@@ -36,7 +36,10 @@ void AddWallBox(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVec
     body->AddAsset(chrono_types::make_shared<ChColorAsset>(0.5f, 0.5f, 0.0f));
 }
 
-void AddWallMesh(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVector<>& loc) {
+void AddWallMesh(std::shared_ptr<ChBody> body,
+                 std::shared_ptr<ChMaterialSurface> mat,
+                 const ChVector<>& dim,
+                 const ChVector<>& loc) {
     auto trimesh = chrono_types::make_shared<geometry::ChTriangleMeshConnected>();
 
     std::vector<ChVector<> >& vertices = trimesh->getCoordsVertices();
@@ -97,7 +100,7 @@ void AddWallMesh(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVe
     for (int i = 0; i < num_faces; i++)
       idx_normals[i] = idx_vertices[i];
 
-    body->GetCollisionModel()->AddTriangleMesh(trimesh, true, true, loc);
+    body->GetCollisionModel()->AddTriangleMesh(mat, trimesh, true, true, loc);
 
     auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
     trimesh_shape->SetMesh(trimesh);
@@ -106,7 +109,10 @@ void AddWallMesh(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVe
     body->AddAsset(chrono_types::make_shared<ChColorAsset>(0.0f, 0.0f, 0.5f));
 }
 
-void AddWallHull(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVector<>& loc) {
+void AddWallHull(std::shared_ptr<ChBody> body,
+                 std::shared_ptr<ChMaterialSurface> mat,
+                 const ChVector<>& dim,
+                 const ChVector<>& loc) {
     std::vector<ChVector<>> points;
 
     points.push_back(ChVector<>(-dim.x(), -dim.y(), -dim.z()) + loc);
@@ -118,7 +124,7 @@ void AddWallHull(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVe
     points.push_back(ChVector<>(+dim.x(), +dim.y(), +dim.z()) + loc);
     points.push_back(ChVector<>(+dim.x(), -dim.y(), +dim.z()) + loc);
 
-    body->GetCollisionModel()->AddConvexHull(points);
+    body->GetCollisionModel()->AddConvexHull(mat, points);
 
     auto shape = chrono_types::make_shared<ChTriangleMeshShape>();
     collision::ChConvexHullLibraryWrapper lh;
@@ -128,44 +134,59 @@ void AddWallHull(std::shared_ptr<ChBody> body, const ChVector<>& dim, const ChVe
     body->AddAsset(chrono_types::make_shared<ChColorAsset>(0.5f, 0.0f, 0.0f));
 }
 
-void BuildContainerBoxes(std::shared_ptr<ChBody> body, double hdimX, double hdimY, double hdimZ, double hthick) {
+void BuildContainerBoxes(std::shared_ptr<ChBody> body,
+                         std::shared_ptr<ChMaterialSurface> mat,
+                         double hdimX,
+                         double hdimY,
+                         double hdimZ,
+                         double hthick) {
   std::cout << "Using boxes for container" << std::endl;
 
   body->GetCollisionModel()->ClearModel();
 
   // Bottom box
-  AddWallBox(body, ChVector<>(hdimX, hthick, hdimY), ChVector<>(0, 0, 0));
+  AddWallBox(body, mat, ChVector<>(hdimX, hthick, hdimY), ChVector<>(0, 0, 0));
 
   // Side box
-  AddWallBox(body, ChVector<>(hthick, hdimZ, hdimY), ChVector<>(hdimX - hthick, hdimZ, 0));
+  AddWallBox(body, mat, ChVector<>(hthick, hdimZ, hdimY), ChVector<>(hdimX - hthick, hdimZ, 0));
 
   body->GetCollisionModel()->BuildModel();
 }
 
-void BuildContainerMeshes(std::shared_ptr<ChBody> body, double hdimX, double hdimY, double hdimZ, double hthick) {
+void BuildContainerMeshes(std::shared_ptr<ChBody> body,
+                          std::shared_ptr<ChMaterialSurface> mat,
+                          double hdimX,
+                          double hdimY,
+                          double hdimZ,
+                          double hthick) {
   std::cout << "Using meshes for container" << std::endl;
 
   body->GetCollisionModel()->ClearModel();
 
   // Bottom mesh
-  AddWallMesh(body, ChVector<>(hdimX, hthick, hdimY), ChVector<>(0, 0, 0));
+  AddWallMesh(body, mat, ChVector<>(hdimX, hthick, hdimY), ChVector<>(0, 0, 0));
 
   // Side mesh
-  AddWallMesh(body, ChVector<>(hthick, hdimZ, hdimY), ChVector<>(hdimX - hthick, hdimZ, 0));
+  AddWallMesh(body, mat, ChVector<>(hthick, hdimZ, hdimY), ChVector<>(hdimX - hthick, hdimZ, 0));
 
   body->GetCollisionModel()->BuildModel();
 }
 
-void BuildContainerHulls(std::shared_ptr<ChBody> body, double hdimX, double hdimY, double hdimZ, double hthick) {
+void BuildContainerHulls(std::shared_ptr<ChBody> body,
+                         std::shared_ptr<ChMaterialSurface> mat,
+                         double hdimX,
+                         double hdimY,
+                         double hdimZ,
+                         double hthick) {
   std::cout << "Using convex hulls for container" << std::endl;
 
   body->GetCollisionModel()->ClearModel();
 
   // Bottom hull
-  AddWallHull(body, ChVector<>(hdimX, hthick, hdimY), ChVector<>(0, 0, 0));
+  AddWallHull(body, mat, ChVector<>(hdimX, hthick, hdimY), ChVector<>(0, 0, 0));
 
   // Side hull
-  AddWallHull(body, ChVector<>(hthick, hdimZ, hdimY), ChVector<>(hdimX - hthick, hdimZ, 0));
+  AddWallHull(body, mat, ChVector<>(hthick, hdimZ, hdimY), ChVector<>(hdimX - hthick, hdimZ, 0));
 
   body->GetCollisionModel()->BuildModel();
 }
@@ -207,7 +228,7 @@ int main(int argc, char* argv[]) {
     material->SetFriction(0.4f);
 
     // Create the falling ball
-    auto ball = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
+    auto ball = chrono_types::make_shared<ChBody>();
 
     ball->SetIdentifier(ballId);
     ball->SetMass(mass);
@@ -217,11 +238,10 @@ int main(int argc, char* argv[]) {
     ball->SetPos_dt(init_vel);
     // ball->SetWvel_par(ChVector<>(0,0,3));
     ball->SetBodyFixed(false);
-    ball->SetMaterialSurface(material);
 
     ball->SetCollide(true);
     ball->GetCollisionModel()->ClearModel();
-    ball->GetCollisionModel()->AddSphere(radius);
+    ball->GetCollisionModel()->AddSphere(material, radius);
     ball->GetCollisionModel()->BuildModel();
 
     auto sphere = chrono_types::make_shared<ChSphereShape>();
@@ -235,7 +255,7 @@ int main(int argc, char* argv[]) {
     msystem.AddBody(ball);
 
     // Create container
-    auto bin = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
+    auto bin = chrono_types::make_shared<ChBody>();
 
     bin->SetIdentifier(binId);
     bin->SetMass(1);
@@ -243,11 +263,10 @@ int main(int argc, char* argv[]) {
     bin->SetRot(ChQuaternion<>(1, 0, 0, 0));
     bin->SetCollide(true);
     bin->SetBodyFixed(true);
-    bin->SetMaterialSurface(material);
 
-    //BuildContainerBoxes(bin, hdimX, hdimY, hdimZ, hthick);
-    //BuildContainerMeshes(bin, hdimX, hdimY, hdimZ, hthick);
-    BuildContainerHulls(bin, hdimX, hdimY, hdimZ, hthick);
+    //BuildContainerBoxes(bin, material, hdimX, hdimY, hdimZ, hthick);
+    //BuildContainerMeshes(bin, material, hdimX, hdimY, hdimZ, hthick);
+    BuildContainerHulls(bin, material, hdimX, hdimY, hdimZ, hthick);
 
     msystem.AddBody(bin);
 

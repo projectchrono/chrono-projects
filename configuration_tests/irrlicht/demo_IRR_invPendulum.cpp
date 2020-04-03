@@ -281,7 +281,7 @@ int main(int argc, char* argv[]) {
     // Simulation loop
     // ---------------
     ChRealtimeStepTimer m_realtime_timer;
-    double max_step = 0.001;
+    double step = 1e-3;
 
     // Initialize cart location target switching
     int target_id = 0;
@@ -311,7 +311,6 @@ int main(int argc, char* argv[]) {
         cart->Empty_forces_accumulators();
         cart->Accumulate_force(ChVector<>(controller.GetForce(), 0, 0), ChVector<>(0, 0, 0), true);
         // Advance system and controller states
-        double step = m_realtime_timer.SuggestSimulationStep(max_step);
         system.DoStepDynamics(step);
         controller.Advance(step);
 

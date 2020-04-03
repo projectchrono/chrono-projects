@@ -32,8 +32,6 @@
 #include "chrono/fea/ChLinkDirFrame.h"
 
 #include "chrono/fea/ChVisualizationFEAmesh.h"
-#include "chrono_irrlicht/ChBodySceneNode.h"
-#include "chrono_irrlicht/ChBodySceneNodeTools.h"
 #include "chrono_irrlicht/ChIrrAppInterface.h"
 #include "chrono_irrlicht/ChIrrApp.h"
 #include "chrono_mkl/ChSolverMKL.h"
@@ -1588,11 +1586,10 @@ int main(int argc, char* argv[]) {
 
 
     // Create the a plane using body of 'box' type:
-    auto mrigidBody = chrono_types::make_shared<ChBodyEasyBox>(10, 10, 0.000001, 1000, false, true);
+    auto mrigidBody = chrono_types::make_shared<ChBodyEasyBox>(10, 10, 0.000001, 1000, true, false); // no collision
     my_system.Add(mrigidBody);
     mrigidBody->SetPos(ChVector<>(0, 0, ContactZ));
     mrigidBody->SetBodyFixed(true);
-    mrigidBody->GetMaterialSurfaceNSC()->SetFriction(0.5);
 
 
     application.AssetBindAll();
