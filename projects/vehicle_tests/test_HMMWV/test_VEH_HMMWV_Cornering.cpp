@@ -174,8 +174,8 @@ int main(int argc, char* argv[]) {
     patch_mat->SetYoungModulus(2e7f);
     patch_mat->SetPoissonRatio(0.3f);
     RigidTerrain terrain(my_hmmwv.GetSystem());
-    auto patch = terrain.AddPatch(patch_mat, ChCoordsys<>(ChVector<>(0, 0, terrainHeight - 5), QUNIT),
-                                  ChVector<>(terrainLength, terrainWidth, 10));
+    auto patch =
+        terrain.AddPatch(patch_mat, ChVector<>(0, 0, terrainHeight), ChVector<>(0, 0, 1), terrainLength, terrainWidth);
     patch->SetColor(ChColor(1, 1, 1));
     patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 100, 50);
     terrain.Initialize();
@@ -209,7 +209,6 @@ int main(int argc, char* argv[]) {
     app.AddTypicalLogo();
     app.AddTypicalLights(irr::core::vector3df(-250.f, -250.f, 200.f), irr::core::vector3df(-250.f, 250.f, 200.f));
     app.AddTypicalLights(irr::core::vector3df(250.f, -250.f, 200.f), irr::core::vector3df(250.0f, 250.f, 200.f));
-    app.EnableGrid(false);
     app.SetChaseCamera(ChVector<>(0.0, 0.0, 1.75), 6.0, 0.5);
 
     app.SetTimestep(step_size);
