@@ -2,7 +2,7 @@
 	"box_X": 600,
 	"box_Z": 400,
 
-	"step_size": 1e-5,
+	"step_size": 5e-6,
 	"time_end": 10,
 
 	"grav_X": 0,
@@ -29,5 +29,5 @@
 	"psi_T": 32,
 	"psi_L": 16,
 	
-	"write_mode": "binary"
+	"write_mode": "none"
 }
