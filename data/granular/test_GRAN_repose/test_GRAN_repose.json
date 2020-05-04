@@ -4,10 +4,10 @@
 
 	"box_X": 60,
 	"box_Y": 60,
-	"box_Z": 10,
+	"box_Z": 20,
 
 	"step_size": 1e-6,
-	"time_end": 10,
+	"time_end": 2,
 
 	"grav_X": 0,
 	"grav_Y": 0,
@@ -15,8 +15,8 @@
 
 	"normalStiffS2S": 1e8,
 	"normalStiffS2W": 1e8,
-	"normalDampS2S": 1e5,
-	"normalDampS2W": 1e5,
+	"normalDampS2S": 1e6,
+	"normalDampS2W": 1e6,
 
 	"tangentStiffS2S": 1e8,
 	"tangentStiffS2W": 1e8,

@@ -29,9 +29,10 @@
 using namespace chrono;
 using namespace chrono::granular;
 
-int num_args = 5;
+int num_args = 6;
 void ShowUsage(std::string name) {
-    std::cout << "usage: " + name + " <json_file> <static_friction> <rolling_friction> <output_dir>" << std::endl;
+    std::cout << "usage: " + name + " <json_file> <static_friction> <rolling_friction> <cohesion> <output_dir>"
+              << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -50,7 +51,9 @@ int main(int argc, char* argv[]) {
     params.rolling_friction_coeffS2S = std::stof(argv[3]);
     params.rolling_friction_coeffS2W = std::stof(argv[3]);
 
-    params.output_dir = std::string(argv[4]);
+    params.cohesion_ratio = std::stof(argv[4]);
+
+    params.output_dir = std::string(argv[5]);
 
     // Setup simulation
     ChSystemGranularSMC gran_sys(params.sphere_radius, params.sphere_density,
@@ -66,6 +69,8 @@ int main(int argc, char* argv[]) {
     gran_sys.set_K_t_SPH2WALL(params.tangentStiffS2W);
     gran_sys.set_Gamma_t_SPH2SPH(params.tangentDampS2S);
     gran_sys.set_Gamma_t_SPH2WALL(params.tangentDampS2W);
+    gran_sys.set_static_friction_coeff_SPH2SPH(params.static_friction_coeffS2S);
+    gran_sys.set_static_friction_coeff_SPH2WALL(params.static_friction_coeffS2W);
 
     // gran_sys.set_rolling_mode(GRAN_ROLLING_MODE::NO_RESISTANCE);
     gran_sys.set_rolling_mode(GRAN_ROLLING_MODE::SCHWARTZ);
@@ -97,9 +102,9 @@ int main(int argc, char* argv[]) {
     std::vector<ChVector<float>> material_points;
 
     float fill_bottom = bottom_z + spacing;
-    float fill_height = 5.f;  // TODO
+    float fill_width = 5.f;
+    float fill_height = 2.f * fill_width;
     float fill_top = fill_bottom + fill_height;
-    float fill_width = 2.f * fill_height;  // TODO
 
     ChVector<float> center(0.f, 0.f, fill_bottom + fill_height / 2.f);
     material_points = sampler.SampleCylinderZ(center, fill_width, fill_height / 2.f);
