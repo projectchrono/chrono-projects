@@ -11,7 +11,6 @@
 set(DEMOS
     demo_IRR_collision
     demo_IRR_invPendulum
-    demo_IRR_debugDrawer_collisionModels
     #demo_IRR_sliderCrank
 )
 

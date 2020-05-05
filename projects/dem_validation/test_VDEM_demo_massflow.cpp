@@ -153,7 +153,7 @@ double height_collector = 1.0e-2;  // height of collector walls
 // Create mechanism
 // -----------------------------------------------------------------------------
 ChBody* CreateMechanism(ChSystemParallel* system) {
-// Create the common material
+    // Create the common material
 #ifdef USE_SMC
     auto mat_b = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_b->SetYoungModulus(Y_c);
@@ -164,14 +164,8 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
     mat_b->SetFriction(mu_c);
 #endif
 
-// Angled insert
-#ifdef USE_SMC
-    auto insert = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    insert->SetMaterialSurface(mat_b);
-#else
+    // Angled insert
     auto insert = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    insert->SetMaterialSurface(mat_b);
-#endif
 
     insert->SetIdentifier(0);
     insert->SetMass(1);
@@ -182,19 +176,13 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
     insert->SetBodyFixed(true);
 
     insert->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(insert.get(), ChVector<>(thickness * 0.5, width * 0.5, height_insert * 0.5));
+    utils::AddBoxGeometry(insert.get(), mat_b, ChVector<>(thickness * 0.5, width * 0.5, height_insert * 0.5));
     insert->GetCollisionModel()->BuildModel();
 
     system->AddBody(insert);
 
-// Static slot (back wall)
-#ifdef USE_SMC
-    auto slot = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    slot->SetMaterialSurface(mat_b);
-#else
+    // Static slot (back wall)
     auto slot = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    slot->SetMaterialSurface(mat_b);
-#endif
 
     slot->SetIdentifier(-1);
     slot->SetMass(1);
@@ -205,19 +193,13 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
     slot->SetBodyFixed(true);
 
     slot->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(slot.get(), ChVector<>(thickness / 2, width / 2, height / 2), ChVector<>(0, 0, 0));
+    utils::AddBoxGeometry(slot.get(), mat_b, ChVector<>(thickness / 2, width / 2, height / 2), ChVector<>(0, 0, 0));
     slot->GetCollisionModel()->BuildModel();
 
     system->AddBody(slot);
 
-// Lateral walls
-#ifdef USE_SMC
-    auto wall = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    wall->SetMaterialSurface(mat_b);
-#else
+    // Lateral walls
     auto wall = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    wall->SetMaterialSurface(mat_b);
-#endif
 
     wall->SetIdentifier(-2);
     wall->SetMass(1);
@@ -228,9 +210,9 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
     wall->SetBodyFixed(true);
 
     wall->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(wall.get(), ChVector<>(3 * height / 2, thickness / 2, height),
+    utils::AddBoxGeometry(wall.get(), mat_b, ChVector<>(3 * height / 2, thickness / 2, height),
                           ChVector<>(0, width / 2 + thickness / 2, height / 2));
-    utils::AddBoxGeometry(wall.get(), ChVector<>(3 * height / 2, thickness / 2, height),
+    utils::AddBoxGeometry(wall.get(), mat_b, ChVector<>(3 * height / 2, thickness / 2, height),
                           ChVector<>(0, -width / 2 - thickness / 2, height / 2));
     wall->GetCollisionModel()->BuildModel();
 

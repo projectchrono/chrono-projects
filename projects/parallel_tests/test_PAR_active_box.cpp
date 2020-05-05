@@ -33,13 +33,13 @@ using namespace chrono::collision;
 // =============================================================================
 int main(int argc, char* argv[]) {
     bool aabb_active = true;
-    ChMaterialSurface::ContactMethod method = ChMaterialSurface::SMC;
+    ChContactMethod method = ChContactMethod::SMC;
 
     // Create system and set method-specific solver settings
     ChSystemParallel* system;
     double time_step;
     switch (method) {
-        case ChMaterialSurface::SMC: {
+        case ChContactMethod::SMC: {
             ChSystemParallelSMC* sys = new ChSystemParallelSMC;
             sys->GetSettings()->solver.contact_force_model = ChSystemSMC::Hertz;
             sys->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::OneStep;
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
             time_step = 1e-3;
             break;
         }
-        case ChMaterialSurface::NSC: {
+        case ChContactMethod::NSC: {
             ChSystemParallelNSC* sys = new ChSystemParallelNSC;
             sys->GetSettings()->solver.solver_type = SolverType::BB;
             sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
     // Create ground body
     std::shared_ptr<chrono::ChMaterialSurface> material_g;
     switch (method) {
-        case ChMaterialSurface::SMC: {
+        case ChContactMethod::SMC: {
             auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             mat_g->SetYoungModulus(1e7f);
             mat_g->SetFriction(0.7f);
@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
             material_g = mat_g;
             break;
         }
-        case ChMaterialSurface::NSC: {
+        case ChContactMethod::NSC: {
             auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             mat_g->SetFriction(0.7f);
             mat_g->SetRestitution(0.5f);
@@ -104,16 +104,15 @@ int main(int argc, char* argv[]) {
     ground->SetPos(ChVector<>(0, 0, 0));
     ground->SetBodyFixed(true);
     ground->SetCollide(true);
-    ground->SetMaterialSurface(material_g);
     ground->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(ground.get(), ChVector<>(1, 1, 0.1), ChVector<>(0, 0, -0.1));
+    utils::AddBoxGeometry(ground.get(), material_g, ChVector<>(1, 1, 0.1), ChVector<>(0, 0, -0.1));
     ground->GetCollisionModel()->BuildModel();
     system->AddBody(ground);
 
     // Create ball body
     std::shared_ptr<chrono::ChMaterialSurface> material_b;
     switch (method) {
-        case ChMaterialSurface::SMC: {
+        case ChContactMethod::SMC: {
             auto mat_b = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             mat_b->SetYoungModulus(1e7f);
             mat_b->SetFriction(0.7f);
@@ -122,7 +121,7 @@ int main(int argc, char* argv[]) {
             material_b = mat_b;
             break;
         }
-        case ChMaterialSurface::NSC: {
+        case ChContactMethod::NSC: {
             auto mat_b = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             mat_b->SetFriction(0.7f);
             mat_b->SetRestitution(0.5f);
@@ -136,9 +135,8 @@ int main(int argc, char* argv[]) {
     ball->SetPos(ChVector<>(0, 0, 1));
     ball->SetPos_dt(ChVector<>(0, 0, 8));
     ball->SetCollide(true);
-    ball->SetMaterialSurface(material_b);
     ball->GetCollisionModel()->ClearModel();
-    utils::AddSphereGeometry(ball.get(), 0.2);
+    utils::AddSphereGeometry(ball.get(), material_b, 0.2);
     ball->GetCollisionModel()->BuildModel();
     system->AddBody(ball);
 

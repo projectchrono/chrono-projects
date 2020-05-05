@@ -91,7 +91,7 @@ class PARSettlingTest : public BaseTest {
   public:
     PARSettlingTest(const std::string& testName,
                     const std::string& testProjectName,
-                    ChMaterialSurface::ContactMethod method,
+                    ChContactMethod method,
                     int num_threads)
         : BaseTest(testName, testProjectName), m_method(method), m_execTime(0), m_num_threads(num_threads) {}
 
@@ -102,7 +102,7 @@ class PARSettlingTest : public BaseTest {
     virtual double getExecutionTime() const override { return m_execTime; }
 
   private:
-    ChMaterialSurface::ContactMethod m_method;
+    ChContactMethod m_method;
     double m_execTime;
     int m_num_threads;
 };
@@ -161,7 +161,7 @@ bool PARSettlingTest::execute() {
     double time_step;
 
     switch (m_method) {
-        case ChMaterialSurface::SMC: {
+        case ChContactMethod::SMC: {
             time_step = 1e-4;
             ChSystemParallelSMC* sys = new ChSystemParallelSMC;
             sys->GetSettings()->solver.contact_force_model = ChSystemSMC::Hooke;
@@ -171,7 +171,7 @@ bool PARSettlingTest::execute() {
 
             break;
         }
-        case ChMaterialSurface::NSC: {
+        case ChContactMethod::NSC: {
             time_step = 1e-3;
             ChSystemParallelNSC* sys = new ChSystemParallelNSC;
             sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
@@ -213,7 +213,7 @@ bool PARSettlingTest::execute() {
     std::shared_ptr<ChMaterialSurface> material_terrain;
 
     switch (m_method) {
-        case ChMaterialSurface::SMC: {
+        case ChContactMethod::SMC: {
             auto mat_ter = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             mat_ter->SetFriction(friction_terrain);
             mat_ter->SetRestitution(restitution_terrain);
@@ -229,7 +229,7 @@ bool PARSettlingTest::execute() {
 
             break;
         }
-        case ChMaterialSurface::NSC: {
+        case ChContactMethod::NSC: {
             auto mat_ter = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             mat_ter->SetFriction(friction_terrain);
             mat_ter->SetRestitution(restitution_terrain);
@@ -247,23 +247,22 @@ bool PARSettlingTest::execute() {
     container->SetMass(1);
     container->SetBodyFixed(true);
     container->SetCollide(true);
-    container->SetMaterialSurface(material_terrain);
 
     container->GetCollisionModel()->ClearModel();
     // Bottom box
-    utils::AddBoxGeometry(container.get(), ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick),
+    utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick),
                           ChQuaternion<>(1, 0, 0, 0), true);
     // Front box
-    utils::AddBoxGeometry(container.get(), ChVector<>(hthick, hdimY, hdimZ + hthick),
+    utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hthick, hdimY, hdimZ + hthick),
                           ChVector<>(hdimX + hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
     // Rear box
-    utils::AddBoxGeometry(container.get(), ChVector<>(hthick, hdimY, hdimZ + hthick),
+    utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hthick, hdimY, hdimZ + hthick),
                           ChVector<>(-hdimX - hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
     // Left box
-    utils::AddBoxGeometry(container.get(), ChVector<>(hdimX, hthick, hdimZ + hthick),
+    utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hdimX, hthick, hdimZ + hthick),
                           ChVector<>(0, hdimY + hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
     // Right box
-    utils::AddBoxGeometry(container.get(), ChVector<>(hdimX, hthick, hdimZ + hthick),
+    utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hdimX, hthick, hdimZ + hthick),
                           ChVector<>(0, -hdimY - hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
     container->GetCollisionModel()->BuildModel();
 
@@ -377,10 +376,10 @@ int main(int argc, char** argv) {
 
     bool passed = true;
 
-    PARSettlingTest testDEM2("metrics_PAR_settling_DEM_2", "Chrono::Parallel", ChMaterialSurface::SMC, 2);
-    PARSettlingTest testDEM4("metrics_PAR_settling_DEM_4", "Chrono::Parallel", ChMaterialSurface::SMC, 4);
-    PARSettlingTest testDVI2("metrics_PAR_settling_DVI_2", "Chrono::Parallel", ChMaterialSurface::NSC, 2);
-    PARSettlingTest testDVI4("metrics_PAR_settling_DVI_4", "Chrono::Parallel", ChMaterialSurface::NSC, 4);
+    PARSettlingTest testDEM2("metrics_PAR_settling_DEM_2", "Chrono::Parallel", ChContactMethod::SMC, 2);
+    PARSettlingTest testDEM4("metrics_PAR_settling_DEM_4", "Chrono::Parallel", ChContactMethod::SMC, 4);
+    PARSettlingTest testDVI2("metrics_PAR_settling_DVI_2", "Chrono::Parallel", ChContactMethod::NSC, 2);
+    PARSettlingTest testDVI4("metrics_PAR_settling_DVI_4", "Chrono::Parallel", ChContactMethod::NSC, 4);
 
     testDEM2.setOutDir(out_dir);
     testDEM2.setVerbose(true);

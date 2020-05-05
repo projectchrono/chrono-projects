@@ -57,7 +57,7 @@ bool addSingleLoad = false;
 bool addPressureAlessandro = true;
 
 std::shared_ptr<ChBody> BGround;
-std::shared_ptr<ChBodyEasyBox> SimpChassis;    // Chassis body
+std::shared_ptr<ChBody> SimpChassis;           // Chassis body
 std::shared_ptr<ChLinkPointFrame> constraint;  // Create shared pointers for rim-mesh constraints
 std::shared_ptr<ChLinkDirFrame> constraintD;
 std::shared_ptr<ChNodeFEAxyzD> ConstrainedNode;
@@ -563,7 +563,6 @@ int main(int argc, char* argv[]) {
     mmaterial->SetDampingF(0.2f);
     auto SimpChassis = chrono_types::make_shared<ChBodyAuxRef>();  // visualization?
     my_system.AddBody(SimpChassis);
-    SimpChassis->SetMaterialSurface(mmaterial);  // use shared surface properties
     SimpChassis->SetMass(2000.0);
     // optional, attach a texture for better visualization
     SimpChassis->SetPos(ChVector<>(0, 0, HumveeVertPos));
@@ -602,13 +601,10 @@ int main(int argc, char* argv[]) {
     my_system.AddLink(spring1);
 
     // Create a large cube as a floor.
-    auto mrigidBody = chrono_types::make_shared<ChBodyEasyBox>(20, 20, 0.00001, 1000,
-                                                      false,  // no collide
-                                                      true);  // visualize
+    auto mrigidBody = chrono_types::make_shared<ChBodyEasyBox>(20, 20, 0.00001, 1000, true, false); // no collision
     my_system.Add(mrigidBody);
     mrigidBody->SetPos(ChVector<>(0, 0, GroundLoc));
     mrigidBody->SetBodyFixed(true);
-    mrigidBody->GetMaterialSurfaceNSC()->SetFriction(0.0);
     my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
 
 // Set up solver

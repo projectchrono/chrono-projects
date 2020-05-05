@@ -53,7 +53,7 @@ using std::endl;
 #define USE_SMC
 
 // Parameters for the falling object
-collision::ShapeType shape_o = collision::CONE;
+ChCollisionShape::Type shape_o = ChCollisionShape::Type::CONE;
 
 ChVector<> initPos(1.0, -1.0, 2.0);
 // ChQuaternion<> initRot(1.0, 0.0, 0.0, 0.0);
@@ -63,7 +63,7 @@ ChVector<> initLinVel(0.0, 0.0, 0.0);
 ChVector<> initAngVel(0.0, 0.0, 0.0);
 
 // Ground contact shapes (SPHERE, CAPSULE, BOX)
-collision::ShapeType shape_g = collision::SPHERE;
+ChCollisionShape::Type shape_g = ChCollisionShape::Type::SPHERE;
 
 // -----------------------------------------------------------------------------
 // Simulation parameters
@@ -118,16 +118,12 @@ void CreateGround(ChSystemParallel* system) {
     mat_g->SetFriction(0.4f);
     mat_g->SetRestitution(0.4f);
 
-    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    ground->SetMaterialSurface(mat_g);
 #else
     auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(0.4f);
-
-    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    ground->SetMaterialSurface(mat_g);
 #endif
 
+    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
     ground->SetIdentifier(-1);
     ground->SetMass(1);
     ground->SetPos(ChVector<>(0, 0, 0));
@@ -140,7 +136,7 @@ void CreateGround(ChSystemParallel* system) {
     // ---------------------------------------------------------
 
     switch (shape_g) {
-        case SPHERE:
+        case ChCollisionShape::Type::SPHERE:
             // A grid of 5x5 spheres
             {
                 double spacing = 1.6;
@@ -150,14 +146,14 @@ void CreateGround(ChSystemParallel* system) {
                 for (int ix = -2; ix < 3; ix++) {
                     for (int iy = -2; iy < 3; iy++) {
                         ChVector<> pos(ix * spacing, iy * spacing, -bigR);
-                        utils::AddSphereGeometry(ground.get(), bigR, pos);
+                        utils::AddSphereGeometry(ground.get(), mat_g, bigR, pos);
                     }
                 }
                 ground->GetCollisionModel()->BuildModel();
             }
             break;
 
-        case CAPSULE:
+        case ChCollisionShape::Type::CAPSULE:
             // A set of 7 parallel capsules, rotated by 30 degrees around Z
             {
                 double spacing = 1.5;
@@ -170,13 +166,13 @@ void CreateGround(ChSystemParallel* system) {
                 ground->GetCollisionModel()->ClearModel();
                 for (int ix = -3; ix < 6; ix++) {
                     ChVector<> pos(ix * spacing, 0, -bigR);
-                    utils::AddCapsuleGeometry(ground.get(), bigR, bigH, pos, rot);
+                    utils::AddCapsuleGeometry(ground.get(), mat_g, bigR, bigH, pos, rot);
                 }
                 ground->GetCollisionModel()->BuildModel();
             }
             break;
 
-        case BOX:
+        case ChCollisionShape::Type::BOX:
             // A single box
             {
                 double bigHx = 6;
@@ -184,7 +180,7 @@ void CreateGround(ChSystemParallel* system) {
                 double bigHz = 1;
 
                 ground->GetCollisionModel()->ClearModel();
-                utils::AddBoxGeometry(ground.get(), ChVector<>(bigHx, bigHy, bigHz), ChVector<>(0, 0, -bigHz));
+                utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(bigHx, bigHy, bigHz), ChVector<>(0, 0, -bigHz));
                 ground->GetCollisionModel()->BuildModel();
             }
             break;
@@ -211,16 +207,12 @@ void CreateObject(ChSystemParallel* system) {
     mat_o->SetYoungModulus(1e7f);
     mat_o->SetFriction(0.4f);
     mat_o->SetRestitution(0.4f);
-
-    auto obj = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    obj->SetMaterialSurface(mat_o);
 #else
     auto mat_o = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_o->SetFriction(0.4f);
+#endif
 
     auto obj = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    obj->SetMaterialSurface(mat_o);
-#endif
 
     obj->SetIdentifier(1);
     obj->SetCollide(true);
@@ -239,52 +231,52 @@ void CreateObject(ChSystemParallel* system) {
     obj->GetCollisionModel()->ClearModel();
 
     switch (shape_o) {
-        case collision::SPHERE: {
+        case ChCollisionShape:: Type::SPHERE : {
             double radius = 0.3;
             rb = utils::CalcSphereBradius(radius);
             vol = utils::CalcSphereVolume(radius);
             J = utils::CalcSphereGyration(radius);
-            utils::AddSphereGeometry(obj.get(), radius);
+            utils::AddSphereGeometry(obj.get(), mat_o, radius);
         } break;
-        case collision::BOX: {
+        case ChCollisionShape::Type::BOX: {
             ChVector<> hdims(0.1, 0.2, 0.1);
             rb = utils::CalcBoxBradius(hdims);
             vol = utils::CalcBoxVolume(hdims);
             J = utils::CalcBoxGyration(hdims);
-            utils::AddBoxGeometry(obj.get(), hdims);
+            utils::AddBoxGeometry(obj.get(), mat_o, hdims);
         } break;
-        case collision::CAPSULE: {
+        case ChCollisionShape::Type::CAPSULE: {
             double radius = 0.1;
             double hlen = 0.2;
             rb = utils::CalcCapsuleBradius(radius, hlen);
             vol = utils::CalcCapsuleVolume(radius, hlen);
             J = utils::CalcCapsuleGyration(radius, hlen);
-            utils::AddCapsuleGeometry(obj.get(), radius, hlen);
+            utils::AddCapsuleGeometry(obj.get(), mat_o, radius, hlen);
         } break;
-        case collision::CYLINDER: {
+        case ChCollisionShape::Type::CYLINDER: {
             double radius = 0.1;
             double hlen = 0.2;
             rb = utils::CalcCylinderBradius(radius, hlen);
             vol = utils::CalcCylinderVolume(radius, hlen);
             J = utils::CalcCylinderGyration(radius, hlen);
-            utils::AddCylinderGeometry(obj.get(), radius, hlen);
+            utils::AddCylinderGeometry(obj.get(), mat_o, radius, hlen);
         } break;
-        case collision::ROUNDEDCYL: {
+        case ChCollisionShape::Type::ROUNDEDCYL: {
             double radius = 0.1;
             double hlen = 0.2;
             double srad = 0.05;
             rb = utils::CalcRoundedCylinderBradius(radius, hlen, srad);
             vol = utils::CalcRoundedCylinderVolume(radius, hlen, srad);
             J = utils::CalcRoundedCylinderGyration(radius, hlen, srad);
-            utils::AddRoundedCylinderGeometry(obj.get(), radius, hlen, srad);
+            utils::AddRoundedCylinderGeometry(obj.get(), mat_o, radius, hlen, srad);
         } break;
-        case collision::CONE: {
+        case ChCollisionShape::Type::CONE: {
             double radius = 0.2;
             double height = 0.4;
             rb = utils::CalcConeBradius(radius, height);
             vol = utils::CalcConeVolume(radius, height);
             J = utils::CalcConeGyration(radius, height);
-            utils::AddConeGeometry(obj.get(), radius, height);
+            utils::AddConeGeometry(obj.get(), mat_o, radius, height);
         } break;
     }
 

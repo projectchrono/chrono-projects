@@ -16,7 +16,6 @@
 #include "chrono/ChConfig.h"
 #include "chrono/core/ChTimer.h"
 #include "chrono/solver/ChIterativeSolverLS.h"
-#include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 

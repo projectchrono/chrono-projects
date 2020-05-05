@@ -248,7 +248,7 @@ int main(int argc, char* argv[]) {
     //
 
     if (!simple_rack) {
-        auto rack = chrono_types::make_shared<ChBodyEasyBox>(hbarL2, hbarW, thickZ, 7000, false);
+        auto rack = chrono_types::make_shared<ChBodyEasyBox>(hbarL2, hbarW, thickZ, 7000, true, false);
         rack->SetPos(0.5 * (vBl + vCl));
         my_system.Add(rack);
 
@@ -260,7 +260,7 @@ int main(int argc, char* argv[]) {
         constr_C->Initialize(node_Cl, rack, false, node_Cl->Frame(), node_Cl->Frame());
         my_system.Add(constr_C);
 
-        auto balance = chrono_types::make_shared<ChBodyEasyCylinder>(Rbalance, Wbalance, 7000, false);
+        auto balance = chrono_types::make_shared<ChBodyEasyCylinder>(Rbalance, Wbalance, 7000, true, false);
         balance->SetPos(vP + ChVector<>(0, 0, -OffPin));
         balance->SetRot(Q_from_AngAxis(CH_C_PI_2, VECT_X));
         for (int i = 0; i < 6; ++i) {

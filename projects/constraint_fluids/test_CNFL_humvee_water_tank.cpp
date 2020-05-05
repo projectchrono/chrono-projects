@@ -19,22 +19,18 @@
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
-
+#include "chrono_models/vehicle/hmmwv/HMMWV.h"
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 
-#include "chrono_models/vehicle/hmmwv/HMMWV.h"
-
 // Chrono::Parallel header files
+#include "chrono_parallel/collision/ChCollisionSystemParallel.h"
 #include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
-
-#include "chrono_parallel/collision/ChCollisionSystemParallel.h"
-
 #include "input_output.h"
 
 #undef CHRONO_OPENGL
@@ -47,6 +43,7 @@ using namespace chrono::collision;
 using namespace chrono::vehicle;
 using namespace chrono::vehicle::hmmwv;
 using namespace chrono::utils;
+
 // =============================================================================
 enum SimModes { TURN, LANE_CHANGE, GRAVEL };
 
@@ -81,7 +78,7 @@ TireModelType tire_model = TireModelType::RIGID;
 ChVector<> trackPoint(0.0, 0.0, 1.75);
 
 // Contact method
-ChMaterialSurface::ContactMethod contact_method = ChMaterialSurface::NSC;
+ChContactMethod contact_method = ChContactMethod::NSC;
 bool contact_vis = false;
 
 // Simulation step sizes
@@ -223,7 +220,7 @@ void RemoveCollisionModel(ChSystemParallelNSC* system, ChCollisionModel* model) 
     int body_id = pmodel->GetBody()->GetId();
     // loop over the models we nned to remove
     // std::cout << "removing: " << pmodel->GetNObjects() << " objects" << std::endl;
-    for (int j = 0; j < pmodel->GetNObjects(); j++) {
+    for (int j = 0; j < pmodel->GetNumShapes(); j++) {
         // find a model to remove
         bool removed = false;
         int index = -1;
@@ -239,37 +236,37 @@ void RemoveCollisionModel(ChSystemParallelNSC* system, ChCollisionModel* model) 
                 // std::cout << "removing: type " << type << " " << start<< " " <<j << std::endl;
 
                 switch (type) {
-                    case chrono::collision::SPHERE:
+                    case ChCollisionShape::Type::SPHERE:
                         ERASE_MACRO_LEN(data_manager->shape_data.sphere_rigid, start, length);
                         break;
-                    case chrono::collision::ELLIPSOID:
+                    case ChCollisionShape::Type::ELLIPSOID:
                         ERASE_MACRO_LEN(data_manager->shape_data.box_like_rigid, start, length);
                         break;
-                    case chrono::collision::BOX:
+                    case ChCollisionShape::Type::BOX:
                         ERASE_MACRO_LEN(data_manager->shape_data.box_like_rigid, start, length);
                         break;
-                    case chrono::collision::CYLINDER:
+                    case ChCollisionShape::Type::CYLINDER:
                         ERASE_MACRO_LEN(data_manager->shape_data.box_like_rigid, start, length);
                         break;
-                    case chrono::collision::CONE:
+                    case ChCollisionShape::Type::CONE:
                         ERASE_MACRO_LEN(data_manager->shape_data.box_like_rigid, start, length);
                         break;
-                    case chrono::collision::CAPSULE:
+                    case ChCollisionShape::Type::CAPSULE:
                         ERASE_MACRO_LEN(data_manager->shape_data.capsule_rigid, start, length);
                         break;
-                    case chrono::collision::ROUNDEDBOX:
+                    case ChCollisionShape::Type::ROUNDEDBOX:
                         ERASE_MACRO_LEN(data_manager->shape_data.rbox_like_rigid, start, length);
                         break;
-                    case chrono::collision::ROUNDEDCYL:
+                    case ChCollisionShape::Type::ROUNDEDCYL:
                         ERASE_MACRO_LEN(data_manager->shape_data.rbox_like_rigid, start, length);
                         break;
-                    case chrono::collision::ROUNDEDCONE:
+                    case ChCollisionShape::Type::ROUNDEDCONE:
                         ERASE_MACRO_LEN(data_manager->shape_data.rbox_like_rigid, start, length);
                         break;
-                    case chrono::collision::CONVEX:
+                    case ChCollisionShape::Type::CONVEX:
                         ERASE_MACRO_LEN(data_manager->shape_data.convex_rigid, start, length);
                         break;
-                    case chrono::collision::TRIANGLEMESH:
+                    case ChCollisionShape::Type::TRIANGLE:
                         ERASE_MACRO_LEN(data_manager->shape_data.convex_rigid, start, 3);
                         break;
                 }
@@ -348,42 +345,48 @@ void CreateFluid(ChSystemParallelNSC* system) {
 std::shared_ptr<ChBody> bottom_plate;
 // =============================================================================
 void CreateBase(ChSystemParallelNSC* system) {
+    Vector c_pos = Vector(0, 0, 0);
+
     bottom_plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    bottom_plate->SetMass(1);
+    bottom_plate->SetPos(Vector(0, 0, 0) + c_pos);
+    bottom_plate->SetRot(Quaternion(1, 0, 0, 0));
+    bottom_plate->SetCollide(true);
+    bottom_plate->SetBodyFixed(true);
+
     auto material = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     material->SetFriction(container_friction);
     material->SetCompliance(1e-9);
     material->SetCohesion(0);
-    Vector c_pos = Vector(0, 0, 0);
+
+    bottom_plate->GetCollisionModel()->ClearModel();
+    bottom_plate->GetCollisionModel()->SetFamily(2);
+    bottom_plate->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
+
     if (simulation_mode == TURN) {
-        InitializeObject(bottom_plate, 1, material, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
-        // AddBoxGeometry(bottom_plate.get(), Vector(40, 40, .1), Vector(0, 0, 0), Quaternion(1, 0, 0, 0));
-        // AddCylinderGeometry(bottom_plate.get(), 40, .1, Vector(0, 0, 0), Q_from_AngAxis(CH_C_PI_2, VECT_X));
-        AddBoxGeometry(bottom_plate.get(), Vector(4, 4, .1), Vector(0, 0, 0), Quaternion(1, 0, 0, 0));
+        AddBoxGeometry(bottom_plate.get(), material, Vector(4, 4, .1), Vector(0, 0, 0), Quaternion(1, 0, 0, 0));
     } else if (simulation_mode == LANE_CHANGE) {
-        InitializeObject(bottom_plate, 1, material, Vector(-30, -123, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2,
-                         2);
-        AddBoxGeometry(bottom_plate.get(), Vector(4, 3, .1), Vector(0, 0, 0), Quaternion(1, 0, 0, 0));
+        AddBoxGeometry(bottom_plate.get(), material, Vector(4, 3, .1), Vector(0, 0, 0), Quaternion(1, 0, 0, 0));
     } else if (simulation_mode == GRAVEL) {
-        InitializeObject(bottom_plate, 1, material, Vector(0, 0, 0) + c_pos, Quaternion(1, 0, 0, 0), true, true, 2, 2);
 
-        AddBoxGeometry(bottom_plate.get(), Vector(4, 2, .1), Vector(0, 0, 0), Quaternion(1, 0, 0, 0));
+        AddBoxGeometry(bottom_plate.get(), material, Vector(4, 2, .1), Vector(0, 0, 0), Quaternion(1, 0, 0, 0));
 
-        // AddBoxGeometry(bottom_plate.get(), Vector(7.5, 2, .1), Vector(4 + 7.5, 0, 0), Quaternion(1, 0, 0, 0));
-
-        AddBoxGeometry(bottom_plate.get(), Vector(10, 2, .1), Vector(4 + hdimX * 2 + 10.0, 0, 0),
+        AddBoxGeometry(bottom_plate.get(), material, Vector(10, 2, .1), Vector(4 + hdimX * 2 + 10.0, 0, 0),
                        Quaternion(1, 0, 0, 0));
 
         // extra side plates
-        AddBoxGeometry(bottom_plate.get(), Vector(12.5, .1, 2), Vector(4 + hdimX, -hdimY - .1, 2 - .1),
+        AddBoxGeometry(bottom_plate.get(), material, Vector(12.5, .1, 2), Vector(4 + hdimX, -hdimY - .1, 2 - .1),
                        Quaternion(1, 0, 0, 0));
-        AddBoxGeometry(bottom_plate.get(), Vector(12.5, .1, 2), Vector(4 + hdimX, hdimY + .1, 2 - .1),
+        AddBoxGeometry(bottom_plate.get(), material, Vector(12.5, .1, 2), Vector(4 + hdimX, hdimY + .1, 2 - .1),
                        Quaternion(1, 0, 0, 0));
         // Top
-        AddBoxGeometry(bottom_plate.get(), Vector(12.5, 2 + .1 * 2, .1), Vector(4 + hdimX, 0, 4 - .1),
+        AddBoxGeometry(bottom_plate.get(), material, Vector(12.5, 2 + .1 * 2, .1), Vector(4 + hdimX, 0, 4 - .1),
                        Quaternion(1, 0, 0, 0));
     }
 
-    FinalizeObject(bottom_plate, (ChSystemParallel*)system);
+    bottom_plate->GetCollisionModel()->BuildModel();
+    system->AddBody(bottom_plate);
+
     if (simulation_mode == GRAVEL) {
         CreateBoxContainer(system, 1, material, ChVector<>(hdimX, hdimY, hdimZ), hthick,
                            ChVector<>(4 + hdimX, 0, -hdimZ * 2 - hthick));
@@ -505,9 +508,11 @@ int main(int argc, char* argv[]) {
     my_hmmwv.GetChassisBody()->GetAssets().clear();
 
     std::shared_ptr<ChBodyAuxRef> m_chassis = my_hmmwv.GetChassisBody();
-    ;
+
+    auto material = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+
     // add sphere to center to mark chassis pos
-    utils::AddSphereGeometry(m_chassis.get(), .115, ChVector<>(0, 0, 0), QUNIT);
+    utils::AddSphereGeometry(m_chassis.get(), material, 0.115, ChVector<>(0, 0, 0), QUNIT);
 
     ChVector<> hdim(.1, .6, .05);
 
@@ -519,10 +524,10 @@ int main(int argc, char* argv[]) {
         ChQuaternion<> qq = Q_from_AngAxis(j * 12 * CH_C_DEG_TO_RAD, VECT_Y);
         ChVector<> ppp = ChVector<>(sin(12 * CH_C_DEG_TO_RAD * j), 0, cos(12 * CH_C_DEG_TO_RAD * j)) * .6;
 
-        utils::AddBoxGeometry(m_chassis.get(), hdim, ppp + ChVector<>(-1.9306 + .24, 0, 1.3011), qq);
+        utils::AddBoxGeometry(m_chassis.get(), material, hdim, ppp + ChVector<>(-1.9306 + .24, 0, 1.3011), qq);
     }
-    utils::AddCylinderGeometry(m_chassis.get(), .6, .05, ChVector<>(-1.9306 + .24, -.6, 1.3011), QUNIT);
-    utils::AddCylinderGeometry(m_chassis.get(), .6, .05, ChVector<>(-1.9306 + .24, .6, 1.3011), QUNIT);
+    utils::AddCylinderGeometry(m_chassis.get(), material, .6, .05, ChVector<>(-1.9306 + .24, -.6, 1.3011), QUNIT);
+    utils::AddCylinderGeometry(m_chassis.get(), material, .6, .05, ChVector<>(-1.9306 + .24, .6, 1.3011), QUNIT);
 
     my_hmmwv.GetChassisBody()->SetCollide(true);
     my_hmmwv.GetChassisBody()->GetCollisionModel()->BuildModel();

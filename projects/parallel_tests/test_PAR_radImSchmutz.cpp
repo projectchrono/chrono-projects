@@ -64,7 +64,7 @@ enum ProblemType { SETTLING, PUSHING, TESTING };
 ProblemType problem = TESTING;
 
 // Wheel contact shape (one of collision::CYLINDER or collision::ROUNDEDCYL)
-collision::ShapeType wheel_shape = collision::CYLINDER;
+ChCollisionShape::Type wheel_shape = ChCollisionShape::Type::CYLINDER;
 
 // -----------------------------------------------------------------------------
 // Simulation parameters
@@ -192,24 +192,16 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
     ChVector<> loc_sled = loc_revolute - ChVector<>(e, 0, 0);
     ChVector<> loc_prismatic = loc_sled - ChVector<>(0, 0, e / 4);
 
-// Create the ground body
-#ifdef USE_SMC
-    m_ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-#else
+    // Create the ground body
     m_ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-#endif
     m_ground->SetIdentifier(-1);
     m_ground->SetBodyFixed(true);
     m_ground->SetCollide(false);
 
     system->AddBody(m_ground);
 
-// Create the sled body
-#ifdef USE_SMC
-    m_sled = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-#else
+    // Create the sled body
     m_sled = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-#endif
     m_sled->SetIdentifier(1);
     m_sled->SetMass(mass1);
     m_sled->SetInertiaXX(inertia_sled);
@@ -230,7 +222,7 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
     system->AddBody(m_sled);
 
-// Create a material for the wheel body
+    // Create a material for the wheel body
 #ifdef USE_SMC
     auto mat_w = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_w->SetYoungModulus(2e6f);
@@ -241,14 +233,8 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
     mat_w->SetFriction(0.4f);
 #endif
 
-// Create the wheel body
-#ifdef USE_SMC
-    m_wheel = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    m_wheel->SetMaterialSurface(mat_w);
-#else
+    // Create the wheel body
     m_wheel = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    m_wheel->SetMaterialSurface(mat_w);
-#endif
     m_wheel->SetIdentifier(2);
     m_wheel->SetMass(mass_wheel);
     m_wheel->SetInertiaXX(inertia_wheel);
@@ -260,11 +246,11 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 
     m_wheel->GetCollisionModel()->ClearModel();
     switch (wheel_shape) {
-        case collision::CYLINDER:
-            utils::AddCylinderGeometry(m_wheel.get(), r_w, w_w / 2, ChVector<>(c, 0, -b), Q_from_AngZ(CH_C_PI_2));
+        case ChCollisionShape::Type::CYLINDER:
+            utils::AddCylinderGeometry(m_wheel.get(), mat_w, r_w, w_w / 2, ChVector<>(c, 0, -b), Q_from_AngZ(CH_C_PI_2));
             break;
-        case collision::ROUNDEDCYL:
-            utils::AddRoundedCylinderGeometry(m_wheel.get(), r_w - s_w, w_w / 2 - s_w, s_w, ChVector<>(c, 0, -b),
+        case ChCollisionShape::Type::ROUNDEDCYL:
+            utils::AddRoundedCylinderGeometry(m_wheel.get(), mat_w, r_w - s_w, w_w / 2 - s_w, s_w, ChVector<>(c, 0, -b),
                                               Q_from_AngZ(CH_C_PI_2));
             break;
     }

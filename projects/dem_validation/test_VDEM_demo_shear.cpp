@@ -127,8 +127,8 @@ double visual_out_step = 1e-1;  // time interval between PovRay outputs
 // -----------------------------------------------------------------------------
 // Utility for adding (visible or invisible) walls
 // -----------------------------------------------------------------------------
-void AddWall(std::shared_ptr<ChBody>& body, const ChVector<>& dim, const ChVector<>& loc, bool visible) {
-    body->GetCollisionModel()->AddBox(dim.x(), dim.y(), dim.z(), loc);
+void AddWall(std::shared_ptr<ChBody>& body, std::shared_ptr<ChMaterialSurface> mat, const ChVector<>& dim, const ChVector<>& loc, bool visible) {
+    body->GetCollisionModel()->AddBox(mat, dim.x(), dim.y(), dim.z(), loc);
 
     if (visible == true) {
         auto box = chrono_types::make_shared<ChBoxShape>();
@@ -213,12 +213,10 @@ int main(int argc, char* argv[]) {
 #ifdef USE_SMC
     cout << "Create SMC system" << endl;
     const std::string title = "soft-sphere (SMC) direct shear box test";
-    ChMaterialSurface::ContactMethod contact_method = ChMaterialSurface::SMC;
     ChSystemParallelSMC* my_system = new ChSystemParallelSMC();
 #else
     cout << "Create NSC system" << endl;
     const std::string title = "hard-sphere (NSC) direct shear box test";
-    ChMaterialSurface::ContactMethod contact_method = ChMaterialSurface::NSC;
     ChSystemParallelNSC* my_system = new ChSystemParallelNSC();
 #endif
 
@@ -290,7 +288,7 @@ int main(int argc, char* argv[]) {
 
     // Create lower bin
 
-    auto bin = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), contact_method);
+    auto bin = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
 
     bin->SetIdentifier(binId);
     bin->SetMass(1);
@@ -298,17 +296,15 @@ int main(int argc, char* argv[]) {
     bin->SetBodyFixed(true);
     bin->SetCollide(true);
 
-    bin->SetMaterialSurface(mat_ext);
-
     bin->GetCollisionModel()->ClearModel();
-    AddWall(bin, ChVector<>(width / 2, thickness / 2, length / 2), ChVector<>(0, 0, 0), true);
-    AddWall(bin, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
+    AddWall(bin, mat_ext, ChVector<>(width / 2, thickness / 2, length / 2), ChVector<>(0, 0, 0), true);
+    AddWall(bin, mat_ext, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
             ChVector<>(-width / 2 - thickness / 2, 0, 0), true);
-    AddWall(bin, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
+    AddWall(bin, mat_ext, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
             ChVector<>(width / 2 + thickness / 2, 0, 0), false);
-    AddWall(bin, ChVector<>(width / 2 + thickness, height / 2, thickness / 2),
+    AddWall(bin, mat_ext, ChVector<>(width / 2 + thickness, height / 2, thickness / 2),
             ChVector<>(0, 0, -length / 2 - thickness / 2), true);
-    AddWall(bin, ChVector<>(width / 2 + thickness, height / 2, thickness / 2),
+    AddWall(bin, mat_ext, ChVector<>(width / 2 + thickness, height / 2, thickness / 2),
             ChVector<>(0, 0, length / 2 + thickness / 2), true);
     bin->GetCollisionModel()->SetFamily(1);
     bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
@@ -320,7 +316,7 @@ int main(int argc, char* argv[]) {
 
     // Create upper shear box
 
-    auto box = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), contact_method);
+    auto box = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
 
     box->SetIdentifier(boxId);
     box->SetMass(1);
@@ -328,16 +324,14 @@ int main(int argc, char* argv[]) {
     box->SetBodyFixed(true);
     box->SetCollide(true);
 
-    box->SetMaterialSurface(mat_ext);
-
     box->GetCollisionModel()->ClearModel();
-    AddWall(box, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
+    AddWall(box, mat_ext, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
             ChVector<>(-width / 2 - thickness / 2, 0, 0), true);
-    AddWall(box, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
+    AddWall(box, mat_ext, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
             ChVector<>(width / 2 + thickness / 2, 0, 0), false);
-    AddWall(box, ChVector<>(width / 2 + thickness, height / 2, thickness / 2),
+    AddWall(box, mat_ext, ChVector<>(width / 2 + thickness, height / 2, thickness / 2),
             ChVector<>(0, 0, -length / 2 - thickness / 2), true);
-    AddWall(box, ChVector<>(width / 2 + thickness, height / 2, thickness / 2),
+    AddWall(box, mat_ext, ChVector<>(width / 2 + thickness, height / 2, thickness / 2),
             ChVector<>(0, 0, length / 2 + thickness / 2), true);
     box->GetCollisionModel()->SetFamily(2);
     box->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
@@ -349,7 +343,7 @@ int main(int argc, char* argv[]) {
 
     // Create upper load plate
 
-    auto plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), contact_method);
+    auto plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
 
     shear_Area = width * length;
 
@@ -359,10 +353,8 @@ int main(int argc, char* argv[]) {
     plate->SetBodyFixed(true);
     plate->SetCollide(true);
 
-    plate->SetMaterialSurface(mat_ext);
-
     plate->GetCollisionModel()->ClearModel();
-    AddWall(plate, ChVector<>(width / 2, thickness / 2, length / 2), ChVector<>(0, 0, 0), true);
+    AddWall(plate, mat_ext, ChVector<>(width / 2, thickness / 2, length / 2), ChVector<>(0, 0, 0), true);
     plate->GetCollisionModel()->SetFamily(3);
     plate->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
     plate->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
@@ -384,7 +376,7 @@ int main(int argc, char* argv[]) {
                 ball_x = 4.0 * radius * (float(j - b / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
                 ball_z = 4.0 * radius * (float(k - c / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
 
-                auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), contact_method);
+                auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
 
                 ball->SetIdentifier(ballId + 6 * 6 * i + 6 * j + k);
                 ball->SetMass(mass);
@@ -393,10 +385,8 @@ int main(int argc, char* argv[]) {
                 ball->SetBodyFixed(false);
                 ball->SetCollide(true);
 
-                ball->SetMaterialSurface(material);
-
                 ball->GetCollisionModel()->ClearModel();
-                ball->GetCollisionModel()->AddSphere(radius);
+                ball->GetCollisionModel()->AddSphere(material, radius);
                 ball->GetCollisionModel()->SetFamily(4);
                 ball->GetCollisionModel()->BuildModel();
 

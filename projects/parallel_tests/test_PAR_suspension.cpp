@@ -143,13 +143,12 @@ class MySimpleCar {
 
         truss = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
         truss->SetIdentifier(-1);
-        truss->SetMaterialSurface(mat);
         truss->SetMass(2086.524902);
         truss->SetPos(ChVector<>(0, 0.52349, 0.055765));
         truss->SetRot(ChQuaternion<>(1, 0, 0, 0));
         truss->SetInertiaXX(ChVector<>(3570.20377, 1078.52344, 2955.66050));
         truss->GetCollisionModel()->ClearModel();
-        utils::AddBoxGeometry(truss.get(), ChVector<>(0.7, 0.5, 3) * 0.5, ChVector<>(0, 0, 0));
+        utils::AddBoxGeometry(truss.get(), mat, ChVector<>(0.7, 0.5, 3) * 0.5, ChVector<>(0, 0, 0));
         truss->GetCollisionModel()->BuildModel();
         truss->SetCollide(false);
         truss->SetBodyFixed(false);
@@ -160,13 +159,12 @@ class MySimpleCar {
         // ..the car right-front spindle
         spindleRF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
         spindleRF->SetIdentifier(-2);
-        spindleRF->SetMaterialSurface(mat);
         spindleRF->SetMass(14.705);
         spindleRF->SetPos(ChVector<>(0.751, -0.026, 1.648965));
         spindleRF->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleRF->SetInertiaXX(ChVector<>(0.07352, 0.04117, 0.04117));
         spindleRF->GetCollisionModel()->ClearModel();
-        utils::AddBoxGeometry(spindleRF.get(), ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
+        utils::AddBoxGeometry(spindleRF.get(), mat, ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
         spindleRF->GetCollisionModel()->BuildModel();
         spindleRF->SetCollide(false);
         my_system->AddBody(spindleRF);
@@ -174,16 +172,15 @@ class MySimpleCar {
         // ..the car right-front wheel
         wheelRF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
         wheelRF->SetIdentifier(-3);
-        wheelRF->SetMaterialSurface(mat);
         wheelRF->SetMass(3.0);
         wheelRF->SetPos(ChVector<>(0.91, -0.026, 1.648965));
         wheelRF->SetRot(ChQuaternion<>(1, 0, 0, 0));
         wheelRF->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
         wheelRF->GetCollisionModel()->ClearModel();
         if (useSpheres) {
-            utils::AddSphereGeometry(wheelRF.get(), 0.45, ChVector<>(0, 0, 0));
+            utils::AddSphereGeometry(wheelRF.get(), mat, 0.45, ChVector<>(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelRF.get(), 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelRF.get(), mat, 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
         }
         wheelRF->GetCollisionModel()->BuildModel();
         wheelRF->SetCollide(true);
@@ -236,13 +233,12 @@ class MySimpleCar {
         // ..the car left-front spindle
         spindleLF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
         spindleLF->SetIdentifier(-4);
-        spindleLF->SetMaterialSurface(mat);
         spindleLF->SetMass(14.705);
         spindleLF->SetPos(ChVector<>(-0.751, -0.026, 1.648965));
         spindleLF->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleLF->SetInertiaXX(ChVector<>(0.07352, 0.04117, 0.04117));
         spindleLF->GetCollisionModel()->ClearModel();
-        utils::AddBoxGeometry(spindleLF.get(), ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
+        utils::AddBoxGeometry(spindleLF.get(), mat, ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
         spindleLF->GetCollisionModel()->BuildModel();
         spindleLF->SetCollide(false);
         my_system->AddBody(spindleLF);
@@ -250,16 +246,15 @@ class MySimpleCar {
         // ..the car left-front wheel
         wheelLF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
         wheelLF->SetIdentifier(-5);
-        wheelLF->SetMaterialSurface(mat);
         wheelLF->SetMass(3.0);
         wheelLF->SetPos(ChVector<>(-0.91, -0.026, 1.648965));
         wheelLF->SetRot(ChQuaternion<>(1, 0, 0, 0));
         wheelLF->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
         wheelLF->GetCollisionModel()->ClearModel();
         if (useSpheres) {
-            utils::AddSphereGeometry(wheelLF.get(), 0.45, ChVector<>(0, 0, 0));
+            utils::AddSphereGeometry(wheelLF.get(), mat, 0.45, ChVector<>(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelLF.get(), 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelLF.get(), mat, 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
         }
         wheelLF->GetCollisionModel()->BuildModel();
         wheelLF->SetCollide(true);
@@ -312,13 +307,12 @@ class MySimpleCar {
         // ..the car right-back spindle
         spindleRB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
         spindleRB->SetIdentifier(-6);
-        spindleRB->SetMaterialSurface(mat);
         spindleRB->SetMass(15.91);
         spindleRB->SetPos(ChVector<>(0.751, -0.026, -1.652965));
         spindleRB->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleRB->SetInertiaXX(ChVector<>(4, 2, 2));
         spindleRB->GetCollisionModel()->ClearModel();
-        utils::AddBoxGeometry(spindleRB.get(), ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
+        utils::AddBoxGeometry(spindleRB.get(), mat, ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
         spindleRB->GetCollisionModel()->BuildModel();
         spindleRB->SetCollide(false);
         my_system->AddBody(spindleRB);
@@ -326,16 +320,15 @@ class MySimpleCar {
         // ..the car right-back wheel
         wheelRB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
         wheelRB->SetIdentifier(-7);
-        wheelRB->SetMaterialSurface(mat);
         wheelRB->SetMass(3.0);
         wheelRB->SetPos(ChVector<>(0.91, -0.026, -1.652965));
         wheelRB->SetRot(ChQuaternion<>(1, 0, 0, 0));
         wheelRB->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
         wheelRB->GetCollisionModel()->ClearModel();
         if (useSpheres) {
-            utils::AddSphereGeometry(wheelRB.get(), 0.45, ChVector<>(0, 0, 0));
+            utils::AddSphereGeometry(wheelRB.get(), mat, 0.45, ChVector<>(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelRB.get(), 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelRB.get(), mat, 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
         }
         wheelRB->GetCollisionModel()->BuildModel();
         wheelRB->SetCollide(true);
@@ -396,13 +389,12 @@ class MySimpleCar {
         // ..the car right-back spindle
         spindleLB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
         spindleLB->SetIdentifier(-8);
-        spindleLB->SetMaterialSurface(mat);
         spindleLB->SetMass(15.91);
         spindleLB->SetPos(ChVector<>(-0.751, -0.026, -1.652965));
         spindleLB->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleLB->SetInertiaXX(ChVector<>(4, 2, 2));
         spindleLB->GetCollisionModel()->ClearModel();
-        utils::AddBoxGeometry(spindleLB.get(), ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
+        utils::AddBoxGeometry(spindleLB.get(), mat, ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
         spindleLB->GetCollisionModel()->BuildModel();
         spindleLB->SetCollide(false);
         my_system->AddBody(spindleLB);
@@ -410,16 +402,15 @@ class MySimpleCar {
         // ..the car left-back wheel
         wheelLB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
         wheelLB->SetIdentifier(-9);
-        wheelLB->SetMaterialSurface(mat);
         wheelLB->SetMass(3.0);
         wheelLB->SetPos(ChVector<>(-0.91, -0.026, -1.652965));
         wheelLB->SetRot(ChQuaternion<>(1, 0, 0, 0));
         wheelLB->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
         wheelLB->GetCollisionModel()->ClearModel();
         if (useSpheres) {
-            utils::AddSphereGeometry(wheelLB.get(), 0.45, ChVector<>(0, 0, 0));
+            utils::AddSphereGeometry(wheelLB.get(), mat, 0.45, ChVector<>(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelLB.get(), 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelLB.get(), mat, 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
         }
         wheelLB->GetCollisionModel()->BuildModel();
         wheelLB->SetCollide(true);
@@ -637,7 +628,6 @@ void AddGround(ChSystemParallelNSC* sys) {
     double wallHeight = 6;
     double thickness = 0.1;
     auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    ground->SetMaterialSurface(mat);
     ground->SetIdentifier(groundId);
     ground->SetMass(1);
     ground->SetPos(pos);
@@ -646,24 +636,8 @@ void AddGround(ChSystemParallelNSC* sys) {
     ground->SetBodyFixed(true);
 
     ground->GetCollisionModel()->ClearModel();
-    utils::AddBoxGeometry(ground.get(), ChVector<>(groundWidth / 2, thickness, 10 * pitLocation_z / 2),
+    utils::AddBoxGeometry(ground.get(), mat, ChVector<>(groundWidth / 2, thickness, 10 * pitLocation_z / 2),
                           ChVector<>(0, -thickness, 0));
-
-    // utils::AddBoxGeometry(ground.get(), ChVector<>(groundWidth/2, thickness, pitLocation_z/2), ChVector<>(0,
-    // -thickness, pitLocation_z/2));
-    // utils::AddBoxGeometry(ground.get(), ChVector<>(groundWidth/2, thickness, pitLength/2), ChVector<>(0,
-    // -thickness-pitDepth, pitLocation_z+pitLength/2));
-    // utils::AddBoxGeometry(ground.get(), ChVector<>(groundWidth/2, thickness,
-    // (groundLength-pitLength-pitLocation_z)/2), ChVector<>(0, -thickness,
-    // pitLocation_z+pitLength+(groundLength-pitLength-pitLocation_z)/2));
-    // utils::AddBoxGeometry(ground.get(), ChVector<>(groundWidth/2, pitDepth/2, thickness), ChVector<>(0,
-    // -pitDepth/2-thickness*2, pitLocation_z-thickness));
-    // utils::AddBoxGeometry(ground.get(), ChVector<>(groundWidth/2, pitDepth/2, thickness), ChVector<>(0,
-    // -pitDepth/2-thickness*2, pitLocation_z+pitLength+thickness));
-    // utils::AddBoxGeometry(ground.get(), ChVector<>(thickness, wallHeight/2+pitDepth/2, groundLength/2),
-    // ChVector<>(groundWidth/2+thickness, wallHeight/2-pitDepth/2-thickness*2, groundLength/2));
-    // utils::AddBoxGeometry(ground.get(), ChVector<>(thickness, wallHeight/2+pitDepth/2, groundLength/2),
-    // ChVector<>(-groundWidth/2-thickness, wallHeight/2-pitDepth/2-thickness*2, groundLength/2));
     ground->GetCollisionModel()->BuildModel();
 
     sys->AddBody(ground);

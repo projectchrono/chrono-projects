@@ -160,10 +160,9 @@ int main(int argc, char* argv[]) {
     // Create the contact surface
     if (include_tire_contact) {
         // In this case it is a ChContactSurfaceNodeCloud, so just pass  all nodes to it.
-        auto mcontactsurf = chrono_types::make_shared<ChContactSurfaceNodeCloud>();
+        auto mcontactsurf = chrono_types::make_shared<ChContactSurfaceNodeCloud>(mysurfmaterial);
         my_mesh->AddContactSurface(mcontactsurf);
         mcontactsurf->AddAllNodes();
-        mcontactsurf->SetMaterialSurface(mysurfmaterial);
     }
 
     // Create tire pressure load
@@ -222,9 +221,8 @@ int main(int argc, char* argv[]) {
     }
 
     // Create ground
-    auto mfloor = chrono_types::make_shared<ChBodyEasyBox>(2, 0.2, 6, 2700, true);
+    auto mfloor = chrono_types::make_shared<ChBodyEasyBox>(2, 0.2, 6, 2700, true, true, mysurfmaterial);
     mfloor->SetBodyFixed(true);
-    mfloor->SetMaterialSurface(mysurfmaterial);
     my_system.Add(mfloor);
 
     if (visualization) {
@@ -236,12 +234,11 @@ int main(int argc, char* argv[]) {
     // Create obstacles
     if (include_obstacles) {
         for (int i = 0; i < 150; ++i) {
-            auto mcube = chrono_types::make_shared<ChBodyEasyBox>(0.18, 0.04, 0.18, 2700, true);
+            auto mcube = chrono_types::make_shared<ChBodyEasyBox>(0.18, 0.04, 0.18, 2700, true, true, mysurfmaterial);
             ChQuaternion<> vrot;
             vrot.Q_from_AngAxis(ChRandom() * CH_C_2PI, VECT_Y);
             mcube->Move(ChCoordsys<>(VNULL, vrot));
             mcube->SetPos(ChVector<>((ChRandom() - 0.5) * 1.4, ChRandom() * 0.2 + 0.05, -ChRandom() * 2.6 + 0.2));
-            mcube->SetMaterialSurface(mysurfmaterial);
             my_system.Add(mcube);
 
             if (visualization) {

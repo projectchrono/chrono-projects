@@ -79,7 +79,7 @@ void TimingOutput(chrono::ChSystem* mSys) {
 
 int main(int argc, char** argv) {
     int num_threads = 4;
-    ChMaterialSurface::ContactMethod method = ChMaterialSurface::SMC;
+    ChContactMethod method = ChContactMethod::SMC;
     bool use_mat_properties = true;
     bool render = false;
     bool track_granule = false;
@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
     chrono::ChSystemParallel* system;
 
     switch (method) {
-        case ChMaterialSurface::SMC: {
+        case ChContactMethod::SMC: {
             ChSystemParallelSMC* sys = new ChSystemParallelSMC;
             sys->GetSettings()->solver.contact_force_model = ChSystemSMC::Hertz;
             sys->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::OneStep;
@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
 
             break;
         }
-        case ChMaterialSurface::NSC: {
+        case ChContactMethod::NSC: {
             ChSystemParallelNSC* sys = new ChSystemParallelNSC;
             sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
             sys->GetSettings()->solver.max_iteration_normal = 0;
@@ -186,7 +186,7 @@ int main(int argc, char** argv) {
     std::shared_ptr<ChMaterialSurface> material_terrain;
 
     switch (method) {
-        case ChMaterialSurface::SMC: {
+        case ChContactMethod::SMC: {
             auto mat_ter = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             mat_ter->SetFriction(friction_terrain);
             mat_ter->SetRestitution(restitution_terrain);
@@ -202,7 +202,7 @@ int main(int argc, char** argv) {
 
             break;
         }
-        case ChMaterialSurface::NSC: {
+        case ChContactMethod::NSC: {
             auto mat_ter = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             mat_ter->SetFriction(friction_terrain);
             mat_ter->SetRestitution(restitution_terrain);
@@ -221,23 +221,22 @@ int main(int argc, char** argv) {
     container->SetMass(1);
     container->SetBodyFixed(true);
     container->SetCollide(true);
-    container->SetMaterialSurface(material_terrain);
 
     container->GetCollisionModel()->ClearModel();
     // Bottom box
-    utils::AddBoxGeometry(container.get(), ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick),
+    utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick),
                           ChQuaternion<>(1, 0, 0, 0), true);
     // Front box
-    utils::AddBoxGeometry(container.get(), ChVector<>(hthick, hdimY, hdimZ + hthick),
+    utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hthick, hdimY, hdimZ + hthick),
                           ChVector<>(hdimX + hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
     // Rear box
-    utils::AddBoxGeometry(container.get(), ChVector<>(hthick, hdimY, hdimZ + hthick),
+    utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hthick, hdimY, hdimZ + hthick),
                           ChVector<>(-hdimX - hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
     // Left box
-    utils::AddBoxGeometry(container.get(), ChVector<>(hdimX, hthick, hdimZ + hthick),
+    utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hdimX, hthick, hdimZ + hthick),
                           ChVector<>(0, hdimY + hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
     // Right box
-    utils::AddBoxGeometry(container.get(), ChVector<>(hdimX, hthick, hdimZ + hthick),
+    utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hdimX, hthick, hdimZ + hthick),
                           ChVector<>(0, -hdimY - hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
     container->GetCollisionModel()->BuildModel();
 

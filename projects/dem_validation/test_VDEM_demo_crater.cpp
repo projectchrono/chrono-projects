@@ -227,7 +227,7 @@ int CreateObjects(ChSystemParallel* system) {
 // and its downward initial velocity has the specified magnitude.
 // -----------------------------------------------------------------------------
 void CreateFallingBall(ChSystemParallel* system, double z, double vz) {
-// Create a material for the falling ball
+    // Create a material for the falling ball
 #ifdef USE_SMC
     auto mat_b = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_b->SetYoungModulus(1e8f);
@@ -238,14 +238,8 @@ void CreateFallingBall(ChSystemParallel* system, double z, double vz) {
     mat_b->SetFriction(mu_c);
 #endif
 
-// Create the falling ball
-#ifdef USE_SMC
-    auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>(), ChMaterialSurface::SMC);
-    ball->SetMaterialSurface(mat_b);
-#else
+    // Create the falling ball
     auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-    ball->SetMaterialSurface(mat_b);
-#endif
 
     ball->SetIdentifier(Id_b);
     ball->SetMass(mass_b);
@@ -257,7 +251,7 @@ void CreateFallingBall(ChSystemParallel* system, double z, double vz) {
     ball->SetBodyFixed(false);
 
     ball->GetCollisionModel()->ClearModel();
-    utils::AddSphereGeometry(ball.get(), R_b);
+    utils::AddSphereGeometry(ball.get(), mat_b, R_b);
     ball->GetCollisionModel()->BuildModel();
 
     system->AddBody(ball);

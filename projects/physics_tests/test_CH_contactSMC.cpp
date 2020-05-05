@@ -177,7 +177,7 @@ int main(int argc, char* argv[]) {
     material->SetGt(gt);
 
     // Create the falling ball
-    auto ball = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
+    auto ball = chrono_types::make_shared<ChBody>();
 
     ball->SetIdentifier(ballId);
     ball->SetMass(mass);
@@ -188,10 +188,9 @@ int main(int argc, char* argv[]) {
     ball->SetWvel_par(init_omg);
     ball->SetCollide(true);
     ball->SetBodyFixed(false);
-    ball->SetMaterialSurface(material);
 
     ball->GetCollisionModel()->ClearModel();
-    ball->GetCollisionModel()->AddSphere(radius);
+    ball->GetCollisionModel()->AddSphere(material, radius);
     ball->GetCollisionModel()->BuildModel();
 
     auto sphere = chrono_types::make_shared<ChSphereShape>();
@@ -205,7 +204,7 @@ int main(int argc, char* argv[]) {
     system.AddBody(ball);
 
     // Create ground
-    auto ground = chrono_types::make_shared<ChBody>(ChMaterialSurface::SMC);
+    auto ground = chrono_types::make_shared<ChBody>();
 
     ground->SetIdentifier(binId);
     ground->SetMass(1);
@@ -213,10 +212,9 @@ int main(int argc, char* argv[]) {
     ground->SetRot(ChQuaternion<>(1, 0, 0, 0));
     ground->SetCollide(true);
     ground->SetBodyFixed(true);
-    ground->SetMaterialSurface(material);
 
     ground->GetCollisionModel()->ClearModel();
-    ground->GetCollisionModel()->AddBox(width, thickness, length, ChVector<>(0, -thickness, 0));
+    ground->GetCollisionModel()->AddBox(material, width, thickness, length, ChVector<>(0, -thickness, 0));
     ground->GetCollisionModel()->BuildModel();
 
     auto box = chrono_types::make_shared<ChBoxShape>();

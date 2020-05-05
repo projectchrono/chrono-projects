@@ -71,7 +71,7 @@ const std::string checkpoint_file = out_dir + "/settled.dat";
 double out_fps = 60;
 
 // Contact method
-ChMaterialSurface::ContactMethod method = ChMaterialSurface::SMC;
+ChContactMethod method = ChContactMethod::SMC;
 
 // Parameters for the granular material
 int Id_g = 100;
@@ -119,7 +119,7 @@ int CreateObjects(ChSystemParallel* system) {
     std::shared_ptr<chrono::ChMaterialSurface> material_c;
 
     switch (method) {
-        case ChMaterialSurface::SMC: {
+        case ChContactMethod::SMC: {
             auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             mat_g->SetYoungModulus(Y_g);
             mat_g->SetFriction(mu_g);
@@ -138,7 +138,7 @@ int CreateObjects(ChSystemParallel* system) {
 
             break;
         }
-        case ChMaterialSurface::NSC: {
+        case ChContactMethod::NSC: {
             auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             mat_g->SetFriction(mu_g);
             mat_g->SetRestitution(cr_g);
@@ -190,7 +190,7 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
     std::shared_ptr<chrono::ChMaterialSurface> material_w;
 
     switch (method) {
-        case ChMaterialSurface::SMC: {
+        case ChContactMethod::SMC: {
             auto mat_w = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             mat_w->SetYoungModulus(Y_w);
             mat_w->SetFriction(mu_w);
@@ -201,7 +201,7 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
 
             break;
         }
-        case ChMaterialSurface::NSC: {
+        case ChContactMethod::NSC: {
             auto mat_w = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             mat_w->SetFriction(mu_w);
             mat_w->SetRestitution(cr_w);
@@ -216,8 +216,6 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
     // Create the wheel body
     auto wheel = std::shared_ptr<ChBody>(system->NewBody());
 
-    wheel->SetMaterialSurface(material_w);
-
     wheel->SetIdentifier(Id_w);
     wheel->SetMass(mass_w);
     wheel->SetInertiaXX(inertia_w);
@@ -227,8 +225,8 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
     wheel->SetBodyFixed(false);
 
     wheel->GetCollisionModel()->ClearModel();
-    utils::AddTriangleMeshGeometry(wheel.get(), obj_mesh_file, mesh_name);
-    //utils::AddCylinderGeometry(wheel.get(), 0.3, 0.1);
+    utils::AddTriangleMeshGeometry(wheel.get(), material_w, obj_mesh_file, mesh_name);
+    //utils::AddCylinderGeometry(wheel.get(), material_w, 0.3, 0.1);
     wheel->GetCollisionModel()->BuildModel();
 
     wheel->SetInertiaXX(inertia_w);
@@ -289,7 +287,7 @@ int main(int argc, char* argv[]) {
     // Create system and set method-specific solver settings
     ChSystemParallel* system;
     switch (method) {
-        case ChMaterialSurface::SMC: {
+        case ChContactMethod::SMC: {
             ChSystemParallelSMC* sys = new ChSystemParallelSMC;
             sys->GetSettings()->solver.contact_force_model = ChSystemSMC::Hertz;
             sys->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::OneStep;
@@ -299,7 +297,7 @@ int main(int argc, char* argv[]) {
             system = sys;
             break;
         }
-        case ChMaterialSurface::NSC: {
+        case ChContactMethod::NSC: {
             ChSystemParallelNSC* sys = new ChSystemParallelNSC;
             sys->GetSettings()->solver.solver_type = SolverType::BB;
             sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
@@ -372,10 +370,10 @@ int main(int argc, char* argv[]) {
     // Set integration step size
     double time_step;
     switch (method) {
-        case ChMaterialSurface::SMC:
+        case ChContactMethod::SMC:
             time_step = time_step_penalty;
             break;
-        case ChMaterialSurface::NSC:
+        case ChContactMethod::NSC:
             time_step = time_step_complementarity;
             break;
     }

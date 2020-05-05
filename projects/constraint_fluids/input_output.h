@@ -142,46 +142,46 @@ void static DumpFluidData(chrono::ChSystemParallelNSC* system, std::string filen
 
 void static DumpAllObjectsWithGeometryPovray(ChSystem* mSys, std::string filename, bool binary = false) {
 	CSVGen csv_output;
-	csv_output.OpenFile(filename.c_str(), binary);
+    csv_output.OpenFile(filename.c_str(), binary);
 
-	for (int i = 0; i < mSys->Get_bodylist().size(); i++) {  //
-		auto abody = mSys->Get_bodylist().at(i);             // Get body
-		const Vector pos = abody->GetFrame_REF_to_abs().GetPos();
-		const Vector vel = abody->GetPos_dt();  // Get velocity
-		Quaternion rot = abody->GetFrame_REF_to_abs().GetRot();
-		Vector pos_final, rad_final;                 //
-		ShapeType type = chrono::collision::SPHERE;  //
-													 // Get each asset
-		for (int j = 0; j < abody->GetAssets().size(); j++) {
-			auto asset = abody->GetAssets().at(j);
-			if (!std::dynamic_pointer_cast<ChVisualization>(asset)) {
-				continue;
-			}
-			ChVisualization* visual_asset = ((ChVisualization*)(asset.get()));
-			Vector center = visual_asset->Pos;
-			center = rot.Rotate(center);
-			pos_final = pos + center;
-			Quaternion lrot = visual_asset->Rot.Get_A_quaternion();
-			lrot = rot * lrot;
-			lrot.Normalize();
+    for (int i = 0; i < mSys->Get_bodylist().size(); i++) {
+        auto abody = mSys->Get_bodylist().at(i);  // Get body
+        const Vector pos = abody->GetFrame_REF_to_abs().GetPos();
+        const Vector vel = abody->GetPos_dt();  // Get velocity
+        Quaternion rot = abody->GetFrame_REF_to_abs().GetRot();
+        Vector pos_final, rad_final;
+        ChCollisionShape::Type type = ChCollisionShape::Type::SPHERE;
+        // Get each asset
+        for (int j = 0; j < abody->GetAssets().size(); j++) {
+            auto asset = abody->GetAssets().at(j);
+            if (!std::dynamic_pointer_cast<ChVisualization>(asset)) {
+                continue;
+            }
+            ChVisualization* visual_asset = ((ChVisualization*)(asset.get()));
+            Vector center = visual_asset->Pos;
+            center = rot.Rotate(center);
+            pos_final = pos + center;
+            Quaternion lrot = visual_asset->Rot.Get_A_quaternion();
+            lrot = rot * lrot;
+            lrot.Normalize();
 			if (std::dynamic_pointer_cast<ChSphereShape>(asset)) {
 				ChSphereShape* sphere_shape = ((ChSphereShape*)(asset.get()));
 				real radius = sphere_shape->GetSphereGeometry().rad;
 				rad_final.x() = radius;
 				rad_final.y() = radius;
 				rad_final.z() = radius;
-				type = chrono::collision::SPHERE;
+                type = ChCollisionShape::Type::SPHERE;
 			}
 
 			else if (std::dynamic_pointer_cast<ChEllipsoidShape>(asset)) {
 				ChEllipsoidShape* ellipsoid_shape = ((ChEllipsoidShape*)(asset.get()));
 				rad_final = ellipsoid_shape->GetEllipsoidGeometry().rad;
-				type = chrono::collision::ELLIPSOID;
+                type = ChCollisionShape::Type::ELLIPSOID;
 			}
 			else if (std::dynamic_pointer_cast<ChBoxShape>(asset)) {
 				ChBoxShape* box_shape = ((ChBoxShape*)(asset.get()));
 				rad_final = box_shape->GetBoxGeometry().Size;
-				type = chrono::collision::BOX;
+                type = ChCollisionShape::Type::BOX;
 			}
 			else if (std::dynamic_pointer_cast<ChCylinderShape>(asset)) {
 				ChCylinderShape* cylinder_shape = ((ChCylinderShape*)(asset.get()));
@@ -190,14 +190,14 @@ void static DumpAllObjectsWithGeometryPovray(ChSystem* mSys, std::string filenam
 				rad_final.x() = rad;
 				rad_final.y() = height;
 				rad_final.z() = rad;
-				type = chrono::collision::CYLINDER;
+                type = ChCollisionShape::Type::CYLINDER;
 			}
 			else if (std::dynamic_pointer_cast<ChConeShape>(asset)) {
 				ChConeShape* cone_shape = ((ChConeShape*)(asset.get()));
 				rad_final.x() = cone_shape->GetConeGeometry().rad.x();
 				rad_final.y() = cone_shape->GetConeGeometry().rad.y();
 				rad_final.z() = cone_shape->GetConeGeometry().rad.z();
-				type = chrono::collision::CONE;
+                type = ChCollisionShape::Type::CONE;
 			}
 
 			csv_output << pos_final;

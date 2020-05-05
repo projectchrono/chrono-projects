@@ -161,11 +161,9 @@ int main(int argc, char* argv[]) {
 
     // Create the contact surface(s).
     // Use the AddFacesFromBoundary() to select automatically the outer skin of the tetrahedron mesh:
-    auto mcontactsurf = chrono_types::make_shared<ChContactSurfaceMesh>();
+    auto mcontactsurf = chrono_types::make_shared<ChContactSurfaceMesh>(mysurfmaterial);
     my_mesh->AddContactSurface(mcontactsurf);
     mcontactsurf->AddFacesFromBoundary();
-    mcontactsurf->SetMaterialSurface(
-        mysurfmaterial);  // by the way it is not needed because contacts will be emulated by cosimulation
 
     /// Create a mesh load for cosimulation, acting on the contact surface above
     /// (forces on nodes will be computed by an external procedure)
@@ -311,7 +309,6 @@ mloadcontainer->Add(mrigidmeshload);
     int triId = 0;
     for (int i = 0; i < triangles.size(); i++) {
         auto triangle = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
-        triangle->SetMaterialSurface(triMat);
         triangle->SetIdentifier(triId++);
         triangle->SetMass(mass);
         triangle->SetInertiaXX(inertia);
@@ -324,10 +321,9 @@ mloadcontainer->Add(mrigidmeshload);
         triangle->SetBodyFixed(true);
 
         triangle->GetCollisionModel()->ClearModel();
-        // utils::AddSphereGeometry(triangle.get(), radius);
         std::string name = "tri" + std::to_string(triId);
-        utils::AddTriangle(triangle.get(), vert_pos[triangles[i].x()] - pos, vert_pos[triangles[i].y()] - pos,
-                           vert_pos[triangles[i].z()] - pos, name);
+        utils::AddTriangleGeometry(triangle.get(), triMat, vert_pos[triangles[i].x()] - pos,
+                                   vert_pos[triangles[i].y()] - pos, vert_pos[triangles[i].z()] - pos, name);
         triangle->GetCollisionModel()->SetFamily(1);
         triangle->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
         triangle->GetCollisionModel()->BuildModel();
