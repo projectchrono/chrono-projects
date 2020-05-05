@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
     ball->AddAsset(sphere);
 
     // Functor class for contact reporting
-    ContactManager cmanager;
+    auto cmanager = chrono_types::make_shared<ContactManager>();
 
     // Perform the simulation.
     double time = 0;
@@ -146,10 +146,10 @@ int main(int argc, char* argv[]) {
         time += time_step;
 
         // Process contacts
-        system.GetContactContainer()->ReportAllContacts(&cmanager);
+        system.GetContactContainer()->ReportAllContacts(cmanager);
 
         // Print ball states
-        Output(time, ball, system.GetNcontacts(), cmanager.GetForce());        
+        Output(time, ball, system.GetNcontacts(), cmanager->GetForce());        
     }
 
     return 0;
