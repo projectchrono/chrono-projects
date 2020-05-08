@@ -17,6 +17,7 @@
 #include <cmath>
 #include <iostream>
 #include <string>
+
 #include "ChGranularDemoUtils.hpp"
 #include "chrono/utils/ChUtilsSamplers.h"
 #include "chrono_granular/api/ChApiGranularChrono.h"
@@ -31,13 +32,13 @@ enum RUN_MODE { FRICTIONLESS = 0, ZERO_FRICTION = 1, SMALL_FRICTION = 2, LARGE_F
 float mu_small = 1e-5f;
 float mu_large = 0.5;
 
-bool axis_aligned = true;
+bool axis_aligned = false;
 ChVector<float> sphere_pos(0, 0, 0);
-ChVector<float> v_init(1, -1, 0);
+ChVector<float> v_init(10, -10, 0);
 
 void ShowUsage(std::string name) {
     std::cout << "usage: " + name +
-                     " <json_file> <output_dir> <psi_L> <run_mode: 0-fricitonless, 1-zero_friction, 2-small_friction, "
+                     " <json_file> <output_dir> <psi_L> <run_mode: 0-frictionless, 1-zero_friction, 2-small_friction, "
                      "3-large_friction>"
               << std::endl;
 }
@@ -55,9 +56,9 @@ int main(int argc, char* argv[]) {
 
     RUN_MODE run_mode = (RUN_MODE)std::stoi(argv[4]);
 
-    params.box_X = 10;
-    params.box_Y = 10;
-    params.box_Z = 10;
+    params.box_X = 15;
+    params.box_Y = 15;
+    params.box_Z = 15;
 
     // Angle gravity
     params.grav_X = -565.80;
@@ -67,31 +68,38 @@ int main(int argc, char* argv[]) {
     // Setup simulation
     ChSystemGranularSMC gran_sys(params.sphere_radius, params.sphere_density,
                                  make_float3(params.box_X, params.box_Y, params.box_Z));
-
+    gran_sys.disableMinLength();
     switch (run_mode) {
         case RUN_MODE::FRICTIONLESS: {
+            std::cout << "Frictionless" << std::endl;
             gran_sys.set_friction_mode(GRAN_FRICTION_MODE::FRICTIONLESS);
             break;
         }
         case RUN_MODE::ZERO_FRICTION: {
+            std::cout << "Zero Friction" << std::endl;
             gran_sys.set_friction_mode(GRAN_FRICTION_MODE::MULTI_STEP);
             params.static_friction_coeffS2W = 0.f;
             break;
         }
         case RUN_MODE::SMALL_FRICTION: {
+            std::cout << "Small Friction " << mu_small << std::endl;
             gran_sys.set_friction_mode(GRAN_FRICTION_MODE::MULTI_STEP);
             params.static_friction_coeffS2W = mu_small;
             break;
         }
         case RUN_MODE::LARGE_FRICTION: {
+            std::cout << "Large Friction " << mu_large << std::endl;
             gran_sys.set_friction_mode(GRAN_FRICTION_MODE::MULTI_STEP);
             params.static_friction_coeffS2W = mu_large;
             break;
         }
-        default: { ShowUsage(argv[0]); }
+        default: {
+            ShowUsage(argv[0]);
+        }
     }
 
     if (axis_aligned) {
+        std::cout << "Axis Aligned" << std::endl;
         params.grav_X = 0;
         params.grav_Y = 0;
         params.grav_Z = -980;
@@ -160,8 +168,7 @@ int main(int argc, char* argv[]) {
     gran_sys.setVerbose(params.verbose);
     gran_sys.initialize();
 
-    // int fps = 10000;
-    int fps = 100;
+    int fps = 1000;
     float frame_step = 1.f / fps;
     float curr_time = 0;
     int currframe = 0;
