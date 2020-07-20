@@ -49,10 +49,6 @@
 #include "chrono_models/vehicle/m113/M113_Vehicle.h"
 #include "chrono_models/vehicle/m113/M113_SimplePowertrain.h"
 
-// M113a model header files
-#include "chrono_models/vehicle/m113a/M113a_Vehicle.h"
-#include "chrono_models/vehicle/m113a/M113a_SimplePowertrain.h"
-
 #include "chrono_thirdparty/filesystem/path.h"
 
 // Utilities
@@ -105,10 +101,6 @@ double coh_force = CH_C_PI * r_g * r_g * coh_pressure;
 // Initial vehicle position and orientation
 ChVector<> initLoc(-hdimX + 4.5, 0, 1.0);
 ChQuaternion<> initRot(1, 0, 0, 0);
-
-// Vehicle model
-enum M113Type { M113_ORIGINAL, M113_MODIFIED };
-M113Type m113_type = M113_MODIFIED;
 
 // -----------------------------------------------------------------------------
 // Simulation parameters
@@ -318,22 +310,8 @@ int main(int argc, char* argv[]) {
     // Construct the M113 vehicle
     // --------------------------
 
-    std::shared_ptr<ChTrackedVehicle> vehicle;
-    std::shared_ptr<ChPowertrain> powertrain;
-
-    // Create and initialize vehicle systems
-    switch (m113_type) {
-    case M113_ORIGINAL:
-        std::cout << "Create ORIGINAL M113 model" << std::endl;
-        vehicle = chrono_types::make_shared<M113_Vehicle>(true, TrackShoeType::SINGLE_PIN, &system);
-        powertrain = chrono_types::make_shared<M113_SimplePowertrain>("Powertrain");
-        break;
-    case M113_MODIFIED:
-        std::cout << "Create MODIFIED M113 model" << std::endl;
-        vehicle = chrono_types::make_shared<M113a_Vehicle>(true, &system);
-        powertrain = chrono_types::make_shared<M113a_SimplePowertrain>("Powertrain");
-        break;
-    }
+    auto vehicle = chrono_types::make_shared<M113_Vehicle>(true, TrackShoeType::SINGLE_PIN, BrakeType::SIMPLE, &system);
+    auto powertrain = chrono_types::make_shared<M113_SimplePowertrain>("Powertrain");
 
     vehicle->Initialize(ChCoordsys<>(initLoc + ChVector<>(0.0, 0.0, vertical_offset), initRot));
 

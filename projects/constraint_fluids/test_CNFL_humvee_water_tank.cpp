@@ -19,11 +19,15 @@
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
+
 #include "chrono_models/vehicle/hmmwv/HMMWV.h"
+
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
+
+#include "chrono_vehicle/wheeled_vehicle/suspension/ChDoubleWishbone.h"
 
 // Chrono::Parallel header files
 #include "chrono_parallel/collision/ChCollisionSystemParallel.h"

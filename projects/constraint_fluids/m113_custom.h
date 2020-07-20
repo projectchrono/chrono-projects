@@ -73,11 +73,11 @@ class M113_Vehicle_Custom : public ChTrackedVehicle {
 
         if (ChSystemParallelNSC* system_dvi = dynamic_cast<ChSystemParallelNSC*>(m_system)) {
             printf("BodiesA: %d\n", system_dvi->data_manager->num_rigid_shapes);
-            m_tracks[0]->Initialize(m_chassis->GetBody(), ChVector<>(0, track_offset, 0));
+            m_tracks[0]->Initialize(m_chassis, ChVector<>(0, track_offset, 0));
 
             printf("BodiesB: %d\n", system_dvi->data_manager->num_rigid_shapes);
 
-            m_tracks[1]->Initialize(m_chassis->GetBody(), ChVector<>(0, -track_offset, 0));
+            m_tracks[1]->Initialize(m_chassis, ChVector<>(0, -track_offset, 0));
 
             printf("BodiesC: %d\n", system_dvi->data_manager->num_rigid_shapes);
 
@@ -87,7 +87,7 @@ class M113_Vehicle_Custom : public ChTrackedVehicle {
         }
 
         // Initialize the driveline subsystem
-        m_driveline->Initialize(m_chassis->GetBody(), m_tracks[0], m_tracks[1]);
+        m_driveline->Initialize(m_chassis, m_tracks[0], m_tracks[1]);
     }
 
   protected:
@@ -98,12 +98,12 @@ class M113_Vehicle_Custom : public ChTrackedVehicle {
         // Create the track assembly subsystems
         switch (m_type) {
             case TrackShoeType::SINGLE_PIN:
-                m_tracks[0] = std::make_shared<M113_TrackAssemblySinglePin>(LEFT);
-                m_tracks[1] = std::make_shared<M113_TrackAssemblySinglePin>(RIGHT);
+                m_tracks[0] = std::make_shared<M113_TrackAssemblySinglePin>(LEFT, BrakeType::SIMPLE);
+                m_tracks[1] = std::make_shared<M113_TrackAssemblySinglePin>(RIGHT, BrakeType::SIMPLE);
                 break;
             case TrackShoeType::DOUBLE_PIN:
-                m_tracks[0] = std::make_shared<M113_TrackAssemblyDoublePin>(LEFT);
-                m_tracks[1] = std::make_shared<M113_TrackAssemblyDoublePin>(RIGHT);
+                m_tracks[0] = std::make_shared<M113_TrackAssemblyDoublePin>(LEFT, BrakeType::SIMPLE);
+                m_tracks[1] = std::make_shared<M113_TrackAssemblyDoublePin>(RIGHT, BrakeType::SIMPLE);
                 break;
         }
 
