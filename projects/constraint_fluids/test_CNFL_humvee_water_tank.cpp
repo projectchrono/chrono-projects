@@ -439,6 +439,7 @@ int main(int argc, char* argv[]) {
     // --------------
     ChSystemParallelNSC* system = new ChSystemParallelNSC();
     system->Set_G_acc(ChVector<>(0, 0, -9.81));
+    system->SetNumThreads(threads);
 
     // ---------------------
     // Edit system settings.
@@ -455,7 +456,6 @@ int main(int argc, char* argv[]) {
     system->GetSettings()->solver.use_full_inertia_tensor = false;
     system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
     system->GetSettings()->solver.bilateral_clamp_speed = 1e8;
-    system->GetSettings()->min_threads = threads;
     system->ChangeSolverType(SolverType::BB);
     system->SetLoggingLevel(LoggingLevel::LOG_INFO);
     system->SetLoggingLevel(LoggingLevel::LOG_TRACE);

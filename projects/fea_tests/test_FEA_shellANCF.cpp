@@ -18,6 +18,7 @@
 #include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/parallel/ChOpenMP.h"
 
 #include "chrono/fea/ChElementShellANCF.h"
 #include "chrono/fea/ChLinkDirFrame.h"
@@ -308,7 +309,7 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
 
         time_total += my_system.GetTimerStep();
         time_setup += my_system.GetTimerSetup();
-        time_solve += my_system.GetTimerSolver();
+        time_solve += my_system.GetTimerLSsolve();
         time_update += my_system.GetTimerUpdate();
 
         // TODO: if it is OK to move timer in ChSolver we can avoid this switch
@@ -353,7 +354,7 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
             }
 #endif
             cout << endl;
-            cout << "solve: " << my_system.GetTimerSolver() << "  ";
+            cout << "solve: " << my_system.GetTimerLSsolve() << "  ";
 #ifdef CHRONO_MUMPS
             if (solver == solver_type::MUMPS) {
                 cout << "  [assembly: " << mumps_solver->GetTimeSolve_Assembly();

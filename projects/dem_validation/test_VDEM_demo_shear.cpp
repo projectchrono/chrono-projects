@@ -67,9 +67,6 @@ using std::endl;
 // Desired number of OpenMP threads (will be clamped to maximum available)
 int threads = 20;
 
-// Perform dynamic tuning of number of threads?
-bool thread_tuning = false;
-
 // Solver settings
 #ifdef USE_SMC
 double time_step = 1e-5;
@@ -227,10 +224,7 @@ int main(int argc, char* argv[]) {
     int max_threads = omp_get_num_procs();
     if (threads > max_threads)
         threads = max_threads;
-    omp_set_num_threads(threads);
-
-    my_system->GetSettings()->max_threads = threads;
-    my_system->GetSettings()->perform_thread_tuning = thread_tuning;
+    my_system->SetNumThreads(threads);
 
     // Edit system settings
 

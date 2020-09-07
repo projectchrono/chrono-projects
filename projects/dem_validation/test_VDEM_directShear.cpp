@@ -85,9 +85,6 @@ double Pa2cgs = 10;
 // Desired number of OpenMP threads (will be clamped to maximum available)
 int threads = 20;
 
-// Perform dynamic tuning of number of threads?
-bool thread_tuning = false;
-
 // Perform shearing action via a linear actuator or kinematically?
 bool use_actuator = true;
 
@@ -520,11 +517,8 @@ int main(int argc, char* argv[]) {
     int max_threads = omp_get_num_procs();
     if (threads > max_threads)
         threads = max_threads;
-    omp_set_num_threads(threads);
+    msystem->SetNumThreads(threads);
     cout << "Using " << threads << " threads" << endl;
-
-    msystem->GetSettings()->max_threads = threads;
-    msystem->GetSettings()->perform_thread_tuning = thread_tuning;
 
     // Edit system settings
     msystem->GetSettings()->solver.use_full_inertia_tensor = false;

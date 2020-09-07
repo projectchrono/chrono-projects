@@ -34,7 +34,7 @@ static inline void TimingOutput(chrono::ChSystem* mSys, chrono::ChStreamOutAscii
   double STEP = mSys->GetTimerStep();
   double BROD = mSys->GetTimerCollisionBroad();
   double NARR = mSys->GetTimerCollisionNarrow();
-  double SOLVER = mSys->GetTimerSolver();
+  double SOLVER = mSys->GetTimerLSsolve();
   double UPDT = mSys->GetTimerUpdate();
   double RESID = 0;
   int REQ_ITS = 0;

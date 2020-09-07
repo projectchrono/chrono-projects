@@ -669,7 +669,6 @@ int main(int argc, char* argv[]) {
     bool clamp_bilaterals = false;
     double bilateral_clamp_speed = 10e30;
     double tolerance = 1e-2;
-    bool thread_tuning = false;
 
     // Create system
     // -------------
@@ -683,11 +682,8 @@ int main(int argc, char* argv[]) {
     int max_threads = omp_get_num_procs();
     if (threads > max_threads)
         threads = max_threads;
-    omp_set_num_threads(threads);
+    msystem.SetNumThreads(threads);
     std::cout << "Using " << threads << " threads" << std::endl;
-
-    msystem.GetSettings()->max_threads = threads;
-    msystem.GetSettings()->perform_thread_tuning = thread_tuning;
 
     // Edit system settings
     msystem.GetSettings()->solver.tolerance = tolerance;

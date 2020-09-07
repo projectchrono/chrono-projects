@@ -18,6 +18,7 @@
 #include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/parallel/ChOpenMP.h"
 
 #include "chrono/fea/ChElementShellANCF.h"
 #include "chrono/fea/ChLinkDirFrame.h"
@@ -301,7 +302,7 @@ bool FEAShellTest::execute() {
 
         time_total += my_system.GetTimerStep();
         time_setup += my_system.GetTimerSetup();
-        time_solve += my_system.GetTimerSolver();
+        time_solve += my_system.GetTimerLSsolve();
         time_update += my_system.GetTimerUpdate();
 
         time_force += my_mesh->GetTimeInternalForces();

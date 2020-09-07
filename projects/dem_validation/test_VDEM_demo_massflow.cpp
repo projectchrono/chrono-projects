@@ -68,10 +68,7 @@ ProblemType problem = SETTLING;
 // -----------------------------------------------------------------------------
 
 // Desired number of OpenMP threads (will be clamped to maximum available)
-int threads = 100;
-
-// Perform dynamic tuning of number of threads?
-bool thread_tuning = true;
+int threads = 8;
 
 // Simulation parameters
 double gravity = 9.81;
@@ -338,10 +335,8 @@ int main(int argc, char* argv[]) {
     int max_threads = omp_get_num_procs();
     if (threads > max_threads)
         threads = max_threads;
-    omp_set_num_threads(threads);
+    msystem->SetNumThreads(threads);
     cout << "Using " << threads << " threads" << endl;
-
-    msystem->GetSettings()->perform_thread_tuning = thread_tuning;
 
     // Set gravitational acceleration
     msystem->Set_G_acc(ChVector<>(0, 0, -gravity));

@@ -190,7 +190,6 @@ bool PARSettlingTest::execute() {
 
     double g = 9.81;
     system->Set_G_acc(ChVector<>(0, 0, -g));
-    system->GetSettings()->perform_thread_tuning = false;
     system->GetSettings()->solver.use_full_inertia_tensor = false;
     system->GetSettings()->solver.tolerance = 0.1;
     system->GetSettings()->solver.max_iteration_bilateral = 100;
@@ -198,7 +197,7 @@ bool PARSettlingTest::execute() {
     system->GetSettings()->collision.bins_per_axis = vec3(binsX, binsY, binsZ);
 
     // Set number of threads
-    CHOMPfunctions::SetNumThreads(m_num_threads);
+    system->SetNumThreads(m_num_threads);
 
 // Sanity check: print number of threads in a parallel region
 #pragma omp parallel

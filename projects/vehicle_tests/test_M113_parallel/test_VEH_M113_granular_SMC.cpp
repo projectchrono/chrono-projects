@@ -109,9 +109,6 @@ ChQuaternion<> initRot(1, 0, 0, 0);
 // Desired number of OpenMP threads (will be clamped to maximum available)
 int threads = 20;
 
-// Perform dynamic tuning of number of threads?
-bool thread_tuning = false;
-
 // Total simulation duration.
 double time_end = 7;
 
@@ -233,10 +230,8 @@ int main(int argc, char* argv[]) {
     int max_threads = CHOMPfunctions::GetNumProcs();
     if (threads > max_threads)
         threads = max_threads;
-    CHOMPfunctions::SetNumThreads(threads);
+    system.SetNumThreads(threads);
     std::cout << "Using " << threads << " threads" << std::endl;
-
-    system.GetSettings()->perform_thread_tuning = thread_tuning;
 
     // Set solver parameters
     system.GetSettings()->solver.use_full_inertia_tensor = false;

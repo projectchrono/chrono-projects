@@ -163,7 +163,6 @@ int main(int argc, char** argv) {
     }
 
     system->Set_G_acc(ChVector<>(0, 0, -9.81));
-    system->GetSettings()->perform_thread_tuning = false;
     system->GetSettings()->solver.use_full_inertia_tensor = false;
     system->GetSettings()->solver.tolerance = 0.1;
     system->GetSettings()->solver.max_iteration_bilateral = 100;
@@ -171,7 +170,7 @@ int main(int argc, char** argv) {
     system->GetSettings()->collision.bins_per_axis = vec3(binsX, binsY, binsZ);
 
     // Set number of threads
-    CHOMPfunctions::SetNumThreads(num_threads);
+    system->SetNumThreads(num_threads);
 
     // Sanity check: print number of threads in a parallel region
 #pragma omp parallel

@@ -84,7 +84,7 @@ void WriteData(ChSystemParallelNSC* msystem, uint i) {
 	}
 	avg_density = avg_density / density.size();
 	avg_pressure = avg_pressure / pressure.size();
-	double SOLVER = msystem->GetTimerSolver();
+	double SOLVER = msystem->GetTimerLSsolve();
 	printf("%d %d %f %f avg D: %f, avg P:  %f, KE: %f SolverTime: %f\n", i, iters, residual, dlambda, avg_density, avg_pressure,
 		KE, SOLVER);
 
@@ -218,7 +218,6 @@ int main(int argc, char* argv[]) {
 	msystem.GetSettings()->solver.use_full_inertia_tensor = false;
 	msystem.GetSettings()->solver.contact_recovery_speed = 100000;
 	msystem.GetSettings()->solver.cache_step_length = true;
-	msystem.GetSettings()->min_threads = 10;
 
 	switch (solver_type) {
 	case 0:

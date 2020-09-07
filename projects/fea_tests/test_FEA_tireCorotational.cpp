@@ -19,6 +19,7 @@
 #include "chrono/physics/ChLoaderUV.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/physics/ChSystemSMC.h"
+#include "chrono/parallel/ChOpenMP.h"
 
 #include "chrono/fea/ChElementTetra_4.h"
 #include "chrono/fea/ChMesh.h"

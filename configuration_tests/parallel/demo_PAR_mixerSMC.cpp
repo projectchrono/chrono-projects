@@ -179,7 +179,7 @@ int main(int argc, char* argv[]) {
     int max_threads = CHOMPfunctions::GetNumProcs();
     if (threads > max_threads)
         threads = max_threads;
-    CHOMPfunctions::SetNumThreads(threads);
+    msystem.SetNumThreads(threads);
 
     // Set gravitational acceleration
     msystem.Set_G_acc(ChVector<>(0, 0, -gravity));

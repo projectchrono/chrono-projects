@@ -25,6 +25,7 @@
 #include "chrono/core/ChStream.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/parallel/ChOpenMP.h"
 
 #ifdef CHRONO_MKL
 #include "chrono_mkl/ChSolverMKL.h"
