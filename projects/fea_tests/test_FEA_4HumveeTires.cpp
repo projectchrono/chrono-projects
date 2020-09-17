@@ -514,26 +514,19 @@ int main(int argc, char* argv[]) {
 
     GetLog() << "Running in performance test mode.\n";
 
-#ifdef CHRONO_OPENMP_ENABLED
-    // --------------------------
-    // Set number of threads
-    // --------------------------
-    int max_threads = CHOMPfunctions::GetNumProcs();
-
-    if (num_threads > max_threads)
-        num_threads = max_threads;
-
-    CHOMPfunctions::SetNumThreads(num_threads);
-    GetLog() << "Using " << num_threads << " thread(s)\n";
-#else
-    GetLog() << "No OpenMP\n";
-#endif
 
     // Definition of the model
     ChSystemNSC my_system;
     utils::CSV_writer out("\t");
     out.stream().setf(std::ios::scientific | std::ios::showpos);
     out.stream().precision(7);
+
+    // Set number of threads
+#ifdef CHRONO_OPENMP_ENABLED
+    my_system.SetNumThreads(std::min(num_threads, ChOMP::GetNumProcs()));
+#else
+    GetLog() << "No OpenMP\n";
+#endif
 
     // Body 1: Ground
     BGround = chrono_types::make_shared<ChBody>();

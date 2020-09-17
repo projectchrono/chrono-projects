@@ -64,12 +64,12 @@ bool verbose = true;                        // verbose output?
 
                                             // -----------------------------------------------------------------------------
 
-void RunModel(solver_type solver,              // use MKL solver (if available)
+void RunModel(int nthreads,              // number of OpenMP threads
+              solver_type solver,        // use MKL solver (if available)
               bool use_adaptiveStep,     // allow step size reduction
               bool use_modifiedNewton,   // use modified Newton method
               const std::string& suffix  // output filename suffix
 ) {
-
     cout << endl;
     cout << "===================================================================" << endl;
     cout << "Solver:          ";
@@ -95,7 +95,7 @@ void RunModel(solver_type solver,              // use MKL solver (if available)
 
     // Create the physical system
     ChSystemNSC my_system;
-
+    my_system.SetNumThreads(nthreads);
     my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
 
     // Create a mesh, that is a container for groups of elements and their referenced nodes.
@@ -432,8 +432,7 @@ int main(int argc, char* argv[]) {
     // Set number of threads
     if (argc > 1)
         num_threads = std::stoi(argv[1]);
-    num_threads = std::min(num_threads, CHOMPfunctions::GetNumProcs());
-    CHOMPfunctions::SetNumThreads(num_threads);
+    num_threads = std::min(num_threads, ChOMP::GetNumProcs());
     GetLog() << "Using " << num_threads << " thread(s)\n";
 #else
     GetLog() << "No OpenMP\n";
@@ -441,17 +440,17 @@ int main(int argc, char* argv[]) {
 
     // Run simulations.
 #ifdef CHRONO_MKL
-    RunModel(solver_type::MKL, true, false, "MKL_adaptive_full");     // MKL, adaptive step, full Newton
-    RunModel(solver_type::MKL, true, true, "MKL_adaptive_modified");  // MKL, adaptive step, modified Newton
+    RunModel(num_threads, solver_type::MKL, true, false, "MKL_adaptive_full");     // MKL, adaptive step, full Newton
+    RunModel(num_threads, solver_type::MKL, true, true, "MKL_adaptive_modified");  // MKL, adaptive step, modified Newton
 #endif
 
 #ifdef CHRONO_MUMPS
-    RunModel(solver_type::MUMPS, true, false, "MUMPS_adaptive_full");     // MUMPS, adaptive step, full Newton
-    RunModel(solver_type::MUMPS, true, true, "MUMPS_adaptive_modified");  // MUMPS, adaptive step, modified Newton
+    RunModel(num_threads, solver_type::MUMPS, true, false, "MUMPS_adaptive_full");     // MUMPS, adaptive step, full Newton
+    RunModel(num_threads, solver_type::MUMPS, true, true, "MUMPS_adaptive_modified");  // MUMPS, adaptive step, modified Newton
 #endif
 
-    RunModel(solver_type::MINRES, true, false, "MINRES_adaptive_full");     // MINRES, adaptive step, full Newton
-    RunModel(solver_type::MINRES, true, true, "MINRES_adaptive_modified");  // MINRES, adaptive step, modified Newton
+    RunModel(num_threads, solver_type::MINRES, true, false, "MINRES_adaptive_full");     // MINRES, adaptive step, full Newton
+    RunModel(num_threads, solver_type::MINRES, true, true, "MINRES_adaptive_modified");  // MINRES, adaptive step, modified Newton
 
     return 0;
 }

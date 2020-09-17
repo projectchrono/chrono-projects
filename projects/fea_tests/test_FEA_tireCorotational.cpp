@@ -85,26 +85,17 @@ int main(int argc, char* argv[]) {
     bool include_obstacles = false;
 
     // --------------------------
-    // Set number of threads
-    // --------------------------
-
-#ifdef CHRONO_OPENMP_ENABLED
-    int max_threads = CHOMPfunctions::GetNumProcs();
-
-    if (num_threads > max_threads)
-        num_threads = max_threads;
-
-    CHOMPfunctions::SetNumThreads(num_threads);
-    GetLog() << "Using " << num_threads << " thread(s)\n";
-#else
-    GetLog() << "No OpenMP\n";
-#endif
-
-    // --------------------------
     // Create the physical system
     // --------------------------
 
     ChSystemSMC my_system;
+
+    // Set number of threads
+#ifdef CHRONO_OPENMP_ENABLED
+    my_system.SetNumThreads(std::min(num_threads, ChOMP::GetNumProcs()));
+#else
+    GetLog() << "No OpenMP\n";
+#endif 
 
     // Global parameter for tire
     double tire_rad = 0.8;

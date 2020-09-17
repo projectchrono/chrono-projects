@@ -66,10 +66,12 @@ class FEAShellTest : public BaseTest {
   public:
     FEAShellTest(const std::string& testName,
                  const std::string& testProjectName,
+                 int nthreads,
                  solver_type solver,
                  bool use_modifiedNewton,
                  bool verbose_solver)
         : BaseTest(testName, testProjectName),
+          m_nthreads(nthreads),
           m_execTime(0),
           m_solver(solver),
           m_use_modifiedNewton(use_modifiedNewton),
@@ -83,7 +85,8 @@ class FEAShellTest : public BaseTest {
     virtual double getExecutionTime() const override { return m_execTime; }
 
   private:
-    double m_execTime;
+    int m_nthreads; // number of OpenMP threads
+    double m_execTime; // execution time
     solver_type m_solver;       // use MKL m_solver (if available)
     bool m_use_adaptiveStep;    // allow step size reduction
     bool m_use_modifiedNewton;  // use modified Newton method
@@ -116,7 +119,7 @@ bool FEAShellTest::execute() {
 
     // Create the physical system
     ChSystemNSC my_system;
-
+    my_system.SetNumThreads(m_nthreads);
     my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
 
     // Create a mesh, that is a container for groups of elements and their referenced nodes.
@@ -368,8 +371,7 @@ int main(int argc, char* argv[]) {
     // Set number of threads
     if (argc > 1)
         num_threads = std::stoi(argv[1]);
-    num_threads = std::min(num_threads, CHOMPfunctions::GetNumProcs());
-    CHOMPfunctions::SetNumThreads(num_threads);
+    num_threads = std::min(num_threads, ChOMP::GetNumProcs());
     GetLog() << "Using " << num_threads << " thread(s)\n";
 #else
     GetLog() << "No OpenMP\n";
@@ -378,26 +380,30 @@ int main(int argc, char* argv[]) {
     bool verbose_solver = false;
     bool verbose_test = false;
 
-    FEAShellTest test_minres_full("metrics_FEA_shellANCF_MINRES_full", "Chrono::FEA", solver_type::MINRES, false, verbose_solver);
+    FEAShellTest test_minres_full("metrics_FEA_shellANCF_MINRES_full", "Chrono::FEA", num_threads, solver_type::MINRES,
+                                  false, verbose_solver);
     test_minres_full.setOutDir(out_dir);
     test_minres_full.setVerbose(verbose_test);
     test_minres_full.run();
     test_minres_full.print();
 
-    FEAShellTest test_minres_mod("metrics_FEA_shellANCF_MINRES_modified", "Chrono::FEA", solver_type::MINRES, true, verbose_solver);
+    FEAShellTest test_minres_mod("metrics_FEA_shellANCF_MINRES_modified", "Chrono::FEA", num_threads,
+                                 solver_type::MINRES, true, verbose_solver);
     test_minres_mod.setOutDir(out_dir);
     test_minres_mod.setVerbose(verbose_test);
     test_minres_mod.run();
     test_minres_mod.print();
 
 #ifdef CHRONO_MKL
-    FEAShellTest test_mkl_full("metrics_FEA_shellANCF_MKL_full", "Chrono::FEA", solver_type::MKL, false, verbose_solver);
+    FEAShellTest test_mkl_full("metrics_FEA_shellANCF_MKL_full", "Chrono::FEA", num_threads, solver_type::MKL, false,
+                               verbose_solver);
     test_mkl_full.setOutDir(out_dir);
     test_mkl_full.setVerbose(verbose_test);
     test_mkl_full.run();
     test_mkl_full.print();
-     
-    FEAShellTest test_mkl_mod("metrics_FEA_shellANCF_MKL_modified", "Chrono::FEA", solver_type::MKL, true, verbose_solver);
+
+    FEAShellTest test_mkl_mod("metrics_FEA_shellANCF_MKL_modified", "Chrono::FEA", num_threads, solver_type::MKL, true,
+                              verbose_solver);
     test_mkl_mod.setOutDir(out_dir);
     test_mkl_mod.setVerbose(verbose_test);
     test_mkl_mod.run();

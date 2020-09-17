@@ -232,11 +232,7 @@ int main(int argc, char* argv[]) {
     system.Set_G_acc(ChVector<>(0, 0, -9.80665));
 
     // Set number of threads
-    int max_threads = CHOMPfunctions::GetNumProcs();
-    if (threads > max_threads)
-        threads = max_threads;
-    system.SetNumThreads(threads);
-    std::cout << "Using " << threads << " threads" << std::endl;
+    system.SetNumThreads(std::min(threads, ChOMP::GetNumProcs()));
 
     // Set solver parameters
     system.GetSettings()->solver.use_full_inertia_tensor = false;

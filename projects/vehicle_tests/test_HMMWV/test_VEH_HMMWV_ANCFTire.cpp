@@ -152,7 +152,7 @@ int main(int argc, char* argv[]) {
     system->Set_G_acc(ChVector<>(0, 0, -9.81));
 
     // Set number threads
-    CHOMPfunctions::SetNumThreads(num_threads);
+    system->SetNumThreads(num_threads);
 
 #ifdef CHRONO_MKL
     // MKL solver settings

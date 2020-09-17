@@ -175,11 +175,8 @@ int main(int argc, char* argv[]) {
 
     ChSystemParallelSMC msystem;
 
-    // Set number of threads.
-    int max_threads = CHOMPfunctions::GetNumProcs();
-    if (threads > max_threads)
-        threads = max_threads;
-    msystem.SetNumThreads(threads);
+    // Set number of threads
+    msystem.SetNumThreads(std::min(8, ChOMP::GetNumProcs()));
 
     // Set gravitational acceleration
     msystem.Set_G_acc(ChVector<>(0, 0, -gravity));
