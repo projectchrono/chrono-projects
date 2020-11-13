@@ -32,9 +32,9 @@
 #include "chrono/fea/ChLoadsBeam.h"
 #include "chrono/fea/ChMesh.h"
 
-////#undef CHRONO_MKL
-#ifdef CHRONO_MKL
-#include "chrono_mkl/ChSolverMKL.h"
+////#undef CHRONO_PARDISO_MKL
+#ifdef CHRONO_PARDISO_MKL
+#include "chrono_pardisomkl/ChSolverPardisoMKL.h"
 #endif
 
 #undef CHRONO_POSTPROCESS
@@ -109,11 +109,11 @@ void test_beam(const std::string& name,  /// test name
         my_system.Add(dir_cnstr);
     }
 
-#ifdef CHRONO_MKL
-    // MKL solver + HHT
-    std::cout << "Using HHT + MKL" << std::endl;
+#ifdef CHRONO_PARDISO_MKL
+    // PardisoMKL solver + HHT
+    std::cout << "Using HHT + PardisoMKL" << std::endl;
 
-    auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
+    auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
     my_system.SetSolver(mkl_solver);
     mkl_solver->LockSparsityPattern(true);
     mkl_solver->SetVerbose(false);

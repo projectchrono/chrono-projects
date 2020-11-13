@@ -35,7 +35,7 @@
 #include "chrono/fea/ChVisualizationFEAmesh.h"
 #include "chrono_irrlicht/ChIrrApp.h"
 #include "chrono_irrlicht/ChIrrAppInterface.h"
-#include "chrono_mkl/ChSolverMKL.h"
+#include "chrono_pardisomkl/ChSolverPardisoMKL.h"
 
 using namespace chrono;
 using namespace fea;
@@ -648,7 +648,7 @@ int main(int argc, char* argv[]) {
     mrigidBody->AddAsset(mtexture);
     
     my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
-    auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
+    auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
     my_system.SetSolver(mkl_solver);
     mkl_solver->LockSparsityPattern(true);
 

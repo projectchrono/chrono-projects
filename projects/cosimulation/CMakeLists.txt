@@ -4,7 +4,7 @@
 #    MPI
 #    Chrono::Vehicle and Chrono::Parallel modules
 # Optional modules:
-#    Chrono::MKL and Chrono::OpenGL
+#    Chrono::PardisoMKL and Chrono::OpenGL
 #=============================================================================
 
 #-----------------------------------------------------------------------------
@@ -37,7 +37,7 @@ endif()
 
 find_package(Chrono
              COMPONENTS Vehicle Parallel
-             OPTIONAL_COMPONENTS MKL OpenGL Irrlicht
+             OPTIONAL_COMPONENTS PardisoMKL OpenGL Irrlicht
              CONFIG
 )
 

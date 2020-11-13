@@ -33,8 +33,8 @@
 #include "chrono_irrlicht/ChIrrApp.h"
 #endif
 
-#ifdef CHRONO_MKL
-#include "chrono_mkl/ChSolverMKL.h"
+#ifdef CHRONO_PARDISO_MKL
+#include "chrono_pardisomkl/ChSolverPardisoMKL.h"
 #endif
 
 #ifdef CHRONO_OPENMP_ENABLED
@@ -61,8 +61,7 @@ int main(int argc, char* argv[]) {
 
     int num_threads = 2;
 
-    enum SolverType { MINRES, MKL };
-    SolverType solver_type = MINRES;
+    ChSolver::Type solver_type = ChSolver::Type::MINRES;
 
     enum IntegratorType { EULER, HHT };
     IntegratorType integrator_type = HHT;
@@ -246,12 +245,12 @@ int main(int argc, char* argv[]) {
     // ----------------------------
 
     // Set up solver
-#ifndef CHRONO_MKL
-    solver_type = MINRES;
+#ifndef CHRONO_PARDISO_MKL
+    solver_type = ChSolver::Type::MINRES;
 #endif
 
     switch (solver_type) {
-        case MINRES: {
+        case ChSolver::Type::MINRES : {
             GetLog() << "Using MINRES solver\n";
             auto solver = chrono_types::make_shared<ChSolverMINRES>();
             solver->EnableWarmStart(true);
@@ -261,10 +260,10 @@ int main(int argc, char* argv[]) {
             my_system.SetSolverForceTolerance(1e-10);
             break;
         }
-        case MKL: {
-#ifdef CHRONO_MKL
-            GetLog() << "Using MKL solver\n";
-            auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
+        case ChSolver::Type::PARDISO_MKL : {
+#ifdef CHRONO_PARDISO_MKL
+            GetLog() << "Using PardisoMKL solver\n";
+            auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
             mkl_solver->LockSparsityPattern(true);
             my_system.SetSolver(mkl_solver);
 #endif

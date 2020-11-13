@@ -1,6 +1,6 @@
 #=============================================================================
 # CMake configuration file for projects requiring the Chrono FEA module
-# and optionally the MKL module
+# and optionally the PardisoMKL module
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
@@ -26,7 +26,7 @@ set(DEMOS_BASIC
 
 find_package(Chrono
              COMPONENTS
-             OPTIONAL_COMPONENTS MKL MUMPS
+             OPTIONAL_COMPONENTS PardisoMKL MUMPS
              CONFIG
 )
 

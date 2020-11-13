@@ -33,8 +33,8 @@
 #include "chrono/fea/ChVisualizationFEAmesh.h"
 #include "chrono/parallel/ChOpenMP.h"
 
-#ifdef CHRONO_MKL
-#include "chrono_mkl/ChSolverMKL.h"
+#ifdef CHRONO_PARDISO_MKL
+#include "chrono_pardisomkl/ChSolverPardisoMKL.h"
 #define USE_MKL
 #else
 #undef USE_MKL
@@ -648,8 +648,8 @@ int main(int argc, char* argv[]) {
 
 // Set up solver
 #ifdef USE_MKL
-    GetLog() << "Using MKL solver\n";
-    auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
+    GetLog() << "Using PardisoMKL solver\n";
+    auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
     my_system.SetSolver(mkl_solver);
     mkl_solver->LockSparsityPattern(true);
 #else

@@ -29,8 +29,8 @@
 
 #include "../BaseTest.h"
 
-#ifdef CHRONO_MKL
-#include "chrono_mkl/ChSolverMKL.h"
+#ifdef CHRONO_PARDISO_MKL
+#include "chrono_pardisomkl/ChSolverPardisoMKL.h"
 #endif
 
 #ifdef CHRONO_MUMPS
@@ -46,8 +46,6 @@ using namespace chrono::fea;
 
 using std::cout;
 using std::endl;
-
-enum class solver_type { MINRES, MKL, MUMPS };
 
 // -----------------------------------------------------------------------------
 
@@ -67,7 +65,7 @@ class FEAShellTest : public BaseTest {
     FEAShellTest(const std::string& testName,
                  const std::string& testProjectName,
                  int nthreads,
-                 solver_type solver,
+                 ChSolver::Type solver,
                  bool use_modifiedNewton,
                  bool verbose_solver)
         : BaseTest(testName, testProjectName),
@@ -85,9 +83,9 @@ class FEAShellTest : public BaseTest {
     virtual double getExecutionTime() const override { return m_execTime; }
 
   private:
-    int m_nthreads; // number of OpenMP threads
-    double m_execTime; // execution time
-    solver_type m_solver;       // use MKL m_solver (if available)
+    int m_nthreads;             // number of OpenMP threads
+    double m_execTime;          // execution time
+    ChSolver::Type m_solver;    // linear solver type
     bool m_use_adaptiveStep;    // allow step size reduction
     bool m_use_modifiedNewton;  // use modified Newton method
     bool m_verbose_solver;      // verbose output from underlying solver
@@ -98,13 +96,13 @@ bool FEAShellTest::execute() {
     cout << "===================================================================" << endl;
     cout << "Solver:          ";
     switch (m_solver) {
-        case solver_type::MINRES:
+        case ChSolver::Type::MINRES:
             cout << "MINRES";
             break;
-        case solver_type::MKL:
-            cout << "MKL";
+        case ChSolver::Type::PARDISO_MKL:
+            cout << "PardisoMKL";
             break;
-        case solver_type::MUMPS:
+        case ChSolver::Type::MUMPS:
             cout << "MUMPS";
             break;
         default:
@@ -203,8 +201,8 @@ bool FEAShellTest::execute() {
     // Remember to add the mesh to the system!
     my_system.Add(my_mesh);
 
-#ifdef CHRONO_MKL
-    std::shared_ptr<ChSolverMKL> mkl_solver;
+#ifdef CHRONO_PARDISO_MKL
+    std::shared_ptr<ChSolverPardisoMKL> mkl_solver;
 #endif
 
 #ifdef CHRONO_MUMPS
@@ -213,7 +211,7 @@ bool FEAShellTest::execute() {
 
     // Set up solver
     switch (m_solver) {
-        case solver_type::MINRES: {
+        case ChSolver::Type::MINRES: {
             auto solver = chrono_types::make_shared<ChSolverMINRES>();
             solver->SetMaxIterations(100);
             solver->EnableDiagonalPreconditioner(true);
@@ -221,16 +219,16 @@ bool FEAShellTest::execute() {
             my_system.SetSolver(solver);
             my_system.SetSolverForceTolerance(1e-9);
         } break;
-        case solver_type::MKL:
-#ifdef CHRONO_MKL
-            mkl_solver = chrono_types::make_shared<ChSolverMKL>();
+        case ChSolver::Type::PARDISO_MKL:
+#ifdef CHRONO_PARDISO_MKL
+            mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
             my_system.SetSolver(mkl_solver);
             mkl_solver->LockSparsityPattern(true);
             mkl_solver->SetVerbose(m_verbose_solver);
             mkl_solver->ForceSparsityPatternUpdate();
 #endif
             break;
-        case solver_type::MUMPS:
+        case ChSolver::Type::MUMPS:
 #ifdef CHRONO_MUMPS
             mumps_solver = chrono_types::make_shared<ChSolverMumps>();
             my_system.SetSolver(mumps_solver);
@@ -285,20 +283,20 @@ bool FEAShellTest::execute() {
         my_mesh->ResetCounters();
         my_mesh->ResetTimers();
 
-#ifdef CHRONO_MKL
-        if (m_solver == solver_type::MKL)
+#ifdef CHRONO_PARDISO_MKL
+        if (m_solver == ChSolver::Type::PARDISO_MKL)
             mkl_solver->ResetTimers();
 #endif
 
 #ifdef CHRONO_MUMPS
-        if (m_solver == solver_type::MUMPS)
+        if (m_solver == ChSolver::Type::MUMPS)
             mumps_solver->ResetTimers();
 #endif
 
         my_system.DoStepDynamics(step_size);
 
-        if (istep == 3 && m_solver == solver_type::MKL) {
-#ifdef CHRONO_MKL
+        if (istep == 3 && m_solver == ChSolver::Type::PARDISO_MKL) {
+#ifdef CHRONO_PARDISO_MKL
             mkl_solver->LockSparsityPattern(true);
 #endif
         }
@@ -380,7 +378,8 @@ int main(int argc, char* argv[]) {
     bool verbose_solver = false;
     bool verbose_test = false;
 
-    FEAShellTest test_minres_full("metrics_FEA_shellANCF_MINRES_full", "Chrono::FEA", num_threads, solver_type::MINRES,
+    FEAShellTest test_minres_full("metrics_FEA_shellANCF_MINRES_full", "Chrono::FEA", num_threads,
+                                  ChSolver::Type::MINRES,
                                   false, verbose_solver);
     test_minres_full.setOutDir(out_dir);
     test_minres_full.setVerbose(verbose_test);
@@ -388,22 +387,22 @@ int main(int argc, char* argv[]) {
     test_minres_full.print();
 
     FEAShellTest test_minres_mod("metrics_FEA_shellANCF_MINRES_modified", "Chrono::FEA", num_threads,
-                                 solver_type::MINRES, true, verbose_solver);
+                                 ChSolver::Type::MINRES, true, verbose_solver);
     test_minres_mod.setOutDir(out_dir);
     test_minres_mod.setVerbose(verbose_test);
     test_minres_mod.run();
     test_minres_mod.print();
 
-#ifdef CHRONO_MKL
-    FEAShellTest test_mkl_full("metrics_FEA_shellANCF_MKL_full", "Chrono::FEA", num_threads, solver_type::MKL, false,
-                               verbose_solver);
+#ifdef CHRONO_PARDISO_MKL
+    FEAShellTest test_mkl_full("metrics_FEA_shellANCF_MKL_full", "Chrono::FEA", num_threads,
+                               ChSolver::Type::PARDISO_MKL, false, verbose_solver);
     test_mkl_full.setOutDir(out_dir);
     test_mkl_full.setVerbose(verbose_test);
     test_mkl_full.run();
     test_mkl_full.print();
 
-    FEAShellTest test_mkl_mod("metrics_FEA_shellANCF_MKL_modified", "Chrono::FEA", num_threads, solver_type::MKL, true,
-                              verbose_solver);
+    FEAShellTest test_mkl_mod("metrics_FEA_shellANCF_MKL_modified", "Chrono::FEA", num_threads,
+                              ChSolver::Type::PARDISO_MKL, true, verbose_solver);
     test_mkl_mod.setOutDir(out_dir);
     test_mkl_mod.setVerbose(verbose_test);
     test_mkl_mod.run();

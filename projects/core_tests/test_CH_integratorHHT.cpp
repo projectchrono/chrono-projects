@@ -6,8 +6,8 @@
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/timestepper/ChTimestepper.h"
 
-#ifdef CHRONO_MKL
-#include "chrono_mkl/ChSolverMKL.h"
+#ifdef CHRONO_PARDISO_MKL
+#include "chrono_pardisomkl/ChSolverPardisoMKL.h"
 #endif
 
 using namespace chrono;
@@ -413,9 +413,9 @@ void RigidPendulums() {
         system.AddLink(revolute2);
     }
 
-// Set MKL solver
-#ifdef CHRONO_MKL
-    auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
+// Set PardisoMKL solver
+#ifdef CHRONO_PARDISO_MKL
+    auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
     mkl_solver->LockSparsityPattern(true);
     system.SetSolver(mkl_solver);
 #endif

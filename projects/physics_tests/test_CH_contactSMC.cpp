@@ -16,8 +16,8 @@
 
 #include "chrono_irrlicht/ChIrrApp.h"
 
-#ifdef CHRONO_MKL
-#include "chrono_mkl/ChSolverMKL.h"
+#ifdef CHRONO_PARDISO_MKL
+#include "chrono_pardisomkl/ChSolverPardisoMKL.h"
 #endif
 
 #include <irrlicht.h>
@@ -91,8 +91,7 @@ int main(int argc, char* argv[]) {
     double gravity = -9.81;   // gravitational acceleration
     double time_step = 1e-4;  // integration step size
 
-    enum SolverType { DEFAULT_SOLVER, MINRES_SOLVER, MKL_SOLVER };
-    SolverType solver_type = MKL_SOLVER;
+    ChSolver::Type solver_type = ChSolver::Type::PARDISO_MKL;
 
     bool stiff_contact = true;
 
@@ -240,21 +239,15 @@ int main(int argc, char* argv[]) {
     // -------------------
 
     // Note that not all solvers support stiffness matrices (that includes the default SolverSMC).
-#ifndef CHRONO_MKL
-    if (solver_type == MKL_SOLVER) {
-        GetLog() << "MKL support not enabled.  Solver reset to default.\n";
-        solver_type = DEFAULT_SOLVER;
+#ifndef CHRONO_PARDISO_MKL
+    if (solver_type == ChSolver::Type::PARDISO_MKL) {
+        GetLog() << "PardisoMKL support not enabled.  Solver reset to default.\n";
+        solver_type = ChSolver::Type::MINRES;
     }
 #endif
 
     switch (solver_type) {
-        case DEFAULT_SOLVER: {
-            GetLog() << "Using DEFAULT solver.\n";
-            system.SetSolverMaxIterations(100);
-            system.SetSolverForceTolerance(1e-6);
-            break;
-        }
-        case MINRES_SOLVER: {
+        case ChSolver::Type::MINRES : {
             GetLog() << "Using MINRES solver.\n";
             auto minres_solver = chrono_types::make_shared<ChSolverMINRES>();
             minres_solver->EnableDiagonalPreconditioner(true);
@@ -263,13 +256,19 @@ int main(int argc, char* argv[]) {
             system.SetSolverForceTolerance(1e-6);
             break;
         }
-        case MKL_SOLVER: {
-#ifdef CHRONO_MKL
-            GetLog() << "Using MKL solver.\n";
-            auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
+        case ChSolver::Type::PARDISO_MKL: {
+#ifdef CHRONO_PARDISO_MKL
+            GetLog() << "Using PardisoMKL solver.\n";
+            auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
             mkl_solver->LockSparsityPattern(true);
             system.SetSolver(mkl_solver);
 #endif
+            break;
+        }
+        default: {
+            GetLog() << "Using DEFAULT solver.\n";
+            system.SetSolverMaxIterations(100);
+            system.SetSolverForceTolerance(1e-6);
             break;
         }
     }

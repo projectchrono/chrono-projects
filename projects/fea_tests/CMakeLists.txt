@@ -34,7 +34,7 @@ set(TESTS_MATLAB_IRR
 
 find_package(Chrono
              COMPONENTS
-             OPTIONAL_COMPONENTS Irrlicht Postprocess MKL MUMPS Matlab
+             OPTIONAL_COMPONENTS Irrlicht Postprocess PardisoMKL MUMPS Matlab
              CONFIG
 )
 
@@ -45,9 +45,9 @@ if(NOT Chrono_FOUND)
   return()
 endif()
 
-# If the Chrono::Irrlicht and Chrono::MKL are available.
+# If the Chrono::Irrlicht and Chrono::PardisoMKL are available.
 
-if(CHRONO_IRRLICHT_FOUND AND CHRONO_MKL_FOUND)
+if(CHRONO_IRRLICHT_FOUND AND CHRONO_PARDISOMKL_FOUND)
   list(APPEND TESTS ${TESTS_MKL_IRR})
 endif()
 

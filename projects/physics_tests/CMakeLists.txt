@@ -25,7 +25,7 @@ SET(DEMOS
 
 find_package(Chrono
              COMPONENTS Irrlicht
-             OPTIONAL_COMPONENTS MKL
+             OPTIONAL_COMPONENTS PardisoMKL
              CONFIG
 )
 

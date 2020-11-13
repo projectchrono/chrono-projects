@@ -242,8 +242,8 @@ mloadcontainer->Add(mrigidmeshload);
     //
 
     // Change solver to embedded MINRES
-    // NOTE! it is strongly advised that you compile the optional MKL module
-    // if you need higher precision, and switch to its MKL solver - see demos for FEA & MKL.
+    // NOTE! it is strongly advised that you compile the optional PardisoMKL module
+    // if you need higher precision, and switch to its Pardiso solver - see demos for FEA & PardisoMKL.
     auto solver = chrono_types::make_shared<ChSolverMINRES>();
     solver->EnableWarmStart(true);
     solver->SetMaxIterations(40);

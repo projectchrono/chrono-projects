@@ -27,8 +27,8 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/parallel/ChOpenMP.h"
 
-#ifdef CHRONO_MKL
-#include "chrono_mkl/ChSolverMKL.h"
+#ifdef CHRONO_PARDISO_MKL
+#include "chrono_pardisomkl/ChSolverPardisoMKL.h"
 #endif
 
 #include "chrono_vehicle/ChConfigVehicle.h"
@@ -154,9 +154,9 @@ int main(int argc, char* argv[]) {
     // Set number threads
     system->SetNumThreads(num_threads);
 
-#ifdef CHRONO_MKL
-    // MKL solver settings
-    auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
+#ifdef CHRONO_PARDISO_MKL
+    // PardisoMKL solver settings
+    auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
     mkl_solver->LockSparsityPattern(true);
     mkl_solver->SetVerbose(verbose);
     system->SetSolver(mkl_solver);
@@ -165,7 +165,7 @@ int main(int argc, char* argv[]) {
     system->SetSolverType(ChSolver::Type::PSOR);
     system->SetSolverMaxIterations(100);
     system->SetSolverTolerance(1e-10);
-    system->SetTolForce(1e-8);
+    system->SetSolverForceTolerance(1e-8);
 #endif
 
     // Integrator settings

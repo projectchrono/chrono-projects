@@ -11,7 +11,7 @@
 
 find_package(Chrono
              COMPONENTS Vehicle 
-             OPTIONAL_COMPONENTS Irrlicht MKL Parallel OpenGL
+             OPTIONAL_COMPONENTS Irrlicht PardisoMKL Parallel OpenGL
              CONFIG
 )
 

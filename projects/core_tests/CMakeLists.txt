@@ -21,7 +21,7 @@ set(TESTS
 # Invoke find_package in CONFIG mode
 
 find_package(Chrono
-             OPTIONAL_COMPONENTS MKL
+             OPTIONAL_COMPONENTS PardisoMKL
              CONFIG
 )
 

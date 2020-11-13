@@ -34,7 +34,7 @@
 #include "chrono/fea/ChVisualizationFEAmesh.h"
 #include "chrono_irrlicht/ChIrrAppInterface.h"
 #include "chrono_irrlicht/ChIrrApp.h"
-#include "chrono_mkl/ChSolverMKL.h"
+#include "chrono_pardisomkl/ChSolverPardisoMKL.h"
 
 // Remember to use the namespace 'chrono' because all classes
 // of Chrono::Engine belong to this namespace and its children...
@@ -1544,8 +1544,8 @@ int main(int argc, char* argv[]) {
     my_system.AddLink(constraintLateral);
     constraintLateral->Initialize(Rim, Ground, ChCoordsys<>(Rim->GetPos(), Q_from_AngX(CH_C_PI_2)));
 
-    // Use the MKL Solver
-    auto mkl_solver = chrono_types::make_shared<ChSolverMKL>();
+    // Use the PardisoMKL Solver
+    auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
     mkl_solver->LockSparsityPattern(true);
     my_system.SetSolver(mkl_solver);
     my_system.Update();

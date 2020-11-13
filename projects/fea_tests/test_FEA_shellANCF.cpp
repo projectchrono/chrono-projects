@@ -27,8 +27,8 @@
 
 #include "chrono_thirdparty/filesystem/path.h"
 
-#ifdef CHRONO_MKL
-#include "chrono_mkl/ChSolverMKL.h"
+#ifdef CHRONO_PARDISO_MKL
+#include "chrono_pardisomkl/ChSolverPardisoMKL.h"
 #endif
 
 #ifdef CHRONO_MUMPS
@@ -45,8 +45,6 @@ using namespace chrono::fea;
 using std::cout;
 using std::endl;
 
-enum class solver_type { MINRES, MKL, MUMPS };
-
 // -----------------------------------------------------------------------------
 
 int num_threads = 4;      // default number of threads
@@ -60,12 +58,12 @@ int numDiv_z = 1;   // mesh divisions in Z direction
 
 std::string out_dir = "../TEST_SHELL_ANCF";  // name of output directory
 bool output = true;                         // generate output file?
-bool verbose = true;                        // verbose output?
+bool verbose = true;                         // verbose output?
 
-                                            // -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 void RunModel(int nthreads,              // number of OpenMP threads
-              solver_type solver,        // use MKL solver (if available)
+              ChSolver::Type solver,     // linear solver type
               bool use_adaptiveStep,     // allow step size reduction
               bool use_modifiedNewton,   // use modified Newton method
               const std::string& suffix  // output filename suffix
@@ -73,18 +71,18 @@ void RunModel(int nthreads,              // number of OpenMP threads
     cout << endl;
     cout << "===================================================================" << endl;
     cout << "Solver:          ";
-    switch (solver)
-    {
-    case solver_type::MINRES:
-        cout << "MINRES";
-        break;
-    case solver_type::MKL:
-        cout << "MKL";
-        break;
-    case solver_type::MUMPS:
-        cout << "MUMPS";
-        break;
-    default: break;
+    switch (solver) {
+        case ChSolver::Type::MINRES:
+            cout << "MINRES";
+            break;
+        case ChSolver::Type::PARDISO_MKL:
+            cout << "PardisoMKL";
+            break;
+        case ChSolver::Type::MUMPS:
+            cout << "MUMPS";
+            break;
+        default:
+            break;
     }
     cout << endl;
     cout << "Adaptive step:   " << (use_adaptiveStep ? "Yes" : "No") << endl;
@@ -179,8 +177,8 @@ void RunModel(int nthreads,              // number of OpenMP threads
     // Remember to add the mesh to the system!
     my_system.Add(my_mesh);
 
-#ifdef CHRONO_MKL
-    std::shared_ptr<ChSolverMKL> mkl_solver;
+#ifdef CHRONO_PARDISO_MKL
+    std::shared_ptr<ChSolverPardisoMKL> mkl_solver;
 #endif
 
 #ifdef CHRONO_MUMPS
@@ -190,7 +188,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
 
     // Set up solver
     switch (solver) {
-        case solver_type::MINRES: {
+        case ChSolver::Type::MINRES: {
             auto solver = chrono_types::make_shared<ChSolverMINRES>();
             solver->EnableDiagonalPreconditioner(true);
             solver->SetMaxIterations(100);
@@ -198,16 +196,16 @@ void RunModel(int nthreads,              // number of OpenMP threads
             my_system.SetSolver(solver);
             my_system.SetSolverForceTolerance(1e-10);
         } break;
-        case solver_type::MKL:
-#ifdef CHRONO_MKL
-            mkl_solver = chrono_types::make_shared<ChSolverMKL>();
+        case ChSolver::Type::PARDISO_MKL:
+#ifdef CHRONO_PARDISO_MKL
+            mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
             my_system.SetSolver(mkl_solver);
             mkl_solver->LockSparsityPattern(true);
             mkl_solver->SetVerbose(verbose);
             mkl_solver->ForceSparsityPatternUpdate();
 #endif
             break;
-        case solver_type::MUMPS:
+        case ChSolver::Type::MUMPS:
 #ifdef CHRONO_MUMPS
             mumps_solver = chrono_types::make_shared<ChSolverMumps>();
             my_system.SetSolver(mumps_solver);
@@ -267,21 +265,21 @@ void RunModel(int nthreads,              // number of OpenMP threads
         my_mesh->ResetCounters();
         my_mesh->ResetTimers();
 
-#ifdef CHRONO_MKL
-        if (solver == solver_type::MKL)
+#ifdef CHRONO_PARDISO_MKL
+        if (solver == ChSolver::Type::PARDISO_MKL)
             mkl_solver->ResetTimers();
 #endif
 
 #ifdef CHRONO_MUMPS
-        if (solver == solver_type::MUMPS)
+        if (solver == ChSolver::Type::MUMPS)
             mumps_solver->ResetTimers();
 #endif
 
         my_system.DoStepDynamics(step_size);
 
-        if (istep == 3 && solver == solver_type::MKL)
+        if (istep == 3 && solver == ChSolver::Type::PARDISO_MKL)
         {
-#ifdef CHRONO_MKL
+#ifdef CHRONO_PARDISO_MKL
             mkl_solver->LockSparsityPattern(true);
 #endif
         }
@@ -313,8 +311,8 @@ void RunModel(int nthreads,              // number of OpenMP threads
         time_update += my_system.GetTimerUpdate();
 
         // TODO: if it is OK to move timer in ChSolver we can avoid this switch
-#ifdef CHRONO_MKL
-        if (solver == solver_type::MKL) {
+#ifdef CHRONO_PARDISO_MKL
+        if (solver == ChSolver::Type::PARDISO_MKL) {
             time_setup_assembly += mkl_solver->GetTimeSetup_Assembly();
             time_setup_solvercall += mkl_solver->GetTimeSetup_SolverCall();
             time_solve_assembly += mkl_solver->GetTimeSolve_Assembly();
@@ -322,7 +320,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
         }
 #endif
 #ifdef CHRONO_MUMPS
-        if (solver == solver_type::MUMPS) {
+        if (solver == ChSolver::Type::MUMPS) {
             time_setup_assembly += mumps_solver->GetTimeSetup_Assembly();
             time_setup_solvercall += mumps_solver->GetTimeSetup_SolverCall();
             time_solve_assembly += mumps_solver->GetTimeSolve_Assembly();
@@ -347,8 +345,8 @@ void RunModel(int nthreads,              // number of OpenMP threads
             cout << "node: [ " << p.x() << " " << p.y() << " " << p.z() << " ]  " << endl;
             cout << "step:  " << my_system.GetTimerStep() << endl;
             cout << "setup: " << my_system.GetTimerSetup();
-#ifdef CHRONO_MKL
-            if (solver == solver_type::MKL) {
+#ifdef CHRONO_PARDISO_MKL
+            if (solver == ChSolver::Type::PARDISO_MKL) {
                 cout << "  [assembly: " << mkl_solver->GetTimeSetup_Assembly();
                 cout << "  pardiso: " << mkl_solver->GetTimeSetup_SolverCall() <<"]";
             }
@@ -356,7 +354,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
             cout << endl;
             cout << "solve: " << my_system.GetTimerLSsolve() << "  ";
 #ifdef CHRONO_MUMPS
-            if (solver == solver_type::MUMPS) {
+            if (solver == ChSolver::Type::MUMPS) {
                 cout << "  [assembly: " << mumps_solver->GetTimeSolve_Assembly();
                 cout << "  mumps: " << mumps_solver->GetTimeSolve_SolverCall() << "]";
             }
@@ -382,20 +380,20 @@ void RunModel(int nthreads,              // number of OpenMP threads
     cout << std::setprecision(3) << std::fixed;
     cout << "Total time: " << time_total << endl;
     cout << "  Setup:    " << time_setup << "\t (" << (time_setup / time_total) * 100 << "%)" << endl;
-    if (solver == solver_type::MKL || solver == solver_type::MUMPS) {
+    if (solver == ChSolver::Type::PARDISO_MKL || solver == ChSolver::Type::MUMPS) {
         cout << "    Assembly: " << time_setup_assembly << "\t (" << (time_setup_assembly / time_setup) * 100
             << "% setup)" << endl;
         cout << "    SolverCall:  " << time_setup_solvercall << "\t (" << (time_setup_solvercall / time_setup) * 100
             << "% setup)" << endl;
     }
     cout << "  Solve:    " << time_solve << "\t (" << (time_solve / time_total) * 100 << "%)" << endl;
-    if (solver == solver_type::MKL || solver == solver_type::MUMPS) {
+    if (solver == ChSolver::Type::PARDISO_MKL || solver == ChSolver::Type::MUMPS) {
         cout << "    Assembly: " << time_solve_assembly << "\t (" << (time_solve_assembly / time_solve) * 100
             << "% solve)" << endl;
         cout << "    SolverCall:  " << time_solve_solvercall << "\t (" << (time_solve_solvercall / time_solve) * 100
             << "% solve)" << endl;
     }
-    if (solver == solver_type::MKL || solver == solver_type::MUMPS) {
+    if (solver == ChSolver::Type::PARDISO_MKL || solver == ChSolver::Type::MUMPS) {
         cout << "  [TOT Assembly: " << time_setup_assembly+time_solve_assembly << "\t (" << ((time_setup_assembly + time_solve_assembly) / time_total) * 100
             << "% total)]" << endl;
         cout << "  [TOT SolverCall:  " << time_setup_solvercall + time_solve_solvercall << "\t (" << ((time_setup_solvercall + time_solve_solvercall) / time_total) * 100
@@ -439,18 +437,18 @@ int main(int argc, char* argv[]) {
 #endif
 
     // Run simulations.
-#ifdef CHRONO_MKL
-    RunModel(num_threads, solver_type::MKL, true, false, "MKL_adaptive_full");     // MKL, adaptive step, full Newton
-    RunModel(num_threads, solver_type::MKL, true, true, "MKL_adaptive_modified");  // MKL, adaptive step, modified Newton
+#ifdef CHRONO_PARDISO_MKL
+    RunModel(num_threads, ChSolver::Type::PARDISO_MKL, true, false, "PardisoMKL_adaptive_full");
+    RunModel(num_threads, ChSolver::Type::PARDISO_MKL, true, true, "PardisoMKL_adaptive_modified");
 #endif
 
 #ifdef CHRONO_MUMPS
-    RunModel(num_threads, solver_type::MUMPS, true, false, "MUMPS_adaptive_full");     // MUMPS, adaptive step, full Newton
-    RunModel(num_threads, solver_type::MUMPS, true, true, "MUMPS_adaptive_modified");  // MUMPS, adaptive step, modified Newton
+    RunModel(num_threads, ChSolver::Type::MUMPS, true, false, "MUMPS_adaptive_full"); 
+    RunModel(num_threads, ChSolver::Type::MUMPS, true, true, "MUMPS_adaptive_modified");
 #endif
 
-    RunModel(num_threads, solver_type::MINRES, true, false, "MINRES_adaptive_full");     // MINRES, adaptive step, full Newton
-    RunModel(num_threads, solver_type::MINRES, true, true, "MINRES_adaptive_modified");  // MINRES, adaptive step, modified Newton
+    RunModel(num_threads, ChSolver::Type::MINRES, true, false, "MINRES_adaptive_full");
+    RunModel(num_threads, ChSolver::Type::MINRES, true, true, "MINRES_adaptive_modified");
 
     return 0;
 }
