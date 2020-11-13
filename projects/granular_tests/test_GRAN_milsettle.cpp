@@ -24,7 +24,6 @@
 #include "chrono_granular/ChGranularData.h"
 #include "chrono_granular/api/ChApiGranularChrono.h"
 #include "chrono_granular/physics/ChGranular.h"
-#include "chrono_thirdparty/SimpleOpt/SimpleOpt.h"
 #include "chrono_thirdparty/filesystem/path.h"
 
 using namespace chrono;
