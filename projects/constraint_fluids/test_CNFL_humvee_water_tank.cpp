@@ -29,11 +29,11 @@
 
 #include "chrono_vehicle/wheeled_vehicle/suspension/ChDoubleWishbone.h"
 
-// Chrono::Parallel header files
-#include "chrono_parallel/collision/ChCollisionSystemParallel.h"
-#include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
+// Chrono::Multicore header files
+#include "chrono_multicore/collision/ChCollisionSystemMulticore.h"
+#include "chrono_multicore/collision/ChNarrowphaseRUtils.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
+#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 #include "input_output.h"
 
@@ -217,10 +217,10 @@ void static WriteVehicleData(hmmwv::HMMWV_Full& my_hmmwv,
     csv_output.CloseFile();
 }
 
-void RemoveCollisionModel(ChSystemParallelNSC* system, ChCollisionModel* model) {
-    ChParallelDataManager* data_manager = system->data_manager;
+void RemoveCollisionModel(ChSystemMulticoreNSC* system, ChCollisionModel* model) {
+    ChMulticoreDataManager* data_manager = system->data_manager;
 #if 1
-    ChCollisionModelParallel* pmodel = static_cast<ChCollisionModelParallel*>(model);
+    ChCollisionModelMulticore* pmodel = static_cast<ChCollisionModelMulticore*>(model);
     int body_id = pmodel->GetBody()->GetId();
     // loop over the models we nned to remove
     // std::cout << "removing: " << pmodel->GetNObjects() << " objects" << std::endl;
@@ -303,7 +303,7 @@ void RemoveCollisionModel(ChSystemParallelNSC* system, ChCollisionModel* model) 
 
 ChFluidContainer* fluid_container;
 
-void CreateFluid(ChSystemParallelNSC* system) {
+void CreateFluid(ChSystemMulticoreNSC* system) {
     auto fluid_container = chrono_types::make_shared<ChFluidContainer>();
     system->Add3DOFContainer(fluid_container);
 
@@ -348,10 +348,10 @@ void CreateFluid(ChSystemParallelNSC* system) {
 }
 std::shared_ptr<ChBody> bottom_plate;
 // =============================================================================
-void CreateBase(ChSystemParallelNSC* system) {
+void CreateBase(ChSystemMulticoreNSC* system) {
     Vector c_pos = Vector(0, 0, 0);
 
-    bottom_plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    bottom_plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
     bottom_plate->SetMass(1);
     bottom_plate->SetPos(Vector(0, 0, 0) + c_pos);
     bottom_plate->SetRot(Quaternion(1, 0, 0, 0));
@@ -397,7 +397,7 @@ void CreateBase(ChSystemParallelNSC* system) {
     }
 }
 
-void CreateGravel(ChSystemParallelNSC* system) {
+void CreateGravel(ChSystemMulticoreNSC* system) {
     auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 
@@ -437,7 +437,7 @@ int main(int argc, char* argv[]) {
     // --------------
     // Create systems
     // --------------
-    ChSystemParallelNSC* system = new ChSystemParallelNSC();
+    ChSystemMulticoreNSC* system = new ChSystemMulticoreNSC();
     system->Set_G_acc(ChVector<>(0, 0, -9.81));
     system->SetNumThreads(threads);
 
@@ -535,7 +535,7 @@ int main(int argc, char* argv[]) {
 
     my_hmmwv.GetChassisBody()->SetCollide(true);
     my_hmmwv.GetChassisBody()->GetCollisionModel()->BuildModel();
-    auto collision_system = std::static_pointer_cast<ChCollisionSystemParallel>(system->GetCollisionSystem());
+    auto collision_system = std::static_pointer_cast<ChCollisionSystemMulticore>(system->GetCollisionSystem());
     collision_system->Add(my_hmmwv.GetChassisBody()->GetCollisionModel().get());
 
     RigidTerrain terrain(my_hmmwv.GetSystem());

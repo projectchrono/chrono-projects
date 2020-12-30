@@ -3,7 +3,7 @@ Chrono projects
 
 ### Granular validation
 
-Validation programs for granular dynamics with Chrono::Parallel
+Validation programs for granular dynamics with Chrono::Multicore
 
 * demo_crater -- low-speed impact validation test (DEM-C or DEM-P)
 * demo_massflow -- massflow validation test (DEM-C or DEM-P)
@@ -14,9 +14,9 @@ Validation programs for granular dynamics with Chrono::Parallel
 * single_wheel --
 * test_shear -- direct shear validation test (DEM-C)
 
-### Parallel tests
+### Multicore tests
 
-Programs testing various features in Chrono::Parallel
+Programs testing various features in Chrono::Multicore
 
 * test_PAR_foam -- cohesion demo (DEM-P)
 * test_PAR_objectdrop -- single object conllision tests

@@ -12,7 +12,7 @@
 // Author: Radu Serban
 // =============================================================================
 //
-// ChronoParallel test program for active bbox.
+// Chrono::Multicore test program for active bbox.
 //
 // The global reference frame has Z up.
 // All units SI.
@@ -24,7 +24,7 @@
 #include "chrono/ChConfig.h"
 #include "chrono/assets/ChBoxShape.h"
 #include "chrono/utils/ChUtilsCreators.h"
-#include "chrono_parallel/physics/ChSystemParallel.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
 #include "chrono_opengl/ChOpenGLWindow.h"
 
 using namespace chrono;
@@ -36,11 +36,11 @@ int main(int argc, char* argv[]) {
     ChContactMethod method = ChContactMethod::SMC;
 
     // Create system and set method-specific solver settings
-    ChSystemParallel* system;
+    ChSystemMulticore* system;
     double time_step;
     switch (method) {
         case ChContactMethod::SMC: {
-            ChSystemParallelSMC* sys = new ChSystemParallelSMC;
+            ChSystemMulticoreSMC* sys = new ChSystemMulticoreSMC;
             sys->GetSettings()->solver.contact_force_model = ChSystemSMC::Hertz;
             sys->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::OneStep;
             sys->GetSettings()->solver.adhesion_force_model = ChSystemSMC::AdhesionForceModel::Constant;
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
             break;
         }
         case ChContactMethod::NSC: {
-            ChSystemParallelNSC* sys = new ChSystemParallelNSC;
+            ChSystemMulticoreNSC* sys = new ChSystemMulticoreNSC;
             sys->GetSettings()->solver.solver_type = SolverType::BB;
             sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
             sys->GetSettings()->solver.max_iteration_normal = 0;

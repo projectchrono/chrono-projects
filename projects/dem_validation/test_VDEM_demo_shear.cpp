@@ -35,8 +35,8 @@
 #include "chrono/assets/ChSphereShape.h"
 #include "chrono/assets/ChBoxShape.h"
 
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
+#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -210,11 +210,11 @@ int main(int argc, char* argv[]) {
 #ifdef USE_SMC
     cout << "Create SMC system" << endl;
     const std::string title = "soft-sphere (SMC) direct shear box test";
-    ChSystemParallelSMC* my_system = new ChSystemParallelSMC();
+    ChSystemMulticoreSMC* my_system = new ChSystemMulticoreSMC();
 #else
     cout << "Create NSC system" << endl;
     const std::string title = "hard-sphere (NSC) direct shear box test";
-    ChSystemParallelNSC* my_system = new ChSystemParallelNSC();
+    ChSystemMulticoreNSC* my_system = new ChSystemMulticoreNSC();
 #endif
 
     my_system->Set_G_acc(ChVector<>(0, -gravity, 0));
@@ -282,7 +282,7 @@ int main(int argc, char* argv[]) {
 
     // Create lower bin
 
-    auto bin = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    auto bin = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
 
     bin->SetIdentifier(binId);
     bin->SetMass(1);
@@ -310,7 +310,7 @@ int main(int argc, char* argv[]) {
 
     // Create upper shear box
 
-    auto box = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    auto box = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
 
     box->SetIdentifier(boxId);
     box->SetMass(1);
@@ -337,7 +337,7 @@ int main(int argc, char* argv[]) {
 
     // Create upper load plate
 
-    auto plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    auto plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
 
     shear_Area = width * length;
 
@@ -370,7 +370,7 @@ int main(int argc, char* argv[]) {
                 ball_x = 4.0 * radius * (float(j - b / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
                 ball_z = 4.0 * radius * (float(k - c / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
 
-                auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+                auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
 
                 ball->SetIdentifier(ballId + 6 * 6 * i + 6 * j + k);
                 ball->SetMass(mass);

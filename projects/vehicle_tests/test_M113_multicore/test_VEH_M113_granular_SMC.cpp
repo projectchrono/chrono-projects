@@ -23,12 +23,12 @@
 #include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-// Chrono::Parallel header files
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
-#include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
+// Chrono::Multicore header files
+#include "chrono_multicore/physics/ChSystemMulticore.h"
+#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
+#include "chrono_multicore/collision/ChNarrowphaseRUtils.h"
 
-// Chrono::Parallel OpenGL header files
+// Chrono::Multicore OpenGL header files
 //#undef CHRONO_OPENGL
 
 #ifdef CHRONO_OPENGL
@@ -44,7 +44,6 @@
 // Chrono vehicle header files
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
-#include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 
 // M113 model header files
 #include "chrono_models/vehicle/m113/M113_Vehicle.h"
@@ -107,11 +106,6 @@ ChQuaternion<> initRot(1, 0, 0, 0);
 // Simulation parameters
 // -----------------------------------------------------------------------------
 
-// Input file names for the path-follower driver model
-std::string steering_controller_file("generic/driver/SteeringController.json");
-std::string speed_controller_file("generic/driver/SpeedController.json");
-std::string path_file("paths/straight10km.txt");
-
 // Desired number of OpenMP threads (will be clamped to maximum available)
 int threads = 20;
 
@@ -123,15 +117,10 @@ double time_end = 7;
 double time_hold = 0.2;
 
 // Solver parameters
-double time_step = 1e-3;
+double time_step = 5e-5;
 double tolerance = 1e-5;
 
 int max_iteration_bilateral = 1000;
-int max_iteration_normal = 0;
-int max_iteration_sliding = 100;
-int max_iteration_spinning = 0;
-
-float contact_recovery_speed = 12;
 
 // Periodically monitor maximum bilateral constraint violation
 bool monitor_bilaterals = false;
@@ -140,7 +129,7 @@ int bilateral_frame_interval = 100;
 // Output directories
 bool povray_output = true;
 
-const std::string out_dir = "../M113_PARALLEL_NSC";
+const std::string out_dir = "../M113_MULTICORE_SMC";
 const std::string pov_dir = out_dir + "/POVRAY";
 
 int out_fps = 60;
@@ -181,10 +170,16 @@ class MyDriver : public ChDriver {
 
 double CreateParticles(ChSystem* system) {
     // Create a material
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(0.0f);
-    mat_g->SetCohesion(static_cast<float>(coh_force));
+    mat_g->SetYoungModulus(8e5f);
+    mat_g->SetPoissonRatio(0.3f);
+    mat_g->SetAdhesion(static_cast<float>(coh_force));
+    mat_g->SetKn(1.0e6f);
+    mat_g->SetGn(6.0e1f);
+    mat_g->SetKt(4.0e5f);
+    mat_g->SetGt(4.0e1f);
 
     // Create a particle generator and a mixture entirely made out of spheres
     utils::Generator gen(system);
@@ -226,8 +221,8 @@ int main(int argc, char* argv[]) {
     // Create system and modify settings
     // ---------------------------------
 
-    std::cout << "Create Parallel NSC system" << std::endl;
-    ChSystemParallelNSC system;
+    std::cout << "Create multicore SMC system" << std::endl;
+    ChSystemMulticoreSMC system;
 
     system.Set_G_acc(ChVector<>(0, 0, -9.80665));
 
@@ -237,18 +232,12 @@ int main(int argc, char* argv[]) {
     // Set solver parameters
     system.GetSettings()->solver.use_full_inertia_tensor = false;
     system.GetSettings()->solver.tolerance = tolerance;
-    system.GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     system.GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
-    system.GetSettings()->solver.max_iteration_normal = max_iteration_normal;
-    system.GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
-    system.GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
-    system.GetSettings()->solver.alpha = 0;
-    system.GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-    system.GetSettings()->solver.bilateral_clamp_speed = 1e8;
-    system.ChangeSolverType(SolverType::BB);
+    system.GetSettings()->solver.contact_force_model = ChSystemSMC::Hertz;
+    system.GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::OneStep;
+    system.GetSettings()->solver.use_material_properties = true;
 
     system.GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
-    system.GetSettings()->collision.collision_envelope = 0.001;
 
     system.GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
 
@@ -264,8 +253,10 @@ int main(int argc, char* argv[]) {
     // ------------------
 
     // Contact material
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    mat_g->SetYoungModulus(1e8f);
     mat_g->SetFriction(mu_g);
+    mat_g->SetRestitution(0.4f);
 
     // Ground body
     auto ground = std::shared_ptr<ChBody>(system.NewBody());
@@ -310,7 +301,6 @@ int main(int argc, char* argv[]) {
     // Construct the M113 vehicle
     // --------------------------
 
-    // Create and initialize vehicle systems
     auto vehicle = chrono_types::make_shared<M113_Vehicle>(true, TrackShoeType::SINGLE_PIN, BrakeType::SIMPLE, &system);
     auto powertrain = chrono_types::make_shared<M113_SimplePowertrain>("Powertrain");
 
@@ -331,15 +321,10 @@ int main(int argc, char* argv[]) {
     // Initialize the powertrain system
     vehicle->InitializePowertrain(powertrain);
 
-    // Create the driver system (temporarily 1 for steering 1 for steering & brakes)
-    MyDriver driver_speed(*vehicle, 0.5);
-    driver_speed.Initialize();
+    // Create the driver system
+    MyDriver driver(*vehicle, 0.5);
+    driver.Initialize();
 
-	auto path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
-    ChPathFollowerDriver driver_steering(*vehicle, vehicle::GetDataFile(steering_controller_file),
-                                vehicle::GetDataFile(speed_controller_file), path, "my_path", 0.0);
-    driver_steering.Initialize();
-	
     // ------------------------------------
     // Prepare output directories and files
     // ------------------------------------
@@ -392,10 +377,7 @@ int main(int argc, char* argv[]) {
 
     while (time < time_end) {
         // Collect output data from modules
-        ChDriver::Inputs driver_inputs;
-        driver_inputs.m_throttle = driver_speed.GetThrottle();
-        driver_inputs.m_braking = driver_speed.GetBraking();
-        driver_inputs.m_steering = driver_steering.GetSteering();
+        ChDriver::Inputs driver_inputs = driver.GetInputs();
         vehicle->GetTrackShoeStates(LEFT, shoe_states_left);
         vehicle->GetTrackShoeStates(RIGHT, shoe_states_right);
 
@@ -446,13 +428,11 @@ int main(int argc, char* argv[]) {
         }
 
         // Update modules (process inputs from other modules)
-        driver_speed.Synchronize(time);
-		driver_steering.Synchronize(time);
+        driver.Synchronize(time);
         vehicle->Synchronize(time, driver_inputs, shoe_forces_left, shoe_forces_right);
 
         // Advance simulation for one timestep for all modules
-        driver_speed.Advance(time_step);
-		driver_steering.Advance(time_step);
+        driver.Advance(time_step);
         vehicle->Advance(time_step);
 
 #ifdef CHRONO_OPENGL

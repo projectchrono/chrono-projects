@@ -18,9 +18,9 @@ Various programs to test linking against different Chrono modules.
 * demo_IRR_invPendulum
 * demo_IRR_sliderCrank
 
-### Parallel module
+### Multicore module
 
-* demo_PAR_mixerDEM
+* demo_MCORE_mixerDEM
 
 ### Python module
 

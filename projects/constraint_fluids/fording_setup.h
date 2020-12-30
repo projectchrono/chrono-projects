@@ -5,9 +5,9 @@
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
-#include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
+#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
+#include "chrono_multicore/collision/ChNarrowphaseRUtils.h"
 
 using namespace chrono;
 using namespace chrono::collision;
@@ -57,19 +57,19 @@ void FinalizeObject(std::shared_ptr<ChBody> body, ChSystem* system) {
     system->AddBody(body);
 }
 
-void CreateContainer(ChSystemParallelNSC* system) {
+void CreateContainer(ChSystemMulticoreNSC* system) {
 	// the extra .03 makes the slope meet up with the end platform
 	real dim_slope = sqrt(dim_e * dim_e + (dim_b + dim_c) * (dim_b + dim_c));  // + .03;
 	real angle = atan(dim_e / (dim_b + dim_c));
 	real width = dim_w + dim_t * 2.0;
 
-    std::shared_ptr<ChBody> bottom_plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
-    std::shared_ptr<ChBody> side_plate_1 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
-    std::shared_ptr<ChBody> side_plate_2 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
-    std::shared_ptr<ChBody> end_plate_1 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
-    std::shared_ptr<ChBody> end_plate_2 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
-    std::shared_ptr<ChBody> end_slope_1 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
-    std::shared_ptr<ChBody> end_slope_2 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelParallel>());
+    std::shared_ptr<ChBody> bottom_plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelMulticore>());
+    std::shared_ptr<ChBody> side_plate_1 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelMulticore>());
+    std::shared_ptr<ChBody> side_plate_2 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelMulticore>());
+    std::shared_ptr<ChBody> end_plate_1 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelMulticore>());
+    std::shared_ptr<ChBody> end_plate_2 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelMulticore>());
+    std::shared_ptr<ChBody> end_slope_1 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelMulticore>());
+    std::shared_ptr<ChBody> end_slope_2 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelMulticore>());
 
     auto material = std::make_shared<ChMaterialSurfaceNSC>();
 	material->SetFriction(container_friction);
@@ -127,13 +127,13 @@ void CreateContainer(ChSystemParallelNSC* system) {
 		Vector(-(dim_d + dim_c * 2 + dim_b * 2 + dim_a * 2), 0, dim_e * 3.1 + dim_t),
 		Quaternion(1, 0, 0, 0));
 
-	FinalizeObject(bottom_plate, (ChSystemParallel*)system);
-	FinalizeObject(side_plate_1, (ChSystemParallel*)system);
-	FinalizeObject(side_plate_2, (ChSystemParallel*)system);
-	FinalizeObject(end_plate_1, (ChSystemParallel*)system);
-	FinalizeObject(end_plate_2, (ChSystemParallel*)system);
-	FinalizeObject(end_slope_1, (ChSystemParallel*)system);
-	FinalizeObject(end_slope_2, (ChSystemParallel*)system);
+	FinalizeObject(bottom_plate, (ChSystemMulticore*)system);
+	FinalizeObject(side_plate_1, (ChSystemMulticore*)system);
+	FinalizeObject(side_plate_2, (ChSystemMulticore*)system);
+	FinalizeObject(end_plate_1, (ChSystemMulticore*)system);
+	FinalizeObject(end_plate_2, (ChSystemMulticore*)system);
+	FinalizeObject(end_slope_1, (ChSystemMulticore*)system);
+	FinalizeObject(end_slope_2, (ChSystemMulticore*)system);
 
 	Vector side_dim(dim_d + (dim_b + dim_c + dim_a) * 2, dim_t, dim_e * 2 + dim_t * 2);
 	Vector top_dim(dim_d + (dim_b + dim_c + dim_a) * 2, width, dim_t);
@@ -142,7 +142,7 @@ void CreateContainer(ChSystemParallelNSC* system) {
            side_dim.z());
 }
 
-#include "chrono_parallel/physics/Ch3DOFContainer.h"
+#include "chrono_multicore/physics/Ch3DOFContainer.h"
 
 real stiffness = 1.4e5;
 
@@ -194,7 +194,7 @@ real TriArea(real2 p0, real2 p1, real2 p2) {
 	return (dArea > 0.0) ? dArea : -dArea;
 }
 
-void CreateFluid(ChSystemParallelNSC* system) {
+void CreateFluid(ChSystemMulticoreNSC* system) {
 	youngs_modulus = stiffness;
 
 	dof_container->kernel_radius = fluid_r * 2;

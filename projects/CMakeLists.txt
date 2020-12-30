@@ -14,8 +14,8 @@ cmake_dependent_option(ENABLE_PRJ_DEM_VALIDATION
 cmake_dependent_option(ENABLE_PRJ_CONSTRAINT_FLUID 
 	"Enable projects using constraint fluids, require zlib" OFF
 	"ENABLE_PROJECTS" OFF)
-cmake_dependent_option(ENABLE_PRJ_PARALLEL_TESTS 
-	"Enable projects for Chrono::Parallel tests" ON
+cmake_dependent_option(ENABLE_PRJ_MULTICORE_TESTS 
+	"Enable projects for Chrono::Multicore tests" ON
 	"ENABLE_PROJECTS" OFF)
 cmake_dependent_option(ENABLE_PRJ_VEHICLE_TESTS 
 	"Enable projects for Chrono::Vehicle tests" ON
@@ -52,8 +52,8 @@ if (ENABLE_PRJ_DEM_VALIDATION)
   add_subdirectory(dem_validation)
 endif()
 
-if (ENABLE_PRJ_PARALLEL_TESTS)
-  add_subdirectory(parallel_tests)
+if (ENABLE_PRJ_MULTICORE_TESTS)
+  add_subdirectory(multicore_tests)
 endif()
 
 if (ENABLE_PRJ_VEHICLE_TESTS)

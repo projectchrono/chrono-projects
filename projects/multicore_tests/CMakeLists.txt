@@ -1,5 +1,5 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono PARALLEL module
+# CMake configuration file for projects requiring the Chrono MULTICORE module
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
@@ -9,9 +9,18 @@
 #--------------------------------------------------------------
 
 set(DEMOS
-    metrics_PAR_settling
+    test_MCORE_foam
+    test_MCORE_objectdrop
+    test_MCORE_soilbin
+    test_MCORE_suspension
+    test_MCORE_wheel
+    test_MCORE_radImSchmutz
+    test_MCORE_settling
 )
 
+set(DEMOS_OPENGL
+    test_MCORE_active_box
+)
 #--------------------------------------------------------------
 # Find the Chrono package with required components
 #--------------------------------------------------------------
@@ -19,7 +28,7 @@ set(DEMOS
 # Invoke find_package in CONFIG mode.
 
 find_package(Chrono
-             COMPONENTS Parallel
+             COMPONENTS Multicore
              OPTIONAL_COMPONENTS OpenGL
              CONFIG
 )
@@ -27,8 +36,12 @@ find_package(Chrono
 # If Chrono and/or the required component(s) were not found, return now.
 
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for PARALLEL projects")
+  message("Could not find requirements for MULTICORE projects")
   return()
+endif()
+
+if (CHRONO_OPENGL_FOUND)
+    set(DEMOS ${DEMOS} ${DEMOS_OPENGL})
 endif()
 
 #--------------------------------------------------------------
@@ -59,18 +72,10 @@ list(APPEND ALL_DLLS "${CHRONO_DLLS}")
 set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 
 #--------------------------------------------------------------
-
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-  set(WORK_DIR ${PROJECT_BINARY_DIR}/bin/$<CONFIGURATION>)
-else()
-  set(WORK_DIR ${PROJECT_BINARY_DIR}/bin)
-endif()
-
-#--------------------------------------------------------------
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Metrics tests for Chrono::Parallel...")
+message(STATUS "Multicore tests...")
 
 foreach(PROGRAM ${DEMOS})
 
@@ -87,12 +92,6 @@ foreach(PROGRAM ${DEMOS})
   )
 
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
-
-  # Note: this is not intended to work on Windows!
-  add_test(NAME ${PROGRAM}
-           WORKING_DIRECTORY ${WORK_DIR}
-           COMMAND ${WORK_DIR}/${PROGRAM}
-           )
 
 endforeach(PROGRAM)
 

@@ -12,7 +12,7 @@
 // Author: Radu Serban, Arman Pazouki
 // =============================================================================
 //
-// ChronoParallel demo program for low velocity cratering studies.
+// Chrono::Multicore demo program for low velocity cratering studies.
 //
 // The model simulated here consists of a spherical projectile dropped in a
 // bed of granular material, using either penalty or complementarity method for
@@ -32,8 +32,8 @@
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
+#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -173,7 +173,7 @@ double h = 10e-2;
 //   radius)
 // - a containing bin consisting of five boxes (no top)
 // -----------------------------------------------------------------------------
-int CreateObjects(ChSystemParallel* msystem) {
+int CreateObjects(ChSystemMulticore* msystem) {
 // Create the containing bin
 #ifdef USE_SMC
     auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
@@ -321,7 +321,7 @@ double FindLowest(ChSystem* sys) {
 // Create the falling object such that its bottom point is at the specified height
 // and its downward initial velocity has the specified magnitude.
 // -----------------------------------------------------------------------------
-std::shared_ptr<ChBody> CreatePenetrator(ChSystemParallel* msystem) {
+std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* msystem) {
     // Estimate object initial location and velocity
     double z = FindHighest(msystem);
     double vz = std::sqrt(2 * gravity * h);
@@ -340,7 +340,7 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemParallel* msystem) {
 #endif
 
     // Create the falling object
-    auto obj = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    auto obj = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
 
     double mass;
     ChVector<> inertia;
@@ -425,10 +425,10 @@ int main(int argc, char* argv[]) {
 // Create system
 #ifdef USE_SMC
     cout << "Create SMC system" << endl;
-    ChSystemParallelSMC* msystem = new ChSystemParallelSMC();
+    ChSystemMulticoreSMC* msystem = new ChSystemMulticoreSMC();
 #else
     cout << "Create NSC system" << endl;
-    ChSystemParallelNSC* msystem = new ChSystemParallelNSC();
+    ChSystemMulticoreNSC* msystem = new ChSystemMulticoreNSC();
 #endif
 
     // Debug log messages.

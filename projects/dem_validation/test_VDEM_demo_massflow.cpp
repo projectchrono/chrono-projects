@@ -12,7 +12,7 @@
 // Authors: Daniel Melanz, Radu Serban
 // =============================================================================
 //
-// ChronoParallel demo program for mass flow rate studies.
+// Chrono::Multicore demo program for mass flow rate studies.
 //
 // The model simulated here consists of a granular material that flows out of a
 // container and the mass of the collected material is measured over time, using
@@ -32,8 +32,8 @@
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
+#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -149,7 +149,7 @@ double height_collector = 1.0e-2;  // height of collector walls
 // -----------------------------------------------------------------------------
 // Create mechanism
 // -----------------------------------------------------------------------------
-ChBody* CreateMechanism(ChSystemParallel* system) {
+ChBody* CreateMechanism(ChSystemMulticore* system) {
     // Create the common material
 #ifdef USE_SMC
     auto mat_b = chrono_types::make_shared<ChMaterialSurfaceSMC>();
@@ -162,7 +162,7 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 #endif
 
     // Angled insert
-    auto insert = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    auto insert = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
 
     insert->SetIdentifier(0);
     insert->SetMass(1);
@@ -179,7 +179,7 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
     system->AddBody(insert);
 
     // Static slot (back wall)
-    auto slot = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    auto slot = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
 
     slot->SetIdentifier(-1);
     slot->SetMass(1);
@@ -196,7 +196,7 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
     system->AddBody(slot);
 
     // Lateral walls
-    auto wall = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    auto wall = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
 
     wall->SetIdentifier(-2);
     wall->SetMass(1);
@@ -233,7 +233,7 @@ ChBody* CreateMechanism(ChSystemParallel* system) {
 // -----------------------------------------------------------------------------
 // Create granular material
 // -----------------------------------------------------------------------------
-void CreateParticles(ChSystemParallel* system) {
+void CreateParticles(ChSystemMulticore* system) {
 // Create a material for the granular material
 #ifdef USE_SMC
     auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
@@ -271,7 +271,7 @@ void CreateParticles(ChSystemParallel* system) {
 // -----------------------------------------------------------------------------
 // Find and return the body with specified identifier.
 // -----------------------------------------------------------------------------
-ChBody* FindBodyById(ChSystemParallel* sys, int id) {
+ChBody* FindBodyById(ChSystemMulticore* sys, int id) {
     for (auto body : sys->Get_bodylist()) {
         if (body->GetIdentifier() == id)
             return body.get();
@@ -284,7 +284,7 @@ ChBody* FindBodyById(ChSystemParallel* sys, int id) {
 // Find the number of particles whose height is below and above, respectively,
 // the specified value.
 // -----------------------------------------------------------------------------
-int GetNumParticlesBelowHeight(ChSystemParallel* sys, double value) {
+int GetNumParticlesBelowHeight(ChSystemMulticore* sys, double value) {
     int count = 0;
     for (auto body : sys->Get_bodylist()) {
         if (body->GetIdentifier() > 0 && body->GetPos().z() < value)
@@ -293,7 +293,7 @@ int GetNumParticlesBelowHeight(ChSystemParallel* sys, double value) {
     return count;
 }
 
-int GetNumParticlesAboveHeight(ChSystemParallel* sys, double value) {
+int GetNumParticlesAboveHeight(ChSystemMulticore* sys, double value) {
     int count = 0;
     for (auto body : sys->Get_bodylist()) {
         if (body->GetIdentifier() > 0 && body->GetPos().z() > value)
@@ -306,7 +306,7 @@ int GetNumParticlesAboveHeight(ChSystemParallel* sys, double value) {
 // Return true if all bodies in the granular mix have a linear velocity whose
 // magnitude is below the specified value.
 // -----------------------------------------------------------------------------
-bool CheckSettled(ChSystemParallel* sys, double threshold) {
+bool CheckSettled(ChSystemMulticore* sys, double threshold) {
     double t2 = threshold * threshold;
 
     for (auto body : sys->Get_bodylist()) {
@@ -325,10 +325,10 @@ int main(int argc, char* argv[]) {
 // Create system
 #ifdef USE_SMC
     cout << "Create SMC system" << endl;
-    ChSystemParallelSMC* msystem = new ChSystemParallelSMC();
+    ChSystemMulticoreSMC* msystem = new ChSystemMulticoreSMC();
 #else
     cout << "Create NSC system" << endl;
-    ChSystemParallelNSC* msystem = new ChSystemParallelNSC();
+    ChSystemMulticoreNSC* msystem = new ChSystemMulticoreNSC();
 #endif
 
     // Set number of threads.

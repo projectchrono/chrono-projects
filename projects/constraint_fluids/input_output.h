@@ -18,7 +18,7 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 
-#include "chrono_parallel/physics/ChSystemParallel.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
 
 using namespace chrono;
 using namespace chrono::collision;
@@ -117,7 +117,7 @@ void static WriteLocalData(const std::string&& filename,
 	bin_output.CloseFile();
 }
 
-void static DumpFluidData(chrono::ChSystemParallelNSC* system, std::string filename, bool binary = true) {
+void static DumpFluidData(chrono::ChSystemMulticoreNSC* system, std::string filename, bool binary = true) {
 	std::vector<real3> pos_particle;
 	std::vector<real3> vel_particle;
 	int num_particles = system->data_manager->num_fluid_bodies;

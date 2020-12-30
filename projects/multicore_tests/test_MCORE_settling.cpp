@@ -12,7 +12,7 @@
 // Author: Radu Serban
 // =============================================================================
 //
-// ChronoParallel test program for settling process of granular material.
+// Chrono::Multicore test program for settling process of granular material.
 //
 // The global reference frame has Z up.
 // All units SI (CGS, i.e., centimeter - gram - second)
@@ -22,9 +22,9 @@
 #include <cmath>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <string>
 #include <valarray>
-#include <cstdlib>
 #include <vector>
 
 #include "chrono/ChConfig.h"
@@ -33,16 +33,12 @@
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/solver/ChIterativeSolverParallel.h"
-
-#include "chrono_thirdparty/filesystem/path.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
+#include "chrono_multicore/solver/ChIterativeSolverMulticore.h"
 
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
-
-#include "../BaseTest.h"
 
 using namespace chrono;
 
@@ -58,7 +54,6 @@ void TimingHeader() {
     printf("# BODIES |");
     printf("# CONTACT|");
     printf(" # ITERS |");
-    printf("   RESID |");
     printf("\n\n");
 }
 
@@ -69,65 +64,45 @@ void TimingOutput(chrono::ChSystem* mSys) {
     double NARR = mSys->GetTimerCollisionNarrow();
     double SOLVER = mSys->GetTimerAdvance();
     double UPDT = mSys->GetTimerUpdate();
-    double RESID = 0;
     int REQ_ITS = 0;
     int BODS = mSys->GetNbodies();
     int CNTC = mSys->GetNcontacts();
-    if (chrono::ChSystemParallel* parallel_sys = dynamic_cast<chrono::ChSystemParallel*>(mSys)) {
-        RESID = std::static_pointer_cast<chrono::ChIterativeSolverParallel>(mSys->GetSolver())->GetResidual();
-        REQ_ITS = std::static_pointer_cast<chrono::ChIterativeSolverParallel>(mSys->GetSolver())->GetIterations();
-        BODS = parallel_sys->GetNbodies();
-        CNTC = parallel_sys->GetNcontacts();
+    if (dynamic_cast<chrono::ChSystemMulticore*>(mSys)) {
+        REQ_ITS = std::static_pointer_cast<chrono::ChIterativeSolverMulticore>(mSys->GetSolver())->GetIterations();
     }
 
-    printf("   %8.5f | %7.4f | %7.4f | %7.4f | %7.4f | %7.4f | %7d | %7d | %7d | %7.4f |\n", TIME, STEP, BROD, NARR,
-           SOLVER, UPDT, BODS, CNTC, REQ_ITS, RESID);
+    printf("   %8.5f | %7.4f | %7.4f | %7.4f | %7.4f | %7.4f | %7d | %7d | %7d |\n", TIME, STEP, BROD, NARR,
+           SOLVER, UPDT, BODS, CNTC, REQ_ITS);
 }
 
-// ====================================================================================
+// --------------------------------------------------------------------------
 
-// Test class
-class PARSettlingTest : public BaseTest {
-  public:
-    PARSettlingTest(const std::string& testName,
-                    const std::string& testProjectName,
-                    ChContactMethod method,
-                    int num_threads)
-        : BaseTest(testName, testProjectName), m_method(method), m_execTime(0), m_num_threads(num_threads) {}
-
-    ~PARSettlingTest() {}
-
-    // Override corresponding functions in BaseTest
-    virtual bool execute() override;
-    virtual double getExecutionTime() const override { return m_execTime; }
-
-  private:
-    ChContactMethod m_method;
-    double m_execTime;
-    int m_num_threads;
-};
-
-// ====================================================================================
-
-bool PARSettlingTest::execute() {
+int main(int argc, char** argv) {
+    int num_threads = 4;
+    ChContactMethod method = ChContactMethod::SMC;
     bool use_mat_properties = true;
     bool render = false;
+    bool track_granule = false;
 
-    std::cout << "Test: " << getTestName() << std::endl;
-    std::cout << "Requested number of threads: " << m_num_threads << std::endl;
+    // Get number of threads from arguments (if specified)
+    if (argc > 1) {
+        num_threads = std::stoi(argv[1]);
+    }
+
+    std::cout << "Requested number of threads: " << num_threads << std::endl;
 
     // ----------------
     // Model parameters
     // ----------------
 
     // Container dimensions
-    double hdimX = 2.0;
+    double hdimX = 5.0;
     double hdimY = 0.25;
     double hdimZ = 0.5;
     double hthick = 0.25;
 
     // Granular material properties
-    double radius_g = 0.05;
+    double radius_g = 0.006;
     int Id_g = 10000;
     double rho_g = 2500;
     double vol_g = (4.0 / 3) * CH_C_PI * radius_g * radius_g * radius_g;
@@ -144,6 +119,8 @@ bool PARSettlingTest::execute() {
     float gn_terrain = 1.0e3f;
     float kt_terrain = 2.86e6f;
     float gt_terrain = 1.0e3f;
+    float coh_pressure_terrain = 0e3f;
+    float coh_force_terrain = (float)(CH_C_PI * radius_g * radius_g) * coh_pressure_terrain;
 
     // Estimates for number of bins for broad-phase
     int factor = 2;
@@ -152,19 +129,17 @@ bool PARSettlingTest::execute() {
     int binsZ = 1;
     std::cout << "Broad-phase bins: " << binsX << " x " << binsY << " x " << binsZ << std::endl;
 
-    // --------------------------
-    // Create the parallel system
-    // --------------------------
+    // ---------------------------
+    // Create the multicore system
+    // ---------------------------
 
     // Create system and set method-specific solver settings
-    chrono::ChSystemParallel* system;
-    double time_step;
+    chrono::ChSystemMulticore* system;
 
-    switch (m_method) {
+    switch (method) {
         case ChContactMethod::SMC: {
-            time_step = 1e-4;
-            ChSystemParallelSMC* sys = new ChSystemParallelSMC;
-            sys->GetSettings()->solver.contact_force_model = ChSystemSMC::Hooke;
+            ChSystemMulticoreSMC* sys = new ChSystemMulticoreSMC;
+            sys->GetSettings()->solver.contact_force_model = ChSystemSMC::Hertz;
             sys->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::OneStep;
             sys->GetSettings()->solver.use_material_properties = use_mat_properties;
             system = sys;
@@ -172,8 +147,7 @@ bool PARSettlingTest::execute() {
             break;
         }
         case ChContactMethod::NSC: {
-            time_step = 1e-3;
-            ChSystemParallelNSC* sys = new ChSystemParallelNSC;
+            ChSystemMulticoreNSC* sys = new ChSystemMulticoreNSC;
             sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
             sys->GetSettings()->solver.max_iteration_normal = 0;
             sys->GetSettings()->solver.max_iteration_sliding = 200;
@@ -188,8 +162,7 @@ bool PARSettlingTest::execute() {
         }
     }
 
-    double g = 9.81;
-    system->Set_G_acc(ChVector<>(0, 0, -g));
+    system->Set_G_acc(ChVector<>(0, 0, -9.81));
     system->GetSettings()->solver.use_full_inertia_tensor = false;
     system->GetSettings()->solver.tolerance = 0.1;
     system->GetSettings()->solver.max_iteration_bilateral = 100;
@@ -197,7 +170,12 @@ bool PARSettlingTest::execute() {
     system->GetSettings()->collision.bins_per_axis = vec3(binsX, binsY, binsZ);
 
     // Set number of threads
-    system->SetNumThreads(m_num_threads);
+    system->SetNumThreads(num_threads);
+
+    // Sanity check: print number of threads in a parallel region
+#pragma omp parallel
+#pragma omp master
+    { std::cout << "Actual number of OpenMP threads: " << omp_get_num_threads() << std::endl; }
 
     // ---------------------
     // Create terrain bodies
@@ -206,14 +184,14 @@ bool PARSettlingTest::execute() {
     // Create contact material for terrain
     std::shared_ptr<ChMaterialSurface> material_terrain;
 
-    switch (m_method) {
+    switch (method) {
         case ChContactMethod::SMC: {
             auto mat_ter = chrono_types::make_shared<ChMaterialSurfaceSMC>();
             mat_ter->SetFriction(friction_terrain);
             mat_ter->SetRestitution(restitution_terrain);
             mat_ter->SetYoungModulus(Y_terrain);
             mat_ter->SetPoissonRatio(nu_terrain);
-            mat_ter->SetAdhesion(100.0f);
+            mat_ter->SetAdhesion(coh_force_terrain);
             mat_ter->SetKn(kn_terrain);
             mat_ter->SetGn(gn_terrain);
             mat_ter->SetKt(kt_terrain);
@@ -227,6 +205,7 @@ bool PARSettlingTest::execute() {
             auto mat_ter = chrono_types::make_shared<ChMaterialSurfaceNSC>();
             mat_ter->SetFriction(friction_terrain);
             mat_ter->SetRestitution(restitution_terrain);
+            mat_ter->SetCohesion(coh_force_terrain);
 
             material_terrain = mat_ter;
 
@@ -286,13 +265,31 @@ bool PARSettlingTest::execute() {
 
     unsigned int num_particles = gen.getTotalNumBodies();
     std::cout << "Generated particles:  " << num_particles << std::endl;
-    double total_weight = num_particles * (4 * CH_C_PI / 3) * r * r * r * rho_g * g;
-    std::cout << "Total weigth:  " << total_weight << std::endl;
+
+    // If tracking a granule (roughly in the "middle of the pack"),
+    // grab a pointer to the tracked body and open an output file.
+    std::shared_ptr<ChBody> granule;  // tracked granule
+    std::ofstream outf;             // output file stream
+
+    if (track_granule) {
+        int id = Id_g + num_particles / 2;
+        for (auto body : system->Get_bodylist()) {
+            if (body->GetIdentifier() == id) {
+                granule = body;
+                break;
+            }
+        }
+
+        outf.open("../settling_granule.dat", std::ios::out);
+        outf.precision(7);
+        outf << std::scientific;
+    }
 
 #ifdef CHRONO_OPENGL
     // -------------------------------
     // Create the visualization window
     // -------------------------------
+
     if (render) {
         opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
         gl_window.Initialize(1280, 720, "Settling test", system);
@@ -305,26 +302,39 @@ bool PARSettlingTest::execute() {
     // Simulate system
     // ---------------
 
-    double sim_time = 0;
-    double broad_time = 0;
-    double narrow_time = 0;
-    double update_time = 0;
-    double solve_time = 0;
-    int num_steps = 0;
+    double time_end = 0.4;
+    double time_step = 1e-4;
 
-    ////TimingHeader();
-    double time_end = 0.5;
+    double cum_sim_time = 0;
+    double cum_broad_time = 0;
+    double cum_narrow_time = 0;
+    double cum_solver_time = 0;
+    double cum_update_time = 0;
+
+    TimingHeader();
+
     while (system->GetChTime() < time_end) {
         system->DoStepDynamics(time_step);
 
-        sim_time += system->GetTimerStep();
-        broad_time += system->GetTimerCollisionBroad();
-        narrow_time += system->GetTimerCollisionNarrow();
-        update_time += system->GetTimerUpdate();
-        solve_time += system->GetTimerAdvance();
-        num_steps++;
+        TimingOutput(system);
 
-        ////TimingOutput(system);
+        cum_sim_time += system->GetTimerStep();
+        cum_broad_time += system->GetTimerCollisionBroad();
+        cum_narrow_time += system->GetTimerCollisionNarrow();
+        cum_solver_time += system->GetTimerAdvance();
+        cum_update_time += system->GetTimerUpdate();
+
+        if (track_granule) {
+            assert(outf.is_open());
+            assert(granule);
+            const ChVector<>& pos = granule->GetPos();
+            const ChVector<>& vel = granule->GetPos_dt();
+            outf << system->GetChTime() << " ";
+            outf << system->GetNbodies() << " " << system->GetNcontacts() << " ";
+            outf << pos.x() << " " << pos.y() << " " << pos.z() << " ";
+            outf << vel.x() << " " << vel.y() << " " << vel.z();
+            outf << std::endl << std::flush;
+        }
 
 #ifdef CHRONO_OPENGL
         if (render) {
@@ -332,68 +342,19 @@ bool PARSettlingTest::execute() {
             if (gl_window.Active()) {
                 gl_window.Render();
             } else {
-                return false;
+                return 1;
             }
         }
 #endif
     }
 
-    system->CalculateContactForces();
-    real3 cforce = system->GetBodyContactForce(container);
-    int ncontacts = system->GetNcontacts();
-    std::cout << "Number of contacts:         " << ncontacts << std::endl;
-    std::cout << "Contact force on container: " << cforce.x << "  " << cforce.y << "  " << cforce.z << std::endl;
-    std::cout << "Total simulation time: " << sim_time << std::endl;
-    std::cout << "    Broad phase:       " << broad_time << std::endl;
-    std::cout << "    Narrow phase:      " << narrow_time << std::endl;
-    std::cout << "    Update phase:      " << update_time << std::endl;
-    std::cout << "    Solve phase:       " << solve_time << std::endl;
-
-    m_execTime = sim_time;
-    addMetric("number_contacts", ncontacts);
-    addMetric("vertical_force", cforce.z);
-    addMetric("avg_sim_time_per_step (ms)", 1000 * sim_time / num_steps);
-    addMetric("avg_broad_time_per_step (ms)", 1000 * broad_time / num_steps);
-    addMetric("avg_narrow_time_per_step (ms)", 1000 * narrow_time / num_steps);
-    addMetric("avg_update_time_per_step (ms)", 1000 * update_time / num_steps);
-    addMetric("avg_solve_time_per_step (ms)", 1000 * solve_time / num_steps);
-
-    return true;
-}
-
-int main(int argc, char** argv) {
-    std::string out_dir = "../METRICS";
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
-        std::cout << "Error creating directory " << out_dir << std::endl;
-        return 1;
-    }
-
-    bool passed = true;
-
-    PARSettlingTest testDEM2("metrics_PAR_settling_DEM_2", "Chrono::Parallel", ChContactMethod::SMC, 2);
-    PARSettlingTest testDEM4("metrics_PAR_settling_DEM_4", "Chrono::Parallel", ChContactMethod::SMC, 4);
-    PARSettlingTest testDVI2("metrics_PAR_settling_DVI_2", "Chrono::Parallel", ChContactMethod::NSC, 2);
-    PARSettlingTest testDVI4("metrics_PAR_settling_DVI_4", "Chrono::Parallel", ChContactMethod::NSC, 4);
-
-    testDEM2.setOutDir(out_dir);
-    testDEM2.setVerbose(true);
-    passed &= testDEM2.run();
-    testDEM2.print();
-
-    testDEM4.setOutDir(out_dir);
-    testDEM4.setVerbose(true);
-    passed &= testDEM4.run();
-    testDEM4.print();
-
-    testDVI2.setOutDir(out_dir);
-    testDVI2.setVerbose(true);
-    passed &= testDVI2.run();
-    testDVI2.print();
-
-    testDVI4.setOutDir(out_dir);
-    testDVI4.setVerbose(true);
-    passed &= testDVI4.run();
-    testDVI4.print();
+    std::cout << std::endl;
+    std::cout << "Simulation time: " << cum_sim_time << std::endl;
+    std::cout << "    Broadphase:  " << cum_broad_time << std::endl;
+    std::cout << "    Narrowphase: " << cum_narrow_time << std::endl;
+    std::cout << "    Solver:      " << cum_solver_time << std::endl;
+    std::cout << "    Update:      " << cum_update_time << std::endl;
+    std::cout << std::endl;
 
     return 0;
 }

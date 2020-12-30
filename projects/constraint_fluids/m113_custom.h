@@ -71,7 +71,7 @@ class M113_Vehicle_Custom : public ChTrackedVehicle {
         // Initialize the left and right track assemblies.
         double track_offset = 1.0795;
 
-        if (ChSystemParallelNSC* system_dvi = dynamic_cast<ChSystemParallelNSC*>(m_system)) {
+        if (ChSystemMulticoreNSC* system_dvi = dynamic_cast<ChSystemMulticoreNSC*>(m_system)) {
             printf("BodiesA: %d\n", system_dvi->data_manager->num_rigid_shapes);
             m_tracks[0]->Initialize(m_chassis, ChVector<>(0, track_offset, 0));
 

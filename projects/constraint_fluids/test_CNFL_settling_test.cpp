@@ -1,8 +1,8 @@
 #include <cstdio>
 #include <vector>
 #include <cmath>
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/solver/ChIterativeSolverParallel.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
+#include "chrono_multicore/solver/ChIterativeSolverMulticore.h"
 
 #include "chrono/ChConfig.h"
 #include "chrono/utils/ChUtilsCreators.h"
@@ -10,7 +10,7 @@
 #include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 
-#include "chrono_parallel/physics/Ch3DOFContainer.h"
+#include "chrono_multicore/physics/Ch3DOFContainer.h"
 
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
@@ -52,8 +52,8 @@ ChVector<> hdim(kernel_radius * 7, kernel_radius * 7, kernel_radius * 7 * mult);
 //store time taken to solve
 
 
-void WriteData(ChSystemParallelNSC* msystem, uint i) {
-    auto iter_solver = std::static_pointer_cast<ChIterativeSolverParallel>(msystem->GetSolver());
+void WriteData(ChSystemMulticoreNSC* msystem, uint i) {
+    auto iter_solver = std::static_pointer_cast<ChIterativeSolverMulticore>(msystem->GetSolver());
     int iters = iter_solver->GetIterations();
     const std::vector<double>& vhist = iter_solver->GetViolationHistory();
 	const std::vector<double>& dhist = iter_solver->GetDeltalambdaHistory();
@@ -120,7 +120,7 @@ void WriteData(ChSystemParallelNSC* msystem, uint i) {
 
 }
 
-void AddContainer(ChSystemParallelNSC* sys) {
+void AddContainer(ChSystemMulticoreNSC* sys) {
 	// Create a common material
 	auto mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
 	mat->SetFriction(1.0);
@@ -131,7 +131,7 @@ void AddContainer(ChSystemParallelNSC* sys) {
 // -----------------------------------------------------------------------------
 // Create the fluid in the shape of a sphere.
 // -----------------------------------------------------------------------------
-void AddFluid(ChSystemParallelNSC* sys) {
+void AddFluid(ChSystemMulticoreNSC* sys) {
     auto fluid_container = chrono_types::make_shared<ChFluidContainer>();
     sys->Add3DOFContainer(fluid_container);
 
@@ -201,7 +201,7 @@ int main(int argc, char* argv[]) {
 	// Create system
 	// -------------
 
-	ChSystemParallelNSC msystem;
+	ChSystemMulticoreNSC msystem;
 	// Set gravitational acceleration
 	msystem.Set_G_acc(ChVector<>(0, 0, -9.81));
 

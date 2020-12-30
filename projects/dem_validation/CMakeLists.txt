@@ -1,5 +1,5 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono PARALLEL module
+# CMake configuration file for projects requiring the Chrono MULTICORE module
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
@@ -26,7 +26,7 @@ set(DEMOS
 # Invoke find_package in CONFIG mode.
 
 find_package(Chrono
-             COMPONENTS Parallel
+             COMPONENTS Multicore
              OPTIONAL_COMPONENTS OpenGL
              CONFIG
 )
@@ -34,7 +34,7 @@ find_package(Chrono
 # If Chrono and/or the required component(s) were not found, return now.
 
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for PARALLEL projects")
+  message("Could not find requirements for MULTICORE projects")
   return()
 endif()
 

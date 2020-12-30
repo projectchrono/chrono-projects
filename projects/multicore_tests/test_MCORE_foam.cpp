@@ -12,7 +12,7 @@
 // Author: Radu Serban
 // =============================================================================
 //
-// ChronoParallel demo program for cohesive SMC granular material simulation.
+// Chrono::Multicore demo program for cohesive SMC granular material simulation.
 //
 // The global reference frame has Z up.
 // All units SI.
@@ -28,8 +28,8 @@
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
+#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -116,7 +116,7 @@ int SpawnParticles() {
 // ========================================================================
 int main(int argc, char* argv[]) {
     // Create system
-    ChSystemParallelSMC* msystem = new ChSystemParallelSMC();
+    ChSystemMulticoreSMC* msystem = new ChSystemMulticoreSMC();
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();

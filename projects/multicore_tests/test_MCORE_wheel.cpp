@@ -12,7 +12,7 @@
 // Author: Radu Serban
 // =============================================================================
 //
-// ChronoParallel demo program for testing contact of a wheel shape.
+// Chrono::Multicore demo program for testing contact of a wheel shape.
 //
 // The global reference frame has Z up.
 // All units SI.
@@ -27,8 +27,8 @@
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
+#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -113,7 +113,7 @@ double layerHeight = 0.5;
 
 // =======================================================================
 
-int CreateObjects(ChSystemParallel* system) {
+int CreateObjects(ChSystemMulticore* system) {
     // Create materials for the granular material and the container
     std::shared_ptr<chrono::ChMaterialSurface> material_g;
     std::shared_ptr<chrono::ChMaterialSurface> material_c;
@@ -181,7 +181,7 @@ int CreateObjects(ChSystemParallel* system) {
 // =======================================================================
 // Create the wheel body at the specified height.
 
-std::shared_ptr<ChBody> CreateWheel(ChSystemParallel* system, double z) {
+std::shared_ptr<ChBody> CreateWheel(ChSystemMulticore* system, double z) {
     // Mesh input file
     std::string obj_mesh_file = GetChronoDataFile("wheel_view.obj");
     std::string mesh_name("wheel");
@@ -285,10 +285,10 @@ int main(int argc, char* argv[]) {
     SetChronoDataPath(CHRONO_DATA_DIR);
 
     // Create system and set method-specific solver settings
-    ChSystemParallel* system;
+    ChSystemMulticore* system;
     switch (method) {
         case ChContactMethod::SMC: {
-            ChSystemParallelSMC* sys = new ChSystemParallelSMC;
+            ChSystemMulticoreSMC* sys = new ChSystemMulticoreSMC;
             sys->GetSettings()->solver.contact_force_model = ChSystemSMC::Hertz;
             sys->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::OneStep;
             sys->GetSettings()->solver.adhesion_force_model = ChSystemSMC::AdhesionForceModel::Constant;
@@ -298,7 +298,7 @@ int main(int argc, char* argv[]) {
             break;
         }
         case ChContactMethod::NSC: {
-            ChSystemParallelNSC* sys = new ChSystemParallelNSC;
+            ChSystemMulticoreNSC* sys = new ChSystemMulticoreNSC;
             sys->GetSettings()->solver.solver_type = SolverType::BB;
             sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
             sys->GetSettings()->solver.max_iteration_normal = 0;

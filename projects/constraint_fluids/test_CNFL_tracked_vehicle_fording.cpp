@@ -22,12 +22,12 @@
 #include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-// Chrono::Parallel header files
-#include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
+// Chrono::Multicore header files
+#include "chrono_multicore/collision/ChNarrowphaseRUtils.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
+#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 
-// Chrono::Parallel OpenGL header files
+// Chrono::Multicore OpenGL header files
 #undef CHRONO_OPENGL
 
 #ifdef CHRONO_OPENGL
@@ -49,7 +49,9 @@
 #include "fording_setup.h"
 #include "input_output.h"
 #include "m113_custom.h"
+
 using namespace chrono;
+using namespace chrono::vehicle;
 using namespace chrono::collision;
 
 using std::cout;
@@ -173,7 +175,7 @@ void static WriteTrackedVehicleData(M113_Vehicle_Custom& vehicle,
     csv_output.CloseFile();
 }
 
-double CreateParticles(ChSystemParallelNSC* system) {
+double CreateParticles(ChSystemMulticoreNSC* system) {
     // Create a material
     auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
@@ -228,9 +230,8 @@ int main(int argc, char* argv[]) {
     // --------------
     // Create system.
     // --------------
-    // ----  Parallel
-    std::cout << "Create Parallel DVI system" << std::endl;
-    ChSystemParallelNSC* system = new ChSystemParallelNSC();
+    std::cout << "Create multicore NSC system" << std::endl;
+    ChSystemMulticoreNSC* system = new ChSystemMulticoreNSC();
     system->Set_G_acc(ChVector<>(0, 0, -9.81));
     system->SetNumThreads(threads);
 

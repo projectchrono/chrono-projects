@@ -19,7 +19,7 @@ set(DEMOS
 # Invoke find_package in CONFIG mode
 
 find_package(Chrono
-             COMPONENTS FSI Parallel
+             COMPONENTS FSI Multicore
              OPTIONAL_COMPONENTS OpenGL
              CONFIG
 )

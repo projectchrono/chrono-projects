@@ -12,7 +12,7 @@
 // Authors: Daniel Melanz
 // =============================================================================
 //
-// ChronoParallel test program using NSC method for frictional contact.
+// Chrono::Multicore test program using NSC method for frictional contact.
 //
 // The global reference frame has Y up.
 //
@@ -31,8 +31,8 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
+#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 
 // Control use of OpenGL run-time rendering
 // Note: CHRONO_OPENGL is defined in ChConfig.h
@@ -50,7 +50,7 @@ const char* out_folder = "../DEMO_SUSPENSION/POVRAY";
 // =============================================================================
 // Generate postprocessing output with current system state.
 // =============================================================================
-void OutputData(ChSystemParallel* sys, int out_frame, double time) {
+void OutputData(ChSystemMulticore* sys, int out_frame, double time) {
     char filename[100];
     sprintf(filename, "%s/data_%03d.dat", out_folder, out_frame);
     utils::WriteShapesPovray(sys, filename);
@@ -124,7 +124,7 @@ class MySimpleCar {
     // Build and initialize the car, creating all bodies corresponding to
     // the various parts and adding them to the physical system - also creating
     // and adding constraints to the system.
-    MySimpleCar(ChSystemParallelNSC* my_system) {
+    MySimpleCar(ChSystemMulticoreNSC* my_system) {
         throttle = 0;  // initially, gas throttle is 0.
         conic_tau = 0.2;
         gear_tau = 0.3;
@@ -141,7 +141,7 @@ class MySimpleCar {
 
         // --- The car body ---
 
-        truss = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+        truss = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
         truss->SetIdentifier(-1);
         truss->SetMass(2086.524902);
         truss->SetPos(ChVector<>(0, 0.52349, 0.055765));
@@ -157,7 +157,7 @@ class MySimpleCar {
         // --- Right Front suspension ---
 
         // ..the car right-front spindle
-        spindleRF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+        spindleRF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
         spindleRF->SetIdentifier(-2);
         spindleRF->SetMass(14.705);
         spindleRF->SetPos(ChVector<>(0.751, -0.026, 1.648965));
@@ -170,7 +170,7 @@ class MySimpleCar {
         my_system->AddBody(spindleRF);
 
         // ..the car right-front wheel
-        wheelRF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+        wheelRF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
         wheelRF->SetIdentifier(-3);
         wheelRF->SetMass(3.0);
         wheelRF->SetPos(ChVector<>(0.91, -0.026, 1.648965));
@@ -231,7 +231,7 @@ class MySimpleCar {
         // --- Left Front suspension ---
 
         // ..the car left-front spindle
-        spindleLF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+        spindleLF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
         spindleLF->SetIdentifier(-4);
         spindleLF->SetMass(14.705);
         spindleLF->SetPos(ChVector<>(-0.751, -0.026, 1.648965));
@@ -244,7 +244,7 @@ class MySimpleCar {
         my_system->AddBody(spindleLF);
 
         // ..the car left-front wheel
-        wheelLF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+        wheelLF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
         wheelLF->SetIdentifier(-5);
         wheelLF->SetMass(3.0);
         wheelLF->SetPos(ChVector<>(-0.91, -0.026, 1.648965));
@@ -305,7 +305,7 @@ class MySimpleCar {
         // --- Right Back suspension ---
 
         // ..the car right-back spindle
-        spindleRB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+        spindleRB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
         spindleRB->SetIdentifier(-6);
         spindleRB->SetMass(15.91);
         spindleRB->SetPos(ChVector<>(0.751, -0.026, -1.652965));
@@ -318,7 +318,7 @@ class MySimpleCar {
         my_system->AddBody(spindleRB);
 
         // ..the car right-back wheel
-        wheelRB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+        wheelRB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
         wheelRB->SetIdentifier(-7);
         wheelRB->SetMass(3.0);
         wheelRB->SetPos(ChVector<>(0.91, -0.026, -1.652965));
@@ -387,7 +387,7 @@ class MySimpleCar {
         // --- Left Back suspension ---
 
         // ..the car right-back spindle
-        spindleLB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+        spindleLB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
         spindleLB->SetIdentifier(-8);
         spindleLB->SetMass(15.91);
         spindleLB->SetPos(ChVector<>(-0.751, -0.026, -1.652965));
@@ -400,7 +400,7 @@ class MySimpleCar {
         my_system->AddBody(spindleLB);
 
         // ..the car left-back wheel
-        wheelLB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+        wheelLB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
         wheelLB->SetIdentifier(-9);
         wheelLB->SetMass(3.0);
         wheelLB->SetPos(ChVector<>(-0.91, -0.026, -1.652965));
@@ -551,7 +551,7 @@ class MySimpleCar {
 // thus ensuring that no two spheres are closer than twice the radius.
 // =============================================================================
 
-int CreateGranularMaterial(ChSystemParallel* system,
+int CreateGranularMaterial(ChSystemMulticore* system,
                            double pitLocation_z,
                            double pitDepth,
                            double pitLength,
@@ -610,7 +610,7 @@ int CreateGranularMaterial(ChSystemParallel* system,
 // blade attached through a revolute joint to ground. The mixer is constrained
 // to rotate at constant angular velocity.
 // =============================================================================
-void AddGround(ChSystemParallelNSC* sys) {
+void AddGround(ChSystemMulticoreNSC* sys) {
     // IDs for the two bodies
     int groundId = -200;
 
@@ -627,7 +627,7 @@ void AddGround(ChSystemParallelNSC* sys) {
     double groundWidth = 5;
     double wallHeight = 6;
     double thickness = 0.1;
-    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
     ground->SetIdentifier(groundId);
     ground->SetMass(1);
     ground->SetPos(pos);
@@ -673,7 +673,7 @@ int main(int argc, char* argv[]) {
     // Create system
     // -------------
 
-    ChSystemParallelNSC msystem;
+    ChSystemMulticoreNSC msystem;
 
     // Set gravitational acceleration
     msystem.Set_G_acc(ChVector<>(0, -gravity, 0));

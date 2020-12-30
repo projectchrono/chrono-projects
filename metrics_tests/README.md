@@ -10,6 +10,6 @@ Chrono programs for performance metrics monitoring.
 * metrics_FEA_EASBrickIso
 * metrics_FEA_EASBrickIso_Grav
 
-### Chrono::Parallel
+### Chrono::Multicore
 
 * metrics_PAR_settling

@@ -13,7 +13,7 @@
 // Authors: Daniel Melanz
 // =============================================================================
 //
-// Test for co-simulation between Chrono::FEA and Chrono::Parallel
+// Test for co-simulation between Chrono::FEA and Chrono::Multicore
 //
 // =============================================================================
 
@@ -31,7 +31,7 @@
 #include "chrono/fea/ChVisualizationFEAmesh.h"
 #include "chrono_irrlicht/ChIrrApp.h"
 
-#include "chrono_parallel/physics/ChSystemParallel.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
 
 #include "chrono/ChConfig.h"
 #include "chrono/utils/ChUtilsCreators.h"
@@ -257,8 +257,8 @@ mloadcontainer->Add(mrigidmeshload);
     application.SetTimestep(time_step);
 #endif
 
-    // BEGIN PARALLEL SYSTEM INITIALIZATION
-    ChSystemParallelNSC* systemG = new ChSystemParallelNSC();
+    // BEGIN MULTICORE SYSTEM INITIALIZATION
+    ChSystemMulticoreNSC* systemG = new ChSystemMulticoreNSC();
 
     // Set gravitational acceleration
     systemG->Set_G_acc(my_system.Get_G_acc());
@@ -308,7 +308,7 @@ mloadcontainer->Add(mrigidmeshload);
 
     int triId = 0;
     for (int i = 0; i < triangles.size(); i++) {
-        auto triangle = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+        auto triangle = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
         triangle->SetIdentifier(triId++);
         triangle->SetMass(mass);
         triangle->SetInertiaXX(inertia);
@@ -355,7 +355,7 @@ mloadcontainer->Add(mrigidmeshload);
     gl_window.SetCamera(ChVector<>(1, 1.4, -1.2), ChVector<>(0, tire_rad, 0), ChVector<>(0, 1, 0));
     gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif
-    // END PARALLEL SYSTEM INITIALIZATION
+    // END MULTICORE SYSTEM INITIALIZATION
 
     // Begin time loop
     int out_steps = (int)std::ceil((1.0 / time_step) / out_fps);

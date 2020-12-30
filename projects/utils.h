@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "core/ChStream.h"
-#include "chrono_parallel/physics/ChSystemParallel.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
 
 // =============================================================================
 // Utility function for displaying an ASCII progress bar for the quantity x
@@ -40,11 +40,11 @@ static inline void TimingOutput(chrono::ChSystem* mSys, chrono::ChStreamOutAscii
   int REQ_ITS = 0;
   int BODS = mSys->GetNbodies();
   int CNTC = mSys->GetNcontacts();
-  if (chrono::ChSystemParallel* parallel_sys = dynamic_cast<chrono::ChSystemParallel*>(mSys)) {
-      RESID = std::static_pointer_cast<chrono::ChIterativeSolverParallel>(mSys->GetSolver())->GetResidual();
-      REQ_ITS = std::static_pointer_cast<chrono::ChIterativeSolverParallel>(mSys->GetSolver())->GetIterations();
-      BODS = parallel_sys->GetNbodies();
-      CNTC = parallel_sys->GetNcontacts();
+  if (chrono::ChSystemMulticore* mc_sys = dynamic_cast<chrono::ChSystemMulticore*>(mSys)) {
+      RESID = std::static_pointer_cast<chrono::ChIterativeSolverMulticore>(mSys->GetSolver())->GetResidual();
+      REQ_ITS = std::static_pointer_cast<chrono::ChIterativeSolverMulticore>(mSys->GetSolver())->GetIterations();
+      BODS = mc_sys->GetNbodies();
+      CNTC = mc_sys->GetNcontacts();
   }
 
   if (ofile) {

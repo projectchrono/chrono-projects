@@ -12,7 +12,7 @@
 // Author: Daniel Melanz, Radu Serban
 // =============================================================================
 //
-// ChronoParallel demo program for pressure-sinkage studies.
+// Chrono::Multicore demo program for pressure-sinkage studies.
 //
 // The global reference frame has Z up.
 // All units SI (CGS, i.e., centimeter - gram - second)
@@ -34,8 +34,8 @@
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
+#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -194,7 +194,7 @@ double radius_ball = 0.9 * hdimY;  // [cm] radius of testing ball
 // No joints between bodies are defined at this time.
 // =============================================================================
 
-void CreateMechanismBodies(ChSystemParallel* system) {
+void CreateMechanismBodies(ChSystemMulticore* system) {
 // -------------------------------
 // Create a material for the walls
 // -------------------------------
@@ -213,7 +213,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
     // Create the ground body -- always FIRST body in system
     // ----------------------
 
-    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
 
     ground->SetIdentifier(Id_ground);
     ground->SetBodyFixed(true);
@@ -237,7 +237,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
     // Initially, the load plate is fixed to ground.
     // It is released after the settling phase.
 
-    auto plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    auto plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
 
     plate->SetIdentifier(Id_plate);
     plate->SetMass(1);
@@ -253,7 +253,7 @@ void CreateMechanismBodies(ChSystemParallel* system) {
 // translational joint and create a linear actuator.
 // =============================================================================
 
-void ConnectLoadPlate(ChSystemParallel* system, std::shared_ptr<ChBody> ground, std::shared_ptr<ChBody> plate) {
+void ConnectLoadPlate(ChSystemMulticore* system, std::shared_ptr<ChBody> ground, std::shared_ptr<ChBody> plate) {
     auto prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
     prismatic->Initialize(ground, plate, ChCoordsys<>(ChVector<>(0, 0, 2 * hdimZ), QUNIT));
     prismatic->SetName("prismatic");
@@ -280,7 +280,7 @@ void ConnectLoadPlate(ChSystemParallel* system, std::shared_ptr<ChBody> ground, 
 // thus ensuring that no two spheres are closer than twice the radius.
 // =============================================================================
 
-int CreateGranularMaterial(ChSystemParallel* system) {
+int CreateGranularMaterial(ChSystemMulticore* system) {
 // -------------------------------------------
 // Create a material for the granular material
 // -------------------------------------------
@@ -331,7 +331,7 @@ int CreateGranularMaterial(ChSystemParallel* system) {
 // Create a single large sphere (for use in TESTING)
 // =============================================================================
 
-void CreateBall(ChSystemParallel* system) {
+void CreateBall(ChSystemMulticore* system) {
 // ------------------------------
 // Create a material for the ball
 // ------------------------------
@@ -350,7 +350,7 @@ void CreateBall(ChSystemParallel* system) {
     // Create the ball
     // ---------------
 
-    auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
 
     ball->SetIdentifier(Id_ball);
     ball->SetMass(mass_ball);
@@ -370,7 +370,7 @@ void CreateBall(ChSystemParallel* system) {
 // look at bodies whith positive identifiers (to exclude all other bodies).
 // =============================================================================
 
-void FindHeightRange(ChSystemParallel* sys, double& lowest, double& highest) {
+void FindHeightRange(ChSystemMulticore* sys, double& lowest, double& highest) {
     highest = -1000;
     lowest = 1000;
     for (auto body : sys->Get_bodylist()) {
@@ -432,10 +432,10 @@ int main(int argc, char* argv[]) {
 
 #ifdef USE_SMC
     cout << "Create SMC system" << endl;
-    ChSystemParallelSMC* msystem = new ChSystemParallelSMC();
+    ChSystemMulticoreSMC* msystem = new ChSystemMulticoreSMC();
 #else
     cout << "Create NSC system" << endl;
-    ChSystemParallelNSC* msystem = new ChSystemParallelNSC();
+    ChSystemMulticoreNSC* msystem = new ChSystemMulticoreNSC();
 #endif
 
     msystem->Set_G_acc(ChVector<>(0, 0, -gravity));

@@ -30,9 +30,9 @@
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/solver/ChSystemDescriptorParallel.h"
-#include "chrono_parallel/collision/ChNarrowphaseRUtils.h"
+#include "chrono_multicore/physics/ChSystemMulticore.h"
+#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
+#include "chrono_multicore/collision/ChNarrowphaseRUtils.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -151,7 +151,7 @@ double init_angle = (CH_C_PI / 180) * 4;
 // =============================================================================
 class Mechanism {
   public:
-    Mechanism(ChSystemParallel* system, double h);
+    Mechanism(ChSystemMulticore* system, double h);
 
     const ChVector<>& GetSledVelocity() const { return m_sled->GetPos_dt(); }
     const ChVector<>& GetWheelVelocity() const { return m_wheel->GetPos_dt(); }
@@ -181,7 +181,7 @@ class Mechanism {
     std::shared_ptr<ChLinkLockRevolute> m_revolute;
 };
 
-Mechanism::Mechanism(ChSystemParallel* system, double h) {
+Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     // Calculate hardpoint locations at initial configuration (expressed in the
     // global frame)
     ChVector<> loc_revolute = calcLocationRevolute(h);
@@ -190,7 +190,7 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
     ChVector<> loc_prismatic = loc_sled - ChVector<>(0, 0, e / 4);
 
     // Create the ground body
-    m_ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    m_ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
     m_ground->SetIdentifier(-1);
     m_ground->SetBodyFixed(true);
     m_ground->SetCollide(false);
@@ -198,7 +198,7 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
     system->AddBody(m_ground);
 
     // Create the sled body
-    m_sled = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    m_sled = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
     m_sled->SetIdentifier(1);
     m_sled->SetMass(mass1);
     m_sled->SetInertiaXX(inertia_sled);
@@ -231,7 +231,7 @@ Mechanism::Mechanism(ChSystemParallel* system, double h) {
 #endif
 
     // Create the wheel body
-    m_wheel = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelParallel>());
+    m_wheel = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
     m_wheel->SetIdentifier(2);
     m_wheel->SetMass(mass_wheel);
     m_wheel->SetInertiaXX(inertia_wheel);
@@ -301,7 +301,7 @@ void Mechanism::WriteResults(ChStreamOutAsciiFile& f, double time) {
 // =============================================================================
 // Create container bin.
 // =============================================================================
-void CreateContainer(ChSystemParallel* system) {
+void CreateContainer(ChSystemMulticore* system) {
     int id_c = -200;
     double thickness = 0.2;
 
@@ -324,7 +324,7 @@ void CreateContainer(ChSystemParallel* system) {
 // =============================================================================
 // Create granular material.
 // =============================================================================
-void CreateParticles(ChSystemParallel* system) {
+void CreateParticles(ChSystemMulticore* system) {
 // Create a material for the ball mixture.
 #ifdef USE_SMC
     auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
@@ -401,10 +401,10 @@ int main(int argc, char* argv[]) {
 
 #ifdef USE_SMC
     cout << "Create SMC system" << endl;
-    ChSystemParallelSMC* msystem = new ChSystemParallelSMC();
+    ChSystemMulticoreSMC* msystem = new ChSystemMulticoreSMC();
 #else
     cout << "Create NSC system" << endl;
-    ChSystemParallelNSC* msystem = new ChSystemParallelNSC();
+    ChSystemMulticoreNSC* msystem = new ChSystemMulticoreNSC();
 #endif
 
     msystem->Set_G_acc(ChVector<>(0, 0, -9.81));

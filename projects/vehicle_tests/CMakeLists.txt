@@ -11,7 +11,7 @@
 
 find_package(Chrono
              COMPONENTS Vehicle 
-             OPTIONAL_COMPONENTS Irrlicht PardisoMKL Parallel OpenGL
+             OPTIONAL_COMPONENTS Irrlicht PardisoMKL Multicore OpenGL
              CONFIG
 )
 
@@ -64,9 +64,9 @@ if (CHRONO_IRRLICHT_FOUND)
   add_subdirectory(test_HMMWV)
 endif()
 
-if (CHRONO_PARALLEL_FOUND)
-  message(STATUS "Programs using Chrono::Parallel...")
-  add_subdirectory(test_M113_parallel)
+if (CHRONO_MULTICORE_FOUND)
+  message(STATUS "Programs using Chrono::Multicore...")
+  add_subdirectory(test_M113_multicore)
 endif()
 
 message(STATUS "")

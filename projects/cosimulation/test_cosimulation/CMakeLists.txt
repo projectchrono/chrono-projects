@@ -1,9 +1,9 @@
 #=============================================================================
 # CMake configuration file for the vehicle cosimulation tests.
-# These example programs requires MPI and the Chrono::Parallel module.
+# These example programs requires MPI and the Chrono::Multicore module.
 #=============================================================================
 
-IF(NOT MPI_CXX_FOUND OR NOT ENABLE_MODULE_PARALLEL)
+IF(NOT MPI_CXX_FOUND OR NOT ENABLE_MODULE_MULTICORE)
     RETURN()
 ENDIF()
 
@@ -17,7 +17,7 @@ SET(TEST_PROGRAMS
 #--------------------------------------------------------------
 # Additional include directories
 
-include_directories(${CH_PARALLEL_INCLUDES})
+include_directories(${CH_MULTICORE_INCLUDES})
 include_directories(${MPI_CXX_INCLUDE_PATH})
 
 #--------------------------------------------------------------
@@ -25,7 +25,7 @@ include_directories(${MPI_CXX_INCLUDE_PATH})
 
 SET(LIBRARIES
     ChronoEngine
-    ChronoEngine_parallel
+    ChronoEngine_multicore
     ChronoEngine_vehicle
     ChronoModels_vehicle
     ${MPI_CXX_LIBRARIES}
@@ -41,7 +41,7 @@ FOREACH(PROGRAM ${TEST_PROGRAMS})
   SOURCE_GROUP(""  FILES  "${PROGRAM}.cpp")
 
   SET_TARGET_PROPERTIES(${PROGRAM} PROPERTIES 
-                        COMPILE_FLAGS "${CH_CXX_FLAGS} ${MPI_CXX_COMPILE_FLAGS} ${CH_PARALLEL_CXX_FLAGS}"
+                        COMPILE_FLAGS "${CH_CXX_FLAGS} ${MPI_CXX_COMPILE_FLAGS} ${CH_MULTICORE_CXX_FLAGS}"
                         LINK_FLAGS "${LINKERFLAG_EXE} ${MPI_CXX_LINK_FLAGS}")
   TARGET_LINK_LIBRARIES(${PROGRAM} ${LIBRARIES})
 
