@@ -1,5 +1,5 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono Granular module.
+# CMake configuration file for projects requiring the Chrono::Gpu module.
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
@@ -9,7 +9,7 @@
 #--------------------------------------------------------------
 
 set(DEMOS
-    demo_GRAN_ballcosim
+    demo_GPU_ballcosim
 )
 
 #--------------------------------------------------------------
@@ -19,14 +19,14 @@ set(DEMOS
 # Invoke find_package in CONFIG mode
 
 find_package(Chrono
-             COMPONENTS Granular
+             COMPONENTS Gpu
              CONFIG
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
 
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for GRANULAR projects")
+  message("Could not find requirements for GPU projects")
   return()
 endif()
 
@@ -72,7 +72,7 @@ endif()
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Configuration tests for Chrono::Granular...")
+message(STATUS "Configuration tests for Chrono::GPU...")
 
 foreach(PROGRAM ${DEMOS})
 

@@ -17,7 +17,7 @@
 #include <iostream>
 #include <string>
 
-#include "ChGranularDemoUtils.hpp"
+#include "GpuDemoUtils.h"
 #include "chrono/core/ChGlobal.h"
 #include "chrono/utils/ChUtilsSamplers.h"
 #include "chrono_granular/ChGranularData.h"

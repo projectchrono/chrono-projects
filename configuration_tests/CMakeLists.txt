@@ -8,6 +8,6 @@ add_subdirectory(irrlicht)
 add_subdirectory(multicore)
 add_subdirectory(python)
 add_subdirectory(cascade)
-add_subdirectory(granular)
+add_subdirectory(gpu)
 
 set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)

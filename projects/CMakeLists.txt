@@ -32,8 +32,8 @@ cmake_dependent_option(ENABLE_PRJ_FEA_TESTS
 cmake_dependent_option(ENABLE_PRJ_COSIMULATION 
 	"Enable projects for Chrono::Vehicle cosimulation" ON
 	"ENABLE_PROJECTS" OFF)
-cmake_dependent_option(ENABLE_PRJ_GRANULAR_TESTS 
-	"Enable projects for Chrono::Granular tests" ON
+cmake_dependent_option(ENABLE_PRJ_GPU_TESTS 
+	"Enable projects for Chrono::Gpu tests" ON
 	"ENABLE_PROJECTS" OFF)
 
 if (ENABLE_PRJ_CORE_TESTS)
@@ -60,8 +60,8 @@ if (ENABLE_PRJ_VEHICLE_TESTS)
   add_subdirectory(vehicle_tests)
 endif()
 
-if (ENABLE_PRJ_GRANULAR_TESTS)
-  add_subdirectory(granular_tests)
+if (ENABLE_PRJ_GPU_TESTS)
+  add_subdirectory(gpu_tests)
 endif()
 
 if (ENABLE_PRJ_COSIMULATION)

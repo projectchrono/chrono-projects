@@ -11,14 +11,15 @@
 // =============================================================================
 // Authors: Nic Olsen
 // =============================================================================
-// Normal contact sphere-vs-wall and sphere-vs-fixed-sphere
+// Rolling ball on a horizontal plane varying rolling friction. Base case is
+// a ball rolling with no slip and no rolling friction.
 // =============================================================================
 
 #include <cmath>
 #include <iostream>
 #include <string>
 
-#include "ChGranularDemoUtils.hpp"
+#include "GpuDemoUtils.h"
 #include "chrono/utils/ChUtilsSamplers.h"
 #include "chrono_granular/api/ChApiGranularChrono.h"
 #include "chrono_granular/physics/ChGranular.h"
@@ -28,10 +29,14 @@
 using namespace chrono;
 using namespace chrono::granular;
 
-enum RUN_MODE { SPHERE_WALL = 0, SPHERE_SPHERE = 1, SPHERE_WALL_ANGLE = 2 };
+ChVector<float> sphere_pos(0, 0, 0);
+ChVector<float> v_init(10, -10, 0);
+
+enum RUN_MODE { NONE = 0, SCHWARTZ = 1 };
 
 void ShowUsage(std::string name) {
-    std::cout << "usage: " + name + " <json_file> <output_dir> <psi_L> <run_mode> <gamma_n>" << std::endl;
+    std::cout << "usage: " + name + " <json_file> <output_dir> <psi_L> <roll_mode: 0-none, 1-schwartz> <mu_roll>"
+              << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -44,21 +49,39 @@ int main(int argc, char* argv[]) {
     }
     params.output_dir = argv[2];
     params.psi_L = std::stoi(argv[3]);
-    RUN_MODE run_mode = (RUN_MODE)std::stoi(argv[4]);
+    RUN_MODE run_mode = (RUN_MODE)std::atoi(argv[4]);
+    float mu_roll = std::stof(argv[5]);
+    params.rolling_friction_coeffS2S = mu_roll;
+    params.rolling_friction_coeffS2W = mu_roll;
 
-    params.box_X = 10;
-    params.box_Y = 10;
-    params.box_Z = (run_mode == SPHERE_SPHERE) ? 8 * params.sphere_radius : 4 * params.sphere_radius;
+    params.box_X = 15;
+    params.box_Y = 15;
+    params.box_Z = 15;
 
-    float gamma_n = std::stof(argv[5]);
-    params.normalDampS2S = gamma_n;
-    params.normalDampS2W = gamma_n;
-    std::cout << "Gamma " << gamma_n << std::endl;
+    // Angle gravity
+    params.grav_X = -565.80;
+    params.grav_Y = -565.80;
+    params.grav_Z = -565.80;
 
     // Setup simulation
     ChSystemGranularSMC gran_sys(params.sphere_radius, params.sphere_density,
                                  make_float3(params.box_X, params.box_Y, params.box_Z));
     gran_sys.disableMinLength();
+    switch (run_mode) {
+        case RUN_MODE::NONE:
+            gran_sys.set_rolling_mode(GRAN_ROLLING_MODE::NO_RESISTANCE);
+            break;
+        case RUN_MODE::SCHWARTZ:
+            gran_sys.set_rolling_mode(GRAN_ROLLING_MODE::SCHWARTZ);
+            gran_sys.set_rolling_coeff_SPH2WALL(params.rolling_friction_coeffS2W);
+            gran_sys.set_rolling_coeff_SPH2SPH(params.rolling_friction_coeffS2S);
+            break;
+        default:
+            std::cout << "Invalid run mode" << std::endl;
+            return 1;
+    }
+
+    gran_sys.set_friction_mode(GRAN_FRICTION_MODE::MULTI_STEP);
     ChGranularSMC_API apiSMC;
     apiSMC.setGranSystem(&gran_sys);
 
@@ -69,43 +92,37 @@ int main(int argc, char* argv[]) {
     gran_sys.set_Gamma_n_SPH2SPH(params.normalDampS2S);
     gran_sys.set_Gamma_n_SPH2WALL(params.normalDampS2W);
 
+    gran_sys.set_K_t_SPH2SPH(params.tangentStiffS2S);
+    gran_sys.set_K_t_SPH2WALL(params.tangentStiffS2W);
+
+    gran_sys.set_Gamma_t_SPH2SPH(params.tangentDampS2S);
+    gran_sys.set_Gamma_t_SPH2WALL(params.tangentDampS2W);
+
+    gran_sys.set_static_friction_coeff_SPH2SPH(params.static_friction_coeffS2S);
+    gran_sys.set_static_friction_coeff_SPH2WALL(params.static_friction_coeffS2W);
+
     gran_sys.set_Cohesion_ratio(params.cohesion_ratio);
     gran_sys.set_Adhesion_ratio_S2W(params.adhesion_ratio_s2w);
-    if (run_mode == SPHERE_WALL_ANGLE) {
-        params.grav_X = -565.80;
-        params.grav_Y = -565.80;
-        params.grav_Z = -565.80;
 
-        float plane_pos[] = {(float)(-2 * params.sphere_radius / std::sqrt(3)),
-                             (float)(-2 * params.sphere_radius / std::sqrt(3)),
-                             (float)(-2 * params.sphere_radius / std::sqrt(3))};
-
-        float plane_normal[] = {1, 1, 1};
-        bool track_forces = false;
-        gran_sys.Create_BC_Plane(plane_pos, plane_normal, track_forces);
-    }
+    // Plane normal
+    ChVector<float> n(1, 1, 1);
+    n.Normalize();
+    float plane_pos[] = {sphere_pos.x() - params.sphere_radius * n.x(), sphere_pos.y() - params.sphere_radius * n.y(),
+                         sphere_pos.z() - params.sphere_radius * n.z()};
+    float plane_normal[] = {n.x(), n.y(), n.z()};
+    bool track_forces = false;
+    gran_sys.Create_BC_Plane(plane_pos, plane_normal, track_forces);
 
     gran_sys.set_gravitational_acceleration(params.grav_X, params.grav_Y, params.grav_Z);
     gran_sys.setOutputMode(params.write_mode);
-    gran_sys.setOutputFlags(
-        GRAN_OUTPUT_FLAGS::VEL_COMPONENTS | GRAN_OUTPUT_FLAGS::FIXITY |
-        GRAN_OUTPUT_FLAGS::FORCE_COMPONENTS);  // NOTE: original test used custom FORCE_COMPONENTS output
+    gran_sys.setOutputFlags(GRAN_OUTPUT_FLAGS::VEL_COMPONENTS | GRAN_OUTPUT_FLAGS::ANG_VEL_COMPONENTS);
 
-    gran_sys.set_friction_mode(GRAN_FRICTION_MODE::FRICTIONLESS);
     gran_sys.set_timeIntegrator(GRAN_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
 
     std::vector<ChVector<float>> body_points;
-    body_points.push_back(ChVector<float>(0, 0, 0));
+    body_points.push_back(sphere_pos);
 
-    if (run_mode == SPHERE_SPHERE) {
-        std::vector<bool> body_points_fixed;
-        body_points.push_back(ChVector<float>(0, 0, -3 * params.sphere_radius));
-        body_points_fixed.push_back(false);
-        body_points_fixed.push_back(true);
-        gran_sys.setParticleFixed(body_points_fixed);
-    }
-
-    apiSMC.setElemsPositions(body_points);
+    apiSMC.setElemsPositions(body_points, std::vector<ChVector<float>>(1, v_init));
 
     gran_sys.set_fixed_stepSize(params.step_size);
 
@@ -116,7 +133,7 @@ int main(int argc, char* argv[]) {
     gran_sys.setVerbose(params.verbose);
     gran_sys.initialize();
 
-    int fps = 10000;
+    int fps = 1000;
     float frame_step = 1.f / fps;
     float curr_time = 0;
     int currframe = 0;
@@ -128,7 +145,8 @@ int main(int argc, char* argv[]) {
 
     std::cout << "frame step is " << frame_step << std::endl;
     while (curr_time < params.time_end) {
-        gran_sys.advance_simulation(frame_step);
+        float real_dt = gran_sys.advance_simulation(frame_step);
+
         curr_time += frame_step;
         printf("rendering frame %u\n", currframe);
         sprintf(filename, "%s/step%06d", params.output_dir.c_str(), currframe++);

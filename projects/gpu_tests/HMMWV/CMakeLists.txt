@@ -5,17 +5,17 @@
 # Additional include paths and libraries
 # ------------------------------------------------------------------------------
 
-message(STATUS "test_GRAN_HMMWV temporarily unavailable")
+message(STATUS "test_GPU_HMMWV temporarily unavailable")
 return()
 
 set(PROGRAMS
-  test_GRAN_HMMWV
+  test_GPU_HMMWV
 )
 
 # ------------------------------------------------------------------------------
 # Add all executables
 # ------------------------------------------------------------------------------
-message(STATUS "Test programs for GRANULAR HMMWV...")
+message(STATUS "Test programs for GPU HMMWV...")
 
 foreach(PROGRAM ${PROGRAMS})
     message(STATUS "...add ${PROGRAM}")
