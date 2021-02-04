@@ -9,9 +9,9 @@
 // http://projectchrono.org/license-chrono.txt.
 //
 // =============================================================================
-// Authors: Nic Olsen, Conlain Kelly
+// Authors: Nic Olsen, Conlain Kelly, Ruochun Zhang
 // =============================================================================
-// Set of simple tests for validating low-level behavior of a Chrono::Granular
+// Set of simple tests for validating low-level behavior of a Chrono::GPU
 // system.
 // =============================================================================
 
@@ -21,15 +21,15 @@
 
 #include "chrono/core/ChGlobal.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_granular/ChGranularData.h"
-#include "chrono_granular/api/ChApiGranularChrono.h"
-#include "chrono_granular/physics/ChGranular.h"
-#include "chrono_granular/physics/ChGranularTriMesh.h"
-#include "chrono_granular/utils/ChGranularJsonParser.h"
+#include "chrono_gpu/ChGpuData.h"
+#include "chrono_gpu/api/ChApiGpuChrono.h"
+#include "chrono_gpu/physics/ChGpu.h"
+#include "chrono_gpu/physics/ChGpuTriMesh.h"
+#include "chrono_gpu/utils/ChGpuJsonParser.h"
 #include "chrono_thirdparty/filesystem/path.h"
 
 using namespace chrono;
-using namespace chrono::granular;
+using namespace chrono::gpu;
 
 std::string output_dir = "../test_results";
 std::string delim = "--------------------------------";
@@ -88,61 +88,60 @@ void ShowUsage(std::string name) {
 }
 
 // Set common set of parameters for all tests
-void setCommonParameters(ChGranularChronoTriMeshAPI& apiSMC_TriMesh) {
-    ChSystemGranularSMC& gran_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
+void setCommonParameters(ChGpuChronoTriMeshAPI& apiSMC_TriMesh) {
+    ChSystemGranularSMC& gpu_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
 
-    gran_sys.setPsiFactors(psi_T, psi_L);
-    gran_sys.set_K_n_SPH2SPH(normalStiffness_S2S);
-    gran_sys.set_K_n_SPH2WALL(normalStiffness_S2W);
-    gran_sys.set_Gamma_n_SPH2SPH(normalDampS2S);
-    gran_sys.set_Gamma_n_SPH2WALL(normalDampS2W);
+    gpu_sys.setPsiFactors(psi_T, psi_L);
+    gpu_sys.set_K_n_SPH2SPH(normalStiffness_S2S);
+    gpu_sys.set_K_n_SPH2WALL(normalStiffness_S2W);
+    gpu_sys.set_Gamma_n_SPH2SPH(normalDampS2S);
+    gpu_sys.set_Gamma_n_SPH2WALL(normalDampS2W);
 
-    gran_sys.set_K_t_SPH2SPH(tangentStiffness_S2S);
-    gran_sys.set_K_t_SPH2WALL(tangentStiffness_S2W);
-    gran_sys.set_Gamma_t_SPH2SPH(tangentDampS2S);
-    gran_sys.set_Gamma_t_SPH2WALL(tangentDampS2W);
+    gpu_sys.set_K_t_SPH2SPH(tangentStiffness_S2S);
+    gpu_sys.set_K_t_SPH2WALL(tangentStiffness_S2W);
+    gpu_sys.set_Gamma_t_SPH2SPH(tangentDampS2S);
+    gpu_sys.set_Gamma_t_SPH2WALL(tangentDampS2W);
 
-    gran_sys.set_Cohesion_ratio(cohes);
-    gran_sys.set_Adhesion_ratio_S2W(cohes);
-    gran_sys.set_gravitational_acceleration(0, 0, grav_Z);
-    gran_sys.setOutputMode(write_mode);
-    gran_sys.set_static_friction_coeff_SPH2SPH(static_friction_coeff);
-    gran_sys.set_static_friction_coeff_SPH2WALL(static_friction_coeff);
+    gpu_sys.set_Cohesion_ratio(cohes);
+    gpu_sys.set_Adhesion_ratio_S2W(cohes);
+    gpu_sys.set_gravitational_acceleration(0, 0, grav_Z);
+    gpu_sys.setOutputMode(write_mode);
+    gpu_sys.set_static_friction_coeff_SPH2SPH(static_friction_coeff);
+    gpu_sys.set_static_friction_coeff_SPH2WALL(static_friction_coeff);
 
-    gran_sys.set_rolling_coeff_SPH2SPH(static_friction_coeff / 2.);
-    gran_sys.set_rolling_coeff_SPH2WALL(static_friction_coeff / 2.);
+    gpu_sys.set_rolling_coeff_SPH2SPH(static_friction_coeff / 2.);
+    gpu_sys.set_rolling_coeff_SPH2WALL(static_friction_coeff / 2.);
 
-    gran_sys.set_timeIntegrator(GRAN_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
-    gran_sys.set_fixed_stepSize(timestep);
+    gpu_sys.set_timeIntegrator(GRAN_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
+    gpu_sys.set_fixed_stepSize(timestep);
     filesystem::create_directory(filesystem::path(output_dir));
-    gran_sys.set_BD_Fixed(true);
+    gpu_sys.set_BD_Fixed(true);
 }
 
 void setCommonMeshParameters(ChGranularChronoTriMeshAPI& apiSMC_TriMesh) {
-    ChSystemGranularSMC_trimesh& gran_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
+    ChSystemGranularSMC_trimesh& gpu_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
 
-    gran_sys.set_K_n_SPH2MESH(normalStiffness_S2M);
-    gran_sys.set_Gamma_n_SPH2MESH(normalDampS2M);
-    gran_sys.set_K_t_SPH2MESH(tangentStiffness_S2M);
-    gran_sys.set_Gamma_t_SPH2MESH(tangentDampS2M);
+    gpu_sys.set_K_n_SPH2MESH(normalStiffness_S2M);
+    gpu_sys.set_Gamma_n_SPH2MESH(normalDampS2M);
+    gpu_sys.set_K_t_SPH2MESH(tangentStiffness_S2M);
+    gpu_sys.set_Gamma_t_SPH2MESH(tangentDampS2M);
 }
 
-void writeGranFile(ChSystemGranularSMC& gran_sys) {
+void writeGranFile(ChSystemGranularSMC& gpu_sys) {
     printf("rendering frame %u\n", currframe);
     char filename[100];
     sprintf(filename, "%s/step%06d", output_dir.c_str(), ++currframe);
-    gran_sys.writeFile(std::string(filename));
+    gpu_sys.writeFile(std::string(filename));
 }
 
-void advanceGranSim(ChSystemGranularSMC& gran_sys) {
-    gran_sys.advance_simulation(frame_step);
+void advanceGranSim(ChSystemGranularSMC& gpu_sys) {
+    gpu_sys.advance_simulation(frame_step);
     curr_time += frame_step;
 }
 
 void run_ROTF() {
-    ChGranularChronoTriMeshAPI apiSMC_TriMesh(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
-    setCommonParameters(apiSMC_TriMesh);
-    ChSystemGranularSMC_trimesh& gran_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
+    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
+    setCommonParameters(gpu_sys);
 
     float ramp_angle = CH_C_PI / 4;
     // ramp normal is 45 degrees about y
@@ -158,20 +157,20 @@ void run_ROTF() {
     // start at far-x wall, halfway up
     ChVector<float> sphere_pos(-box_X / 2.f + 2.f * sphere_radius, 0, 2 * sphere_radius);
     points.push_back(sphere_pos);
-    apiSMC_TriMesh.setElemsPositions(points);
+    gpu_sys.SetParticlePositions(points);
 
     printf("Plane pos: (%f, %f, %f)\n", plane_pos[0], plane_pos[1], plane_pos[2]);
 
-    size_t slope_plane_id = gran_sys.Create_BC_Plane(plane_pos, plane_normal, true);
+    size_t slope_plane_id = gpu_sys.Create_BC_Plane(plane_pos, plane_normal, true);
     // add bottom plane to capture bottom forces
     float bot_plane_pos[] = {0, 0, -box_Z / 2 + 2 * sphere_radius};
     float bot_plane_normal[] = {0, 0, 1};
-    size_t bottom_plane_id = gran_sys.Create_BC_Plane(bot_plane_pos, bot_plane_normal, true);
+    size_t bottom_plane_id = gpu_sys.Create_BC_Plane(bot_plane_pos, bot_plane_normal, true);
     // Finalize settings and initialize for runtime
 
-    gran_sys.set_friction_mode(chrono::granular::GRAN_FRICTION_MODE::MULTI_STEP);
-    gran_sys.set_rolling_mode(chrono::granular::GRAN_ROLLING_MODE::NO_RESISTANCE);
-    gran_sys.initialize();
+    gpu_sys.set_friction_mode(chrono::granular::GRAN_FRICTION_MODE::MULTI_STEP);
+    gpu_sys.set_rolling_mode(chrono::granular::GRAN_ROLLING_MODE::NO_RESISTANCE);
+    gpu_sys.initialize();
 
     float reaction_forces[3] = {0, 0, 0};
 
@@ -182,7 +181,7 @@ void run_ROTF() {
 
     // Run settling experiments
     while (curr_time < timeEnd) {
-        bool success = gran_sys.getBCReactionForces(slope_plane_id, reaction_forces);
+        bool success = gpu_sys.getBCReactionForces(slope_plane_id, reaction_forces);
         if (!success) {
             printf("ERROR! Get contact forces for plane failed\n");
         } else {
@@ -190,22 +189,22 @@ void run_ROTF() {
                    reaction_forces[1], reaction_forces[2]);
         }
 
-        success = gran_sys.getBCReactionForces(bottom_plane_id, reaction_forces);
+        success = gpu_sys.getBCReactionForces(bottom_plane_id, reaction_forces);
         if (!success) {
             printf("ERROR! Get contact forces for plane failed\n");
         } else {
             printf("curr time is %f, bottom plane force is (%f, %f, %f) Newtons\n", curr_time, reaction_forces[0],
                    reaction_forces[1], reaction_forces[2]);
         }
-        writeGranFile(gran_sys);
-        advanceGranSim(gran_sys);
+        writeGranFile(gpu_sys);
+        advanceGranSim(gpu_sys);
     }
 }
 
 void run_ROTF_MESH() {
     // overwrite olds system
     ChGranularChronoTriMeshAPI apiSMC_TriMesh(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
-    ChSystemGranularSMC_trimesh& gran_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
+    ChSystemGranularSMC_trimesh& gpu_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
     setCommonParameters(apiSMC_TriMesh);
 
     setCommonMeshParameters(apiSMC_TriMesh);
@@ -246,11 +245,11 @@ void run_ROTF_MESH() {
     apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
 
     // Finalize settings and initialize for runtime
-    gran_sys.set_friction_mode(chrono::granular::GRAN_FRICTION_MODE::MULTI_STEP);
-    gran_sys.set_rolling_mode(chrono::granular::GRAN_ROLLING_MODE::NO_RESISTANCE);
-    gran_sys.initialize();
+    gpu_sys.set_friction_mode(chrono::granular::GRAN_FRICTION_MODE::MULTI_STEP);
+    gpu_sys.set_rolling_mode(chrono::granular::GRAN_ROLLING_MODE::NO_RESISTANCE);
+    gpu_sys.initialize();
 
-    unsigned int nSoupFamilies = gran_sys.getNumTriangleFamilies();
+    unsigned int nSoupFamilies = gpu_sys.getNumTriangleFamilies();
     printf("%u soup families\n", nSoupFamilies);
 
     double* meshSoupLocOri = new double[7 * nSoupFamilies];
@@ -280,15 +279,15 @@ void run_ROTF_MESH() {
 
     // Run settling experiments
     while (curr_time < timeEnd) {
-        gran_sys.meshSoup_applyRigidBodyMotion(meshSoupLocOri, meshVel);
-        writeGranFile(gran_sys);
-        advanceGranSim(gran_sys);
+        gpu_sys.meshSoup_applyRigidBodyMotion(meshSoupLocOri, meshVel);
+        writeGranFile(gpu_sys);
+        advanceGranSim(gpu_sys);
     }
 }
 
 void run_PYRAMID() {
     ChGranularChronoTriMeshAPI apiSMC_TriMesh(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
-    ChSystemGranularSMC_trimesh& gran_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
+    ChSystemGranularSMC_trimesh& gpu_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
 
     setCommonParameters(apiSMC_TriMesh);
 
@@ -298,10 +297,10 @@ void run_PYRAMID() {
     // add plane just below origin
     float bot_plane_pos[] = {0, 0, -1.02 * sphere_radius};
     float bot_plane_normal[] = {0, 0, 1};
-    size_t bottom_plane_id = gran_sys.Create_BC_Plane(bot_plane_pos, bot_plane_normal, true);
+    size_t bottom_plane_id = gpu_sys.Create_BC_Plane(bot_plane_pos, bot_plane_normal, true);
 
-    gran_sys.set_friction_mode(chrono::granular::GRAN_FRICTION_MODE::MULTI_STEP);
-    gran_sys.set_rolling_mode(chrono::granular::GRAN_ROLLING_MODE::NO_RESISTANCE);
+    gpu_sys.set_friction_mode(chrono::granular::GRAN_FRICTION_MODE::MULTI_STEP);
+    gpu_sys.set_rolling_mode(chrono::granular::GRAN_ROLLING_MODE::NO_RESISTANCE);
     float reaction_forces[3] = {0, 0, 0};
 
     // just above origin
@@ -324,17 +323,17 @@ void run_PYRAMID() {
     points.push_back(top_sphere);
     apiSMC_TriMesh.setElemsPositions(points);
 
-    gran_sys.initialize();
+    gpu_sys.initialize();
 
     while (curr_time < timeEnd) {
-        writeGranFile(gran_sys);
-        advanceGranSim(gran_sys);
+        writeGranFile(gpu_sys);
+        advanceGranSim(gpu_sys);
     }
 }
 
 void run_PYRAMID_MESH() {
     ChGranularChronoTriMeshAPI apiSMC_TriMesh(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
-    ChSystemGranularSMC_trimesh& gran_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
+    ChSystemGranularSMC_trimesh& gpu_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
     setCommonParameters(apiSMC_TriMesh);
 
     setCommonMeshParameters(apiSMC_TriMesh);
@@ -359,8 +358,8 @@ void run_PYRAMID_MESH() {
     mesh_masses.push_back(10.f);
     apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
 
-    gran_sys.set_friction_mode(chrono::granular::GRAN_FRICTION_MODE::MULTI_STEP);
-    gran_sys.set_rolling_mode(chrono::granular::GRAN_ROLLING_MODE::NO_RESISTANCE);
+    gpu_sys.set_friction_mode(chrono::granular::GRAN_FRICTION_MODE::MULTI_STEP);
+    gpu_sys.set_rolling_mode(chrono::granular::GRAN_ROLLING_MODE::NO_RESISTANCE);
     float reaction_forces[3] = {0, 0, 0};
 
     // just above origin
@@ -383,9 +382,9 @@ void run_PYRAMID_MESH() {
     points.push_back(top_sphere);
     apiSMC_TriMesh.setElemsPositions(points);
 
-    gran_sys.initialize();
+    gpu_sys.initialize();
 
-    unsigned int nSoupFamilies = gran_sys.getNumTriangleFamilies();
+    unsigned int nSoupFamilies = gpu_sys.getNumTriangleFamilies();
     printf("%u soup families\n", nSoupFamilies);
 
     double* meshSoupLocOri = new double[7 * nSoupFamilies];
@@ -402,21 +401,21 @@ void run_PYRAMID_MESH() {
     float* meshVel = new float[6 * nSoupFamilies]();
 
     while (curr_time < timeEnd) {
-        gran_sys.meshSoup_applyRigidBodyMotion(meshSoupLocOri, meshVel);
-        writeGranFile(gran_sys);
+        gpu_sys.meshSoup_applyRigidBodyMotion(meshSoupLocOri, meshVel);
+        writeGranFile(gpu_sys);
         char filename[100];
 
         sprintf(filename, "%s/step%06d_meshes", output_dir.c_str(), currframe);
 
-        gran_sys.write_meshes(std::string(filename));
+        gpu_sys.write_meshes(std::string(filename));
 
-        advanceGranSim(gran_sys);
+        advanceGranSim(gpu_sys);
     }
 }
 
 void run_MESH_STEP() {
     ChGranularChronoTriMeshAPI apiSMC_TriMesh(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
-    ChSystemGranularSMC_trimesh& gran_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
+    ChSystemGranularSMC_trimesh& gpu_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
     setCommonParameters(apiSMC_TriMesh);
     setCommonMeshParameters(apiSMC_TriMesh);
 
@@ -455,7 +454,7 @@ void run_MESH_STEP() {
 
     apiSMC_TriMesh.setElemsPositions(body_points);
 
-    unsigned int nSoupFamilies = gran_sys.getNumTriangleFamilies();
+    unsigned int nSoupFamilies = gpu_sys.getNumTriangleFamilies();
     std::cout << nSoupFamilies << " soup families" << std::endl;
     double* meshSoupLocOri = new double[7 * nSoupFamilies];
 
@@ -470,16 +469,16 @@ void run_MESH_STEP() {
 
     float* meshVel = new float[6 * nSoupFamilies]();
 
-    gran_sys.initialize();
+    gpu_sys.initialize();
 
     for (float t = 0; t < timeEnd; t += frame_step) {
-        gran_sys.meshSoup_applyRigidBodyMotion(meshSoupLocOri, meshVel);
+        gpu_sys.meshSoup_applyRigidBodyMotion(meshSoupLocOri, meshVel);
         std::cout << "Rendering frame " << currframe << std::endl;
         char filename[100];
         sprintf(filename, "%s/step%06u", output_dir.c_str(), currframe);
-        writeGranFile(gran_sys);
-        gran_sys.write_meshes(std::string(filename));
-        advanceGranSim(gran_sys);
+        writeGranFile(gpu_sys);
+        gpu_sys.write_meshes(std::string(filename));
+        advanceGranSim(gpu_sys);
     }
     delete[] meshSoupLocOri;
     delete[] meshVel;
@@ -491,7 +490,7 @@ void run_MESH_FORCE() {
     return;
 
     ChGranularChronoTriMeshAPI apiSMC_TriMesh(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
-    ChSystemGranularSMC_trimesh& gran_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
+    ChSystemGranularSMC_trimesh& gpu_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
     setCommonParameters(apiSMC_TriMesh);
     setCommonMeshParameters(apiSMC_TriMesh);
 
@@ -525,7 +524,7 @@ void run_MESH_FORCE() {
 
     apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
 
-    unsigned int nSoupFamilies = gran_sys.getNumTriangleFamilies();
+    unsigned int nSoupFamilies = gpu_sys.getNumTriangleFamilies();
     std::cout << nSoupFamilies << " soup families" << std::endl;
     float* genForcesOnMeshSoup = new float[6 * nSoupFamilies];
     double* meshSoupLocOri = new double[7 * nSoupFamilies];
@@ -540,25 +539,25 @@ void run_MESH_FORCE() {
     meshSoupLocOri[5] = 0;
     meshSoupLocOri[6] = 0;
 
-    gran_sys.initialize();
+    gpu_sys.initialize();
 
     // Run a loop that is typical of co-simulation. For instance, the wheeled is moved a bit, which moves the
     // particles. Conversely, the particles impress a force and torque upon the mesh soup
     for (float t = 0; t < timeEnd; t += frame_step) {
-        gran_sys.meshSoup_applyRigidBodyMotion(meshSoupLocOri, meshVel);
+        gpu_sys.meshSoup_applyRigidBodyMotion(meshSoupLocOri, meshVel);
         std::cout << "Rendering frame " << currframe << std::endl;
         char filename[100];
         sprintf(filename, "%s/step%06u", output_dir.c_str(), currframe);
-        writeGranFile(gran_sys);
-        gran_sys.write_meshes(std::string(filename));
-        // gran_sys.checkSDCounts(std::string(filename) + "SU", true, false);
+        writeGranFile(gpu_sys);
+        gpu_sys.write_meshes(std::string(filename));
+        // gpu_sys.checkSDCounts(std::string(filename) + "SU", true, false);
         float forces[6];
-        gran_sys.collectGeneralizedForcesOnMeshSoup(forces);
+        gpu_sys.collectGeneralizedForcesOnMeshSoup(forces);
         std::cout << "force_z: " << forces[2] << "; total weight: " << total_weight << "; sphere weight "
                   << sphere_weight << std::endl;
         std::cout << "torque: " << forces[3] << ", " << forces[4] << ", " << forces[5] << std::endl;
 
-        advanceGranSim(gran_sys);
+        advanceGranSim(gpu_sys);
     }
 
     delete[] genForcesOnMeshSoup;

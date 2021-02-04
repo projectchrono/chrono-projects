@@ -9,21 +9,21 @@
 #--------------------------------------------------------------
 
 set(DEMOS
-        test_GPU_DamBreak
-        test_GPU_Bucket
-        test_GPU_rover
-        test_GPU_directshear
-        test_GPU_mixer
-        test_GPU_Coneflow
-        test_GPU_commvessels
-        test_GPU_bulkcompress
-        test_GPU_milsettle
-        test_GPU_testsuite
-        test_GPU_normal
+        #test_GPU_DamBreak
+        #test_GPU_Bucket
+        #test_GPU_rover
+        #test_GPU_directshear
+        #test_GPU_mixer
+        #test_GPU_Coneflow
+        #test_GPU_commvessels
+        #test_GPU_bulkcompress
+        #test_GPU_milsettle
+        #test_GPU_testsuite
+        #test_GPU_normal
         test_GPU_slide
         test_GPU_roll
-        test_GPU_incline
-        test_GPU_repose
+        #test_GPU_incline
+        #test_GPU_repose
 )
 
 #--------------------------------------------------------------

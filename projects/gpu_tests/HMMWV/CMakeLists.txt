@@ -9,7 +9,7 @@ message(STATUS "test_GPU_HMMWV temporarily unavailable")
 return()
 
 set(PROGRAMS
-  test_GPU_HMMWV
+    #  test_GPU_HMMWV
 )
 
 # ------------------------------------------------------------------------------
