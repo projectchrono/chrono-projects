@@ -183,6 +183,9 @@ void CreateSolidPhase(ChSystemSMC& mphysicalSystem,
 // =============================================================================
 
 int main(int argc, char* argv[]) {
+    // Set path to Chrono data directories
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     ChSystemSMC mphysicalSystem;
     fsi::ChSystemFsi myFsiSystem(mphysicalSystem);
     // Get the pointer to the system parameter and use a JSON file to fill it out with the user parameters
