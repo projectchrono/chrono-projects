@@ -11,7 +11,7 @@
 set(DEMOS
         #test_GPU_DamBreak
         #test_GPU_Bucket
-        #test_GPU_rover
+        test_GPU_rover
         #test_GPU_directshear
         #test_GPU_mixer
         #test_GPU_Coneflow
