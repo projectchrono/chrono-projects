@@ -9,8 +9,8 @@
 #--------------------------------------------------------------
 
 set(DEMOS
-    metrics_GPU_settling
-    metrics_GPU_suite
+#    metrics_GPU_settling
+#    metrics_GPU_suite
 )
 
 #--------------------------------------------------------------

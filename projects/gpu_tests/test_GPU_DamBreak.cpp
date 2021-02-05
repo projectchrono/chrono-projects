@@ -20,14 +20,15 @@
 
 #include "chrono/core/ChGlobal.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_granular/ChGranularData.h"
-#include "chrono_granular/api/ChApiGranularChrono.h"
-#include "chrono_granular/physics/ChGranular.h"
-#include "chrono_granular/utils/ChGranularJsonParser.h"
+
+#include "chrono_gpu/physics/ChSystemGpu.h"
+#include "chrono_gpu/utils/ChGpuJsonParser.h"
+#include "chrono_gpu/ChGpuData.h"
+
 #include "chrono_thirdparty/filesystem/path.h"
 
 using namespace chrono;
-using namespace chrono::granular;
+using namespace chrono::gpu;
 
 enum run_mode { FRICTIONLESS_NOCYL = 0, FRICTIONLESS_WITHCYL = 1, MULTI_STEP_NOCYL = 2, MULTI_STEP_WITHCYL = 3 };
 
@@ -106,7 +107,7 @@ void writeZCylinderMesh(std::ostringstream& outstream, ChVector<> pos, float rad
 }
 
 int main(int argc, char* argv[]) {
-    granular::SetDataPath(std::string(PROJECTS_DATA_DIR) + "granular/");
+    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "granular/");
     // Some of the default values might be overwritten by user via command line
     if (argc != 7 || ParseJSON(argv[1], params) == false) {
         ShowUsage(argv[0]);
@@ -126,30 +127,34 @@ int main(int argc, char* argv[]) {
     std::cout << "output_dir " << params.output_dir << std::endl;
 
     // Setup simulation
-    ChSystemGranularSMC gran_system(params.sphere_radius, params.sphere_density,
+    ChSystemGpu gran_system(params.sphere_radius, params.sphere_density,
                                     make_float3(params.box_X, params.box_Y, params.box_Z));
-    gran_system.set_K_n_SPH2SPH(params.normalStiffS2S);
-    gran_system.set_K_n_SPH2WALL(params.normalStiffS2W);
-    gran_system.set_Gamma_n_SPH2SPH(params.normalDampS2S);
-    gran_system.set_Gamma_n_SPH2WALL(params.normalDampS2W);
 
-    gran_system.set_K_t_SPH2SPH(params.tangentStiffS2S);
-    gran_system.set_K_t_SPH2WALL(params.tangentStiffS2W);
-    gran_system.set_Gamma_t_SPH2SPH(params.tangentDampS2S);
-    gran_system.set_Gamma_t_SPH2WALL(params.tangentDampS2W);
-    gran_system.set_static_friction_coeff_SPH2SPH(params.static_friction_coeffS2S);
-    gran_system.set_static_friction_coeff_SPH2WALL(params.static_friction_coeffS2W);
+    // normal force model
+    gran_sys.SetKn_SPH2SPH(params.normalStiffS2S);
+    gran_sys.SetKn_SPH2WALL(params.normalStiffS2W);
+    gran_sys.SetGn_SPH2SPH(params.normalDampS2S);
+    gran_sys.SetGn_SPH2WALL(params.normalDampS2W);
 
-    gran_system.set_Cohesion_ratio(params.cohesion_ratio);
-    gran_system.set_Adhesion_ratio_S2W(params.adhesion_ratio_s2w);
-    gran_system.set_gravitational_acceleration(params.grav_X, params.grav_Y, params.grav_Z);
-    gran_system.setOutputMode(params.write_mode);
+    // tangential force model 
+    gran_sys.SetKt_SPH2SPH(params.tangentStiffS2S);
+    gran_sys.SetKt_SPH2WALL(params.tangentStiffS2W);
+    gran_sys.SetGt_SPH2SPH(params.tangentDampS2S);
+    gran_sys.SetGt_SPH2WALL(params.tangentDampS2W);
+
+    gran_sys.SetStaticFrictionCoeff_SPH2SPH(params.static_friction_coeffS2S);
+    gran_sys.SetStaticFrictionCoeff_SPH2WALL(params.static_friction_coeffS2W);
+
+    gran_sys.SetCohesionRatio(0.0);
+    gran_sys.SetAdhesionRatio_SPH2WALL(0.0);
+    gran_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
+    gran_sys.SetOutputMode(params.write_mode);
 
     gran_system.set_timeIntegrator(GRAN_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
     gran_system.set_fixed_stepSize(params.step_size);
     gran_system.setVerbose(params.verbose);
 
-    gran_system.set_BD_Fixed(true);
+    gran_sys.SetBDFixed(true);
 
     switch (params.run_mode) {
         case run_mode::MULTI_STEP_WITHCYL:

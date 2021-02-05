@@ -17,17 +17,17 @@
 #include <iostream>
 #include <string>
 
-#include "GpuDemoUtils.h"
 #include "chrono/core/ChGlobal.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_granular/ChGranularData.h"
-#include "chrono_granular/api/ChApiGranularChrono.h"
-#include "chrono_granular/physics/ChGranular.h"
-#include "chrono_granular/utils/ChGranularJsonParser.h"
+
+#include "chrono_gpu/physics/ChSystemGpu.h"
+#include "chrono_gpu/utils/ChGpuJsonParser.h"
+#include "chrono_gpu/ChGpuData.h"
+
 #include "chrono_thirdparty/filesystem/path.h"
 
 using namespace chrono;
-using namespace chrono::granular;
+using namespace chrono::gpu;
 
 // expected number of args for param sweep
 constexpr int num_args_full = 7;
@@ -43,7 +43,7 @@ void ShowUsage(std::string name) {
     std::cout << "must have either 1 or " << num_args_full - 1 << " arguments" << std::endl;
 }
 
-std::string cyl_filename = granular::GetDataFile("shared/Gran_cylinder_transparent.obj");
+std::string cyl_filename = gpu::GetDataFile("shared/Gran_cylinder_transparent.obj");
 
 // Take a ChBody and write its
 void writeZCylinderMesh(std::ostringstream& outstream, ChVector<> pos, float rad, float height) {
@@ -106,8 +106,8 @@ void writeZConeMesh(std::ostringstream& outstream, ChVector<> pos, std::string m
 }
 
 int main(int argc, char* argv[]) {
-    granular::SetDataPath(std::string(PROJECTS_DATA_DIR) + "granular/");
-    sim_param_holder params;
+    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "granular/");
+    ChGpuSimulationParameters params;
 
     // Some of the default values might be overwritten by user via command line
     if (argc < 2 || (argc > 2 && argc != num_args_full) || ParseJSON(argv[1], params) == false) {
@@ -127,26 +127,29 @@ int main(int argc, char* argv[]) {
                params.sphere_radius, params.grav_Z, params.sphere_density, params.output_dir.c_str());
     }
     // Setup simulation
-    ChSystemGranularSMC gran_sys(params.sphere_radius, params.sphere_density,
+    ChSystemGpu gran_sys(params.sphere_radius, params.sphere_density,
                                  make_float3(params.box_X, params.box_Y, params.box_Z));
-    gran_sys.set_K_n_SPH2SPH(params.normalStiffS2S);
-    gran_sys.set_K_n_SPH2WALL(params.normalStiffS2W);
-    gran_sys.set_Gamma_n_SPH2SPH(params.normalDampS2S);
-    gran_sys.set_Gamma_n_SPH2WALL(params.normalDampS2W);
+    // normal force model
+    gran_sys.SetKn_SPH2SPH(params.normalStiffS2S);
+    gran_sys.SetKn_SPH2WALL(params.normalStiffS2W);
+    gran_sys.SetGn_SPH2SPH(params.normalDampS2S);
+    gran_sys.SetGn_SPH2WALL(params.normalDampS2W);
 
-    gran_sys.set_K_t_SPH2SPH(params.tangentStiffS2S);
-    gran_sys.set_K_t_SPH2WALL(params.tangentStiffS2W);
-    gran_sys.set_Gamma_t_SPH2SPH(params.tangentDampS2S);
-    gran_sys.set_Gamma_t_SPH2WALL(params.tangentDampS2W);
+    // tangential force model 
+    gran_sys.SetKt_SPH2SPH(params.tangentStiffS2S);
+    gran_sys.SetKt_SPH2WALL(params.tangentStiffS2W);
+    gran_sys.SetGt_SPH2SPH(params.tangentDampS2S);
+    gran_sys.SetGt_SPH2WALL(params.tangentDampS2W);
 
-    gran_sys.set_Cohesion_ratio(params.cohesion_ratio);
-    gran_sys.set_Adhesion_ratio_S2W(params.adhesion_ratio_s2w);
-    gran_sys.set_gravitational_acceleration(params.grav_X, params.grav_Y, params.grav_Z);
-    gran_sys.setOutputMode(params.write_mode);
-    gran_sys.set_static_friction_coeff_SPH2SPH(params.static_friction_coeffS2S);
-    gran_sys.set_static_friction_coeff_SPH2WALL(params.static_friction_coeffS2W);
+    gran_sys.SetStaticFrictionCoeff_SPH2SPH(params.static_friction_coeffS2S);
+    gran_sys.SetStaticFrictionCoeff_SPH2WALL(params.static_friction_coeffS2W);
 
-    gran_sys.set_BD_Fixed(true);
+    gran_sys.SetCohesionRatio(params.cohesion_ratio);
+    gran_sys.SetAdhesionRatio_SPH2WALL(params.adhesion_ratio_s2w);
+    gran_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
+    gran_sys.SetOutputMode(params.write_mode);
+
+    gran_sys.SetBDFixed(true);
 
     // Fill box with bodies
     std::vector<ChVector<float>> body_points;
@@ -158,7 +161,7 @@ int main(int argc, char* argv[]) {
 
     chrono::utils::PDSampler<float> sampler(fill_epsilon * params.sphere_radius);
 
-    float center_pt[3] = {0.f, 0.f, -2 - params.box_Z / 6.f};
+    ChVector<float> center_pt(0, 0, -2 - params.box_Z / 6);
 
     // width we want to fill to
     float fill_width = params.box_Z / 3.f;
@@ -185,20 +188,19 @@ int main(int argc, char* argv[]) {
     std::vector<ChVector<float>> body_points_first;
     body_points_first.push_back(body_points[0]);
 
-    ChGranularSMC_API apiSMC;
-    apiSMC.setGranSystem(&gran_sys);
-    apiSMC.setElemsPositions(body_points);
+    gran_sys.SetParticlePositions(body_points);
 
     float sphere_mass =
         (4.f / 3.f) * params.sphere_density * params.sphere_radius * params.sphere_radius * params.sphere_radius;
 
     printf("%d spheres with mass %f \n", body_points.size(), body_points.size() * sphere_mass);
 
-    // gran_sys.set_timeIntegrator(GRAN_TIME_INTEGRATOR::CHUNG);
-    gran_sys.set_timeIntegrator(GRAN_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
-    gran_sys.set_friction_mode(GRAN_FRICTION_MODE::MULTI_STEP);
-    // gran_sys.set_friction_mode(GRAN_FRICTION_MODE::FRICTIONLESS);
-    gran_sys.set_fixed_stepSize(params.step_size);
+    // set time integrator
+    gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
+    gran_sys.SetFixedStepSize(params.step_size);
+
+    // set friction mode
+    gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
 
     filesystem::create_directory(filesystem::path(params.output_dir));
 
@@ -206,49 +208,46 @@ int main(int argc, char* argv[]) {
 
     float cone_offset = aperture_diameter / 2.f;
 
-    gran_sys.setVerbose(params.verbose);
+    gran_sys.SetVerbosity(params.verbose);
     float hmax = params.box_Z;
-    float hmin = center_pt[2] + cone_offset;
+    float hmin = center_pt.z() + cone_offset;
     // Finalize settings and initialize for runtime
-    gran_sys.Create_BC_Cone_Z(center_pt, cone_slope, hmax, hmin, false, false);
+    gran_sys.CreateBCConeZ(center_pt, cone_slope, hmax, hmin, false, false);
 
-    ChVector<> cone_top_pos(0, 0, center_pt[2] + fill_width + 8);
+    ChVector<> cone_top_pos(0, 0, center_pt.z() + fill_width + 8);
 
     float cyl_rad = fill_width + 8;
     printf("top of cone is at %f, cone tip is %f, top width is %f, bottom width is hmin %f\n", cone_top_pos.z(),
            fill_width + 8, hmax, cone_offset);
 
-    float zvec[3] = {0, 0, 0};
+    ChVector<float> zvec(0, 0, 0);
     {
         std::string meshes_file = "coneflow_meshes.csv";
 
         std::ofstream meshfile{params.output_dir + "/" + meshes_file};
         std::ostringstream outstream;
         outstream << "mesh_name,dx,dy,dz,x1,x2,x3,y1,y2,y3,z1,z2,z3\n";
-        writeZConeMesh(outstream, cone_top_pos, granular::GetDataFile("shared/gran_zcone.obj"));
-        writeZCylinderMesh(outstream, ChVector<>(zvec[0], zvec[1], zvec[2]), cyl_rad, params.box_Z);
+        writeZConeMesh(outstream, cone_top_pos, gpu::GetDataFile("shared/gran_zcone.obj"));
+        writeZCylinderMesh(outstream, zvec, cyl_rad, params.box_Z);
 
         meshfile << outstream.str();
     }
 
-    gran_sys.Create_BC_Cyl_Z(zvec, cyl_rad, false, false);
+    gran_sys.CreateBCCylinderZ(zvec, cyl_rad, false, false);
 
-    // printf("fill radius is %f, cyl radius is %f\n", fill_width, fill_width);
+    ChVector<float> plane_center(0, 0, center_pt.z() + 2 * cone_slope + cone_slope * cone_offset);
+    ChVector<float> plane_normal(0, 0, 1);
 
-    float plane_center[3] = {0, 0, center_pt[2] + 2 * cone_slope + cone_slope * cone_offset};
-    // face in upwards
-    float plane_normal[3] = {0, 0, 1};
-
-    printf("center is %f, %f, %f, plane center is is %f, %f, %f\n", center_pt[0], center_pt[1], center_pt[2],
-           plane_center[0], plane_center[1], plane_center[2]);
-    size_t cone_plane_bc_id = gran_sys.Create_BC_Plane(plane_center, plane_normal, false);
+    printf("center is %f, %f, %f, plane center is is %f, %f, %f\n", center_pt.x(), center_pt.y(), center_pt.z(),
+           plane_center.x(), plane_center.y(), plane_center.z());
+    size_t cone_plane_bc_id = gran_sys.CreateBCPlane(plane_center, plane_normal, false);
 
     // put a plane at the bottom of the box to count forces
-    float box_bottom[3] = {0, 0, -params.box_Z / 2.f + 2.f};
+    ChVector<float> box_bottom(0, 0, -params.box_Z / 2.f + 2.f);
 
-    size_t bottom_plane_bc_id = gran_sys.Create_BC_Plane(box_bottom, plane_normal, true);
+    size_t bottom_plane_bc_id = gran_sys.CreateBCPlane(box_bottom, plane_normal, true);
 
-    gran_sys.initialize();
+    gran_sys.Initialize();
 
     // number of times to capture force data per second
     int captures_per_second = 200;
@@ -266,7 +265,7 @@ int main(int argc, char* argv[]) {
     float t_remove_plane = .5;
     bool plane_active = false;
 
-    float reaction_forces[3] = {0, 0, 0};
+    ChVector<float> reaction_forces(0, 0, 0);
 
     constexpr float F_CGS_TO_SI = 1e-5;
     constexpr float M_CGS_TO_SI = 1e-3;
@@ -280,25 +279,25 @@ int main(int argc, char* argv[]) {
     // Run settling experiments
     while (curr_time < params.time_end) {
         if (!plane_active && curr_time > t_remove_plane) {
-            gran_sys.disable_BC_by_ID(cone_plane_bc_id);
+            gran_sys.DisableBCbyID(cone_plane_bc_id);
         }
 
-        bool success = gran_sys.getBCReactionForces(bottom_plane_bc_id, reaction_forces);
+        bool success = gran_sys.GetBCReactionForces(bottom_plane_bc_id, reaction_forces);
         if (!success) {
             printf("ERROR! Get contact forces for plane failed\n");
         } else {
             printf("curr time is %f, plane force is (%f, %f, %f) Newtons\n", curr_time,
-                   F_CGS_TO_SI * reaction_forces[0], F_CGS_TO_SI * reaction_forces[1],
-                   F_CGS_TO_SI * reaction_forces[2]);
+                   F_CGS_TO_SI * reaction_forces.x(), F_CGS_TO_SI * reaction_forces.y(),
+                   F_CGS_TO_SI * reaction_forces.z());
         }
-        gran_sys.advance_simulation(frame_step);
+        gran_sys.AdvanceSimulation(frame_step);
         curr_time += frame_step;
 
         // if this frame is a render frame
         if (currcapture % captures_per_frame == 0) {
             printf("rendering frame %u\n", currframe);
             sprintf(filename, "%s/step%06d", params.output_dir.c_str(), currframe++);
-            gran_sys.writeFile(std::string(filename));
+            gran_sys.WriteFile(std::string(filename));
         }
         currcapture++;
     }
