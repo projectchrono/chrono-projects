@@ -183,7 +183,7 @@ int CreateObjects(ChSystemMulticore* system) {
 
 std::shared_ptr<ChBody> CreateWheel(ChSystemMulticore* system, double z) {
     // Mesh input file
-    std::string obj_mesh_file = GetChronoDataFile("wheel_view.obj");
+    std::string obj_mesh_file = GetChronoDataFile("models/bulldozer/wheel_view.obj");
     std::string mesh_name("wheel");
 
     // Create a material for the wheel

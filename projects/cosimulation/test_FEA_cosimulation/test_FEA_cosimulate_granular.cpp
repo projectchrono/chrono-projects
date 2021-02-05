@@ -202,7 +202,7 @@ mrigidbody->SetInertiaXX(ChVector<>(20,20,20));
 mrigidbody->SetPos(tire_center);
 
 auto mrigidmesh = chrono_types::make_shared<ChTriangleMeshShape>();
-mrigidmesh->GetMesh().LoadWavefrontMesh(GetChronoDataFile("tractor_wheel_fine.obj"));
+mrigidmesh->GetMesh().LoadWavefrontMesh(GetChronoDataFile("models/tractor_wheel_fine.obj"));
 mrigidmesh->GetMesh().Transform(VNULL, Q_from_AngAxis(CH_C_PI, VECT_Y) );
 mrigidbody->AddAsset(mrigidmesh);
 

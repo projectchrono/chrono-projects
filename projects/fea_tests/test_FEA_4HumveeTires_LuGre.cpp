@@ -585,7 +585,7 @@ int main(int argc, char* argv[]) {
     my_system.AddBody(SimpChassis);
     // optional, attach a texture for better visualization
     auto mtexturebox = chrono_types::make_shared<ChTexture>();
-    mtexturebox->SetTextureFilename(GetChronoDataFile("cubetexture_bluwhite.png"));
+    mtexturebox->SetTextureFilename(GetChronoDataFile("textures/cubetexture_bluewhite.png"));
     SimpChassis->SetPos(ChVector<>(0, 0, HumveeVertPos));
     SimpChassis->SetPos_dt(ChVector<>(ForVelocity, 0, 0));
     SimpChassis->AddAsset(mtexturebox);
@@ -644,7 +644,7 @@ int main(int argc, char* argv[]) {
     my_system.Add(mrigidBody);
     mrigidBody->SetPos(ChVector<>(0, 0, GroundLoc));
     mrigidBody->SetBodyFixed(true);
-    auto mtexture = chrono_types::make_shared<ChTexture>(GetChronoDataFile("concrete.jpg").c_str());
+    auto mtexture = chrono_types::make_shared<ChTexture>(GetChronoDataFile("textures/concrete.jpg").c_str());
     mrigidBody->AddAsset(mtexture);
     
     my_system.Set_G_acc(ChVector<>(0, 0, -9.81));

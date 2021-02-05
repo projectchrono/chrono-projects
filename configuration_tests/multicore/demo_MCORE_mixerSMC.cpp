@@ -156,7 +156,8 @@ void AddFallingBalls(ChSystemMulticoreSMC* sys) {
 int main(int argc, char* argv[]) {
     GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
 
-    int threads = 8;
+    // Set path to Chrono data directories
+    SetChronoDataPath(CHRONO_DATA_DIR);
 
     // Simulation parameters
     // ---------------------

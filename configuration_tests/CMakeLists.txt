@@ -9,5 +9,6 @@ add_subdirectory(multicore)
 add_subdirectory(python)
 add_subdirectory(cascade)
 add_subdirectory(gpu)
+add_subdirectory(synchrono)
 
 set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)

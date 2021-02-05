@@ -71,7 +71,7 @@ TireModelType tire_model = TireModelType::ANCF;
 PowertrainModelType powertrain_model = PowertrainModelType::SHAFTS;
 
 // Drive type (FWD, RWD, or AWD)
-DrivelineType drive_type = DrivelineType::AWD;
+DrivelineTypeWV drive_type = DrivelineTypeWV::AWD;
 
 // Rigid terrain (RigidTerrain::PatchType::FLAT, RigidTerrain::PatchType::HEIGHT_MAP, RigidTerrain::PatchType::MESH)
 RigidTerrain::PatchType terrain_model = RigidTerrain::PatchType::BOX;

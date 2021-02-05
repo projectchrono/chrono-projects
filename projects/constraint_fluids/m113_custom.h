@@ -1,7 +1,7 @@
 #pragma once
 #include "chrono_models/vehicle/m113/M113_Chassis.h"
 #include "chrono_models/vehicle/m113/M113_SimpleDriveline.h"
-#include "chrono_models/vehicle/m113/M113_SimplePowertrain.h"
+#include "chrono_models/vehicle/m113/M113_SimpleCVTPowertrain.h"
 #include "chrono_models/vehicle/m113/M113_TrackAssemblyDoublePin.h"
 #include "chrono_models/vehicle/m113/M113_TrackAssemblySinglePin.h"
 #include "chrono_models/vehicle/m113/M113_Vehicle.h"

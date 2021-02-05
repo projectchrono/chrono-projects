@@ -289,7 +289,7 @@ int main(int argc, char* argv[]) {
     vehicle.SetTrackShoeVisualizationType(VisualizationType::PRIMITIVES);
 
     // Create the powertrain system
-    auto powertrain = chrono_types::make_shared<M113_SimplePowertrain>("powertrain");
+    auto powertrain = chrono_types::make_shared<M113_SimpleCVTPowertrain>("powertrain");
     vehicle.InitializePowertrain(powertrain);
 
     // ---------------

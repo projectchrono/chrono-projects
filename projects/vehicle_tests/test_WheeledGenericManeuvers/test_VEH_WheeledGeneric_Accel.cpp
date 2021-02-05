@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
 
     // Create the vehicle: specify if chassis is fixed, the suspension type
     // and the inital forward speed
-    Generic_Vehicle vehicle(false, SuspensionType::DOUBLE_WISHBONE);
+    Generic_Vehicle vehicle(false, SuspensionTypeWV::DOUBLE_WISHBONE);
     vehicle.Initialize(ChCoordsys<>(initLoc, initRot), initFwdSpd);
     vehicle.SetChassisVisualizationType(VisualizationType::PRIMITIVES);
     vehicle.SetSuspensionVisualizationType(VisualizationType::PRIMITIVES);

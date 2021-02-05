@@ -55,7 +55,7 @@ void create_some_falling_items(ChSystemNSC& mphysicalSystem, ISceneManager* msce
         mphysicalSystem.Add(msphereBody);
 
         auto mtexture = chrono_types::make_shared<ChTexture>();
-        mtexture->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
+        mtexture->SetTextureFilename(GetChronoDataFile("textures/bluewhite.png"));
         msphereBody->AddAsset(mtexture);
 
         auto mboxBody = chrono_types::make_shared<ChBodyEasyBox>(1.5, 1.5, 1.5,  // x,y,z size
@@ -68,7 +68,7 @@ void create_some_falling_items(ChSystemNSC& mphysicalSystem, ISceneManager* msce
         mphysicalSystem.Add(mboxBody);
 
         auto mtexturebox = chrono_types::make_shared<ChTexture>();
-        mtexturebox->SetTextureFilename(GetChronoDataFile("cubetexture_bluwhite.png"));
+        mtexturebox->SetTextureFilename(GetChronoDataFile("textures/cubetexture_bluewhite.png"));
         mboxBody->AddAsset(mtexturebox);
 
         auto mcylBody = chrono_types::make_shared<ChBodyEasyCylinder>(0.75, 0.5,  // radius, height
@@ -82,7 +82,7 @@ void create_some_falling_items(ChSystemNSC& mphysicalSystem, ISceneManager* msce
 
         // optional, attach a texture for better visualization
         auto mtexturecyl = chrono_types::make_shared<ChTexture>();
-        mtexturecyl->SetTextureFilename(GetChronoDataFile("pinkwhite.png"));
+        mtexturecyl->SetTextureFilename(GetChronoDataFile("textures/pinkwhite.png"));
         mcylBody->AddAsset(mtexturecyl);
     }
 
@@ -117,7 +117,7 @@ void create_some_falling_items(ChSystemNSC& mphysicalSystem, ISceneManager* msce
 
     // optional, attach  textures for better visualization
     auto mtexturewall = chrono_types::make_shared<ChTexture>();
-    mtexturewall->SetTextureFilename(GetChronoDataFile("concrete.jpg"));
+    mtexturewall->SetTextureFilename(GetChronoDataFile("textures/concrete.jpg"));
     wallBody1->AddAsset(mtexturewall);  // note: most assets can be shared
     wallBody2->AddAsset(mtexturewall);
     wallBody3->AddAsset(mtexturewall);
@@ -180,6 +180,9 @@ void create_some_falling_items(ChSystemNSC& mphysicalSystem, ISceneManager* msce
 
 int main(int argc, char* argv[]) {
     GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
+
+    // Set path to Chrono data directories
+    SetChronoDataPath(CHRONO_DATA_DIR);
 
     // Create a ChronoENGINE physical system
     ChSystemNSC mphysicalSystem;

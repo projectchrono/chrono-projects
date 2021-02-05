@@ -218,7 +218,7 @@ int main(int argc, char* argv[]) {
 
     if (visualization) {
         auto mtexture = chrono_types::make_shared<ChTexture>();
-        mtexture->SetTextureFilename(GetChronoDataFile("concrete.jpg"));
+        mtexture->SetTextureFilename(GetChronoDataFile("textures/concrete.jpg"));
         mfloor->AddAsset(mtexture);
     }
 
