@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
     my_hmmwv.SetInitPosition(ChCoordsys<>(initLoc));
     my_hmmwv.SetInitFwdVel(1.5 * target_speed);
     my_hmmwv.SetPowertrainType(PowertrainModelType::SHAFTS);
-    my_hmmwv.SetDriveType(DrivelineType::RWD);
+    my_hmmwv.SetDriveType(DrivelineTypeWV::RWD);
     my_hmmwv.SetTireType(TireModelType::RIGID);
     my_hmmwv.SetTireStepSize(step_size);
     my_hmmwv.Initialize();

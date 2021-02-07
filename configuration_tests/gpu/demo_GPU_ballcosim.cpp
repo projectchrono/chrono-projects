@@ -76,6 +76,9 @@ void writeMeshFrames(std::ostringstream& outstream, ChBody& body, std::string ob
 }
 
 int main(int argc, char* argv[]) {
+    // Set path to Chrono data directories
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     ChGpuSimulationParameters params;
     if (argc != 2 || ParseJSON(argv[1], params) == false) {
         std::cout << "Usage:\n./demo_GPU_ballcosim <json_file>" << std::endl;

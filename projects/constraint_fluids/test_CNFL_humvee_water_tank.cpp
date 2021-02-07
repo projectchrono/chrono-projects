@@ -73,7 +73,7 @@ VisualizationType tire_vis_type = VisualizationType::PRIMITIVES;
 PowertrainModelType powertrain_model = PowertrainModelType::SHAFTS;
 
 // Drive type (FWD, RWD, or AWD)
-DrivelineType drive_type = DrivelineType::AWD;
+DrivelineTypeWV drive_type = DrivelineTypeWV::AWD;
 
 // Type of tire model (RIGID, RIGID_MESH, PACEJKA, LUGRE, FIALA)
 TireModelType tire_model = TireModelType::RIGID;

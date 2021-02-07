@@ -48,7 +48,7 @@
 
 // M113 model header files
 #include "chrono_models/vehicle/m113/M113_Vehicle.h"
-#include "chrono_models/vehicle/m113/M113_SimplePowertrain.h"
+#include "chrono_models/vehicle/m113/M113_SimpleCVTPowertrain.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -311,8 +311,9 @@ int main(int argc, char* argv[]) {
     // --------------------------
 
     // Create and initialize vehicle systems
-    auto vehicle = chrono_types::make_shared<M113_Vehicle>(true, TrackShoeType::SINGLE_PIN, BrakeType::SIMPLE, &system);
-    auto powertrain = chrono_types::make_shared<M113_SimplePowertrain>("Powertrain");
+    auto vehicle = chrono_types::make_shared<M113_Vehicle>(true, TrackShoeType::SINGLE_PIN, DrivelineTypeTV::SIMPLE,
+                                                           BrakeType::SIMPLE, &system);
+    auto powertrain = chrono_types::make_shared<M113_SimpleCVTPowertrain>("Powertrain");
 
     vehicle->Initialize(ChCoordsys<>(initLoc + ChVector<>(0.0, 0.0, vertical_offset), initRot));
 

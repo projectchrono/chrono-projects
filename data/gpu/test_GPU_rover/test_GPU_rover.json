@@ -32,5 +32,5 @@
 	"psi_T": 32,
 	"psi_L": 16,
 	"output_dir": "gran_rover",
-	"write_mode": "binary"
+	"write_mode": "csv"
 }

@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
     wheel->AddAsset(cyl);
 
     auto texture = chrono_types::make_shared<ChTexture>();
-    texture->SetTextureFilename(GetChronoDataFile("bluwhite.png"));
+    texture->SetTextureFilename(GetChronoDataFile("textures/bluewhite.png"));
     wheel->AddAsset(texture);
 
     // Revolute joint
