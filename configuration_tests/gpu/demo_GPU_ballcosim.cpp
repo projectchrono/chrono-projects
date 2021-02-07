@@ -161,7 +161,7 @@ int main(int argc, char* argv[]) {
     // gpu_sys.SetRollingCoeff_SPH2WALL(params.rolling_friction_coeffS2W);
     // gpu_sys.SetRollingCoeff_SPH2MESH(params.rolling_friction_coeffS2M);
 
-    std::string mesh_filename(GetChronoDataFile("gpu/demo_GPU_ballcosim/sphere.obj"));
+    std::string mesh_filename(GetChronoDataFile("models/sphere.obj"));
     std::vector<string> mesh_filenames(1, mesh_filename);
 
     std::vector<float3> mesh_translations(1, make_float3(0.f, 0.f, 0.f));
