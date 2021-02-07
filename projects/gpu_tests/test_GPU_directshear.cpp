@@ -26,15 +26,15 @@
 #include "chrono/physics/ChBody.h"
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_granular/ChGranularData.h"
-#include "chrono_granular/api/ChApiGranularChrono.h"
-#include "chrono_granular/physics/ChGranular.h"
-#include "chrono_granular/physics/ChGranularTriMesh.h"
-#include "chrono_granular/utils/ChGranularJsonParser.h"
+
+#include "chrono_gpu/physics/ChSystemGpu.h"
+#include "chrono_gpu/utils/ChGpuJsonParser.h"
+#include "chrono_gpu/ChGpuData.h"
+
 #include "chrono_thirdparty/filesystem/path.h"
 
 using namespace chrono;
-using namespace chrono::granular;
+using namespace chrono::gpu;
 
 #define FAM_ENTRIES_POS 7
 #define FAM_ENTRIES_VEL 6
@@ -68,33 +68,40 @@ void ShowUsage(std::string name) {
     std::cout << "usage: " + name + " <json_file> <normal_stress_index>" << std::endl;
 }
 
-void SetupGranSystem(ChGranularChronoTriMeshAPI& apiSMC_TriMesh, sim_param_holder& params) {
-    ChSystemGranularSMC_trimesh& gran_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
+void SetupGranSystem(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params) {
 
-    gran_sys.set_K_n_SPH2SPH(params.normalStiffS2S);
-    gran_sys.set_K_n_SPH2WALL(params.normalStiffS2W);
-    gran_sys.set_K_n_SPH2MESH(params.normalStiffS2M);
-    gran_sys.set_K_t_SPH2SPH(params.tangentStiffS2S);
-    gran_sys.set_K_t_SPH2WALL(params.tangentStiffS2W);
-    gran_sys.set_K_t_SPH2MESH(params.tangentStiffS2M);
-    gran_sys.set_Gamma_n_SPH2SPH(params.normalDampS2S);
-    gran_sys.set_Gamma_n_SPH2WALL(params.normalDampS2W);
-    gran_sys.set_Gamma_n_SPH2MESH(params.normalDampS2M);
-    gran_sys.set_Gamma_t_SPH2SPH(params.tangentDampS2S);
-    gran_sys.set_Gamma_t_SPH2WALL(params.tangentDampS2W);
-    gran_sys.set_Gamma_t_SPH2MESH(params.tangentDampS2M);
+    gpu_sys.SetKn_SPH2SPH(params.normalStiffS2S);
+    gpu_sys.SetKn_SPH2WALL(params.normalStiffS2W);
+    gpu_sys.SetKn_SPH2MESH(params.normalStiffS2M);
 
-    gran_sys.set_Cohesion_ratio(params.cohesion_ratio);
-    gran_sys.set_Adhesion_ratio_S2M(params.adhesion_ratio_s2m);
-    gran_sys.set_Adhesion_ratio_S2W(params.adhesion_ratio_s2w);
-    gran_sys.set_gravitational_acceleration(params.grav_X, params.grav_Y, params.grav_Z);
-    gran_sys.set_friction_mode(chrono::granular::GRAN_FRICTION_MODE::SINGLE_STEP);  // TODO multi-step
+    gpu_sys.SetKt_SPH2SPH(params.tangentStiffS2S);
+    gpu_sys.SetKt_SPH2WALL(params.tangentStiffS2W);
+    gpu_sys.SetKt_SPH2MESH(params.tangentStiffS2M);
 
-    gran_sys.setOutputMode(GRAN_OUTPUT_MODE::CSV);
+    gpu_sys.SetGn_SPH2SPH(params.normalDampS2S);
+    gpu_sys.SetGn_SPH2WALL(params.normalDampS2W);
+    gpu_sys.SetGn_SPH2MESH(params.normalDampS2M);
 
-    gran_sys.set_timeIntegrator(GRAN_TIME_INTEGRATOR::FORWARD_EULER);
-    gran_sys.set_fixed_stepSize(params.step_size);
-    gran_sys.set_BD_Fixed(true);
+    gpu_sys.SetGt_SPH2SPH(params.tangentDampS2S);
+    gpu_sys.SetGt_SPH2WALL(params.tangentDampS2W);
+    gpu_sys.SetGt_SPH2MESH(params.tangentDampS2M);
+
+    gpu_sys.SetCohesionRatio(params.cohesion_ratio);
+    gpu_sys.SetAdhesionRatio_SPH2MESH(params.adhesion_ratio_s2m);
+    gpu_sys.SetAdhesionRatio_SPH2WALL(params.adhesion_ratio_s2w);
+
+    gpu_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
+
+    gpu_sys.SetFrictionMode(chrono::gpu::CHGPU_FRICTION_MODE::SINGLE_STEP);
+    double mu = 0.5;
+    gpu_sys.SetStaticFrictionCoeff_SPH2SPH(mu);
+    gpu_sys.SetStaticFrictionCoeff_SPH2WALL(mu);
+
+    gpu_sys.SetOutputMode(CHGPU_OUTPUT_MODE::CSV);
+
+    gpu_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::FORWARD_EULER);
+    gpu_sys.SetFixedStepSize(params.step_size);
+    gpu_sys.SetBDFixed(true);
 
     double epsilon = 0.02 * params.sphere_radius;
     double spacing = 2 * params.sphere_radius + epsilon;
@@ -116,14 +123,14 @@ void SetupGranSystem(ChGranularChronoTriMeshAPI& apiSMC_TriMesh, sim_param_holde
 
     std::cout << "Created " << body_points.size() << " spheres" << std::endl;
 
-    apiSMC_TriMesh.setElemsPositions(body_points);
+    gpu_sys.SetParticlePositions(body_points);
 
     // Mesh values
     std::vector<string> mesh_filenames;
     // TODO dull the corners and fix nans
-    mesh_filenames.push_back(std::string(granular::GetDataFile("test_GRAN_directshear/shear_bottom.obj")));
-    mesh_filenames.push_back(std::string(granular::GetDataFile("test_GRAN_directshear/shear_top.obj")));
-    mesh_filenames.push_back(std::string(granular::GetDataFile("test_GRAN_directshear/downward_square.obj")));
+    mesh_filenames.push_back(std::string(gpu::GetDataFile("test_GPU_directshear/shear_bottom.obj")));
+    mesh_filenames.push_back(std::string(gpu::GetDataFile("test_GPU_directshear/shear_top.obj")));
+    mesh_filenames.push_back(std::string(gpu::GetDataFile("test_GPU_directshear/downward_square.obj")));
 
     std::vector<ChMatrix33<float>> mesh_rotscales;
     std::vector<float3> mesh_translations;
@@ -140,69 +147,30 @@ void SetupGranSystem(ChGranularChronoTriMeshAPI& apiSMC_TriMesh, sim_param_holde
     mesh_masses.push_back(1000);
     mesh_masses.push_back(plate_mass);
 
-    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
+    gpu_sys.LoadMeshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
 }
 
-void SetInitialMeshes(double* meshPosRot, float* meshVel, const std::shared_ptr<ChBody> plate) {
-    // Set initial positions
-    // Bottom
-    meshPosRot[bottom_i * FAM_ENTRIES_POS + 0] = 0;
-    meshPosRot[bottom_i * FAM_ENTRIES_POS + 1] = 0;
-    meshPosRot[bottom_i * FAM_ENTRIES_POS + 2] = 0;
+void SetInitialMeshes(ChSystemGpuMesh& gpu_sys, const std::shared_ptr<ChBody> plate) {
+    // initial positions and velocity
+    ChVector<float> mesh_pos(0, 0, 0);
+    ChQuaternion<float> mesh_rot(1, 0, 0, 0);
+    ChVector<float> mesh_lin_vel(0, 0, 0);
+    ChVector<float> mesh_ang_vel(0, 0 , 0);
+    
+    // Bottom bin
+    gpu_sys.ApplyMeshMotion(bottom_i, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
 
-    meshPosRot[bottom_i * FAM_ENTRIES_POS + 3] = 1;
-    meshPosRot[bottom_i * FAM_ENTRIES_POS + 4] = 0;
-    meshPosRot[bottom_i * FAM_ENTRIES_POS + 5] = 0;
-    meshPosRot[bottom_i * FAM_ENTRIES_POS + 6] = 0;
-
-    meshVel[bottom_i * FAM_ENTRIES_VEL + 0] = 0;
-    meshVel[bottom_i * FAM_ENTRIES_VEL + 1] = 0;
-    meshVel[bottom_i * FAM_ENTRIES_VEL + 2] = 0;
-
-    meshVel[bottom_i * FAM_ENTRIES_VEL + 3] = 0;
-    meshVel[bottom_i * FAM_ENTRIES_VEL + 4] = 0;
-    meshVel[bottom_i * FAM_ENTRIES_VEL + 5] = 0;
-
-    // Top
-    meshPosRot[top_i * FAM_ENTRIES_POS + 0] = 0;
-    meshPosRot[top_i * FAM_ENTRIES_POS + 1] = 0;
-    meshPosRot[top_i * FAM_ENTRIES_POS + 2] = 0;
-
-    meshPosRot[top_i * FAM_ENTRIES_POS + 3] = 1;
-    meshPosRot[top_i * FAM_ENTRIES_POS + 4] = 0;
-    meshPosRot[top_i * FAM_ENTRIES_POS + 5] = 0;
-    meshPosRot[top_i * FAM_ENTRIES_POS + 6] = 0;
-
-    meshVel[top_i * FAM_ENTRIES_VEL + 0] = 0;
-    meshVel[top_i * FAM_ENTRIES_VEL + 1] = 0;
-    meshVel[top_i * FAM_ENTRIES_VEL + 2] = 0;
-
-    meshVel[top_i * FAM_ENTRIES_VEL + 3] = 0;
-    meshVel[top_i * FAM_ENTRIES_VEL + 4] = 0;
-    meshVel[top_i * FAM_ENTRIES_VEL + 5] = 0;
+    // Top bin
+    gpu_sys.ApplyMeshMotion(top_i, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
 
     // Plate
-    meshPosRot[plate_i * FAM_ENTRIES_POS + 0] = 0;
-    meshPosRot[plate_i * FAM_ENTRIES_POS + 1] = 0;
-    meshPosRot[plate_i * FAM_ENTRIES_POS + 2] = plate->GetPos().z();
-
-    meshPosRot[plate_i * FAM_ENTRIES_POS + 3] = 1;
-    meshPosRot[plate_i * FAM_ENTRIES_POS + 4] = 0;
-    meshPosRot[plate_i * FAM_ENTRIES_POS + 5] = 0;
-    meshPosRot[plate_i * FAM_ENTRIES_POS + 6] = 0;
-
-    meshVel[plate_i * FAM_ENTRIES_VEL + 0] = 0;
-    meshVel[plate_i * FAM_ENTRIES_VEL + 1] = 0;
-    meshVel[plate_i * FAM_ENTRIES_VEL + 2] = 0;
-
-    meshVel[plate_i * FAM_ENTRIES_VEL + 3] = 0;
-    meshVel[plate_i * FAM_ENTRIES_VEL + 4] = 0;
-    meshVel[plate_i * FAM_ENTRIES_VEL + 5] = 0;
+    ChVector<float> plate_pos(0, 0, plate->GetPos().z());
+    gpu_sys.ApplyMeshMotion(plate_i, plate_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
 }
 
 int main(int argc, char* argv[]) {
-    granular::SetDataPath(std::string(PROJECTS_DATA_DIR) + "granular/");
-    sim_param_holder params;
+    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
+    ChGpuSimulationParameters params;
 
     if (argc != 3 || ParseJSON(argv[1], params) == false) {
         ShowUsage(argv[0]);
@@ -211,19 +179,18 @@ int main(int argc, char* argv[]) {
 
     float iteration_step = params.step_size;  // TODO
 
-    ChGranularChronoTriMeshAPI apiSMC_TriMesh(params.sphere_radius, params.sphere_density,
-                                              make_float3(params.box_X, params.box_Y, params.box_Z));
+    ChSystemGpuMesh gran_sys(params.sphere_radius, params.sphere_density,
+                            make_float3(params.box_X, params.box_Y, params.box_Z));
 
-    ChSystemGranularSMC_trimesh& gran_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
-    SetupGranSystem(apiSMC_TriMesh, params);
     filesystem::create_directory(filesystem::path(params.output_dir));
 
-    unsigned int nFamilies = gran_sys.getNumTriangleFamilies();
-    std::cout << nFamilies << " soup families" << std::endl;
-    double* meshPosRot = new double[FAM_ENTRIES_POS * nFamilies]();
-    float* meshVel = new float[FAM_ENTRIES_VEL * nFamilies]();
 
-    gran_sys.initialize();
+    SetupGranSystem(gran_sys, params);
+    gran_sys.Initialize();
+
+    unsigned int numMeshes = gran_sys.GetNumMeshes();
+    std::cout << numMeshes << " soup families" << std::endl;
+
 
     unsigned int currframe = 0;
     double out_fps = 100;
@@ -249,8 +216,7 @@ int main(int argc, char* argv[]) {
     plate->SetMass(plate_mass);
     ch_sys.AddBody(plate);
 
-    SetInitialMeshes(meshPosRot, meshVel, plate);
-    gran_sys.meshSoup_applyRigidBodyMotion(meshPosRot, meshVel);
+    SetInitialMeshes(gran_sys, plate);
 
     std::cout << "Running settling..." << std::endl;
     for (; m_time < time_settle; m_time += iteration_step, step++) {
@@ -258,58 +224,66 @@ int main(int argc, char* argv[]) {
             std::cout << "Rendering frame " << currframe << std::endl;
             char filename[100];
             sprintf(filename, "%s/step%06u", params.output_dir.c_str(), currframe++);
-            gran_sys.writeFile(std::string(filename));
-            gran_sys.write_meshes(std::string(filename));
+            gran_sys.WriteFile(std::string(filename));
+            gran_sys.WriteMeshes(std::string(filename));
         }
-        gran_sys.advance_simulation(iteration_step);
+        gran_sys.AdvanceSimulation(iteration_step);
     }
 
     // Add a weighted top plate
-    double plate_z = gran_sys.get_max_z() + 2 * params.sphere_radius;
+    double plate_z = gran_sys.GetMaxParticleZ() + 2 * params.sphere_radius;
     std::cout << "Adding plate at "
               << "(0, 0, " << plate_z << ")" << std::endl;
     plate->SetPos(ChVector<>(0, 0, plate_z));
     plate->SetBodyFixed(false);
 
-    float* forces = new float[nFamilies * FAM_ENTRIES_FORCE];
+    float* forces = new float[numMeshes * FAM_ENTRIES_FORCE];
 
     // Compress the material under the weight of the plate
     std::cout << "Running compression..." << std::endl;
     m_time = 0;
+    ChVector<float> plate_pos(0, 0, 0);
+    ChQuaternion<float> plate_quat(1, 0, 0, 0);
+    ChVector<float> plate_lin_velo(0, 0, 0);
+    ChVector<float> plate_ang_velo(0, 0, 0);
+    ChVector<> plate_force;
+    ChVector<> plate_torque;
+
+    ChVector<float> top_pos(0, 0, 0);
+    ChQuaternion<float> top_quat(1, 0, 0, 0);
+    ChVector<float> top_lin_velo(0, 0, 0);
+    ChVector<float> top_rot_velo(0, 0, 0);
+
+    ChVector<float> bottom_pos(0, 0, 0);
+    ChQuaternion<float> bottom_quat(1, 0, 0, 0);
+    ChVector<float> bottom_lin_velo(0, 0, 0);
+    ChVector<float> bottom_rot_velo(0, 0, 0);
+
+
     for (; m_time < time_compress; m_time += iteration_step, step++) {
         // Update Plate
-        meshPosRot[plate_i * FAM_ENTRIES_POS + 0] = 0;
-        meshPosRot[plate_i * FAM_ENTRIES_POS + 1] = 0;
-        meshPosRot[plate_i * FAM_ENTRIES_POS + 2] = plate->GetPos().z();
+        plate_pos.z() = plate->GetPos().z();
+        plate_lin_velo.z() = plate->GetPos_dt().z();
 
-        meshPosRot[plate_i * FAM_ENTRIES_POS + 3] = 1;
-        meshPosRot[plate_i * FAM_ENTRIES_POS + 4] = 0;
-        meshPosRot[plate_i * FAM_ENTRIES_POS + 5] = 0;
-        meshPosRot[plate_i * FAM_ENTRIES_POS + 6] = 0;
+        gran_sys.ApplyMeshMotion(plate_i, plate_pos, plate_quat, plate_lin_velo, plate_ang_velo);
 
-        meshVel[plate_i * FAM_ENTRIES_VEL + 0] = 0;
-        meshVel[plate_i * FAM_ENTRIES_VEL + 1] = 0;
-        meshVel[plate_i * FAM_ENTRIES_VEL + 2] = plate->GetPos_dt().z();
-
-        meshVel[plate_i * FAM_ENTRIES_VEL + 3] = 0;
-        meshVel[plate_i * FAM_ENTRIES_VEL + 4] = 0;
-        meshVel[plate_i * FAM_ENTRIES_VEL + 5] = 0;
-
-        gran_sys.meshSoup_applyRigidBodyMotion(meshPosRot, meshVel);
         if (step % out_steps == 0) {
             std::cout << "Rendering frame " << currframe << std::endl;
             char filename[100];
             sprintf(filename, "%s/step%06u", params.output_dir.c_str(), currframe++);
-            gran_sys.writeFile(std::string(filename));
-            gran_sys.write_meshes(std::string(filename));
+            gran_sys.WriteFile(std::string(filename));
+            gran_sys.WriteMeshes(std::string(filename));
         }
 
         ch_sys.DoStepDynamics(iteration_step);
-        gran_sys.advance_simulation(iteration_step);
+        gran_sys.AdvanceSimulation(iteration_step);
 
-        gran_sys.collectGeneralizedForcesOnMeshSoup(forces);
+        gran_sys.CollectMeshContactForces(plate_i, plate_force, plate_torque);
         plate->Empty_forces_accumulators();
-        plate->Accumulate_force(ChVector<>(0, 0, forces[plate_i * FAM_ENTRIES_FORCE + 2]), plate->GetPos(), false);
+        // set force in x and y direction to zero
+        plate_force.x() = 0;
+        plate_force.y() = 0;
+        plate->Accumulate_force(plate_force, plate->GetPos(), false);
     }
 
     std::cout << std::endl << "Running shear test..." << std::endl;
@@ -321,51 +295,28 @@ int main(int argc, char* argv[]) {
         double pos = m_time * shear_velocity;
 
         // Update Plate
-        meshPosRot[plate_i * FAM_ENTRIES_POS + 0] = pos;
-        meshPosRot[plate_i * FAM_ENTRIES_POS + 1] = 0;
-        meshPosRot[plate_i * FAM_ENTRIES_POS + 2] = plate->GetPos().z();
+        plate_pos.x() = pos;
+        plate_pos.z() = plate->GetPos().z();
+        plate_lin_velo.x() = shear_velocity;
+        plate_lin_velo.z() = plate->GetPos_dt().z();
+        gran_sys.ApplyMeshMotion(plate_i, plate_pos, plate_quat, plate_lin_velo, plate_ang_velo);
+        
+        // Update top bin
+        top_pos.x() = pos;
+        top_lin_velo.x() = shear_velocity;
+        gran_sys.ApplyMeshMotion(top_i, top_pos, top_quat, top_lin_velo, top_rot_velo);        
 
-        meshPosRot[plate_i * FAM_ENTRIES_POS + 3] = 1;
-        meshPosRot[plate_i * FAM_ENTRIES_POS + 4] = 0;
-        meshPosRot[plate_i * FAM_ENTRIES_POS + 5] = 0;
-        meshPosRot[plate_i * FAM_ENTRIES_POS + 6] = 0;
-
-        meshVel[plate_i * FAM_ENTRIES_VEL + 0] = shear_velocity;
-        meshVel[plate_i * FAM_ENTRIES_VEL + 1] = 0;
-        meshVel[plate_i * FAM_ENTRIES_VEL + 2] = plate->GetPos_dt().z();
-
-        meshVel[plate_i * FAM_ENTRIES_VEL + 3] = 0;
-        meshVel[plate_i * FAM_ENTRIES_VEL + 4] = 0;
-        meshVel[plate_i * FAM_ENTRIES_VEL + 5] = 0;
-
-        // Update Top
-        meshPosRot[top_i * FAM_ENTRIES_POS + 0] = pos;
-        meshPosRot[top_i * FAM_ENTRIES_POS + 1] = 0;
-        meshPosRot[top_i * FAM_ENTRIES_POS + 2] = 0;
-
-        meshPosRot[top_i * FAM_ENTRIES_POS + 3] = 1;
-        meshPosRot[top_i * FAM_ENTRIES_POS + 4] = 0;
-        meshPosRot[top_i * FAM_ENTRIES_POS + 5] = 0;
-        meshPosRot[top_i * FAM_ENTRIES_POS + 6] = 0;
-
-        meshVel[top_i * FAM_ENTRIES_VEL + 0] = shear_velocity;
-        meshVel[top_i * FAM_ENTRIES_VEL + 1] = 0;
-        meshVel[top_i * FAM_ENTRIES_VEL + 2] = 0;
-
-        meshVel[top_i * FAM_ENTRIES_VEL + 3] = 0;
-        meshVel[top_i * FAM_ENTRIES_VEL + 4] = 0;
-        meshVel[top_i * FAM_ENTRIES_VEL + 5] = 0;
-
-        gran_sys.meshSoup_applyRigidBodyMotion(meshPosRot, meshVel);
-        gran_sys.advance_simulation(iteration_step);
+        gran_sys.AdvanceSimulation(iteration_step);
         ch_sys.DoStepDynamics(iteration_step);
 
-        gran_sys.collectGeneralizedForcesOnMeshSoup(forces);
-        double shear_force = forces[top_i * FAM_ENTRIES_FORCE + 0];
-        shear_force += forces[plate_i * FAM_ENTRIES_FORCE + 0];
+        gran_sys.CollectMeshContactForces(plate_i, plate_force, plate_torque);
+        ChVector<> top_bin_force;
+        ChVector<> top_bin_torque;
+        gran_sys.CollectMeshContactForces(top_i, top_bin_force, top_bin_torque);
+        double shear_force = plate_force.x() + top_bin_force.x();
 
         plate->Empty_forces_accumulators();
-        plate->Accumulate_force(ChVector<>(0, 0, forces[plate_i * FAM_ENTRIES_FORCE + 2]), plate->GetPos(), false);
+        plate->Accumulate_force(ChVector<>(0, 0, plate_force.z()), plate->GetPos(), false);
 
         // shear_force = fm_lowpass5.Filter(shear_force);
 
@@ -374,8 +325,8 @@ int main(int argc, char* argv[]) {
             std::cout << "Rendering frame " << currframe << std::endl;
             char filename[100];
             sprintf(filename, "%s/step%06u", params.output_dir.c_str(), currframe++);
-            gran_sys.writeFile(std::string(filename));
-            gran_sys.write_meshes(std::string(filename));
+            gran_sys.WriteFile(std::string(filename));
+            gran_sys.WriteMeshes(std::string(filename));
 
             double shear_area = box_xy * (box_xy - m_time * shear_velocity * 2);
             double normal_stress = (plate_mass * grav_mag) / shear_area;
@@ -388,10 +339,6 @@ int main(int argc, char* argv[]) {
                       << std::endl;
         }
     }
-
-    delete[] meshPosRot;
-    delete[] meshVel;
-    delete[] forces;
 
     return 0;
 }

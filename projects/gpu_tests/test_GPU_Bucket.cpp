@@ -118,7 +118,7 @@ void writeForcesFile(ChSystemGpu& gran_sys) {
 }
 
 int main(int argc, char* argv[]) {
-    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "granular/");
+    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
     // Some of the default values might be overwritten by user via command line
     if (argc < 2 || argc > 2 && argc != num_args_full || ParseJSON(argv[1], params) == false) {
         ShowUsage(argv[0]);

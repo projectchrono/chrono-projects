@@ -106,7 +106,7 @@ void writeZConeMesh(std::ostringstream& outstream, ChVector<> pos, std::string m
 }
 
 int main(int argc, char* argv[]) {
-    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "granular/");
+    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
     ChGpuSimulationParameters params;
 
     // Some of the default values might be overwritten by user via command line

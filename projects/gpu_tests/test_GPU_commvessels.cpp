@@ -22,15 +22,16 @@
 
 #include "chrono/core/ChGlobal.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_granular/ChGranularData.h"
-#include "chrono_granular/api/ChApiGranularChrono.h"
-#include "chrono_granular/physics/ChGranular.h"
-#include "chrono_granular/physics/ChGranularTriMesh.h"
-#include "chrono_granular/utils/ChGranularJsonParser.h"
+
+#include "chrono_gpu/ChGpuData.h"
+#include "chrono_gpu/physics/ChSystemGpu.h"
+#include "chrono_gpu/utils/ChGpuJsonParser.h"
+#include "chrono_gpu/utils/ChGpuVisualization.h"
+
 #include "chrono_thirdparty/filesystem/path.h"
 
 using namespace chrono;
-using namespace chrono::granular;
+using namespace chrono::gpu;
 
 void ShowUsage(std::string name) {
     std::cout << "usage: " + name + " <json_file> <output_dir> <radius> <density>" << std::endl;
@@ -39,7 +40,7 @@ void ShowUsage(std::string name) {
 void writeMeshFrames(std::ostringstream& outstream,
                      const std::string obj_name,
                      const ChVector<>& pos,
-                     const float3 mesh_scaling) {
+                     const ChVector<>& mesh_scaling) {
     outstream << obj_name << ",";
 
     // Get basis vectors
@@ -60,13 +61,13 @@ void writeMeshFrames(std::ostringstream& outstream,
     outstream << vz.x() << ",";
     outstream << vz.y() << ",";
     outstream << vz.z() << ",";
-    outstream << mesh_scaling.x << "," << mesh_scaling.y << "," << mesh_scaling.z;
+    outstream << mesh_scaling.x() << "," << mesh_scaling.y() << "," << mesh_scaling.z();
     outstream << "\n";
 }
 
 int main(int argc, char* argv[]) {
-    granular::SetDataPath(std::string(PROJECTS_DATA_DIR) + "granular/");
-    sim_param_holder params;
+    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
+    ChGpuSimulationParameters params;
 
     // Some of the default values might be overwritten by user via command line
     if (argc != 5 || ParseJSON(argv[1], params) == false) {
@@ -85,61 +86,59 @@ int main(int argc, char* argv[]) {
     std::cout << "sphere_radius " << params.sphere_radius << std::endl;
     std::cout << "sphere_density " << params.sphere_density << std::endl;
 
-    ChGranularChronoTriMeshAPI apiSMC_TriMesh(params.sphere_radius, params.sphere_density, make_float3(Bx, By, Bz));
+    ChSystemGpuMesh gran_sys(params.sphere_radius, params.sphere_density, make_float3(Bx, By, Bz));
 
-    ChSystemGranularSMC_trimesh& gran_sys = apiSMC_TriMesh.getGranSystemSMC_TriMesh();
+    gran_sys.SetVerbosity(params.verbose);
 
-    gran_sys.setVerbose(params.verbose);
+    gran_sys.SetKn_SPH2SPH(params.normalStiffS2S);
+    gran_sys.SetKn_SPH2WALL(params.normalStiffS2W);
+    gran_sys.SetKn_SPH2MESH(params.normalStiffS2M);
 
-    gran_sys.set_K_n_SPH2SPH(params.normalStiffS2S);
-    gran_sys.set_K_n_SPH2WALL(params.normalStiffS2W);
-    gran_sys.set_K_n_SPH2MESH(params.normalStiffS2M);
+    gran_sys.SetKt_SPH2SPH(params.tangentStiffS2S);
+    gran_sys.SetKt_SPH2WALL(params.tangentStiffS2W);
+    gran_sys.SetKt_SPH2MESH(params.tangentStiffS2M);
 
-    gran_sys.set_K_t_SPH2SPH(params.tangentStiffS2S);
-    gran_sys.set_K_t_SPH2WALL(params.tangentStiffS2W);
-    gran_sys.set_K_t_SPH2MESH(params.tangentStiffS2M);
+    gran_sys.SetGn_SPH2SPH(params.normalDampS2S);
+    gran_sys.SetGn_SPH2WALL(params.normalDampS2W);
+    gran_sys.SetGn_SPH2MESH(params.normalDampS2M);
 
-    gran_sys.set_Gamma_n_SPH2SPH(params.normalDampS2S);
-    gran_sys.set_Gamma_n_SPH2WALL(params.normalDampS2W);
-    gran_sys.set_Gamma_n_SPH2MESH(params.normalDampS2M);
+    gran_sys.SetGt_SPH2SPH(params.tangentDampS2S);
+    gran_sys.SetGt_SPH2WALL(params.tangentDampS2W);
+    gran_sys.SetGt_SPH2MESH(params.tangentDampS2M);
 
-    gran_sys.set_Gamma_t_SPH2SPH(params.tangentDampS2S);
-    gran_sys.set_Gamma_t_SPH2WALL(params.tangentDampS2W);
-    gran_sys.set_Gamma_t_SPH2MESH(params.tangentDampS2M);
+    gran_sys.SetCohesionRatio(params.cohesion_ratio);
+    gran_sys.SetAdhesionRatio_SPH2MESH(params.adhesion_ratio_s2m);
+    gran_sys.SetAdhesionRatio_SPH2WALL(params.adhesion_ratio_s2w);
+    gran_sys.SetFrictionMode(chrono::gpu::CHGPU_FRICTION_MODE::FRICTIONLESS);
 
-    gran_sys.set_Cohesion_ratio(params.cohesion_ratio);
-    gran_sys.set_Adhesion_ratio_S2W(params.adhesion_ratio_s2w);
-    gran_sys.set_Adhesion_ratio_S2M(params.adhesion_ratio_s2m);
+    gran_sys.SetStaticFrictionCoeff_SPH2SPH(params.static_friction_coeffS2S);
+    gran_sys.SetStaticFrictionCoeff_SPH2WALL(params.static_friction_coeffS2W);
+    gran_sys.SetStaticFrictionCoeff_SPH2MESH(params.static_friction_coeffS2M);
 
-    gran_sys.set_friction_mode(GRAN_FRICTION_MODE::FRICTIONLESS);  // TODO may want to play with this
-    gran_sys.set_static_friction_coeff_SPH2SPH(params.static_friction_coeffS2S);
-    gran_sys.set_static_friction_coeff_SPH2WALL(params.static_friction_coeffS2W);
-    gran_sys.set_static_friction_coeff_SPH2MESH(params.static_friction_coeffS2M);
-
-    gran_sys.set_rolling_mode(GRAN_ROLLING_MODE::NO_RESISTANCE);  // TODO may want to play with this
-
-    gran_sys.setOutputMode(params.write_mode);
+    gran_sys.SetOutputMode(params.write_mode);
     std::string out_dir(argv[2]);
     filesystem::create_directory(filesystem::path(out_dir));
+    gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
 
-    gran_sys.set_timeIntegrator(GRAN_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
-    gran_sys.set_fixed_stepSize(params.step_size);
-    gran_sys.set_BD_Fixed(true);
-    gran_sys.set_gravitational_acceleration(params.grav_X, params.grav_Y, params.grav_Z);
+    gran_sys.SetFixedStepSize(params.step_size);
+
+    gran_sys.SetBDFixed(true);
+    gran_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
+
 
     // Fill the entire height
     const float fill_bottom = -Bz / 2.f;
     const float fill_height = Bz;
 
     // Cylinder mesh has interior radius 1 and total radius 1.1
-    float cyl_center[3] = {0, 0, 0};
-    const float3 scaling = make_float3(Bx / 4.f, Bx / 4.f, Bz);
-    std::cout << "Cylinder radius: " << scaling.x << std::endl;
+    ChVector<float> cyl_center(0, 0, 0);
+    ChVector<float> scaling(Bx / 4.f, Bx / 4.f, Bz);
+    std::cout << "Cylinder radius: " << scaling.x() << std::endl;
 
     utils::PDSampler<float> sampler(2.05 * params.sphere_radius);
     std::vector<ChVector<float>> body_points;
 
-    const float fill_radius = scaling.x - 2.f * params.sphere_radius;
+    const float fill_radius = scaling.x() - 2.f * params.sphere_radius;
     const float fill_top = fill_bottom + fill_height;
     std::cout << "Fill radius " << fill_radius << std::endl;
     std::cout << "Fill bottom " << fill_bottom << std::endl;
@@ -155,7 +154,7 @@ int main(int argc, char* argv[]) {
 
     unsigned int n_spheres = body_points.size();
     std::cout << "Adding " << n_spheres << " particles" << std::endl;
-    apiSMC_TriMesh.setElemsPositions(body_points);
+    gran_sys.SetParticlePositions(body_points);
 
     std::vector<string> mesh_filenames;
     std::vector<ChMatrix33<float>> mesh_rotscales;
@@ -163,21 +162,18 @@ int main(int argc, char* argv[]) {
     std::vector<float> mesh_masses;
     const float mass = 10;
 
-    std::string mesh_filename = granular::GetDataFile("test_GRAN_commvessels/cylinder_refined.obj");
+    std::string mesh_filename = gpu::GetDataFile("test_GPU_commvessels/cylinder_refined.obj");
 
     mesh_filenames.push_back(mesh_filename);
-    mesh_rotscales.push_back(ChMatrix33<float>(ChVector<float>(scaling.x, scaling.y, scaling.z)));
+    mesh_rotscales.push_back(ChMatrix33<float>(scaling));
     mesh_translations.push_back(make_float3(0, 0, 0));
     mesh_masses.push_back(mass);
 
-    apiSMC_TriMesh.load_meshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
+    gran_sys.LoadMeshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
 
-    double* meshPosRot = new double[7];
-    float* meshVel = new float[6]();
-
-    gran_sys.initialize();
+    gran_sys.Initialize();
     std::cout << "Writing init..." << std::endl;
-    gran_sys.writeFile(out_dir + std::string("/init"));
+    gran_sys.WriteFile(out_dir + std::string("/init"));
 
     const double time_settling = std::sqrt(-2.0 * (params.box_Z) / params.grav_Z);
     const double raising_vel = 1.0;
@@ -196,15 +192,12 @@ int main(int argc, char* argv[]) {
     double mesh_vz = raising_vel;
 
     // Set initial mesh locations for the settling phase
-    meshPosRot[0] = 0;
-    meshPosRot[1] = 0;
-    meshPosRot[2] = mesh_z;
-    meshPosRot[3] = 1;
-    meshPosRot[4] = 0;
-    meshPosRot[5] = 0;
-    meshPosRot[6] = 0;
+    ChVector<float> mesh_pos(0, 0, 0);
+    ChQuaternion<float> mesh_rot(1, 0, 0, 0);
+    ChVector<float> mesh_lin_vel(0, 0, 0);
+    ChVector<float> mesh_ang_vel(0, 0 , 0);
 
-    gran_sys.meshSoup_applyRigidBodyMotion(meshPosRot, meshVel);
+    gran_sys.ApplyMeshMotion(0, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
 
     unsigned int currframe = 0;
     double out_fps = 60;
@@ -215,7 +208,7 @@ int main(int argc, char* argv[]) {
     unsigned int step = 0;
     bool settled = false;
     bool raised = false;
-    ChVector<> pos_mesh(0, 0, mesh_z);
+//    ChVector<> pos_mesh(0, 0, mesh_z);
 
     std::cout << "Settling..." << std::endl;
     for (float t = 0; t < time_settling + time_raising + time_sitting; t += iteration_step, step++) {
@@ -227,24 +220,22 @@ int main(int argc, char* argv[]) {
             }
 
             mesh_z += iteration_step * raising_vel;
-            meshPosRot[2] = mesh_z;
-            pos_mesh.z() = mesh_z;  // For output
-            meshVel[2] = mesh_vz;
-            gran_sys.meshSoup_applyRigidBodyMotion(meshPosRot, meshVel);
+            mesh_pos.z() = mesh_z;
+            mesh_lin_vel.z() = mesh_vz;
+            gran_sys.ApplyMeshMotion(0, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
         } else if (t > time_settling + time_raising) {
             if (!raised) {
                 std::cout << "Raised." << std::endl;
                 raised = true;
-                meshVel[2] = 0;
-                gran_sys.meshSoup_applyRigidBodyMotion(meshPosRot, meshVel);
-            }
+                mesh_lin_vel.z() = 0;
+            gran_sys.ApplyMeshMotion(0, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);            }
         }
 
         if (step % out_steps == 0) {
             std::cout << "Rendering frame " << currframe << std::endl;
             char filename[100];
             sprintf(filename, "%s/step%06u", out_dir.c_str(), currframe++);
-            gran_sys.writeFile(std::string(filename));
+            gran_sys.WriteFile(std::string(filename));
             // gran_sys.write_meshes(std::string(filename));
             std::string mesh_output = std::string(filename) + "_meshframes.csv";
 
@@ -252,16 +243,14 @@ int main(int argc, char* argv[]) {
             std::ostringstream outstream;
             outstream << "mesh_name,dx,dy,dz,x1,x2,x3,y1,y2,y3,z1,z2,z3,sx,sy,sz\n";
 
-            writeMeshFrames(outstream, mesh_filename, pos_mesh, scaling);
+            writeMeshFrames(outstream, mesh_filename, mesh_pos, scaling);
 
             meshfile << outstream.str();
             meshfile.close();
         }
 
-        gran_sys.advance_simulation(iteration_step);
+        gran_sys.AdvanceSimulation(iteration_step);
     }
 
-    delete[] meshPosRot;
-    delete[] meshVel;
     return 0;
 }

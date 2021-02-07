@@ -42,10 +42,10 @@ void ShowUsage(std::string name) {
               << std::endl;
 }
 
-std::string box_filename = granular::GetDataFile("shared/BD_Box.obj");
-std::string cyl_filename = granular::GetDataFile("shared/Gran_cylinder.obj");
+std::string box_filename = gpu::GetDataFile("shared/BD_Box.obj");
+std::string cyl_filename = gpu::GetDataFile("shared/Gran_cylinder.obj");
 
-sim_param_holder params;
+ChGpuSimulationParameters params;
 
 void writeBoxMesh(std::ostringstream& outstream) {
     ChVector<> pos(0, 0, 0);
@@ -107,7 +107,7 @@ void writeZCylinderMesh(std::ostringstream& outstream, ChVector<> pos, float rad
 }
 
 int main(int argc, char* argv[]) {
-    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "granular/");
+    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
     // Some of the default values might be overwritten by user via command line
     if (argc != 7 || ParseJSON(argv[1], params) == false) {
         ShowUsage(argv[0]);
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
     std::cout << "output_dir " << params.output_dir << std::endl;
 
     // Setup simulation
-    ChSystemGpu gran_system(params.sphere_radius, params.sphere_density,
+    ChSystemGpu gran_sys(params.sphere_radius, params.sphere_density,
                                     make_float3(params.box_X, params.box_Y, params.box_Z));
 
     // normal force model
@@ -150,27 +150,27 @@ int main(int argc, char* argv[]) {
     gran_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
     gran_sys.SetOutputMode(params.write_mode);
 
-    gran_system.set_timeIntegrator(GRAN_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
-    gran_system.set_fixed_stepSize(params.step_size);
-    gran_system.setVerbose(params.verbose);
+    gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
+    gran_sys.SetFixedStepSize(params.step_size);
+    gran_sys.SetVerbosity(params.verbose);
 
     gran_sys.SetBDFixed(true);
 
     switch (params.run_mode) {
         case run_mode::MULTI_STEP_WITHCYL:
-            gran_system.set_friction_mode(GRAN_FRICTION_MODE::MULTI_STEP);
+            gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
             use_cylinder = true;
             break;
         case run_mode::MULTI_STEP_NOCYL:
-            gran_system.set_friction_mode(GRAN_FRICTION_MODE::MULTI_STEP);
+            gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
             use_cylinder = false;
             break;
         case run_mode::FRICTIONLESS_WITHCYL:
-            gran_system.set_friction_mode(GRAN_FRICTION_MODE::FRICTIONLESS);
+            gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::FRICTIONLESS);
             use_cylinder = true;
             break;
         case run_mode::FRICTIONLESS_NOCYL:
-            gran_system.set_friction_mode(GRAN_FRICTION_MODE::FRICTIONLESS);
+            gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::FRICTIONLESS);
             use_cylinder = false;
             break;
         default:
@@ -199,33 +199,31 @@ int main(int argc, char* argv[]) {
     std::vector<ChVector<float>> first_points;
 
     std::cout << "Adding " << body_points.size() << " particles" << std::endl;
-    ChGranularSMC_API apiSMC;
-    apiSMC.setGranSystem(&gran_system);
-    apiSMC.setElemsPositions(body_points);
+    gran_sys.SetParticlePositions(body_points);
 
     // just at end of material
-    float plane_center[3] = {center.x() + hdims.x() + sphere_diam, 0, 0};
+    ChVector<float> plane_center(center.x() + hdims.x() + sphere_diam, 0, 0);
 
     // face in -y, hold material in
-    float plane_normal[3] = {-1, 0, 0};
+    ChVector<float> plane_normal(-1, 0, 0);
 
-    printf("fill center is %f, %f, %f, plane center is %f, %f, %f\n", center[0], center[1], center[2], plane_center[0],
-           plane_center[1], plane_center[2]);
-    size_t plane_bc_id = gran_system.Create_BC_Plane(plane_center, plane_normal, true);
+    printf("fill center is %f, %f, %f, plane center is %f, %f, %f\n", center.x(), center.y(), center.z(), plane_center.x(),
+           plane_center.y(), plane_center.z());
+    size_t plane_bc_id = gran_sys.CreateBCPlane(plane_center, plane_normal, true);
 
-    float cyl_center[3] = {params.box_X / 2.f - 200.f, 0, 0};
+    ChVector<float> cyl_center(params.box_X / 2.f - 200.f, 0, 0);
 
     float cyl_rad = 30;
 
     size_t cyl_bc_id;
     if (use_cylinder) {
-        cyl_bc_id = gran_system.Create_BC_Cyl_Z(cyl_center, cyl_rad, true, true);
+        cyl_bc_id = gran_sys.CreateBCCylinderZ(cyl_center, cyl_rad, true, true);
     }
 
     filesystem::create_directory(filesystem::path(params.output_dir));
 
     // Finalize settings and initialize for runtime
-    gran_system.initialize();
+    gran_sys.Initialize();
 
     int fps = 50;
     float frame_step = 1. / fps;
@@ -234,7 +232,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "frame step is " << frame_step << std::endl;
     bool plane_active = true;
-    float reaction_forces[3] = {0, 0, 0};
+    ChVector<float> reaction_forces(0, 0, 0);
 
     constexpr float F_CGS_TO_SI = 1e-5;
     constexpr float M_CGS_TO_SI = 1e-3;
@@ -250,7 +248,7 @@ int main(int argc, char* argv[]) {
         std::ostringstream outstream;
         outstream << "mesh_name,dx,dy,dz,x1,x2,x3,y1,y2,y3,z1,z2,z3\n";
         writeBoxMesh(outstream);
-        writeZCylinderMesh(outstream, ChVector<>(cyl_center[0], cyl_center[1], cyl_center[2]), cyl_rad, params.box_Z);
+        writeZCylinderMesh(outstream, cyl_center, cyl_rad, params.box_Z);
 
         meshfile << outstream.str();
     }
@@ -260,37 +258,37 @@ int main(int argc, char* argv[]) {
         if (plane_active && curr_time > 1) {
             printf("disabling plane!\n");
             plane_active = false;
-            gran_system.disable_BC_by_ID(plane_bc_id);
+            gran_sys.DisableBCbyID(plane_bc_id);
         }
 
         if (plane_active) {
-            bool success = gran_system.getBCReactionForces(plane_bc_id, reaction_forces);
+            bool success = gran_sys.GetBCReactionForces(plane_bc_id, reaction_forces);
             if (!success) {
                 printf("ERROR! Get contact forces for plane failed\n");
             } else {
                 printf("curr time is %f, plane force is (%f, %f, %f) Newtons\n", curr_time,
-                       F_CGS_TO_SI * reaction_forces[0], F_CGS_TO_SI * reaction_forces[1],
-                       F_CGS_TO_SI * reaction_forces[2]);
+                       F_CGS_TO_SI * reaction_forces.x(), F_CGS_TO_SI * reaction_forces.y(),
+                       F_CGS_TO_SI * reaction_forces.z());
             }
         } else {
             if (use_cylinder) {
-                bool success = gran_system.getBCReactionForces(cyl_bc_id, reaction_forces);
+                bool success = gran_sys.GetBCReactionForces(cyl_bc_id, reaction_forces);
                 if (!success) {
                     printf("ERROR! Get contact forces for cyl failed\n");
                 } else {
                     printf("curr time is %f, cyl force is (%f, %f, %f) Newtons\n", curr_time,
-                           F_CGS_TO_SI * reaction_forces[0], F_CGS_TO_SI * reaction_forces[1],
-                           F_CGS_TO_SI * reaction_forces[2]);
+                           F_CGS_TO_SI * reaction_forces.x(), F_CGS_TO_SI * reaction_forces.y(),
+                           F_CGS_TO_SI * reaction_forces.z());
                 }
             }
         }
 
-        gran_system.advance_simulation(frame_step);
+        gran_sys.AdvanceSimulation(frame_step);
         curr_time += frame_step;
         printf("rendering frame %u\n", currframe);
         char filename[100];
         sprintf(filename, "%s/step%06d", params.output_dir.c_str(), currframe++);
-        gran_system.writeFile(std::string(filename));
+        gran_sys.WriteFile(std::string(filename));
     }
 
     return 0;

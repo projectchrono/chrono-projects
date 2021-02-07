@@ -20,13 +20,14 @@
 
 #include "GpuDemoUtils.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_granular/api/ChApiGranularChrono.h"
-#include "chrono_granular/physics/ChGranular.h"
-#include "chrono_granular/utils/ChGranularJsonParser.h"
+
+#include "chrono_gpu/physics/ChSystemGpu.h"
+#include "chrono_gpu/utils/ChGpuJsonParser.h"
+#include "chrono_gpu/ChGpuData.h"
 #include "chrono_thirdparty/filesystem/path.h"
 
 using namespace chrono;
-using namespace chrono::granular;
+using namespace chrono::gpu;
 
 ChVector<float> sphere_pos(0, 0, 0);
 
@@ -39,7 +40,7 @@ void ShowUsage(std::string name) {
 }
 
 int main(int argc, char* argv[]) {
-    sim_param_holder params;
+    ChGpuSimulationParameters params;
 
     // Some of the default values are overwritten by user via command line
     if (argc != 8 || ParseJSON(argv[1], params) == false) {
@@ -60,46 +61,44 @@ int main(int argc, char* argv[]) {
     params.box_Z = 60;
 
     // Setup simulation
-    ChSystemGranularSMC gran_sys(params.sphere_radius, params.sphere_density,
-                                 make_float3(params.box_X, params.box_Y, params.box_Z));
-    gran_sys.disableMinLength();
+    ChSystemGpu gran_sys(params.sphere_radius, params.sphere_density,
+                        make_float3(params.box_X, params.box_Y, params.box_Z));
+    gran_sys.DisableMinLength();
 
     switch (run_mode) {
         case RUN_MODE::NONE:
-            gran_sys.set_rolling_mode(GRAN_ROLLING_MODE::NO_RESISTANCE);
+            gran_sys.SetRollingMode(CHGPU_ROLLING_MODE::NO_RESISTANCE);
             break;
         case RUN_MODE::SCHWARTZ:
-            gran_sys.set_rolling_mode(GRAN_ROLLING_MODE::SCHWARTZ);
-            gran_sys.set_rolling_coeff_SPH2WALL(params.rolling_friction_coeffS2W);
-            gran_sys.set_rolling_coeff_SPH2SPH(params.rolling_friction_coeffS2S);
+            gran_sys.SetRollingMode(CHGPU_ROLLING_MODE::SCHWARTZ);
+            gran_sys.SetRollingCoeff_SPH2SPH(params.rolling_friction_coeffS2S);
+            gran_sys.SetRollingCoeff_SPH2WALL(params.rolling_friction_coeffS2W);
             break;
         default:
             std::cout << "Invalid run mode" << std::endl;
             return 1;
     }
 
-    gran_sys.set_friction_mode(GRAN_FRICTION_MODE::MULTI_STEP);
-    ChGranularSMC_API apiSMC;
-    apiSMC.setGranSystem(&gran_sys);
+    gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
+    gran_sys.SetPsiFactors(params.psi_T, params.psi_L);
 
-    gran_sys.setPsiFactors(params.psi_T, params.psi_L);
+    // normal force model
+    gran_sys.SetKn_SPH2SPH(params.normalStiffS2S);
+    gran_sys.SetKn_SPH2WALL(params.normalStiffS2W);
+    gran_sys.SetGn_SPH2SPH(params.normalDampS2S);
+    gran_sys.SetGn_SPH2WALL(params.normalDampS2W);
 
-    gran_sys.set_K_n_SPH2SPH(params.normalStiffS2S);
-    gran_sys.set_K_n_SPH2WALL(params.normalStiffS2W);
-    gran_sys.set_Gamma_n_SPH2SPH(params.normalDampS2S);
-    gran_sys.set_Gamma_n_SPH2WALL(params.normalDampS2W);
+    // tangential force model 
+    gran_sys.SetKt_SPH2SPH(params.tangentStiffS2S);
+    gran_sys.SetKt_SPH2WALL(params.tangentStiffS2W);
+    gran_sys.SetGt_SPH2SPH(params.tangentDampS2S);
+    gran_sys.SetGt_SPH2WALL(params.tangentDampS2W);
 
-    gran_sys.set_K_t_SPH2SPH(params.tangentStiffS2S);
-    gran_sys.set_K_t_SPH2WALL(params.tangentStiffS2W);
+    gran_sys.SetStaticFrictionCoeff_SPH2SPH(params.static_friction_coeffS2S);
+    gran_sys.SetStaticFrictionCoeff_SPH2WALL(params.static_friction_coeffS2W);
 
-    gran_sys.set_Gamma_t_SPH2SPH(params.tangentDampS2S);
-    gran_sys.set_Gamma_t_SPH2WALL(params.tangentDampS2W);
-
-    gran_sys.set_static_friction_coeff_SPH2SPH(params.static_friction_coeffS2S);
-    gran_sys.set_static_friction_coeff_SPH2WALL(params.static_friction_coeffS2W);
-
-    gran_sys.set_Cohesion_ratio(params.cohesion_ratio);
-    gran_sys.set_Adhesion_ratio_S2W(params.adhesion_ratio_s2w);
+    gran_sys.SetCohesionRatio(0.0);
+    gran_sys.SetAdhesionRatio_SPH2WALL(0.0);
 
     double x = -std::sqrt((2.0 * std::cos(theta) * std::cos(theta)) / (4.0 - 4.0 * std::cos(theta) * std::cos(theta)));
     // Vector parallel to the plane going up (ax, ax, az)
@@ -113,31 +112,31 @@ int main(int argc, char* argv[]) {
     ChVector<float> v_init(ax, ax, az);
     v_init = (-v_init_mag / v_init.Length()) * v_init;
 
-    float plane_pos[] = {-params.sphere_radius * n.x(), -params.sphere_radius * n.y(), -params.sphere_radius * n.z()};
-    float plane_normal[] = {n.x(), n.y(), n.z()};
+    ChVector<float> plane_pos(-params.sphere_radius * n.x(), -params.sphere_radius * n.y(), -params.sphere_radius * n.z());
+    ChVector<float> plane_normal(n.x(), n.y(), n.z());
     bool track_forces = false;
-    gran_sys.Create_BC_Plane(plane_pos, plane_normal, track_forces);
+    gran_sys.CreateBCPlane(plane_pos, plane_normal, track_forces);
 
-    gran_sys.set_gravitational_acceleration(params.grav_X, params.grav_Y, params.grav_Z);
-    gran_sys.setOutputMode(params.write_mode);
-    gran_sys.setOutputFlags(GRAN_OUTPUT_FLAGS::VEL_COMPONENTS | GRAN_OUTPUT_FLAGS::ANG_VEL_COMPONENTS);
+    gran_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
+    gran_sys.SetOutputMode(params.write_mode);
+    gran_sys.SetOutputFlags(CHGPU_OUTPUT_FLAGS::VEL_COMPONENTS | CHGPU_OUTPUT_FLAGS::ANG_VEL_COMPONENTS);
 
-    gran_sys.set_timeIntegrator(GRAN_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
+    gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
 
     std::vector<ChVector<float>> body_points;
     body_points.push_back(sphere_pos);
     std::vector<ChVector<float>> body_vels(1, v_init);
 
-    apiSMC.setElemsPositions(body_points, body_vels);
+    gran_sys.SetParticlePositions(body_points, body_vels);
 
-    gran_sys.set_fixed_stepSize(params.step_size);
+    gran_sys.SetFixedStepSize(params.step_size);
 
     filesystem::create_directory(filesystem::path(params.output_dir));
 
-    gran_sys.set_BD_Fixed(true);
+    gran_sys.SetBDFixed(true);
 
-    gran_sys.setVerbose(params.verbose);
-    gran_sys.initialize();
+    gran_sys.SetVerbosity(params.verbose);
+    gran_sys.Initialize();
 
     int fps = 1000;
     float frame_step = 1.f / fps;
@@ -147,15 +146,15 @@ int main(int argc, char* argv[]) {
     // write an initial frame
     char filename[100];
     sprintf(filename, "%s/step%06d", params.output_dir.c_str(), currframe++);
-    gran_sys.writeFile(std::string(filename));
+    gran_sys.WriteFile(std::string(filename));
 
     std::cout << "frame step is " << frame_step << std::endl;
     while (curr_time < params.time_end) {
-        gran_sys.advance_simulation(frame_step);
+        gran_sys.AdvanceSimulation(frame_step);
         curr_time += frame_step;
         printf("rendering frame %u\n", currframe);
         sprintf(filename, "%s/step%06d", params.output_dir.c_str(), currframe++);
-        gran_sys.writeFile(std::string(filename));
+        gran_sys.WriteFile(std::string(filename));
     }
 
     return 0;
