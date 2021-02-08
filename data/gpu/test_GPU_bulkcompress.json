@@ -1,10 +1,10 @@
 {
 	"sphere_radius": 0.5,
-	"sphere_density": 1.5,
+	"sphere_density": 3.5,
 
-	"box_X": 100,
-	"box_Y": 100,
-	"box_Z": 200,
+	"box_X": 30,
+	"box_Y": 30,
+	"box_Z": 60,
 
 	"time_end": 4,
 	"step_size": 1e-5,
@@ -23,9 +23,13 @@
 	"tangentStiffS2S": 1e5,
 	"tangentStiffS2M": 1e5,
 	"tangentStiffS2W": 1e5,
-	"tangentDampS2S": 0,
-	"tangentDampS2M": 0,
-	"tangentDampS2W": 0,
+	"tangentDampS2S": 300,
+	"tangentDampS2M": 300,
+	"tangentDampS2W": 300,
+
+  "static_friction_coeffS2S" : 0.5,
+	"static_friction_coeffS2W" : 0.5,
+  "static_friction_coeffS2M" : 0.5,
 
 	"cohesion_ratio": 0,
 	"adhesion_ratio_s2w": 0,
