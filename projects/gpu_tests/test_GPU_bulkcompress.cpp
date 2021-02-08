@@ -84,7 +84,10 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params
     gpu_sys.SetCohesionRatio(params.cohesion_ratio);
     gpu_sys.SetAdhesionRatio_SPH2MESH(params.adhesion_ratio_s2m);
     gpu_sys.SetAdhesionRatio_SPH2WALL(params.adhesion_ratio_s2w);
-    gpu_sys.SetFrictionMode(chrono::gpu::CHGPU_FRICTION_MODE::SINGLE_STEP);
+    gpu_sys.SetFrictionMode(chrono::gpu::CHGPU_FRICTION_MODE::MULTI_STEP);
+    gpu_sys.SetStaticFrictionCoeff_SPH2SPH(params.static_friction_coeffS2S);
+    gpu_sys.SetStaticFrictionCoeff_SPH2WALL(params.static_friction_coeffS2W);
+    gpu_sys.SetStaticFrictionCoeff_SPH2MESH(params.static_friction_coeffS2M);
 
     gpu_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
 
@@ -172,6 +175,14 @@ int main(int argc, char* argv[]) {
     gpu_sys.EnableMeshCollision(true);
     gpu_sys.Initialize();
 
+    ChVector<float> box_pos(0, 0, 0);
+    ChQuaternion<float> box_quat(1, 0, 0, 0);
+    ChVector<float> box_lin_velo(0, 0, 0);
+    ChVector<float> box_ang_velo(0, 0, 0);
+    ChVector<> box_force;
+    ChVector<> box_torque;
+
+
     for (float t = 0; t < params.time_end; t += iteration_step, step++) {
         if (t >= time_settle && box_released == false) {
             block->SetBodyFixed(false);
@@ -187,15 +198,18 @@ int main(int argc, char* argv[]) {
             std::cout << "Releasing box" << std::endl;
         }
 
-        gpu_sys.ApplyMeshMotion(0, block->GetPos(), block->GetRot(), block->GetPos_dt(), block->GetWvel_par());
+        box_pos.z() = block->GetPos().z();
+        box_lin_velo.z() = block->GetPos_dt().z();
+//        gpu_sys.ApplyMeshMotion(0, block->GetPos(), block->GetRot(), block->GetPos_dt(), block->GetWvel_par());
+        gpu_sys.ApplyMeshMotion(0, box_pos, box_quat, box_lin_velo, box_ang_velo);
         
-        ChVector<> box_force;
-        ChVector<> box_torque;
         gpu_sys.CollectMeshContactForces(0, box_force, box_torque);
-
+        // clear out force in x and z direction
+        box_force.x() = 0;
+        box_force.y() = 0;
         block->Empty_forces_accumulators();
-        block->Accumulate_force(box_force, block->GetPos(), false);
-        block->Accumulate_torque(box_torque, false);
+        block->Accumulate_force(box_force, box_pos, false);
+//        block->Accumulate_torque(box_torque, false);
 
         if (step % out_steps == 0) {
             std::cout << "Rendering frame " << currframe << std::endl;
@@ -204,7 +218,7 @@ int main(int argc, char* argv[]) {
             gpu_sys.WriteFile(std::string(filename));
             gpu_sys.WriteMeshes(std::string(filename));
             if (box_released) {
-                std::cout << block->GetPos().z() << std::endl;
+                std::cout << "time, " << t << ", block velo: " << block->GetPos_dt().z() << " cm/s" << std::endl;
             }
         }
 
