@@ -33,8 +33,13 @@
 using namespace chrono;
 using namespace chrono::gpu;
 
+// expected number of args for param sweep
+constexpr int num_args_full = 5;
+
 void ShowUsage(std::string name) {
     std::cout << "usage: " + name + " <json_file> <output_dir> <radius> <density>" << std::endl;
+    std::cout << "must have either 1 or " << num_args_full - 1 << " arguments" << std::endl;
+
 }
 
 void writeMeshFrames(std::ostringstream& outstream,
@@ -70,9 +75,16 @@ int main(int argc, char* argv[]) {
 
     // Some of the default values might be overwritten by user via command line
     ChGpuSimulationParameters params;
-    if (argc != 5 || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
+    // Some of the default values might be overwritten by user via command line
+    if (argc < 2 || argc > 2 && argc != num_args_full || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
         ShowUsage(argv[0]);
         return 1;
+    }
+
+    if (argc == num_args_full){
+        params.output_dir = argv[2];
+        params.sphere_radius = std::stof(argv[3]);
+        params.sphere_density = std::stof(argv[4]);
     }
 
     float iteration_step = params.step_size;
@@ -81,8 +93,6 @@ int main(int argc, char* argv[]) {
     const float Bz = params.box_Z;
 
     // Overwrite parameters from the command line
-    params.sphere_radius = std::stof(argv[3]);
-    params.sphere_density = std::stof(argv[4]);
     std::cout << "sphere_radius " << params.sphere_radius << std::endl;
     std::cout << "sphere_density " << params.sphere_density << std::endl;
 
@@ -116,8 +126,7 @@ int main(int argc, char* argv[]) {
     gran_sys.SetStaticFrictionCoeff_SPH2MESH(params.static_friction_coeffS2M);
 
     gran_sys.SetOutputMode(params.write_mode);
-    std::string out_dir(argv[2]);
-    filesystem::create_directory(filesystem::path(out_dir));
+    filesystem::create_directory(filesystem::path(params.output_dir));
     gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
 
     gran_sys.SetFixedStepSize(params.step_size);
@@ -172,9 +181,6 @@ int main(int argc, char* argv[]) {
     gran_sys.LoadMeshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
 
     gran_sys.Initialize();
-    std::cout << "Writing init..." << std::endl;
-    gran_sys.WriteFile(out_dir + std::string("/init"));
-
     const double time_settling = std::sqrt(-2.0 * (params.box_Z) / params.grav_Z);
     const double raising_vel = 1.0;
 
@@ -234,7 +240,7 @@ int main(int argc, char* argv[]) {
         if (step % out_steps == 0) {
             std::cout << "Rendering frame " << currframe << std::endl;
             char filename[100];
-            sprintf(filename, "%s/step%06u", out_dir.c_str(), currframe++);
+            sprintf(filename, "%s/step%06u", params.output_dir.c_str(), currframe++);
             gran_sys.WriteFile(std::string(filename));
             // gran_sys.write_meshes(std::string(filename));
             std::string mesh_output = std::string(filename) + "_meshframes.csv";

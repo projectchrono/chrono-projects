@@ -33,10 +33,15 @@ ChVector<float> sphere_pos(0, 0, 0);
 
 enum RUN_MODE { NONE = 0, SCHWARTZ = 1 };
 
+// expected number of args for param sweep
+constexpr int num_args_full = 8;
+
 void ShowUsage(std::string name) {
     std::cout << "usage: " + name +
                      " <json_file> <output_dir> <psi_L> <roll_mode: 0-none, 1-schwartz> <mu_roll> <angle> <v_init>"
               << std::endl;
+    std::cout << "must have either 1 or " << num_args_full - 1 << " arguments" << std::endl;
+
 }
 
 int main(int argc, char* argv[]) {
@@ -44,18 +49,29 @@ int main(int argc, char* argv[]) {
 
     // Some of the default values are overwritten by user via command line
     ChGpuSimulationParameters params;
-    if (argc != 8 || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
+    // Some of the default values might be overwritten by user via command line
+    if (argc < 2 || argc > 2 && argc != num_args_full || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
         ShowUsage(argv[0]);
         return 1;
     }
-    params.output_dir = argv[2];
-    params.psi_L = std::stoi(argv[3]);
-    RUN_MODE run_mode = (RUN_MODE)std::atoi(argv[4]);
-    float mu_roll = std::stof(argv[5]);
+
+    RUN_MODE run_mode = RUN_MODE::SCHWARTZ;
+    float mu_roll = 0.01;
+    double theta = 5;
+    float v_init_mag = 2;
+    if (argc == num_args_full){
+        params.output_dir = argv[2];
+        params.psi_L = std::stoi(argv[3]);
+        run_mode = (RUN_MODE)std::atoi(argv[4]);
+        mu_roll = std::stof(argv[5]);
+        theta = std::stod(argv[6]);
+        v_init_mag = std::stof(argv[7]);
+
+    }
     params.rolling_friction_coeffS2S = mu_roll;
     params.rolling_friction_coeffS2W = mu_roll;
-    double theta = std::stod(argv[6]);
-    float v_init_mag = std::stof(argv[7]);
+
+
 
     params.box_X = 60;
     params.box_Y = 60;

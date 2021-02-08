@@ -59,8 +59,13 @@ double fill_top;
 
 const double block_mass = 50000;  // 50kg
 
+// expected number of args for param sweep
+constexpr int num_args_full = 3;
+
 void ShowUsage(std::string name) {
     std::cout << "usage: " + name + " <json_file> <output_dir>" << std::endl;
+    std::cout << "must have either 1 or " << num_args_full - 1 << " arguments" << std::endl;
+
 }
 
 void SetupGranSystem(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params, std::string out_dir) {
@@ -141,7 +146,9 @@ int main(int argc, char* argv[]) {
     gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
 
     ChGpuSimulationParameters params;
-    if (argc != 3 || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
+
+    // Some of the default values might be overwritten by user via command line
+    if (argc < 2 || argc > 2 && argc != num_args_full || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
         ShowUsage(argv[0]);
         return 1;
     }
@@ -150,7 +157,14 @@ int main(int argc, char* argv[]) {
     ChSystemGpuMesh gpu_sys(params.sphere_radius, params.sphere_density,
                             make_float3(params.box_X, params.box_Y, params.box_Z));
 
-    std::string out_dir(argv[2]);
+    std::string out_dir;
+    if (argc == num_args_full){
+        out_dir = argv[2];
+    }
+    else{
+        out_dir = params.output_dir;
+    }
+
     SetupGranSystem(gpu_sys, params, out_dir);
 
     ChSystemSMC ch_sys;

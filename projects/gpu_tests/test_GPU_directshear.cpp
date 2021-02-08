@@ -64,8 +64,14 @@ const size_t plate_i = 2;
 
 double fill_top;
 
+// expected number of args for param sweep
+constexpr int num_args_full = 3;
+
+
 void ShowUsage(std::string name) {
     std::cout << "usage: " + name + " <json_file> <normal_stress_index>" << std::endl;
+    std::cout << "must have either 1 or " << num_args_full - 1 << " arguments" << std::endl;
+
 }
 
 void SetupGranSystem(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params) {
@@ -172,9 +178,18 @@ int main(int argc, char* argv[]) {
     gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
 
     ChGpuSimulationParameters params;
-    if (argc != 3 || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
+    // Some of the default values might be overwritten by user via command line
+    if (argc < 2 || argc > 2 && argc != num_args_full || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
         ShowUsage(argv[0]);
         return 1;
+    }
+
+    int normal_stress_id;
+    if (argc == num_args_full){
+        normal_stress_id = std::atoi(argv[2]);
+    }
+    else{
+        normal_stress_id = 0;
     }
 
     float iteration_step = params.step_size;  // TODO
@@ -212,7 +227,7 @@ int main(int argc, char* argv[]) {
     auto plate = std::make_shared<ChBody>();
     plate->SetBodyFixed(true);
     plate->SetPos(ChVector<>(0, 0, params.box_Z));  // Initially out of the way
-    plate_mass = normal_stresses[std::stoi(argv[2])] * box_xy * box_xy / grav_mag;
+    plate_mass = normal_stresses[normal_stress_id] * box_xy * box_xy / grav_mag;
     plate->SetMass(plate_mass);
     ch_sys.AddBody(plate);
 
