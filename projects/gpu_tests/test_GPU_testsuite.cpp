@@ -518,6 +518,7 @@ int main(int argc, char* argv[]) {
         ShowUsage(argv[0]);
         return 1;
     }
+    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
 
     curr_test = static_cast<TEST_TYPE>(std::atoi(argv[1]));
 
