@@ -198,7 +198,6 @@ void run_ROTF() {
 }
 
 void run_ROTF_MESH() {
-    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
     // overwrite olds system
     ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
     setCommonParameters(gpu_sys);
@@ -312,7 +311,6 @@ void run_PYRAMID() {
 }
 
 void run_PYRAMID_MESH() {
-    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
     ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
     setCommonParameters(gpu_sys);
 
@@ -386,7 +384,6 @@ void run_PYRAMID_MESH() {
 }
 
 void run_MESH_STEP() {
-    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
     ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
     setCommonParameters(gpu_sys);
     setCommonMeshParameters(gpu_sys);
@@ -446,7 +443,6 @@ void run_MESH_STEP() {
 }
 
 void run_MESH_FORCE() {
-    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
     // TODO Adapt sizing
     std::cout << "MESH_FORCE not implemented" << std::endl;
     return;
@@ -522,6 +518,7 @@ int main(int argc, char* argv[]) {
         ShowUsage(argv[0]);
         return 1;
     }
+    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
 
     curr_test = static_cast<TEST_TYPE>(std::atoi(argv[1]));
 
