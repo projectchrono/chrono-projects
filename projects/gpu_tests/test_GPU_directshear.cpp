@@ -128,9 +128,9 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params
     // Mesh values
     std::vector<string> mesh_filenames;
     // TODO dull the corners and fix nans
-    mesh_filenames.push_back(std::string(gpu::GetDataFile("test_GPU_directshear/shear_bottom.obj")));
-    mesh_filenames.push_back(std::string(gpu::GetDataFile("test_GPU_directshear/shear_top.obj")));
-    mesh_filenames.push_back(std::string(gpu::GetDataFile("test_GPU_directshear/downward_square.obj")));
+    mesh_filenames.push_back(std::string(gpu::GetDataFile("meshes/directshear/shear_bottom.obj")));
+    mesh_filenames.push_back(std::string(gpu::GetDataFile("meshes/directshear/shear_top.obj")));
+    mesh_filenames.push_back(std::string(gpu::GetDataFile("meshes/directshear/downward_square.obj")));
 
     std::vector<ChMatrix33<float>> mesh_rotscales;
     std::vector<float3> mesh_translations;
@@ -170,9 +170,9 @@ void SetInitialMeshes(ChSystemGpuMesh& gpu_sys, const std::shared_ptr<ChBody> pl
 
 int main(int argc, char* argv[]) {
     gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
-    ChGpuSimulationParameters params;
 
-    if (argc != 3 || ParseJSON(argv[1], params) == false) {
+    ChGpuSimulationParameters params;
+    if (argc != 3 || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
         ShowUsage(argv[0]);
         return 1;
     }

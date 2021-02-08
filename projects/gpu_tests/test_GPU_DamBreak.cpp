@@ -42,8 +42,8 @@ void ShowUsage(std::string name) {
               << std::endl;
 }
 
-std::string box_filename = gpu::GetDataFile("shared/BD_Box.obj");
-std::string cyl_filename = gpu::GetDataFile("shared/Gran_cylinder.obj");
+std::string box_filename = gpu::GetDataFile("meshes/BD_Box.obj");
+std::string cyl_filename = gpu::GetDataFile("meshes/Gran_cylinder.obj");
 
 ChGpuSimulationParameters params;
 
@@ -108,8 +108,9 @@ void writeZCylinderMesh(std::ostringstream& outstream, ChVector<> pos, float rad
 
 int main(int argc, char* argv[]) {
     gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
+
     // Some of the default values might be overwritten by user via command line
-    if (argc != 7 || ParseJSON(argv[1], params) == false) {
+    if (argc != 7 || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
         ShowUsage(argv[0]);
         return 1;
     }

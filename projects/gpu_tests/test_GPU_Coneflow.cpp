@@ -43,7 +43,7 @@ void ShowUsage(std::string name) {
     std::cout << "must have either 1 or " << num_args_full - 1 << " arguments" << std::endl;
 }
 
-std::string cyl_filename = gpu::GetDataFile("shared/Gran_cylinder_transparent.obj");
+std::string cyl_filename = gpu::GetDataFile("meshes/Gran_cylinder_transparent.obj");
 
 // Take a ChBody and write its
 void writeZCylinderMesh(std::ostringstream& outstream, ChVector<> pos, float rad, float height) {
@@ -107,10 +107,10 @@ void writeZConeMesh(std::ostringstream& outstream, ChVector<> pos, std::string m
 
 int main(int argc, char* argv[]) {
     gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
-    ChGpuSimulationParameters params;
 
     // Some of the default values might be overwritten by user via command line
-    if (argc < 2 || (argc > 2 && argc != num_args_full) || ParseJSON(argv[1], params) == false) {
+    ChGpuSimulationParameters params;
+    if (argc < 2 || (argc > 2 && argc != num_args_full) || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
         ShowUsage(argv[0]);
         return 1;
     }
@@ -227,7 +227,7 @@ int main(int argc, char* argv[]) {
         std::ofstream meshfile{params.output_dir + "/" + meshes_file};
         std::ostringstream outstream;
         outstream << "mesh_name,dx,dy,dz,x1,x2,x3,y1,y2,y3,z1,z2,z3\n";
-        writeZConeMesh(outstream, cone_top_pos, gpu::GetDataFile("shared/gran_zcone.obj"));
+        writeZConeMesh(outstream, cone_top_pos, gpu::GetDataFile("meshes/gran_zcone.obj"));
         writeZCylinderMesh(outstream, zvec, cyl_rad, params.box_Z);
 
         meshfile << outstream.str();

@@ -121,7 +121,7 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params
 
     // Mesh values
     std::vector<string> mesh_filenames;
-    std::string mesh_filename = gpu::GetDataFile("test_GPU_bulkcompress/downward_square.obj");
+    std::string mesh_filename = gpu::GetDataFile("meshes/directshear/downward_square.obj");
     mesh_filenames.push_back(mesh_filename);
 
     std::vector<ChMatrix33<float>> mesh_rotscales;
@@ -139,9 +139,9 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params
 
 int main(int argc, char* argv[]) {
     gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
-    ChGpuSimulationParameters params;
 
-    if (argc != 3 || ParseJSON(argv[1], params) == false) {
+    ChGpuSimulationParameters params;
+    if (argc != 3 || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
         ShowUsage(argv[0]);
         return 1;
     }

@@ -20,6 +20,7 @@
 
 #include "GpuDemoUtils.h"
 #include "chrono/utils/ChUtilsSamplers.h"
+#include "chrono_gpu/ChGpuData.h"
 #include "chrono_gpu/physics/ChSystemGpu.h"
 #include "chrono_gpu/utils/ChGpuJsonParser.h"
 #include "chrono_thirdparty/filesystem/path.h"
@@ -43,10 +44,11 @@ void ShowUsage(std::string name) {
 }
 
 int main(int argc, char* argv[]) {
-    ChGpuSimulationParameters params;
+    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
 
     // Some of the default values are overwritten by user via command line
-    if (argc != 5 || ParseJSON(argv[1], params) == false) {
+    ChGpuSimulationParameters params;
+    if (argc != 5 || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
         ShowUsage(argv[0]);
         return 1;
     }

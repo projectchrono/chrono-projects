@@ -29,6 +29,7 @@
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/assets/ChSphereShape.h"
 
+#include "chrono_gpu/ChGpuData.h"
 #include "chrono_gpu/physics/ChSystemGpu.h"
 #include "chrono_gpu/utils/ChGpuJsonParser.h"
 #include "chrono_gpu/utils/ChGpuVisualization.h"
@@ -78,9 +79,10 @@ void writeMeshFrames(std::ostringstream& outstream, ChBody& body, std::string ob
 int main(int argc, char* argv[]) {
     // Set path to Chrono data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
+    gpu::SetDataPath(std::string(CHRONO_DATA_DIR) + "gpu/");
 
     ChGpuSimulationParameters params;
-    if (argc != 2 || ParseJSON(argv[1], params) == false) {
+    if (argc != 2 || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
         std::cout << "Usage:\n./demo_GPU_ballcosim <json_file>" << std::endl;
         return 1;
     }
@@ -161,7 +163,7 @@ int main(int argc, char* argv[]) {
     // gpu_sys.SetRollingCoeff_SPH2WALL(params.rolling_friction_coeffS2W);
     // gpu_sys.SetRollingCoeff_SPH2MESH(params.rolling_friction_coeffS2M);
 
-    std::string mesh_filename(GetChronoDataFile("gpu/demo_GPU_ballcosim/sphere.obj"));
+    std::string mesh_filename(GetChronoDataFile("models/sphere.obj"));
     std::vector<string> mesh_filenames(1, mesh_filename);
 
     std::vector<float3> mesh_translations(1, make_float3(0.f, 0.f, 0.f));

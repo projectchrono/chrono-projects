@@ -103,9 +103,3 @@ foreach(PROGRAM ${DEMOS})
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
 
 endforeach(PROGRAM)
-
-message(STATUS "")
-
-if (CHRONO_VEHICLE_FOUND)
-    message(STATUS "Programs using Chrono::Vehicles...")
-endif()

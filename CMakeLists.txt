@@ -105,16 +105,8 @@ endif()
 add_subdirectory(projects)
 
 # ------------------------------------------------------------------------------
-# Copy the data folder to the bin directory
+# Set paths to data directories 
 # ------------------------------------------------------------------------------
-
-IF(MSVC)
-  FILE( COPY ${CMAKE_SOURCE_DIR}/data/ DESTINATION ${CMAKE_BINARY_DIR}/bin/data/)
-ELSEIF(XCODE_VERSION)
-  FILE( COPY ${CMAKE_SOURCE_DIR}/data/ DESTINATION ${CMAKE_BINARY_DIR}/bin/data/)
-ELSE()
-  FILE( COPY ${CMAKE_SOURCE_DIR}/data/ DESTINATION ${CMAKE_BINARY_DIR}/data/)
-ENDIF()
 
 SET(CHRONO_DATA_DIR "${CHRONO_DATA_DIR}")
 SET(PROJECTS_DATA_DIR "${CMAKE_SOURCE_DIR}/data/" CACHE INTERNAL "")
