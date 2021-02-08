@@ -82,8 +82,6 @@ double terrain_height_offset = 0;
 
 enum RUN_MODE { SETTLING = 0, TESTING = 1 };
 
-std::string chassis_filename = gpu::GetDataFile("meshes/rover/MER_body.obj");  // For output only
-
 enum ROVER_BODY_ID { WHEEL_FRONT_LEFT, WHEEL_FRONT_RIGHT, WHEEL_REAR_LEFT, WHEEL_REAR_RIGHT };
 
 std::vector<std::shared_ptr<chrono::ChBody>> wheel_bodies;
@@ -95,8 +93,6 @@ std::vector<float> mesh_masses;
 
 // y is height, x and z are radial
 // starts as height=1, diameter = 1
-
-std::string wheel_filename = gpu::GetDataFile("meshes/rover/wheel_scaled.obj");
 
 void ShowUsage(std::string name) {
     std::cout << "usage: " + name +
@@ -140,6 +136,7 @@ std::vector<ChVector<float>> loadCheckpointFile(std::string checkpoint_file) {
 
 void addWheelBody(ChSystemNSC& rover_sys,
                   std::shared_ptr<ChBody> chassis_body,
+                  std::string wheel_filename,
                   const ChVector<>& wheel_initial_pos_relative) {
     ChVector<> wheel_initial_pos = chassis_body->GetPos() + wheel_initial_pos_relative;
     std::shared_ptr<ChBody> wheel_body(rover_sys.NewBody());
@@ -220,6 +217,8 @@ int main(int argc, char* argv[]) {
         ShowUsage(argv[0]);
         return 1;
     }
+    std::string chassis_filename = gpu::GetDataFile("meshes/rover/MER_body.obj");  // For output only
+    std::string wheel_filename = gpu::GetDataFile("meshes/rover/wheel_scaled.obj");
 
     RUN_MODE run_mode = (RUN_MODE)std::atoi(argv[2]);
     std::string checkpoint_file_base = std::string(argv[3]);
@@ -316,16 +315,16 @@ int main(int argc, char* argv[]) {
 
     // NOTE these must happen before the gran system loads meshes!!!
     // two wheels at front
-    addWheelBody(rover_sys, chassis_body, ChVector<>(front_wheel_offset_x, front_wheel_offset_y, wheel_offset_z));
-    addWheelBody(rover_sys, chassis_body, ChVector<>(front_wheel_offset_x, -front_wheel_offset_y, wheel_offset_z));
+    addWheelBody(rover_sys, chassis_body, wheel_filename, ChVector<>(front_wheel_offset_x, front_wheel_offset_y, wheel_offset_z));
+    addWheelBody(rover_sys, chassis_body, wheel_filename, ChVector<>(front_wheel_offset_x, -front_wheel_offset_y, wheel_offset_z));
 
     // two wheels at back
-    addWheelBody(rover_sys, chassis_body, ChVector<>(middle_wheel_offset_x, middle_wheel_offset_y, wheel_offset_z));
-    addWheelBody(rover_sys, chassis_body, ChVector<>(middle_wheel_offset_x, -middle_wheel_offset_y, wheel_offset_z));
+    addWheelBody(rover_sys, chassis_body, wheel_filename, ChVector<>(middle_wheel_offset_x, middle_wheel_offset_y, wheel_offset_z));
+    addWheelBody(rover_sys, chassis_body, wheel_filename, ChVector<>(middle_wheel_offset_x, -middle_wheel_offset_y, wheel_offset_z));
 
     // two wheels in middle of chassis
-    addWheelBody(rover_sys, chassis_body, ChVector<>(rear_wheel_offset_x, rear_wheel_offset_y, wheel_offset_z));
-    addWheelBody(rover_sys, chassis_body, ChVector<>(rear_wheel_offset_x, -rear_wheel_offset_y, wheel_offset_z));
+    addWheelBody(rover_sys, chassis_body, wheel_filename, ChVector<>(rear_wheel_offset_x, rear_wheel_offset_y, wheel_offset_z));
+    addWheelBody(rover_sys, chassis_body, wheel_filename, ChVector<>(rear_wheel_offset_x, -rear_wheel_offset_y, wheel_offset_z));
 
     // Load in meshes
     gpu_sys.LoadMeshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
@@ -336,8 +335,6 @@ int main(int argc, char* argv[]) {
 
     unsigned int nSoupFamilies = gpu_sys.GetNumMeshes();
     std::cout << nSoupFamilies << " soup families" << std::endl;
-    double* meshPosRot = new double[7 * nSoupFamilies];
-    float* meshVel = new float[6 * nSoupFamilies]();
 
     gpu_sys.Initialize();
 
@@ -426,9 +423,6 @@ int main(int argc, char* argv[]) {
     double total_time = ((double)(end - start)) / CLOCKS_PER_SEC;
 
     std::cout << "Time: " << total_time << " seconds" << std::endl;
-
-    delete[] meshPosRot;
-    delete[] meshVel;
 
     return 0;
 }
