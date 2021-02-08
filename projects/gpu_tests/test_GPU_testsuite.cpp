@@ -227,12 +227,12 @@ void run_ROTF_MESH() {
     ChMatrix33<float> mesh_scaling = ChMatrix33<float>(ChVector<float>(100, 100, 100));
 
     // make two plane meshes, one for ramp and one for bottom
-    mesh_filenames.push_back(GetDataFile("test_GPU_testsuite/square_plane_fine.obj"));
+    mesh_filenames.push_back(GetDataFile("meshes/testsuite/square_plane_fine.obj"));
     mesh_rotscales.push_back(mesh_scaling);
     mesh_translations.push_back(make_float3(0, 0, 0));
     mesh_masses.push_back(10.f);
 
-    mesh_filenames.push_back(GetDataFile("test_GPU_testsuite/square_plane_fine.obj"));
+    mesh_filenames.push_back(GetDataFile("meshes/testsuite/square_plane_fine.obj"));
     mesh_rotscales.push_back(mesh_scaling);
     mesh_translations.push_back(make_float3(0, 0, 0));
     mesh_masses.push_back(10.f);
@@ -330,7 +330,7 @@ void run_PYRAMID_MESH() {
 
     ChMatrix33<float> mesh_scaling = ChMatrix33<float>(ChVector<float>(1, 1, 1));
     // make two plane meshes, one for ramp and one for bottom
-    mesh_filenames.push_back(GetDataFile("test_GPU_testsuite/tiny_triangle.obj"));
+    mesh_filenames.push_back(GetDataFile("meshes/testsuite/tiny_triangle.obj"));
     mesh_rotscales.push_back(mesh_scaling);
     mesh_translations.push_back(make_float3(0, 0, 0));
     mesh_masses.push_back(10.f);
@@ -389,7 +389,7 @@ void run_MESH_STEP() {
     setCommonMeshParameters(gpu_sys);
 
     std::vector<string> mesh_filenames;
-    std::string mesh_filename(GetDataFile("test_GPU_testsuite/step.obj"));
+    std::string mesh_filename(GetDataFile("meshes/testsuite/step.obj"));
     mesh_filenames.push_back(mesh_filename);
 
     std::vector<ChMatrix33<float>> mesh_rotscales;
@@ -466,7 +466,7 @@ void run_MESH_FORCE() {
 
     // Mesh values
     std::vector<string> mesh_filenames;
-    std::string mesh_filename(GetDataFile("test_GPU_testsuite/square_box.obj"));
+    std::string mesh_filename(GetDataFile("meshes/testsuite/square_box.obj"));
     mesh_filenames.push_back(mesh_filename);
 
     std::vector<ChMatrix33<float>> mesh_rotscales;

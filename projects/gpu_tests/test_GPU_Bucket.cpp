@@ -49,7 +49,7 @@ void ShowUsage(std::string name) {
 
 ChGpuSimulationParameters params;
 
-std::string box_filename = gpu::GetDataFile("shared/BD_Box.obj");
+std::string box_filename = gpu::GetDataFile("meshes/BD_Box.obj");
 
 // Take a ChBody and write its
 void writeBoxMesh(std::ostringstream& outstream) {
@@ -119,8 +119,9 @@ void writeForcesFile(ChSystemGpu& gran_sys) {
 
 int main(int argc, char* argv[]) {
     gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
+
     // Some of the default values might be overwritten by user via command line
-    if (argc < 2 || argc > 2 && argc != num_args_full || ParseJSON(argv[1], params) == false) {
+    if (argc < 2 || argc > 2 && argc != num_args_full || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
         ShowUsage(argv[0]);
         return 1;
     }

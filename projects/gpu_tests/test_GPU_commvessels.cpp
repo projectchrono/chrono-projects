@@ -67,10 +67,10 @@ void writeMeshFrames(std::ostringstream& outstream,
 
 int main(int argc, char* argv[]) {
     gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
-    ChGpuSimulationParameters params;
 
     // Some of the default values might be overwritten by user via command line
-    if (argc != 5 || ParseJSON(argv[1], params) == false) {
+    ChGpuSimulationParameters params;
+    if (argc != 5 || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
         ShowUsage(argv[0]);
         return 1;
     }
@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
     std::vector<float> mesh_masses;
     const float mass = 10;
 
-    std::string mesh_filename = gpu::GetDataFile("test_GPU_commvessels/cylinder_refined.obj");
+    std::string mesh_filename = gpu::GetDataFile("meshes/cylinder_refined.obj");
 
     mesh_filenames.push_back(mesh_filename);
     mesh_rotscales.push_back(ChMatrix33<float>(scaling));

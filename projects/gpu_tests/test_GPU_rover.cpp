@@ -82,7 +82,7 @@ double terrain_height_offset = 0;
 
 enum RUN_MODE { SETTLING = 0, TESTING = 1 };
 
-std::string chassis_filename = GetDataFile("test_GPU_rover/MER_body.obj");  // For output only
+std::string chassis_filename = gpu::GetDataFile("meshes/rover/MER_body.obj");  // For output only
 
 enum ROVER_BODY_ID { WHEEL_FRONT_LEFT, WHEEL_FRONT_RIGHT, WHEEL_REAR_LEFT, WHEEL_REAR_RIGHT };
 
@@ -96,7 +96,7 @@ std::vector<float> mesh_masses;
 // y is height, x and z are radial
 // starts as height=1, diameter = 1
 
-std::string wheel_filename = GetDataFile("test_GPU_rover/wheel_scaled.obj");
+std::string wheel_filename = gpu::GetDataFile("meshes/rover/wheel_scaled.obj");
 
 void ShowUsage(std::string name) {
     std::cout << "usage: " + name +
@@ -213,8 +213,10 @@ void writeMeshFrames(std::ostringstream& outstream,
 }
 
 int main(int argc, char* argv[]) {
+    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
+
     ChGpuSimulationParameters params;
-    if (argc != 5 || ParseJSON(argv[1], params) == false) {
+    if (argc != 5 || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
         ShowUsage(argv[0]);
         return 1;
     }
