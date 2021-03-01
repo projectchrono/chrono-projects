@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
     brake->Initialize(ground, wheel, true, joint->GetMarker1()->GetCoord(), joint->GetMarker2()->GetCoord());
 
     // Create the Irrlicht visualization
-    ChIrrApp application(&system, L"Brake test", core::dimension2d<u32>(800, 600), false, true);
+    ChIrrApp application(&system, L"Brake test", core::dimension2d<u32>(800, 600));
     application.AddTypicalLogo();
     application.AddTypicalSky();
     application.AddTypicalLights();
@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
 
         application.BeginScene();
         application.DrawAll();
-        ChIrrTools::drawAllCOGs(system, application.GetVideoDriver(), 1);
+        tools::drawAllCOGs(system, application.GetVideoDriver(), 1);
         sprintf(msg, "Time:    %.2f", time);
         font->draw(msg, text_box1, text_col);
         sprintf(msg, "Omega:   %.2f", wheel->GetWvel_loc().z());

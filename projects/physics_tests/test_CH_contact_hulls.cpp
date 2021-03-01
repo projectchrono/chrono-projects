@@ -271,8 +271,7 @@ int main(int argc, char* argv[]) {
     msystem.AddBody(bin);
 
     // Create the Irrlicht visualization
-    ChIrrApp application(&msystem, L"Collision test", irr::core::dimension2d<irr::u32>(800, 600), false, true);
-
+    ChIrrApp application(&msystem, L"Collision test", irr::core::dimension2d<irr::u32>(800, 600));
     application.AddTypicalLogo();
     application.AddTypicalSky();
     application.AddTypicalLights();
@@ -280,7 +279,7 @@ int main(int argc, char* argv[]) {
 
     // Enable contact forces visualization in Irrlicht application
     application.SetSymbolscale(1e-4);
-    application.SetContactsDrawMode(ChIrrTools::eCh_ContactsDrawMode::CONTACT_FORCES);
+    application.SetContactsDrawMode(IrrContactsDrawMode::CONTACT_FORCES);
 
     // Complete asset construction
     application.AssetBindAll();

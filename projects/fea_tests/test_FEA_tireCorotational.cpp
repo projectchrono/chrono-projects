@@ -299,8 +299,7 @@ int main(int argc, char* argv[]) {
     if (visualization) {
 #ifdef CHRONO_IRRLICHT
         // Create Irrlicht visualization application
-        ChIrrApp application(&my_system, L"ABAQUS tire demo", core::dimension2d<u32>(1280, 720), false, true);
-
+        ChIrrApp application(&my_system, L"ABAQUS tire demo", core::dimension2d<u32>(1280, 720));
         application.AddTypicalLogo();
         application.AddTypicalSky();
         application.AddTypicalLights();
@@ -308,7 +307,7 @@ int main(int argc, char* argv[]) {
         application.AddLightWithShadow(core::vector3df(1.5f, 5.5f, -2.5f), core::vector3df(0, 0, 0), 3, 2.2, 7.2, 40, 512,
                                        video::SColorf(0.8f, 0.8f, 1.0f));
         application.AddShadowAll();
-        ////application.SetContactsDrawMode(ChIrrTools::CONTACT_DISTANCES);
+        ////application.SetContactsDrawMode(IrrContactsDrawMode::CONTACT_DISTANCES);
 
         // Bind assets
         application.AssetBindAll();

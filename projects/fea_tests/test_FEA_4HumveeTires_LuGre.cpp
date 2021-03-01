@@ -526,8 +526,7 @@ int main(int argc, char* argv[]) {
     // Definition of the model
     ChSystemNSC my_system;
 
-    ChIrrApp application(&my_system, L"ANCF Rolling Tire", core::dimension2d<u32>(1080, 800), false);
-    // Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
+    ChIrrApp application(&my_system, L"ANCF Rolling Tire", core::dimension2d<u32>(1080, 800));
     application.AddTypicalLogo();
     application.AddTypicalSky();
     application.AddTypicalLights();

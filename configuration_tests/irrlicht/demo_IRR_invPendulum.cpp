@@ -269,7 +269,7 @@ int main(int argc, char* argv[]) {
 
     // Create Irrlicht window and camera
     // ---------------------------------
-    ChIrrApp application(&system, L"Inverted Pendulum", core::dimension2d<u32>(800, 600), false, true);
+    ChIrrApp application(&system, L"Inverted Pendulum", core::dimension2d<u32>(800, 600));
     application.AddTypicalLogo();
     application.AddTypicalSky();
     application.AddTypicalLights();
@@ -292,7 +292,7 @@ int main(int argc, char* argv[]) {
         application.DrawAll();
 
         // Render a grid
-        ChIrrTools::drawGrid(application.GetVideoDriver(), 0.5, 0.5, 40, 40, CSYSNORM, video::SColor(0, 204, 204, 0), true);
+        tools::drawGrid(application.GetVideoDriver(), 0.5, 0.5, 40, 40, CSYSNORM, video::SColor(0, 204, 204, 0), true);
 
         // Render text with current time
         char msg[40];

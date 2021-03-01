@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 
     ChSystemNSC system;
 
-    ChIrrApp application(&system, L"Paths", core::dimension2d<u32>(800, 600), false, true);
+    ChIrrApp application(&system, L"Paths", core::dimension2d<u32>(800, 600));
     application.AddTypicalLogo();
     application.AddTypicalSky();
     application.AddTypicalLights();
@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
 
     // Show contact forces in Irrlicht application
     application.SetSymbolscale(0.2);
-    application.SetContactsDrawMode(ChIrrTools::eCh_ContactsDrawMode::CONTACT_NORMALS);
+    application.SetContactsDrawMode(IrrContactsDrawMode::CONTACT_NORMALS);
 
     // Create a shared material (default properties)
     auto mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();

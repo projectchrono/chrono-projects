@@ -49,9 +49,7 @@ int main(int argc, char* argv[]) {
 
     // Create the Irrlicht visualization (open the Irrlicht device,
     // bind a simple user interface, etc. etc.)
-    ChIrrApp application(&my_system, L"FEM thermal", core::dimension2d<u32>(800, 600), false, true);
-
-    // Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
+    ChIrrApp application(&my_system, L"FEM thermal", core::dimension2d<u32>(800, 600));
     application.AddTypicalLogo();
     application.AddTypicalSky();
     application.AddTypicalLights(core::vector3df(20, 20, 20), core::vector3df(-20, 20, -20), 90, 90,

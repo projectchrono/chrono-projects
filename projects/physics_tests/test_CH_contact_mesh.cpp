@@ -104,9 +104,7 @@ int main(int argc, char* argv[]) {
     system->Set_G_acc(ChVector<>(0, 0, -gravity));
 
     // Create the Irrlicht visualization
-    ChIrrApp application(system, L"mesh collision", irr::core::dimension2d<irr::u32>(800, 600), false, true);
-
-    // Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene
+    ChIrrApp application(system, L"mesh collision", irr::core::dimension2d<irr::u32>(800, 600));
     application.AddTypicalLogo();
     application.AddTypicalSky();
     application.AddTypicalLights();
@@ -114,7 +112,7 @@ int main(int argc, char* argv[]) {
 
     // This means that contact forces will be shown in Irrlicht application
     application.SetSymbolscale(1e-4);
-    application.SetContactsDrawMode(ChIrrTools::eCh_ContactsDrawMode::CONTACT_FORCES);
+    application.SetContactsDrawMode(IrrContactsDrawMode::CONTACT_FORCES);
 
     // Create the falling object
     auto object = std::shared_ptr<ChBody>(system->NewBody());

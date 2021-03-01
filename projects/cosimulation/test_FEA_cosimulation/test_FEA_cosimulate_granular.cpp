@@ -17,17 +17,17 @@
 //
 // =============================================================================
 
-#include "chrono/physics/ChSystemSMC.h"
-#include "chrono/physics/ChLoaderUV.h"
-#include "chrono/physics/ChLoadContainer.h"
-#include "chrono/physics/ChLoadBodyMesh.h"
 #include "chrono/geometry/ChTriangleMeshConnected.h"
+#include "chrono/physics/ChLoadBodyMesh.h"
+#include "chrono/physics/ChLoadContainer.h"
+#include "chrono/physics/ChLoaderUV.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/solver/ChIterativeSolverLS.h"
 
 #include "chrono/fea/ChElementTetra_4.h"
+#include "chrono/fea/ChLoadContactSurfaceMesh.h"
 #include "chrono/fea/ChMesh.h"
 #include "chrono/fea/ChMeshFileLoader.h"
-#include "chrono/fea/ChLoadContactSurfaceMesh.h"
 #include "chrono/fea/ChVisualizationFEAmesh.h"
 #include "chrono_irrlicht/ChIrrApp.h"
 
@@ -35,8 +35,8 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/utils/ChUtilsCreators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsGenerators.h"
+#include "chrono/utils/ChUtilsInputOutput.h"
 
 // comment the following line out to see opengl view
 #undef CHRONO_OPENGL
@@ -71,15 +71,14 @@ void draw_affected_triangles(ChIrrApp& application,
         if (vert_hit == true) {
             std::vector<chrono::ChVector<>> fourpoints = {vert_pos[triangles[it].x()], vert_pos[triangles[it].y()],
                                                           vert_pos[triangles[it].z()], vert_pos[triangles[it].x()]};
-            ChIrrTools::drawPolyline(application.GetVideoDriver(), fourpoints, irr::video::SColor(255, 240, 200, 0),
-                                     true);
+            tools::drawPolyline(application.GetVideoDriver(), fourpoints, irr::video::SColor(255, 240, 200, 0), true);
         }
     }
     if (forcescale > 0)
         for (int io = 0; io < vert_indexes.size(); ++io) {
             std::vector<chrono::ChVector<>> forceline = {vert_pos[vert_indexes[io]],
                                                          vert_pos[vert_indexes[io]] + vert_forces[io] * forcescale};
-            ChIrrTools::drawPolyline(application.GetVideoDriver(), forceline, irr::video::SColor(100, 240, 0, 0), true);
+            tools::drawPolyline(application.GetVideoDriver(), forceline, irr::video::SColor(100, 240, 0, 0), true);
         }
 }
 
@@ -109,14 +108,11 @@ int main(int argc, char* argv[]) {
 #ifndef CHRONO_OPENGL
     // Create the Irrlicht visualization (open the Irrlicht device,
     // bind a simple user interface, etc. etc.)
-    ChIrrApp application(&my_system, L"FEA contacts", core::dimension2d<u32>(1280, 720), false, true);
-
-    // Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
+    ChIrrApp application(&my_system, L"FEA contacts", core::dimension2d<u32>(1280, 720));
     application.AddTypicalLogo();
     application.AddTypicalSky();
     application.AddTypicalLights();
     application.AddTypicalCamera(core::vector3dfCH(ChVector<>(3, 1.4, -3.2)), core::vector3dfCH(ChVector<>(0, 0, 0)));
-
     application.AddLightWithShadow(core::vector3dfCH(ChVector<>(1.5, 5.5, -2.5)), core::vector3df(0, 0, 0), 3, 2.2, 7.2,
                                    40, 512, video::SColorf((f32)0.8, (f32)0.8, (f32)1.0));
 #endif
@@ -182,49 +178,49 @@ int main(int argc, char* argv[]) {
     mvisualizemesh->SetSmoothFaces(true);
     my_mesh->AddAsset(mvisualizemesh);
 
-//
-// END CREATE A FINITE ELEMENT MESH
-//
+    //
+    // END CREATE A FINITE ELEMENT MESH
+    //
 
-/*
-//
-// CREATE A RIGID BODY WITH A MESH
-//
+    /*
+    //
+    // CREATE A RIGID BODY WITH A MESH
+    //
 
-// Create also a rigid body with a rigid mesh that will be used for the cosimulation,
-// this time the ChLoadContactSurfaceMesh cannot be used as in the FEA case, so we
-// will use the ChLoadBodyMesh class:
+    // Create also a rigid body with a rigid mesh that will be used for the cosimulation,
+    // this time the ChLoadContactSurfaceMesh cannot be used as in the FEA case, so we
+    // will use the ChLoadBodyMesh class:
 
-auto mrigidbody = chrono_types::make_shared<ChBody>();
-my_system.Add(mrigidbody);
-mrigidbody->SetMass(200);
-mrigidbody->SetInertiaXX(ChVector<>(20,20,20));
-mrigidbody->SetPos(tire_center);
+    auto mrigidbody = chrono_types::make_shared<ChBody>();
+    my_system.Add(mrigidbody);
+    mrigidbody->SetMass(200);
+    mrigidbody->SetInertiaXX(ChVector<>(20,20,20));
+    mrigidbody->SetPos(tire_center);
 
-auto mrigidmesh = chrono_types::make_shared<ChTriangleMeshShape>();
-mrigidmesh->GetMesh().LoadWavefrontMesh(GetChronoDataFile("models/tractor_wheel_fine.obj"));
-mrigidmesh->GetMesh().Transform(VNULL, Q_from_AngAxis(CH_C_PI, VECT_Y) );
-mrigidbody->AddAsset(mrigidmesh);
+    auto mrigidmesh = chrono_types::make_shared<ChTriangleMeshShape>();
+    mrigidmesh->GetMesh().LoadWavefrontMesh(GetChronoDataFile("models/tractor_wheel_fine.obj"));
+    mrigidmesh->GetMesh().Transform(VNULL, Q_from_AngAxis(CH_C_PI, VECT_Y) );
+    mrigidbody->AddAsset(mrigidmesh);
 
-auto mcol = chrono_types::make_shared<ChColorAsset>();
-mcol->SetColor(ChColor(0.3f, 0.3f, 0.3f));
-mrigidbody->AddAsset(mcol);
+    auto mcol = chrono_types::make_shared<ChColorAsset>();
+    mcol->SetColor(ChColor(0.3f, 0.3f, 0.3f));
+    mrigidbody->AddAsset(mcol);
 
-/// Create a mesh load for cosimulation, acting on the contact surface above
-/// (forces on nodes will be computed by an external procedure)
+    /// Create a mesh load for cosimulation, acting on the contact surface above
+    /// (forces on nodes will be computed by an external procedure)
 
-auto mloadcontainer = chrono_types::make_shared<ChLoadContainer>();
-my_system.Add(mloadcontainer);
+    auto mloadcontainer = chrono_types::make_shared<ChLoadContainer>();
+    my_system.Add(mloadcontainer);
 
-// this is used to use the mesh in cosimulation!
-auto mrigidmeshload = chrono_types::make_shared<ChLoadBodyMesh>(mrigidbody, mrigidmesh->GetMesh());
-mloadcontainer->Add(mrigidmeshload);
+    // this is used to use the mesh in cosimulation!
+    auto mrigidmeshload = chrono_types::make_shared<ChLoadBodyMesh>(mrigidbody, mrigidmesh->GetMesh());
+    mloadcontainer->Add(mrigidmeshload);
 
-//
-// END CREATE A RIGID BODY WITH A MESH
-//
- *
-*/
+    //
+    // END CREATE A RIGID BODY WITH A MESH
+    //
+     *
+    */
 
 #ifndef CHRONO_OPENGL
     // ==IMPORTANT!== Use this function for adding a ChIrrNodeAsset to all items
@@ -477,7 +473,7 @@ mloadcontainer->Add(mrigidmeshload);
                 real3(vert_pos[triangles[i].z()].x() - pos.x(), vert_pos[triangles[i].z()].y() - pos.y(),
                       vert_pos[triangles[i].z()].z() - pos.z());
         }
-// END STEP 4
+        // END STEP 4
 
 #ifndef CHRONO_OPENGL
         // now, just for debugging and some fun, draw some triangles
@@ -496,8 +492,8 @@ mloadcontainer->Add(mrigidmeshload);
         // End of cosimulation block
         // -------------------------------------------------------------------------
 
-        ChIrrTools::drawGrid(application.GetVideoDriver(), 0.1, 0.1, 20, 20, ChCoordsys<>(VNULL, CH_C_PI_2, VECT_X),
-                             video::SColor(50, 90, 90, 90), true);
+        tools::drawGrid(application.GetVideoDriver(), 0.1, 0.1, 20, 20, ChCoordsys<>(VNULL, CH_C_PI_2, VECT_X),
+                        video::SColor(50, 90, 90, 90), true);
 
         application.EndScene();
 #endif

@@ -51,9 +51,7 @@ int main(int argc, char* argv[]) {
 
     // Create the Irrlicht visualization (open the Irrlicht device,
     // bind a simple user interface, etc. etc.)
-    ChIrrApp application(&my_system, L"Beams and constraints", core::dimension2d<u32>(800, 600), false, true);
-
-    // Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
+    ChIrrApp application(&my_system, L"Beams and constraints", core::dimension2d<u32>(800, 600));
     application.AddTypicalLogo();
     application.AddTypicalSky();
     application.AddTypicalLights();
@@ -361,8 +359,8 @@ int main(int argc, char* argv[]) {
 
         application.DrawAll();
 
-        ChIrrTools::drawGrid(application.GetVideoDriver(), 0.2, 0.2, 10, 10, ChCoordsys<>(VNULL, CH_C_PI_2, VECT_Z),
-                             video::SColor(50, 90, 100, 100), true);
+        tools::drawGrid(application.GetVideoDriver(), 0.2, 0.2, 10, 10, ChCoordsys<>(VNULL, CH_C_PI_2, VECT_Z),
+                        video::SColor(50, 90, 100, 100), true);
 
         application.DoStep();
 
