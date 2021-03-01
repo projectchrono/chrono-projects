@@ -124,22 +124,9 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params
 
     gpu_sys.SetParticlePositions(body_points);
 
-    // Mesh values
-    std::vector<string> mesh_filenames;
-    std::string mesh_filename = gpu::GetDataFile("meshes/directshear/downward_square.obj");
-    mesh_filenames.push_back(mesh_filename);
-
-    std::vector<ChMatrix33<float>> mesh_rotscales;
-    std::vector<float3> mesh_translations;
-
-    ChMatrix33<float> scaling(ChVector<float>(params.box_X / 2, params.box_Y / 2, 1));
-    mesh_rotscales.push_back(scaling);
-    mesh_translations.push_back(make_float3(0, 0, 0));
-
-    std::vector<float> mesh_masses;
-    mesh_masses.push_back(block_mass);
-
-    gpu_sys.LoadMeshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
+    // Mesh
+    gpu_sys.AddMesh(gpu::GetDataFile("meshes/directshear/downward_square.obj"), ChVector<float>(0),
+                    ChMatrix33<float>(ChVector<float>(params.box_X / 2, params.box_Y / 2, 1)), block_mass);
 }
 
 int main(int argc, char* argv[]) {
@@ -179,9 +166,9 @@ int main(int argc, char* argv[]) {
     std::cout << numMeshes << " meshes" << std::endl;
 
     unsigned int currframe = 0;
-    double out_fps = 100;
+    float out_fps = 100;
     float frame_step = 1.f / out_fps;  // Duration of a frame
-    unsigned int out_steps = frame_step / iteration_step;
+    unsigned int out_steps = (unsigned int)(frame_step / iteration_step);
     std::cout << "out_steps " << out_steps << std::endl;
 
     unsigned int step = 0;

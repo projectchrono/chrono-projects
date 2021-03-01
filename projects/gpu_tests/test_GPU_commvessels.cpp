@@ -161,24 +161,13 @@ int main(int argc, char* argv[]) {
         center.z() += 2.05 * params.sphere_radius;
     }
 
-    unsigned int n_spheres = body_points.size();
+    auto n_spheres = body_points.size();
     std::cout << "Adding " << n_spheres << " particles" << std::endl;
     gran_sys.SetParticlePositions(body_points);
 
-    std::vector<string> mesh_filenames;
-    std::vector<ChMatrix33<float>> mesh_rotscales;
-    std::vector<float3> mesh_translations;
-    std::vector<float> mesh_masses;
-    const float mass = 10;
-
-    std::string mesh_filename = gpu::GetDataFile("meshes/cylinder_refined.obj");
-
-    mesh_filenames.push_back(mesh_filename);
-    mesh_rotscales.push_back(ChMatrix33<float>(scaling));
-    mesh_translations.push_back(make_float3(0, 0, 0));
-    mesh_masses.push_back(mass);
-
-    gran_sys.LoadMeshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
+    // Add mesh
+    std::string mesh_filename(gpu::GetDataFile("meshes/cylinder_refined.obj"));
+    gran_sys.AddMesh(mesh_filename, ChVector<float>(0), ChMatrix33<float>(scaling), 10.0f);
 
     gran_sys.Initialize();
     const double time_settling = std::sqrt(-2.0 * (params.box_Z) / params.grav_Z);
@@ -206,9 +195,9 @@ int main(int argc, char* argv[]) {
     gran_sys.ApplyMeshMotion(0, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
 
     unsigned int currframe = 0;
-    double out_fps = 60;
+    float out_fps = 60;
     float frame_step = 1.f / out_fps;  // Duration of a frame
-    unsigned int out_steps = frame_step / iteration_step;
+    unsigned int out_steps = (unsigned int)(frame_step / iteration_step);
     std::cout << "Writing at " << out_fps << " FPS" << std::endl;
 
     unsigned int step = 0;

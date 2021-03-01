@@ -70,7 +70,7 @@ constexpr double chassis_length_x = 2 * METERS_TO_CM;
 constexpr double chassis_length_y = 2 * METERS_TO_CM;
 constexpr double chassis_length_z = 1.5 * METERS_TO_CM;
 
-const ChMatrix33<float> wheel_scaling = ChMatrix33<float>(ChVector<float>(wheel_rad * 2, wheel_width, wheel_rad * 2));
+const ChMatrix33<float> wheel_scaling(ChVector<float>(wheel_rad * 2, wheel_width, wheel_rad * 2));
 
 constexpr double wheel_inertia_x = (1. / 4.) * wheel_mass * wheel_rad * wheel_rad + (1 / 12.) * wheel_mass;
 constexpr double wheel_inertia_y = (1. / 2.) * wheel_mass * wheel_rad * wheel_rad;
@@ -85,11 +85,6 @@ enum RUN_MODE { SETTLING = 0, TESTING = 1 };
 enum ROVER_BODY_ID { WHEEL_FRONT_LEFT, WHEEL_FRONT_RIGHT, WHEEL_REAR_LEFT, WHEEL_REAR_RIGHT };
 
 std::vector<std::shared_ptr<chrono::ChBody>> wheel_bodies;
-
-std::vector<string> mesh_filenames;
-std::vector<ChMatrix33<float>> mesh_rotscales;
-std::vector<float3> mesh_translations;
-std::vector<float> mesh_masses;
 
 // y is height, x and z are radial
 // starts as height=1, diameter = 1
@@ -161,10 +156,6 @@ void addWheelBody(ChSystemNSC& rover_sys,
     motor->SetMotorFunction(std::make_shared<ChFunction_Ramp>(0, CH_C_PI));
     rover_sys.AddLink(motor);
 
-    mesh_masses.push_back(wheel_mass);
-    mesh_rotscales.push_back(wheel_scaling);
-    mesh_filenames.push_back(wheel_filename);
-    mesh_translations.push_back(make_float3(0, 0, 0));
     wheel_bodies.push_back(wheel_body);
 }
 
@@ -248,7 +239,7 @@ int main(int argc, char* argv[]) {
 
     std::vector<ChVector<float>> body_points;
     if (run_mode == RUN_MODE::SETTLING) {
-        body_points = utils::PDLayerSampler_BOX<float>(center, hdims, 2. * params.sphere_radius, 1.01);
+        body_points = utils::PDLayerSampler_BOX<float>(center, hdims, 2.0f * params.sphere_radius, 1.01f);
     } else if (run_mode == RUN_MODE::TESTING) {
         body_points = loadCheckpointFile(checkpoint_file_base + ".csv");
     }
@@ -326,8 +317,8 @@ int main(int argc, char* argv[]) {
     addWheelBody(rover_sys, chassis_body, wheel_filename, ChVector<>(rear_wheel_offset_x, rear_wheel_offset_y, wheel_offset_z));
     addWheelBody(rover_sys, chassis_body, wheel_filename, ChVector<>(rear_wheel_offset_x, -rear_wheel_offset_y, wheel_offset_z));
 
-    // Load in meshes
-    gpu_sys.LoadMeshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
+    // Add collision mesh to GPU system
+    gpu_sys.AddMesh(wheel_filename, ChVector<float>(0), wheel_scaling, wheel_mass);
 
     gpu_sys.SetOutputMode(params.write_mode);
     gpu_sys.SetVerbosity(params.verbose);
@@ -340,7 +331,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Rendering at " << out_fps << "FPS" << std::endl;
 
-    unsigned int out_steps = 1 / (out_fps * iteration_step);
+    unsigned int out_steps = (unsigned int)(1 / (out_fps * iteration_step));
 
     int currframe = 0;
     unsigned int curr_step = 0;
@@ -362,7 +353,7 @@ int main(int argc, char* argv[]) {
             printf("Setting wheel free!\n");
             chassis_fixed = false;
             chassis_body->SetBodyFixed(false);
-            float max_terrain_z = gpu_sys.GetMaxParticleZ();
+            double max_terrain_z = gpu_sys.GetMaxParticleZ();
             printf("terrain max is %f\n", max_terrain_z);
             // put terrain just below bottom of wheels
             terrain_height_offset = max_terrain_z + height_offset_chassis_to_bottom;

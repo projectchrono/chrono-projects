@@ -99,7 +99,7 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params
     gpu_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
 
     gpu_sys.SetFrictionMode(chrono::gpu::CHGPU_FRICTION_MODE::SINGLE_STEP);
-    double mu = 0.5;
+    float mu = 0.5;
     gpu_sys.SetStaticFrictionCoeff_SPH2SPH(mu);
     gpu_sys.SetStaticFrictionCoeff_SPH2WALL(mu);
 
@@ -138,22 +138,13 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params
     mesh_filenames.push_back(std::string(gpu::GetDataFile("meshes/directshear/shear_top.obj")));
     mesh_filenames.push_back(std::string(gpu::GetDataFile("meshes/directshear/downward_square.obj")));
 
-    std::vector<ChMatrix33<float>> mesh_rotscales;
-    std::vector<float3> mesh_translations;
     ChMatrix33<float> scale(ChVector<float>(box_r, box_r, box_r));
-    mesh_rotscales.push_back(scale);
-    mesh_rotscales.push_back(scale);
-    mesh_rotscales.push_back(scale);
-    mesh_translations.push_back(make_float3(0, 0, 0));
-    mesh_translations.push_back(make_float3(0, 0, 0));
-    mesh_translations.push_back(make_float3(0, 0, 0));
+    std::vector<ChMatrix33<float>> mesh_rotscales = {scale, scale, scale};
+    std::vector<ChVector<float>> mesh_translations = {ChVector<float>(0, 0, 0), ChVector<float>(0, 0, 0),
+                                                      ChVector<float>(0, 0, 0)};
+    std::vector<float> mesh_masses = {1000, 1000, (float)plate_mass};
 
-    std::vector<float> mesh_masses;
-    mesh_masses.push_back(1000);
-    mesh_masses.push_back(1000);
-    mesh_masses.push_back(plate_mass);
-
-    gpu_sys.LoadMeshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
+    gpu_sys.AddMeshes(mesh_filenames, mesh_translations, mesh_rotscales, mesh_masses);
 }
 
 void SetInitialMeshes(ChSystemGpuMesh& gpu_sys, const std::shared_ptr<ChBody> plate) {
@@ -170,7 +161,7 @@ void SetInitialMeshes(ChSystemGpuMesh& gpu_sys, const std::shared_ptr<ChBody> pl
     gpu_sys.ApplyMeshMotion(top_i, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
 
     // Plate
-    ChVector<float> plate_pos(0, 0, plate->GetPos().z());
+    ChVector<float> plate_pos(0, 0, (float)plate->GetPos().z());
     gpu_sys.ApplyMeshMotion(plate_i, plate_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
 }
 
@@ -208,9 +199,9 @@ int main(int argc, char* argv[]) {
 
 
     unsigned int currframe = 0;
-    double out_fps = 100;
+    float out_fps = 100;
     float frame_step = 1.f / out_fps;  // Duration of a frame
-    unsigned int out_steps = frame_step / iteration_step;
+    unsigned int out_steps = (unsigned int)(frame_step / iteration_step);
     std::cout << "out_steps " << out_steps << std::endl;
 
     double m_time = 0;
@@ -304,7 +295,6 @@ int main(int argc, char* argv[]) {
     std::cout << std::endl << "Running shear test..." << std::endl;
     // 5 Hz low pass filter
     // utils::ChButterworth_Lowpass fm_lowpass5(1, dt, 5.0);
-    double shear_area;  // Evolving area of overlap between the boxes
     m_time = 0;
     for (; m_time < time_shear; step++, m_time += iteration_step) {
         double pos = m_time * shear_velocity;

@@ -54,7 +54,7 @@ constexpr float static_friction_coeff = 0.5f;
 
 constexpr float cohes = 0;
 
-constexpr float timestep = 2e-5;
+constexpr float timestep = 2e-5f;
 
 constexpr unsigned int psi_T = 16;
 constexpr unsigned int psi_L = 16;
@@ -139,7 +139,7 @@ void run_ROTF() {
     ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
     setCommonParameters(gpu_sys);
 
-    float ramp_angle = CH_C_PI / 4;
+    float ramp_angle = (float)CH_C_PI / 4;
     // ramp normal is 45 degrees about y
     float nx = std::cos(ramp_angle);
     float nz = std::sin(ramp_angle);
@@ -221,23 +221,23 @@ void run_ROTF_MESH() {
 
     std::vector<string> mesh_filenames;
     std::vector<ChMatrix33<float>> mesh_rotscales;
-    std::vector<float3> mesh_translations;
+    std::vector<ChVector<float>> mesh_translations;
     std::vector<float> mesh_masses;
 
-    ChMatrix33<float> mesh_scaling = ChMatrix33<float>(ChVector<float>(100, 100, 100));
+    ChMatrix33<float> mesh_scaling(ChVector<float>(100, 100, 100));
 
     // make two plane meshes, one for ramp and one for bottom
     mesh_filenames.push_back(GetDataFile("meshes/testsuite/square_plane_fine.obj"));
     mesh_rotscales.push_back(mesh_scaling);
-    mesh_translations.push_back(make_float3(0, 0, 0));
+    mesh_translations.push_back(ChVector<float>(0, 0, 0));
     mesh_masses.push_back(10.f);
 
     mesh_filenames.push_back(GetDataFile("meshes/testsuite/square_plane_fine.obj"));
     mesh_rotscales.push_back(mesh_scaling);
-    mesh_translations.push_back(make_float3(0, 0, 0));
+    mesh_translations.push_back(ChVector<float>(0, 0, 0));
     mesh_masses.push_back(10.f);
 
-    gpu_sys.LoadMeshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
+    gpu_sys.AddMeshes(mesh_filenames, mesh_translations, mesh_rotscales, mesh_masses);
 
     // Finalize settings and Initialize for runtime
     gpu_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
@@ -272,7 +272,7 @@ void run_PYRAMID() {
 
     timeEnd = 1;
     // slightly inflated diameter to ensure no penetration
-    float diam_delta = 2.01;
+    float diam_delta = 2.01f;
     // add plane just below origin
     ChVector<> bot_plane_pos(0, 0, -1.02 * sphere_radius);
     ChVector<> bot_plane_normal(0, 0, 1);
@@ -318,23 +318,14 @@ void run_PYRAMID_MESH() {
 
     timeEnd = 1;
     // slightly inflated diameter to ensure no penetration
-    float diam_delta = 2.01;
+    float diam_delta = 2.01f;
     // add plane just below origin
     ChVector<> bot_plane_pos(0, 0, -1.02 * sphere_radius);
     ChVector<> bot_plane_normal(0, 0, 1);
 
-    std::vector<string> mesh_filenames;
-    std::vector<ChMatrix33<float>> mesh_rotscales;
-    std::vector<float3> mesh_translations;
-    std::vector<float> mesh_masses;
-
-    ChMatrix33<float> mesh_scaling = ChMatrix33<float>(ChVector<float>(1, 1, 1));
-    // make two plane meshes, one for ramp and one for bottom
-    mesh_filenames.push_back(GetDataFile("meshes/testsuite/tiny_triangle.obj"));
-    mesh_rotscales.push_back(mesh_scaling);
-    mesh_translations.push_back(make_float3(0, 0, 0));
-    mesh_masses.push_back(10.f);
-    gpu_sys.LoadMeshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
+    // Add mesh
+    gpu_sys.AddMesh(GetDataFile("meshes/testsuite/tiny_triangle.obj"), ChVector<float>(0),
+                    ChMatrix33<float>(ChVector<float>(1, 1, 1)), 10.0f);
 
     gpu_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
     gpu_sys.SetRollingMode(CHGPU_ROLLING_MODE::NO_RESISTANCE);
@@ -388,21 +379,8 @@ void run_MESH_STEP() {
     setCommonParameters(gpu_sys);
     setCommonMeshParameters(gpu_sys);
 
-    std::vector<string> mesh_filenames;
-    std::string mesh_filename(GetDataFile("meshes/testsuite/step.obj"));
-    mesh_filenames.push_back(mesh_filename);
-
-    std::vector<ChMatrix33<float>> mesh_rotscales;
-    std::vector<float3> mesh_translations;
-
-    ChMatrix33<float> scaling = ChMatrix33<float>(ChVector<float>(box_X / 2, box_Y / 2, step_height));
-    mesh_rotscales.push_back(scaling);
-    mesh_translations.push_back(make_float3(0, 0, 0));
-
-    std::vector<float> mesh_masses;
-    mesh_masses.push_back(step_mass);
-
-    gpu_sys.LoadMeshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
+    gpu_sys.AddMesh(GetDataFile("meshes/testsuite/step.obj"), ChVector<float>(0),
+                    ChMatrix33<float>(ChVector<float>(box_X / 2, box_Y / 2, step_height)), step_mass);
 
     // Fill domain with particles
     std::vector<ChVector<float>> body_points;
@@ -451,10 +429,10 @@ void run_MESH_FORCE() {
     setCommonParameters(gpu_sys);
     setCommonMeshParameters(gpu_sys);
 
-    utils::HCPSampler<float> sampler(2.1 * sphere_radius);
+    utils::HCPSampler<float> sampler(2.1f * sphere_radius);
     auto pos = sampler.SampleBox(ChVector<>(0, 0, 26), ChVector<>(38, 38, 10));
 
-    unsigned int n_spheres = pos.size();
+    auto n_spheres = pos.size();
     std::cout << "Created " << n_spheres << " spheres" << std::endl;
     double sphere_mass = sphere_density * 4.0 * CH_C_PI * sphere_radius * sphere_radius * sphere_radius / 3.0;
 
@@ -464,22 +442,9 @@ void run_MESH_FORCE() {
 
     gpu_sys.SetParticlePositions(pos);
 
-    // Mesh values
-    std::vector<string> mesh_filenames;
-    std::string mesh_filename(GetDataFile("meshes/testsuite/square_box.obj"));
-    mesh_filenames.push_back(mesh_filename);
-
-    std::vector<ChMatrix33<float>> mesh_rotscales;
-    std::vector<float3> mesh_translations;
-    ChMatrix33<float> scaling = ChMatrix33<float>(ChVector<float>(40, 40, 40));
-    mesh_rotscales.push_back(scaling);
-    mesh_translations.push_back(make_float3(0, 0, 0));
-
-    std::vector<float> mesh_masses;
-    float mass = 1;
-    mesh_masses.push_back(mass);
-
-    gpu_sys.LoadMeshes(mesh_filenames, mesh_rotscales, mesh_translations, mesh_masses);
+    // Add mesh
+    gpu_sys.AddMesh(GetDataFile("meshes/testsuite/square_box.obj"), ChVector<float>(0), 
+        ChMatrix33<float>(ChVector<float>(40, 40, 40)), 1.0f);
 
     unsigned int nSoupFamilies = gpu_sys.GetNumMeshes();
     std::cout << nSoupFamilies << " soup families" << std::endl;
