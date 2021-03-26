@@ -19,6 +19,7 @@
 #include "chrono/ChConfig.h"
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/collision/ChCollisionUtils.h"
+#include "chrono/collision/ChCollisionUtilsBullet.h"
 
 #include "chrono_irrlicht/ChIrrApp.h"
 
@@ -127,7 +128,7 @@ void AddWallHull(std::shared_ptr<ChBody> body,
     body->GetCollisionModel()->AddConvexHull(mat, points);
 
     auto shape = chrono_types::make_shared<ChTriangleMeshShape>();
-    collision::ChConvexHullLibraryWrapper lh;
+    collision::utils::ChConvexHullLibraryWrapper lh;
     lh.ComputeHull(points, *shape->GetMesh());
     body->AddAsset(shape);
 

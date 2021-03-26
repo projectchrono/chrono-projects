@@ -71,7 +71,6 @@ ChQuaternion<> initRot(1, 0, 0, 0);
 
 double initFwdSpd = 30.0 / 3.6;  // 30kph to m/s
 double target_speed = 10000;     // full throttle test
-int gear = 4;
 
 // Input file names for the path-follower driver model
 std::string steering_controller_file("generic/driver/SteeringController.json");
@@ -149,7 +148,6 @@ int main(int argc, char* argv[]) {
     // Create and initialize the powertrain system
     auto powertrain = chrono_types::make_shared<Generic_SimpleMapPowertrain>("Powertrain");
     vehicle.InitializePowertrain(powertrain);
-    powertrain->SetSelectedGear(gear);
 
     // Create the tires
     auto tire_FL = chrono_types::make_shared<Generic_FialaTire>("FL");
@@ -400,7 +398,7 @@ int main(int argc, char* argv[]) {
     }
     if (state_output) {
         char filename[100];
-        sprintf(filename, "%s/output_Gear%d.dat", out_dir.c_str(), gear);
+        sprintf(filename, "%s/output.dat", out_dir.c_str());
         csv.write_to_file(filename);
     }
     return 0;

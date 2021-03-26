@@ -40,8 +40,8 @@ float normStiffness_S2W = 1e7f;
 
 float normalDampS2S = 1000;
 float normalDampS2W = 1000;
-float adhesion_ratio_s2w = 0.f;
-float timestep = 1e-4;
+float adhesion_ratio_s2w = 0.0f;
+float timestep = 1e-4f;
 
 CHGPU_OUTPUT_MODE write_mode = CHGPU_OUTPUT_MODE::BINARY;
 CHGPU_VERBOSITY verbose = CHGPU_VERBOSITY::INFO;
@@ -64,8 +64,8 @@ double run_test(float box_size_X, float box_size_Y, float box_size_Z) {
     gpu_system.SetOutputMode(write_mode);
 
     // Fill the bottom half with material
-    chrono::utils::HCPSampler<float> sampler(2.4 * ballRadius);  // Add epsilon
-    ChVector<float> center(0, 0, -.25 * box_size_Z);
+    chrono::utils::HCPSampler<float> sampler(2.4f * ballRadius);  // Add epsilon
+    ChVector<float> center(0, 0, -0.25f * box_size_Z);
     ChVector<float> hdims(box_size_X / 2 - ballRadius, box_size_X / 2 - ballRadius, box_size_Z / 4 - ballRadius);
     std::vector<ChVector<float>> body_points = sampler.SampleBox(center, hdims);
     gpu_system.SetParticlePositions(body_points);

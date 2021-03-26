@@ -318,8 +318,8 @@ int main(int argc, char* argv[]) {
 
         triangle->GetCollisionModel()->ClearModel();
         std::string name = "tri" + std::to_string(triId);
-        utils::AddTriangleGeometry(triangle.get(), triMat, vert_pos[triangles[i].x()] - pos,
-                                   vert_pos[triangles[i].y()] - pos, vert_pos[triangles[i].z()] - pos, name);
+        chrono::utils::AddTriangleGeometry(triangle.get(), triMat, vert_pos[triangles[i].x()] - pos,
+                                           vert_pos[triangles[i].y()] - pos, vert_pos[triangles[i].z()] - pos, name);
         triangle->GetCollisionModel()->SetFamily(1);
         triangle->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
         triangle->GetCollisionModel()->BuildModel();
@@ -328,13 +328,13 @@ int main(int argc, char* argv[]) {
     }
 
     // Add the terrain, MUST BE ADDED AFTER TIRE GEOMETRY (for index assumptions)
-    utils::CreateBoxContainer(systemG, -2, triMat, ChVector<>(1, 1, 1), 0.1, ChVector<>(0, -1, 0), QUNIT, true, true,
-                              true, false);
+    chrono::utils::CreateBoxContainer(systemG, -2, triMat, ChVector<>(1, 1, 1), 0.1, ChVector<>(0, -1, 0), QUNIT, true,
+                                      true, true, false);
 
     double r = 0.1;  // 0.02;//
     double shapeRatio = 0.4;
-    utils::Generator gen(systemG);
-    auto m1 = gen.AddMixtureIngredient(utils::MixtureType::ELLIPSOID, 1.0);
+    chrono::utils::Generator gen(systemG);
+    auto m1 = gen.AddMixtureIngredient(chrono::utils::MixtureType::ELLIPSOID, 1.0);
     m1->setDefaultMaterial(triMat);
     m1->setDefaultDensity(2500);
     m1->setDefaultSize(ChVector<>(r, r * shapeRatio, r));
@@ -342,7 +342,7 @@ int main(int argc, char* argv[]) {
     gen.setBodyIdentifier(triId);
     ChVector<> hdims(1 - r * 1.01, 0.5, 1 - r * 1.01);
     ChVector<> center(0, 0, 0);
-    gen.createObjectsBox(utils::SamplingType::POISSON_DISK, 2 * r, center, hdims);
+    gen.createObjectsBox(chrono::utils::SamplingType::POISSON_DISK, 2 * r, center, hdims);
 
 #ifdef CHRONO_OPENGL
     // Initialize OpenGL
@@ -379,9 +379,9 @@ int main(int argc, char* argv[]) {
             char filename[100];
             sprintf(filename, "../POVRAY/data_%d.dat", frameIndex);
 
-            utils::WriteShapesPovray(systemG, filename, false);
+            chrono::utils::WriteShapesPovray(systemG, filename, false);
             std::string delim = ",";
-            utils::CSV_writer csv(delim);
+            chrono::utils::CSV_writer csv(delim);
             csv << triangles.size() << std::endl;
             for (int i = 0; i < triangles.size(); i++) {
                 csv << systemG->Get_bodylist().at(i)->GetPos() << vert_pos[triangles[i].x()]

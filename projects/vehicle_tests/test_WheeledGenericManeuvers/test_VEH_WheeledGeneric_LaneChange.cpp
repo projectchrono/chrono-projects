@@ -108,19 +108,15 @@ int main(int argc, char* argv[]) {
     vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
 
     double target_speed = 60.0 / 3.6;  // kph to m/s
-    int gear = 3;
     // Simulation length (set to a negative value to disable for Irrlicht)
     double tend = 15;
 
     // Check for input arguments for running this test in batch
     // First argument is the target vehicle speed in m/s
-    // Second argument is the selected gear number
-    // Third argument is the simulation end time in s
+    // Second argument is the simulation end time in s
     if (argc > 1)
         target_speed = std::atof(argv[1]);
     if (argc > 2)
-        gear = std::atoi(argv[3]);
-    if (argc > 3)
         tend = std::atof(argv[4]);
 
 
@@ -151,7 +147,6 @@ int main(int argc, char* argv[]) {
     // Create and initialize the powertrain system
     auto powertrain = chrono_types::make_shared<Generic_SimpleMapPowertrain>("Powertrain");
     vehicle.InitializePowertrain(powertrain);
-    powertrain->SetSelectedGear(gear);
 
     // Create the tires
     auto tire_FL = chrono_types::make_shared<Generic_FialaTire>("FL");
@@ -384,7 +379,7 @@ int main(int argc, char* argv[]) {
     }
     if (state_output) {
         char filename[100];
-        sprintf(filename, "%s/output_%dmps_Gear%d_LaneChange.dat", out_dir.c_str(), int(std::round(target_speed)), gear);
+        sprintf(filename, "%s/output_%dmps_LaneChange.dat", out_dir.c_str(), int(std::round(target_speed)));
         csv.write_to_file(filename);
     }
     return 0;

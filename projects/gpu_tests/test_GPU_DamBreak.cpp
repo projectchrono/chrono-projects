@@ -233,7 +233,7 @@ int main(int argc, char* argv[]) {
     gran_sys.Initialize();
 
     int fps = 50;
-    float frame_step = 1. / fps;
+    float frame_step = 1.0f / fps;
     float curr_time = 0;
     int currframe = 0;
 
@@ -241,9 +241,9 @@ int main(int argc, char* argv[]) {
     bool plane_active = true;
     ChVector<float> reaction_forces(0, 0, 0);
 
-    constexpr float F_CGS_TO_SI = 1e-5;
-    constexpr float M_CGS_TO_SI = 1e-3;
-    float total_system_mass = 4. / 3. * CH_C_PI * params.sphere_density * params.sphere_radius * params.sphere_radius *
+    constexpr float F_CGS_TO_SI = 1e-5f;
+    constexpr float M_CGS_TO_SI = 1e-3f;
+    float total_system_mass = 4.0f / 3.0f * (float)CH_C_PI * params.sphere_density * params.sphere_radius * params.sphere_radius *
                               params.sphere_radius * body_points.size();
     printf("total system mass is %f kg \n", total_system_mass * M_CGS_TO_SI);
 

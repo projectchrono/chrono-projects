@@ -255,7 +255,7 @@ int main(int argc, char* argv[]) {
     int captures_per_frame = 4;
 
     // assume we run for at least one frame
-    float frame_step = 1. / captures_per_second;
+    float frame_step = 1.0f / captures_per_second;
     float curr_time = 0;
     int currcapture = 0;
     int currframe = 0;
@@ -267,9 +267,9 @@ int main(int argc, char* argv[]) {
 
     ChVector<float> reaction_forces(0, 0, 0);
 
-    constexpr float F_CGS_TO_SI = 1e-5;
-    constexpr float M_CGS_TO_SI = 1e-3;
-    float total_system_mass = 4. / 3. * CH_C_PI * params.sphere_density * params.sphere_radius * params.sphere_radius *
+    constexpr float F_CGS_TO_SI = 1e-5f;
+    constexpr float M_CGS_TO_SI = 1e-3f;
+    float total_system_mass = 4.0f / 3.0f * (float)CH_C_PI * params.sphere_density * params.sphere_radius * params.sphere_radius *
                               params.sphere_radius * body_points.size();
     printf("total system mass is %f kg \n", total_system_mass * M_CGS_TO_SI);
     char filename[100];

@@ -170,21 +170,17 @@ int main(int argc, char* argv[]) {
 
     double initFwdSpd = 30.0 / 3.6;  // kph to m/s
     double finalFwdSpd = 100.0 / 3.6;  // kph to m/s
-    int gear = 4;
     double cornerRadius = 200;
 
     // Check for input arguments for running this test in batch
     // First argument is the initial vehicle speed in m/s
     // Second argument is the target final speed in m/s
-    // Third argument is the selected gear number
-    // Fourth argument is the radius of the turn in m
+    // Third argument is the radius of the turn in m
     if (argc > 1)
         initFwdSpd = std::atof(argv[1]);
     if (argc > 2)
         finalFwdSpd = std::atof(argv[2]);
     if (argc > 3)
-        gear = std::atoi(argv[3]);
-    if (argc > 4)
         cornerRadius = std::atof(argv[4]);
 
     // ------------------------------------
@@ -225,7 +221,6 @@ int main(int argc, char* argv[]) {
     // Create and initialize the powertrain system
     auto powertrain = chrono_types::make_shared<Generic_SimpleMapPowertrain>("Powertrain");
     vehicle.InitializePowertrain(powertrain);    
-    powertrain->SetSelectedGear(gear);
 
     // Create the tires
     auto tire_FL = chrono_types::make_shared<Generic_FialaTire>("FL");
@@ -467,9 +462,9 @@ int main(int argc, char* argv[]) {
     if (state_output) {
         char filename[100];
         if (cornerRadius>0)
-            sprintf(filename, "%s/output_%dmps_to_%dmps_Gear%d_CW_Rad%dm.dat", out_dir.c_str(), int(std::round(initFwdSpd)), int(std::round(finalFwdSpd)), gear, int(std::round(std::abs(cornerRadius))));
+            sprintf(filename, "%s/output_%dmps_to_%dmps_CW_Rad%dm.dat", out_dir.c_str(), int(std::round(initFwdSpd)), int(std::round(finalFwdSpd)), int(std::round(std::abs(cornerRadius))));
         else
-            sprintf(filename, "%s/output_%dmps_to_%dmps_Gear%d_CCW_Rad%dm.dat", out_dir.c_str(), int(std::round(initFwdSpd)), int(std::round(finalFwdSpd)), gear, int(std::round(std::abs(cornerRadius))));
+            sprintf(filename, "%s/output_%dmps_to_%dmps_CCW_Rad%dm.dat", out_dir.c_str(), int(std::round(initFwdSpd)), int(std::round(finalFwdSpd)), int(std::round(std::abs(cornerRadius))));
         csv.write_to_file(filename);
     }
     return 0;
