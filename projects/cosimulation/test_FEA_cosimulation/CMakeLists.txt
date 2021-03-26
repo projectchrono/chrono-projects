@@ -25,7 +25,7 @@ foreach(PROGRAM ${TEST_PROGRAMS})
   set_target_properties(${PROGRAM} PROPERTIES 
                         COMPILE_FLAGS "${CHRONO_CXX_FLAGS}"
                         COMPILE_DEFINITIONS "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\""
-                        LINK_FLAGS "${CHRONO_CXX_FLAGS} ${CHRONO_LINKER_FLAGS}"
+                        LINK_FLAGS "${CHRONO_LINKER_FLAGS}"
                         )
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
 
