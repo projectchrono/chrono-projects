@@ -35,6 +35,9 @@ cmake_dependent_option(ENABLE_PRJ_COSIMULATION
 cmake_dependent_option(ENABLE_PRJ_GPU_TESTS 
 	"Enable projects for Chrono::Gpu tests" ON
 	"ENABLE_PROJECTS" OFF)
+cmake_dependent_option(ENABLE_PRJ_SYN_HIGHWAY 
+	"Enable projects for SynChrono Highway" ON
+	"ENABLE_PROJECTS" OFF)
 
 if (ENABLE_PRJ_CORE_TESTS)
   add_subdirectory(core_tests)
@@ -70,6 +73,10 @@ endif()
 
 if (ENABLE_PRJ_CONSTRAINT_FLUID)
   add_subdirectory(constraint_fluids)
+endif()
+
+if (ENABLE_PRJ_SYN_HIGHWAY)
+  add_subdirectory(synchrono_highway)
 endif()
 
 set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
