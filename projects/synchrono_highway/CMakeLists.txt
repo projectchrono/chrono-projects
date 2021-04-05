@@ -1,5 +1,5 @@
 #=============================================================================
-# CMake configuration file for the SynChrono Highway project - an extended 
+# CMake configuration file for the SynChrono Highway project - an extended
 #   demo of a highway environment, interfaced to a human-driven simulator
 #=============================================================================
 
@@ -28,22 +28,23 @@ if(NOT Chrono_FOUND)
 endif()
 
 # Get the path to the highway mesh
-set(HIGHWAY_DIR "" CACHE FILEPATH "Path to directory contain highway assets")
-add_compile_definitions(HIGHWAY_COL_PATH="${HIGHWAY_DIR}Highway_new.obj")
-add_compile_definitions(HIGHWAY_VIS_PATH="${HIGHWAY_DIR}Highway_new.obj")
+set(HIGHWAY_DATA_DIR "" CACHE FILEPATH "Path to directory contain highway assets")
+#add_compile_definitions(HIGHWAY_COL_PATH="${HIGHWAY_DIR}Highway_new.obj")
+#add_compile_definitions(HIGHWAY_VIS_PATH="${HIGHWAY_DIR}Highway_new.obj")
+add_compile_definitions(HIGHWAY_DATA_DIR=${HIGHWAY_DATA_DIR})
 
 #--------------------------------------------------------------
 # Include paths and libraries
 #--------------------------------------------------------------
 
 # (A) Path to the Chrono include headers
-# - If using an installed version of Chrono, this will be the path 
+# - If using an installed version of Chrono, this will be the path
 #   to the installed headers (the configuration headers are also
 #   available there)
 # - If using a build version of Chrono, this will contain both the
 #   path to the Chrono sources and the path to the chrono BUILD tree
 #   (the latter for the configuration headers)
-# 
+#
 # (B) Path to the top of the source tree for this project
 # - for access to utility headers
 

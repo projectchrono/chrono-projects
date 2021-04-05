@@ -35,12 +35,18 @@
 #include "chrono_synchrono/utils/SynDataLoader.h"
 #include "chrono_synchrono/utils/SynLog.h"
 
+#include "chrono_sensor/ChCameraSensor.h"
+#include "chrono_sensor/ChSensorManager.h"
+#include "chrono_sensor/filters/ChFilterVisualize.h"
+
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
 
 using namespace chrono;
+using namespace chrono::geometry;
 using namespace chrono::irrlicht;
 using namespace chrono::synchrono;
 using namespace chrono::vehicle;
+using namespace chrono::sensor;
 
 // =============================================================================
 
@@ -59,7 +65,7 @@ VisualizationType tire_vis_type = VisualizationType::MESH;
 TireModelType tire_model = TireModelType::TMEASY;
 
 // Type of vehicle
-enum VehicleType { SEDAN, HMMWV, UAZ, CITYBUS, MAN };
+enum VehicleType { SEDAN, AUDI, TRUCK, VAN, SUV, CITYBUS };
 
 // Point on chassis tracked by the camera
 ChVector<> trackPoint(0.0, 0.0, 1.75);
@@ -80,6 +86,8 @@ double heartbeat = 1e-2;  // 100[Hz]
 // Time interval between two render frames
 double render_step_size = 1.0 / 50;  // FPS = 50
 
+std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
+
 // =============================================================================
 
 // Forward declares for straight forward helper functions
@@ -91,6 +99,8 @@ void GetVehicleModelFiles(VehicleType type,
                           std::string& tire,
                           std::string& zombie,
                           double& cam_distance);
+
+void AddSceneMeshes(ChSystem* chsystem, RigidTerrain& terrain);
 
 class IrrAppWrapper {
   public:
@@ -156,9 +166,14 @@ int main(int argc, char* argv[]) {
     int num_nodes = communicator->GetNumRanks();
     SynChronoManager syn_manager(node_id, num_nodes, communicator);
 
-    SetChronoDataPath(CHRONO_DATA_DIR);
-    vehicle::SetDataPath(CHRONO_DATA_DIR + std::string("vehicle/"));
-    synchrono::SetDataPath(CHRONO_DATA_DIR + std::string("synchrono/"));
+    // SetChronoDataPath(CHRONO_DATA_DIR);
+    // vehicle::SetDataPath(CHRONO_DATA_DIR + std::string("vehicle/"));
+    // synchrono::SetDataPath(CHRONO_DATA_DIR + std::string("synchrono/"));
+
+    // all the demo data will be in user-specified location
+    SetChronoDataPath(demo_data_path);
+    vehicle::SetDataPath(demo_data_path + std::string("/vehicles/"));
+    synchrono::SetDataPath(demo_data_path + std::string("/synchrono/"));
 
     // Copyright
     LogCopyright(node_id == 0);
@@ -220,18 +235,10 @@ int main(int argc, char* argv[]) {
     syn_manager.AddAgent(agent);
     syn_manager.Initialize(vehicle.GetSystem());
 
-    // Create the terrain
-    MaterialInfo minfo;
-    minfo.mu = 0.9f;
-    minfo.cr = 0.01f;
-    minfo.Y = 2e7f;
-    auto patch_mat = minfo.CreateMaterial(contact_method);
-
     RigidTerrain terrain(vehicle.GetSystem());
-
-    std::string col_mesh_filename(STRINGIFY(HIGHWAY_COL_PATH));
-    auto patch = terrain.AddPatch(patch_mat, CSYSNORM, col_mesh_filename, "", 0.001, true);
-
+    AddSceneMeshes(vehicle.GetSystem(), terrain);
+    // auto patch = terrain.AddPatch(patch_mat, CSYSNORM, GetChronoDataFile("/Highway/Highway_new.obj"), "", 0.001,
+    // true);
     terrain.Initialize();
 
     // Create the vehicle Irrlicht interface
@@ -250,6 +257,10 @@ int main(int argc, char* argv[]) {
         // Create the interactive driver system
         auto irr_driver = chrono_types::make_shared<ChIrrGuiDriver>(*temp_app);
 
+        // optionally force the gui driver to use keyboard rather than joystick
+        if (cli.HasValueInVector<int>("keyboard", node_id))
+            irr_driver->SetInputMode(ChIrrGuiDriver::KEYBOARD);
+
         // Set the time response for steering and throttle keyboard inputs.
         double steering_time = 1.0;  // time to go from 0 to +1 (or from 0 to -1)
         double throttle_time = 1.0;  // time to go from 0 to +1
@@ -263,6 +274,24 @@ int main(int argc, char* argv[]) {
         app.Set(temp_app);
         driver.Set(irr_driver);
     }
+
+    // add a sensor manager
+    auto manager = chrono_types::make_shared<ChSensorManager>(vehicle.GetSystem());
+    manager->scene->AddPointLight({100, 100, 100}, {2, 2, 2}, 5000);
+
+    // add a camera to the vehicle
+    // roof mounted camera .1, 0, 1.45
+    auto camera = chrono_types::make_shared<ChCameraSensor>(
+        vehicle.GetChassisBody(),                                           // body camera is attached to
+        60.f,                                                               // update rate in Hz
+        chrono::ChFrame<double>({-8, 0, 3}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
+        1280,                                                               // image width
+        720,                                                                // image height
+        3.14 / 3, 1);
+    camera->SetName("Camera Sensor");
+    camera->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720));
+    // camera->PushFilter(chrono_types::make_shared<ChFilterSave>(sens_dir + "/cam2/"));
+    manager->AddSensor(camera);
 
     // ---------------
     // Simulation loop
@@ -301,6 +330,7 @@ int main(int argc, char* argv[]) {
         terrain.Advance(step_size);
         vehicle.Advance(step_size);
         app.Advance(step_size);
+        manager->Update();
 
         // Increment frame number
         step_number++;
@@ -335,6 +365,7 @@ void AddCommandLineOptions(ChCLI& cli) {
 
     // Irrlicht options
     cli.AddOption<std::vector<int>>("Irrlicht", "i,irr", "Nodes for irrlicht usage", "-1");
+    cli.AddOption<std::vector<int>>("Keyboard", "k,keyboard", "Force irrlicht driver into keyboard control");
 
     // Other options
     cli.AddOption<int>("Demo", "v,vehicle", "Vehicle Options [0-4]: Sedan, HMMWV, UAZ, CityBus, MAN", "0");
@@ -351,36 +382,129 @@ void GetVehicleModelFiles(VehicleType type,
             vehicle = vehicle::GetDataFile("sedan/vehicle/Sedan_Vehicle.json");
             powertrain = vehicle::GetDataFile("sedan/powertrain/Sedan_SimpleMapPowertrain.json");
             tire = vehicle::GetDataFile("sedan/tire/Sedan_TMeasyTire.json");
-            zombie = synchrono::GetDataFile("vehicle/Sedan.json");
+            zombie = vehicle::GetDataFile("sedan/Sedan.json");
             cam_distance = 6.0;
             break;
-        case VehicleType::HMMWV:
-            vehicle = vehicle::GetDataFile("hmmwv/vehicle/HMMWV_Vehicle.json");
-            powertrain = vehicle::GetDataFile("hmmwv/powertrain/HMMWV_ShaftsPowertrain.json");
-            tire = vehicle::GetDataFile("hmmwv/tire/HMMWV_TMeasyTire.json");
-            zombie = synchrono::GetDataFile("vehicle/HMMWV.json");
+        case VehicleType::AUDI:
+            vehicle = vehicle::GetDataFile("audi/json/audi_Vehicle.json");
+            powertrain = vehicle::GetDataFile("audi/json/audi_SimpleMapPowertrain.json");
+            tire = vehicle::GetDataFile("audi/json/audi_TMeasyTire.json");
+            zombie = vehicle::GetDataFile("audi/json/audi.json");
             cam_distance = 6.0;
             break;
-        case VehicleType::UAZ:
-            vehicle = vehicle::GetDataFile("uaz/vehicle/UAZBUS_SAEVehicle.json");
-            powertrain = vehicle::GetDataFile("uaz/powertrain/UAZBUS_SimpleMapPowertrain.json");
-            tire = vehicle::GetDataFile("uaz/tire/UAZBUS_TMeasyTireFront.json");
-            zombie = synchrono::GetDataFile("vehicle/UAZBUS.json");
+        case VehicleType::SUV:
+            // unsupported vehicle model
+            vehicle = vehicle::GetDataFile("suv/json/suv_Vehicle.json");
+            powertrain = vehicle::GetDataFile("suv/json/suv_SimpleMapPowertrain.json");
+            tire = vehicle::GetDataFile("suv/json/suv_TMeasyTire.json");
+            zombie = vehicle::GetDataFile("suv/json/suv.json");
             cam_distance = 6.0;
+            break;
+        case VehicleType::TRUCK:
+            // unsupported vehicle model
+            vehicle = vehicle::GetDataFile("truck/json/truck_Vehicle.json");
+            powertrain = vehicle::GetDataFile("truck/json/truck_SimpleMapPowertrain.json");
+            tire = vehicle::GetDataFile("truck/json/truck_TMeasyTire.json");
+            zombie = vehicle::GetDataFile("truck/json/truck.json");
+            cam_distance = 14.0;
+            break;
+        case VehicleType::VAN:
+            // unsupported vehicle model
+            vehicle = vehicle::GetDataFile("van/json/van_Vehicle.json");
+            powertrain = vehicle::GetDataFile("van/json/van_SimpleMapPowertrain.json");
+            tire = vehicle::GetDataFile("van/json/van_TMeasyTire.json");
+            zombie = vehicle::GetDataFile("van/json/van.json");
+            cam_distance = 12.0;
             break;
         case VehicleType::CITYBUS:
             vehicle = vehicle::GetDataFile("citybus/vehicle/CityBus_Vehicle.json");
             powertrain = vehicle::GetDataFile("citybus/powertrain/CityBus_SimpleMapPowertrain.json");
             tire = vehicle::GetDataFile("citybus/tire/CityBus_TMeasyTire.json");
-            zombie = synchrono::GetDataFile("vehicle/CityBus.json");
+            zombie = vehicle::GetDataFile("citybus/CityBus.json");
             cam_distance = 14.0;
             break;
-        case VehicleType::MAN:
-            vehicle = vehicle::GetDataFile("MAN_Kat1/vehicle/MAN_10t_Vehicle_8WD.json");
-            powertrain = vehicle::GetDataFile("MAN_Kat1/powertrain/MAN_7t_SimpleCVTPowertrain.json");
-            tire = vehicle::GetDataFile("MAN_Kat1/tire/MAN_5t_TMeasyTire.json");
-            zombie = synchrono::GetDataFile("vehicle/MAN_8WD.json");
-            cam_distance = 12.0;
-            break;
+    }
+}
+
+void AddSceneMeshes(ChSystem* chsystem, RigidTerrain& terrain) {
+    // load all meshes in input file, using instancing where possible
+    std::string base_path = GetChronoDataFile("/Environments/SanFrancisco/components/");
+    // std::string input_file = base_path + "instance_map_01.csv";
+    std::string input_file = base_path + "instance_map_roads_only.csv";
+
+    std::ifstream infile(input_file);
+    if (!infile.is_open())
+        throw std::runtime_error("Could not open file " + input_file);
+    std::string line, col;
+    std::vector<std::string> result;
+
+    std::unordered_map<std::string, std::shared_ptr<ChTriangleMeshConnected>> mesh_map;
+
+    int mesh_offset = 0;
+    int num_meshes = 2000;
+    if (infile.good()) {
+        int mesh_count = 0;
+        int mesh_limit = mesh_offset + num_meshes;
+        while (std::getline(infile, line) && mesh_count < mesh_limit) {
+            if (mesh_count < mesh_offset) {
+                mesh_count++;
+            } else {
+                mesh_count++;
+                result.clear();
+                std::stringstream ss(line);
+                while (std::getline(ss, col, ',')) {
+                    result.push_back(col);
+                }
+                // std::cout << "Name: " << result[0] << ", mesh: " << result[1] << std::endl;
+                std::string mesh_name = result[0];
+                std::string mesh_obj = base_path + result[1] + ".obj";
+
+                // std::cout << mesh_name << std::endl;
+
+                // check if mesh is in map
+                bool instance_found = false;
+                std::shared_ptr<ChTriangleMeshConnected> mmesh;
+                if (mesh_map.find(mesh_obj) != mesh_map.end()) {
+                    mmesh = mesh_map[mesh_obj];
+                    instance_found = true;
+                } else {
+                    mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
+                    mmesh->LoadWavefrontMesh(mesh_obj, false, true);
+                    mesh_map[mesh_obj] = mmesh;
+                }
+
+                ChVector<double> pos = {std::stod(result[2]), std::stod(result[3]), std::stod(result[4])};
+                ChQuaternion<double> rot = {std::stod(result[5]), std::stod(result[6]), std::stod(result[7]),
+                                            std::stod(result[8])};
+                ChVector<double> scale = {std::stod(result[9]), std::stod(result[10]), std::stod(result[11])};
+
+                // if its a road, use collision with terrain patch
+                if (mesh_name.find("road") != std::string::npos || mesh_name.find("Road") != std::string::npos) {
+                    // Create the terrain
+                    MaterialInfo minfo;
+                    minfo.mu = 0.9f;
+                    minfo.cr = 0.01f;
+                    minfo.Y = 2e7f;
+                    auto patch_mat = minfo.CreateMaterial(contact_method);
+                    auto patch = terrain.AddPatch(patch_mat, CSYSNORM, mesh_obj, "", 0.001, true);
+                } else {
+                    // // if not road, only add visualization with new pos,rot,scale
+                    // auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+                    // trimesh_shape->SetMesh(mmesh);
+                    // trimesh_shape->SetName(mesh_name);
+                    // trimesh_shape->SetStatic(true);
+                    // trimesh_shape->SetScale(scale);
+
+                    // auto mesh_body = chrono_types::make_shared<ChBody>();
+                    // mesh_body->SetPos(pos);
+                    // mesh_body->SetRot(rot);
+                    // mesh_body->AddAsset(trimesh_shape);
+                    // mesh_body->SetBodyFixed(true);
+                    // chsystem->Add(mesh_body);
+                }
+            }
+        }
+        std::cout << "Total meshes: " << mesh_count - mesh_offset << " | Unique meshes: " << mesh_map.size()
+                  << std::endl;
     }
 }
