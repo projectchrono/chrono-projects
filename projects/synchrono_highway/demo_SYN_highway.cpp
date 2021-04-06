@@ -245,8 +245,8 @@ int main(int argc, char* argv[]) {
     minfo.cr = 0.01f;
     minfo.Y = 2e7f;
     auto patch_mat = minfo.CreateMaterial(contact_method);
-    auto patch =
-        terrain.AddPatch(patch_mat, ChVector<>({0, 0, -100}), ChVector<>({0, 0, 1}), 1000.0, 1000.0, 1, false, 1, true);
+    auto patch = terrain.AddPatch(patch_mat, ChVector<>({0, 0, -65.554}), ChVector<>({0, 0, 1}), 10000.0, 10000.0, 1,
+                                  false, 1, false);
     terrain.Initialize();
 
     // Create the vehicle Irrlicht interface
@@ -298,7 +298,8 @@ int main(int argc, char* argv[]) {
         chrono::ChFrame<double>({-12, 0, 3}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
         1280,                                                                // image width
         720,                                                                 // image height
-        3.14 / 2, 2);
+        3.14 / 2, 1);
+    camera->SetLag(1 / 30.f);
     camera->SetName("Camera Sensor");
     camera->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720));
     camera->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam/"));
@@ -494,30 +495,19 @@ void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
                                             std::stod(result[8])};
                 ChVector<double> scale = {std::stod(result[9]), std::stod(result[10]), std::stod(result[11])};
 
-                // if its a road, use collision with terrain patch
-                if (mesh_name.find("road") != std::string::npos || mesh_name.find("Road") != std::string::npos) {
-                    // Create the terrain
-                    MaterialInfo minfo;
-                    minfo.mu = 0.9f;
-                    minfo.cr = 0.01f;
-                    minfo.Y = 2e7f;
-                    auto patch_mat = minfo.CreateMaterial(contact_method);
-                    auto patch = terrain->AddPatch(patch_mat, CSYSNORM, mesh_obj, "", 0.001, true);
-                } else {
-                    // if not road, only add visualization with new pos,rot,scale
-                    auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
-                    trimesh_shape->SetMesh(mmesh);
-                    trimesh_shape->SetName(mesh_name);
-                    trimesh_shape->SetStatic(true);
-                    trimesh_shape->SetScale(scale);
+                // if not road, only add visualization with new pos,rot,scale
+                auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+                trimesh_shape->SetMesh(mmesh);
+                trimesh_shape->SetName(mesh_name);
+                trimesh_shape->SetStatic(true);
+                trimesh_shape->SetScale(scale);
 
-                    auto mesh_body = chrono_types::make_shared<ChBody>();
-                    mesh_body->SetPos(pos);
-                    mesh_body->SetRot(rot);
-                    mesh_body->AddAsset(trimesh_shape);
-                    mesh_body->SetBodyFixed(true);
-                    chsystem->Add(mesh_body);
-                }
+                auto mesh_body = chrono_types::make_shared<ChBody>();
+                mesh_body->SetPos(pos);
+                mesh_body->SetRot(rot);
+                mesh_body->AddAsset(trimesh_shape);
+                mesh_body->SetBodyFixed(true);
+                chsystem->Add(mesh_body);
             }
         }
         ChVector<> pos = {0, 0, 100};
