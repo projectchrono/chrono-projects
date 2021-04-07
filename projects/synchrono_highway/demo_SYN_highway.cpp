@@ -52,7 +52,7 @@ using namespace chrono::sensor;
 // =============================================================================
 
 // Initial vehicle location and orientation
-ChVector<> initLoc(907, -230, -65);
+ChVector<> initLoc(907, -230, -64.8);
 ChQuaternion<> initRot(1, 0, 0, 0);
 
 // Visualization type for vehicle parts (PRIMITIVES, MESH, or NONE)
@@ -72,11 +72,10 @@ enum VehicleType { SEDAN, AUDI, TRUCK, VAN, SUV, CITYBUS };
 ChVector<> trackPoint(0.0, 0.0, 1.75);
 
 // Contact method
-ChContactMethod contact_method = ChContactMethod::SMC;
+ChContactMethod contact_method = ChContactMethod::NSC;
 
 // Simulation step sizes
-double step_size = 3e-3;
-double tire_step_size = 1e-3;
+double step_size = 2e-3;
 
 // Simulation end time
 double end_time = 1000;
@@ -86,6 +85,8 @@ double heartbeat = 1e-2;  // 100[Hz]
 
 // Time interval between two render frames
 double render_step_size = 1.0 / 50;  // FPS = 50
+
+bool save = false;
 
 std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
 
@@ -193,6 +194,7 @@ int main(int argc, char* argv[]) {
     step_size = cli.GetAsType<double>("step_size");
     end_time = cli.GetAsType<double>("end_time");
     heartbeat = cli.GetAsType<double>("heartbeat");
+    save = cli.GetAsType<bool>("save");
 
     // Change SynChronoManager settings
     syn_manager.SetHeartbeat(heartbeat);
@@ -238,14 +240,18 @@ int main(int argc, char* argv[]) {
 
     RigidTerrain terrain(vehicle.GetSystem());
     AddSceneMeshes(vehicle.GetSystem(), &terrain);
-    // auto patch = terrain.AddPatch(patch_mat, CSYSNORM, GetChronoDataFile("/Highway/Highway_new.obj"), "", 0.001,
-    // true);
-    MaterialInfo minfo;
-    minfo.mu = 0.9f;
-    minfo.cr = 0.01f;
-    minfo.Y = 2e7f;
+
+    MaterialInfo minfo;  // values from RigidPlane.json
+    minfo.mu = 0.9;      // coefficient of friction
+    minfo.cr = 0.01;     // coefficient of restitution
+    minfo.Y = 2e7;       // Young's modulus
+    minfo.nu = 0.3;      // Poisson ratio
+    minfo.kn = 2e5;      // normal stiffness
+    minfo.gn = 40.0;     // normal viscous damping
+    minfo.kt = 2e5;      // tangential stiffness
+    minfo.gt = 20.0;     // tangential viscous damping
     auto patch_mat = minfo.CreateMaterial(contact_method);
-    auto patch = terrain.AddPatch(patch_mat, ChVector<>({0, 0, -65.554}), ChVector<>({0, 0, 1}), 10000.0, 10000.0, 1,
+    auto patch = terrain.AddPatch(patch_mat, ChVector<>({0, 0, -65.554}), ChVector<>({0, 0, 1}), 10000.0, 10000.0, 2,
                                   false, 1, false);
     terrain.Initialize();
 
@@ -270,13 +276,15 @@ int main(int argc, char* argv[]) {
             irr_driver->SetInputMode(ChIrrGuiDriver::KEYBOARD);
 
         // Set the time response for steering and throttle keyboard inputs.
-        double steering_time = 1.0;  // time to go from 0 to +1 (or from 0 to -1)
-        double throttle_time = 1.0;  // time to go from 0 to +1
-        double braking_time = 0.3;   // time to go from 0 to +1
-        irr_driver->SetSteeringDelta(render_step_size / steering_time);
-        irr_driver->SetThrottleDelta(render_step_size / throttle_time);
-        irr_driver->SetBrakingDelta(render_step_size / braking_time);
-
+        // double steering_time = 1.0;  // time to go from 0 to +1 (or from 0 to -1)
+        // double throttle_time = 1.0;  // time to go from 0 to +1
+        // double braking_time = 0.3;   // time to go from 0 to +1
+        // irr_driver->SetSteeringDelta(render_step_size / steering_time);
+        // irr_driver->SetThrottleDelta(render_step_size / throttle_time);
+        // irr_driver->SetBrakingDelta(render_step_size / braking_time);
+        irr_driver->SetSteeringDelta(0.02);
+        irr_driver->SetThrottleDelta(0.02);
+        irr_driver->SetBrakingDelta(0.06);
         irr_driver->Initialize();
 
         app.Set(temp_app);
@@ -294,15 +302,16 @@ int main(int argc, char* argv[]) {
     // add a camera to the vehicle
     auto camera = chrono_types::make_shared<ChCameraSensor>(
         vehicle.GetChassisBody(),                                            // body camera is attached to
-        30.f,                                                                // update rate in Hz
+        60.f,                                                                // update rate in Hz
         chrono::ChFrame<double>({-12, 0, 3}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
-        1280,                                                                // image width
-        720,                                                                 // image height
+        1920,                                                                // image width
+        1080,                                                                // image height
         3.14 / 2, 1);
-    camera->SetLag(1 / 30.f);
-    camera->SetName("Camera Sensor");
+    // camera->SetLag(1 / 30.f);
+    // camera->SetName("Camera Sensor");
     camera->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720));
-    camera->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam/"));
+    if (save)
+        camera->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam/"));
     manager->AddSensor(camera);
 
     // ---------------
@@ -316,11 +325,13 @@ int main(int argc, char* argv[]) {
 
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
-    float orbit_radius = 30.f;
+    float orbit_radius = 8.f;
     float orbit_rate = 1;
 
     while (app.IsOk() && syn_manager.IsOk()) {
         double time = vehicle.GetSystem()->GetChTime();
+
+        // std::cout << "t=" << time << std::endl;
 
         // End simulation
         if (time >= end_time)
@@ -336,31 +347,31 @@ int main(int argc, char* argv[]) {
         // Update modules (process inputs from other modules)
         syn_manager.Synchronize(time);  // Synchronize between nodes
         driver.Synchronize(time);
-        terrain.Synchronize(time);
         vehicle.Synchronize(time, driver_inputs, terrain);
+        terrain.Synchronize(time);
         app.Synchronize("", driver_inputs);
 
         // Advance simulation for one timestep for all modules
         driver.Advance(step_size);
-        terrain.Advance(step_size);
         vehicle.Advance(step_size);
+        terrain.Advance(step_size);
         app.Advance(step_size);
 
         // update sensors
-        camera->SetOffsetPose(
-            chrono::ChFrame<double>({-orbit_radius * cos(time * orbit_rate), -orbit_radius * sin(time * orbit_rate), 3},
-                                    Q_from_AngAxis(time * orbit_rate, {0, 0, 1})));
+        // camera->SetOffsetPose(
+        //     chrono::ChFrame<double>({-orbit_radius * cos(time * orbit_rate), -orbit_radius * sin(time * orbit_rate), 3},
+        //                             Q_from_AngAxis(time * orbit_rate, {0, 0, 1})));
         manager->Update();
 
         // Increment frame number
         step_number++;
 
         // Log clock time
-        if (step_number % 100 == 0 && node_id == 0) {
+        if (step_number % 500 == 0 && node_id == 0) {
             std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-            auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+            auto time_span = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 
-            SynLog() << (time_span.count() / 1e3) / time << "\n";
+            SynLog() << (time_span.count()) / time << "\n";
         }
     }
     // Properly shuts down other ranks when one rank ends early
@@ -382,6 +393,7 @@ void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<double>("Simulation", "s,step_size", "Step size", std::to_string(step_size));
     cli.AddOption<double>("Simulation", "e,end_time", "End time", std::to_string(end_time));
     cli.AddOption<double>("Simulation", "b,heartbeat", "Heartbeat", std::to_string(heartbeat));
+    cli.AddOption<bool>("Simulation", "save", "save", std::to_string(save));
 
     // Irrlicht options
     cli.AddOption<std::vector<int>>("Irrlicht", "i,irr", "Nodes for irrlicht usage", "-1");
@@ -413,6 +425,14 @@ void GetVehicleModelFiles(VehicleType type,
             cam_distance = 6.0;
             break;
         case VehicleType::TRUCK:
+            // vehicle::SetDataPath("/mnt/data/code/chrono/data/vehicle/");
+            // synchrono::SetDataPath("/mnt/data/code/chrono/data/synchrono/");
+
+            // vehicle = vehicle::GetDataFile("MAN_Kat1/vehicle/MAN_7t_Vehicle_6WD.json");
+            // powertrain = vehicle::GetDataFile("MAN_Kat1/powertrain/MAN_7t_SimpleCVTPowertrain.json");
+            // tire = vehicle::GetDataFile("MAN_Kat1/tire/MAN_5t_TMeasyTire.json");
+            // zombie = synchrono::GetDataFile("vehicle/MAN_8WD.json");
+
             vehicle = vehicle::GetDataFile("truck/json/truck_Vehicle.json");
             powertrain = vehicle::GetDataFile("truck/json/truck_SimpleCVTPowertrain.json");
             tire = vehicle::GetDataFile("truck/json/truck_TMeasyTire.json");
