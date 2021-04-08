@@ -293,26 +293,52 @@ int main(int argc, char* argv[]) {
 
     // add a sensor manager
     auto manager = chrono_types::make_shared<ChSensorManager>(vehicle.GetSystem());
+    manager->SetRayRecursions(4);
+    Background b;
+    b.mode = BackgroundMode::ENVIRONMENT_MAP; //GRADIENT
+    b.color_zenith = {.5f, .6f, .7f};
+    b.color_horizon = {.9f, .8f, .7f};
+    b.env_tex = GetChronoDataFile("/Environments/sky_2_4k.hdr");
+    manager->scene->SetBackground(b);
     float brightness = 0.5f;
-    manager->scene->AddPointLight({1000, 1000, 1000}, {brightness, brightness, brightness}, 10000);
-    manager->scene->AddPointLight({-1000, 1000, 1000}, {brightness, brightness, brightness}, 10000);
-    manager->scene->AddPointLight({1000, -1000, 1000}, {brightness, brightness, brightness}, 10000);
-    manager->scene->AddPointLight({-1000, -1000, 1000}, {brightness, brightness, brightness}, 10000);
+    manager->scene->AddPointLight({100, 100, 1000}, {brightness, brightness, brightness}, 10000);
+    manager->scene->AddPointLight({-100, 100, 1000}, {brightness, brightness, brightness}, 10000);
+    manager->scene->AddPointLight({100, -100, 1000}, {brightness, brightness, brightness}, 10000);
+    manager->scene->AddPointLight({-100, -100, 1000}, {brightness, brightness, brightness}, 10000);
+    manager->scene->AddPointLight({0, 0, 10000}, {brightness, brightness, brightness}, 100000);
 
-    // add a camera to the vehicle
+    // // add a camera to the vehicle
     auto camera = chrono_types::make_shared<ChCameraSensor>(
         vehicle.GetChassisBody(),                                            // body camera is attached to
         60.f,                                                                // update rate in Hz
         chrono::ChFrame<double>({-12, 0, 3}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
         1920,                                                                // image width
         1080,                                                                // image height
-        3.14 / 2, 1);
+        3.14 / 2,                                                            // fov
+        1,                                                                   // super samples
+        CameraLensModelType::PINHOLE,                                        // camera model type
+        false                                                                // global illumination
+    );
     // camera->SetLag(1 / 30.f);
     // camera->SetName("Camera Sensor");
-    camera->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720));
+    camera->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720, "Camera 1, Super Sampled"));
     if (save)
         camera->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam/"));
     manager->AddSensor(camera);
+
+    // auto camera2 = chrono_types::make_shared<ChCameraSensor>(
+    //     vehicle.GetChassisBody(),                                            // body camera is attached to
+    //     60.f,                                                                // update rate in Hz
+    //     chrono::ChFrame<double>({-12, 0, 3}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
+    //     1920,                                                                // image width
+    //     1080,                                                                // image height
+    //     3.14 / 2, 1);
+    // // camera->SetLag(1 / 30.f);
+    // // camera->SetName("Camera Sensor");
+    // camera2->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720, "Camera 2, Single Sampled"));
+    // if (save)
+    //     camera2->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam2/"));
+    // manager->AddSensor(camera2);
 
     // ---------------
     // Simulation loop
@@ -324,6 +350,7 @@ int main(int argc, char* argv[]) {
     int step_number = 0;
 
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+    double last_time = 0;
 
     float orbit_radius = 8.f;
     float orbit_rate = 1;
@@ -358,9 +385,10 @@ int main(int argc, char* argv[]) {
         app.Advance(step_size);
 
         // update sensors
-        // camera->SetOffsetPose(
-        //     chrono::ChFrame<double>({-orbit_radius * cos(time * orbit_rate), -orbit_radius * sin(time * orbit_rate), 3},
-        //                             Q_from_AngAxis(time * orbit_rate, {0, 0, 1})));
+        camera->SetOffsetPose(
+            chrono::ChFrame<double>({-orbit_radius * cos(time * orbit_rate), -orbit_radius * sin(time * orbit_rate),
+            3},
+                                    Q_from_AngAxis(time * orbit_rate, {0, 0, 1})));
         manager->Update();
 
         // Increment frame number
@@ -369,9 +397,13 @@ int main(int argc, char* argv[]) {
         // Log clock time
         if (step_number % 500 == 0 && node_id == 0) {
             std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-            auto time_span = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+            // auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()*1000;
+            std::chrono::duration<double> wall_time =
+                std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
 
-            SynLog() << (time_span.count()) / time << "\n";
+            SynLog() << (wall_time.count()) / (time - last_time) << "\n";
+            last_time = time;
+            start = std::chrono::high_resolution_clock::now();
         }
     }
     // Properly shuts down other ranks when one rank ends early
@@ -466,7 +498,7 @@ void GetVehicleModelFiles(VehicleType type,
 void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
     // load all meshes in input file, using instancing where possible
     std::string base_path = GetChronoDataFile("/Environments/SanFrancisco/components/");
-    std::string input_file = base_path + "instance_map_02.csv";
+    std::string input_file = base_path + "instance_map_03.csv";
     // std::string input_file = base_path + "instance_map_roads_only.csv";
 
     std::ifstream infile(input_file);
@@ -477,6 +509,7 @@ void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
 
     std::unordered_map<std::string, std::shared_ptr<ChTriangleMeshConnected>> mesh_map;
 
+    int meshes_added = 0;
     int mesh_offset = 0;
     int num_meshes = 20000;
     if (infile.good()) {
@@ -497,43 +530,49 @@ void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
                 std::string mesh_obj = base_path + result[1] + ".obj";
 
                 // std::cout << mesh_name << std::endl;
+                if (mesh_name.find("EmissionOn") ==
+                    std::string::npos /*&& mesh_name.find("Road") != std::string::npos*/) {  // exlude items with
+                                                                                             // emission on
+                    // check if mesh is in map
+                    bool instance_found = false;
+                    std::shared_ptr<ChTriangleMeshConnected> mmesh;
+                    if (mesh_map.find(mesh_obj) != mesh_map.end()) {
+                        mmesh = mesh_map[mesh_obj];
+                        instance_found = true;
+                    } else {
+                        mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
+                        mmesh->LoadWavefrontMesh(mesh_obj, false, true);
+                        mesh_map[mesh_obj] = mmesh;
+                    }
 
-                // check if mesh is in map
-                bool instance_found = false;
-                std::shared_ptr<ChTriangleMeshConnected> mmesh;
-                if (mesh_map.find(mesh_obj) != mesh_map.end()) {
-                    mmesh = mesh_map[mesh_obj];
-                    instance_found = true;
+                    ChVector<double> pos = {std::stod(result[2]), std::stod(result[3]), std::stod(result[4])};
+                    ChQuaternion<double> rot = {std::stod(result[5]), std::stod(result[6]), std::stod(result[7]),
+                                                std::stod(result[8])};
+                    ChVector<double> scale = {std::stod(result[9]), std::stod(result[10]), std::stod(result[11])};
+
+                    // if not road, only add visualization with new pos,rot,scale
+                    auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+                    trimesh_shape->SetMesh(mmesh);
+                    trimesh_shape->SetName(mesh_name);
+                    trimesh_shape->SetStatic(true);
+                    trimesh_shape->SetScale(scale);
+
+                    auto mesh_body = chrono_types::make_shared<ChBody>();
+                    mesh_body->SetPos(pos);
+                    mesh_body->SetRot(rot);
+                    mesh_body->AddAsset(trimesh_shape);
+                    mesh_body->SetBodyFixed(true);
+                    mesh_body->SetCollide(false);
+                    chsystem->Add(mesh_body);
+                    meshes_added++;
                 } else {
-                    mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
-                    mmesh->LoadWavefrontMesh(mesh_obj, false, true);
-                    mesh_map[mesh_obj] = mmesh;
+                    // std::cout << "Skipped emissive mesh\n";
                 }
-
-                ChVector<double> pos = {std::stod(result[2]), std::stod(result[3]), std::stod(result[4])};
-                ChQuaternion<double> rot = {std::stod(result[5]), std::stod(result[6]), std::stod(result[7]),
-                                            std::stod(result[8])};
-                ChVector<double> scale = {std::stod(result[9]), std::stod(result[10]), std::stod(result[11])};
-
-                // if not road, only add visualization with new pos,rot,scale
-                auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
-                trimesh_shape->SetMesh(mmesh);
-                trimesh_shape->SetName(mesh_name);
-                trimesh_shape->SetStatic(true);
-                trimesh_shape->SetScale(scale);
-
-                auto mesh_body = chrono_types::make_shared<ChBody>();
-                mesh_body->SetPos(pos);
-                mesh_body->SetRot(rot);
-                mesh_body->AddAsset(trimesh_shape);
-                mesh_body->SetBodyFixed(true);
-                chsystem->Add(mesh_body);
             }
         }
         ChVector<> pos = {0, 0, 100};
         std::cout << "Terrrain height at <" << pos.x() << "," << pos.y() << "," << pos.z()
                   << ">: " << terrain->GetHeight(pos) << std::endl;
-        std::cout << "Total meshes: " << mesh_count - mesh_offset << " | Unique meshes: " << mesh_map.size()
-                  << std::endl;
+        std::cout << "Total meshes: " << meshes_added << " | Unique meshes: " << mesh_map.size() << std::endl;
     }
 }
