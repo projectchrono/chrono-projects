@@ -36,9 +36,16 @@
 #include "chrono_synchrono/utils/SynLog.h"
 
 #include "chrono_sensor/ChCameraSensor.h"
+#include "chrono_sensor/ChLidarSensor.h"
 #include "chrono_sensor/ChSensorManager.h"
+#include "chrono_sensor/filters/ChFilterAccess.h"
+#include "chrono_sensor/filters/ChFilterLidarNoise.h"
+#include "chrono_sensor/filters/ChFilterLidarReduce.h"
+#include "chrono_sensor/filters/ChFilterPCfromDepth.h"
 #include "chrono_sensor/filters/ChFilterSave.h"
+#include "chrono_sensor/filters/ChFilterSavePtCloud.h"
 #include "chrono_sensor/filters/ChFilterVisualize.h"
+#include "chrono_sensor/filters/ChFilterVisualizePointCloud.h"
 
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
 
@@ -66,7 +73,7 @@ VisualizationType tire_vis_type = VisualizationType::MESH;
 TireModelType tire_model = TireModelType::TMEASY;
 
 // Type of vehicle
-enum VehicleType { SEDAN, AUDI, TRUCK, VAN, SUV, CITYBUS };
+enum VehicleType { SEDAN, AUDI, SUV, VAN, TRUCK, CITYBUS };
 
 // Point on chassis tracked by the camera
 ChVector<> trackPoint(0.0, 0.0, 1.75);
@@ -295,19 +302,18 @@ int main(int argc, char* argv[]) {
     auto manager = chrono_types::make_shared<ChSensorManager>(vehicle.GetSystem());
     manager->SetRayRecursions(4);
     Background b;
-    b.mode = BackgroundMode::ENVIRONMENT_MAP; //GRADIENT
+    b.mode = BackgroundMode::ENVIRONMENT_MAP;  // GRADIENT
     b.color_zenith = {.5f, .6f, .7f};
     b.color_horizon = {.9f, .8f, .7f};
     b.env_tex = GetChronoDataFile("/Environments/sky_2_4k.hdr");
     manager->scene->SetBackground(b);
-    float brightness = 0.5f;
+    float brightness = .5f;
     manager->scene->AddPointLight({100, 100, 1000}, {brightness, brightness, brightness}, 10000);
     manager->scene->AddPointLight({-100, 100, 1000}, {brightness, brightness, brightness}, 10000);
     manager->scene->AddPointLight({100, -100, 1000}, {brightness, brightness, brightness}, 10000);
     manager->scene->AddPointLight({-100, -100, 1000}, {brightness, brightness, brightness}, 10000);
     manager->scene->AddPointLight({0, 0, 10000}, {brightness, brightness, brightness}, 100000);
 
-    // // add a camera to the vehicle
     auto camera = chrono_types::make_shared<ChCameraSensor>(
         vehicle.GetChassisBody(),                                            // body camera is attached to
         60.f,                                                                // update rate in Hz
@@ -315,30 +321,38 @@ int main(int argc, char* argv[]) {
         1920,                                                                // image width
         1080,                                                                // image height
         3.14 / 2,                                                            // fov
-        1,                                                                   // super samples
-        CameraLensModelType::PINHOLE,                                        // camera model type
-        false                                                                // global illumination
-    );
-    // camera->SetLag(1 / 30.f);
-    // camera->SetName("Camera Sensor");
+        1);
     camera->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720, "Camera 1, Super Sampled"));
     if (save)
         camera->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam/"));
     manager->AddSensor(camera);
 
-    // auto camera2 = chrono_types::make_shared<ChCameraSensor>(
-    //     vehicle.GetChassisBody(),                                            // body camera is attached to
-    //     60.f,                                                                // update rate in Hz
-    //     chrono::ChFrame<double>({-12, 0, 3}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
-    //     1920,                                                                // image width
-    //     1080,                                                                // image height
-    //     3.14 / 2, 1);
-    // // camera->SetLag(1 / 30.f);
-    // // camera->SetName("Camera Sensor");
-    // camera2->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720, "Camera 2, Single Sampled"));
-    // if (save)
-    //     camera2->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam2/"));
-    // manager->AddSensor(camera2);
+    auto lidar = chrono_types::make_shared<ChLidarSensor>(
+        vehicle.GetChassisBody(),                                            // body lidar is attached to
+        20.f,                                                                // scanning rate in Hz
+        chrono::ChFrame<double>({0, 0, 1.5}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
+        900,                                                                 // number of horizontal samples
+        16,                                                                  // number of vertical channels
+        6.28318530718,                                                       // horizontal field of view
+        0.261799,
+        -0.261799,                         // vertical field of view
+        100.f,                             // max distance
+        LidarBeamShape::ELLIPTICAL,        // beam shape
+        2,                                 // sample radius
+        0.003,                             // vertical divergence angle
+        0.003,                             // horizontal divergence angle
+        LidarReturnMode::STRONGEST_RETURN  // return mode for the lidar
+    );
+    lidar->SetName("Lidar Sensor 1");
+    lidar->SetLag(0.01);
+    lidar->SetCollectionWindow(.05);
+    lidar->PushFilter(chrono_types::make_shared<ChFilterPCfromDepth>());
+    lidar->PushFilter(chrono_types::make_shared<ChFilterLidarNoiseXYZI>(0.01f, 0.001f, 0.001f, 0.01f));
+    lidar->PushFilter(chrono_types::make_shared<ChFilterVisualizePointCloud>(640, 480, 2, "Lidar Point Cloud"));
+    lidar->PushFilter(chrono_types::make_shared<ChFilterXYZIAccess>());
+    if (save)
+        lidar->PushFilter(chrono_types::make_shared<ChFilterSavePtCloud>("DEMO_OUTPUT/lidar/"));
+    manager->AddSensor(lidar);
 
     // ---------------
     // Simulation loop
@@ -352,11 +366,11 @@ int main(int argc, char* argv[]) {
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     double last_time = 0;
 
-    float orbit_radius = 8.f;
+    float orbit_radius = 10.f;
     float orbit_rate = 1;
-
-    while (app.IsOk() && syn_manager.IsOk()) {
-        double time = vehicle.GetSystem()->GetChTime();
+    double time = 0;
+    while (app.IsOk() && syn_manager.IsOk() && time < end_time) {
+        time = vehicle.GetSystem()->GetChTime();
 
         // std::cout << "t=" << time << std::endl;
 
@@ -365,8 +379,8 @@ int main(int argc, char* argv[]) {
             break;
 
         // Render scene
-        if (step_number % render_steps == 0)
-            app.Render();
+        // if (step_number % render_steps == 0)
+        //     app.Render();
 
         // Get driver inputs
         ChDriver::Inputs driver_inputs = driver.GetInputs();
@@ -385,10 +399,10 @@ int main(int argc, char* argv[]) {
         app.Advance(step_size);
 
         // update sensors
-        camera->SetOffsetPose(
-            chrono::ChFrame<double>({-orbit_radius * cos(time * orbit_rate), -orbit_radius * sin(time * orbit_rate),
-            3},
-                                    Q_from_AngAxis(time * orbit_rate, {0, 0, 1})));
+        // camera->SetOffsetPose(
+        //     chrono::ChFrame<double>({-orbit_radius * cos(time * orbit_rate), -orbit_radius * sin(time * orbit_rate),
+        //     3},
+        //                             Q_from_AngAxis(time * orbit_rate, {0, 0, 1})));
         manager->Update();
 
         // Increment frame number
@@ -457,14 +471,6 @@ void GetVehicleModelFiles(VehicleType type,
             cam_distance = 6.0;
             break;
         case VehicleType::TRUCK:
-            // vehicle::SetDataPath("/mnt/data/code/chrono/data/vehicle/");
-            // synchrono::SetDataPath("/mnt/data/code/chrono/data/synchrono/");
-
-            // vehicle = vehicle::GetDataFile("MAN_Kat1/vehicle/MAN_7t_Vehicle_6WD.json");
-            // powertrain = vehicle::GetDataFile("MAN_Kat1/powertrain/MAN_7t_SimpleCVTPowertrain.json");
-            // tire = vehicle::GetDataFile("MAN_Kat1/tire/MAN_5t_TMeasyTire.json");
-            // zombie = synchrono::GetDataFile("vehicle/MAN_8WD.json");
-
             vehicle = vehicle::GetDataFile("truck/json/truck_Vehicle.json");
             powertrain = vehicle::GetDataFile("truck/json/truck_SimpleCVTPowertrain.json");
             tire = vehicle::GetDataFile("truck/json/truck_TMeasyTire.json");
@@ -509,9 +515,15 @@ void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
 
     std::unordered_map<std::string, std::shared_ptr<ChTriangleMeshConnected>> mesh_map;
 
+    auto mesh_body = chrono_types::make_shared<ChBody>();
+    mesh_body->SetBodyFixed(true);
+    mesh_body->SetCollide(false);
+    chsystem->Add(mesh_body);
+
     int meshes_added = 0;
     int mesh_offset = 0;
     int num_meshes = 20000;
+
     if (infile.good()) {
         int mesh_count = 0;
         int mesh_limit = mesh_offset + num_meshes;
@@ -530,9 +542,9 @@ void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
                 std::string mesh_obj = base_path + result[1] + ".obj";
 
                 // std::cout << mesh_name << std::endl;
-                if (mesh_name.find("EmissionOn") ==
-                    std::string::npos /*&& mesh_name.find("Road") != std::string::npos*/) {  // exlude items with
-                                                                                             // emission on
+                if (mesh_name.find("EmissionOn") == std::string::npos /*&&
+                    mesh_name.find("Road") != std::string::npos*/) {  // exlude items with
+                                                                    // emission on
                     // check if mesh is in map
                     bool instance_found = false;
                     std::shared_ptr<ChTriangleMeshConnected> mmesh;
@@ -546,6 +558,7 @@ void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
                     }
 
                     ChVector<double> pos = {std::stod(result[2]), std::stod(result[3]), std::stod(result[4])};
+
                     ChQuaternion<double> rot = {std::stod(result[5]), std::stod(result[6]), std::stod(result[7]),
                                                 std::stod(result[8])};
                     ChVector<double> scale = {std::stod(result[9]), std::stod(result[10]), std::stod(result[11])};
@@ -556,17 +569,12 @@ void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
                     trimesh_shape->SetName(mesh_name);
                     trimesh_shape->SetStatic(true);
                     trimesh_shape->SetScale(scale);
+                    trimesh_shape->Pos = pos;
+                    trimesh_shape->Rot = ChMatrix33<>(rot);
 
-                    auto mesh_body = chrono_types::make_shared<ChBody>();
-                    mesh_body->SetPos(pos);
-                    mesh_body->SetRot(rot);
                     mesh_body->AddAsset(trimesh_shape);
-                    mesh_body->SetBodyFixed(true);
-                    mesh_body->SetCollide(false);
-                    chsystem->Add(mesh_body);
+
                     meshes_added++;
-                } else {
-                    // std::cout << "Skipped emissive mesh\n";
                 }
             }
         }
