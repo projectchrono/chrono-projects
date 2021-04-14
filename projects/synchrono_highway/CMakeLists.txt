@@ -33,6 +33,24 @@ set(HIGHWAY_DATA_DIR "" CACHE FILEPATH "Path to directory contain highway assets
 #add_compile_definitions(HIGHWAY_VIS_PATH="${HIGHWAY_DIR}Highway_new.obj")
 add_compile_definitions(HIGHWAY_DATA_DIR=${HIGHWAY_DATA_DIR})
 
+#---------------
+# Find DDS
+#---------------
+string(FIND "${CHRONO_LIBRARIES}" "fastcdr" matchres)
+if(NOT ${matchres} EQUAL -1)
+	message(STATUS "Using Fast DDS...")
+	add_compile_definitions(USE_FAST_DDS=1)
+	set(FAST_DDS_INSTALL_DIR "" CACHE PATH "Path to FastDDS install dir")
+	set(fastcdr_DIR "${FAST_DDS_INSTALL_DIR}/lib/cmake/fastcdr" CACHE FILEPATH "Path to the FastCDR cmake config file" FORCE)
+	set(fastrtps_DIR "${FAST_DDS_INSTALL_DIR}/share/fastrtps/cmake" CACHE FILEPATH "Path to the FastDDS cmake config file" FORCE)
+	set(foonathan_memory_DIR "${FAST_DDS_INSTALL_DIR}/lib/foonathan_memory/cmake" CACHE FILEPATH "Path to the foonathan memory cmake config file" FORCE)
+	if (NOT EXISTS ${foonathan_memory_DIR})
+		set(foonathan_memory_DIR "${FAST_DDS_INSTALL_DIR}/lib64/foonathan_memory/cmake" CACHE PATH "Path to the foonathan memory cmake config file" FORCE)
+	endif()
+	find_package(fastcdr REQUIRED)
+	find_package(fastrtps REQUIRED)
+endif()
+
 #--------------------------------------------------------------
 # Include paths and libraries
 #--------------------------------------------------------------
@@ -47,7 +65,6 @@ add_compile_definitions(HIGHWAY_DATA_DIR=${HIGHWAY_DATA_DIR})
 #
 # (B) Path to the top of the source tree for this project
 # - for access to utility headers
-
 
 include_directories(
     ${CHRONO_INCLUDE_DIRS}
@@ -73,6 +90,18 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 endif()
 
 #--------------------------------------------------------------
+# Grab the extras
+#--------------------------------------------------------------
+set(EXTRAS
+	extras/driver/ChCSLDriver.h
+	extras/driver/ChCSLDriver.cpp
+	extras/driver/joystick.h
+
+	extras/filters/ChFilterFullScreenVisualize.h
+	extras/filters/ChFilterFullScreenVisualize.cpp
+)
+
+#--------------------------------------------------------------
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
@@ -82,7 +111,7 @@ foreach(PROGRAM ${DEMOS})
 
   message(STATUS "...add ${PROGRAM}")
 
-  add_executable(${PROGRAM}  "${PROGRAM}.cpp")
+	add_executable(${PROGRAM}  "${PROGRAM}.cpp" ${EXTRAS})
   source_group(""  FILES "${PROGRAM}.cpp")
   set_target_properties(${PROGRAM} PROPERTIES
     FOLDER demos
@@ -91,6 +120,6 @@ foreach(PROGRAM ${DEMOS})
     LINK_FLAGS "${CHRONO_LINKER_FLAGS}"
   )
 
-  target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
+	target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES} "-L/usr/local/cuda/lib64 -lcudart")
 
 endforeach(PROGRAM)
