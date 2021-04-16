@@ -511,7 +511,7 @@ void AddCommandLineOptions(ChCLI& cli) {
 #endif
 
     // Other options
-    cli.AddOption<int>("Demo", "v,vehicle", "Vehicle Options [0-4]: Sedan, HMMWV, UAZ, CityBus, MAN", "0");
+    cli.AddOption<int>("Demo", "v,vehicle", "Vehicle Options [0-4]: Sedan, Audi, SUV, Van, Truck, CityBus", "0");
 }
 
 void GetVehicleModelFiles(VehicleType type,
