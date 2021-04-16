@@ -99,6 +99,11 @@ double heartbeat = 1e-2;  // 100[Hz]
 double render_step_size = 1.0 / 50;  // FPS = 50
 
 bool save = false;
+bool use_fullscreen = false;
+
+// Resolution of the CSL 3-monitor setup
+const int FS_WIDTH = 3840;
+const int FS_HEIGHT = 720;
 
 std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
 
@@ -156,12 +161,12 @@ class DriverWrapper : public ChDriver {
             m_steering = irr_driver->GetSteering();
             m_braking = irr_driver->GetBraking();
         }
-				if(csl_driver){
+        if (csl_driver) {
             csl_driver->Synchronize(time);
             m_throttle = csl_driver->GetThrottle();
             m_steering = csl_driver->GetSteering();
             m_braking = csl_driver->GetBraking();
-				}
+        }
     }
 
     /// Advance the state of this driver system by the specified time step.
@@ -192,32 +197,31 @@ int main(int argc, char* argv[]) {
     if (!cli.Parse(argc, argv, true))
         return 0;
 
-    // -----------------------
-    // Create SynChronoManager
-    // -----------------------
+        // -----------------------
+        // Create SynChronoManager
+        // -----------------------
 #ifdef USE_FAST_DDS
-		int node_id, num_nodes;
-		std::shared_ptr<SynCommunicator> communicator;
-		if (cli.GetAsType<bool>("dds")) {
-				node_id = cli.GetAsType<int>("node_id");
-				num_nodes = cli.GetAsType<int>("num_nodes");
-				auto dds_communicator = chrono_types::make_shared<SynDDSCommunicator>(node_id);
+    int node_id, num_nodes;
+    std::shared_ptr<SynCommunicator> communicator;
+    if (cli.GetAsType<bool>("dds")) {
+        node_id = cli.GetAsType<int>("node_id");
+        num_nodes = cli.GetAsType<int>("num_nodes");
+        auto dds_communicator = chrono_types::make_shared<SynDDSCommunicator>(node_id);
 
-				communicator = dds_communicator;
-		}
-		else {
-				auto mpi_communicator = chrono_types::make_shared<SynMPICommunicator>(argc, argv);
+        communicator = dds_communicator;
+    } else {
+        auto mpi_communicator = chrono_types::make_shared<SynMPICommunicator>(argc, argv);
 
-				node_id = mpi_communicator->GetRank();
-				num_nodes = mpi_communicator->GetNumRanks();
-				communicator = mpi_communicator;
-		}
+        node_id = mpi_communicator->GetRank();
+        num_nodes = mpi_communicator->GetNumRanks();
+        communicator = mpi_communicator;
+    }
     SynChronoManager syn_manager(node_id, num_nodes, communicator);
 #else
-		auto communicator = chrono_types::make_shared<SynMPICommunicator>(argc, argv);
+    auto communicator = chrono_types::make_shared<SynMPICommunicator>(argc, argv);
 
-		int node_id = communicator->GetRank();
-		int num_nodes = communicator->GetNumRanks();
+    int node_id = communicator->GetRank();
+    int num_nodes = communicator->GetNumRanks();
     SynChronoManager syn_manager(node_id, num_nodes, communicator);
 #endif
 
@@ -238,6 +242,7 @@ int main(int argc, char* argv[]) {
     end_time = cli.GetAsType<double>("end_time");
     heartbeat = cli.GetAsType<double>("heartbeat");
     save = cli.GetAsType<bool>("save");
+    use_fullscreen = cli.GetAsType<bool>("fullscreen");
 
     // Change SynChronoManager settings
     syn_manager.SetHeartbeat(heartbeat);
@@ -332,71 +337,76 @@ int main(int argc, char* argv[]) {
 
         app.Set(temp_app);
         driver.SetIrrDriver(irr_driver);
+    } else {
+        // Use custom CSL driver instead of irr driver
+        if (cli.HasValueInVector<int>("console", node_id)) {
+            auto csl_driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
+            driver.SetCSLDriver(csl_driver);
+        }
     }
-		else {
-				// Use custom CSL driver instead of irr driver
-        auto csl_driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
-        driver.SetCSLDriver(csl_driver);
-		}
 
     // add a sensor manager
     auto manager = chrono_types::make_shared<ChSensorManager>(vehicle.GetSystem());
-    manager->SetRayRecursions(4);
-		if (node_id == 0)
-		{
-				Background b;
-				b.mode = BackgroundMode::ENVIRONMENT_MAP;  // GRADIENT
-				b.color_zenith = {.5f, .6f, .7f};
-				b.color_horizon = {.9f, .8f, .7f};
-				b.env_tex = GetChronoDataFile("/Environments/sky_2_4k.hdr");
-				manager->scene->SetBackground(b);
-				float brightness = .5f;
-				manager->scene->AddPointLight({100, 100, 1000}, {brightness, brightness, brightness}, 10000);
-				manager->scene->AddPointLight({-100, 100, 1000}, {brightness, brightness, brightness}, 10000);
-				manager->scene->AddPointLight({100, -100, 1000}, {brightness, brightness, brightness}, 10000);
-				manager->scene->AddPointLight({-100, -100, 1000}, {brightness, brightness, brightness}, 10000);
-				manager->scene->AddPointLight({0, 0, 10000}, {brightness, brightness, brightness}, 100000);
+    manager->SetRayRecursions(11);
+    if (node_id == 0) {
+        Background b;
+        b.mode = BackgroundMode::ENVIRONMENT_MAP;  // GRADIENT
+        b.color_zenith = {.5f, .6f, .7f};
+        b.color_horizon = {.9f, .8f, .7f};
+        b.env_tex = GetChronoDataFile("/Environments/sky_2_4k.hdr");
+        manager->scene->SetBackground(b);
+        float brightness = .5f;
+        // manager->scene->AddPointLight({100, 100, 1000}, {brightness, brightness, brightness}, 10000);
+        // manager->scene->AddPointLight({-100, 100, 1000}, {brightness, brightness, brightness}, 10000);
+        // manager->scene->AddPointLight({100, -100, 1000}, {brightness, brightness, brightness}, 10000);
+        // manager->scene->AddPointLight({-100, -100, 1000}, {brightness, brightness, brightness}, 10000);
+        manager->scene->AddPointLight({0, 0, 10000}, {brightness, brightness, brightness}, 100000);
 
-				auto camera = chrono_types::make_shared<ChCameraSensor>(
-						vehicle.GetChassisBody(),                                            // body camera is attached to
-						60.f,                                                                // update rate in Hz
-						chrono::ChFrame<double>({-12, 0, 3}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
-						1920,                                                                // image width
-						1080,                                                                // image height
-						3.14 / 2,                                                            // fov
-						1);
-				camera->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(1280, 720, "Camera 1, Super Sampled", false));
-				if (save)
-						camera->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam/"));
-				manager->AddSensor(camera);
+        int image_width = use_fullscreen ? FS_WIDTH : 1920;
+        int image_height = use_fullscreen ? FS_HEIGHT : 1080;
 
-				auto lidar = chrono_types::make_shared<ChLidarSensor>(
-						vehicle.GetChassisBody(),                                            // body lidar is attached to
-						20.f,                                                                // scanning rate in Hz
-						chrono::ChFrame<double>({0, 0, 1.5}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
-						900,                                                                 // number of horizontal samples
-						16,                                                                  // number of vertical channels
-						6.28318530718,                                                       // horizontal field of view
-						0.261799,
-						-0.261799,                         // vertical field of view
-						100.f,                             // max distance
-						LidarBeamShape::ELLIPTICAL,        // beam shape
-						2,                                 // sample radius
-						0.003,                             // vertical divergence angle
-						0.003,                             // horizontal divergence angle
-						LidarReturnMode::STRONGEST_RETURN  // return mode for the lidar
-				);
-				lidar->SetName("Lidar Sensor 1");
-				lidar->SetLag(0.01);
-				lidar->SetCollectionWindow(.05);
-				lidar->PushFilter(chrono_types::make_shared<ChFilterPCfromDepth>());
-				lidar->PushFilter(chrono_types::make_shared<ChFilterLidarNoiseXYZI>(0.01f, 0.001f, 0.001f, 0.01f));
-				lidar->PushFilter(chrono_types::make_shared<ChFilterVisualizePointCloud>(640, 480, 2, "Lidar Point Cloud"));
-				lidar->PushFilter(chrono_types::make_shared<ChFilterXYZIAccess>());
-				if (save)
-						lidar->PushFilter(chrono_types::make_shared<ChFilterSavePtCloud>("DEMO_OUTPUT/lidar/"));
-				manager->AddSensor(lidar);
-		}
+        auto camera = chrono_types::make_shared<ChCameraSensor>(
+            vehicle.GetChassisBody(),                                            // body camera is attached to
+            60.f,                                                                // update rate in Hz
+            chrono::ChFrame<double>({-12, 0, 3}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
+            image_width,                                                         // image width
+            image_height,                                                        // image height
+            3.14 / 2,                                                            // fov
+            1);
+
+        camera->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(
+            image_width, image_height, "Camera 1, Super Sampled", use_fullscreen));
+        if (save)
+            camera->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam/"));
+        manager->AddSensor(camera);
+
+        auto lidar = chrono_types::make_shared<ChLidarSensor>(
+            vehicle.GetChassisBody(),                                            // body lidar is attached to
+            20.f,                                                                // scanning rate in Hz
+            chrono::ChFrame<double>({0, 0, 1.5}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
+            900,                                                                 // number of horizontal samples
+            16,                                                                  // number of vertical channels
+            6.28318530718,                                                       // horizontal field of view
+            0.261799,
+            -0.261799,                         // vertical field of view
+            100.f,                             // max distance
+            LidarBeamShape::ELLIPTICAL,        // beam shape
+            2,                                 // sample radius
+            0.003,                             // vertical divergence angle
+            0.003,                             // horizontal divergence angle
+            LidarReturnMode::STRONGEST_RETURN  // return mode for the lidar
+        );
+        lidar->SetName("Lidar Sensor 1");
+        lidar->SetLag(0.01);
+        lidar->SetCollectionWindow(.05);
+        lidar->PushFilter(chrono_types::make_shared<ChFilterPCfromDepth>());
+        lidar->PushFilter(chrono_types::make_shared<ChFilterLidarNoiseXYZI>(0.01f, 0.001f, 0.001f, 0.01f));
+        lidar->PushFilter(chrono_types::make_shared<ChFilterVisualizePointCloud>(640, 480, 2, "Lidar Point Cloud"));
+        lidar->PushFilter(chrono_types::make_shared<ChFilterXYZIAccess>());
+        if (save)
+            lidar->PushFilter(chrono_types::make_shared<ChFilterSavePtCloud>("DEMO_OUTPUT/lidar/"));
+        manager->AddSensor(lidar);
+    }
 
     // ---------------
     // Simulation loop
@@ -484,10 +494,14 @@ void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<double>("Simulation", "e,end_time", "End time", std::to_string(end_time));
     cli.AddOption<double>("Simulation", "b,heartbeat", "Heartbeat", std::to_string(heartbeat));
     cli.AddOption<bool>("Simulation", "save", "save", std::to_string(save));
+    cli.AddOption<std::vector<int>>("Simulation", "console", "Nodes to drive with the steering wheel and pedals", "-1");
 
     // Irrlicht options
     cli.AddOption<std::vector<int>>("Irrlicht", "i,irr", "Nodes for irrlicht usage", "-1");
     cli.AddOption<std::vector<int>>("Keyboard", "k,keyboard", "Force irrlicht driver into keyboard control", "-1");
+
+    // Sensor options
+    cli.AddOption<bool>("Simulation", "fullscreen", "Use full screen camera display", std::to_string(use_fullscreen));
 
     // SynChrono options
 #ifdef USE_FAST_DDS
