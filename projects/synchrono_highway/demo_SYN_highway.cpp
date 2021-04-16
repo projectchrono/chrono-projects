@@ -337,12 +337,10 @@ int main(int argc, char* argv[]) {
 
         app.Set(temp_app);
         driver.SetIrrDriver(irr_driver);
-    } else {
+    } else if (cli.HasValueInVector<int>("console", node_id)) {
         // Use custom CSL driver instead of irr driver
-        if (cli.HasValueInVector<int>("console", node_id)) {
-            auto csl_driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
-            driver.SetCSLDriver(csl_driver);
-        }
+        auto csl_driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
+        driver.SetCSLDriver(csl_driver);
     }
 
     // add a sensor manager
@@ -362,8 +360,8 @@ int main(int argc, char* argv[]) {
         // manager->scene->AddPointLight({-100, -100, 1000}, {brightness, brightness, brightness}, 10000);
         manager->scene->AddPointLight({0, 0, 10000}, {brightness, brightness, brightness}, 100000);
 
-        int image_width = use_fullscreen ? FS_WIDTH : 1920;
-        int image_height = use_fullscreen ? FS_HEIGHT : 1080;
+        const int image_width = use_fullscreen ? FS_WIDTH : 1920;
+        const int image_height = use_fullscreen ? FS_HEIGHT : 1080;
 
         auto camera = chrono_types::make_shared<ChCameraSensor>(
             vehicle.GetChassisBody(),                                            // body camera is attached to
