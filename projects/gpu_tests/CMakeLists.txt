@@ -15,7 +15,6 @@ set(DEMOS
         test_GPU_directshear
         test_GPU_Coneflow
         test_GPU_commvessels
-        test_GPU_bulkcompress
         test_GPU_milsettle
         test_GPU_testsuite
         test_GPU_normal
