@@ -159,7 +159,7 @@ void ChLidarWaypointDriver::Advance(double step) {
         }
 
         // calculate a new current speed using the path curvature
-        double curve_location_const = 3.0;
+        double curve_location_const = 4.0;
 
         ChVector<double> curvature_location =
             m_vehicle.GetVehiclePos() +
@@ -185,13 +185,16 @@ void ChLidarWaypointDriver::Advance(double step) {
         ChVector<> heading = m_vehicle.GetVehicleRot().Rotate({1, 0, 0});
         double dotangle = d.Dot(heading);
 
-        m_acc_driver->SetDesiredSpeed(m_target_speed * std::max(0.2, dotangle * .75 + .25));
+        m_acc_driver->SetDesiredSpeed(m_target_speed * std::max(0.3, dotangle * 1.5 - .5));
+        // std::cout << "Speed: " << m_target_speed * std::max(0.3, dotangle * 2.0 - 1.0) << std::endl;
         m_acc_driver->SetCurrentDistance(m_current_distance);
         m_acc_driver->Advance(step);
 
-        m_throttle = m_acc_driver->GetThrottle();
-        m_steering = m_acc_driver->GetSteering();
-        m_braking = m_acc_driver->GetBraking();
+        double max_dt = 0.01;
+        m_throttle = ChClamp(m_acc_driver->GetThrottle(), m_throttle - max_dt, m_throttle + max_dt);
+        m_steering = ChClamp(m_acc_driver->GetSteering(), m_steering - max_dt, m_steering + max_dt);
+        m_braking = ChClamp(m_acc_driver->GetBraking(), m_braking - max_dt, m_braking + max_dt);
+
     } else {
         m_data_driver->Advance(step);
     }

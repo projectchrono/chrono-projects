@@ -119,37 +119,49 @@ struct PathVehicleSetup {
 
 // starting locations and paths
 std::vector<PathVehicleSetup> demo_config = {
-    {AUDI, {925.434, -164.87, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},    // agent 0
-    {AUDI, {925.434, -53.47, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},     // agent 0
-    {AUDI, {903.134, 149.13, -64.8}, Q_from_AngAxis(3.14, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},         // agent 0
-    {SUV, {825.134, 149.13, -64.8}, Q_from_AngAxis(3.14, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},          // agent 0
-    {TRUCK, {751.234, 148.93, -64.8}, Q_from_AngAxis(3.14, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},        // agent 0
-    {SUV, {727.834, 124.13, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},     // agent 0
-    {AUDI, {727.834, 40.13, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},     // agent 0
-    {SUV, {727.834, -34.27, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},     // agent 0
-    {AUDI, {727.834, -100.27, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},   // agent 0
-    {TRUCK, {727.834, -212.97, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},  // agent 0
-    {TRUCK, {748.234, -225.07, -64.8}, Q_from_AngAxis(0, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},          // agent 0
-    {SUV, {800.234, -225.07, -64.8}, Q_from_AngAxis(0, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},            // agent 0
-    {AUDI, {855.934, -222.77, -64.8}, Q_from_AngAxis(0, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},           // agent 0
-    {SUV, {925.634, -214.17, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},     // agent 0
-    {TRUCK, {925.434, -180.87, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},   // agent 0
-    {AUDI, {847.634, 140.83, -64.8}, Q_from_AngAxis(0, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},            // agent 0
-    {AUDI, {917.234, 116.63, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},    // agent 0
-    {SUV, {917.234, 60.63, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},      // agent 0
-    {TRUCK, {917.234, -10.63, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},   // agent 0
-    {AUDI, {917.334, -95.67, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},    // agent 0
-    {SUV, {892.334, -120.17, -64.8}, Q_from_AngAxis(3.14, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},         // agent 0
-    {TRUCK, {850.334, -120.17, -64.8}, Q_from_AngAxis(3.14, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},       // agent 0
-    {AUDI, {800.334, -119.67, -64.8}, Q_from_AngAxis(3.14, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},        // agent 0
-    {AUDI, {752.934, -119.47, -64.8}, Q_from_AngAxis(3.14, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},        // agent 0
-    {SUV, {735.734, -102.97, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},     // agent 0
-    {AUDI, {735.734, -50.43, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},     // agent 0
-    {AUDI, {735.734, 1.43, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},       // agent 0
-    {SUV, {735.734, 60.63, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},       // agent 0
-    {TRUCK, {735.734, 123.63, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},    // agent 0
-    {AUDI, {755.634, 140.93, -64.8}, Q_from_AngAxis(0, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1}             // agent 0
-};
+    {AUDI, {925.434, -164.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},
+
+    {AUDI, {845.534, -131.97, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", 8.0, 0.1},
+    {VAN, {763.334, -131.37, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", 8.0, 1.0},
+    {SUV, {727.834, -158.07, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/4.txt", 8.0, 0.1},
+    {SUV, {727.834, -203.57, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/4.txt", 8.0, 0.1},
+    {AUDI, {759.734, -225.07, -64.8}, Q_from_AngZ(0), "/paths/4.txt", 8.0, 0.1},
+    {SUV, {897.934, -223.27, -64.8}, Q_from_AngZ(0), "/paths/4.txt", 8.0, 0.1},
+    {AUDI, {925.434, -199.77, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/4.txt", 8.0, 0.1},
+    {AUDI, {897.434, -132.07, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", 8.0, 0.1},
+
+    {SUV, {925.434, -53.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},
+    {AUDI, {925.434, 0.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},
+    {VAN, {925.434, 50.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 1.0},
+    {SUV, {925.434, 75.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},
+    {AUDI, {903.134, 149.13, -64.8}, Q_from_AngZ(3.14), "/paths/2.txt", 10.0, 0.1},
+    {AUDI, {825.134, 149.13, -64.8}, Q_from_AngZ(3.14), "/paths/2.txt", 10.0, 0.1},
+    {SUV, {751.234, 148.93, -64.8}, Q_from_AngZ(3.14), "/paths/2.txt", 10.0, 0.1},
+    {CITYBUS, {727.834, 124.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", 10.0, 1.0},
+    {SUV, {727.834, 85.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", 10.0, 0.1},
+    {AUDI, {727.834, 40.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", 10.0, 0.1},
+    {SUV, {727.834, -34.27, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", 10.0, 0.1},
+    {AUDI, {727.834, -100.27, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", 10.0, 0.1},
+    {AUDI, {727.834, -212.97, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", 10.0, 0.1},
+    {VAN, {748.234, -225.07, -64.8}, Q_from_AngZ(0), "/paths/2.txt", 10.0, 1.0},
+    {AUDI, {855.934, -222.77, -64.8}, Q_from_AngZ(0), "/paths/2.txt", 10.0, 0.1},
+    {CITYBUS, {925.634, -214.17, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 1.0},
+
+    {AUDI, {867.634, 140.83, -64.8}, Q_from_AngZ(0), "/paths/3.txt", 7.0, 0.1},
+    {AUDI, {847.634, 140.83, -64.8}, Q_from_AngZ(0), "/paths/3.txt", 7.0, 0.1},
+    {AUDI, {917.234, 116.63, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", 7.0, 0.1},
+    {SUV, {917.234, 60.63, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", 5.0, 0.1},
+    {SUV, {917.234, -10.63, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", 5.0, 0.1},
+    {AUDI, {917.334, -95.67, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", 7.0, 0.1},
+    {SUV, {892.334, -120.17, -64.8}, Q_from_AngZ(3.14), "/paths/3.txt", 5.0, 0.1},
+    {SUV, {850.334, -120.17, -64.8}, Q_from_AngZ(3.14), "/paths/3.txt", 5.0, 0.1},
+    {AUDI, {752.934, -119.47, -64.8}, Q_from_AngZ(3.14), "/paths/3.txt", 7.0, 0.1},
+    {SUV, {735.734, -102.97, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", 5.0, 0.1},
+    {AUDI, {735.734, -75.97, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", 5.0, 0.1},
+    {AUDI, {735.734, 1.43, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", 7.0, 0.1},
+    {AUDI, {735.734, 123.63, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", 7.0, 0.1},
+    {SUV, {755.634, 140.93, -64.8}, Q_from_AngZ(0), "/paths/3.txt", 7.0, 0.1},
+    {SUV, {785.634, 140.93, -64.8}, Q_from_AngZ(0), "/paths/3.txt", 7.0, 0.1}};
 
 // =============================================================================
 
@@ -316,6 +328,7 @@ int main(int argc, char* argv[]) {
     terrain.Initialize();
 
     std::shared_ptr<ChLidarSensor> lidar;
+    std::shared_ptr<ChCameraSensor> camera;
     std::shared_ptr<ChSensorManager> manager;
     if (node_id == 0 || !no_sensing) {
         // add a sensor manager
@@ -333,13 +346,14 @@ int main(int argc, char* argv[]) {
         const int image_width = use_fullscreen ? FS_WIDTH : 1280;
         const int image_height = use_fullscreen ? FS_HEIGHT : 720;
         if (node_id == 0) {
-            auto camera = chrono_types::make_shared<ChCameraSensor>(
-                vehicle.GetChassisBody(),                                            // body camera is attached to
-                30.f,                                                                // update rate in Hz
-                chrono::ChFrame<double>({-12, 0, 3}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
-                image_width,                                                         // image width
-                image_height,                                                        // image height
-                3.14 / 4,                                                            // fov
+            camera = chrono_types::make_shared<ChCameraSensor>(
+                vehicle.GetChassisBody(),  // body camera is attached to
+                30.f,                      // update rate in Hz
+                chrono::ChFrame<double>({-cam_distance, 0, .45 * cam_distance},
+                                        Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
+                image_width,                                            // image width
+                image_height,                                           // image height
+                3.14 / 4,                                               // fov
                 1);
 
             camera->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(
@@ -347,6 +361,22 @@ int main(int argc, char* argv[]) {
             if (save)
                 camera->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam/"));
             manager->AddSensor(camera);
+
+            // auto camera2 = chrono_types::make_shared<ChCameraSensor>(
+            //     patch->GetGroundBody(),  // body camera is attached to
+            //     30.f,                    // update rate in Hz
+            //     chrono::ChFrame<double>({830, -40.87, 200.0}, Q_from_AngAxis(3.14 / 2, {0, 1, 0})),  // offset pose
+            //     image_width,                                                                         // image width
+            //     image_height,                                                                        // image height
+            //     3.14 / 2,                                                                            // fov
+            //     1);
+
+            // camera2->PushFilter(
+            //     chrono_types::make_shared<ChFilterFullScreenVisualize>(image_width, image_height, "Camera 2",
+            //     false));
+            // if (save)
+            //     camera2->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam2/"));
+            // manager->AddSensor(camera2);
         }
 
         lidar = chrono_types::make_shared<ChLidarSensor>(
@@ -442,7 +472,7 @@ int main(int argc, char* argv[]) {
     double last_time = 0;
 
     float orbit_radius = 10.f;
-    float orbit_rate = 1;
+    float orbit_rate = .25;
     double time = 0;
     while (app.IsOk() && syn_manager.IsOk() && time < end_time) {
         time = vehicle.GetSystem()->GetChTime();
@@ -473,8 +503,14 @@ int main(int argc, char* argv[]) {
         terrain.Advance(step_size);
         app.Advance(step_size);
 
-        if (manager)
+        if (manager) {
+            // if (camera) {
+            //     camera->SetOffsetPose(chrono::ChFrame<double>(
+            //         {-orbit_radius * cos(time * orbit_rate), -orbit_radius * sin(time * orbit_rate), 1},
+            //         Q_from_AngAxis(time * orbit_rate, {0, 0, 1})));
+            // }
             manager->Update();
+        }
 
         // Increment frame number
         step_number++;
@@ -571,8 +607,8 @@ void GetVehicleModelFiles(VehicleType type,
             powertrain = vehicle::GetDataFile("van/json/van_SimpleMapPowertrain.json");
             tire = vehicle::GetDataFile("van/json/van_TMeasyTire.json");
             zombie = vehicle::GetDataFile("van/json/van.json");
-            lidar_pos = {1.0, 0, 0.25};
-            cam_distance = 12.0;
+            lidar_pos = {1.1, 0, 0.5};
+            cam_distance = 5.0;
             break;
         case VehicleType::SUV:
             vehicle = vehicle::GetDataFile("suv/json/suv_Vehicle.json");
@@ -587,7 +623,7 @@ void GetVehicleModelFiles(VehicleType type,
             powertrain = vehicle::GetDataFile("citybus/powertrain/CityBus_SimpleMapPowertrain.json");
             tire = vehicle::GetDataFile("citybus/tire/CityBus_TMeasyTire.json");
             zombie = vehicle::GetDataFile("citybus/CityBus.json");
-            lidar_pos = {1.0, 0, 0.25};
+            lidar_pos = {2.32, 0, 0.5};
             cam_distance = 14.0;
             break;
     }
@@ -634,8 +670,8 @@ void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
                 std::string mesh_obj = base_path + result[1] + ".obj";
 
                 // std::cout << mesh_name << std::endl;
-                if (mesh_name.find("EmissionOn") == std::string::npos /*&&
-                    mesh_name.find("Road") != std::string::npos*/) {  // exlude items with
+                if (mesh_name.find("EmissionOn") == std::string::npos &&
+                    mesh_name.find("Road") != std::string::npos) {  // exlude items with
                                                                     // emission on
                     // check if mesh is in map
                     bool instance_found = false;
