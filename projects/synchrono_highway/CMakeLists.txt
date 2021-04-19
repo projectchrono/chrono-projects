@@ -95,6 +95,8 @@ endif()
 set(EXTRAS
 	extras/driver/ChCSLDriver.h
 	extras/driver/ChCSLDriver.cpp
+	extras/driver/ChLidarWaypointDriver.h
+	extras/driver/ChLidarWaypointDriver.cpp
 	extras/driver/joystick.h
 
 	extras/filters/ChFilterFullScreenVisualize.h

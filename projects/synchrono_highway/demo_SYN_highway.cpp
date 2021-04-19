@@ -34,8 +34,11 @@
 #include "chrono_synchrono/communication/dds/SynDDSCommunicator.h"
 #endif
 #include "chrono_synchrono/communication/mpi/SynMPICommunicator.h"
+#include "chrono_synchrono/controller/driver/SynMultiPathDriver.h"
 #include "chrono_synchrono/utils/SynDataLoader.h"
 #include "chrono_synchrono/utils/SynLog.h"
+#include "chrono_vehicle/driver/ChPathFollowerACCDriver.h"
+#include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 
 #include "chrono_sensor/ChCameraSensor.h"
 #include "chrono_sensor/ChLidarSensor.h"
@@ -52,6 +55,7 @@
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
 
 #include "extras/driver/ChCSLDriver.h"
+#include "extras/driver/ChLidarWaypointDriver.h"
 #include "extras/filters/ChFilterFullScreenVisualize.h"
 
 using namespace chrono;
@@ -62,10 +66,6 @@ using namespace chrono::vehicle;
 using namespace chrono::sensor;
 
 // =============================================================================
-
-// Initial vehicle location and orientation
-ChVector<> initLoc(907, -230, -64.8);
-ChQuaternion<> initRot(1, 0, 0, 0);
 
 // Visualization type for vehicle parts (PRIMITIVES, MESH, or NONE)
 VisualizationType chassis_vis_type = VisualizationType::MESH;
@@ -100,12 +100,56 @@ double render_step_size = 1.0 / 50;  // FPS = 50
 
 bool save = false;
 bool use_fullscreen = false;
+bool no_sensing = false;
 
 // Resolution of the CSL 3-monitor setup
 const int FS_WIDTH = 3840;
 const int FS_HEIGHT = 720;
 
 std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
+
+struct PathVehicleSetup {
+    VehicleType vehicle_type;
+    ChVector<double> pos;
+    ChQuaternion<double> rot;
+    std::string path_file;
+    double lookahead;
+    double speed_gain_p;
+};
+
+// starting locations and paths
+std::vector<PathVehicleSetup> demo_config = {
+    {AUDI, {925.434, -164.87, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},    // agent 0
+    {AUDI, {925.434, -53.47, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},     // agent 0
+    {AUDI, {903.134, 149.13, -64.8}, Q_from_AngAxis(3.14, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},         // agent 0
+    {SUV, {825.134, 149.13, -64.8}, Q_from_AngAxis(3.14, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},          // agent 0
+    {TRUCK, {751.234, 148.93, -64.8}, Q_from_AngAxis(3.14, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},        // agent 0
+    {SUV, {727.834, 124.13, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},     // agent 0
+    {AUDI, {727.834, 40.13, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},     // agent 0
+    {SUV, {727.834, -34.27, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},     // agent 0
+    {AUDI, {727.834, -100.27, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},   // agent 0
+    {TRUCK, {727.834, -212.97, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},  // agent 0
+    {TRUCK, {748.234, -225.07, -64.8}, Q_from_AngAxis(0, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},          // agent 0
+    {SUV, {800.234, -225.07, -64.8}, Q_from_AngAxis(0, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},            // agent 0
+    {AUDI, {855.934, -222.77, -64.8}, Q_from_AngAxis(0, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},           // agent 0
+    {SUV, {925.634, -214.17, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},     // agent 0
+    {TRUCK, {925.434, -180.87, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/2.txt", 10.0, 0.1},   // agent 0
+    {AUDI, {847.634, 140.83, -64.8}, Q_from_AngAxis(0, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},            // agent 0
+    {AUDI, {917.234, 116.63, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},    // agent 0
+    {SUV, {917.234, 60.63, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},      // agent 0
+    {TRUCK, {917.234, -10.63, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},   // agent 0
+    {AUDI, {917.334, -95.67, -64.8}, Q_from_AngAxis(-3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},    // agent 0
+    {SUV, {892.334, -120.17, -64.8}, Q_from_AngAxis(3.14, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},         // agent 0
+    {TRUCK, {850.334, -120.17, -64.8}, Q_from_AngAxis(3.14, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},       // agent 0
+    {AUDI, {800.334, -119.67, -64.8}, Q_from_AngAxis(3.14, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},        // agent 0
+    {AUDI, {752.934, -119.47, -64.8}, Q_from_AngAxis(3.14, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},        // agent 0
+    {SUV, {735.734, -102.97, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},     // agent 0
+    {AUDI, {735.734, -50.43, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},     // agent 0
+    {AUDI, {735.734, 1.43, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},       // agent 0
+    {SUV, {735.734, 60.63, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},       // agent 0
+    {TRUCK, {735.734, 123.63, -64.8}, Q_from_AngAxis(3.14 / 2, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1},    // agent 0
+    {AUDI, {755.634, 140.93, -64.8}, Q_from_AngAxis(0, {0, 0, 1}), "/paths/3.txt", 10.0, 0.1}             // agent 0
+};
 
 // =============================================================================
 
@@ -117,6 +161,7 @@ void GetVehicleModelFiles(VehicleType type,
                           std::string& powertrain,
                           std::string& tire,
                           std::string& zombie,
+                          ChVector<>& lidar_pos,
                           double& cam_distance);
 
 void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain);
@@ -147,41 +192,6 @@ class IrrAppWrapper {
     bool IsOk() { return app ? app->GetDevice()->run() : true; }
 
     std::shared_ptr<ChWheeledVehicleIrrApp> app;
-};
-
-class DriverWrapper : public ChDriver {
-  public:
-    DriverWrapper(ChVehicle& vehicle) : ChDriver(vehicle) {}
-
-    /// Update the state of this driver system at the specified time.
-    virtual void Synchronize(double time) override {
-        if (irr_driver) {
-            irr_driver->Synchronize(time);
-            m_throttle = irr_driver->GetThrottle();
-            m_steering = irr_driver->GetSteering();
-            m_braking = irr_driver->GetBraking();
-        }
-        if (csl_driver) {
-            csl_driver->Synchronize(time);
-            m_throttle = csl_driver->GetThrottle();
-            m_steering = csl_driver->GetSteering();
-            m_braking = csl_driver->GetBraking();
-        }
-    }
-
-    /// Advance the state of this driver system by the specified time step.
-    virtual void Advance(double step) override {
-        if (irr_driver)
-            irr_driver->Advance(step);
-        if (csl_driver)
-            csl_driver->Advance(step);
-    }
-
-    void SetIrrDriver(std::shared_ptr<ChIrrGuiDriver> irr_driver) { this->irr_driver = irr_driver; }
-    void SetCSLDriver(std::shared_ptr<ChCSLDriver> csl_driver) { this->csl_driver = csl_driver; }
-
-    std::shared_ptr<ChIrrGuiDriver> irr_driver;
-    std::shared_ptr<ChCSLDriver> csl_driver;
 };
 
 // =============================================================================
@@ -225,10 +235,6 @@ int main(int argc, char* argv[]) {
     SynChronoManager syn_manager(node_id, num_nodes, communicator);
 #endif
 
-    // SetChronoDataPath(CHRONO_DATA_DIR);
-    // vehicle::SetDataPath(CHRONO_DATA_DIR + std::string("vehicle/"));
-    // synchrono::SetDataPath(CHRONO_DATA_DIR + std::string("synchrono/"));
-
     // all the demo data will be in user-specified location
     SetChronoDataPath(demo_data_path);
     vehicle::SetDataPath(demo_data_path + std::string("/vehicles/"));
@@ -243,6 +249,7 @@ int main(int argc, char* argv[]) {
     heartbeat = cli.GetAsType<double>("heartbeat");
     save = cli.GetAsType<bool>("save");
     use_fullscreen = cli.GetAsType<bool>("fullscreen");
+    no_sensing = cli.GetAsType<bool>("nosensing");
 
     // Change SynChronoManager settings
     syn_manager.SetHeartbeat(heartbeat);
@@ -252,17 +259,22 @@ int main(int argc, char* argv[]) {
     // --------------
 
     // Adjust position of each vehicle so they aren't on top of each other
-    initLoc.x() += node_id * 5;
 
     // Get the vehicle JSON filenames
     double cam_distance;
     std::string vehicle_filename, powertrain_filename, tire_filename, zombie_filename;
-    GetVehicleModelFiles((VehicleType)cli.GetAsType<int>("vehicle"), vehicle_filename, powertrain_filename,
-                         tire_filename, zombie_filename, cam_distance);
+    ChVector<> lidar_pos;
+    GetVehicleModelFiles(demo_config[node_id].vehicle_type, vehicle_filename, powertrain_filename, tire_filename,
+                         zombie_filename, lidar_pos, cam_distance);
 
     // Create the vehicle, set parameters, and initialize
     WheeledVehicle vehicle(vehicle_filename, contact_method);
-    vehicle.Initialize(ChCoordsys<>(initLoc, initRot));
+    if (node_id < demo_config.size()) {
+        vehicle.Initialize(ChCoordsys<>(demo_config[node_id].pos, demo_config[node_id].rot));
+    } else {
+        vehicle.Initialize(ChCoordsys<>(demo_config[0].pos, demo_config[0].rot));
+    }
+
     vehicle.GetChassis()->SetFixed(false);
     vehicle.SetChassisVisualizationType(chassis_vis_type);
     vehicle.SetSuspensionVisualizationType(suspension_vis_type);
@@ -303,9 +315,71 @@ int main(int argc, char* argv[]) {
                                   false, 1, false);
     terrain.Initialize();
 
+    std::shared_ptr<ChLidarSensor> lidar;
+    std::shared_ptr<ChSensorManager> manager;
+    if (node_id == 0 || !no_sensing) {
+        // add a sensor manager
+        manager = chrono_types::make_shared<ChSensorManager>(vehicle.GetSystem());
+        manager->SetRayRecursions(11);
+        Background b;
+        b.mode = BackgroundMode::ENVIRONMENT_MAP;  // GRADIENT
+        b.color_zenith = {.5f, .6f, .7f};
+        b.color_horizon = {.9f, .8f, .7f};
+        b.env_tex = GetChronoDataFile("/Environments/sky_2_4k.hdr");
+        manager->scene->SetBackground(b);
+        float brightness = 1.5f;
+        manager->scene->AddPointLight({0, 0, 10000}, {brightness, brightness, brightness}, 100000);
+
+        const int image_width = use_fullscreen ? FS_WIDTH : 1280;
+        const int image_height = use_fullscreen ? FS_HEIGHT : 720;
+        if (node_id == 0) {
+            auto camera = chrono_types::make_shared<ChCameraSensor>(
+                vehicle.GetChassisBody(),                                            // body camera is attached to
+                30.f,                                                                // update rate in Hz
+                chrono::ChFrame<double>({-12, 0, 3}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
+                image_width,                                                         // image width
+                image_height,                                                        // image height
+                3.14 / 4,                                                            // fov
+                1);
+
+            camera->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(
+                image_width, image_height, "Camera 1, Super Sampled", use_fullscreen));
+            if (save)
+                camera->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam/"));
+            manager->AddSensor(camera);
+        }
+
+        lidar = chrono_types::make_shared<ChLidarSensor>(
+            vehicle.GetChassisBody(),                                          // body lidar is attached to
+            20.f,                                                              // scanning rate in Hz
+            chrono::ChFrame<double>(lidar_pos, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
+            900,                                                               // number of horizontal samples
+            16,                                                                // number of vertical channels
+            6.28318530718,                                                     // horizontal field of view
+            0.261799,
+            -0.261799,                         // vertical field of view
+            100.f,                             // max distance
+            LidarBeamShape::RECTANGULAR,       // beam shape
+            2,                                 // sample radius
+            0.003,                             // vertical divergence angle
+            0.003,                             // horizontal divergence angle
+            LidarReturnMode::STRONGEST_RETURN  // return mode for the lidar
+        );
+        lidar->SetName("Lidar Sensor 1");
+        lidar->SetLag(0.01);
+        lidar->SetCollectionWindow(.05);
+        lidar->PushFilter(chrono_types::make_shared<ChFilterPCfromDepth>());
+        lidar->PushFilter(chrono_types::make_shared<ChFilterLidarNoiseXYZI>(0.01f, 0.001f, 0.001f, 0.01f));
+        lidar->PushFilter(chrono_types::make_shared<ChFilterVisualizePointCloud>(640, 480, 2, "Lidar Point Cloud"));
+        lidar->PushFilter(chrono_types::make_shared<ChFilterXYZIAccess>());
+        if (save)
+            lidar->PushFilter(chrono_types::make_shared<ChFilterSavePtCloud>("DEMO_OUTPUT/lidar/"));
+        manager->AddSensor(lidar);
+    }
+
     // Create the vehicle Irrlicht interface
     IrrAppWrapper app;
-    DriverWrapper driver(vehicle);
+    std::shared_ptr<ChDriver> driver;
     if (cli.HasValueInVector<int>("irr", node_id)) {
         auto temp_app = chrono_types::make_shared<ChWheeledVehicleIrrApp>(&vehicle, L"SynChrono Wheeled Vehicle Demo");
         temp_app->SetSkyBox();
@@ -324,86 +398,35 @@ int main(int argc, char* argv[]) {
             irr_driver->SetInputMode(ChIrrGuiDriver::KEYBOARD);
 
         // Set the time response for steering and throttle keyboard inputs.
-        // double steering_time = 1.0;  // time to go from 0 to +1 (or from 0 to -1)
-        // double throttle_time = 1.0;  // time to go from 0 to +1
-        // double braking_time = 0.3;   // time to go from 0 to +1
-        // irr_driver->SetSteeringDelta(render_step_size / steering_time);
-        // irr_driver->SetThrottleDelta(render_step_size / throttle_time);
-        // irr_driver->SetBrakingDelta(render_step_size / braking_time);
-        irr_driver->SetSteeringDelta(0.02);
-        irr_driver->SetThrottleDelta(0.02);
-        irr_driver->SetBrakingDelta(0.06);
+        double steering_time = 1.0;  // time to go from 0 to +1 (or from 0 to -1)
+        double throttle_time = 1.0;  // time to go from 0 to +1
+        double braking_time = 0.3;   // time to go from 0 to +1
+        irr_driver->SetSteeringDelta(render_step_size / steering_time);
+        irr_driver->SetThrottleDelta(render_step_size / throttle_time);
+        irr_driver->SetBrakingDelta(render_step_size / braking_time);
         irr_driver->Initialize();
 
         app.Set(temp_app);
-        driver.SetIrrDriver(irr_driver);
+        // driver = irr_driver;
     } else if (cli.HasValueInVector<int>("console", node_id)) {
         // Use custom CSL driver instead of irr driver
         auto csl_driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
-        driver.SetCSLDriver(csl_driver);
-    }
+        driver = csl_driver;
+    } else {
+        auto path = ChBezierCurve::read(GetChronoDataFile(demo_config[node_id].path_file));
+        double target_speed = 11.2;
+        bool isPathClosed = true;
+        double following_time = 4.0;
+        double following_distance = 10;
+        double current_distance = 100;
+        auto path_driver =
+            chrono_types::make_shared<ChLidarWaypointDriver>(vehicle, lidar, path, "NSF", target_speed, following_time,
+                                                             following_distance, current_distance, isPathClosed);
+        path_driver->SetGains(demo_config[node_id].lookahead, 0.5, 0.0, 0.0, demo_config[node_id].speed_gain_p, 0.01,
+                              0.0);
+        path_driver->Initialize();
 
-    // add a sensor manager
-    auto manager = chrono_types::make_shared<ChSensorManager>(vehicle.GetSystem());
-    manager->SetRayRecursions(11);
-    if (node_id == 0) {
-        Background b;
-        b.mode = BackgroundMode::ENVIRONMENT_MAP;  // GRADIENT
-        b.color_zenith = {.5f, .6f, .7f};
-        b.color_horizon = {.9f, .8f, .7f};
-        b.env_tex = GetChronoDataFile("/Environments/sky_2_4k.hdr");
-        manager->scene->SetBackground(b);
-        float brightness = .5f;
-        // manager->scene->AddPointLight({100, 100, 1000}, {brightness, brightness, brightness}, 10000);
-        // manager->scene->AddPointLight({-100, 100, 1000}, {brightness, brightness, brightness}, 10000);
-        // manager->scene->AddPointLight({100, -100, 1000}, {brightness, brightness, brightness}, 10000);
-        // manager->scene->AddPointLight({-100, -100, 1000}, {brightness, brightness, brightness}, 10000);
-        manager->scene->AddPointLight({0, 0, 10000}, {brightness, brightness, brightness}, 100000);
-
-        const int image_width = use_fullscreen ? FS_WIDTH : 1920;
-        const int image_height = use_fullscreen ? FS_HEIGHT : 1080;
-
-        auto camera = chrono_types::make_shared<ChCameraSensor>(
-            vehicle.GetChassisBody(),                                            // body camera is attached to
-            60.f,                                                                // update rate in Hz
-            chrono::ChFrame<double>({-12, 0, 3}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
-            image_width,                                                         // image width
-            image_height,                                                        // image height
-            3.14 / 2,                                                            // fov
-            1);
-
-        camera->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(
-            image_width, image_height, "Camera 1, Super Sampled", use_fullscreen));
-        if (save)
-            camera->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam/"));
-        manager->AddSensor(camera);
-
-        auto lidar = chrono_types::make_shared<ChLidarSensor>(
-            vehicle.GetChassisBody(),                                            // body lidar is attached to
-            20.f,                                                                // scanning rate in Hz
-            chrono::ChFrame<double>({0, 0, 1.5}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
-            900,                                                                 // number of horizontal samples
-            16,                                                                  // number of vertical channels
-            6.28318530718,                                                       // horizontal field of view
-            0.261799,
-            -0.261799,                         // vertical field of view
-            100.f,                             // max distance
-            LidarBeamShape::ELLIPTICAL,        // beam shape
-            2,                                 // sample radius
-            0.003,                             // vertical divergence angle
-            0.003,                             // horizontal divergence angle
-            LidarReturnMode::STRONGEST_RETURN  // return mode for the lidar
-        );
-        lidar->SetName("Lidar Sensor 1");
-        lidar->SetLag(0.01);
-        lidar->SetCollectionWindow(.05);
-        lidar->PushFilter(chrono_types::make_shared<ChFilterPCfromDepth>());
-        lidar->PushFilter(chrono_types::make_shared<ChFilterLidarNoiseXYZI>(0.01f, 0.001f, 0.001f, 0.01f));
-        lidar->PushFilter(chrono_types::make_shared<ChFilterVisualizePointCloud>(640, 480, 2, "Lidar Point Cloud"));
-        lidar->PushFilter(chrono_types::make_shared<ChFilterXYZIAccess>());
-        if (save)
-            lidar->PushFilter(chrono_types::make_shared<ChFilterSavePtCloud>("DEMO_OUTPUT/lidar/"));
-        manager->AddSensor(lidar);
+        driver = path_driver;
     }
 
     // ---------------
@@ -431,31 +454,27 @@ int main(int argc, char* argv[]) {
             break;
 
         // Render scene
-        // if (step_number % render_steps == 0)
-        //     app.Render();
+        if (step_number % render_steps == 0)
+            app.Render();
 
         // Get driver inputs
-        ChDriver::Inputs driver_inputs = driver.GetInputs();
+        ChDriver::Inputs driver_inputs = driver->GetInputs();
 
         // Update modules (process inputs from other modules)
         syn_manager.Synchronize(time);  // Synchronize between nodes
-        driver.Synchronize(time);
+        driver->Synchronize(time);
         vehicle.Synchronize(time, driver_inputs, terrain);
         terrain.Synchronize(time);
         app.Synchronize("", driver_inputs);
 
         // Advance simulation for one timestep for all modules
-        driver.Advance(step_size);
+        driver->Advance(step_size);
         vehicle.Advance(step_size);
         terrain.Advance(step_size);
         app.Advance(step_size);
 
-        // update sensors
-        // camera->SetOffsetPose(
-        //     chrono::ChFrame<double>({-orbit_radius * cos(time * orbit_rate), -orbit_radius * sin(time * orbit_rate),
-        //     3},
-        //                             Q_from_AngAxis(time * orbit_rate, {0, 0, 1})));
-        manager->Update();
+        if (manager)
+            manager->Update();
 
         // Increment frame number
         step_number++;
@@ -501,6 +520,9 @@ void AddCommandLineOptions(ChCLI& cli) {
     // Sensor options
     cli.AddOption<bool>("Simulation", "fullscreen", "Use full screen camera display", std::to_string(use_fullscreen));
 
+    // disable sensing for additional vehicles (not rank 0)
+    cli.AddOption<bool>("Simulation", "nosensing", "Disable sensing on non-human vehicles", std::to_string(no_sensing));
+
     // SynChrono options
 #ifdef USE_FAST_DDS
     cli.AddOption<bool>("DDS", "dds", "Use DDS as the communication mechanism", "false");
@@ -517,6 +539,7 @@ void GetVehicleModelFiles(VehicleType type,
                           std::string& powertrain,
                           std::string& tire,
                           std::string& zombie,
+                          ChVector<>& lidar_pos,
                           double& cam_distance) {
     switch (type) {
         case VehicleType::SEDAN:
@@ -524,6 +547,7 @@ void GetVehicleModelFiles(VehicleType type,
             powertrain = vehicle::GetDataFile("sedan/powertrain/Sedan_SimpleMapPowertrain.json");
             tire = vehicle::GetDataFile("sedan/tire/Sedan_TMeasyTire.json");
             zombie = vehicle::GetDataFile("sedan/Sedan.json");
+            lidar_pos = {1.0, 0, 0.25};
             cam_distance = 6.0;
             break;
         case VehicleType::AUDI:
@@ -531,6 +555,7 @@ void GetVehicleModelFiles(VehicleType type,
             powertrain = vehicle::GetDataFile("audi/json/audi_SimpleMapPowertrain.json");
             tire = vehicle::GetDataFile("audi/json/audi_TMeasyTire.json");
             zombie = vehicle::GetDataFile("audi/json/audi.json");
+            lidar_pos = {2.3, 0, .4};
             cam_distance = 6.0;
             break;
         case VehicleType::TRUCK:
@@ -538,6 +563,7 @@ void GetVehicleModelFiles(VehicleType type,
             powertrain = vehicle::GetDataFile("truck/json/truck_SimpleCVTPowertrain.json");
             tire = vehicle::GetDataFile("truck/json/truck_TMeasyTire.json");
             zombie = vehicle::GetDataFile("truck/json/truck.json");
+            lidar_pos = {1.92, 0, 0.88};
             cam_distance = 14.0;
             break;
         case VehicleType::VAN:
@@ -545,6 +571,7 @@ void GetVehicleModelFiles(VehicleType type,
             powertrain = vehicle::GetDataFile("van/json/van_SimpleMapPowertrain.json");
             tire = vehicle::GetDataFile("van/json/van_TMeasyTire.json");
             zombie = vehicle::GetDataFile("van/json/van.json");
+            lidar_pos = {1.0, 0, 0.25};
             cam_distance = 12.0;
             break;
         case VehicleType::SUV:
@@ -552,6 +579,7 @@ void GetVehicleModelFiles(VehicleType type,
             powertrain = vehicle::GetDataFile("suv/json/suv_ShaftsPowertrain.json");
             tire = vehicle::GetDataFile("suv/json/suv_TMeasyTire.json");
             zombie = vehicle::GetDataFile("suv/json/suv.json");
+            lidar_pos = {.95, 0, 0.45};
             cam_distance = 6.0;
             break;
         case VehicleType::CITYBUS:
@@ -559,6 +587,7 @@ void GetVehicleModelFiles(VehicleType type,
             powertrain = vehicle::GetDataFile("citybus/powertrain/CityBus_SimpleMapPowertrain.json");
             tire = vehicle::GetDataFile("citybus/tire/CityBus_TMeasyTire.json");
             zombie = vehicle::GetDataFile("citybus/CityBus.json");
+            lidar_pos = {1.0, 0, 0.25};
             cam_distance = 14.0;
             break;
     }
@@ -566,7 +595,7 @@ void GetVehicleModelFiles(VehicleType type,
 
 void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
     // load all meshes in input file, using instancing where possible
-    std::string base_path = GetChronoDataFile("/Environments/SanFrancisco/components/");
+    std::string base_path = GetChronoDataFile("/Environments/SanFrancisco/components_new/");
     std::string input_file = base_path + "instance_map_03.csv";
     // std::string input_file = base_path + "instance_map_roads_only.csv";
 
