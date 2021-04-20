@@ -17,6 +17,7 @@
 // =============================================================================
 
 #include <chrono>
+#include <functional>
 
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
@@ -34,6 +35,7 @@
 #include "chrono_synchrono/communication/dds/SynDDSCommunicator.h"
 #endif
 #include "chrono_synchrono/communication/mpi/SynMPICommunicator.h"
+#include "chrono_synchrono/controller/SynControllerFunctions.h"
 #include "chrono_synchrono/controller/driver/SynMultiPathDriver.h"
 #include "chrono_synchrono/utils/SynDataLoader.h"
 #include "chrono_synchrono/utils/SynLog.h"
@@ -57,6 +59,23 @@
 #include "extras/driver/ChCSLDriver.h"
 #include "extras/driver/ChLidarWaypointDriver.h"
 #include "extras/filters/ChFilterFullScreenVisualize.h"
+
+// =============================================================================
+
+#ifdef USE_FAST_DDS
+
+// FastDDS
+#undef ALIVE
+#include <fastdds/rtps/transport/UDPv4TransportDescriptor.h>
+#include <fastdds/dds/domain/qos/DomainParticipantQos.hpp>
+
+using namespace eprosima::fastdds::dds;
+using namespace eprosima::fastdds::rtps;
+using namespace eprosima::fastrtps::rtps;
+
+#endif
+
+// =============================================================================
 
 using namespace chrono;
 using namespace chrono::geometry;
@@ -98,6 +117,7 @@ double heartbeat = 1e-2;  // 100[Hz]
 // Time interval between two render frames
 double render_step_size = 1.0 / 50;  // FPS = 50
 
+unsigned int leader;
 bool save = false;
 bool use_fullscreen = false;
 bool no_sensing = false;
@@ -120,15 +140,8 @@ struct PathVehicleSetup {
 // starting locations and paths
 std::vector<PathVehicleSetup> demo_config = {
     {AUDI, {925.434, -164.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},  // ego vehicle
-
-    {AUDI, {845.534, -131.97, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", 8.0, 0.1},
-    {VAN, {763.334, -131.37, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", 8.0, 1.0},
-    {SUV, {727.834, -158.07, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/4.txt", 8.0, 0.1},
-    {SUV, {727.834, -203.57, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/4.txt", 8.0, 0.1},
-    {AUDI, {759.734, -225.07, -64.8}, Q_from_AngZ(0), "/paths/4.txt", 8.0, 0.1},
-    {SUV, {897.934, -223.27, -64.8}, Q_from_AngZ(0), "/paths/4.txt", 8.0, 0.1},
-    {AUDI, {925.434, -199.77, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/4.txt", 8.0, 0.1},
-    {AUDI, {897.434, -132.07, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", 8.0, 0.1},
+    // {AUDI, {925.434, -150.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},  // ego vehicle
+    // {AUDI, {925.434, -140.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},  // ego vehicle
 
     {SUV, {925.434, -53.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},
     {AUDI, {925.434, 0.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},
@@ -146,6 +159,15 @@ std::vector<PathVehicleSetup> demo_config = {
     {VAN, {748.234, -225.07, -64.8}, Q_from_AngZ(0), "/paths/2.txt", 10.0, 1.0},
     {AUDI, {855.934, -222.77, -64.8}, Q_from_AngZ(0), "/paths/2.txt", 10.0, 0.1},
     {CITYBUS, {925.634, -214.17, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 1.0},
+
+    {AUDI, {845.534, -131.97, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", 8.0, 0.1},
+    {VAN, {763.334, -131.37, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", 8.0, 1.0},
+    {SUV, {727.834, -158.07, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/4.txt", 8.0, 0.1},
+    {SUV, {727.834, -203.57, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/4.txt", 8.0, 0.1},
+    {AUDI, {759.734, -225.07, -64.8}, Q_from_AngZ(0), "/paths/4.txt", 8.0, 0.1},
+    {SUV, {897.934, -223.27, -64.8}, Q_from_AngZ(0), "/paths/4.txt", 8.0, 0.1},
+    {AUDI, {925.434, -199.77, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/4.txt", 8.0, 0.1},
+    {AUDI, {897.434, -132.07, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", 8.0, 0.1},
 
     {AUDI, {867.634, 140.83, -64.8}, Q_from_AngZ(0), "/paths/3.txt", 7.0, 0.1},
     {AUDI, {847.634, 140.83, -64.8}, Q_from_AngZ(0), "/paths/3.txt", 7.0, 0.1},
@@ -177,6 +199,11 @@ void GetVehicleModelFiles(VehicleType type,
                           double& cam_distance);
 
 void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain);
+
+void VehicleProcessMessageCallback(std::shared_ptr<SynMessage> message,
+                                   WheeledVehicle& vehicle,
+                                   std::shared_ptr<SynWheeledVehicleAgent> agent,
+                                   std::shared_ptr<ChLidarWaypointDriver> driver);
 
 class IrrAppWrapper {
   public:
@@ -228,8 +255,27 @@ int main(int argc, char* argv[]) {
     if (cli.GetAsType<bool>("dds")) {
         node_id = cli.GetAsType<int>("node_id");
         num_nodes = cli.GetAsType<int>("num_nodes");
-        auto dds_communicator = chrono_types::make_shared<SynDDSCommunicator>(node_id);
 
+        // Set up the qos
+        DomainParticipantQos qos;
+        qos.name("/syn/node/" + AgentKey(node_id, 0).GetKeyString());
+
+        // Use UDP by default
+        auto udp_transport = chrono_types::make_shared<UDPv4TransportDescriptor>();
+        udp_transport->maxInitialPeersRange = num_nodes;
+        qos.transport().user_transports.push_back(udp_transport);
+        qos.transport().use_builtin_transports = false;
+
+        // Set up the initial peers list
+        std::vector<std::string> ip_list = {"10.8.0.2", "127.0.0.1"};
+        for (auto& ip : ip_list) {
+            Locator_t peer;
+            IPLocator::setIPv4(peer, ip);
+            peer.port = 0;
+            qos.wire_protocol().builtin.initialPeersList.push_back(peer);
+        }
+
+        auto dds_communicator = chrono_types::make_shared<SynDDSCommunicator>(node_id);
         communicator = dds_communicator;
     } else {
         auto mpi_communicator = chrono_types::make_shared<SynMPICommunicator>(argc, argv);
@@ -252,13 +298,11 @@ int main(int argc, char* argv[]) {
     vehicle::SetDataPath(demo_data_path + std::string("/vehicles/"));
     synchrono::SetDataPath(demo_data_path + std::string("/synchrono/"));
 
-    // Copyright
-    LogCopyright(node_id == 0);
-
     // Normal simulation options
     step_size = cli.GetAsType<double>("step_size");
     end_time = cli.GetAsType<double>("end_time");
     heartbeat = cli.GetAsType<double>("heartbeat");
+    leader = cli.GetAsType<unsigned int>("leader");
     save = cli.GetAsType<bool>("save");
     use_fullscreen = cli.GetAsType<bool>("fullscreen");
     no_sensing = cli.GetAsType<bool>("nosensing");
@@ -268,6 +312,12 @@ int main(int argc, char* argv[]) {
 
     // Change SynChronoManager settings
     syn_manager.SetHeartbeat(heartbeat);
+
+    // Copyright
+    LogCopyright(node_id == leader);
+
+    // Sanity check
+    assert(leader < num_nodes);
 
     // --------------
     // Create systems
@@ -280,7 +330,7 @@ int main(int argc, char* argv[]) {
     std::string vehicle_filename, powertrain_filename, tire_filename, zombie_filename;
     ChVector<> lidar_pos;
 
-    if (node_id == 0) {
+    if (node_id == leader) {
         GetVehicleModelFiles(rank0_vehicle, vehicle_filename, powertrain_filename, tire_filename, zombie_filename,
                              lidar_pos, cam_distance);
     } else {
@@ -339,7 +389,7 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<ChLidarSensor> lidar;
     std::shared_ptr<ChCameraSensor> camera;
     std::shared_ptr<ChSensorManager> manager;
-    if (node_id == 0 || !no_sensing) {
+    if (node_id == leader || !no_sensing) {
         // add a sensor manager
         manager = chrono_types::make_shared<ChSensorManager>(vehicle.GetSystem());
         manager->SetRayRecursions(11);
@@ -354,7 +404,7 @@ int main(int argc, char* argv[]) {
 
         const int image_width = use_fullscreen ? FS_WIDTH : FS_WIDTH / 2;
         const int image_height = use_fullscreen ? FS_HEIGHT : FS_WIDTH / 2;
-        if (node_id == 0) {
+        if (node_id == leader) {
             // camera at driver's eye location for Audi
             auto driver_cam = chrono_types::make_shared<ChCameraSensor>(
                 vehicle.GetChassisBody(),  // body camera is attached to
@@ -391,11 +441,9 @@ int main(int argc, char* argv[]) {
             // auto camera2 = chrono_types::make_shared<ChCameraSensor>(
             //     patch->GetGroundBody(),  // body camera is attached to
             //     30.f,                    // update rate in Hz
-            //     chrono::ChFrame<double>({830, -40.87, 200.0}, Q_from_AngAxis(3.14 / 2, {0, 1, 0})),  // offset pose
-            //     image_width,                                                                         // image width
-            //     image_height,                                                                        // image height
-            //     3.14 / 2,                                                                            // fov
-            //     1);
+            //     chrono::ChFrame<double>({830, -40.87, 200.0}, Q_from_AngAxis(3.14 / 2, {0, 1, 0})),  // offset
+            //     pose image_width,                                                                         //
+            //     image width image_height, // image height 3.14 / 2, // fov 1);
 
             // camera2->PushFilter(
             //     chrono_types::make_shared<ChFilterFullScreenVisualize>(image_width, image_height, "Camera 2",
@@ -439,11 +487,11 @@ int main(int argc, char* argv[]) {
 
     IrrAppWrapper app;
     std::shared_ptr<ChDriver> driver;
-    if (node_id == 0 && replay_inputs) {
+    if (node_id == leader && replay_inputs) {
         auto data_driver = chrono_types::make_shared<ChDataDriver>(vehicle, driver_file, true);
         data_driver->Initialize();
         driver = data_driver;
-    } else if (node_id == 0 && cli.GetAsType<bool>("irr")) {
+    } else if (node_id == leader && cli.GetAsType<bool>("irr")) {
         auto temp_app = chrono_types::make_shared<ChWheeledVehicleIrrApp>(&vehicle, L"SynChrono Wheeled Vehicle Demo");
         temp_app->SetSkyBox();
         temp_app->AddTypicalLights(irr::core::vector3df(30.f, -30.f, 100.f), irr::core::vector3df(30.f, 50.f, 100.f),
@@ -471,7 +519,7 @@ int main(int argc, char* argv[]) {
 
         app.Set(temp_app);
         driver = irr_driver;
-    } else if (node_id == 0 && cli.GetAsType<bool>("console")) {
+    } else if (node_id == leader && cli.GetAsType<bool>("console")) {
         // Use custom CSL driver instead of irr driver
         auto csl_driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
         driver = csl_driver;
@@ -482,12 +530,20 @@ int main(int argc, char* argv[]) {
         double following_time = 4.0;
         double following_distance = 10;
         double current_distance = 100;
+
         auto path_driver =
             chrono_types::make_shared<ChLidarWaypointDriver>(vehicle, lidar, path, "NSF", target_speed, following_time,
                                                              following_distance, current_distance, isPathClosed);
         path_driver->SetGains(demo_config[node_id].lookahead, 0.5, 0.0, 0.0, demo_config[node_id].speed_gain_p, 0.01,
                               0.0);
         path_driver->Initialize();
+
+        if (no_sensing && node_id != leader) {
+            // Set the callback so that we can check the state of other vehicles
+            auto callback =
+                std::bind(&VehicleProcessMessageCallback, std::placeholders::_1, std::ref(vehicle), agent, path_driver);
+            agent->SetProcessMessageCallback(callback);
+        }
 
         driver = path_driver;
     }
@@ -517,7 +573,7 @@ int main(int argc, char* argv[]) {
         // Get driver inputs
         ChDriver::Inputs driver_inputs = driver->GetInputs();
 
-        if (record_inputs) {
+        if (node_id == leader && record_inputs) {
             driver_csv << time << driver_inputs.m_steering << driver_inputs.m_throttle << driver_inputs.m_braking
                        << std::endl;
         }
@@ -536,11 +592,11 @@ int main(int argc, char* argv[]) {
         app.Advance(step_size);
 
         if (manager) {
-            if (camera) {
-                camera->SetOffsetPose(chrono::ChFrame<double>(
-                    {-orbit_radius * cos(time * orbit_rate), -orbit_radius * sin(time * orbit_rate), 1},
-                    Q_from_AngAxis(time * orbit_rate, {0, 0, 1})));
-            }
+            // if (camera) {
+            //     camera->SetOffsetPose(chrono::ChFrame<double>(
+            //         {-orbit_radius * cos(time * orbit_rate), -orbit_radius * sin(time * orbit_rate), 1},
+            //         Q_from_AngAxis(time * orbit_rate, {0, 0, 1})));
+            // }
             manager->Update();
         }
 
@@ -548,7 +604,7 @@ int main(int argc, char* argv[]) {
         step_number++;
 
         // Log clock time
-        if (step_number % 500 == 0 && node_id == 0) {
+        if (step_number % 500 == 0 && node_id == leader) {
             std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
             // auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()*1000;
             std::chrono::duration<double> wall_time =
@@ -559,7 +615,7 @@ int main(int argc, char* argv[]) {
             start = std::chrono::high_resolution_clock::now();
         }
     }
-    if (record_inputs) {
+    if (node_id == leader && record_inputs) {
         driver_csv.write_to_file(driver_file);
     }
 
@@ -584,6 +640,7 @@ void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<double>("Simulation", "b,heartbeat", "Heartbeat", std::to_string(heartbeat));
     cli.AddOption<bool>("Simulation", "save", "save", std::to_string(save));
     cli.AddOption<bool>("Simulation", "console", "Use console for rank 0", "false");
+    cli.AddOption<unsigned int>("Simulation", "l,leader", "The leader rank/node", "0");
 
     // Irrlicht options
     cli.AddOption<bool>("Irrlicht", "i,irr", "Use irrlicht on rank 0", "false");
@@ -597,7 +654,7 @@ void AddCommandLineOptions(ChCLI& cli) {
     // disable sensing for additional vehicles (not rank 0)
     cli.AddOption<bool>("Simulation", "nosensing", "Disable sensing on non-human vehicles", std::to_string(no_sensing));
 
-    // SynChrono options
+// SynChrono/DDS options
 #ifdef USE_FAST_DDS
     cli.AddOption<bool>("DDS", "dds", "Use DDS as the communication mechanism", "false");
     cli.AddOption<int>("DDS", "d,node_id", "ID for this Node", "1");
@@ -745,5 +802,31 @@ void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
             }
         }
         std::cout << "Total meshes: " << meshes_added << " | Unique meshes: " << mesh_map.size() << std::endl;
+    }
+}
+
+void VehicleProcessMessageCallback(std::shared_ptr<SynMessage> message,
+                                   WheeledVehicle& vehicle,
+                                   std::shared_ptr<SynWheeledVehicleAgent> agent,
+                                   std::shared_ptr<ChLidarWaypointDriver> driver) {
+    if (auto vehicle_message = std::dynamic_pointer_cast<SynWheeledVehicleStateMessage>(message)) {
+        // The IsInsideBox function will determine whether the a passsed point is inside a box defined by a
+        // front position, back position and the width of the box. Rotation of the vectors are taken into account.
+        // The positions must be in the same reference, i.e. local OR global, not both.
+
+        // First calculate the box
+        // We'll do everything in the local frame
+        double width = 4;
+        double x_min = 0;
+        double x_max = 100;
+        double offset_for_chassis_size = 5;
+
+        // Get the zombies position relative to this vehicle
+        auto zombie_pos = vehicle_message->chassis.GetFrame().GetPos() - vehicle.GetVehicleCOMPos();
+        zombie_pos = vehicle.GetVehicleRot().RotateBack(zombie_pos);
+
+        if (zombie_pos.x() < x_max && zombie_pos.x() > x_min && abs(zombie_pos.y()) < width / 2) {
+            driver->SetCurrentDistance(zombie_pos.Length() - offset_for_chassis_size);
+        }
     }
 }

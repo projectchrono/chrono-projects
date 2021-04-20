@@ -36,12 +36,9 @@ using namespace chrono::sensor;
 namespace chrono {
 namespace synchrono {
 
+
 class CH_VEHICLE_API ChLidarWaypointDriver : public ChDriver {
   public:
-    enum InputMode {
-        NOMINAL,  ///< drives along waypoint-defined line, using lidar for collision prevention
-        DATAFILE  ///< driver inputs from file (when recorded)
-    };
     /// Construct an interactive driver.
     ChLidarWaypointDriver(ChVehicle& vehicle,
                           std::shared_ptr<ChLidarSensor> lidar,
@@ -62,6 +59,8 @@ class CH_VEHICLE_API ChLidarWaypointDriver : public ChDriver {
     /// Advance the state of this driver system by the specified time step.
     virtual void Advance(double step) override;
 
+    void SetCurrentDistance(double dist) { m_current_distance = std::min(m_current_distance,dist); }
+
     /// Set gains for internal dynamics.
     void SetGains(double lookahead,
                   double p_steer,
@@ -71,36 +70,20 @@ class CH_VEHICLE_API ChLidarWaypointDriver : public ChDriver {
                   double i_acc,
                   double d_acc);
 
-    /// Set the input file for the underlying data driver.
-    void SetInputDataFile(const std::string& filename);
-
-    /// Set the current functioning mode.
-    void SetInputMode(InputMode mode);
-
-    /// Return the current functioning mode as a string.
-    std::string GetInputModeAsString() const;
-
-    void SetReverse(bool reverse) { is_reverse = reverse; }
-
   private:
     void MinDistFromLidar();
-    bool is_reverse = false;
-
-    InputMode m_mode;  ///< current mode of the driver
 
     std::shared_ptr<ChLidarSensor> m_lidar;
     double m_current_distance;
     double m_last_lidar_time = 0;
-
+    double next_dist_reset_time = 0;
     double m_target_speed;
     std::shared_ptr<ChBezierCurve> m_path;
 
     std::shared_ptr<ChPathFollowerACCDriver> m_acc_driver;  ///< underlying acc driver
-
-    // Variables for mode=DATAFILE
-    double m_time_shift;                          ///< time at which mode was switched to DATAFILE
-    std::shared_ptr<ChDataDriver> m_data_driver;  ///< embedded data driver (for playback)
 };
+
+
 
 }  // namespace synchrono
 }  // namespace chrono
