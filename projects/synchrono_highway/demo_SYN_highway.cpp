@@ -119,7 +119,7 @@ struct PathVehicleSetup {
 
 // starting locations and paths
 std::vector<PathVehicleSetup> demo_config = {
-    {AUDI, {925.434, -164.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},
+    {AUDI, {925.434, -164.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},  // ego vehicle
 
     {AUDI, {845.534, -131.97, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", 8.0, 0.1},
     {VAN, {763.334, -131.37, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", 8.0, 1.0},
@@ -262,6 +262,9 @@ int main(int argc, char* argv[]) {
     save = cli.GetAsType<bool>("save");
     use_fullscreen = cli.GetAsType<bool>("fullscreen");
     no_sensing = cli.GetAsType<bool>("nosensing");
+    VehicleType rank0_vehicle = (VehicleType)cli.GetAsType<int>("vehicle");
+    bool record_inputs = cli.GetAsType<bool>("record");
+    bool replay_inputs = cli.GetAsType<bool>("replay");
 
     // Change SynChronoManager settings
     syn_manager.SetHeartbeat(heartbeat);
@@ -276,8 +279,14 @@ int main(int argc, char* argv[]) {
     double cam_distance;
     std::string vehicle_filename, powertrain_filename, tire_filename, zombie_filename;
     ChVector<> lidar_pos;
-    GetVehicleModelFiles(demo_config[node_id].vehicle_type, vehicle_filename, powertrain_filename, tire_filename,
-                         zombie_filename, lidar_pos, cam_distance);
+
+    if (node_id == 0) {
+        GetVehicleModelFiles(rank0_vehicle, vehicle_filename, powertrain_filename, tire_filename, zombie_filename,
+                             lidar_pos, cam_distance);
+    } else {
+        GetVehicleModelFiles(demo_config[node_id].vehicle_type, vehicle_filename, powertrain_filename, tire_filename,
+                             zombie_filename, lidar_pos, cam_distance);
+    }
 
     // Create the vehicle, set parameters, and initialize
     WheeledVehicle vehicle(vehicle_filename, contact_method);
@@ -343,23 +352,40 @@ int main(int argc, char* argv[]) {
         float brightness = 1.5f;
         manager->scene->AddPointLight({0, 0, 10000}, {brightness, brightness, brightness}, 100000);
 
-        const int image_width = use_fullscreen ? FS_WIDTH : 1280;
-        const int image_height = use_fullscreen ? FS_HEIGHT : 720;
+        const int image_width = use_fullscreen ? FS_WIDTH : FS_WIDTH / 2;
+        const int image_height = use_fullscreen ? FS_HEIGHT : FS_WIDTH / 2;
         if (node_id == 0) {
+            // camera at driver's eye location for Audi
+            auto driver_cam = chrono_types::make_shared<ChCameraSensor>(
+                vehicle.GetChassisBody(),  // body camera is attached to
+                30.f,                      // update rate in Hz
+                chrono::ChFrame<double>({0.05, .381, 1.04}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
+                image_width,                                                                // image width
+                image_height,                                                               // image height
+                3.14 / 4,                                                                   // fov
+                1);
+
+            driver_cam->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(
+                image_width, image_height, "Camera 1, Super Sampled", use_fullscreen));
+            if (save)
+                driver_cam->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/driver_cam/"));
+            manager->AddSensor(driver_cam);
+
+            // third person camera, for any vehicle
             camera = chrono_types::make_shared<ChCameraSensor>(
                 vehicle.GetChassisBody(),  // body camera is attached to
                 30.f,                      // update rate in Hz
                 chrono::ChFrame<double>({-cam_distance, 0, .45 * cam_distance},
                                         Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
-                image_width,                                            // image width
-                image_height,                                           // image height
+                1280,                                                   // image width
+                720,                                                    // image height
                 3.14 / 4,                                               // fov
                 1);
 
-            camera->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(
-                image_width, image_height, "Camera 1, Super Sampled", use_fullscreen));
+            camera->PushFilter(
+                chrono_types::make_shared<ChFilterFullScreenVisualize>(1280, 720, "Camera 1, Super Sampled", false));
             if (save)
-                camera->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam/"));
+                camera->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam_third/"));
             manager->AddSensor(camera);
 
             // auto camera2 = chrono_types::make_shared<ChCameraSensor>(
@@ -408,9 +434,16 @@ int main(int argc, char* argv[]) {
     }
 
     // Create the vehicle Irrlicht interface
+    std::string driver_file = "driver_inputs.txt";
+    utils::CSV_writer driver_csv(" ");
+
     IrrAppWrapper app;
     std::shared_ptr<ChDriver> driver;
-    if (cli.HasValueInVector<int>("irr", node_id)) {
+    if (node_id == 0 && replay_inputs) {
+        auto data_driver = chrono_types::make_shared<ChDataDriver>(vehicle, driver_file, true);
+        data_driver->Initialize();
+        driver = data_driver;
+    } else if (node_id == 0 && cli.GetAsType<bool>("irr")) {
         auto temp_app = chrono_types::make_shared<ChWheeledVehicleIrrApp>(&vehicle, L"SynChrono Wheeled Vehicle Demo");
         temp_app->SetSkyBox();
         temp_app->AddTypicalLights(irr::core::vector3df(30.f, -30.f, 100.f), irr::core::vector3df(30.f, 50.f, 100.f),
@@ -424,7 +457,7 @@ int main(int argc, char* argv[]) {
         auto irr_driver = chrono_types::make_shared<ChIrrGuiDriver>(*temp_app);
 
         // optionally force the gui driver to use keyboard rather than joystick
-        if (cli.HasValueInVector<int>("keyboard", node_id))
+        if (cli.GetAsType<bool>("keyboard"))
             irr_driver->SetInputMode(ChIrrGuiDriver::KEYBOARD);
 
         // Set the time response for steering and throttle keyboard inputs.
@@ -437,8 +470,8 @@ int main(int argc, char* argv[]) {
         irr_driver->Initialize();
 
         app.Set(temp_app);
-        // driver = irr_driver;
-    } else if (cli.HasValueInVector<int>("console", node_id)) {
+        driver = irr_driver;
+    } else if (node_id == 0 && cli.GetAsType<bool>("console")) {
         // Use custom CSL driver instead of irr driver
         auto csl_driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
         driver = csl_driver;
@@ -477,18 +510,17 @@ int main(int argc, char* argv[]) {
     while (app.IsOk() && syn_manager.IsOk() && time < end_time) {
         time = vehicle.GetSystem()->GetChTime();
 
-        // std::cout << "t=" << time << std::endl;
-
-        // End simulation
-        if (time >= end_time)
-            break;
-
         // Render scene
-        if (step_number % render_steps == 0)
-            app.Render();
+        // if (step_number % render_steps == 0)
+        //     app.Render();
 
         // Get driver inputs
         ChDriver::Inputs driver_inputs = driver->GetInputs();
+
+        if (record_inputs) {
+            driver_csv << time << driver_inputs.m_steering << driver_inputs.m_throttle << driver_inputs.m_braking
+                       << std::endl;
+        }
 
         // Update modules (process inputs from other modules)
         syn_manager.Synchronize(time);  // Synchronize between nodes
@@ -504,11 +536,11 @@ int main(int argc, char* argv[]) {
         app.Advance(step_size);
 
         if (manager) {
-            // if (camera) {
-            //     camera->SetOffsetPose(chrono::ChFrame<double>(
-            //         {-orbit_radius * cos(time * orbit_rate), -orbit_radius * sin(time * orbit_rate), 1},
-            //         Q_from_AngAxis(time * orbit_rate, {0, 0, 1})));
-            // }
+            if (camera) {
+                camera->SetOffsetPose(chrono::ChFrame<double>(
+                    {-orbit_radius * cos(time * orbit_rate), -orbit_radius * sin(time * orbit_rate), 1},
+                    Q_from_AngAxis(time * orbit_rate, {0, 0, 1})));
+            }
             manager->Update();
         }
 
@@ -527,6 +559,10 @@ int main(int argc, char* argv[]) {
             start = std::chrono::high_resolution_clock::now();
         }
     }
+    if (record_inputs) {
+        driver_csv.write_to_file(driver_file);
+    }
+
     // Properly shuts down other ranks when one rank ends early
     syn_manager.QuitSimulation();
 
@@ -547,14 +583,16 @@ void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<double>("Simulation", "e,end_time", "End time", std::to_string(end_time));
     cli.AddOption<double>("Simulation", "b,heartbeat", "Heartbeat", std::to_string(heartbeat));
     cli.AddOption<bool>("Simulation", "save", "save", std::to_string(save));
-    cli.AddOption<std::vector<int>>("Simulation", "console", "Nodes to drive with the steering wheel and pedals", "-1");
+    cli.AddOption<bool>("Simulation", "console", "Use console for rank 0", "false");
 
     // Irrlicht options
-    cli.AddOption<std::vector<int>>("Irrlicht", "i,irr", "Nodes for irrlicht usage", "-1");
-    cli.AddOption<std::vector<int>>("Keyboard", "k,keyboard", "Force irrlicht driver into keyboard control", "-1");
+    cli.AddOption<bool>("Irrlicht", "i,irr", "Use irrlicht on rank 0", "false");
+    cli.AddOption<bool>("Keyboard", "k,keyboard", "Force irrlicht driver into keyboard control on rank 0", "false");
 
-    // Sensor options
+    // options for human driver
     cli.AddOption<bool>("Simulation", "fullscreen", "Use full screen camera display", std::to_string(use_fullscreen));
+    cli.AddOption<bool>("Simulation", "record", "Record human driver inputs to file", "false");
+    cli.AddOption<bool>("Simulation", "replay", "Replay human driver inputs from file", "false");
 
     // disable sensing for additional vehicles (not rank 0)
     cli.AddOption<bool>("Simulation", "nosensing", "Disable sensing on non-human vehicles", std::to_string(no_sensing));
@@ -567,7 +605,7 @@ void AddCommandLineOptions(ChCLI& cli) {
 #endif
 
     // Other options
-    cli.AddOption<int>("Demo", "v,vehicle", "Vehicle Options [0-4]: Sedan, Audi, SUV, Van, Truck, CityBus", "0");
+    cli.AddOption<int>("Demo", "v,vehicle", "Vehicle Options [0-4]: Sedan, Audi, SUV, Van, Truck, CityBus", "1");
 }
 
 void GetVehicleModelFiles(VehicleType type,
@@ -706,9 +744,6 @@ void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
                 }
             }
         }
-        ChVector<> pos = {0, 0, 100};
-        std::cout << "Terrain height at <" << pos.x() << "," << pos.y() << "," << pos.z()
-                  << ">: " << terrain->GetHeight(pos) << std::endl;
         std::cout << "Total meshes: " << meshes_added << " | Unique meshes: " << mesh_map.size() << std::endl;
     }
 }
