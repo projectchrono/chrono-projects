@@ -36,7 +36,7 @@ cmake_dependent_option(ENABLE_PRJ_GPU_TESTS
 	"Enable projects for Chrono::Gpu tests" ON
 	"ENABLE_PROJECTS" OFF)
 cmake_dependent_option(ENABLE_PRJ_SYN_HIGHWAY 
-	"Enable projects for SynChrono Highway" ON
+	"Enable projects for SynChrono Highway" OFF
 	"ENABLE_PROJECTS" OFF)
 
 if (ENABLE_PRJ_CORE_TESTS)
