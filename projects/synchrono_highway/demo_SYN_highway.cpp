@@ -412,7 +412,7 @@ int main(int argc, char* argv[]) {
         manager->scene->AddPointLight({0, 0, 10000}, {brightness, brightness, brightness}, 100000);
 
         const int image_width = use_fullscreen ? FS_WIDTH : FS_WIDTH / 2;
-        const int image_height = use_fullscreen ? FS_HEIGHT : FS_WIDTH / 2;
+        const int image_height = use_fullscreen ? FS_HEIGHT : FS_HEIGHT / 2;
         if (node_id == leader) {
             // camera at driver's eye location for Audi
             auto driver_cam = chrono_types::make_shared<ChCameraSensor>(
@@ -421,7 +421,7 @@ int main(int argc, char* argv[]) {
                 chrono::ChFrame<double>({0.05, .381, 1.04}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
                 image_width,                                                                // image width
                 image_height,                                                               // image height
-                3.14 / 4,                                                                   // fov
+                3.14 / 1.5,                                                                   // fov
                 1);
 
             driver_cam->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(
@@ -434,7 +434,7 @@ int main(int argc, char* argv[]) {
             camera = chrono_types::make_shared<ChCameraSensor>(
                 vehicle.GetChassisBody(),  // body camera is attached to
                 30.f,                      // update rate in Hz
-                chrono::ChFrame<double>({-5 * cam_distance, 0, .45 * cam_distance},
+                chrono::ChFrame<double>({cam_distance, 0, .45 * cam_distance},
                                         Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
                 1280,                                                   // image width
                 720,                                                    // image height
@@ -447,19 +447,18 @@ int main(int argc, char* argv[]) {
                 camera->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam_third/"));
             manager->AddSensor(camera);
 
-            // auto camera2 = chrono_types::make_shared<ChCameraSensor>(
-            //     patch->GetGroundBody(),  // body camera is attached to
-            //     30.f,                    // update rate in Hz
-            //     chrono::ChFrame<double>({830, -40.87, 200.0}, Q_from_AngAxis(3.14 / 2, {0, 1, 0})),  // offset
-            //     pose image_width,                                                                         //
-            //     image width image_height, // image height 3.14 / 2, // fov 1);
+            auto camera2 = chrono_types::make_shared<ChCameraSensor>(
+                patch->GetGroundBody(),  // body camera is attached to
+                30.f,                    // update rate in Hz
+                chrono::ChFrame<double>({830, -120.87, 200.0}, Q_from_AngAxis(3.14 / 2, {0, 1, 0})), 1080,  //
+                1080,  // image height
+                3.14 / 2, 1);
 
-            // camera2->PushFilter(
-            //     chrono_types::make_shared<ChFilterFullScreenVisualize>(image_width, image_height, "Camera 2",
-            //     false));
-            // if (save)
-            //     camera2->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam2/"));
-            // manager->AddSensor(camera2);
+            camera2->PushFilter(
+                chrono_types::make_shared<ChFilterFullScreenVisualize>(1080, 1080, "Camera 2", false));
+            if (save)
+                camera2->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam2/"));
+            manager->AddSensor(camera2);
         }
 
         lidar = chrono_types::make_shared<ChLidarSensor>(
