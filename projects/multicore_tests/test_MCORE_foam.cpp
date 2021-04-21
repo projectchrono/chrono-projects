@@ -101,13 +101,13 @@ int maxNumParticles = 100000;
 
 int SpawnParticles() {
     double dist = 2 * 0.99 * r_g;
+    utils::PDSampler<double> sampler(dist);
 
-    ////gen->createObjectsBox(utils::SamplingType::POISSON_DISK,
-    ////                     dist,
-    ////                     ChVector<>(9, 0, 3),
-    ////                     ChVector<>(0, 1, 0.5),
-    ////                     ChVector<>(-initVel, 0, 0));
-    gen->createObjectsCylinderX(utils::SamplingType::POISSON_DISK, dist, ChVector<>(9, 0, 3), 0.2f, 0, ChVector<>(-initVel, 0, 0));
+    ////gen->CreateObjectsBox(sampler,
+    ////                      ChVector<>(9, 0, 3),
+    ////                      ChVector<>(0, 1, 0.5),
+    ////                      ChVector<>(-initVel, 0, 0));
+    gen->CreateObjectsCylinderX(sampler, ChVector<>(9, 0, 3), 0.2f, 0, ChVector<>(-initVel, 0, 0));
     cout << "  total bodies: " << gen->getTotalNumBodies() << endl;
 
     return gen->getTotalNumBodies();
