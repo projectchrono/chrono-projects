@@ -577,6 +577,8 @@ int CreateGranularMaterial(ChSystemMulticore* system,
     // ---------------------------------------------
 
     // Create the particle generator with a mixture of 100% spheres
+    double r = 1.01 * r_g;
+    utils::PDSampler<double> sampler(2 * r);
     utils::Generator gen(system);
 
     std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
@@ -591,13 +593,12 @@ int CreateGranularMaterial(ChSystemMulticore* system,
     // Generate the particles
     // ----------------------
 
-    double r = 1.01 * r_g;
     ChVector<> hdims(groundWidth - 2 * r, 2 * (pitDepth - 2 * r), pitLength - 2 * r);
     ChVector<> center(0, 0, pitLocation_z + pitLength / 3 - 2 * r);
 
     // while (center.z() < pitDepth)
     //{
-    gen.createObjectsBox(utils::SamplingType::POISSON_DISK, 2 * r, center, hdims / 2);
+    gen.CreateObjectsBox(sampler, center, hdims / 2);
     //  center.z() += 2 * r;
     //}
 

@@ -401,6 +401,8 @@ void CreateGravel(ChSystemMulticoreNSC* system) {
     auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_g->SetFriction(mu_g);
 
+    double r = 1.01 * r_g;
+    utils::PDSampler<double> sampler(3 * r);
     utils::Generator gen(system);
     std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::BISPHERE, 1.0);
     // std::shared_ptr<utils::MixtureIngredient> m2 = gen.AddMixtureIngredient(utils::MixtureType::CYLINDER, 1.0);
@@ -414,12 +416,11 @@ void CreateGravel(ChSystemMulticoreNSC* system) {
     gen.setBodyIdentifier(Id_g);
 
     // Create particles in layers until reaching the desired number of particles
-    double r = 1.01 * r_g;
     ChVector<> hdims(hdimX - r * 3, hdimY - r * 3, 0);
     ChVector<> center(4 + hdimX, 0, -.2);
 
     while (gen.getTotalNumBodies() < 100000) {
-        gen.createObjectsBox(utils::SamplingType::POISSON_DISK, 3 * r, center, hdims);
+        gen.CreateObjectsBox(sampler, center, hdims);
         center.z() += 2 * r;
     }
 

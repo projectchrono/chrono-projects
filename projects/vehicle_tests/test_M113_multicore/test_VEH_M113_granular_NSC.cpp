@@ -187,6 +187,8 @@ double CreateParticles(ChSystem* system) {
     mat_g->SetCohesion(static_cast<float>(coh_force));
 
     // Create a particle generator and a mixture entirely made out of spheres
+    double r = 1.01 * r_g;
+    utils::PDSampler<double> sampler(2 * r);
     utils::Generator gen(system);
     std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
     m1->setDefaultMaterial(mat_g);
@@ -197,13 +199,12 @@ double CreateParticles(ChSystem* system) {
     gen.setBodyIdentifier(Id_g);
 
     // Create particles in layers until reaching the desired number of particles
-    double r = 1.01 * r_g;
     ChVector<> hdims(hdimX - r, hdimY - r, 0);
     ChVector<> center(0, 0, 2 * r);
 
     double layerCount = 0;
     while (layerCount < numLayers) {
-        gen.createObjectsBox(utils::SamplingType::POISSON_DISK, 2 * r, center, hdims);
+        gen.CreateObjectsBox(sampler, center, hdims);
         center.z() += 2 * r;
         layerCount++;
     }

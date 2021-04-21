@@ -246,6 +246,8 @@ void CreateParticles(ChSystemMulticore* system) {
 #endif
 
     // Create a mixture entirely made out of spheres
+    double r = 1.01 * r_g;
+    utils::PDSampler<double> sampler(2 * r);
     utils::Generator gen(system);
 
     std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
@@ -258,10 +260,9 @@ void CreateParticles(ChSystemMulticore* system) {
     ChVector<> hdims(0.3 * height, 0.3 * width, 0);
     ChVector<> center(-0.4 * height, 0, 0.8 * height);
     ChVector<> vel(0, 0, 0);
-    double r = 1.01 * r_g;
 
     while (gen.getTotalNumBodies() < desired_num_particles) {
-        gen.createObjectsBox(utils::SamplingType::POISSON_DISK, 2 * r, center, hdims, vel);
+        gen.CreateObjectsBox(sampler, center, hdims, vel);
         center.z() += 2 * r;
     }
 
