@@ -36,7 +36,6 @@ using namespace chrono::sensor;
 namespace chrono {
 namespace synchrono {
 
-
 class CH_VEHICLE_API ChLidarWaypointDriver : public ChDriver {
   public:
     /// Construct an interactive driver.
@@ -59,7 +58,10 @@ class CH_VEHICLE_API ChLidarWaypointDriver : public ChDriver {
     /// Advance the state of this driver system by the specified time step.
     virtual void Advance(double step) override;
 
-    void SetCurrentDistance(double dist) { m_current_distance = std::min(m_current_distance,dist); }
+    void SetCurrentDistance(double dist) {
+        m_current_distance = std::min(m_current_distance, dist);
+        next_dist_reset_time += 0.1;
+    }
 
     /// Set gains for internal dynamics.
     void SetGains(double lookahead,
@@ -82,8 +84,6 @@ class CH_VEHICLE_API ChLidarWaypointDriver : public ChDriver {
 
     std::shared_ptr<ChPathFollowerACCDriver> m_acc_driver;  ///< underlying acc driver
 };
-
-
 
 }  // namespace synchrono
 }  // namespace chrono

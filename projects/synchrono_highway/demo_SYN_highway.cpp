@@ -122,6 +122,11 @@ bool save = false;
 bool use_fullscreen = false;
 bool no_sensing = false;
 
+ChVector<> simulation_center = {826.734, -37.97, -64.8};
+
+double loading_radius = 1000;
+bool load_roads_only = false;
+
 // Resolution of the CSL 3-monitor setup
 const int FS_WIDTH = 3840;
 const int FS_HEIGHT = 720;
@@ -139,8 +144,10 @@ struct PathVehicleSetup {
 
 // starting locations and paths
 std::vector<PathVehicleSetup> demo_config = {
+
+    {AUDI, {925.434, -150.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},  // ego vehicle
     {AUDI, {925.434, -164.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},  // ego vehicle
-    // {AUDI, {925.434, -150.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},  // ego vehicle
+
     // {AUDI, {925.434, -140.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},  // ego vehicle
 
     {SUV, {925.434, -53.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},
@@ -309,6 +316,8 @@ int main(int argc, char* argv[]) {
     VehicleType rank0_vehicle = (VehicleType)cli.GetAsType<int>("vehicle");
     bool record_inputs = cli.GetAsType<bool>("record");
     bool replay_inputs = cli.GetAsType<bool>("replay");
+    loading_radius = cli.GetAsType<double>("load_radius");
+    load_roads_only = cli.GetAsType<bool>("roads_only");
 
     // Change SynChronoManager settings
     syn_manager.SetHeartbeat(heartbeat);
@@ -425,7 +434,7 @@ int main(int argc, char* argv[]) {
             camera = chrono_types::make_shared<ChCameraSensor>(
                 vehicle.GetChassisBody(),  // body camera is attached to
                 30.f,                      // update rate in Hz
-                chrono::ChFrame<double>({-cam_distance, 0, .45 * cam_distance},
+                chrono::ChFrame<double>({-5 * cam_distance, 0, .45 * cam_distance},
                                         Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
                 1280,                                                   // image width
                 720,                                                    // image height
@@ -642,6 +651,11 @@ void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<bool>("Simulation", "console", "Use console for rank 0", "false");
     cli.AddOption<unsigned int>("Simulation", "l,leader", "The leader rank/node", "0");
 
+    // mesh loading options
+    cli.AddOption<double>("Simulation", "load_radius", "Radius around simulation center to load meshes",
+                          std::to_string(loading_radius));
+    cli.AddOption<bool>("Simulation", "roads_only", "only load road meshes", std::to_string(load_roads_only));
+
     // Irrlicht options
     cli.AddOption<bool>("Irrlicht", "i,irr", "Use irrlicht on rank 0", "false");
     cli.AddOption<bool>("Keyboard", "k,keyboard", "Force irrlicht driver into keyboard control on rank 0", "false");
@@ -765,39 +779,44 @@ void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
                 std::string mesh_obj = base_path + result[1] + ".obj";
 
                 // std::cout << mesh_name << std::endl;
-                if (mesh_name.find("EmissionOn") == std::string::npos &&
-                    mesh_name.find("Road") != std::string::npos) {  // exlude items with
-                                                                    // emission on
-                    // check if mesh is in map
-                    bool instance_found = false;
-                    std::shared_ptr<ChTriangleMeshConnected> mmesh;
-                    if (mesh_map.find(mesh_obj) != mesh_map.end()) {
-                        mmesh = mesh_map[mesh_obj];
-                        instance_found = true;
-                    } else {
-                        mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
-                        mmesh->LoadWavefrontMesh(mesh_obj, false, true);
-                        mesh_map[mesh_obj] = mmesh;
+                if (mesh_name.find("EmissionOn") == std::string::npos) {  // exlude items with
+                                                                          // emission on
+
+                    if (!load_roads_only || mesh_name.find("Road") != std::string::npos) {
+                        ChVector<double> pos = {std::stod(result[2]), std::stod(result[3]), std::stod(result[4])};
+
+                        if ((pos - simulation_center).Length() < loading_radius) {
+                            // check if mesh is in map
+                            bool instance_found = false;
+                            std::shared_ptr<ChTriangleMeshConnected> mmesh;
+                            if (mesh_map.find(mesh_obj) != mesh_map.end()) {
+                                mmesh = mesh_map[mesh_obj];
+                                instance_found = true;
+                            } else {
+                                mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
+                                mmesh->LoadWavefrontMesh(mesh_obj, false, true);
+                                mesh_map[mesh_obj] = mmesh;
+                            }
+
+                            ChQuaternion<double> rot = {std::stod(result[5]), std::stod(result[6]),
+                                                        std::stod(result[7]), std::stod(result[8])};
+                            ChVector<double> scale = {std::stod(result[9]), std::stod(result[10]),
+                                                      std::stod(result[11])};
+
+                            // if not road, only add visualization with new pos,rot,scale
+                            auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+                            trimesh_shape->SetMesh(mmesh);
+                            trimesh_shape->SetName(mesh_name);
+                            trimesh_shape->SetStatic(true);
+                            trimesh_shape->SetScale(scale);
+                            trimesh_shape->Pos = pos;
+                            trimesh_shape->Rot = ChMatrix33<>(rot);
+
+                            mesh_body->AddAsset(trimesh_shape);
+
+                            meshes_added++;
+                        }
                     }
-
-                    ChVector<double> pos = {std::stod(result[2]), std::stod(result[3]), std::stod(result[4])};
-
-                    ChQuaternion<double> rot = {std::stod(result[5]), std::stod(result[6]), std::stod(result[7]),
-                                                std::stod(result[8])};
-                    ChVector<double> scale = {std::stod(result[9]), std::stod(result[10]), std::stod(result[11])};
-
-                    // if not road, only add visualization with new pos,rot,scale
-                    auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
-                    trimesh_shape->SetMesh(mmesh);
-                    trimesh_shape->SetName(mesh_name);
-                    trimesh_shape->SetStatic(true);
-                    trimesh_shape->SetScale(scale);
-                    trimesh_shape->Pos = pos;
-                    trimesh_shape->Rot = ChMatrix33<>(rot);
-
-                    mesh_body->AddAsset(trimesh_shape);
-
-                    meshes_added++;
                 }
             }
         }
@@ -819,14 +838,17 @@ void VehicleProcessMessageCallback(std::shared_ptr<SynMessage> message,
         double width = 4;
         double x_min = 0;
         double x_max = 100;
-        double offset_for_chassis_size = 5;
+        double offset_for_chassis_size = 10;
 
         // Get the zombies position relative to this vehicle
         auto zombie_pos = vehicle_message->chassis.GetFrame().GetPos() - vehicle.GetVehicleCOMPos();
         zombie_pos = vehicle.GetVehicleRot().RotateBack(zombie_pos);
 
+        // std::cout<<"Zombie loc: "<<zombie_pos.x()<<", "<<zombie_pos.y()<<", "<<zombie_pos.z()<<std::endl;
+
         if (zombie_pos.x() < x_max && zombie_pos.x() > x_min && abs(zombie_pos.y()) < width / 2) {
             driver->SetCurrentDistance(zombie_pos.Length() - offset_for_chassis_size);
+            // std::cout << "Zombie dist: " << zombie_pos.Length() - offset_for_chassis_size << std::endl;
         }
     }
 }

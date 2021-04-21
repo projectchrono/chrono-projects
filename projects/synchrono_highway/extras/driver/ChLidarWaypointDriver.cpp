@@ -72,7 +72,7 @@ void ChLidarWaypointDriver::SetGains(double lookahead,
 // -----------------------------------------------------------------------------
 void ChLidarWaypointDriver::Synchronize(double time) {
     if (time > next_dist_reset_time && !m_lidar) {
-        next_dist_reset_time = time + 0.01;
+        next_dist_reset_time = time + 0.1;
         m_current_distance = 100;
     }
 
