@@ -386,7 +386,7 @@ int main(int argc, char* argv[]) {
             printf("Wheel torques: %f, %f, %f\n", wheel_torque.x(), wheel_torque.y(), wheel_torque.z());
             char filename[100];
             sprintf(filename, "%s/step%06d", params.output_dir.c_str(), currframe++);
-            gpu_sys.WriteFile(std::string(filename));
+            gpu_sys.WriteParticleFile(std::string(filename));
             std::string mesh_output = std::string(filename) + "_meshframes.csv";
             std::ofstream meshfile(mesh_output);
             std::ostringstream outstream;
@@ -407,7 +407,7 @@ int main(int argc, char* argv[]) {
     if (run_mode == RUN_MODE::SETTLING) {
         gpu_sys.SetOutputMode(CHGPU_OUTPUT_MODE::CSV);
 
-        gpu_sys.WriteFile(checkpoint_file_base);
+        gpu_sys.WriteParticleFile(checkpoint_file_base);
     }
 
     clock_t end = std::clock();

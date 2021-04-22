@@ -127,7 +127,7 @@ void writeGranFile(ChSystemGpu& gpu_sys) {
     printf("rendering frame %u\n", currframe);
     char filename[100];
     sprintf(filename, "%s/step%06d", output_dir.c_str(), ++currframe);
-    gpu_sys.WriteFile(std::string(filename));
+    gpu_sys.WriteParticleFile(std::string(filename));
 }
 
 void advanceGranSim(ChSystemGpu& gpu_sys) {

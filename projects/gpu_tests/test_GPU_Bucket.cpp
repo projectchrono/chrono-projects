@@ -275,7 +275,7 @@ int main(int argc, char* argv[]) {
     char filename[100];
     printf("rendering frame %u\n", currframe);
     sprintf(filename, "%s/step%06d", params.output_dir.c_str(), currframe);
-    gran_sys.WriteFile(std::string(filename));
+    gran_sys.WriteParticleFile(std::string(filename));
 
     // write mesh transforms for ospray renderer
     {

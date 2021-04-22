@@ -231,7 +231,7 @@ int main(int argc, char* argv[]) {
             std::cout << "Output frame " << currframe + 1 << " of " << total_frames << std::endl;
             char filename[100];
             sprintf(filename, "%s/step%06d", params.output_dir.c_str(), currframe++);
-            gpu_sys.WriteFile(std::string(filename));
+            gpu_sys.WriteParticleFile(std::string(filename));
             gpu_sys.WriteMeshes(std::string(filename));
 
             /*  // disable meshframes output, for it may be confusing for users dealing with Chrono::Gpu only
