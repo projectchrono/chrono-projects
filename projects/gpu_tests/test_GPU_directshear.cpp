@@ -230,7 +230,7 @@ int main(int argc, char* argv[]) {
             std::cout << "Rendering frame " << currframe << std::endl;
             char filename[100];
             sprintf(filename, "%s/step%06u", params.output_dir.c_str(), currframe++);
-            gran_sys.WriteFile(std::string(filename));
+            gran_sys.WriteParticleFile(std::string(filename));
             gran_sys.WriteMeshes(std::string(filename));
         }
         gran_sys.AdvanceSimulation(iteration_step);
@@ -277,7 +277,7 @@ int main(int argc, char* argv[]) {
             std::cout << "Rendering frame " << currframe << std::endl;
             char filename[100];
             sprintf(filename, "%s/step%06u", params.output_dir.c_str(), currframe++);
-            gran_sys.WriteFile(std::string(filename));
+            gran_sys.WriteParticleFile(std::string(filename));
             gran_sys.WriteMeshes(std::string(filename));
         }
 
@@ -330,7 +330,7 @@ int main(int argc, char* argv[]) {
             std::cout << "Rendering frame " << currframe << std::endl;
             char filename[100];
             sprintf(filename, "%s/step%06u", params.output_dir.c_str(), currframe++);
-            gran_sys.WriteFile(std::string(filename));
+            gran_sys.WriteParticleFile(std::string(filename));
             gran_sys.WriteMeshes(std::string(filename));
 
             double shear_area = box_xy * (box_xy - m_time * shear_velocity * 2);

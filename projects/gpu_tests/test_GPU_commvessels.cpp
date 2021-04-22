@@ -230,7 +230,7 @@ int main(int argc, char* argv[]) {
             std::cout << "Rendering frame " << currframe << std::endl;
             char filename[100];
             sprintf(filename, "%s/step%06u", params.output_dir.c_str(), currframe++);
-            gran_sys.WriteFile(std::string(filename));
+            gran_sys.WriteParticleFile(std::string(filename));
             // gran_sys.write_meshes(std::string(filename));
             std::string mesh_output = std::string(filename) + "_meshframes.csv";
 

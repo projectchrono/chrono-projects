@@ -295,7 +295,7 @@ int main(int argc, char* argv[]) {
         printf("rendering frame %u\n", currframe);
         char filename[100];
         sprintf(filename, "%s/step%06d", params.output_dir.c_str(), currframe++);
-        gran_sys.WriteFile(std::string(filename));
+        gran_sys.WriteParticleFile(std::string(filename));
     }
 
     return 0;
