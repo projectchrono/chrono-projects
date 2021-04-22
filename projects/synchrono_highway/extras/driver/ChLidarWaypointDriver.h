@@ -59,8 +59,13 @@ class CH_VEHICLE_API ChLidarWaypointDriver : public ChDriver {
     virtual void Advance(double step) override;
 
     void SetCurrentDistance(double dist) {
-        m_current_distance = std::min(m_current_distance, dist);
-        next_dist_reset_time += 0.1;
+        if (m_current_time > last_dist_update_time + 1e-6) {
+            m_current_distance = dist;
+        } else {
+            m_current_distance = std::min(m_current_distance, dist);
+        }
+        next_dist_reset_time = m_current_time + 0.05;
+        last_dist_update_time = m_current_time;
     }
 
     /// Set gains for internal dynamics.
@@ -79,7 +84,9 @@ class CH_VEHICLE_API ChLidarWaypointDriver : public ChDriver {
     double m_current_distance;
     double m_last_lidar_time = 0;
     double next_dist_reset_time = 0;
+    double last_dist_update_time = 0;
     double m_target_speed;
+    double m_current_time = 0;
     std::shared_ptr<ChBezierCurve> m_path;
 
     std::shared_ptr<ChPathFollowerACCDriver> m_acc_driver;  ///< underlying acc driver

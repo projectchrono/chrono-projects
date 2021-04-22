@@ -142,55 +142,62 @@ struct PathVehicleSetup {
     double speed_gain_p;
 };
 
+double suv_lookahead = 5.0;
+double audi_tight_lookahead = 6.0;
+double suv_pgain = .5;
+double audi_pgain = .5;
+
 // starting locations and paths
 std::vector<PathVehicleSetup> demo_config = {
-
-    {AUDI, {925.434, -150.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},  // ego vehicle
-    {AUDI, {925.434, -164.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},  // ego vehicle
+    // {SUV, {917.234, 60.63, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {925.434, -150.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 8.0, 0.1},  // ego vehicle
+    // {AUDI, {925.434, -164.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 8.0, 0.1},  // ego vehicle
 
     // {AUDI, {925.434, -140.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},  // ego vehicle
 
-    {SUV, {925.434, -53.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},
-    {AUDI, {925.434, 0.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},
-    {VAN, {925.434, 50.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 1.0},
-    {SUV, {925.434, 75.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},
-    {AUDI, {903.134, 149.13, -64.8}, Q_from_AngZ(3.14), "/paths/2.txt", 10.0, 0.1},
-    {AUDI, {825.134, 149.13, -64.8}, Q_from_AngZ(3.14), "/paths/2.txt", 10.0, 0.1},
-    {SUV, {751.234, 148.93, -64.8}, Q_from_AngZ(3.14), "/paths/2.txt", 10.0, 0.1},
-    {CITYBUS, {727.834, 124.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", 10.0, 1.0},
-    {SUV, {727.834, 85.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", 10.0, 0.1},
-    {AUDI, {727.834, 40.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", 10.0, 0.1},
-    {SUV, {727.834, -34.27, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", 10.0, 0.1},
-    {AUDI, {727.834, -100.27, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", 10.0, 0.1},
-    {AUDI, {727.834, -212.97, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", 10.0, 0.1},
-    {VAN, {748.234, -225.07, -64.8}, Q_from_AngZ(0), "/paths/2.txt", 10.0, 1.0},
-    {AUDI, {855.934, -222.77, -64.8}, Q_from_AngZ(0), "/paths/2.txt", 10.0, 0.1},
-    {CITYBUS, {925.634, -214.17, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 1.0},
+    {SUV, {925.434, -53.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", suv_lookahead, suv_pgain},
+    {AUDI, {925.434, 0.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
+    {VAN, {925.434, 50.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 8.0, 1.0},
+    {SUV, {925.434, 75.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", suv_lookahead, suv_pgain},
+    {AUDI, {903.134, 149.13, -64.8}, Q_from_AngZ(3.14), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {825.134, 149.13, -64.8}, Q_from_AngZ(3.14), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
+    {SUV, {751.234, 148.93, -64.8}, Q_from_AngZ(3.14), "/paths/2.txt", suv_lookahead, suv_pgain},
+    {CITYBUS, {727.834, 124.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", 5.0, 1.0},
+    {SUV, {727.834, 85.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", suv_lookahead, suv_pgain},
+    {AUDI, {727.834, 40.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", audi_tight_lookahead,audi_pgain},
+    {SUV, {727.834, -34.27, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", suv_lookahead, suv_pgain},
+    {AUDI, {727.834, -100.27, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {727.834, -212.97, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
+    {VAN, {748.234, -225.07, -64.8}, Q_from_AngZ(0), "/paths/2.txt", 8.0, 1.0},
+    {AUDI, {855.934, -222.77, -64.8}, Q_from_AngZ(0), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
+    {CITYBUS, {925.634, -214.17, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 5.0, 1.0},
 
-    {AUDI, {845.534, -131.97, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", 8.0, 0.1},
+    {AUDI, {867.634, 140.83, -64.8}, Q_from_AngZ(0), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {847.634, 140.83, -64.8}, Q_from_AngZ(0), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {917.234, 116.63, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {SUV, {917.234, 60.63, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", suv_lookahead, suv_pgain},
+    {SUV, {917.234, -10.63, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", suv_lookahead, suv_pgain},
+    {AUDI, {917.334, -95.67, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {SUV, {892.334, -120.17, -64.8}, Q_from_AngZ(3.14), "/paths/3.txt", suv_lookahead, suv_pgain},
+    {SUV, {850.334, -120.17, -64.8}, Q_from_AngZ(3.14), "/paths/3.txt", suv_lookahead, suv_pgain},
+    {AUDI, {752.934, -119.47, -64.8}, Q_from_AngZ(3.14), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {SUV, {735.734, -102.97, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", suv_lookahead, suv_pgain},
+    {AUDI, {735.734, -75.97, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {735.734, 1.43, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {735.734, 123.63, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {SUV, {755.634, 140.93, -64.8}, Q_from_AngZ(0), "/paths/3.txt", suv_lookahead, suv_pgain},
+    {SUV, {785.634, 140.93, -64.8}, Q_from_AngZ(0), "/paths/3.txt", suv_lookahead, suv_pgain},
+
+    {AUDI, {845.534, -131.97, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", audi_tight_lookahead, audi_pgain},
     {VAN, {763.334, -131.37, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", 8.0, 1.0},
-    {SUV, {727.834, -158.07, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/4.txt", 8.0, 0.1},
-    {SUV, {727.834, -203.57, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/4.txt", 8.0, 0.1},
-    {AUDI, {759.734, -225.07, -64.8}, Q_from_AngZ(0), "/paths/4.txt", 8.0, 0.1},
-    {SUV, {897.934, -223.27, -64.8}, Q_from_AngZ(0), "/paths/4.txt", 8.0, 0.1},
-    {AUDI, {925.434, -199.77, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/4.txt", 8.0, 0.1},
-    {AUDI, {897.434, -132.07, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", 8.0, 0.1},
+    {SUV, {727.834, -158.07, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/4.txt", suv_lookahead, suv_pgain},
+    {SUV, {727.834, -203.57, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/4.txt", suv_lookahead, suv_pgain},
+    {AUDI, {759.734, -225.07, -64.8}, Q_from_AngZ(0), "/paths/4.txt", audi_tight_lookahead, audi_pgain},
+    {SUV, {897.934, -223.27, -64.8}, Q_from_AngZ(0), "/paths/4.txt", suv_lookahead, suv_pgain},
+    {AUDI, {925.434, -199.77, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/4.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {897.434, -132.07, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", audi_tight_lookahead, audi_pgain}
 
-    {AUDI, {867.634, 140.83, -64.8}, Q_from_AngZ(0), "/paths/3.txt", 7.0, 0.1},
-    {AUDI, {847.634, 140.83, -64.8}, Q_from_AngZ(0), "/paths/3.txt", 7.0, 0.1},
-    {AUDI, {917.234, 116.63, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", 7.0, 0.1},
-    {SUV, {917.234, 60.63, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", 5.0, 0.1},
-    {SUV, {917.234, -10.63, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", 5.0, 0.1},
-    {AUDI, {917.334, -95.67, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", 7.0, 0.1},
-    {SUV, {892.334, -120.17, -64.8}, Q_from_AngZ(3.14), "/paths/3.txt", 5.0, 0.1},
-    {SUV, {850.334, -120.17, -64.8}, Q_from_AngZ(3.14), "/paths/3.txt", 5.0, 0.1},
-    {AUDI, {752.934, -119.47, -64.8}, Q_from_AngZ(3.14), "/paths/3.txt", 7.0, 0.1},
-    {SUV, {735.734, -102.97, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", 5.0, 0.1},
-    {AUDI, {735.734, -75.97, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", 5.0, 0.1},
-    {AUDI, {735.734, 1.43, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", 7.0, 0.1},
-    {AUDI, {735.734, 123.63, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", 7.0, 0.1},
-    {SUV, {755.634, 140.93, -64.8}, Q_from_AngZ(0), "/paths/3.txt", 7.0, 0.1},
-    {SUV, {785.634, 140.93, -64.8}, Q_from_AngZ(0), "/paths/3.txt", 7.0, 0.1}};
+};
 
 // =============================================================================
 
@@ -421,7 +428,7 @@ int main(int argc, char* argv[]) {
                 chrono::ChFrame<double>({0.05, .381, 1.04}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
                 image_width,                                                                // image width
                 image_height,                                                               // image height
-                3.14 / 1.5,                                                                   // fov
+                3.14 / 1.5,                                                                 // fov
                 1);
 
             driver_cam->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(
@@ -434,7 +441,7 @@ int main(int argc, char* argv[]) {
             camera = chrono_types::make_shared<ChCameraSensor>(
                 vehicle.GetChassisBody(),  // body camera is attached to
                 30.f,                      // update rate in Hz
-                chrono::ChFrame<double>({cam_distance, 0, .45 * cam_distance},
+                chrono::ChFrame<double>({-2.0*cam_distance, 0, .45 * cam_distance},
                                         Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
                 1280,                                                   // image width
                 720,                                                    // image height
@@ -447,46 +454,82 @@ int main(int argc, char* argv[]) {
                 camera->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam_third/"));
             manager->AddSensor(camera);
 
-            auto camera2 = chrono_types::make_shared<ChCameraSensor>(
-                patch->GetGroundBody(),  // body camera is attached to
-                30.f,                    // update rate in Hz
-                chrono::ChFrame<double>({830, -120.87, 200.0}, Q_from_AngAxis(3.14 / 2, {0, 1, 0})), 1080,  //
-                1080,  // image height
-                3.14 / 2, 1);
+            // auto camera2 = chrono_types::make_shared<ChCameraSensor>(
+            //     patch->GetGroundBody(),  // body camera is attached to
+            //     30.f,                    // update rate in Hz
+            //     chrono::ChFrame<double>({925, -120.87, 200.0}, Q_from_AngAxis(3.14 / 2, {0, 1, 0})), 1080,  //
+            //     1080,  // image height
+            //     3.14 / 2, 1);
 
-            camera2->PushFilter(
-                chrono_types::make_shared<ChFilterFullScreenVisualize>(1080, 1080, "Camera 2", false));
-            if (save)
-                camera2->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam2/"));
-            manager->AddSensor(camera2);
+            // camera2->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(500, 500, "Camera 2", false));
+            // if (save)
+            //     camera2->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam2/"));
+            // manager->AddSensor(camera2);
+
+            // auto camer5 = chrono_types::make_shared<ChCameraSensor>(
+            //     patch->GetGroundBody(),  // body camera is attached to
+            //     30.f,                    // update rate in Hz
+            //     chrono::ChFrame<double>({725, -120.87, 200.0}, Q_from_AngAxis(3.14 / 2, {0, 1, 0})), 1080,  //
+            //     1080,  // image height
+            //     3.14 / 2, 1);
+
+            // camer5->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(500, 500, "Camera 5", false));
+            // if (save)
+            //     camer5->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam2/"));
+            // manager->AddSensor(camer5);
+
+            // auto camera3 = chrono_types::make_shared<ChCameraSensor>(
+            //     patch->GetGroundBody(),  // body camera is attached to
+            //     30.f,                    // update rate in Hz
+            //     chrono::ChFrame<double>({925, 145.0, 200.0}, Q_from_AngAxis(3.14 / 2, {0, 1, 0})), 1080,  //
+            //     1080,  // image height
+            //     3.14 / 2, 1);
+
+            // camera3->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(700, 700, "Camera 3", false));
+            // if (save)
+            //     camera3->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam2/"));
+            // manager->AddSensor(camera3);
+
+            // auto camera4 = chrono_types::make_shared<ChCameraSensor>(
+            //     patch->GetGroundBody(),  // body camera is attached to
+            //     30.f,                    // update rate in Hz
+            //     chrono::ChFrame<double>({725, -220.87, 200.0}, Q_from_AngAxis(3.14 / 2, {0, 1, 0})), 1080,  //
+            //     1080,  // image height
+            //     3.14 / 2, 1);
+
+            // camera4->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(700, 700, "Camera 4", false));
+            // if (save)
+            //     camera4->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam2/"));
+            // manager->AddSensor(camera4);
         }
-
-        lidar = chrono_types::make_shared<ChLidarSensor>(
-            vehicle.GetChassisBody(),                                          // body lidar is attached to
-            20.f,                                                              // scanning rate in Hz
-            chrono::ChFrame<double>(lidar_pos, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
-            900,                                                               // number of horizontal samples
-            16,                                                                // number of vertical channels
-            6.28318530718,                                                     // horizontal field of view
-            0.261799,
-            -0.261799,                         // vertical field of view
-            100.f,                             // max distance
-            LidarBeamShape::RECTANGULAR,       // beam shape
-            2,                                 // sample radius
-            0.003,                             // vertical divergence angle
-            0.003,                             // horizontal divergence angle
-            LidarReturnMode::STRONGEST_RETURN  // return mode for the lidar
-        );
-        lidar->SetName("Lidar Sensor 1");
-        lidar->SetLag(0.01);
-        lidar->SetCollectionWindow(.05);
-        lidar->PushFilter(chrono_types::make_shared<ChFilterPCfromDepth>());
-        lidar->PushFilter(chrono_types::make_shared<ChFilterLidarNoiseXYZI>(0.01f, 0.001f, 0.001f, 0.01f));
-        lidar->PushFilter(chrono_types::make_shared<ChFilterVisualizePointCloud>(640, 480, 2, "Lidar Point Cloud"));
-        lidar->PushFilter(chrono_types::make_shared<ChFilterXYZIAccess>());
-        if (save)
-            lidar->PushFilter(chrono_types::make_shared<ChFilterSavePtCloud>("DEMO_OUTPUT/lidar/"));
-        manager->AddSensor(lidar);
+        if (!no_sensing) {
+            lidar = chrono_types::make_shared<ChLidarSensor>(
+                vehicle.GetChassisBody(),                                          // body lidar is attached to
+                20.f,                                                              // scanning rate in Hz
+                chrono::ChFrame<double>(lidar_pos, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
+                900,                                                               // number of horizontal samples
+                16,                                                                // number of vertical channels
+                6.28318530718,                                                     // horizontal field of view
+                0.261799,
+                -0.261799,                         // vertical field of view
+                100.f,                             // max distance
+                LidarBeamShape::RECTANGULAR,       // beam shape
+                2,                                 // sample radius
+                0.003,                             // vertical divergence angle
+                0.003,                             // horizontal divergence angle
+                LidarReturnMode::STRONGEST_RETURN  // return mode for the lidar
+            );
+            lidar->SetName("Lidar Sensor 1");
+            lidar->SetLag(0.01);
+            lidar->SetCollectionWindow(.05);
+            lidar->PushFilter(chrono_types::make_shared<ChFilterPCfromDepth>());
+            lidar->PushFilter(chrono_types::make_shared<ChFilterLidarNoiseXYZI>(0.01f, 0.001f, 0.001f, 0.01f));
+            lidar->PushFilter(chrono_types::make_shared<ChFilterVisualizePointCloud>(640, 480, 2, "Lidar Point Cloud"));
+            lidar->PushFilter(chrono_types::make_shared<ChFilterXYZIAccess>());
+            if (save)
+                lidar->PushFilter(chrono_types::make_shared<ChFilterSavePtCloud>("DEMO_OUTPUT/lidar/"));
+            manager->AddSensor(lidar);
+        }
     }
 
     // Create the vehicle Irrlicht interface
@@ -546,7 +589,7 @@ int main(int argc, char* argv[]) {
                               0.0);
         path_driver->Initialize();
 
-        if (no_sensing && node_id != leader) {
+        if (no_sensing) {
             // Set the callback so that we can check the state of other vehicles
             auto callback =
                 std::bind(&VehicleProcessMessageCallback, std::placeholders::_1, std::ref(vehicle), agent, path_driver);
@@ -839,9 +882,15 @@ void VehicleProcessMessageCallback(std::shared_ptr<SynMessage> message,
         double x_max = 100;
         double offset_for_chassis_size = 10;
 
+        double max_angle = vehicle.GetMaxSteeringAngle();
+        double curr_steering = driver->GetSteering();
+
+        ChQuaternion<> q = Q_from_AngZ(max_angle * curr_steering);
+
         // Get the zombies position relative to this vehicle
         auto zombie_pos = vehicle_message->chassis.GetFrame().GetPos() - vehicle.GetVehicleCOMPos();
-        zombie_pos = vehicle.GetVehicleRot().RotateBack(zombie_pos);
+        zombie_pos = q.RotateBack(vehicle.GetVehicleRot().RotateBack(zombie_pos));
+        // zombie_pos = vehicle.GetVehicleRot().RotateBack(zombie_pos);
 
         // std::cout<<"Zombie loc: "<<zombie_pos.x()<<", "<<zombie_pos.y()<<", "<<zombie_pos.z()<<std::endl;
 
@@ -849,5 +898,13 @@ void VehicleProcessMessageCallback(std::shared_ptr<SynMessage> message,
             driver->SetCurrentDistance(zombie_pos.Length() - offset_for_chassis_size);
             // std::cout << "Zombie dist: " << zombie_pos.Length() - offset_for_chassis_size << std::endl;
         }
+
+        // if (zombie_pos.x() < x_max && zombie_pos.x() > x_min) {
+        //     std::cout << "Zombie loc: " << zombie_pos.x() << ", " << zombie_pos.y() << ", " << zombie_pos.z()
+        //               << std::endl;
+
+        //     // driver->SetCurrentDistance(zombie_pos.Length() - offset_for_chassis_size);
+        //     // std::cout << "Zombie dist: " << zombie_pos.Length() - offset_for_chassis_size << std::endl;
+        // }
     }
 }

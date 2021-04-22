@@ -20,6 +20,7 @@
 // =============================================================================
 
 #include "ChLidarWaypointDriver.h"
+#include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
 
 #include <algorithm>
 #include <climits>
@@ -71,8 +72,9 @@ void ChLidarWaypointDriver::SetGains(double lookahead,
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 void ChLidarWaypointDriver::Synchronize(double time) {
+    m_current_time = time;
     if (time > next_dist_reset_time && !m_lidar) {
-        next_dist_reset_time = time + 0.1;
+        next_dist_reset_time = time + 0.05;
         m_current_distance = 100;
     }
 
@@ -92,19 +94,26 @@ void ChLidarWaypointDriver::MinDistFromLidar() {
     double z_min = -.1;
     double z_max = 1.5;
 
+    auto wheeled_vehicle = dynamic_cast<WheeledVehicle*>(&m_vehicle);
+    double max_angle = wheeled_vehicle->GetMaxSteeringAngle();
+    double curr_steering = m_steering;
+    ChQuaternion<> q = Q_from_AngZ(max_angle * curr_steering);
+
     UserXYZIBufferPtr xyzi_buffer = m_lidar->GetMostRecentBuffer<UserXYZIBufferPtr>();
     if (xyzi_buffer->TimeStamp > m_last_lidar_time + update_period) {
         m_last_lidar_time = xyzi_buffer->TimeStamp;
         for (int i = 0; i < xyzi_buffer->Height; i++) {
             for (int j = 0; j < xyzi_buffer->Width; j++) {
                 PixelXYZI xyzi = xyzi_buffer->Buffer[i * xyzi_buffer->Width + j];
+                ChVector<> pt = {xyzi.x, xyzi.y, xyzi.z};
+                pt = q.RotateBack(pt);
                 // intensity threshold
                 if (xyzi.intensity > 0) {
                     // x threshold
-                    if (xyzi.x < std::min(x_max, min_distance) && xyzi.x > x_min) {
-                        if (xyzi.y < y_max && xyzi.y > y_min) {
-                            if (xyzi.z < z_max && xyzi.z > z_min) {
-                                min_distance = xyzi.x;
+                    if (pt.x() < std::min(x_max, min_distance) && pt.x() > x_min) {
+                        if (pt.y() < y_max && pt.y() > y_min) {
+                            if (pt.z() < z_max && pt.z() > z_min) {
+                                min_distance = pt.x();
                             }
                         }
                     }
