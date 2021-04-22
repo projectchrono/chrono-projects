@@ -142,18 +142,18 @@ void ChLidarWaypointDriver::Advance(double step) {
     double t;
     double t_actual;
     double min_dist = 1e6;
-    int knot_id = 0;
-    for (int i = 0; i < m_path->getNumPoints(); i++) {
+    int segment = 0;
+    for (int i = 0; i < m_path->getNumPoints()-1; i++) {
         ChVector<> loc = m_path->calcClosestPoint(curvature_location, i, t);
         double tmp_min_dist = (loc - curvature_location).Length();
         if (tmp_min_dist < min_dist) {
             min_dist = tmp_min_dist;
-            knot_id = i;
+            segment = i;
             t_actual = t;
         }
     }
 
-    ChVector<> d = m_path->evalD(knot_id, t_actual);
+    ChVector<> d = m_path->evalD(segment, t_actual);
     d.Normalize();
     ChVector<> heading = m_vehicle.GetVehicleRot().Rotate({1, 0, 0});
     double dotangle = d.Dot(heading);
