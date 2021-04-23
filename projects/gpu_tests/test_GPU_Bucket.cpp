@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
     gran_sys.SetCohesionRatio(0.0);
     gran_sys.SetAdhesionRatio_SPH2WALL(0.0);
     gran_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
-    gran_sys.SetOutputMode(params.write_mode);
+    gran_sys.SetParticleOutputMode(params.write_mode);
 
     std::vector<ChVector<float>> body_points;
 

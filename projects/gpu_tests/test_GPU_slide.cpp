@@ -147,8 +147,8 @@ int main(int argc, char* argv[]) {
         gpu_sys.CreateBCPlane(plane_pos, plane_normal, track_forces);
     }
     gpu_sys.SetGravitationalAcceleration(ChVector<>(params.grav_X, params.grav_Y, params.grav_Z));
-    gpu_sys.SetOutputMode(params.write_mode);
-    gpu_sys.SetOutputFlags(CHGPU_OUTPUT_FLAGS::VEL_COMPONENTS | CHGPU_OUTPUT_FLAGS::ANG_VEL_COMPONENTS);
+    gpu_sys.SetParticleOutputMode(params.write_mode);
+    gpu_sys.SetParticleOutputFlags(CHGPU_OUTPUT_FLAGS::VEL_COMPONENTS | CHGPU_OUTPUT_FLAGS::ANG_VEL_COMPONENTS);
 
     gpu_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
 

@@ -135,8 +135,8 @@ int main(int argc, char* argv[]) {
     gran_sys.CreateBCPlane(plane_pos, plane_normal, track_forces);
 
     gran_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
-    gran_sys.SetOutputMode(params.write_mode);
-    gran_sys.SetOutputFlags(CHGPU_OUTPUT_FLAGS::VEL_COMPONENTS | CHGPU_OUTPUT_FLAGS::ANG_VEL_COMPONENTS);
+    gran_sys.SetParticleOutputMode(params.write_mode);
+    gran_sys.SetParticleOutputFlags(CHGPU_OUTPUT_FLAGS::VEL_COMPONENTS | CHGPU_OUTPUT_FLAGS::ANG_VEL_COMPONENTS);
 
     gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
 

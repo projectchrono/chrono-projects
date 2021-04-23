@@ -85,8 +85,8 @@ int main(int argc, char* argv[]) {
     }
 
     gpu_sys.SetGravitationalAcceleration(ChVector<>(params.grav_X, params.grav_Y, params.grav_Z));
-    gpu_sys.SetOutputMode(params.write_mode);
-    gpu_sys.SetOutputFlags(
+    gpu_sys.SetParticleOutputMode(params.write_mode);
+    gpu_sys.SetParticleOutputFlags(
         CHGPU_OUTPUT_FLAGS::VEL_COMPONENTS | CHGPU_OUTPUT_FLAGS::FIXITY |
         CHGPU_OUTPUT_FLAGS::FORCE_COMPONENTS);  // NOTE: original test used custom FORCE_COMPONENTS output
 

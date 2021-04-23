@@ -170,7 +170,7 @@ int main(int argc, char* argv[]) {
     std::string mesh_filename(GetChronoDataFile("models/sphere.obj"));
     auto ball_mesh_id = gpu_sys.AddMesh(mesh_filename, ChVector<float>(0), ChMatrix33<float>(ball_radius), ball_mass);
 
-    gpu_sys.SetOutputMode(params.write_mode);
+    gpu_sys.SetParticleOutputMode(params.write_mode);
     gpu_sys.SetVerbosity(params.verbose);
 
 

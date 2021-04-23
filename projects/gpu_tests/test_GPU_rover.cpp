@@ -320,7 +320,7 @@ int main(int argc, char* argv[]) {
     // Add collision mesh to GPU system
     gpu_sys.AddMesh(wheel_filename, ChVector<float>(0), wheel_scaling, wheel_mass);
 
-    gpu_sys.SetOutputMode(params.write_mode);
+    gpu_sys.SetParticleOutputMode(params.write_mode);
     gpu_sys.SetVerbosity(params.verbose);
     filesystem::create_directory(filesystem::path(params.output_dir));
 
@@ -405,7 +405,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (run_mode == RUN_MODE::SETTLING) {
-        gpu_sys.SetOutputMode(CHGPU_OUTPUT_MODE::CSV);
+        gpu_sys.SetParticleOutputMode(CHGPU_OUTPUT_MODE::CSV);
 
         gpu_sys.WriteParticleFile(checkpoint_file_base);
     }

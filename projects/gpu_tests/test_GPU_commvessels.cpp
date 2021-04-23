@@ -125,7 +125,7 @@ int main(int argc, char* argv[]) {
     gran_sys.SetStaticFrictionCoeff_SPH2WALL(params.static_friction_coeffS2W);
     gran_sys.SetStaticFrictionCoeff_SPH2MESH(params.static_friction_coeffS2M);
 
-    gran_sys.SetOutputMode(params.write_mode);
+    gran_sys.SetParticleOutputMode(params.write_mode);
     filesystem::create_directory(filesystem::path(params.output_dir));
     gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
 

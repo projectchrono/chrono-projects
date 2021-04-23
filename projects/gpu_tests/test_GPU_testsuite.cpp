@@ -102,7 +102,7 @@ void setCommonParameters(ChSystemGpu& gpu_sys) {
     gpu_sys.SetCohesionRatio(cohes);
     gpu_sys.SetAdhesionRatio_SPH2WALL(cohes);
     gpu_sys.SetGravitationalAcceleration(ChVector<>(0, 0, grav_Z));
-    gpu_sys.SetOutputMode(write_mode);
+    gpu_sys.SetParticleOutputMode(write_mode);
     gpu_sys.SetStaticFrictionCoeff_SPH2SPH(static_friction_coeff);
     gpu_sys.SetStaticFrictionCoeff_SPH2WALL(static_friction_coeff);
 

@@ -103,7 +103,7 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params
     gpu_sys.SetStaticFrictionCoeff_SPH2SPH(mu);
     gpu_sys.SetStaticFrictionCoeff_SPH2WALL(mu);
 
-    gpu_sys.SetOutputMode(CHGPU_OUTPUT_MODE::CSV);
+    gpu_sys.SetParticleOutputMode(CHGPU_OUTPUT_MODE::CSV);
 
     gpu_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::FORWARD_EULER);
     gpu_sys.SetFixedStepSize(params.step_size);
