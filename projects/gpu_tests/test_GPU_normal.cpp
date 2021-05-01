@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
         gpu_sys.SetParticleFixed(body_points_fixed);
     }
 
-    gpu_sys.SetParticlePositions(body_points);
+    gpu_sys.SetParticles(body_points);
 
     gpu_sys.SetFixedStepSize(params.step_size);
 

@@ -153,7 +153,7 @@ void run_ROTF() {
     // start at far-x wall, halfway up
     ChVector<float> sphere_pos(-box_X / 2.f + 2.f * sphere_radius, 0, 2 * sphere_radius);
     points.push_back(sphere_pos);
-    gpu_sys.SetParticlePositions(points);
+    gpu_sys.SetParticles(points);
 
     printf("Plane pos: (%f, %f, %f)\n", plane_pos.x(), plane_pos.y(), plane_pos.z());
 
@@ -211,7 +211,7 @@ void run_ROTF_MESH() {
     // start at far-x wall, halfway up
     ChVector<float> sphere_pos(-box_X / 2.f + 2.f * sphere_radius, 0, 2 * sphere_radius);
     points.push_back(sphere_pos);
-    gpu_sys.SetParticlePositions(points);
+    gpu_sys.SetParticles(points);
 
     printf("Plane pos: (%f, %f, %f)\n", plane_pos.x(), plane_pos.y(), plane_pos.z());
 
@@ -300,7 +300,7 @@ void run_PYRAMID() {
     points.push_back(base_sphere_2);
     points.push_back(base_sphere_3);
     points.push_back(top_sphere);
-    gpu_sys.SetParticlePositions(points);
+    gpu_sys.SetParticles(points);
 
     gpu_sys.Initialize();
 
@@ -349,7 +349,7 @@ void run_PYRAMID_MESH() {
     points.push_back(base_sphere_2);
     points.push_back(base_sphere_3);
     points.push_back(top_sphere);
-    gpu_sys.SetParticlePositions(points);
+    gpu_sys.SetParticles(points);
 
     gpu_sys.Initialize();
 
@@ -399,7 +399,7 @@ void run_MESH_STEP() {
 
     std::cout << "Created " << body_points.size() << " spheres" << std::endl;
 
-    gpu_sys.SetParticlePositions(body_points);
+    gpu_sys.SetParticles(body_points);
 
     unsigned int nSoupFamilies = gpu_sys.GetNumMeshes();
     std::cout << nSoupFamilies << " soup families" << std::endl;
@@ -440,7 +440,7 @@ void run_MESH_FORCE() {
     double sphere_weight = sphere_mass * std::abs(grav_Z);
     double total_weight = total_mass * std::abs(grav_Z);
 
-    gpu_sys.SetParticlePositions(pos);
+    gpu_sys.SetParticles(pos);
 
     // Add mesh
     gpu_sys.AddMesh(GetDataFile("meshes/testsuite/square_box.obj"), ChVector<float>(0), 

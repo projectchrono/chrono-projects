@@ -170,7 +170,7 @@ int main(int argc, char* argv[]) {
         body_points = utils::PDLayerSampler_BOX<float>(center, hdims, 2. * params.sphere_radius, 1.02);
     }
 
-    gran_sys.SetParticlePositions(body_points);
+    gran_sys.SetParticles(body_points);
 
     // face in upwards
     ChVector<float> bottom_plane_normal_X(1, 0, 0);

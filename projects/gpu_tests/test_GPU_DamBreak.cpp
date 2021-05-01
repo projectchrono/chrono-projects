@@ -206,7 +206,7 @@ int main(int argc, char* argv[]) {
     std::vector<ChVector<float>> first_points;
 
     std::cout << "Adding " << body_points.size() << " particles" << std::endl;
-    gran_sys.SetParticlePositions(body_points);
+    gran_sys.SetParticles(body_points);
 
     // just at end of material
     ChVector<float> plane_center(center.x() + hdims.x() + sphere_diam, 0, 0);

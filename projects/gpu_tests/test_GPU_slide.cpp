@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
     std::vector<ChVector<float>> body_points;
     body_points.push_back(sphere_pos);
 
-    gpu_sys.SetParticlePositions(body_points, std::vector<ChVector<float>>(1, v_init));
+    gpu_sys.SetParticles(body_points, std::vector<ChVector<float>>(1, v_init));
 
     gpu_sys.SetFixedStepSize(params.step_size);
 

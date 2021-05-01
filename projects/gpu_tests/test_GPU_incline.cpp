@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
     body_points.push_back(sphere_pos);
     std::vector<ChVector<float>> body_vels(1, v_init);
 
-    gran_sys.SetParticlePositions(body_points, body_vels);
+    gran_sys.SetParticles(body_points, body_vels);
 
     gran_sys.SetFixedStepSize(params.step_size);
 

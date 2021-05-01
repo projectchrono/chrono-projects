@@ -244,7 +244,7 @@ int main(int argc, char* argv[]) {
         body_points = loadCheckpointFile(checkpoint_file_base + ".csv");
     }
 
-    gpu_sys.SetParticlePositions(body_points);
+    gpu_sys.SetParticles(body_points);
 
     gpu_sys.SetBDFixed(true);
 

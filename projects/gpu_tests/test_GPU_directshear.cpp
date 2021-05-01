@@ -129,7 +129,7 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params
 
     std::cout << "Created " << body_points.size() << " spheres" << std::endl;
 
-    gpu_sys.SetParticlePositions(body_points);
+    gpu_sys.SetParticles(body_points);
 
     // Mesh values
     std::vector<string> mesh_filenames;

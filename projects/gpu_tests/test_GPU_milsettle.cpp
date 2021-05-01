@@ -68,7 +68,7 @@ double run_test(float box_size_X, float box_size_Y, float box_size_Z) {
     ChVector<float> center(0, 0, -0.25f * box_size_Z);
     ChVector<float> hdims(box_size_X / 2 - ballRadius, box_size_X / 2 - ballRadius, box_size_Z / 4 - ballRadius);
     std::vector<ChVector<float>> body_points = sampler.SampleBox(center, hdims);
-    gpu_system.SetParticlePositions(body_points);
+    gpu_system.SetParticles(body_points);
 
     filesystem::create_directory(filesystem::path(output_prefix));
 

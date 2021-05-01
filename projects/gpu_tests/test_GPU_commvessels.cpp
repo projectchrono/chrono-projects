@@ -163,7 +163,7 @@ int main(int argc, char* argv[]) {
 
     auto n_spheres = body_points.size();
     std::cout << "Adding " << n_spheres << " particles" << std::endl;
-    gran_sys.SetParticlePositions(body_points);
+    gran_sys.SetParticles(body_points);
 
     // Add mesh
     std::string mesh_filename(gpu::GetDataFile("meshes/cylinder_refined.obj"));
