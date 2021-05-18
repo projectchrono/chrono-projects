@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
     std::cout << "sphere_radius " << params.sphere_radius << std::endl;
     std::cout << "sphere_density " << params.sphere_density << std::endl;
 
-    ChSystemGpuMesh gran_sys(params.sphere_radius, params.sphere_density, make_float3(Bx, By, Bz));
+    ChSystemGpuMesh gran_sys(params.sphere_radius, params.sphere_density, ChVector<float>(Bx, By, Bz));
 
     gran_sys.SetVerbosity(params.verbose);
 

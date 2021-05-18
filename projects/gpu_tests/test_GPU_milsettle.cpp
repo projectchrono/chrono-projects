@@ -52,7 +52,7 @@ float cohesion_ratio = 0;
 // -----------------------------------------------------------------------------
 double run_test(float box_size_X, float box_size_Y, float box_size_Z) {
     // Setup simulation
-    ChSystemGpu gpu_system(ballRadius, ballDensity, make_float3(box_size_X, box_size_Y, box_size_Z));
+    ChSystemGpu gpu_system(ballRadius, ballDensity, ChVector<float>(box_size_X, box_size_Y, box_size_Z));
     gpu_system.SetKn_SPH2SPH(normStiffness_S2S);
     gpu_system.SetKn_SPH2WALL(normStiffness_S2W);
     gpu_system.SetGn_SPH2SPH(normalDampS2S);

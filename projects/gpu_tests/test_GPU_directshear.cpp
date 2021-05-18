@@ -186,7 +186,7 @@ int main(int argc, char* argv[]) {
     float iteration_step = params.step_size;  // TODO
 
     ChSystemGpuMesh gran_sys(params.sphere_radius, params.sphere_density,
-                            make_float3(params.box_X, params.box_Y, params.box_Z));
+                             ChVector<float>(params.box_X, params.box_Y, params.box_Z));
 
     filesystem::create_directory(filesystem::path(params.output_dir));
 

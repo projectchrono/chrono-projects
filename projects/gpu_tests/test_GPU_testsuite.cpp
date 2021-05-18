@@ -136,7 +136,7 @@ void advanceGranSim(ChSystemGpu& gpu_sys) {
 }
 
 void run_ROTF() {
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
+    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector<float>(box_X, box_Y, box_Z));
     setCommonParameters(gpu_sys);
 
     float ramp_angle = (float)CH_C_PI / 4;
@@ -199,7 +199,7 @@ void run_ROTF() {
 
 void run_ROTF_MESH() {
     // overwrite olds system
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
+    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector<float>(box_X, box_Y, box_Z));
     setCommonParameters(gpu_sys);
 
     setCommonMeshParameters(gpu_sys);
@@ -266,7 +266,7 @@ void run_ROTF_MESH() {
 }
 
 void run_PYRAMID() {
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
+    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector<float>(box_X, box_Y, box_Z));
 
     setCommonParameters(gpu_sys);
 
@@ -311,7 +311,7 @@ void run_PYRAMID() {
 }
 
 void run_PYRAMID_MESH() {
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
+    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector<float>(box_X, box_Y, box_Z));
     setCommonParameters(gpu_sys);
 
     setCommonMeshParameters(gpu_sys);
@@ -375,7 +375,7 @@ void run_PYRAMID_MESH() {
 }
 
 void run_MESH_STEP() {
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
+    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector<float>(box_X, box_Y, box_Z));
     setCommonParameters(gpu_sys);
     setCommonMeshParameters(gpu_sys);
 
@@ -425,7 +425,7 @@ void run_MESH_FORCE() {
     std::cout << "MESH_FORCE not implemented" << std::endl;
     return;
 
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, make_float3(box_X, box_Y, box_Z));
+    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector<float>(box_X, box_Y, box_Z));
     setCommonParameters(gpu_sys);
     setCommonMeshParameters(gpu_sys);
 
