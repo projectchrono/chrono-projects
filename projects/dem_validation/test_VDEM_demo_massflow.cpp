@@ -162,7 +162,7 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
 #endif
 
     // Angled insert
-    auto insert = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto insert = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     insert->SetIdentifier(0);
     insert->SetMass(1);
@@ -179,7 +179,7 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     system->AddBody(insert);
 
     // Static slot (back wall)
-    auto slot = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto slot = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     slot->SetIdentifier(-1);
     slot->SetMass(1);
@@ -196,7 +196,7 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     system->AddBody(slot);
 
     // Lateral walls
-    auto wall = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto wall = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     wall->SetIdentifier(-2);
     wall->SetMass(1);
@@ -348,7 +348,7 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.use_full_inertia_tensor = false;
 
 #ifdef USE_SMC
-    msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
+    msystem->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::PRIMS;
 #else
     msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;

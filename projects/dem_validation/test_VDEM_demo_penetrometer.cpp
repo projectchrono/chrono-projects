@@ -340,7 +340,7 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* msystem) {
 #endif
 
     // Create the falling object
-    auto obj = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto obj = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     double mass;
     ChVector<> inertia;
@@ -450,7 +450,7 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.tolerance = tolerance;
 
 #ifdef USE_SMC
-    msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
+    msystem->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::HYBRID;
 
     msystem->GetSettings()->solver.contact_force_model = contact_force_model;
     msystem->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;

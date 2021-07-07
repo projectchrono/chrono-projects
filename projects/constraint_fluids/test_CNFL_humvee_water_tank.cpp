@@ -20,6 +20,9 @@
 #include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
+#include "chrono/collision/ChCollisionSystemChrono.h"
+#include "chrono/collision/ChCollisionModelChrono.h"
+
 #include "chrono_models/vehicle/hmmwv/HMMWV.h"
 
 #include "chrono_vehicle/ChConfigVehicle.h"
@@ -30,8 +33,6 @@
 #include "chrono_vehicle/wheeled_vehicle/suspension/ChDoubleWishbone.h"
 
 // Chrono::Multicore header files
-#include "chrono_multicore/collision/ChCollisionSystemMulticore.h"
-#include "chrono_multicore/collision/ChNarrowphaseRUtils.h"
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 #include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
@@ -220,7 +221,7 @@ void static WriteVehicleData(hmmwv::HMMWV_Full& my_hmmwv,
 void RemoveCollisionModel(ChSystemMulticoreNSC* system, ChCollisionModel* model) {
     ChMulticoreDataManager* data_manager = system->data_manager;
 #if 1
-    ChCollisionModelMulticore* pmodel = static_cast<ChCollisionModelMulticore*>(model);
+    ChCollisionModelChrono* pmodel = static_cast<ChCollisionModelChrono*>(model);
     int body_id = pmodel->GetBody()->GetId();
     // loop over the models we nned to remove
     // std::cout << "removing: " << pmodel->GetNObjects() << " objects" << std::endl;
@@ -228,61 +229,61 @@ void RemoveCollisionModel(ChSystemMulticoreNSC* system, ChCollisionModel* model)
         // find a model to remove
         bool removed = false;
         int index = -1;
-        for (int i = 0; i < data_manager->shape_data.id_rigid.size(); i++) {
-            if (data_manager->shape_data.id_rigid[i] == body_id) {
+        for (int i = 0; i < data_manager->cd_data->shape_data.id_rigid.size(); i++) {
+            if (data_manager->cd_data->shape_data.id_rigid[i] == body_id) {
                 index = i;
-                data_manager->num_rigid_shapes--;
+                data_manager->cd_data->num_rigid_shapes--;
 
-                int start = data_manager->shape_data.start_rigid[index];
-                int length = data_manager->shape_data.length_rigid[index];
-                int type = data_manager->shape_data.typ_rigid[index];
+                int start = data_manager->cd_data->shape_data.start_rigid[index];
+                int length = data_manager->cd_data->shape_data.length_rigid[index];
+                int type = data_manager->cd_data->shape_data.typ_rigid[index];
 
                 // std::cout << "removing: type " << type << " " << start<< " " <<j << std::endl;
 
                 switch (type) {
                     case ChCollisionShape::Type::SPHERE:
-                        ERASE_MACRO_LEN(data_manager->shape_data.sphere_rigid, start, length);
+                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.sphere_rigid, start, length);
                         break;
                     case ChCollisionShape::Type::ELLIPSOID:
-                        ERASE_MACRO_LEN(data_manager->shape_data.box_like_rigid, start, length);
+                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.box_like_rigid, start, length);
                         break;
                     case ChCollisionShape::Type::BOX:
-                        ERASE_MACRO_LEN(data_manager->shape_data.box_like_rigid, start, length);
+                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.box_like_rigid, start, length);
                         break;
                     case ChCollisionShape::Type::CYLINDER:
-                        ERASE_MACRO_LEN(data_manager->shape_data.box_like_rigid, start, length);
+                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.box_like_rigid, start, length);
                         break;
                     case ChCollisionShape::Type::CONE:
-                        ERASE_MACRO_LEN(data_manager->shape_data.box_like_rigid, start, length);
+                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.box_like_rigid, start, length);
                         break;
                     case ChCollisionShape::Type::CAPSULE:
-                        ERASE_MACRO_LEN(data_manager->shape_data.capsule_rigid, start, length);
+                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.capsule_rigid, start, length);
                         break;
                     case ChCollisionShape::Type::ROUNDEDBOX:
-                        ERASE_MACRO_LEN(data_manager->shape_data.rbox_like_rigid, start, length);
+                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.rbox_like_rigid, start, length);
                         break;
                     case ChCollisionShape::Type::ROUNDEDCYL:
-                        ERASE_MACRO_LEN(data_manager->shape_data.rbox_like_rigid, start, length);
+                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.rbox_like_rigid, start, length);
                         break;
                     case ChCollisionShape::Type::ROUNDEDCONE:
-                        ERASE_MACRO_LEN(data_manager->shape_data.rbox_like_rigid, start, length);
+                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.rbox_like_rigid, start, length);
                         break;
                     case ChCollisionShape::Type::CONVEX:
-                        ERASE_MACRO_LEN(data_manager->shape_data.convex_rigid, start, length);
+                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.convex_rigid, start, length);
                         break;
                     case ChCollisionShape::Type::TRIANGLE:
-                        ERASE_MACRO_LEN(data_manager->shape_data.convex_rigid, start, 3);
+                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.convex_rigid, start, 3);
                         break;
                 }
 
-                ERASE_MACRO(data_manager->shape_data.ObA_rigid, index);
-                ERASE_MACRO(data_manager->shape_data.ObR_rigid, index);
-                ERASE_MACRO(data_manager->shape_data.start_rigid, index);
-                ERASE_MACRO(data_manager->shape_data.length_rigid, index);
+                ERASE_MACRO(data_manager->cd_data->shape_data.ObA_rigid, index);
+                ERASE_MACRO(data_manager->cd_data->shape_data.ObR_rigid, index);
+                ERASE_MACRO(data_manager->cd_data->shape_data.start_rigid, index);
+                ERASE_MACRO(data_manager->cd_data->shape_data.length_rigid, index);
 
-                ERASE_MACRO(data_manager->shape_data.fam_rigid, index);
-                ERASE_MACRO(data_manager->shape_data.typ_rigid, index);
-                ERASE_MACRO(data_manager->shape_data.id_rigid, index);
+                ERASE_MACRO(data_manager->cd_data->shape_data.fam_rigid, index);
+                ERASE_MACRO(data_manager->cd_data->shape_data.typ_rigid, index);
+                ERASE_MACRO(data_manager->cd_data->shape_data.id_rigid, index);
                 removed = true;
                 break;
             }
@@ -291,9 +292,9 @@ void RemoveCollisionModel(ChSystemMulticoreNSC* system, ChCollisionModel* model)
         if (removed) {
             // we removed a model, all of the starts are off by one for indices past the index removed, decrement all
             // starts before removing a second model
-            for (int i = index; i < data_manager->shape_data.start_rigid.size(); i++) {
-                if (data_manager->shape_data.start_rigid[i] != 0) {
-                    data_manager->shape_data.start_rigid[i] -= 1;
+            for (int i = index; i < data_manager->cd_data->shape_data.start_rigid.size(); i++) {
+                if (data_manager->cd_data->shape_data.start_rigid[i] != 0) {
+                    data_manager->cd_data->shape_data.start_rigid[i] -= 1;
                 }
             }
         }
@@ -351,7 +352,7 @@ std::shared_ptr<ChBody> bottom_plate;
 void CreateBase(ChSystemMulticoreNSC* system) {
     Vector c_pos = Vector(0, 0, 0);
 
-    bottom_plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    bottom_plate = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
     bottom_plate->SetMass(1);
     bottom_plate->SetPos(Vector(0, 0, 0) + c_pos);
     bottom_plate->SetRot(Quaternion(1, 0, 0, 0));
@@ -464,8 +465,7 @@ int main(int argc, char* argv[]) {
     system->GetSettings()->collision.collision_envelope = 0.1 * fluid_r;
 
     system->GetSettings()->collision.bins_per_axis = vec3(300, 40, 50);
-    system->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
-    system->GetSettings()->collision.fixed_bins = true;
+    system->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::HYBRID;
 
     std::shared_ptr<ChBezierCurve> path;
 
@@ -536,7 +536,7 @@ int main(int argc, char* argv[]) {
 
     my_hmmwv.GetChassisBody()->SetCollide(true);
     my_hmmwv.GetChassisBody()->GetCollisionModel()->BuildModel();
-    auto collision_system = std::static_pointer_cast<ChCollisionSystemMulticore>(system->GetCollisionSystem());
+    auto collision_system = std::static_pointer_cast<ChCollisionSystemChrono>(system->GetCollisionSystem());
     collision_system->Add(my_hmmwv.GetChassisBody()->GetCollisionModel().get());
 
     RigidTerrain terrain(my_hmmwv.GetSystem());

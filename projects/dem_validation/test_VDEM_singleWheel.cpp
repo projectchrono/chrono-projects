@@ -216,7 +216,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     // Create the ground body -- always FIRST body in system
     // ----------------------
 
-    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto ground = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     ground->SetIdentifier(Id_ground);
     ground->SetBodyFixed(true);
@@ -240,7 +240,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     // Initially, the wheel is fixed to ground.
 
-    auto wheel = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto wheel = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     // Set wheel starting pos, near back of the containing bin
     double hdimX_w = -hdimX + 1.01 * wheelRadius;
@@ -265,7 +265,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     // Initially, the chassis is fixed to ground.
     // It is released after the settling phase.
 
-    auto chassis = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto chassis = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     chassis->SetIdentifier(Id_chassis);
     chassis->SetMass(1.0);
@@ -288,7 +288,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     // Initially, the axle is fixed to ground.
     // It is released after the settling phase.
 
-    auto axle = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto axle = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     axle->SetIdentifier(Id_axle);
     axle->SetMass(wheelWeight / gravity);
@@ -429,7 +429,7 @@ void CreateBall(ChSystemMulticore* system) {
     // Create the ball
     // ---------------
 
-    auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto ball = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     ball->SetIdentifier(Id_ball);
     ball->SetMass(mass_ball);

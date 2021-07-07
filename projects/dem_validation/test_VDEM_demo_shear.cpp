@@ -250,7 +250,7 @@ int main(int argc, char* argv[]) {
 #endif
 
     my_system->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
-    my_system->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
+    my_system->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::HYBRID;
 
 // Create a ball material (will be used by balls only)
 
@@ -282,7 +282,7 @@ int main(int argc, char* argv[]) {
 
     // Create lower bin
 
-    auto bin = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto bin = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     bin->SetIdentifier(binId);
     bin->SetMass(1);
@@ -310,7 +310,7 @@ int main(int argc, char* argv[]) {
 
     // Create upper shear box
 
-    auto box = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto box = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     box->SetIdentifier(boxId);
     box->SetMass(1);
@@ -337,7 +337,7 @@ int main(int argc, char* argv[]) {
 
     // Create upper load plate
 
-    auto plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto plate = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     shear_Area = width * length;
 
@@ -370,7 +370,7 @@ int main(int argc, char* argv[]) {
                 ball_x = 4.0 * radius * (float(j - b / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
                 ball_z = 4.0 * radius * (float(k - c / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
 
-                auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+                auto ball = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
                 ball->SetIdentifier(ballId + 6 * 6 * i + 6 * j + k);
                 ball->SetMass(mass);

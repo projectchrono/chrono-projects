@@ -7,7 +7,6 @@
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 #include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
-#include "chrono_multicore/collision/ChNarrowphaseRUtils.h"
 
 using namespace chrono;
 using namespace chrono::collision;
@@ -63,13 +62,13 @@ void CreateContainer(ChSystemMulticoreNSC* system) {
 	real angle = atan(dim_e / (dim_b + dim_c));
 	real width = dim_w + dim_t * 2.0;
 
-    std::shared_ptr<ChBody> bottom_plate = std::make_shared<ChBody>(std::make_shared<ChCollisionModelMulticore>());
-    std::shared_ptr<ChBody> side_plate_1 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelMulticore>());
-    std::shared_ptr<ChBody> side_plate_2 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelMulticore>());
-    std::shared_ptr<ChBody> end_plate_1 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelMulticore>());
-    std::shared_ptr<ChBody> end_plate_2 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelMulticore>());
-    std::shared_ptr<ChBody> end_slope_1 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelMulticore>());
-    std::shared_ptr<ChBody> end_slope_2 = std::make_shared<ChBody>(std::make_shared<ChCollisionModelMulticore>());
+    std::shared_ptr<ChBody> bottom_plate = std::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    std::shared_ptr<ChBody> side_plate_1 = std::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    std::shared_ptr<ChBody> side_plate_2 = std::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    std::shared_ptr<ChBody> end_plate_1 = std::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    std::shared_ptr<ChBody> end_plate_2 = std::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    std::shared_ptr<ChBody> end_slope_1 = std::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    std::shared_ptr<ChBody> end_slope_2 = std::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     auto material = std::make_shared<ChMaterialSurfaceNSC>();
 	material->SetFriction(container_friction);

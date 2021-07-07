@@ -242,7 +242,7 @@ int main(int argc, char* argv[]) {
 		break;
 	}
 
-	msystem.GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
+	msystem.GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::HYBRID;
 
 	AddFluid(&msystem);
 

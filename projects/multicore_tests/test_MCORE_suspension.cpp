@@ -141,7 +141,7 @@ class MySimpleCar {
 
         // --- The car body ---
 
-        truss = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+        truss = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
         truss->SetIdentifier(-1);
         truss->SetMass(2086.524902);
         truss->SetPos(ChVector<>(0, 0.52349, 0.055765));
@@ -157,7 +157,7 @@ class MySimpleCar {
         // --- Right Front suspension ---
 
         // ..the car right-front spindle
-        spindleRF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+        spindleRF = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
         spindleRF->SetIdentifier(-2);
         spindleRF->SetMass(14.705);
         spindleRF->SetPos(ChVector<>(0.751, -0.026, 1.648965));
@@ -170,7 +170,7 @@ class MySimpleCar {
         my_system->AddBody(spindleRF);
 
         // ..the car right-front wheel
-        wheelRF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+        wheelRF = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
         wheelRF->SetIdentifier(-3);
         wheelRF->SetMass(3.0);
         wheelRF->SetPos(ChVector<>(0.91, -0.026, 1.648965));
@@ -231,7 +231,7 @@ class MySimpleCar {
         // --- Left Front suspension ---
 
         // ..the car left-front spindle
-        spindleLF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+        spindleLF = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
         spindleLF->SetIdentifier(-4);
         spindleLF->SetMass(14.705);
         spindleLF->SetPos(ChVector<>(-0.751, -0.026, 1.648965));
@@ -244,7 +244,7 @@ class MySimpleCar {
         my_system->AddBody(spindleLF);
 
         // ..the car left-front wheel
-        wheelLF = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+        wheelLF = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
         wheelLF->SetIdentifier(-5);
         wheelLF->SetMass(3.0);
         wheelLF->SetPos(ChVector<>(-0.91, -0.026, 1.648965));
@@ -305,7 +305,7 @@ class MySimpleCar {
         // --- Right Back suspension ---
 
         // ..the car right-back spindle
-        spindleRB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+        spindleRB = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
         spindleRB->SetIdentifier(-6);
         spindleRB->SetMass(15.91);
         spindleRB->SetPos(ChVector<>(0.751, -0.026, -1.652965));
@@ -318,7 +318,7 @@ class MySimpleCar {
         my_system->AddBody(spindleRB);
 
         // ..the car right-back wheel
-        wheelRB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+        wheelRB = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
         wheelRB->SetIdentifier(-7);
         wheelRB->SetMass(3.0);
         wheelRB->SetPos(ChVector<>(0.91, -0.026, -1.652965));
@@ -387,7 +387,7 @@ class MySimpleCar {
         // --- Left Back suspension ---
 
         // ..the car right-back spindle
-        spindleLB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+        spindleLB = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
         spindleLB->SetIdentifier(-8);
         spindleLB->SetMass(15.91);
         spindleLB->SetPos(ChVector<>(-0.751, -0.026, -1.652965));
@@ -400,7 +400,7 @@ class MySimpleCar {
         my_system->AddBody(spindleLB);
 
         // ..the car left-back wheel
-        wheelLB = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+        wheelLB = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
         wheelLB->SetIdentifier(-9);
         wheelLB->SetMass(3.0);
         wheelLB->SetPos(ChVector<>(-0.91, -0.026, -1.652965));
@@ -628,7 +628,7 @@ void AddGround(ChSystemMulticoreNSC* sys) {
     double groundWidth = 5;
     double wallHeight = 6;
     double thickness = 0.1;
-    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto ground = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
     ground->SetIdentifier(groundId);
     ground->SetMass(1);
     ground->SetPos(pos);

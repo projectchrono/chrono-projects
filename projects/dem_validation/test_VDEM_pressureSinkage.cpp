@@ -213,7 +213,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     // Create the ground body -- always FIRST body in system
     // ----------------------
 
-    auto ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto ground = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     ground->SetIdentifier(Id_ground);
     ground->SetBodyFixed(true);
@@ -237,7 +237,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     // Initially, the load plate is fixed to ground.
     // It is released after the settling phase.
 
-    auto plate = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto plate = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     plate->SetIdentifier(Id_plate);
     plate->SetMass(1);
@@ -351,7 +351,7 @@ void CreateBall(ChSystemMulticore* system) {
     // Create the ball
     // ---------------
 
-    auto ball = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto ball = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     ball->SetIdentifier(Id_ball);
     ball->SetMass(mass_ball);

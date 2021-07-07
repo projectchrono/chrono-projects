@@ -87,8 +87,8 @@ enum run_mode { FRICTIONLESS = 0, ONE_STEP = 1, MULTI_STEP = 2, FRICLESS_CHUNG =
 std::vector<size_t> bc_ids;
 std::vector<std::string> bc_names;
 
-constexpr float F_CGS_TO_SI = 1e-5;
-constexpr float M_CGS_TO_SI = 1e-3;
+constexpr float F_CGS_TO_SI = 1e-5f;
+constexpr float M_CGS_TO_SI = 1e-3f;
 
 void writeForcesFile(ChSystemGpu& gran_sys) {
     char forcefile[100];

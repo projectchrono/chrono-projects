@@ -23,7 +23,6 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 // Chrono::Multicore header files
-#include "chrono_multicore/collision/ChNarrowphaseRUtils.h"
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 #include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 
@@ -259,8 +258,7 @@ int main(int argc, char* argv[]) {
     system->GetSettings()->collision.collision_envelope = 0.1 * r_g;
 
     system->GetSettings()->collision.bins_per_axis = vec3(100, 20, 25);
-    system->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
-    system->GetSettings()->collision.fixed_bins = true;
+    system->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::HYBRID;
 
     // -------------------
     // Create the terrain.

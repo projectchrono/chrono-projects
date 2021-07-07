@@ -72,17 +72,17 @@ class M113_Vehicle_Custom : public ChTrackedVehicle {
         double track_offset = 1.0795;
 
         if (ChSystemMulticoreNSC* system_dvi = dynamic_cast<ChSystemMulticoreNSC*>(m_system)) {
-            printf("BodiesA: %d\n", system_dvi->data_manager->num_rigid_shapes);
+            printf("BodiesA: %d\n", system_dvi->data_manager->cd_data->num_rigid_shapes);
             m_tracks[0]->Initialize(m_chassis, ChVector<>(0, track_offset, 0));
 
-            printf("BodiesB: %d\n", system_dvi->data_manager->num_rigid_shapes);
+            printf("BodiesB: %d\n", system_dvi->data_manager->cd_data->num_rigid_shapes);
 
             m_tracks[1]->Initialize(m_chassis, ChVector<>(0, -track_offset, 0));
 
-            printf("BodiesC: %d\n", system_dvi->data_manager->num_rigid_shapes);
+            printf("BodiesC: %d\n", system_dvi->data_manager->cd_data->num_rigid_shapes);
 
             for (int i = 25; i < 558; i++) {
-                system_dvi->data_manager->shape_data.fam_rigid[i].x = 1 << 4;
+                system_dvi->data_manager->cd_data->shape_data.fam_rigid[i].x = 1 << 4;
             }
         }
 

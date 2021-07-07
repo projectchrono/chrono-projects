@@ -269,7 +269,7 @@ int main(int argc, char* argv[]) {
     systemG->GetSettings()->solver.alpha = 0;
     systemG->GetSettings()->solver.contact_recovery_speed = 10000;
     systemG->ChangeSolverType(SolverType::APGD);
-    systemG->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
+    systemG->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::HYBRID;
 
     systemG->GetSettings()->collision.collision_envelope = 0.01;
     systemG->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
@@ -304,7 +304,7 @@ int main(int argc, char* argv[]) {
 
     int triId = 0;
     for (int i = 0; i < triangles.size(); i++) {
-        auto triangle = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+        auto triangle = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
         triangle->SetIdentifier(triId++);
         triangle->SetMass(mass);
         triangle->SetInertiaXX(inertia);
@@ -464,13 +464,13 @@ int main(int argc, char* argv[]) {
             //            }
 
             // Update collision information
-            systemG->data_manager->shape_data.triangle_rigid[3 * i + 0] =
+            systemG->data_manager->cd_data->shape_data.triangle_rigid[3 * i + 0] =
                 real3(vert_pos[triangles[i].x()].x() - pos.x(), vert_pos[triangles[i].x()].y() - pos.y(),
                       vert_pos[triangles[i].x()].z() - pos.z());
-            systemG->data_manager->shape_data.triangle_rigid[3 * i + 1] =
+            systemG->data_manager->cd_data->shape_data.triangle_rigid[3 * i + 1] =
                 real3(vert_pos[triangles[i].y()].x() - pos.x(), vert_pos[triangles[i].y()].y() - pos.y(),
                       vert_pos[triangles[i].y()].z() - pos.z());
-            systemG->data_manager->shape_data.triangle_rigid[3 * i + 2] =
+            systemG->data_manager->cd_data->shape_data.triangle_rigid[3 * i + 2] =
                 real3(vert_pos[triangles[i].z()].x() - pos.x(), vert_pos[triangles[i].z()].y() - pos.y(),
                       vert_pos[triangles[i].z()].z() - pos.z());
         }

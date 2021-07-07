@@ -30,7 +30,6 @@
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 #include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
-#include "chrono_multicore/collision/ChNarrowphaseRUtils.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -204,7 +203,7 @@ void CreateObject(ChSystemMulticore* system, double z) {
     // Create the falling object.
     // --------------------------
 
-    auto obj = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    auto obj = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
 
     obj->SetIdentifier(0);
     obj->SetCollide(true);
@@ -360,7 +359,7 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.tolerance = 1e-3;
 
 #ifdef USE_SMC
-    msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
+    msystem->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::PRIMS;
 #else
     msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;

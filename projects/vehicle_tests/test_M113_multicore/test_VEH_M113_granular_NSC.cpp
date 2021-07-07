@@ -26,7 +26,6 @@
 // Chrono::Multicore header files
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 #include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
-#include "chrono_multicore/collision/ChNarrowphaseRUtils.h"
 
 // Chrono::Multicore OpenGL header files
 //#undef CHRONO_OPENGL
@@ -248,7 +247,7 @@ int main(int argc, char* argv[]) {
     system.GetSettings()->solver.bilateral_clamp_speed = 1e8;
     system.ChangeSolverType(SolverType::BB);
 
-    system.GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_HYBRID_MPR;
+    system.GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::HYBRID;
     system.GetSettings()->collision.collision_envelope = 0.001;
 
     system.GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);

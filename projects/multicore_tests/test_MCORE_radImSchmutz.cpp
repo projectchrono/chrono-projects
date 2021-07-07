@@ -32,7 +32,6 @@
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 #include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
-#include "chrono_multicore/collision/ChNarrowphaseRUtils.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -190,7 +189,7 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     ChVector<> loc_prismatic = loc_sled - ChVector<>(0, 0, e / 4);
 
     // Create the ground body
-    m_ground = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    m_ground = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
     m_ground->SetIdentifier(-1);
     m_ground->SetBodyFixed(true);
     m_ground->SetCollide(false);
@@ -198,7 +197,7 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     system->AddBody(m_ground);
 
     // Create the sled body
-    m_sled = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    m_sled = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
     m_sled->SetIdentifier(1);
     m_sled->SetMass(mass1);
     m_sled->SetInertiaXX(inertia_sled);
@@ -231,7 +230,7 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
 #endif
 
     // Create the wheel body
-    m_wheel = chrono_types::make_shared<ChBody>(chrono_types::make_shared<ChCollisionModelMulticore>());
+    m_wheel = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
     m_wheel->SetIdentifier(2);
     m_wheel->SetMass(mass_wheel);
     m_wheel->SetInertiaXX(inertia_wheel);
@@ -430,7 +429,7 @@ int main(int argc, char* argv[]) {
     msystem->GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
 
 #ifdef USE_SMC
-    msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
+    msystem->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::PRIMS;
 #else
     msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
     msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;

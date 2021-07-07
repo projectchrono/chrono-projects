@@ -128,7 +128,7 @@ void AddWallHull(std::shared_ptr<ChBody> body,
     body->GetCollisionModel()->AddConvexHull(mat, points);
 
     auto shape = chrono_types::make_shared<ChTriangleMeshShape>();
-    collision::utils::ChConvexHullLibraryWrapper lh;
+    collision::bt_utils::ChConvexHullLibraryWrapper lh;
     lh.ComputeHull(points, *shape->GetMesh());
     body->AddAsset(shape);
 
