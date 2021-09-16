@@ -58,7 +58,6 @@
 
 #include "extras/driver/ChCSLDriver.h"
 #include "extras/driver/ChLidarWaypointDriver.h"
-#include "extras/filters/ChFilterFullScreenVisualize.h"
 
 // =============================================================================
 
@@ -425,13 +424,13 @@ int main(int argc, char* argv[]) {
             auto driver_cam = chrono_types::make_shared<ChCameraSensor>(
                 vehicle.GetChassisBody(),  // body camera is attached to
                 30.f,                      // update rate in Hz
-                chrono::ChFrame<double>({0.05, .381, 1.04}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
+                chrono::ChFrame<double>({0.54, .381, 1.04}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
                 image_width,                                                                // image width
                 image_height,                                                               // image height
                 3.14 / 1.5,                                                                 // fov
                 1);
 
-            driver_cam->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(
+            driver_cam->PushFilter(chrono_types::make_shared<ChFilterVisualize>(
                 image_width, image_height, "Camera 1, Super Sampled", use_fullscreen));
             if (save)
                 driver_cam->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/driver_cam/"));
@@ -449,7 +448,7 @@ int main(int argc, char* argv[]) {
                 1);
 
             camera->PushFilter(
-                chrono_types::make_shared<ChFilterFullScreenVisualize>(1280, 720, "Camera 1, Super Sampled", false));
+                chrono_types::make_shared<ChFilterVisualize>(1280, 720, "Camera 1, Super Sampled", false));
             if (save)
                 camera->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam_third/"));
             manager->AddSensor(camera);
@@ -461,7 +460,7 @@ int main(int argc, char* argv[]) {
             //     1080,  // image height
             //     3.14 / 2, 1);
 
-            // camera2->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(500, 500, "Camera 2", false));
+            // camera2->PushFilter(chrono_types::make_shared<ChFilterVisualize>(500, 500, "Camera 2", false));
             // if (save)
             //     camera2->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam2/"));
             // manager->AddSensor(camera2);
@@ -473,7 +472,7 @@ int main(int argc, char* argv[]) {
             //     1080,  // image height
             //     3.14 / 2, 1);
 
-            // camer5->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(500, 500, "Camera 5", false));
+            // camer5->PushFilter(chrono_types::make_shared<ChFilterVisualize>(500, 500, "Camera 5", false));
             // if (save)
             //     camer5->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam2/"));
             // manager->AddSensor(camer5);
@@ -485,7 +484,7 @@ int main(int argc, char* argv[]) {
             //     1080,  // image height
             //     3.14 / 2, 1);
 
-            // camera3->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(700, 700, "Camera 3", false));
+            // camera3->PushFilter(chrono_types::make_shared<ChFilterVisualize>(700, 700, "Camera 3", false));
             // if (save)
             //     camera3->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam2/"));
             // manager->AddSensor(camera3);
@@ -497,7 +496,7 @@ int main(int argc, char* argv[]) {
             //     1080,  // image height
             //     3.14 / 2, 1);
 
-            // camera4->PushFilter(chrono_types::make_shared<ChFilterFullScreenVisualize>(700, 700, "Camera 4", false));
+            // camera4->PushFilter(chrono_types::make_shared<ChFilterVisualize>(700, 700, "Camera 4", false));
             // if (save)
             //     camera4->PushFilter(chrono_types::make_shared<ChFilterSave>("DEMO_OUTPUT/cam2/"));
             // manager->AddSensor(camera4);

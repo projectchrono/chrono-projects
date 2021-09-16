@@ -98,9 +98,6 @@ set(EXTRAS
 	extras/driver/ChLidarWaypointDriver.h
 	extras/driver/ChLidarWaypointDriver.cpp
 	extras/driver/joystick.h
-
-	extras/filters/ChFilterFullScreenVisualize.h
-	extras/filters/ChFilterFullScreenVisualize.cpp
 )
 
 #--------------------------------------------------------------
@@ -122,6 +119,6 @@ foreach(PROGRAM ${DEMOS})
     LINK_FLAGS "${CHRONO_LINKER_FLAGS}"
   )
 
-	target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES} "-L/usr/local/cuda/lib64 -lcudart")
+	target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES} "-L/usr/local/cuda/lib64")# -lcudart")
 
 endforeach(PROGRAM)
