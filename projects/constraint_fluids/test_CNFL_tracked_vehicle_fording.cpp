@@ -354,7 +354,7 @@ int main(int argc, char* argv[]) {
         }
 
         double powertrain_torque = powertrain->GetOutputTorque();
-        double driveshaft_speed = vehicle.GetDriveshaftSpeed();
+        double driveshaft_speed = vehicle.GetDriveline()->GetDriveshaftSpeed();
         vehicle.GetTrackShoeStates(LEFT, shoe_states_left);
         vehicle.GetTrackShoeStates(RIGHT, shoe_states_right);
 

@@ -882,17 +882,17 @@ int main(int argc, char* argv[]) {
 
         // Find maximum constraint violation
         if (prismatic_box_ground) {
-            ChVectorDynamic<> C = prismatic_box_ground->GetC();
+            ChVectorDynamic<> C = prismatic_box_ground->GetConstraintViolation();
             for (int i = 0; i < 5; i++)
                 max_cnstr_viol[0] = std::max(max_cnstr_viol[0], std::abs(C(i)));
         }
         if (prismatic_plate_ground) {
-            ChVectorDynamic<> C = prismatic_plate_ground->GetC();
+            ChVectorDynamic<> C = prismatic_plate_ground->GetConstraintViolation();
             for (int i = 0; i < 5; i++)
                 max_cnstr_viol[1] = std::max(max_cnstr_viol[1], std::abs(C(i)));
         }
         if (actuator) {
-            ChVectorDynamic<> C = actuator->GetC();
+            ChVectorDynamic<> C = actuator->GetConstraintViolation();
             max_cnstr_viol[2] = std::max(max_cnstr_viol[2], std::abs(C(0)));
         }
 

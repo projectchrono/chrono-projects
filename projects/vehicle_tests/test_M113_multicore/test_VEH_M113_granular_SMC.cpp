@@ -391,7 +391,7 @@ int main(int argc, char* argv[]) {
         csv << vehicle->GetTrackAssembly(LEFT)->GetSprocket()->GetAxleSpeed()
             << vehicle->GetTrackAssembly(RIGHT)->GetSprocket()->GetAxleSpeed();
         csv << powertrain->GetMotorSpeed() << powertrain->GetMotorTorque();
-        csv << powertrain->GetOutputTorque() << vehicle->GetDriveshaftSpeed();
+        csv << powertrain->GetOutputTorque() << vehicle->GetDriveline()->GetDriveshaftSpeed();
         // Chassis Position & Velocity
         csv << pos_CG.x() << pos_CG.y() << pos_CG.z();
         csv << vel_CG.x() << vel_CG.y() << vel_CG.z();
