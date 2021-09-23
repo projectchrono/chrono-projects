@@ -8,7 +8,8 @@
 #--------------------------------------------------------------
 
 set(DEMOS
-    demo_SYN_highway
+    demo_SYN_city
+	demo_SYN_highway
 )
 
 #--------------------------------------------------------------
@@ -110,7 +111,7 @@ foreach(PROGRAM ${DEMOS})
 
   message(STATUS "...add ${PROGRAM}")
 
-	add_executable(${PROGRAM}  "${PROGRAM}.cpp" ${EXTRAS})
+  add_executable(${PROGRAM}  "${PROGRAM}.cpp" ${EXTRAS})
   source_group(""  FILES "${PROGRAM}.cpp")
   set_target_properties(${PROGRAM} PROPERTIES
     FOLDER demos
