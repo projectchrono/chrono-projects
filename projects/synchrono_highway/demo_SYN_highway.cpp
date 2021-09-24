@@ -24,7 +24,9 @@
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
+#include "chrono_vehicle/driver/ChIrrGuiDriver.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
+#include "chrono_vehicle/wheeled_vehicle/utils/ChWheeledVehicleIrrApp.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -50,9 +52,10 @@ using namespace chrono::synchrono;
 
 // Initial vehicle location and orientation
 // ChVector<> initLoc(-788, -195, -1);
-ChVector<> initLoc(3990.1, -1200.3124, .75);
+// ChVector<> initLoc(3990.1, -1200.3124, .75); //middle-ish of oval highway
+ChVector<> initLoc(3982.1, -12837, .75);  // extreme-ish of oval highway
 // ChQuaternion<> initRot(1, 0, 0, 0);
-ChQuaternion<> initRot = Q_from_AngZ(CH_C_PI_2);
+ChQuaternion<> initRot = Q_from_AngZ(-CH_C_PI_2);
 
 enum DriverMode { DEFAULT, RECORD, PLAYBACK };
 DriverMode driver_mode = DEFAULT;
@@ -84,13 +87,14 @@ ChContactMethod contact_method = ChContactMethod::SMC;
 // -----------------------------------------------------------------------------
 
 // camera parameters
-float frame_rate = 30;
-int super_samples = 2;
-unsigned int image_width = 3840 / 2;
-unsigned int image_height = 720 / 2;
+float frame_rate = 30.0;
+int super_samples = 1;
+unsigned int image_width = 1920;   // / 2;
+unsigned int image_height = 1080;  // / 2;
 unsigned int fullscreen_image_width = 3840;
 unsigned int fullscreen_image_height = 720;
-float cam_fov = 1.408f;
+// float cam_fov = 1.608f;
+float cam_fov = .524;
 bool use_fullscreen = false;
 
 // -----------------------------------------------------------------------------
@@ -239,11 +243,15 @@ int main(int argc, char* argv[]) {
     // Create the driver system
     // ------------------------
 
+    ChWheeledVehicleIrrApp app(&vehicle, L"Highway Demo");
+    ChRealtimeStepTimer realtime_timer;
+
     // Create the interactive driver system
     std::shared_ptr<ChDriver> driver;
     if (!disable_joystick) {
         // ChCSLDriver driver(vehicle);
-        driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
+        // driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
+        driver = chrono_types::make_shared<ChIrrGuiDriver>(app);
     } else {
         double mph_to_ms = 0.44704;
         std::string path_file = demo_data_path + "/Environments/Iowa/oval_highway_path.csv";
@@ -275,8 +283,9 @@ int main(int argc, char* argv[]) {
     // ---------------------------------------------
     auto manager = chrono_types::make_shared<ChSensorManager>(vehicle.GetSystem());
     float intensity = 2.0;
-    manager->scene->AddPointLight({0, 0, 1e8}, {intensity, intensity, intensity}, 1e15);
+    manager->scene->AddPointLight({0, 0, 1e8}, {intensity, intensity, intensity}, 1e12);
     manager->scene->SetAmbientLight({.1, .1, .1});
+    manager->scene->SetSceneEpsilon(.01);
 
     // Set environment map
     Background b;
@@ -300,17 +309,17 @@ int main(int argc, char* argv[]) {
         cam->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720));
 
     // add sensor to the manager
-    manager->AddSensor(cam);
+    // manager->AddSensor(cam);
 
     // -------------------------------------------------------
     // Create a second camera and add it to the sensor manager
     // -------------------------------------------------------
     auto cam2 = chrono_types::make_shared<ChCameraSensor>(
-        vehicle.GetChassisBody(),                                             // body camera is attached to
-        frame_rate,                                                           // update rate in Hz
-        chrono::ChFrame<double>({1, 0, .875}, Q_from_AngAxis(0, {1, 0, 0})),  // offset pose
-        image_width,                                                          // image width
-        image_height,                                                         // image height
+        vehicle.GetChassisBody(),                                               // body camera is attached to
+        frame_rate,                                                             // update rate in Hz
+        chrono::ChFrame<double>({-.2, .4, .95}, Q_from_AngAxis(0, {1, 0, 0})),  // offset pose
+        image_width,                                                            // image width
+        image_height,                                                           // image height
         cam_fov,
         super_samples);  // fov, lag, exposure
     cam2->SetName("Camera Sensor");
@@ -330,7 +339,10 @@ int main(int argc, char* argv[]) {
 
     auto t0 = high_resolution_clock::now();
 
-    while (true) {
+    double extra_time = 0.0;
+    double last_sim_sync = 0;
+
+    while (app.GetDevice()->run()) {
         time = vehicle.GetSystem()->GetChTime();
 
         // End simulation
@@ -345,30 +357,43 @@ int main(int argc, char* argv[]) {
         ChDriver::Inputs driver_inputs = driver->GetInputs();
         // printf("Driver inputs: %f,%f,%f\n", driver_inputs.m_throttle, driver_inputs.m_braking,
         //        driver_inputs.m_steering);
-        // driver_inputs.m_braking = 1;
+        driver_inputs.m_steering *= -1;
         // driver_inputs.m_throttle = 0;
-        if (step_number % 2000 == 0) {
-            auto pos = vehicle.GetVehiclePos();
+        if (step_number % int(1 / step_size) == 0) {
             auto speed = vehicle.GetVehicleSpeed();
-            printf("Time=%f, Pos=%f,%f, Speed=%f\n", time, pos.x(), pos.y(), speed);
+            auto wall_time = high_resolution_clock::now();
+            printf("Sim Time=%f, \tWall Time=%f, \tExtra Time=%f, \tSpeed=%f\n", time,
+                   duration_cast<duration<double>>(wall_time - t0).count(), extra_time, speed);
+            extra_time = 0.0;
         }
 
         // Update modules (process inputs from other modules)
         driver->Synchronize(time);
         terrain.Synchronize(time);
         vehicle.Synchronize(time, driver_inputs, terrain);
+        app.Synchronize("", driver_inputs);
 
         // Advance simulation for one timestep for all modules
         double step = step_size;
         driver->Advance(step);
         terrain.Advance(step);
         vehicle.Advance(step);
+        app.Advance(step_size);
 
         // Update the sensor manager
         manager->Update();
 
         // Increment frame number
         step_number++;
+
+        if (step_number % (int)(2.0 / frame_rate / step_size) == 0) {
+            double since_last_sync = time - last_sim_sync;
+            last_sim_sync = time;
+            auto tt0 = high_resolution_clock::now();
+            realtime_timer.Spin(since_last_sync);
+            auto tt1 = high_resolution_clock::now();
+            extra_time += duration_cast<duration<double>>(tt1 - tt0).count();
+        }
     }
 
     auto t1 = high_resolution_clock::now();

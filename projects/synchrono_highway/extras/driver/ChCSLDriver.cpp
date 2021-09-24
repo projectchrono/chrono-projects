@@ -47,7 +47,7 @@ ChCSLDriver::ChCSLDriver(ChVehicle& vehicle)
       m_throttle_gain(4.0),
       m_braking_gain(4.0),
       m_mode(KEYBOARD),
- 			m_joystick(std::make_shared<Joystick>())	{
+      m_joystick(std::make_shared<Joystick>()) {
     m_dT = 0;
 
     /// Activates joysticks, if available
@@ -68,7 +68,8 @@ bool ChCSLDriver::Sample() {
             if (event.isButton()) {
                 // printf("Button %u is %s\n", event.number, event.value == 0 ? "up" : "down");
                 return true;
-            } else if (event.isAxis()) {
+            }
+            if (event.isAxis()) {
                 if (event.number != 1) {
                     // printf("Axis %u is at position %d\n", event.number, event.value);
                 }
@@ -230,13 +231,18 @@ void ChCSLDriver::Synchronize(double time) {
     m_throttle = m_data_driver->GetThrottle();
     m_steering = m_data_driver->GetSteering();
     m_braking = m_data_driver->GetBraking();
+
+    m_time = time;
 }
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 void ChCSLDriver::Advance(double step) {
     // Update driver inputs with either joystick or keyboard values
+    // if (m_time > m_last_time + .016) {  // only samples at 60Hz
     Sample();
+    //     m_last_time = m_time;
+    // }
 
     // Integrate dynamics, taking as many steps as required to reach the value 'step'
     double t = 0;

@@ -115,6 +115,8 @@ class CH_VEHICLE_API ChCSLDriver : public ChDriver {
 
     // Variables for mode=JOYSTICK
     int m_dT;
+    double m_time;
+    double m_last_time;
 
     // Variables for mode=DATAFILE
     double m_time_shift;                          ///< time at which mode was switched to DATAFILE
