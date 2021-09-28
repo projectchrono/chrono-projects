@@ -40,6 +40,10 @@
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
 #include "extras/driver/ChCSLDriver.h"
 
+#ifdef CHRONO_IRRKLANG
+#include "extras/ChCSLSoundEngine.h"
+#endif
+
 using namespace chrono;
 using namespace chrono::geometry;
 using namespace chrono::vehicle;
@@ -245,7 +249,9 @@ int main(int argc, char* argv[]) {
 
     ChWheeledVehicleIrrApp app(&vehicle, L"Highway Demo");
     ChRealtimeStepTimer realtime_timer;
-
+#ifdef CHRONO_IRRKLANG
+    ChCSLSoundEngine soundEng(&vehicle);
+#endif
     // Create the interactive driver system
     std::shared_ptr<ChDriver> driver;
     if (!disable_joystick) {
@@ -372,7 +378,9 @@ int main(int argc, char* argv[]) {
         terrain.Synchronize(time);
         vehicle.Synchronize(time, driver_inputs, terrain);
         app.Synchronize("", driver_inputs);
-
+#ifdef CHRONO_IRRKLANG
+        soundEng.Synchronize(time);
+#endif
         // Advance simulation for one timestep for all modules
         double step = step_size;
         driver->Advance(step);

@@ -18,22 +18,22 @@
 // otherwise default to a keyboard input.
 //
 // =============================================================================
-
 #include "ChCSLSoundEngine.h"
 #include <string>
 
 #include "chrono_vehicle/ChApiVehicle.h"
-
+#ifdef CHRONO_IRRKLANG
 namespace chrono {
 
 
 ChCSLSoundEngine::ChCSLSoundEngine(ChVehicle* vehicle){
   thisvehicle = vehicle;
   sound_engine = irrklang::createIrrKlangDevice();
-  motor_soundfiles = {"600rpm_noload", "1000_rpm_manifoldNorm", "1500_rpm_manifoldNorm", 
-                      "2000_rpm_manifoldNorm", "2500_rpm_manifoldNorm", "3000_rpm_manifoldNorm", "3500_rpm_manifoldNorm"};
+  motor_soundfiles = {"/600rpm_noload", "/1000_rpm_manifoldNorm", "/1500_rpm_manifoldNorm", 
+                      "/2000_rpm_manifoldNorm", "/2500_rpm_manifoldNorm", "/3000_rpm_manifoldNorm", "/3500_rpm_manifoldNorm"};
   for(auto file : motor_soundfiles){
-    irrklang::ISound* motor_sound = sound_engine->play2D((std::string(STRINGIFY(HIGHWAY_DATA_DIR)) + file).c_str(), true, false, true);
+    irrklang::ISound* motor_sound = sound_engine->play2D((std::string(STRINGIFY(HIGHWAY_DATA_DIR)) + 
+                                                          "/Environments/Iowa/Sounds" + file + ".wav").c_str(), true, false, true);
             motor_sound->setIsPaused(true);
             motor_sounds.push_back(motor_sound);
         }
@@ -57,8 +57,14 @@ void ChCSLSoundEngine::Synchronize(double time){
       motor_sounds[new_threshold]->setIsPaused(false);
       last_threshold = new_threshold;
       }
+    /*if(new_threshold > 0){
+      double soundspeed = rpm/(rpm-500);
+      std::cout << "Sound Playback Speed:  " << soundspeed << "\n";
+      motor_sounds[last_threshold]->setPlaybackSpeed((irrklang::ik_f32)soundspeed);
+      }*/
     }
   }
 
 }
 
+#endif

@@ -21,17 +21,17 @@
 
 #ifndef CH_SOUND_ENGINE_H
 #define CH_SOUND_ENGINE_H
-
 #include <string>
-#include "irrKlang.h"
+
 #include "chrono_vehicle/ChApiVehicle.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/utils/ChUtilsChaseCamera.h"
-
 #include "chrono_irrlicht/ChIrrApp.h"
-
 #include "chrono_vehicle/ChApiVehicle.h"
 #include "chrono_vehicle/ChVehicle.h"
+#include "chrono_vehicle/wheeled_vehicle/utils/ChWheeledVehicleIrrApp.h"
+#ifdef CHRONO_IRRKLANG
+#include "irrKlang.h"
 
 using namespace chrono::vehicle;
 
@@ -63,4 +63,5 @@ class CH_VEHICLE_API ChCSLSoundEngine {
 
   }; 
 }// end namespace chrono
+#endif
 #endif
