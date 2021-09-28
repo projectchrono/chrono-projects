@@ -71,7 +71,6 @@ include_directories(
     ${CHRONO_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
 )
-
 #--------------------------------------------------------------
 # Append to the parent's list of DLLs
 #--------------------------------------------------------------
@@ -99,6 +98,8 @@ set(EXTRAS
 	extras/driver/ChLidarWaypointDriver.h
 	extras/driver/ChLidarWaypointDriver.cpp
 	extras/driver/joystick.h
+	extras/ChCSLSoundEngine.h
+	extras/ChCSLSoundEngine.cpp
 )
 
 #--------------------------------------------------------------
