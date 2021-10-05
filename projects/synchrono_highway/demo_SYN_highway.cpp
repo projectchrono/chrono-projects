@@ -148,6 +148,7 @@ int main(int argc, char* argv[]) {
     if (use_fullscreen) {
         image_width = fullscreen_image_width;
         image_height = fullscreen_image_height;
+	cam_fov = 1.608f;
     }
     bool disable_joystick = cli.GetAsType<bool>("nojoystick");
     std::cout << "disable_joystick=" << disable_joystick << std::endl;
@@ -250,6 +251,7 @@ int main(int argc, char* argv[]) {
     ChWheeledVehicleIrrApp app(&vehicle, L"Highway Demo");
     ChRealtimeStepTimer realtime_timer;
 #ifdef CHRONO_IRRKLANG
+    GetLog() << "USING IRRKLANG" << "\n\n";
     ChCSLSoundEngine soundEng(&vehicle);
 #endif
     // Create the interactive driver system

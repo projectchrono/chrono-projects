@@ -51,18 +51,22 @@ void ChCSLSoundEngine::Synchronize(double time){
     last_time_played = time;
     double rpm = thisvehicle->GetPowertrain()->GetMotorSpeed() * 60 / CH_C_2PI;
     // we round it to change only every 500 rpm
-    int new_threshold = (rpm - 500)/500;
-    if(new_threshold != last_threshold){
-      motor_sounds[last_threshold]->setIsPaused(true);
-      motor_sounds[new_threshold]->setIsPaused(false);
-      last_threshold = new_threshold;
-      }
-    /*if(new_threshold > 0){
-      double soundspeed = rpm/(rpm-500);
-      std::cout << "Sound Playback Speed:  " << soundspeed << "\n";
-      motor_sounds[last_threshold]->setPlaybackSpeed((irrklang::ik_f32)soundspeed);
-      }*/
-    }
+    if(rpm > 500){
+	    uint32_t new_threshold = (rpm - 500)/500;
+	    if(new_threshold != last_threshold){
+	      motor_sounds[last_threshold]->setIsPaused(true);
+	      motor_sounds[new_threshold]->setIsPaused(false);
+	      motor_sounds[new_threshold]->setVolume(1);
+	      std::cout << "Playing new audio" << "\n";
+	      last_threshold = new_threshold;
+	      }
+	    /*if(new_threshold > 0){
+	      double soundspeed = rpm/(rpm-500);
+	      std::cout << "Sound Playback Speed:  " << soundspeed << "\n";
+	      motor_sounds[last_threshold]->setPlaybackSpeed((irrklang::ik_f32)soundspeed);
+	      }*/
+	    }
+       }
   }
 
 }
