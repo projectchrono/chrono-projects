@@ -24,7 +24,7 @@
 
 #include <string>
 
-#include "chrono_sensor/ChLidarSensor.h"
+#include "chrono_sensor/sensors/ChLidarSensor.h"
 #include "chrono_vehicle/ChApiVehicle.h"
 #include "chrono_vehicle/ChDriver.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"

@@ -30,7 +30,7 @@
 
 #include "chrono_thirdparty/filesystem/path.h"
 
-#include "chrono_sensor/ChCameraSensor.h"
+#include "chrono_sensor/sensors/ChCameraSensor.h"
 #include "chrono_sensor/ChSensorManager.h"
 #include "chrono_sensor/filters/ChFilterVisualize.h"
 #include "chrono_sensor/utils/ChVisualMaterialUtils.h"
@@ -122,6 +122,11 @@ std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
 using namespace std::chrono;
 
 // =============================================================================
+
+// button callback placeholder
+void customButtonCallback(){
+    std::cout << "I AM CALLING THE CALLBACK FROM THE JOYSTICK BUTTON, SEE?? \n";
+}
 
 void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<double>("Simulation", "s,step_size", "Step size", std::to_string(step_size));
@@ -259,7 +264,9 @@ int main(int argc, char* argv[]) {
     if (!disable_joystick) {
         // ChCSLDriver driver(vehicle);
         // driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
-        driver = chrono_types::make_shared<ChIrrGuiDriver>(app);
+        auto IGdriver = chrono_types::make_shared<ChIrrGuiDriver>(app);
+        IGdriver->SetButtonCallback(7, &customButtonCallback);
+        driver = IGdriver;
     } else {
         double mph_to_ms = 0.44704;
         std::string path_file = demo_data_path + "/Environments/Iowa/oval_highway_path.csv";
