@@ -509,7 +509,7 @@ int main(int argc, char* argv[]) {
         if (write_povray_data && my_system->GetChTime() >= visual_out_frame * visual_out_step) {
             char filename[100];
             sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), visual_out_frame + 1);
-            utils::WriteShapesPovray(my_system, filename, false);
+            utils::WriteVisualizationAssets(my_system, filename, false);
 
             visual_out_frame++;
         }

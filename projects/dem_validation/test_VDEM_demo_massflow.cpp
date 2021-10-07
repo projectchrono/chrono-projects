@@ -423,7 +423,7 @@ int main(int argc, char* argv[]) {
         if (sim_frame == next_out_frame) {
             char filename[100];
             sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
-            utils::WriteShapesPovray(msystem, filename);
+            utils::WriteVisualizationAssets(msystem, filename);
 
             cout << "------------ Output frame:   " << out_frame << endl;
             cout << "             Sim frame:      " << sim_frame << endl;

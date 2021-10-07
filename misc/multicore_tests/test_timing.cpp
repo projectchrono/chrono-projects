@@ -125,7 +125,7 @@ int main(int argc, char* argv[]) {
         msystem->DoStepDynamics(time_step);
 
       utils::WriteCheckpoint(msystem, checkpoint_file);
-      utils::WriteShapesPovray(msystem, povray_file);
+      utils::WriteVisualizationAssets(msystem, povray_file);
     }
 
     break;

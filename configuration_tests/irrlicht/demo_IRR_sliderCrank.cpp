@@ -219,7 +219,7 @@ int main(int   argc,
       OutputData(&system, ofile, time);
 
       sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame+1);
-      utils::WriteShapesPovray(&system, filename);
+      utils::WriteVisualizationAssets(&system, filename);
 
       out_frame++;
     }

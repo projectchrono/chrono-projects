@@ -380,7 +380,7 @@ int main(int argc, char* argv[]) {
             char filename[100];
             sprintf(filename, "../POVRAY/data_%d.dat", frameIndex);
 
-            chrono::utils::WriteShapesPovray(systemG, filename, false);
+            chrono::utils::WriteVisualizationAssets(systemG, filename, false);
             std::string delim = ",";
             chrono::utils::CSV_writer csv(delim);
             csv << triangles.size() << std::endl;

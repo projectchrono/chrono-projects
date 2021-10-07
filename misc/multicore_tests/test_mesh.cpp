@@ -188,7 +188,7 @@ int main(int argc, char* argv[]) {
   for (int i = 0; i < num_steps; i++) {
     if (i % out_steps == 0) {
       sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame);
-      utils::WriteShapesPovray(msystem, filename);
+        utils::WriteVisualizationAssets(msystem, filename);
       out_frame++;
     }
 

@@ -98,12 +98,12 @@ class M113_Vehicle_Custom : public ChTrackedVehicle {
         // Create the track assembly subsystems
         switch (m_type) {
             case TrackShoeType::SINGLE_PIN:
-                m_tracks[0] = std::make_shared<M113_TrackAssemblySinglePin>(LEFT, BrakeType::SIMPLE);
-                m_tracks[1] = std::make_shared<M113_TrackAssemblySinglePin>(RIGHT, BrakeType::SIMPLE);
+                m_tracks[0] = std::make_shared<M113_TrackAssemblySinglePin>(LEFT, BrakeType::SIMPLE, false);
+                m_tracks[1] = std::make_shared<M113_TrackAssemblySinglePin>(RIGHT, BrakeType::SIMPLE, false);
                 break;
             case TrackShoeType::DOUBLE_PIN:
-                m_tracks[0] = std::make_shared<M113_TrackAssemblyDoublePin>(LEFT, BrakeType::SIMPLE);
-                m_tracks[1] = std::make_shared<M113_TrackAssemblyDoublePin>(RIGHT, BrakeType::SIMPLE);
+                m_tracks[0] = std::make_shared<M113_TrackAssemblyDoublePin>(LEFT, BrakeType::SIMPLE, false);
+                m_tracks[1] = std::make_shared<M113_TrackAssemblyDoublePin>(RIGHT, BrakeType::SIMPLE, false);
                 break;
         }
 
