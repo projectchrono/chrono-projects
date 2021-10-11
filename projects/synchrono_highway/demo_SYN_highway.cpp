@@ -61,8 +61,8 @@ ChVector<> initLoc(3982.1, -12837, .75);  // extreme-ish of oval highway
 // ChQuaternion<> initRot(1, 0, 0, 0);
 ChQuaternion<> initRot = Q_from_AngZ(-CH_C_PI_2);
 
-enum DriverMode { DEFAULT, RECORD, PLAYBACK };
-DriverMode driver_mode = DEFAULT;
+enum DriverMode { HUMAN, AUTONOMOUS };
+DriverMode driver_mode = AUTONOMOUS;
 
 // Visualization type for vehicle parts (PRIMITIVES, MESH, or NONE)
 VisualizationType chassis_vis_type = VisualizationType::MESH;
@@ -119,14 +119,18 @@ bool sensor_vis = true;
 
 std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
 
+// globally accessible driver and irrapp
+std::shared_ptr<ChWheeledVehicleIrrApp> appptr;
+std::shared_ptr<ChDriver> driver;
+std::shared_ptr<ChIrrGuiDriver> IGdriver;
+std::shared_ptr<ChPathFollowerDriver> PFdriver;
+
 using namespace std::chrono;
 
 // =============================================================================
 
 // button callback placeholder
-void customButtonCallback(){
-    std::cout << "I AM CALLING THE CALLBACK FROM THE JOYSTICK BUTTON, SEE?? \n";
-}
+void customButtonCallback();
 
 void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<double>("Simulation", "s,step_size", "Step size", std::to_string(step_size));
@@ -260,26 +264,28 @@ int main(int argc, char* argv[]) {
     ChCSLSoundEngine soundEng(&vehicle);
 #endif
     // Create the interactive driver system
-    std::shared_ptr<ChDriver> driver;
-    if (!disable_joystick) {
-        // ChCSLDriver driver(vehicle);
-        // driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
-        auto IGdriver = chrono_types::make_shared<ChIrrGuiDriver>(app);
-        IGdriver->SetButtonCallback(7, &customButtonCallback);
-        driver = IGdriver;
-    } else {
-        double mph_to_ms = 0.44704;
-        std::string path_file = demo_data_path + "/Environments/Iowa/oval_highway_path.csv";
-        auto path = ChBezierCurve::read(path_file);
-        std::string steering_controller_file("hmmwv/SteeringController.json");
-        std::string speed_controller_file("hmmwv/SpeedController.json");
-        driver = chrono_types::make_shared<ChPathFollowerDriver>(
-            vehicle, vehicle::GetDataFile(steering_controller_file), vehicle::GetDataFile(speed_controller_file), path,
-            "road", 65 * mph_to_ms, true);
-        std::cout << "Using path follower driver\n";
-    }
+    // ChCSLDriver driver(vehicle);
+    // driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
+    auto IGdriver = chrono_types::make_shared<ChIrrGuiDriver>(app);
+    IGdriver->SetButtonCallback(7, &customButtonCallback);
+    IGdriver->Initialize();
 
-    driver->Initialize();
+    double mph_to_ms = 0.44704;
+    std::string path_file = demo_data_path + "/Environments/Iowa/oval_highway_path.csv";
+    auto path = ChBezierCurve::read(path_file);
+    std::string steering_controller_file("hmmwv/SteeringController.json");
+    std::string speed_controller_file("hmmwv/SpeedController.json");
+    PFdriver = chrono_types::make_shared<ChPathFollowerDriver>(
+        vehicle, vehicle::GetDataFile(steering_controller_file), vehicle::GetDataFile(speed_controller_file), path,
+        "road", 65 * mph_to_ms, true);
+    PFdriver->Initialize();
+
+    if (!disable_joystick) {
+        driver_mode = HUMAN;
+    } else {
+        driver_mode = AUTONOMOUS;
+        std::cout << "Using path follower driver\n";
+    }    
 
     // ---------------
     // Simulation loop
@@ -369,7 +375,12 @@ int main(int argc, char* argv[]) {
                                     Q_from_AngAxis(time * orbit_rate, {0, 0, 1})));
 
         // Collect output data from modules (for inter-module communication)
-        ChDriver::Inputs driver_inputs = driver->GetInputs();
+        ChDriver::Inputs driver_inputs;
+        if (driver_mode==AUTONOMOUS)
+            driver_inputs = PFdriver->GetInputs();
+        else
+            driver_inputs = IGdriver->GetInputs();
+
         // printf("Driver inputs: %f,%f,%f\n", driver_inputs.m_throttle, driver_inputs.m_braking,
         //        driver_inputs.m_steering);
         driver_inputs.m_steering *= -1;
@@ -383,7 +394,10 @@ int main(int argc, char* argv[]) {
         }
 
         // Update modules (process inputs from other modules)
-        driver->Synchronize(time);
+        if (driver_mode==AUTONOMOUS)
+            PFdriver->Synchronize(time);
+        else
+            IGdriver->Synchronize(time);
         terrain.Synchronize(time);
         vehicle.Synchronize(time, driver_inputs, terrain);
         app.Synchronize("", driver_inputs);
@@ -392,7 +406,11 @@ int main(int argc, char* argv[]) {
 #endif
         // Advance simulation for one timestep for all modules
         double step = step_size;
-        driver->Advance(step);
+        
+        if (driver_mode==AUTONOMOUS)
+            PFdriver->Advance(step);
+        else
+            IGdriver->Advance(step);
         terrain.Advance(step);
         vehicle.Advance(step);
         app.Advance(step_size);
@@ -418,4 +436,10 @@ int main(int argc, char* argv[]) {
     std::cout << "Simulation Time: " << t_end << ", Wall Time: " << time_span.count() << std::endl;
 
     return 0;
+}
+
+
+void customButtonCallback(){
+    std::cout << "Button Callback Invoked";
+    driver_mode = HUMAN;
 }
