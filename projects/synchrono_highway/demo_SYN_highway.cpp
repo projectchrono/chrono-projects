@@ -132,6 +132,7 @@ void AddCommandLineOptions(ChCLI& cli) {
 
     // options for human driver
     cli.AddOption<bool>("Simulation", "nojoystick", "Turn off joystick control", "false");
+    cli.AddOption<bool>("Simulation", "lbj", "Switch Joystick axes as used by LBJ", "false");
     cli.AddOption<bool>("Simulation", "fullscreen", "Use full screen camera display", std::to_string(use_fullscreen));
     cli.AddOption<bool>("Simulation", "record", "Record human driver inputs to file", "false");
     cli.AddOption<bool>("Simulation", "replay", "Replay human driver inputs from file", "false");
@@ -151,9 +152,10 @@ int main(int argc, char* argv[]) {
     if (use_fullscreen) {
         image_width = fullscreen_image_width;
         image_height = fullscreen_image_height;
-	cam_fov = 1.608f;
+	    cam_fov = 1.608f;
     }
     bool disable_joystick = cli.GetAsType<bool>("nojoystick");
+    bool lbj_joystick = cli.GetAsType<bool>("lbj");
     std::cout << "disable_joystick=" << disable_joystick << std::endl;
     //  = cli.GetAsType<bool>("record");
     //  = cli.GetAsType<bool>("replay");
