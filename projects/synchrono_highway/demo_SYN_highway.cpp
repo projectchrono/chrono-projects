@@ -263,7 +263,9 @@ int main(int argc, char* argv[]) {
     // ChCSLDriver driver(vehicle);
     // driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
     auto IGdriver = chrono_types::make_shared<ChIrrGuiDriver>(app);
-    IGdriver->SetButtonCallback(7, &customButtonCallback);
+    IGdriver->SetButtonCallback(6, &customButtonCallback);
+    IGdriver->SetJoystickAxes(ChIrrGuiDriver::JoystickAxes::AXIS_Z, ChIrrGuiDriver::JoystickAxes::AXIS_R, 
+	ChIrrGuiDriver::JoystickAxes::AXIS_X, ChIrrGuiDriver::JoystickAxes::NONE);
     IGdriver->Initialize();
 
     double mph_to_ms = 0.44704;
