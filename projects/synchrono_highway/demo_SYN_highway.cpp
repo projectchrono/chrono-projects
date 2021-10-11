@@ -119,12 +119,6 @@ bool sensor_vis = true;
 
 std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
 
-// globally accessible driver and irrapp
-std::shared_ptr<ChWheeledVehicleIrrApp> appptr;
-std::shared_ptr<ChDriver> driver;
-std::shared_ptr<ChIrrGuiDriver> IGdriver;
-std::shared_ptr<ChPathFollowerDriver> PFdriver;
-
 using namespace std::chrono;
 
 // =============================================================================
@@ -275,7 +269,7 @@ int main(int argc, char* argv[]) {
     auto path = ChBezierCurve::read(path_file);
     std::string steering_controller_file("hmmwv/SteeringController.json");
     std::string speed_controller_file("hmmwv/SpeedController.json");
-    PFdriver = chrono_types::make_shared<ChPathFollowerDriver>(
+    auto PFdriver = chrono_types::make_shared<ChPathFollowerDriver>(
         vehicle, vehicle::GetDataFile(steering_controller_file), vehicle::GetDataFile(speed_controller_file), path,
         "road", 65 * mph_to_ms, true);
     PFdriver->Initialize();
