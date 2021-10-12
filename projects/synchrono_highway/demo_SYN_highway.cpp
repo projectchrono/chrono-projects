@@ -27,6 +27,7 @@
 #include "chrono_vehicle/driver/ChIrrGuiDriver.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 #include "chrono_vehicle/wheeled_vehicle/utils/ChWheeledVehicleIrrApp.h"
+#include <irrlicht.h>
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -255,10 +256,23 @@ int main(int argc, char* argv[]) {
 
     ChWheeledVehicleIrrApp app(&vehicle, L"Highway Demo");
     ChRealtimeStepTimer realtime_timer;
+    /*
+    SPEEDOMETER: we want to use the irrlicht app to display the speedometer, but calling endscene would update the entire (massive) scenario.
+    In order to do so, we first have to clean app the Irrlichr app. Once we delete the node, we remove all cached meshes and textures.
+    The order is important, otherwise meshes are re-cached!!
+    */
+    irr::scene::ISceneNode* mnode = app.GetContainer();
+    mnode->remove();
+    irr::scene::IMeshCache *cache = app.GetDevice()->getSceneManager()->getMeshCache();
+    cache->clear ();
+    app.GetVideoDriver()->removeAllTextures();
+    
 #ifdef CHRONO_IRRKLANG
     GetLog() << "USING IRRKLANG" << "\n\n";
     ChCSLSoundEngine soundEng(&vehicle);
 #endif
+
+
     // Create the interactive driver system
     // ChCSLDriver driver(vehicle);
     // driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
@@ -410,6 +424,12 @@ int main(int argc, char* argv[]) {
         terrain.Advance(step);
         vehicle.Advance(step);
         app.Advance(step_size);
+        if (step_number % int(60 / step_size) == 0) {
+            ///irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0), false);
+            app.GetDevice()->getVideoDriver()->draw2DImage(app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/Speedometer.png").c_str()),
+                irr::core::position2d<irr::s32>(10, 10));
+            app.GetDevice()->getVideoDriver()->endScene();
+        }
 
         // Update the sensor manager
         manager->Update();
