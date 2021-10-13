@@ -430,7 +430,7 @@ int main(int argc, char* argv[]) {
         terrain.Advance(step);
         vehicle.Advance(step);
         app.Advance(step_size);
-        if (step_number % int(1 /(60 * step_size)) == 0) {
+        if (step_number % int(1 /(20 * step_size)) == 0) {
             ///irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0), false);
             app.GetDevice()->getVideoDriver()->draw2DImage(app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/Speedometer.png").c_str()),
                 irr::core::position2d<irr::s32>(0, 0));
@@ -471,5 +471,8 @@ int main(int argc, char* argv[]) {
 
 void customButtonCallback(){
     std::cout << "Button Callback Invoked";
-    driver_mode = HUMAN;
+    if(driver_mode == AUTONOMOUS)
+        driver_mode = HUMAN;
+    else if(driver_mode == HUMAN)
+        driver_mode = AUTONOMOUS;
 }

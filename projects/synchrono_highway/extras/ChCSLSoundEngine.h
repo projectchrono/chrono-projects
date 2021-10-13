@@ -53,11 +53,11 @@ class CH_VEHICLE_API ChCSLSoundEngine {
   
   private:
     ChVehicle* thisvehicle;
-    std::shared_ptr<irrklang::ISound> car_sound;
+    irrklang::ISound*  car_sound;
     //irrklang::ISound* motor_sound;
     irrklang::ISoundEngine* sound_engine;
-    std::vector<std::string> motor_soundfiles;
-    std::vector<irrklang::ISound*> motor_sounds;
+    //std::vector<std::string> motor_soundfiles;
+    //std::vector<irrklang::ISound*> motor_sounds;
     double last_time_played = 0;
     int last_threshold = 0;
 
