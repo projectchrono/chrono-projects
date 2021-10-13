@@ -118,6 +118,10 @@ bool sensor_save = false;
 // Visualize sensor data
 bool sensor_vis = true;
 
+/// Speedometer image data
+irr::core::position2d<irr::s32> sm_center(300,200);
+double sm_needle = 140;
+
 std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
 
 using namespace std::chrono;
@@ -254,7 +258,7 @@ int main(int argc, char* argv[]) {
     // Create the driver system
     // ------------------------
 
-    ChWheeledVehicleIrrApp app(&vehicle, L"Highway Demo");
+    ChWheeledVehicleIrrApp app(&vehicle, L"Highway Demo",irr::core::dimension2d<irr::u32>(600, 400));
     ChRealtimeStepTimer realtime_timer;
     /*
     SPEEDOMETER: we want to use the irrlicht app to display the speedometer, but calling endscene would update the entire (massive) scenario.
@@ -426,10 +430,18 @@ int main(int argc, char* argv[]) {
         terrain.Advance(step);
         vehicle.Advance(step);
         app.Advance(step_size);
-        if (step_number % int(60 / step_size) == 0) {
+        if (step_number % int(1 /(60 * step_size)) == 0) {
             ///irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0), false);
             app.GetDevice()->getVideoDriver()->draw2DImage(app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/Speedometer.png").c_str()),
-                irr::core::position2d<irr::s32>(10, 10));
+                irr::core::position2d<irr::s32>(0, 0));
+            /*app.GetDevice()->getVideoDriver()->draw2DImage(app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/Needle.png").c_str()),
+                irr::core::position2d<irr::s32>(200, 200));*/
+            double speed_mph = vehicle.GetVehicleSpeedCOM() * 2.23694;
+            double theta = ((270/140)*speed_mph)*(CH_C_PI/180);
+            app.GetDevice()->getVideoDriver()->draw2DLine(
+                    sm_center + irr::core::position2d<irr::s32>(-sm_needle*sin(theta),sm_needle*cos(theta)),
+					sm_center,
+					irr::video::SColor (255,255,0,0));
             app.GetDevice()->getVideoDriver()->endScene();
         }
 
