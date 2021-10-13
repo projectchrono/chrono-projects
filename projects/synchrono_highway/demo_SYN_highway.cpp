@@ -271,6 +271,7 @@ int main(int argc, char* argv[]) {
     cache->clear ();
     app.GetVideoDriver()->removeAllTextures();
     
+    
 #ifdef CHRONO_IRRKLANG
     GetLog() << "USING IRRKLANG" << "\n\n";
     ChCSLSoundEngine soundEng(&vehicle);
@@ -431,11 +432,10 @@ int main(int argc, char* argv[]) {
         vehicle.Advance(step);
         app.Advance(step_size);
         if (step_number % int(1 /(20 * step_size)) == 0) {
+            app.BeginScene(true, true, irr::video::SColor(255, 140, 161, 192));
             ///irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0), false);
             app.GetDevice()->getVideoDriver()->draw2DImage(app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/Speedometer.png").c_str()),
                 irr::core::position2d<irr::s32>(0, 0));
-            /*app.GetDevice()->getVideoDriver()->draw2DImage(app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/Needle.png").c_str()),
-                irr::core::position2d<irr::s32>(200, 200));*/
             double speed_mph = vehicle.GetVehicleSpeedCOM() * 2.23694;
             double theta = ((270/140)*speed_mph)*(CH_C_PI/180);
             app.GetDevice()->getVideoDriver()->draw2DLine(
