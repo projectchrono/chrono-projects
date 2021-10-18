@@ -21,6 +21,7 @@ set(DEMOS
         test_GPU_slide
         test_GPU_roll
         test_GPU_incline
+        test_GPU_repose
 )
 
 #--------------------------------------------------------------
