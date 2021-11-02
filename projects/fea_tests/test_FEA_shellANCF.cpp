@@ -20,7 +20,7 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/parallel/ChOpenMP.h"
 
-#include "chrono/fea/ChElementShellANCF.h"
+#include "chrono/fea/ChElementShellANCF_3423.h"
 #include "chrono/fea/ChLinkDirFrame.h"
 #include "chrono/fea/ChLinkPointFrame.h"
 #include "chrono/fea/ChMesh.h"
@@ -154,7 +154,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
         int node3 = (i / (numDiv_x)) * (N_x)+i % numDiv_x + N_x;
 
         // Create the element and set its nodes.
-        auto element = chrono_types::make_shared<ChElementShellANCF>();
+        auto element = chrono_types::make_shared<ChElementShellANCF_3423>();
         element->SetNodes(std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(node0)),
                           std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(node1)),
                           std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(node2)),
@@ -162,12 +162,8 @@ void RunModel(int nthreads,              // number of OpenMP threads
 
         // Element length is a fixed number in both direction. (uniform distribution of nodes in both directions)
         element->SetDimensions(dx, dy);
-        // Single layer
-        element->AddLayer(dz, 0 * CH_C_DEG_TO_RAD, mat);  // Thickness: dy;  Ply angle: 0.
-                                                          // Set other element properties
-        element->SetAlphaDamp(0.0);   // Structural damping for this
-        element->SetGravityOn(true);  // element calculates its own gravitational load
-                                      // Add element to mesh
+        element->AddLayer(dz, 0 * CH_C_DEG_TO_RAD, mat);  // Single layer; Thickness: dy;  Ply angle: 0.
+        element->SetAlphaDamp(0.0);                       // Structural damping for this
         my_mesh->AddElement(element);
     }
 
