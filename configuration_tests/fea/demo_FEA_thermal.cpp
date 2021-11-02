@@ -2,54 +2,61 @@
 // PROJECT CHRONO - http://projectchrono.org
 //
 // Copyright (c) 2014 projectchrono.org
-// All right reserved.
+// All rights reserved.
 //
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file at the top level of the distribution and at
 // http://projectchrono.org/license-chrono.txt.
 //
 // =============================================================================
-// Author: Alessandro Tasora
+// Authors: Alessandro Tasora
 // =============================================================================
 //
-// ChronoFEA demo program for thermal analysis (uses Irrlicht for visualization)
+// FEA visualization using Irrlicht
+//
 // =============================================================================
 
-#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/solver/ChIterativeSolverLS.h"
 
-#include "chrono/fea/ChElementSpring.h"
-#include "chrono/fea/ChElementBar.h"
-#include "chrono/fea/ChElementTetra_4.h"
-#include "chrono/fea/ChElementTetra_10.h"
-#include "chrono/fea/ChElementHexa_8.h"
-#include "chrono/fea/ChElementHexa_20.h"
-#include "chrono/fea/ChContinuumThermal.h"
 #include "chrono/fea/ChContinuumElectrostatics.h"
-#include "chrono/fea/ChNodeFEAxyzP.h"
+#include "chrono/fea/ChContinuumThermal.h"
+#include "chrono/fea/ChElementBar.h"
+#include "chrono/fea/ChElementHexaCorot_20.h"
+#include "chrono/fea/ChElementHexaCorot_8.h"
+#include "chrono/fea/ChElementTetraCorot_10.h"
+#include "chrono/fea/ChElementTetraCorot_4.h"
+#include "chrono/fea/ChLinkPointFrame.h"
 #include "chrono/fea/ChMesh.h"
 #include "chrono/fea/ChMeshFileLoader.h"
-#include "chrono/fea/ChLinkPointFrame.h"
+#include "chrono/fea/ChNodeFEAxyzP.h"
 #include "chrono/fea/ChVisualizationFEAmesh.h"
 
 #include "chrono_irrlicht/ChIrrApp.h"
 
+// Remember to use the namespace 'chrono' because all classes
+// of Chrono::Engine belong to this namespace and its children...
+
 using namespace chrono;
-using namespace chrono::irrlicht;
 using namespace chrono::fea;
+using namespace chrono::irrlicht;
 
 using namespace irr;
 
 int main(int argc, char* argv[]) {
+    GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
+
     // Set path to Chrono data directory
     SetChronoDataPath(CHRONO_DATA_DIR);
 
     // Create a Chrono::Engine physical system
-    ChSystemNSC my_system;
+    ChSystemSMC my_system;
 
     // Create the Irrlicht visualization (open the Irrlicht device,
     // bind a simple user interface, etc. etc.)
     ChIrrApp application(&my_system, L"FEM thermal", core::dimension2d<u32>(800, 600));
+
+    // Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
     application.AddTypicalLogo();
     application.AddTypicalSky();
     application.AddTypicalLights(core::vector3df(20, 20, 20), core::vector3df(-20, 20, -20), 90, 90,
@@ -70,13 +77,13 @@ int main(int argc, char* argv[]) {
     // Add some TETAHEDRONS:
     //
 
-    // Load a .node file and a .ele  file from disk, defining a complicate tetahedron mesh.
+    // Load a .node file and a .ele  file from disk, defining a complicate tetrahedron mesh.
     // This is much easier than creating all nodes and elements via C++ programming.
     // You can generate these files using the TetGen tool.
     try {
         ChMeshFileLoader::FromTetGenFile(my_mesh, GetChronoDataFile("fea/beam.node").c_str(),
                                          GetChronoDataFile("fea/beam.ele").c_str(), mmaterial);
-    } catch (ChException myerr) {
+    } catch (const ChException& myerr) {
         GetLog() << myerr.what();
         return 0;
     }
@@ -119,9 +126,9 @@ int main(int argc, char* argv[]) {
     // ==Asset== attach a visualization of the FEM mesh.
     // This will automatically update a triangle mesh (a ChTriangleMeshShape
     // asset that is internally managed) by setting  proper
-    // coordinates and vertex colours as in the FEM elements.
+    // coordinates and vertex colors as in the FEM elements.
     // Such triangle mesh can be rendered by Irrlicht or POVray or whatever
-    // postprocessor that can handle a coloured ChTriangleMeshShape).
+    // postprocessor that can handle a colored ChTriangleMeshShape).
     // Do not forget AddAsset() at the end!
 
     // This will paint the colored mesh with temperature scale (E_PLOT_NODE_P is the scalar field of the Poisson
@@ -160,14 +167,16 @@ int main(int argc, char* argv[]) {
 
     application.AssetUpdateAll();
 
-    //
-    // THE SOFT-REAL-TIME CYCLE
-    //
+    // SIMULATION LOOP
 
+    // Use MINRES solver to handle stiffness matrices.
     auto solver = chrono_types::make_shared<ChSolverMINRES>();
-    solver->EnableWarmStart(true);
-    solver->SetMaxIterations(160);
     my_system.SetSolver(solver);
+    solver->SetMaxIterations(150);
+    solver->SetTolerance(1e-6);
+    solver->EnableDiagonalPreconditioner(true);
+    solver->EnableWarmStart(true);  // IMPORTANT for convergence when using EULER_IMPLICIT_LINEARIZED
+    solver->SetVerbose(false);
 
     my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
 
@@ -175,7 +184,7 @@ int main(int argc, char* argv[]) {
     // (not a transient thermal solution, but rather the steady-state solution),
     // at this point you can uncomment the following line:
     //
-    //	 my_system.DoStaticLinear();
+    //  my_system.DoStaticLinear();
     //
     // Also, in the following while() loop, remove  application.DoStep();
     // so you can spin the 3D view and look at the solution.
@@ -190,6 +199,8 @@ int main(int argc, char* argv[]) {
         application.DoStep();
 
         application.EndScene();
+        if (my_system.GetChTime() > 5)
+            break;
     }
 
     // Print some node temperatures..

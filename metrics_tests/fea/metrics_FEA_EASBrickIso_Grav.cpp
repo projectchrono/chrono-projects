@@ -30,7 +30,7 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono/fea/ChElementBar.h"
-#include "chrono/fea/ChElementBrick.h"
+#include "chrono/fea/ChElementHexaANCF_3813.h"
 #include "chrono/fea/ChElementSpring.h"
 #include "chrono/fea/ChLinkDirFrame.h"
 #include "chrono/fea/ChLinkPointFrame.h"
@@ -187,7 +187,7 @@ bool BrickIso_GravTest::execute() {
 
     int elemcount = 0;
     while (elemcount < TotalNumElements) {
-        auto element = chrono_types::make_shared<ChElementBrick>();
+        auto element = chrono_types::make_shared<ChElementHexaANCF_3813>();
         ChVectorN<double, 3> InertFlexVec;  // Read element length, used in ChElementBrick
         InertFlexVec.setZero();
         InertFlexVec(0) = ElemLengthXY(elemcount, 0);
@@ -205,7 +205,6 @@ bool BrickIso_GravTest::execute() {
                           std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(NumNodes(elemcount, 7))));
         element->SetMaterial(mmaterial);
         element->SetElemNum(elemcount);
-        element->SetGravityOn(true);      // Turn gravity on/off from within the element
         element->SetMooneyRivlin(false);  // Turn on/off Mooney Rivlin (Linear Isotropic by default)
         // element->SetMRCoefficients(551584.0, 137896.0); // Set two coefficients for Mooney-Rivlin
 

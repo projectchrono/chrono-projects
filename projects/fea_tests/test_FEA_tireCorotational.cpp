@@ -21,7 +21,6 @@
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/parallel/ChOpenMP.h"
 
-#include "chrono/fea/ChElementTetra_4.h"
 #include "chrono/fea/ChMesh.h"
 #include "chrono/fea/ChMeshFileLoader.h"
 #include "chrono/fea/ChContactSurfaceMesh.h"

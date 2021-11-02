@@ -28,7 +28,7 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsValidation.h"
 
-#include "chrono/fea/ChElementShellANCF.h"
+#include "chrono/fea/ChElementShellANCF_3423.h"
 #include "chrono/fea/ChLinkDirFrame.h"
 #include "chrono/fea/ChLinkPointFrame.h"
 #include "chrono/fea/ChMesh.h"
@@ -393,7 +393,7 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
 
     // Create all elements of the tire
     for (int i = 0; i < TotalNumElements; i++) {
-        auto element = chrono_types::make_shared<ChElementShellANCF>();
+        auto element = chrono_types::make_shared<ChElementShellANCF_3423>();
         element->SetNodes(std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(NodesPerElement(i, 0) - 1)),
             std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(NodesPerElement(i, 1) - 1)),
             std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(NodesPerElement(i, 2) - 1)),
@@ -428,7 +428,6 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
             // GetLog() << "Index: " << LayerHist + j << "   PRev: " << LayerHist << "\n";
         }
         element->SetAlphaDamp(0.01); //0.005
-        element->SetGravityOn(true);
         TireMesh->AddElement(element);
     }
     // End of assigning properties to TireMesh (ChMesh)
@@ -473,7 +472,8 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
     // Add constant pressure using ChLoaderPressure (preferred for simple, constant pressure)
     if (addPressureAlessandro) {
         for (int NoElmPre = 0; NoElmPre < TotalNumElements; NoElmPre++) {
-            auto faceload = chrono_types::make_shared<ChLoad<ChLoaderPressure > >(std::static_pointer_cast<ChElementShellANCF>(TireMesh->GetElement(NoElmPre)));
+            auto faceload = chrono_types::make_shared<ChLoad<ChLoaderPressure>>(
+                std::static_pointer_cast<ChElementShellANCF_3423>(TireMesh->GetElement(NoElmPre)));
             faceload->loader.SetPressure(-TirePressure);
             faceload->loader.SetStiff(false);
             faceload->loader.SetIntegrationPoints(2);

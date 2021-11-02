@@ -26,7 +26,7 @@
 #include "chrono/utils/ChUtilsValidation.h"
 #include "chrono/core/ChMathematics.h"
 
-#include "chrono/fea/ChElementShellANCF.h"
+#include "chrono/fea/ChElementShellANCF_3423.h"
 #include "chrono/fea/ChMesh.h"
 #include "chrono/fea/ChLinkPointFrame.h"
 #include "chrono/fea/ChLinkDirFrame.h"
@@ -1319,7 +1319,7 @@ int main(int argc, char* argv[]) {
 
     // Create all elements of the tire
     for (int i = 0; i < TotalNumElements; i++) {
-        auto element = chrono_types::make_shared<ChElementShellANCF>();
+        auto element = chrono_types::make_shared<ChElementShellANCF_3423>();
         element->SetNodes(std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(NodesPerElement(i, 0) - 1)),
             std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(NodesPerElement(i, 1) - 1)),
             std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(NodesPerElement(i, 2) - 1)),
@@ -1352,7 +1352,6 @@ int main(int argc, char* argv[]) {
         }
 
         element->SetAlphaDamp(0.0005);
-        element->SetGravityOn(true);
         my_mesh->AddElement(element);
     }
 
@@ -1409,12 +1408,12 @@ int main(int argc, char* argv[]) {
 
     class MyPressureLoad : public ChLoaderUVdistributed {
       private:
-        std::shared_ptr<ChElementShellANCF> m_element;
+        std::shared_ptr<ChElementShellANCF_3423> m_element;
 
       public:
         // Useful: a constructor that also sets ChLoadable
         MyPressureLoad(std::shared_ptr<ChLoadableUV> element) : ChLoaderUVdistributed(element) {
-            m_element = std::static_pointer_cast<ChElementShellANCF>(element);
+            m_element = std::static_pointer_cast<ChElementShellANCF_3423>(element);
         };
         virtual bool IsStiff() override { return true; }
         virtual int GetIntegrationPointsU() { return 2; }
@@ -1502,7 +1501,8 @@ int main(int argc, char* argv[]) {
     // It is created using templates, that is instancing a ChLoad<a_loader_class>()
     // initiate for loop for all the elements
     for (int NoElmPre = 0; NoElmPre < TotalNumElements; NoElmPre++) {
-        auto PressureElement = chrono_types::make_shared<ChLoad<MyPressureLoad > >(std::static_pointer_cast<ChElementShellANCF>(my_mesh->GetElement(NoElmPre)));
+        auto PressureElement = chrono_types::make_shared<ChLoad<MyPressureLoad>>(
+            std::static_pointer_cast<ChElementShellANCF_3423>(my_mesh->GetElement(NoElmPre)));
         Mloadcontainer->Add(PressureElement);  // do not forget to add the load to the load container.
     }
 
