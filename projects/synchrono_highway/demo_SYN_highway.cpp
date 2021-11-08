@@ -64,7 +64,8 @@ ChVector<> initLoc(4011.5, -345, .75);  // near mile marker
 // ChQuaternion<> initRot = Q_from_AngZ(-CH_C_PI_2);
 ChQuaternion<> initRot = Q_from_AngZ(CH_C_PI_2);
 
-ChVector<> driver_eye(-.2, .4, .95);
+// ChVector<> driver_eye(-.2, .4, .95);
+ChVector<> driver_eye(-.3, .4, .98);
 // ChVector<> driver_eye(1.0, .4, .95);
 ChQuaternion<> driver_view_direction = Q_from_AngAxis(0, {1, 0, 0});
 
@@ -100,12 +101,12 @@ ChContactMethod contact_method = ChContactMethod::SMC;
 // camera parameters
 float frame_rate = 30.0;
 int super_samples = 1;
-unsigned int image_width = 1920;   // / 2;
-unsigned int image_height = 1080;  // / 2;
+unsigned int image_width = 3840 / 2; //1920;   // / 2;
+unsigned int image_height = 720 / 2;  // / 2;
 unsigned int fullscreen_image_width = 3840;
 unsigned int fullscreen_image_height = 720;
-// float cam_fov = 1.608f;
-float cam_fov = .524;
+float cam_fov = 1.608f;
+// float cam_fov = .524;
 bool use_fullscreen = false;
 
 // -----------------------------------------------------------------------------
@@ -189,6 +190,7 @@ int main(int argc, char* argv[]) {
     vehicle.SetWheelVisualizationType(wheel_vis_type);
     auto powertrain = ReadPowertrainJSON(powertrain_file);
     vehicle.InitializePowertrain(powertrain);
+
     // Create and initialize the tires
     for (auto& axle : vehicle.GetAxles()) {
         for (auto& wheel : axle->GetWheels()) {
@@ -196,6 +198,41 @@ int main(int argc, char* argv[]) {
             vehicle.InitializeTire(tire, wheel, tire_vis_type);
         }
     }
+
+    //change the ego vehicle vis out for windowless audi
+    vehicle.GetChassisBody()->GetAssets().clear();
+
+    auto audi_mesh = chrono_types::make_shared<ChTriangleMeshConnected>();
+    audi_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/vehicles/audi_chassis_windowless.obj", false, true);
+    audi_mesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
+    auto audi_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+    audi_shape->SetMesh(audi_mesh);
+    audi_shape->SetName("Windowless Audi");
+    audi_shape->SetStatic(true);
+    vehicle.GetChassisBody()->AddAsset(audi_shape);
+    
+    //add rearview mirror
+
+    auto rvw_mirror_mesh = chrono_types::make_shared<ChTriangleMeshConnected>();
+    rvw_mirror_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/vehicles/audi_rearview_mirror.obj", false, true);
+    rvw_mirror_mesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
+    auto rvw_mirror_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+    rvw_mirror_shape->SetMesh(rvw_mirror_mesh);
+    rvw_mirror_shape->SetName("Windowless Audi");
+    rvw_mirror_shape->SetStatic(true);
+    rvw_mirror_shape->Pos = ChVector<>(0.442,0.0,1.096);
+    rvw_mirror_shape->Rot = Q_from_AngY(-.08)*Q_from_AngZ(-.25);
+
+    auto mirror_mat = chrono_types::make_shared<ChVisualMaterial>();
+    mirror_mat->SetDiffuseColor({0.2f,0.2f,0.2f});
+    mirror_mat->SetRoughness(0.f);
+    mirror_mat->SetMetallic(1.0f);
+    mirror_mat->SetUseSpecularWorkflow(false);
+    rvw_mirror_shape->material_list.push_back(mirror_mat);
+
+    vehicle.GetChassisBody()->AddAsset(rvw_mirror_shape);
+
+
 
     // Create the terrain
     RigidTerrain terrain(vehicle.GetSystem());
