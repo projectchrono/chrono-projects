@@ -267,7 +267,7 @@ int main(int argc, char* argv[]) {
 
     //add terrain with weighted textures
     auto terrain_mesh = chrono_types::make_shared<ChTriangleMeshConnected>();
-    terrain_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/terrain.obj", false, true);
+    terrain_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/terrain/terrain.obj", false, true);
     terrain_mesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
     auto terrain_shape = chrono_types::make_shared<ChTriangleMeshShape>();
     terrain_shape->SetMesh(terrain_mesh);
@@ -275,21 +275,23 @@ int main(int argc, char* argv[]) {
     terrain_shape->SetStatic(true);
 
     auto vis_mat2 = chrono_types::make_shared<ChVisualMaterial>();
-    vis_mat2->SetKdTexture(demo_data_path + "/Environments/Iowa/Gravel/GroundGravel017_COL_1K.jpg");
-    vis_mat2->SetRoughnessTexture(demo_data_path + "/Environments/Iowa/Gravel/GroundGravel017_ROUGH_1K.png");
-    vis_mat2->SetNormalMapTexture(demo_data_path + "/Environments/Iowa/Gravel/GroundGravel017_NRM_1K.jpg");
-    vis_mat2->SetWeightTexture(demo_data_path + "/Environments/Iowa/weight_gravel.png");
+    vis_mat2->SetKdTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_COL_1K.jpg");
+    vis_mat2->SetRoughnessTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_ROUGH_1K.png");
+    vis_mat2->SetNormalMapTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_NRM_1K.jpg");
+    vis_mat2->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/weight_gravel_v02.png");
     vis_mat2->SetSpecularColor({.0f, .0f, .0f});
-    vis_mat2->SetTextureScale({500.0,500.0,1.0});
+    vis_mat2->SetTextureScale({1000.0,1000.0,1.0});
     vis_mat2->SetRoughness(1.f);
     vis_mat2->SetUseSpecularWorkflow(false);
     terrain_shape->material_list.push_back(vis_mat2);
 
     auto vis_mat1 = chrono_types::make_shared<ChVisualMaterial>();
     // vis_mat1->SetKdTexture(demo_data_path + "/Environments/Iowa/Grass/T_grass_a_d.png"));
-    vis_mat1->SetKdTexture(GetChronoDataFile("vehicle/terrain/textures/grass.jpg"));
-    vis_mat1->SetWeightTexture(demo_data_path + "/Environments/Iowa/weight_grass.png");
-    vis_mat1->SetTextureScale({20.0,20.0,1.0});
+    vis_mat1->SetKdTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_COL_1K.jpg");
+    vis_mat1->SetRoughnessTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_ROUGH_1K.jpg");
+    vis_mat1->SetNormalMapTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_NRM_1K.jpg");
+    vis_mat1->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/weight_grass_v02.png");
+    vis_mat1->SetTextureScale({100.0,100.0,1.0});
     vis_mat1->SetSpecularColor({.0f, .0f, .0f});
     vis_mat1->SetRoughness(1.f);
     vis_mat1->SetUseSpecularWorkflow(false);
@@ -303,8 +305,8 @@ int main(int argc, char* argv[]) {
 
 
     std::vector<std::string> environment_meshes = {
-        "/Environments/Iowa/mile_markers_inner.obj", "/Environments/Iowa/mile_markers_outer.obj",
-        "/Environments/Iowa/oval_highway.obj"};
+        "/Environments/Iowa/signs/mile_markers_inner.obj", "/Environments/Iowa/signs/mile_markers_outer.obj",
+        "/Environments/Iowa/terrain/oval_highway.obj"};
     std::vector<ChVector<>> offsets = {{0, 0, -128.22}, {0, 0, 0.0}, {0, 0, 0.01}};
 
     for (int i = 0; i < environment_meshes.size(); i++) {  // auto file_name : environment_meshes) {
@@ -326,7 +328,7 @@ int main(int argc, char* argv[]) {
     // add in corn for testing
 
     auto trimesh = chrono_types::make_shared<ChTriangleMeshConnected>();
-    trimesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/tree_01.obj", false, true);
+    trimesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/trees/tree_01.obj", false, true);
     trimesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
     auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
     trimesh_shape->SetMesh(trimesh);
@@ -396,7 +398,7 @@ int main(int argc, char* argv[]) {
     IGdriver->Initialize();
 
     double mph_to_ms = 0.44704;
-    std::string path_file = demo_data_path + "/Environments/Iowa/oval_highway_path.csv";
+    std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
     auto path = ChBezierCurve::read(path_file);
     std::string steering_controller_file("hmmwv/SteeringController.json");
     std::string speed_controller_file("hmmwv/SpeedController.json");
