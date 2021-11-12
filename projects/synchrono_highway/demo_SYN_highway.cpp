@@ -278,11 +278,24 @@ int main(int argc, char* argv[]) {
     vis_mat2->SetKdTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_COL_1K.jpg");
     vis_mat2->SetRoughnessTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_ROUGH_1K.png");
     vis_mat2->SetNormalMapTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_NRM_1K.jpg");
+    vis_mat2->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/weight_gravel_v02.png");
     vis_mat2->SetSpecularColor({.0f, .0f, .0f});
+    vis_mat2->SetTextureScale({1000.0,1000.0,1.0});
     vis_mat2->SetRoughness(1.f);
     vis_mat2->SetUseSpecularWorkflow(false);
     terrain_shape->material_list.push_back(vis_mat2);
 
+    auto vis_mat1 = chrono_types::make_shared<ChVisualMaterial>();
+    // vis_mat1->SetKdTexture(demo_data_path + "/Environments/Iowa/Grass/T_grass_a_d.png"));
+    vis_mat1->SetKdTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_COL_1K.jpg");
+    vis_mat1->SetRoughnessTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_ROUGH_1K.jpg");
+    vis_mat1->SetNormalMapTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_NRM_1K.jpg");
+    vis_mat1->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/weight_grass_v02.png");
+    vis_mat1->SetTextureScale({100.0,100.0,1.0});
+    vis_mat1->SetSpecularColor({.0f, .0f, .0f});
+    vis_mat1->SetRoughness(1.f);
+    vis_mat1->SetUseSpecularWorkflow(false);
+    terrain_shape->material_list.push_back(vis_mat1);
 
     auto terrain_body = chrono_types::make_shared<ChBody>();
     terrain_body->SetPos({0,0,-.01});
@@ -427,6 +440,8 @@ int main(int argc, char* argv[]) {
     b.mode = BackgroundMode::ENVIRONMENT_MAP;
     b.env_tex = GetChronoDataFile("sensor/textures/sunflowers_4k.hdr");
     manager->scene->SetBackground(b);
+    manager->scene->SetFogScatteringFromDistance(2000.0);
+    manager->scene->SetFogColor({.8, .8, .8});
 
     // ------------------------------------------------
     // Create a camera and add it to the sensor manager
