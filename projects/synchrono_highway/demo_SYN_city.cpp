@@ -56,7 +56,7 @@
 
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
 
-#include "extras/driver/ChCSLDriver.h"
+// #include "extras/driver/ChCSLDriver.h"
 #include "extras/driver/ChLidarWaypointDriver.h"
 
 // =============================================================================
@@ -569,10 +569,10 @@ int main(int argc, char* argv[]) {
 
         app.Set(temp_app);
         driver = irr_driver;
-    } else if (node_id == leader && cli.GetAsType<bool>("console")) {
-        // Use custom CSL driver instead of irr driver
-        auto csl_driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
-        driver = csl_driver;
+    // } else if (node_id == leader && cli.GetAsType<bool>("console")) {
+    //     // Use custom CSL driver instead of irr driver
+    //     auto csl_driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
+    //     driver = csl_driver;
     } else {
         auto path = ChBezierCurve::read(GetChronoDataFile(demo_config[node_id].path_file));
         double target_speed = 11.2;
@@ -689,7 +689,7 @@ void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<double>("Simulation", "e,end_time", "End time", std::to_string(end_time));
     cli.AddOption<double>("Simulation", "b,heartbeat", "Heartbeat", std::to_string(heartbeat));
     cli.AddOption<bool>("Simulation", "save", "save", std::to_string(save));
-    cli.AddOption<bool>("Simulation", "console", "Use console for rank 0", "false");
+    // cli.AddOption<bool>("Simulation", "console", "Use console for rank 0", "false");
     cli.AddOption<unsigned int>("Simulation", "l,leader", "The leader rank/node", "0");
 
     // mesh loading options
