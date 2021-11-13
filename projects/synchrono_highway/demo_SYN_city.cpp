@@ -28,10 +28,10 @@
 #include "chrono_vehicle/wheeled_vehicle/utils/ChWheeledVehicleIrrApp.h"
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
 
-#include "chrono_synchrono/SynChronoManager.h"
 #include "chrono_synchrono/SynConfig.h"
+#include "chrono_synchrono/SynChronoManager.h"
 #include "chrono_synchrono/agent/SynWheeledVehicleAgent.h"
-#ifdef USE_FAST_DDS
+#ifdef CHRONO_FASTDDS
 #include "chrono_synchrono/communication/dds/SynDDSCommunicator.h"
 #endif
 #include "chrono_synchrono/communication/mpi/SynMPICommunicator.h"
@@ -61,7 +61,7 @@
 
 // =============================================================================
 
-#ifdef USE_FAST_DDS
+#ifdef CHRONO_FASTDDS
 
 // FastDDS
 #undef ALIVE
@@ -262,7 +262,7 @@ int main(int argc, char* argv[]) {
         // -----------------------
         // Create SynChronoManager
         // -----------------------
-#ifdef USE_FAST_DDS
+#ifdef CHRONO_FASTDDS
     int node_id, num_nodes;
     std::shared_ptr<SynCommunicator> communicator;
     if (cli.GetAsType<bool>("dds")) {
@@ -710,7 +710,7 @@ void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<bool>("Simulation", "nosensing", "Disable sensing on non-human vehicles", std::to_string(no_sensing));
 
 // SynChrono/DDS options
-#ifdef USE_FAST_DDS
+#ifdef CHRONO_FASTDDS
     cli.AddOption<bool>("DDS", "dds", "Use DDS as the communication mechanism", "false");
     cli.AddOption<int>("DDS", "d,node_id", "ID for this Node", "1");
     cli.AddOption<int>("DDS", "n,num_nodes", "Number of Nodes", "2");

@@ -85,8 +85,13 @@ endif()
 # Invoke CMake in subdirectories
 #-----------------------------------------------------------------------------
 
+if(NOT Chrono_DIR)
+  set(Chrono_DIR "" CACHE PATH "The directory containing a CMake configuration file for Chrono.")
+  return()
+endif()
+
 # Options for configuring/building individual sets of programs
-option(ENABLE_CONFIG_TESTS "Build the programs for checking Chrono configuration" OFF)
+option(ENABLE_CONFIG_TESTS "Build the programs for checking Chrono configuration" ON)
 option(ENABLE_METRICS_TESTS "Build the programs for metrics testing" OFF)
 
 

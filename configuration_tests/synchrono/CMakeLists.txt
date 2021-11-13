@@ -13,28 +13,6 @@ set(DEMOS
     demo_SYN_scm
 )
 
-#-----------------------------------------------------------------------------
-# MPI support
-#-----------------------------------------------------------------------------
-
-message(STATUS "Searching for MPI...")
-find_package(MPI)
-message(STATUS "  MPI (C++) found:       ${MPI_CXX_FOUND}")
-if(MPI_CXX_FOUND)
-  message(STATUS "  MPI compiler:          ${MPI_CXX_COMPILER}")
-  message(STATUS "  MPI compile flags:     ${MPI_CXX_COMPILE_FLAGS}")
-  message(STATUS "  MPI include path:      ${MPI_CXX_INCLUDE_PATH}")
-  message(STATUS "  MPI link flags:        ${MPI_CXX_LINK_FLAGS}")
-  message(STATUS "  MPI libraries:         ${MPI_CXX_LIBRARIES}")
-  message(STATUS "")
-  message(STATUS "  MPIEXEC:               ${MPIEXEC}")
-  message(STATUS "  MPIEXEC_NUMPROC_FLAG:  ${MPIEXEC_NUMPROC_FLAG}")
-  message(STATUS "  MPIEXEC_PREFLAGS:      ${MPIEXEC_PREFLAGS}")
-  message(STATUS "  MPIEXEC_POSTFLAGS:     ${MPIEXEC_POSTFLAGS}")
-else()
-  message(STATUS "  Co-simulation programs disabled...")
-endif()
-
 #--------------------------------------------------------------
 # Find the Chrono package with required components
 #--------------------------------------------------------------
@@ -42,7 +20,8 @@ endif()
 # Invoke find_package in CONFIG mode
 
 find_package(Chrono
-             COMPONENTS Irrlicht Vehicle Synchrono Sensor
+             COMPONENTS Vehicle Synchrono
+             OPTIONAL_COMPONENTS Irrlicht Sensor
              CONFIG
 )
 
@@ -70,7 +49,6 @@ endif()
 
 include_directories(
     ${CHRONO_INCLUDE_DIRS}
-    ${MPI_CXX_INCLUDE_PATH}
     ${CMAKE_SOURCE_DIR}
 )
 
@@ -85,7 +63,7 @@ set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 # Compilation flags
 #--------------------------------------------------------------
 
-set(COMPILE_FLAGS ${CHRONO_CXX_FLAGS} ${MPI_CXX_COMPILE_FLAGS}) 
+set(COMPILE_FLAGS ${CHRONO_CXX_FLAGS})
 
 # Disable some warnings triggered by Irrlicht (Windows only)
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
@@ -96,7 +74,7 @@ endif()
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Configurarion tests for Chrono::Irrlicht...")
+message(STATUS "Configuration tests for Chrono::Synchrono...")
 
 foreach(PROGRAM ${DEMOS})
 
@@ -112,8 +90,7 @@ foreach(PROGRAM ${DEMOS})
     LINK_FLAGS "${CHRONO_LINKER_FLAGS}"
   )
 
-  target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES} ${MPI_CXX_LIBRARIES})
+  target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
 
 endforeach(PROGRAM)
 
-message(STATUS "")
