@@ -23,7 +23,6 @@
 #define CH_SOUND_ENGINE_H
 #include <string>
 
-#include "chrono_vehicle/ChApiVehicle.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/utils/ChUtilsChaseCamera.h"
 #include "chrono_irrlicht/ChIrrApp.h"
@@ -38,7 +37,7 @@ using namespace chrono::vehicle;
 namespace chrono {
 /// Sound effect tools for the CSL simulator
 ///
-class CH_VEHICLE_API ChCSLSoundEngine {
+class ChCSLSoundEngine {
   public:
 
     /// Construct the sound reproduction engine

@@ -24,7 +24,6 @@
 
 #include <string>
 
-#include "chrono_vehicle/ChApiVehicle.h"
 #include "chrono_vehicle/ChDriver.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
 
@@ -40,7 +39,7 @@ namespace synchrono {
 /// functionality required by its base ChDriver class using keyboard inputs.
 ///
 /// @sa ChDataDriver
-class CH_VEHICLE_API ChCSLDriver : public ChDriver {
+class ChCSLDriver : public ChDriver {
   public:
     /// Functioning modes for a ChCSLDriver
     enum InputMode {

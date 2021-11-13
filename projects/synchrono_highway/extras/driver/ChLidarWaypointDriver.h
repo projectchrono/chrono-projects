@@ -25,7 +25,6 @@
 #include <string>
 
 #include "chrono_sensor/sensors/ChLidarSensor.h"
-#include "chrono_vehicle/ChApiVehicle.h"
 #include "chrono_vehicle/ChDriver.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
 #include "chrono_vehicle/driver/ChPathFollowerACCDriver.h"
@@ -36,7 +35,7 @@ using namespace chrono::sensor;
 namespace chrono {
 namespace synchrono {
 
-class CH_VEHICLE_API ChLidarWaypointDriver : public ChDriver {
+class ChLidarWaypointDriver : public ChDriver {
   public:
     /// Construct an interactive driver.
     ChLidarWaypointDriver(ChVehicle& vehicle,
