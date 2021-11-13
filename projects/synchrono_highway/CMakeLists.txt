@@ -93,11 +93,11 @@ endif()
 # Grab the extras
 #--------------------------------------------------------------
 set(EXTRAS
-	extras/driver/ChCSLDriver.h
-	extras/driver/ChCSLDriver.cpp
+	# extras/driver/ChCSLDriver.h
+	# extras/driver/ChCSLDriver.cpp
 	extras/driver/ChLidarWaypointDriver.h
 	extras/driver/ChLidarWaypointDriver.cpp
-	extras/driver/joystick.h
+	# extras/driver/joystick.h
 	extras/ChCSLSoundEngine.h
 	extras/ChCSLSoundEngine.cpp
 )
