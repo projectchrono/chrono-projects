@@ -452,11 +452,6 @@ int main(int argc, char* argv[]) {
     b.mode = BackgroundMode::ENVIRONMENT_MAP;
     b.env_tex = GetChronoDataFile("sensor/textures/sunflowers_4k.hdr");
     manager->scene->SetBackground(b);
-<<<<<<< HEAD
-    //manager->scene->SetFogScatteringFromDistance(2000.0);
-    //manager->scene->SetFogColor({.8, .8, .8});
-=======
->>>>>>> 28c93bf48ff4682cc663651d32109d2999a0f25c
 
     // ------------------------------------------------
     // Create a camera and add it to the sensor manager
