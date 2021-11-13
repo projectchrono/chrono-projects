@@ -5,6 +5,8 @@
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
 
+message("\n---- SYNCHRONO configuration test")
+
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
@@ -19,7 +21,7 @@ set(DEMOS
 
 # Invoke find_package in CONFIG mode
 
-find_package(Chrono
+find_package(Chrono QUIET
              COMPONENTS Vehicle Synchrono
              OPTIONAL_COMPONENTS Irrlicht Sensor
              CONFIG

@@ -4,6 +4,8 @@
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
 
+message("\n---- GPU projects")
+
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
@@ -30,7 +32,7 @@ set(DEMOS
 
 # Invoke find_package in CONFIG mode
 
-find_package(Chrono
+find_package(Chrono QUIET
              COMPONENTS Gpu
              OPTIONAL_COMPONENTS Vehicle
              CONFIG

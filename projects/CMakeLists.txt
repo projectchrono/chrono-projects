@@ -1,7 +1,7 @@
 option(ENABLE_PROJECTS "Build the project programs" OFF)
 
 if(ENABLE_PROJECTS)
-  message(STATUS "==== Chrono projects ====\n")
+  message(STATUS "\n==== Chrono projects ====")
 endif()
 
 #-----------------------------------------------------------------------------

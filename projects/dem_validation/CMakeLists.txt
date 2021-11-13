@@ -4,6 +4,8 @@
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
 
+message("\n---- DEM VALIDATION projects")
+
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
@@ -25,7 +27,7 @@ set(DEMOS
 
 # Invoke find_package in CONFIG mode.
 
-find_package(Chrono
+find_package(Chrono QUIET
              COMPONENTS Multicore
              OPTIONAL_COMPONENTS OpenGL
              CONFIG
@@ -34,7 +36,7 @@ find_package(Chrono
 # If Chrono and/or the required component(s) were not found, return now.
 
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for MULTICORE projects")
+  message("Could not find requirements for DEM VALIDATION projects")
   return()
 endif()
 
@@ -88,5 +90,3 @@ foreach(PROGRAM ${DEMOS})
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
 
 endforeach(PROGRAM)
-
-message(STATUS "")

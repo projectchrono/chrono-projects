@@ -18,7 +18,7 @@ set(DEMOS
 
 # Invoke find_package in CONFIG mode.
 
-find_package(Chrono
+find_package(Chrono QUIET
              COMPONENTS Multicore
              OPTIONAL_COMPONENTS OpenGL
              CONFIG

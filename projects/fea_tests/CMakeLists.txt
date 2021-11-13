@@ -4,6 +4,8 @@
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
 
+message("\n---- FEA projects")
+
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
@@ -32,7 +34,7 @@ set(TESTS_MATLAB_IRR
 
 # Invoke find_package in CONFIG mode
 
-find_package(Chrono
+find_package(Chrono QUIET
              COMPONENTS
              OPTIONAL_COMPONENTS Irrlicht Postprocess PardisoMKL MUMPS Matlab
              CONFIG
@@ -104,5 +106,3 @@ FOREACH(PROGRAM ${TESTS})
     TARGET_LINK_LIBRARIES(${PROGRAM} ${CHRONO_LIBRARIES})
 
 ENDFOREACH(PROGRAM)
-
-message(STATUS "")

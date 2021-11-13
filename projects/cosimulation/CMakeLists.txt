@@ -7,27 +7,7 @@
 #    Chrono::PardisoMKL and Chrono::OpenGL
 #=============================================================================
 
-#-----------------------------------------------------------------------------
-# MPI support
-#-----------------------------------------------------------------------------
-
-message(STATUS "Searching for MPI...")
-find_package(MPI)
-message(STATUS "  MPI (C++) found:       ${MPI_CXX_FOUND}")
-if(MPI_CXX_FOUND)
-  message(STATUS "  MPI compiler:          ${MPI_CXX_COMPILER}")
-  message(STATUS "  MPI compile flags:     ${MPI_CXX_COMPILE_FLAGS}")
-  message(STATUS "  MPI include path:      ${MPI_CXX_INCLUDE_PATH}")
-  message(STATUS "  MPI link flags:        ${MPI_CXX_LINK_FLAGS}")
-  message(STATUS "  MPI libraries:         ${MPI_CXX_LIBRARIES}")
-  message(STATUS "")
-  message(STATUS "  MPIEXEC:               ${MPIEXEC}")
-  message(STATUS "  MPIEXEC_NUMPROC_FLAG:  ${MPIEXEC_NUMPROC_FLAG}")
-  message(STATUS "  MPIEXEC_PREFLAGS:      ${MPIEXEC_PREFLAGS}")
-  message(STATUS "  MPIEXEC_POSTFLAGS:     ${MPIEXEC_POSTFLAGS}")
-else()
-  message(STATUS "  Co-simulation programs disabled...")
-endif()
+message("\n---- VEHICLE COSIMULATION projects")
 
 #--------------------------------------------------------------
 # Find the Chrono package with required components
@@ -35,7 +15,7 @@ endif()
 
 # Invoke find_package in CONFIG mode
 
-find_package(Chrono
+find_package(Chrono QUIET
              COMPONENTS Vehicle Multicore
              OPTIONAL_COMPONENTS PardisoMKL OpenGL Irrlicht
              CONFIG
@@ -44,7 +24,12 @@ find_package(Chrono
 # If Chrono and/or the required component(s) were not found, return now.
 
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for VEHICLE projects")
+  message("Could not find requirements for VEHICLE co-simulation projects")
+  return()
+endif()
+
+if(NOT CHRONO_MPI_FOUND)
+  message("The co-simulation projects require MPI which was not found!")
   return()
 endif()
 
@@ -83,4 +68,3 @@ message(STATUS "Programs...")
 
 add_subdirectory(test_FEA_cosimulation)
 
-message(STATUS "")

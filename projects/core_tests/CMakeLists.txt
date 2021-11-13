@@ -4,6 +4,8 @@
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
 
+message("\n---- CORE projects")
+
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
@@ -20,7 +22,7 @@ set(TESTS
 
 # Invoke find_package in CONFIG mode
 
-find_package(Chrono
+find_package(Chrono QUIET
              OPTIONAL_COMPONENTS PardisoMKL
              CONFIG
 )
@@ -82,4 +84,3 @@ FOREACH(PROGRAM ${TESTS})
 
 ENDFOREACH(PROGRAM)
 
-message(STATUS "")

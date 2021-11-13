@@ -100,11 +100,11 @@ list(APPEND ALL_DLLS "")
 
 # Propagate configuration to submodules.
 if(ENABLE_CONFIG_TESTS)
-  message(STATUS "==== Chrono configuration programs ====\n")
+  message(STATUS "\n==== Chrono configuration programs ====")
   add_subdirectory(configuration_tests)
 endif()
 if(ENABLE_METRICS_TESTS)
-  message(STATUS "==== Chrono metrics programs ====\n")
+  message(STATUS "\n==== Chrono metrics programs ====")
   add_subdirectory(metrics_tests)
 endif()
 
@@ -124,5 +124,6 @@ SET(PROJECTS_DATA_DIR "${CMAKE_SOURCE_DIR}/data/" CACHE INTERNAL "")
 # Add custom command for copying DLLs to the appropriate binary output folder
 # (on Windows only).
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+  message(STATUS "")
 	add_DLL_copy_command("${ALL_DLLS}")
 endif()

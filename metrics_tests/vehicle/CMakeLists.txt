@@ -20,7 +20,7 @@ set(DEMOS_BASIC
 
 # Invoke find_package in CONFIG mode
 
-find_package(Chrono
+find_package(Chrono QUIET
              COMPONENTS VEHICLE IRRLICHT
              CONFIG
 )

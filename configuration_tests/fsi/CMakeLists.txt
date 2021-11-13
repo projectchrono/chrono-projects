@@ -4,6 +4,8 @@
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
 
+message("\n---- FSI configuration test")
+
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
@@ -18,7 +20,7 @@ set(DEMOS
 
 # Invoke find_package in CONFIG mode
 
-find_package(Chrono
+find_package(Chrono QUIET
              COMPONENTS FSI Multicore
              OPTIONAL_COMPONENTS OpenGL
              CONFIG
@@ -92,5 +94,3 @@ foreach(PROGRAM ${DEMOS})
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
 
 endforeach(PROGRAM)
-
-message(STATUS "")

@@ -5,6 +5,8 @@
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
 
+message("\n---- FEA configuration test")
+
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
@@ -23,7 +25,7 @@ set(DEMOS_IRR
 
 # Invoke find_package in CONFIG mode
 
-find_package(Chrono
+find_package(Chrono QUIET
              COMPONENTS
              OPTIONAL_COMPONENTS Irrlicht
              CONFIG
@@ -108,5 +110,3 @@ foreach(PROGRAM ${DEMOS})
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
 
 endforeach(PROGRAM)
-
-message(STATUS "")

@@ -3,6 +3,8 @@
 #   demo of a highway environment, interfaced to a human-driven simulator
 #=============================================================================
 
+message("\n---- SYNCHRONO HIGHWAY projects")
+
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
@@ -17,7 +19,7 @@ set(DEMOS
 #--------------------------------------------------------------
 
 # Invoke find_package in CONFIG mode
-find_package(Chrono
+find_package(Chrono QUIET
              COMPONENTS SynChrono Vehicle Sensor Irrlicht
              CONFIG
 )

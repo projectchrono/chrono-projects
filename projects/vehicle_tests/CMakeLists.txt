@@ -3,13 +3,15 @@
 # various other modules
 #=============================================================================
 
+message("\n---- VEHICLE projects")
+
 #--------------------------------------------------------------
 # Find the Chrono package with required components
 #--------------------------------------------------------------
 
 # Invoke find_package in CONFIG mode
 
-find_package(Chrono
+find_package(Chrono QUIET
              COMPONENTS Vehicle 
              OPTIONAL_COMPONENTS Irrlicht PardisoMKL Multicore OpenGL
              CONFIG
@@ -68,5 +70,3 @@ if (CHRONO_MULTICORE_FOUND)
   message(STATUS "Programs using Chrono::Multicore...")
   add_subdirectory(test_M113_multicore)
 endif()
-
-message(STATUS "")

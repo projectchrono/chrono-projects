@@ -5,6 +5,8 @@
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
 
+message("\n---- PHYSICS projects")
+
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
@@ -23,7 +25,7 @@ SET(DEMOS
 
 # Invoke find_package in CONFIG mode
 
-find_package(Chrono
+find_package(Chrono QUIET
              COMPONENTS Irrlicht
              OPTIONAL_COMPONENTS PardisoMKL
              CONFIG
@@ -86,4 +88,3 @@ FOREACH(PROGRAM ${DEMOS})
 
 ENDFOREACH(PROGRAM)
 
-message(STATUS "")

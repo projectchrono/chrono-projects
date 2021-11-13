@@ -4,6 +4,8 @@
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
 
+message("\n---- CONSTRAINT FLUID projects")
+
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
@@ -30,7 +32,7 @@ else()
   mark_as_advanced(CLEAR ZLIB_ROOT)
 endif()
 
-find_package(Chrono
+find_package(Chrono QUIET
              COMPONENTS Multicore Vehicle
              OPTIONAL_COMPONENTS OpenGL  
              CONFIG
@@ -39,7 +41,7 @@ find_package(Chrono
 # If Chrono and/or the required component(s) were not found, return now.
 
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for MULTICORE projects")
+  message("Could not find requirements for CONSTRAINT FLUID projects")
   return()
 endif()
 
@@ -95,4 +97,3 @@ foreach(PROGRAM ${DEMOS})
 
 endforeach(PROGRAM)
 
-message(STATUS "")
