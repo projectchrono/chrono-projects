@@ -233,6 +233,25 @@ int main(int argc, char* argv[]) {
     vehicle.GetChassisBody()->AddAsset(rvw_mirror_shape);
 
 
+    // Add a leader vehicle
+    WheeledVehicle lead_vehicle(vehicle.GetSystem(), vehicle_file);
+    lead_vehicle.Initialize(ChCoordsys<>(initLoc + initRot.Rotate(ChVector<>(20,0,0)), initRot));
+    lead_vehicle.GetChassis()->SetFixed(false);
+    lead_vehicle.SetChassisVisualizationType(chassis_vis_type);
+    lead_vehicle.SetSuspensionVisualizationType(suspension_vis_type);
+    lead_vehicle.SetSteeringVisualizationType(steering_vis_type);
+    lead_vehicle.SetWheelVisualizationType(wheel_vis_type);
+    lead_vehicle.InitializePowertrain(powertrain);
+
+    // Create and initialize the tires
+    for (auto& axle : lead_vehicle.GetAxles()) {
+        for (auto& wheel : axle->GetWheels()) {
+            auto tire = ReadTireJSON(tire_file);
+            lead_vehicle.InitializeTire(tire, wheel, tire_vis_type);
+        }
+    }
+
+
 
     // Create the terrain
     RigidTerrain terrain(vehicle.GetSystem());
@@ -414,6 +433,12 @@ int main(int argc, char* argv[]) {
         std::cout << "Using path follower driver\n";
     }
 
+    // Leader Driver
+    auto lead_PFdriver = chrono_types::make_shared<ChPathFollowerDriver>(
+        vehicle, vehicle::GetDataFile(steering_controller_file), vehicle::GetDataFile(speed_controller_file), path,
+        "road", 65 * mph_to_ms, true);
+    lead_PFdriver->Initialize();
+
     // ---------------
     // Simulation loop
     // ---------------
@@ -440,16 +465,16 @@ int main(int argc, char* argv[]) {
     b.mode = BackgroundMode::ENVIRONMENT_MAP;
     b.env_tex = GetChronoDataFile("sensor/textures/sunflowers_4k.hdr");
     manager->scene->SetBackground(b);
-    manager->scene->SetFogScatteringFromDistance(2000.0);
-    manager->scene->SetFogColor({.8, .8, .8});
+    //manager->scene->SetFogScatteringFromDistance(2000.0);
+    //manager->scene->SetFogColor({.8, .8, .8});
 
     // ------------------------------------------------
     // Create a camera and add it to the sensor manager
     // ------------------------------------------------
     auto cam = chrono_types::make_shared<ChCameraSensor>(
-        vehicle.GetChassisBody(),                                                    // body camera is attached to
+        lead_vehicle.GetChassisBody(),                                                    // body camera is attached to
         frame_rate,                                                                  // update rate in Hz
-        chrono::ChFrame<double>({0, 0, 500}, Q_from_AngAxis(CH_C_PI_2, {0, 1, 0})),  // offset pose
+        chrono::ChFrame<double>({0, 0, 50}, Q_from_AngAxis(CH_C_PI_2, {0, 1, 0})),  // offset pose
         1280,                                                                        // image width
         720,                                                                         // image height
         CH_C_PI_4,
@@ -459,7 +484,7 @@ int main(int argc, char* argv[]) {
         cam->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720));
 
     // add sensor to the manager
-    // manager->AddSensor(cam);
+     //manager->AddSensor(cam);
 
     // -------------------------------------------------------
     // Create a second camera and add it to the sensor manager
@@ -510,6 +535,7 @@ int main(int argc, char* argv[]) {
         else
             driver_inputs = IGdriver->GetInputs();
 
+        ChDriver::Inputs lead_driver_inputs = lead_PFdriver->GetInputs();
         // printf("Driver inputs: %f,%f,%f\n", driver_inputs.m_throttle, driver_inputs.m_braking,
         //        driver_inputs.m_steering);
         driver_inputs.m_steering *= -1;
@@ -527,8 +553,10 @@ int main(int argc, char* argv[]) {
             PFdriver->Synchronize(time);
         else
             IGdriver->Synchronize(time);
+        lead_PFdriver->Synchronize(time);
         terrain.Synchronize(time);
         vehicle.Synchronize(time, driver_inputs, terrain);
+        lead_vehicle.Synchronize(time, lead_driver_inputs, terrain);
         app.Synchronize("", driver_inputs);
 #ifdef CHRONO_IRRKLANG
         soundEng.Synchronize(time);
@@ -540,7 +568,9 @@ int main(int argc, char* argv[]) {
             PFdriver->Advance(step);
         else
             IGdriver->Advance(step);
+        lead_PFdriver->Advance(step);
         terrain.Advance(step);
+        lead_vehicle.Advance(step);
         vehicle.Advance(step);
         app.Advance(step_size);
         if (step_number % int(1 / (60 * step_size)) == 0) {
