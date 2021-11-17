@@ -41,6 +41,8 @@
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
 #include "extras/driver/ChCSLDriver.h"
 
+#include "chrono_vehicle/utils/ChUtilsJSON.h"
+
 #ifdef CHRONO_IRRKLANG
 #include "extras/ChCSLSoundEngine.h"
 #endif
@@ -131,12 +133,55 @@ double sm_needle = 140;
 
 std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
 
+std::string scenario_parameters = demo_data_path+ "/Environments/Iowa/parameters/scenario_parameters.json";
+std::string simulation_parameters = demo_data_path+ "/Environments/Iowa/parameters/simulation_parameters.json";
+
 using namespace std::chrono;
 
 // =============================================================================
 
 // button callback placeholder
 void customButtonCallback();
+
+void ReadParameterFiles(){
+    {// Simulation parameter file
+        rapidjson::Document d;
+        vehicle::ReadFileJSON(simulation_parameters, d);
+
+        if(d.HasMember("TimeStep")){
+            step_size = d["TimeStep"].GetDouble();
+        }
+
+        if(d.HasMember("Camera")){
+            const rapidjson::Value& camera_params = d["Camera"];
+            if(camera_params.HasMember("DriverEye")){
+                driver_eye = vehicle::ReadVectorJSON(camera_params["DriverEye"]);
+            }
+            if(camera_params.HasMember("FrameRate")){
+                frame_rate = camera_params["FrameRate"].GetFloat();
+            }
+            if(camera_params.HasMember("SuperSamples")){
+                super_samples = camera_params["SuperSamples"].GetInt();
+            }
+            if(camera_params.HasMember("FieldOfView")){
+                cam_fov = camera_params["FieldOfView"].GetFloat() * CH_C_DEG_TO_RAD;
+            }
+        }
+    }
+
+    {// Scenario parameter file
+        rapidjson::Document d;
+        vehicle::ReadFileJSON(scenario_parameters, d);
+
+        if(d.HasMember("StartLocation")){
+            initLoc = vehicle::ReadVectorJSON(d["StartLocation"]);
+        }
+        if(d.HasMember("EndTime")){
+            t_end = d["EndTime"].GetDouble();
+        }
+ 
+    }
+}
 
 void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<double>("Simulation", "s,step_size", "Step size", std::to_string(step_size));
@@ -148,6 +193,9 @@ void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<bool>("Simulation", "fullscreen", "Use full screen camera display", std::to_string(use_fullscreen));
     cli.AddOption<bool>("Simulation", "record", "Record human driver inputs to file", "false");
     cli.AddOption<bool>("Simulation", "replay", "Replay human driver inputs from file", "false");
+
+    cli.AddOption<std::string>("Simulation", "scenario_params", "Path to scenario configuration file",scenario_parameters);
+    cli.AddOption<std::string>("Simulation", "sim_params", "Path to simulation configuration file",simulation_parameters);
 }
 
 int main(int argc, char* argv[]) {
@@ -160,6 +208,7 @@ int main(int argc, char* argv[]) {
     // parse command line inputs
     step_size = cli.GetAsType<double>("step_size");
     t_end = cli.GetAsType<double>("end_time");
+
     use_fullscreen = cli.GetAsType<bool>("fullscreen");
     if (use_fullscreen) {
         image_width = fullscreen_image_width;
@@ -172,6 +221,11 @@ int main(int argc, char* argv[]) {
     //  = cli.GetAsType<bool>("record");
     //  = cli.GetAsType<bool>("replay");
 
+    scenario_parameters = cli.GetAsType<std::string>("scenario_params");
+    simulation_parameters = cli.GetAsType<std::string>("sim_params");
+
+    ReadParameterFiles();
+    
     SetChronoDataPath(CHRONO_DATA_DIR);
     vehicle::SetDataPath(CHRONO_DATA_DIR + std::string("vehicle/"));
 
@@ -267,7 +321,7 @@ int main(int argc, char* argv[]) {
 
     //add terrain with weighted textures
     auto terrain_mesh = chrono_types::make_shared<ChTriangleMeshConnected>();
-    terrain_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/terrain/terrain.obj", false, true);
+    terrain_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/terrain/terrain_v2.obj", false, true);
     terrain_mesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
     auto terrain_shape = chrono_types::make_shared<ChTriangleMeshShape>();
     terrain_shape->SetMesh(terrain_mesh);
@@ -278,7 +332,7 @@ int main(int argc, char* argv[]) {
     vis_mat2->SetKdTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_COL_1K.jpg");
     vis_mat2->SetRoughnessTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_ROUGH_1K.png");
     vis_mat2->SetNormalMapTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_NRM_1K.jpg");
-    vis_mat2->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/weight_gravel_v02.png");
+    vis_mat2->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/weight_gravel_v03.png");
     vis_mat2->SetSpecularColor({.0f, .0f, .0f});
     vis_mat2->SetTextureScale({1000.0,1000.0,1.0});
     vis_mat2->SetRoughness(1.f);
@@ -290,7 +344,7 @@ int main(int argc, char* argv[]) {
     vis_mat1->SetKdTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_COL_1K.jpg");
     vis_mat1->SetRoughnessTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_ROUGH_1K.jpg");
     vis_mat1->SetNormalMapTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_NRM_1K.jpg");
-    vis_mat1->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/weight_grass_v02.png");
+    vis_mat1->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/weight_grass_v03.png");
     vis_mat1->SetTextureScale({100.0,100.0,1.0});
     vis_mat1->SetSpecularColor({.0f, .0f, .0f});
     vis_mat1->SetRoughness(1.f);
@@ -440,8 +494,8 @@ int main(int argc, char* argv[]) {
     b.mode = BackgroundMode::ENVIRONMENT_MAP;
     b.env_tex = GetChronoDataFile("sensor/textures/sunflowers_4k.hdr");
     manager->scene->SetBackground(b);
-    manager->scene->SetFogScatteringFromDistance(2000.0);
-    manager->scene->SetFogColor({.8, .8, .8});
+    // manager->scene->SetFogScatteringFromDistance(2000.0);
+    // manager->scene->SetFogColor({.8, .8, .8});
 
     // ------------------------------------------------
     // Create a camera and add it to the sensor manager
@@ -459,7 +513,7 @@ int main(int argc, char* argv[]) {
         cam->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720));
 
     // add sensor to the manager
-    // manager->AddSensor(cam);
+    manager->AddSensor(cam);
 
     // -------------------------------------------------------
     // Create a second camera and add it to the sensor manager
