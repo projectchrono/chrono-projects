@@ -286,8 +286,6 @@ int main(int argc, char* argv[]) {
 
     vehicle.GetChassisBody()->AddAsset(rvw_mirror_shape);
 
-    rvw_mirror_shape);
-
 
     // Add a leader vehicle
     WheeledVehicle lead_vehicle(vehicle.GetSystem(), vehicle_file);
@@ -623,7 +621,7 @@ int main(int argc, char* argv[]) {
             PFdriver->Advance(step);
         else
             IGdriver->Advance(step);
-        ead_PFdriver->Advance(step);
+        lead_PFdriver->Advance(step);
         terrain.Advance(step);
         vehicle.Advance(step);
         lead_vehicle.Advance(step);
