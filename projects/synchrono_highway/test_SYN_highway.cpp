@@ -487,7 +487,7 @@ int main(int argc, char* argv[]) {
 
     // Leader Driver
     auto lead_PFdriver = chrono_types::make_shared<ChPathFollowerDriver>(
-        vehicle, vehicle::GetDataFile(steering_controller_file), vehicle::GetDataFile(speed_controller_file), path,
+        lead_vehicle, vehicle::GetDataFile(steering_controller_file), vehicle::GetDataFile(speed_controller_file), path,
         "road", 65 * mph_to_ms, true);
     lead_PFdriver->Initialize();
 
@@ -587,11 +587,11 @@ int main(int argc, char* argv[]) {
         else
             driver_inputs = IGdriver->GetInputs();
 
-        ChDriver::Inputs lead_driver_inputs = lead_PFdriver->GetInputs();
+        
         
         // printf("Driver inputs: %f,%f,%f\n", driver_inputs.m_throttle, driver_inputs.m_braking,
         //        driver_inputs.m_steering);
-        driver_inputs.m_steering *= -1;
+        //driver_inputs.m_steering *= -1;
         // driver_inputs.m_throttle = 0;
         if (step_number % int(1 / step_size) == 0) {
             auto speed = vehicle.GetVehicleSpeed();
@@ -606,10 +606,10 @@ int main(int argc, char* argv[]) {
             PFdriver->Synchronize(time);
         else
             IGdriver->Synchronize(time);
-        lead_PFdriver->Synchronize(time);
+        
         terrain.Synchronize(time);
         vehicle.Synchronize(time, driver_inputs, terrain);
-        lead_vehicle.Synchronize(time, lead_driver_inputs, terrain);
+        
         app.Synchronize("", driver_inputs);
 #ifdef CHRONO_IRRKLANG
         soundEng.Synchronize(time);
@@ -621,11 +621,17 @@ int main(int argc, char* argv[]) {
             PFdriver->Advance(step);
         else
             IGdriver->Advance(step);
-        lead_PFdriver->Advance(step);
+        
         terrain.Advance(step);
         vehicle.Advance(step);
-        lead_vehicle.Advance(step);
+        
         app.Advance(step_size);
+        ChDriver::Inputs lead_driver_inputs = lead_PFdriver->GetInputs();
+        lead_PFdriver->Synchronize(time);
+        lead_vehicle.Synchronize(time, lead_driver_inputs, terrain);
+        vehicle.Synchronize(time, driver_inputs, terrain);
+        lead_PFdriver->Advance(step);
+        lead_vehicle.Advance(step);
         if (step_number % int(1 / (60 * step_size)) == 0) {
             /// irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0), false);
             app.GetDevice()->getVideoDriver()->draw2DImage(
