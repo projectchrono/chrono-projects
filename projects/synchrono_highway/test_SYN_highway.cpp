@@ -289,13 +289,14 @@ int main(int argc, char* argv[]) {
 
     // Add a leader vehicle
     WheeledVehicle lead_vehicle(vehicle.GetSystem(), vehicle_file);
+    auto lead_powertrain = ReadPowertrainJSON(powertrain_file);
     lead_vehicle.Initialize(ChCoordsys<>(initLoc + initRot.Rotate(ChVector<>(20,0,0)), initRot));
     lead_vehicle.GetChassis()->SetFixed(false);
     lead_vehicle.SetChassisVisualizationType(chassis_vis_type);
     lead_vehicle.SetSuspensionVisualizationType(suspension_vis_type);
     lead_vehicle.SetSteeringVisualizationType(steering_vis_type);
     lead_vehicle.SetWheelVisualizationType(wheel_vis_type);
-    lead_vehicle.InitializePowertrain(powertrain);
+    lead_vehicle.InitializePowertrain(lead_powertrain);
 
     // Create and initialize the tires
     for (auto& axle : lead_vehicle.GetAxles()) {
@@ -470,6 +471,7 @@ int main(int argc, char* argv[]) {
 
     double mph_to_ms = 0.44704;
     std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
+    //std::string path_file = demo_data_path + "/Environments/Iowa/Driver/Iowa_Loop.txt";
     auto path = ChBezierCurve::read(path_file);
     std::string steering_controller_file("hmmwv/SteeringController.json");
     std::string speed_controller_file("hmmwv/SpeedController.json");
