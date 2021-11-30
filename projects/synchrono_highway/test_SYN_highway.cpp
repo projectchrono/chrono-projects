@@ -586,15 +586,16 @@ int main(int argc, char* argv[]) {
         ChDriver::Inputs driver_inputs;
         if (driver_mode == AUTONOMOUS)
             driver_inputs = PFdriver->GetInputs();
-        else
+        else{
             driver_inputs = IGdriver->GetInputs();
-
+            driver_inputs.m_steering *= -1;
+        }
         
         
         // printf("Driver inputs: %f,%f,%f\n", driver_inputs.m_throttle, driver_inputs.m_braking,
         //        driver_inputs.m_steering);
-        //driver_inputs.m_steering *= -1;
         // driver_inputs.m_throttle = 0;
+        //driver_inputs.m_steering *= -1;
         if (step_number % int(1 / step_size) == 0) {
             auto speed = vehicle.GetVehicleSpeed();
             auto wall_time = high_resolution_clock::now();
@@ -631,7 +632,6 @@ int main(int argc, char* argv[]) {
         ChDriver::Inputs lead_driver_inputs = lead_PFdriver->GetInputs();
         lead_PFdriver->Synchronize(time);
         lead_vehicle.Synchronize(time, lead_driver_inputs, terrain);
-        vehicle.Synchronize(time, driver_inputs, terrain);
         lead_PFdriver->Advance(step);
         lead_vehicle.Advance(step);
         if (step_number % int(1 / (60 * step_size)) == 0) {
