@@ -61,7 +61,7 @@ using namespace chrono::synchrono;
 // ChVector<> initLoc(-788, -195, -1);
 // ChVector<> initLoc(3990.1, -1200.3124, .75); //middle-ish of oval highway
 // ChVector<> initLoc(3991.5, 0.0, .75);
-ChVector<> initLoc(4011.5, -345, .75);  // near mile marker
+ChVector<> initLoc(5011.5, -445, .75);  // near mile marker
 // ChQuaternion<> initRot(1, 0, 0, 0);
 // ChQuaternion<> initRot = Q_from_AngZ(-CH_C_PI_2);
 ChQuaternion<> initRot = Q_from_AngZ(CH_C_PI_2);
@@ -538,7 +538,7 @@ int main(int argc, char* argv[]) {
         cam->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720));
 
     // add sensor to the manager
-    manager->AddSensor(cam);
+    //manager->AddSensor(cam);
 
     // -------------------------------------------------------
     // Create a second camera and add it to the sensor manager
@@ -673,7 +673,22 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
+// Wheel button callback to switch between driving modes
 void customButtonCallback() {
-    std::cout << "Button Callback Invoked";
-    driver_mode = HUMAN;
+    // We use an "anti bounce":
+    static auto last_invoked = std::chrono::system_clock::now().time_since_epoch();
+    auto current_invoke = std::chrono::system_clock::now().time_since_epoch();
+    //std::cout << std::chrono::duration_cast<std::chrono::seconds>(last_invoked).count() << "\n"
+    //std::cout << std::chrono::duration_cast<std::chrono::seconds>(current_invoke).count() << "\n"
+    if(std::chrono::duration_cast<std::chrono::seconds>(current_invoke-last_invoked).count()>5.0){
+        std::cout << "Button Callback Invoked \n";
+        if(driver_mode == HUMAN)
+            driver_mode = AUTONOMOUS;
+        else
+            driver_mode = HUMAN;
+        // last, update the last call
+        last_invoked = current_invoke;
+    }
+    else
+        std::cout << "Callback Not Invoked, call was too close to the last one \n";
 }
