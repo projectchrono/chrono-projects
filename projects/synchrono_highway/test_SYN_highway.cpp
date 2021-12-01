@@ -42,6 +42,12 @@
 #include "extras/driver/ChCSLDriver.h"
 
 #include "chrono_vehicle/utils/ChUtilsJSON.h"
+#include "chrono/utils/ChUtilsInputOutput.h"
+
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 
 #ifdef CHRONO_IRRKLANG
 #include "extras/ChCSLSoundEngine.h"
@@ -135,6 +141,14 @@ std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
 
 std::string scenario_parameters = demo_data_path+ "/Environments/Iowa/parameters/scenario_parameters.json";
 std::string simulation_parameters = demo_data_path+ "/Environments/Iowa/parameters/simulation_parameters.json";
+
+// Data saving
+bool save_driver = true;
+// time interval between data savings
+double tsave = 1e-1;
+// path where the output is saved
+std::string output_file_path = "/home/simone/codes/projects/chrono-projects/build/output.txt";
+utils::CSV_writer driver_csv(" ");
 
 using namespace std::chrono;
 
@@ -236,6 +250,7 @@ int main(int argc, char* argv[]) {
     std::string tire_file = vehicle::GetDataFile("audi/json/audi_TMeasyTire.json");
 
     WheeledVehicle vehicle(vehicle_file, ChContactMethod::NSC);
+    auto ego_chassis = vehicle.GetChassis();
     vehicle.Initialize(ChCoordsys<>(initLoc, initRot));
     vehicle.GetChassis()->SetFixed(false);
     vehicle.SetChassisVisualizationType(chassis_vis_type);
@@ -493,6 +508,7 @@ int main(int argc, char* argv[]) {
         "road", 65 * mph_to_ms, true);
     lead_PFdriver->Initialize();
 
+
     // ---------------
     // Simulation loop
     // ---------------
@@ -663,6 +679,35 @@ int main(int argc, char* argv[]) {
             realtime_timer.Spin(since_last_sync);
             auto tt1 = high_resolution_clock::now();
             extra_time += duration_cast<duration<double>>(tt1 - tt0).count();
+        }
+
+        if (save_driver) {
+            if (step_number % int(tsave/step_size ) == 0) {
+                driver_csv.write_to_file(output_file_path, std::to_string(step_number) + " 3\n");
+                ChDriver* currDriver;
+                bool isManual;
+                if(driver_mode = HUMAN){
+                    currDriver = IGdriver.get();
+                    isManual = true;
+                }
+                else{
+                    currDriver = PFdriver.get();
+                    isManual = false;
+                }
+                driver_csv << std::fixed << std::setprecision(6);
+                driver_csv << isManual << "\t";
+                driver_csv << currDriver->GetSteering() << "\t";
+                driver_csv << currDriver->GetThrottle() << "\t";
+                driver_csv << currDriver->GetBraking()  << "\t";
+                driver_csv << ego_chassis->GetPos().x() << "\t";
+                driver_csv << ego_chassis->GetPos().y() << "\t";
+                driver_csv << ego_chassis->GetPos().z() << "\t";
+                driver_csv << ego_chassis->GetSpeed()   << "\t";
+                driver_csv << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << "\t";
+                driver_csv << (ego_chassis->GetPos()-lead_vehicle.GetChassis()->GetPos()).Length() << "\t";
+                
+                driver_csv << std::endl;
+            }
         }
     }
 
