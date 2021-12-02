@@ -268,7 +268,7 @@ int main(int argc, char* argv[]) {
     plate->SetPos(ChVector<>(0, 0, plate_z));
     plate->SetBodyFixed(false);
 
-    float* forces = new float[numMeshes * FAM_ENTRIES_FORCE];
+    // float* forces = new float[numMeshes * FAM_ENTRIES_FORCE];
 
     // Compress the material under the weight of the plate
     std::cout << "Running compression..." << std::endl;
