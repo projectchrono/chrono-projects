@@ -164,9 +164,9 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys) {
         // Mesh values
         std::vector<string> mesh_filenames;
 
-       mesh_filenames.push_back(std::string(gpu::GetDataFile("shear_bottom.obj")));
-       mesh_filenames.push_back(std::string(gpu::GetDataFile("shear_top.obj")));
-       mesh_filenames.push_back(std::string(gpu::GetDataFile("downward_square.obj")));
+        mesh_filenames.push_back(std::string(gpu::GetDataFile("meshes/directshear/shear_bottom.obj")));
+        mesh_filenames.push_back(std::string(gpu::GetDataFile("meshes/directshear/shear_top.obj")));
+        mesh_filenames.push_back(std::string(gpu::GetDataFile("meshes/directshear/downward_square.obj")));
 
         ChMatrix33<float> scale(ChVector<float>(box_r, box_r, box_r));
         std::vector<ChMatrix33<float>> mesh_rotscales = {scale, scale, scale};
