@@ -59,6 +59,7 @@ using namespace chrono::vehicle;
 using namespace chrono::sensor;
 using namespace chrono::synchrono;
 
+#define MS_TO_MPH 2.23694
 // -----------------------------------------------------------------------------
 // Vehicle parameters
 // -----------------------------------------------------------------------------
@@ -145,7 +146,7 @@ std::string simulation_parameters = demo_data_path+ "/Environments/Iowa/paramete
 // Data saving
 bool save_driver = true;
 // time interval between data savings
-double tsave = 1e-1;
+double tsave = 2e-2;
 // path where the output is saved
 std::string output_file_path = "/home/simone/codes/projects/chrono-projects/build/output.txt";
 utils::CSV_writer driver_csv(" ");
@@ -508,6 +509,9 @@ int main(int argc, char* argv[]) {
         "road", 65 * mph_to_ms, true);
     lead_PFdriver->Initialize();
 
+    if(save_driver)
+        driver_csv.write_to_file(output_file_path, "Legend: \n");
+
 
     // ---------------
     // Simulation loop
@@ -658,7 +662,7 @@ int main(int argc, char* argv[]) {
                 irr::core::position2d<irr::s32>(0, 0));
             /*app.GetDevice()->getVideoDriver()->draw2DImage(app.GetDevice()->getVideoDriver()->getTexture((demo_data_path
                + "/miscellaneous/Needle.png").c_str()), irr::core::position2d<irr::s32>(200, 200));*/
-            double speed_mph = vehicle.GetVehicleSpeedCOM() * 2.23694;
+            double speed_mph = vehicle.GetVehicleSpeedCOM() * MS_TO_MPH;
             double theta = ((270 / 140) * speed_mph) * (CH_C_PI / 180);
             app.GetDevice()->getVideoDriver()->draw2DLine(
                 sm_center + irr::core::position2d<irr::s32>(-sm_needle * sin(theta), sm_needle * cos(theta)), sm_center,
@@ -683,10 +687,11 @@ int main(int argc, char* argv[]) {
 
         if (save_driver) {
             if (step_number % int(tsave/step_size ) == 0) {
-                driver_csv.write_to_file(output_file_path, std::to_string(step_number) + " 3\n");
+                driver_csv << std::fixed << std::setprecision(3);
+                driver_csv<< std::to_string(step_number) + " ,";
                 ChDriver* currDriver;
                 bool isManual;
-                if(driver_mode = HUMAN){
+                if(driver_mode == HUMAN){
                     currDriver = IGdriver.get();
                     isManual = true;
                 }
@@ -694,19 +699,20 @@ int main(int argc, char* argv[]) {
                     currDriver = PFdriver.get();
                     isManual = false;
                 }
-                driver_csv << std::fixed << std::setprecision(6);
-                driver_csv << isManual << "\t";
-                driver_csv << currDriver->GetSteering() << "\t";
-                driver_csv << currDriver->GetThrottle() << "\t";
-                driver_csv << currDriver->GetBraking()  << "\t";
-                driver_csv << ego_chassis->GetPos().x() << "\t";
-                driver_csv << ego_chassis->GetPos().y() << "\t";
-                driver_csv << ego_chassis->GetPos().z() << "\t";
-                driver_csv << ego_chassis->GetSpeed()   << "\t";
-                driver_csv << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << "\t";
-                driver_csv << (ego_chassis->GetPos()-lead_vehicle.GetChassis()->GetPos()).Length() << "\t";
+                driver_csv << isManual << ",";
+                driver_csv << currDriver->GetSteering() << ",";
+                driver_csv << currDriver->GetThrottle() << ",";
+                driver_csv << currDriver->GetBraking()  << ",";
+                driver_csv << ego_chassis->GetPos().x() << ",";
+                driver_csv << ego_chassis->GetPos().y() << ",";
+                driver_csv << ego_chassis->GetPos().z() << ",";
+                driver_csv << ego_chassis->GetSpeed() * MS_TO_MPH  << ",";
+                driver_csv << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << ",";
+                driver_csv << (ego_chassis->GetPos()-lead_vehicle.GetChassis()->GetPos()).Length() << ",t";
                 
-                driver_csv << std::endl;
+                driver_csv << "\n";
+                if ((step_number % int(30/step_size) == 0 )){
+                    driver_csv.write_to_file(output_file_path, std::to_string(step_number) + "\n ");                }
             }
         }
     }
@@ -723,8 +729,6 @@ void customButtonCallback() {
     // We use an "anti bounce":
     static auto last_invoked = std::chrono::system_clock::now().time_since_epoch();
     auto current_invoke = std::chrono::system_clock::now().time_since_epoch();
-    //std::cout << std::chrono::duration_cast<std::chrono::seconds>(last_invoked).count() << "\n"
-    //std::cout << std::chrono::duration_cast<std::chrono::seconds>(current_invoke).count() << "\n"
     if(std::chrono::duration_cast<std::chrono::seconds>(current_invoke-last_invoked).count()>5.0){
         std::cout << "Button Callback Invoked \n";
         if(driver_mode == HUMAN)
