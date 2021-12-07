@@ -388,7 +388,7 @@ int main(int argc, char* argv[]) {
     vis_mat2->SetKdTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_COL_1K.jpg");
     vis_mat2->SetRoughnessTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_ROUGH_1K.png");
     vis_mat2->SetNormalMapTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_NRM_1K.jpg");
-    vis_mat2->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/weight_gravel_v03.png");
+    vis_mat2->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_Gravel_v3.png");
     vis_mat2->SetSpecularColor({.0f, .0f, .0f});
     vis_mat2->SetTextureScale({1000.0,1000.0,1.0});
     vis_mat2->SetRoughness(1.f);
@@ -400,12 +400,38 @@ int main(int argc, char* argv[]) {
     vis_mat1->SetKdTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_COL_1K.jpg");
     vis_mat1->SetRoughnessTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_ROUGH_1K.jpg");
     vis_mat1->SetNormalMapTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_NRM_1K.jpg");
-    vis_mat1->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/weight_grass_v03.png");
+    // vis_mat1->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/weight_grass_v03.png");
+    vis_mat1->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_Grass_A_v1.png");
     vis_mat1->SetTextureScale({100.0,100.0,1.0});
     vis_mat1->SetSpecularColor({.0f, .0f, .0f});
     vis_mat1->SetRoughness(1.f);
     vis_mat1->SetUseSpecularWorkflow(false);
     terrain_shape->material_list.push_back(vis_mat1);
+
+    auto vis_mat3 = chrono_types::make_shared<ChVisualMaterial>();
+    vis_mat3->SetKdTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/green_grass.jpg");
+    // vis_mat3->SetKdTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_COL_1K.jpg");
+    // vis_mat3->SetRoughnessTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_ROUGH_1K.png");
+    // vis_mat3->SetNormalMapTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_NRM_1K.jpg");
+    vis_mat3->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_Grass_B_v1.png");
+    vis_mat3->SetSpecularColor({.0f, .0f, .0f});
+    vis_mat3->SetTextureScale({1000.0,1000.0,1.0});
+    vis_mat3->SetRoughness(1.f);
+    vis_mat3->SetUseSpecularWorkflow(false);
+    terrain_shape->material_list.push_back(vis_mat3);
+
+    auto vis_mat4 = chrono_types::make_shared<ChVisualMaterial>();
+    vis_mat4->SetKdTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundGrassGreenPatchy005_COL_2K.jpg");
+    // vis_mat4->SetKdTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_COL_1K.jpg");
+    // vis_mat4->SetRoughnessTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_ROUGH_1K.png");
+    // vis_mat4->SetNormalMapTexture(demo_data_path + "/Environments/Iowa/terrain/Gravel/GroundGravel017_NRM_1K.jpg");
+    vis_mat4->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_DirtFields_v1.png");
+    vis_mat4->SetSpecularColor({.0f, .0f, .0f});
+    vis_mat4->SetTextureScale({1000.0,1000.0,1.0});
+    vis_mat4->SetRoughness(1.f);
+    vis_mat4->SetUseSpecularWorkflow(false);
+    terrain_shape->material_list.push_back(vis_mat4);
+
 
     auto terrain_body = chrono_types::make_shared<ChBody>();
     terrain_body->SetPos({0,0,-.01});
