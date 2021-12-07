@@ -100,6 +100,8 @@ set(EXTRAS
 	# extras/driver/joystick.h
 	extras/ChCSLSoundEngine.h
 	extras/ChCSLSoundEngine.cpp
+	extras/driver/ChNSF_Drivers.h
+	extras/driver/ChNSF_Drivers.cpp
 )
 
 #--------------------------------------------------------------

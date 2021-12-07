@@ -36,7 +36,8 @@
 #include "chrono_sensor/sensors/ChCameraSensor.h"
 #include "chrono_sensor/utils/ChVisualMaterialUtils.h"
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
-#include "chrono_vehicle/driver/ChPathFollowerDriver.h"
+//#include "chrono_vehicle/driver/ChPathFollowerDriver.h"
+#include "extras/driver/ChNSF_Drivers.h"
 #include "chrono_vehicle/utils/ChUtilsJSON.h"
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
 #include "extras/driver/ChCSLDriver.h"
@@ -59,7 +60,6 @@ using namespace chrono::vehicle;
 using namespace chrono::sensor;
 using namespace chrono::synchrono;
 
-#define MS_TO_MPH 2.23694
 // -----------------------------------------------------------------------------
 // Vehicle parameters
 // -----------------------------------------------------------------------------
@@ -140,6 +140,8 @@ double sm_needle = 140;
 
 std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
 
+//Driver parameters
+std::vector<std::vector<double>> leaderParam;
 std::string scenario_parameters = demo_data_path+ "/Environments/Iowa/parameters/scenario_parameters.json";
 std::string simulation_parameters = demo_data_path+ "/Environments/Iowa/parameters/simulation_parameters.json";
 
@@ -148,7 +150,7 @@ bool save_driver = true;
 // time interval between data savings
 double tsave = 2e-2;
 // path where the output is saved
-std::string output_file_path = "/home/simone/codes/projects/chrono-projects/build/output.txt";
+std::string output_file_path = "./output.txt";
 utils::CSV_writer driver_csv(" ");
 
 using namespace std::chrono;
@@ -194,7 +196,27 @@ void ReadParameterFiles(){
         if(d.HasMember("EndTime")){
             t_end = d["EndTime"].GetDouble();
         }
- 
+        if(d.HasMember("LeaderDriverParam")){
+            auto marr =  d["LeaderDriverParam"].GetArray();
+            int msize0 = marr.Size();
+            int msize1 = marr[0].Size();
+            assert(msize1 == 6);
+            leaderParam.resize(msize0);
+            //printf("ARRAY DIM = %i \n", msize);
+            for(auto it = marr.begin(); it != marr.end(); ++it) {
+                auto i = std::distance(marr.begin(), it); 
+                leaderParam[i].resize(msize1);
+                for(auto jt = marr.begin(); jt != marr.end(); ++jt) {
+                    auto j = std::distance(marr.begin(), jt); 
+                    leaderParam[i][j] = marr[i][j].GetDouble();
+                }
+            }
+        }
+        else{
+            leaderParam.resize(1);
+            leaderParam[0] = {0.5, 1.5, 55.0, 5.0, 628.3, 0.0};
+        }
+        
     }
 }
 
@@ -457,7 +479,7 @@ int main(int argc, char* argv[]) {
     // Create the driver system
     // ------------------------
 
-    ChWheeledVehicleIrrApp app(&vehicle, L"Highway Demo", irr::core::dimension2d<irr::u32>(600, 400));
+    ChWheeledVehicleIrrApp app(&vehicle, L"  ", irr::core::dimension2d<irr::u32>(600, 400));
     ChRealtimeStepTimer realtime_timer;
     /*
     SPEEDOMETER: we want to use the irrlicht app to display the speedometer, but calling endscene would update the
@@ -485,7 +507,6 @@ int main(int argc, char* argv[]) {
                               ChIrrGuiDriver::JoystickAxes::AXIS_X, ChIrrGuiDriver::JoystickAxes::NONE);
     IGdriver->Initialize();
 
-    double mph_to_ms = 0.44704;
     std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
     //std::string path_file = demo_data_path + "/Environments/Iowa/Driver/Iowa_Loop.txt";
     auto path = ChBezierCurve::read(path_file);
@@ -493,7 +514,7 @@ int main(int argc, char* argv[]) {
     std::string speed_controller_file("hmmwv/SpeedController.json");
     auto PFdriver = chrono_types::make_shared<ChPathFollowerDriver>(
         vehicle, vehicle::GetDataFile(steering_controller_file), vehicle::GetDataFile(speed_controller_file), path,
-        "road", 65 * mph_to_ms, true);
+        "road", 65 * MPH_TO_MS, true);
     PFdriver->Initialize();
 
     if (!disable_joystick) {
@@ -504,9 +525,9 @@ int main(int argc, char* argv[]) {
     }
 
     // Leader Driver
-    auto lead_PFdriver = chrono_types::make_shared<ChPathFollowerDriver>(
+    auto lead_PFdriver = chrono_types::make_shared<ChNSFLeaderDriver>(
         lead_vehicle, vehicle::GetDataFile(steering_controller_file), vehicle::GetDataFile(speed_controller_file), path,
-        "road", 65 * mph_to_ms, true);
+        "road", 65 * MPH_TO_MS, leaderParam, true);
     lead_PFdriver->Initialize();
 
     if(save_driver)
@@ -708,7 +729,8 @@ int main(int argc, char* argv[]) {
                 driver_csv << ego_chassis->GetPos().z() << ",";
                 driver_csv << ego_chassis->GetSpeed() * MS_TO_MPH  << ",";
                 driver_csv << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << ",";
-                driver_csv << (ego_chassis->GetPos()-lead_vehicle.GetChassis()->GetPos()).Length() << ",t";
+                driver_csv << (ego_chassis->GetPos()-lead_vehicle.GetChassis()->GetPos()).Length() - AUDI_LENGTH << ",a";  // Distance bumper-to-bumber
+                driver_csv << (ego_chassis->GetPos()-lead_vehicle.GetChassis()->GetPos()) * ChMatrix33<>(ego_chassis->GetRot()).Get_A_Xaxis() - AUDI_LENGTH << " ";  // Projected distance bumper-to-bumber
                 
                 driver_csv << "\n";
                 if ((step_number % int(30/step_size) == 0 )){
