@@ -507,13 +507,13 @@ int main(int argc, char* argv[]) {
                               ChIrrGuiDriver::JoystickAxes::AXIS_X, ChIrrGuiDriver::JoystickAxes::NONE);
     IGdriver->Initialize();
 
-    std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
-    //std::string path_file = demo_data_path + "/Environments/Iowa/Driver/Iowa_Loop.txt";
+    //std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
+    std::string path_file = demo_data_path + "/Environments/Iowa/Driver/Iowa_Loop.txt";
     auto path = ChBezierCurve::read(path_file);
-    std::string steering_controller_file("hmmwv/SteeringController.json");
-    std::string speed_controller_file("hmmwv/SpeedController.json");
+    std::string steering_controller_file = demo_data_path + "/Environments/Iowa/Driver/SteeringController.json";
+    std::string speed_controller_file = demo_data_path + "/Environments/Iowa/Driver/SpeedController.json";
     auto PFdriver = chrono_types::make_shared<ChPathFollowerDriver>(
-        vehicle, vehicle::GetDataFile(steering_controller_file), vehicle::GetDataFile(speed_controller_file), path,
+        vehicle, steering_controller_file, speed_controller_file, path,
         "road", 65 * MPH_TO_MS, true);
     PFdriver->Initialize();
 
@@ -526,8 +526,8 @@ int main(int argc, char* argv[]) {
 
     // Leader Driver
     auto lead_PFdriver = chrono_types::make_shared<ChNSFLeaderDriver>(
-        lead_vehicle, vehicle::GetDataFile(steering_controller_file), vehicle::GetDataFile(speed_controller_file), path,
-        "road", 65 * MPH_TO_MS, leaderParam, true);
+        lead_vehicle, steering_controller_file, speed_controller_file, path,
+        "road", 45 * MPH_TO_MS, leaderParam, true);
     lead_PFdriver->Initialize();
 
     if(save_driver)
@@ -638,9 +638,9 @@ int main(int argc, char* argv[]) {
         // driver_inputs.m_throttle = 0;
         //driver_inputs.m_steering *= -1;
         if (step_number % int(1 / step_size) == 0) {
-            auto speed = vehicle.GetVehicleSpeed();
+            auto speed = lead_vehicle.GetVehicleSpeed() * MS_TO_MPH;
             auto wall_time = high_resolution_clock::now();
-            printf("Sim Time=%f, \tWall Time=%f, \tExtra Time=%f, \tSpeed=%f\n", time,
+            printf("Sim Time=%f, \tWall Time=%f, \tExtra Time=%f, \tSpeed mph=%f\n", time,
                    duration_cast<duration<double>>(wall_time - t0).count(), extra_time, speed);
             extra_time = 0.0;
         }

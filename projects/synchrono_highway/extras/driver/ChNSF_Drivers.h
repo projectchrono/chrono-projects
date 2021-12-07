@@ -37,7 +37,7 @@ using namespace chrono::sensor;
 #define MS_TO_MPH 2.23694
 #define MPH_TO_MS 0.44704
 #define AUDI_LENGTH 4.86
-
+#define M_TO_MILE 0.000621371
 namespace chrono {
 namespace synchrono {
 
@@ -62,7 +62,10 @@ class CH_VEHICLE_API ChNSFLeaderDriver : public ChPathFollowerDriver {
     // starting pos to compare with to obtain traveled dist 
     ChVector<> startingPos;
     //JSON file containing the instruction for target speed
-     std::vector<std::vector<double>> behavior_data;
+    std::vector<std::vector<double>> behavior_data;
+    // Cruise speed between sinusoidal stretches
+    double cruise_speed;
+
 };
 
 }  // namespace synchrono
