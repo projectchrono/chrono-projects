@@ -142,8 +142,10 @@ std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
 
 // Driver parameters
 std::vector<std::vector<double>> leaderParam;
-std::string scenario_parameters = demo_data_path + "/Environments/Iowa/parameters/scenario_parameters.json";
-std::string simulation_parameters = demo_data_path + "/Environments/Iowa/parameters/simulation_parameters.json";
+std::string scenario_parameters = demo_data_path+ "/Environments/Iowa/parameters/scenario_parameters.json";
+std::string simulation_parameters = demo_data_path+ "/Environments/Iowa/parameters/simulation_parameters.json";
+// cruise speed [mph]
+double cruise_speed = 45;
 
 // Data saving
 bool save_driver = true;
@@ -224,6 +226,10 @@ void ReadParameterFiles() {
             leaderParam.resize(1);
             leaderParam[0] = {0.5, 1.5, 55.0, 5.0, 628.3, 0.0};
         }
+        if(d.HasMember("CruiseSpeed")){
+            cruise_speed = d["CruiseSpeed"].GetDouble();
+        }
+        
     }
 }
 
@@ -432,13 +438,14 @@ int main(int argc, char* argv[]) {
                               ChIrrGuiDriver::JoystickAxes::AXIS_X, ChIrrGuiDriver::JoystickAxes::NONE);
     IGdriver->Initialize();
 
-    // std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
-    std::string path_file = demo_data_path + "/Environments/Iowa/Driver/Iowa_Loop.txt";
+    std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
+    // std::string path_file = demo_data_path + "/Environments/Iowa/Driver/untitled.txt";
     auto path = ChBezierCurve::read(path_file);
     std::string steering_controller_file = demo_data_path + "/Environments/Iowa/Driver/SteeringController.json";
     std::string speed_controller_file = demo_data_path + "/Environments/Iowa/Driver/SpeedController.json";
     auto PFdriver = chrono_types::make_shared<ChPathFollowerDriver>(
-        vehicle, steering_controller_file, speed_controller_file, path, "road", 65 * MPH_TO_MS, true);
+        vehicle, steering_controller_file, speed_controller_file, path,
+        "road", cruise_speed * MPH_TO_MS, true);
     PFdriver->Initialize();
 
     if (!disable_joystick) {
@@ -450,7 +457,8 @@ int main(int argc, char* argv[]) {
 
     // Leader Driver
     auto lead_PFdriver = chrono_types::make_shared<ChNSFLeaderDriver>(
-        lead_vehicle, steering_controller_file, speed_controller_file, path, "road", 45 * MPH_TO_MS, leaderParam, true);
+        lead_vehicle, steering_controller_file, speed_controller_file, path,
+        "road", cruise_speed * MPH_TO_MS, leaderParam, true);
     lead_PFdriver->Initialize();
 
     if (save_driver)
@@ -647,20 +655,17 @@ int main(int argc, char* argv[]) {
                 driver_csv << currDriver->GetBraking() << ",";
                 driver_csv << ego_chassis->GetPos().x() << ",";
                 driver_csv << ego_chassis->GetPos().y() << ",";
-                driver_csv << ego_chassis->GetPos().z() << ",";
-                driver_csv << ego_chassis->GetSpeed() * MS_TO_MPH << ",";
+                driver_csv << ego_chassis->GetSpeed() * MS_TO_MPH  << ",";
                 driver_csv << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << ",";
-                driver_csv << (ego_chassis->GetPos() - lead_vehicle.GetChassis()->GetPos()).Length() - AUDI_LENGTH
-                           << ",a";  // Distance bumper-to-bumber
-                driver_csv << (ego_chassis->GetPos() - lead_vehicle.GetChassis()->GetPos()) *
-                                      ChMatrix33<>(ego_chassis->GetRot()).Get_A_Xaxis() -
-                                  AUDI_LENGTH
-                           << " ";  // Projected distance bumper-to-bumber
-
+                double dist = (ego_chassis->GetPos()-lead_vehicle.GetChassis()->GetPos()).Length() - AUDI_LENGTH;
+                driver_csv << dist << ",";  // Distance bumper-to-bumber
+                double  proj_dist = (ego_chassis->GetPos()-lead_vehicle.GetChassis()->GetPos()) ^ ChMatrix33<>(ego_chassis->GetRot()).Get_A_Xaxis() - AUDI_LENGTH;
+                driver_csv << proj_dist << " ";  // Projected distance bumper-to-bumber
+                
                 driver_csv << "\n";
-                if ((step_number % int(30 / step_size) == 0)) {
-                    driver_csv.write_to_file(output_file_path, std::to_string(step_number) + "\n ");
-                }
+                if ((step_number % int(30/step_size) == 0 )){
+                    driver_csv.write_to_file(output_file_path, 
+                    "Legend: numsteps, isManual, Steering, Throttle, Braking, x, y, speed[mph], acceleration [m/s^2], dist [m], dist_projected[m]}  \n ");                }
             }
         }
     }
