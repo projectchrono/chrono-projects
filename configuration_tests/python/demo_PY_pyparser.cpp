@@ -29,7 +29,7 @@
 // ------------------------------------------------
 ///////////////////////////////////////////////////
 
-#include "chrono_python/ChPython.h"
+#include "chrono_pyparser/ChPython.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/physics/ChBodyAuxRef.h"
 #include <iostream>
