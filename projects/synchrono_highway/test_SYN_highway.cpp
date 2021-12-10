@@ -153,7 +153,8 @@ bool save_driver = true;
 double tsave = 2e-2;
 // path where the output is saved
 std::string output_file_path = "./output.txt";
-utils::CSV_writer driver_csv(" ");
+std::stringstream buffer;
+std::ofstream filestream (output_file_path);
 
 using namespace std::chrono;
 
@@ -206,10 +207,10 @@ void ReadParameterFiles(){
             leaderParam.resize(msize0);
             //printf("ARRAY DIM = %i \n", msize);
             for(auto it = marr.begin(); it != marr.end(); ++it) {
-                auto i = std::distance(marr.begin(), it); 
+                auto i = std::distance(marr.begin(), it);
                 leaderParam[i].resize(msize1);
                 for(auto jt = marr.begin(); jt != marr.end(); ++jt) {
-                    auto j = std::distance(marr.begin(), jt); 
+                    auto j = std::distance(marr.begin(), jt);
                     leaderParam[i][j] = marr[i][j].GetDouble();
                 }
             }
@@ -221,7 +222,7 @@ void ReadParameterFiles(){
         if(d.HasMember("CruiseSpeed")){
             cruise_speed = d["CruiseSpeed"].GetDouble();
         }
-        
+
     }
 }
 
@@ -267,7 +268,7 @@ int main(int argc, char* argv[]) {
     simulation_parameters = cli.GetAsType<std::string>("sim_params");
 
     ReadParameterFiles();
-    
+
     SetChronoDataPath(CHRONO_DATA_DIR);
     vehicle::SetDataPath(CHRONO_DATA_DIR + std::string("vehicle/"));
 
@@ -307,7 +308,7 @@ int main(int argc, char* argv[]) {
     audi_shape->SetName("Windowless Audi");
     audi_shape->SetStatic(true);
     vehicle.GetChassisBody()->AddAsset(audi_shape);
-    
+
     //add rearview mirror
 
     auto rvw_mirror_mesh = chrono_types::make_shared<ChTriangleMeshConnected>();
@@ -562,7 +563,7 @@ int main(int argc, char* argv[]) {
     lead_PFdriver->Initialize();
 
     if(save_driver)
-        driver_csv.write_to_file(output_file_path, "Legend: \n");
+        filestream << "Legend: numsteps, isManual, Steering, Throttle, Braking, x, y, speed[mph], acceleration [m/s^2], dist [m], dist_projected[m]}  \n ";
 
 
     // ---------------
@@ -662,8 +663,8 @@ int main(int argc, char* argv[]) {
             driver_inputs = IGdriver->GetInputs();
             driver_inputs.m_steering *= -1;
         }
-        
-        
+
+
         // printf("Driver inputs: %f,%f,%f\n", driver_inputs.m_throttle, driver_inputs.m_braking,
         //        driver_inputs.m_steering);
         // driver_inputs.m_throttle = 0;
@@ -681,10 +682,10 @@ int main(int argc, char* argv[]) {
             PFdriver->Synchronize(time);
         else
             IGdriver->Synchronize(time);
-        
+
         terrain.Synchronize(time);
         vehicle.Synchronize(time, driver_inputs, terrain);
-        
+
         app.Synchronize("", driver_inputs);
 #ifdef CHRONO_IRRKLANG
         soundEng.Synchronize(time);
@@ -696,10 +697,10 @@ int main(int argc, char* argv[]) {
             PFdriver->Advance(step);
         else
             IGdriver->Advance(step);
-        
+
         terrain.Advance(step);
         vehicle.Advance(step);
-        
+
         app.Advance(step_size);
         ChDriver::Inputs lead_driver_inputs = lead_PFdriver->GetInputs();
         lead_PFdriver->Synchronize(time);
@@ -711,9 +712,9 @@ int main(int argc, char* argv[]) {
             app.GetDevice()->getVideoDriver()->draw2DImage(
                 app.GetDevice()->getVideoDriver()->getTexture(
                     (demo_data_path + "/miscellaneous/Speedometer.png").c_str()),
-                irr::core::position2d<irr::s32>(0, 0));
-            /*app.GetDevice()->getVideoDriver()->draw2DImage(app.GetDevice()->getVideoDriver()->getTexture((demo_data_path
-               + "/miscellaneous/Needle.png").c_str()), irr::core::position2d<irr::s32>(200, 200));*/
+                irr::core::position2d<irr::s32>(0, 0));*/
+            app.GetDevice()->getVideoDriver()->draw2DImage(app.GetDevice()->getVideoDriver()->getTexture((demo_data_path
+               + "/miscellaneous/Needle.png").c_str()), irr::core::position2d<irr::s32>(200, 200));
             double speed_mph = vehicle.GetVehicleSpeedCOM() * MS_TO_MPH;
             double theta = ((270 / 140) * speed_mph) * (CH_C_PI / 180);
             app.GetDevice()->getVideoDriver()->draw2DLine(
@@ -739,8 +740,8 @@ int main(int argc, char* argv[]) {
 
         if (save_driver) {
             if (step_number % int(tsave/step_size ) == 0) {
-                driver_csv << std::fixed << std::setprecision(3);
-                driver_csv<< std::to_string(step_number) + " ,";
+                buffer << std::fixed << std::setprecision(3);
+                buffer<< std::to_string(step_number) + " ,";
                 ChDriver* currDriver;
                 bool isManual;
                 if(driver_mode == HUMAN){
@@ -751,23 +752,26 @@ int main(int argc, char* argv[]) {
                     currDriver = PFdriver.get();
                     isManual = false;
                 }
-                driver_csv << isManual << ",";
-                driver_csv << currDriver->GetSteering() << ",";
-                driver_csv << currDriver->GetThrottle() << ",";
-                driver_csv << currDriver->GetBraking()  << ",";
-                driver_csv << ego_chassis->GetPos().x() << ",";
-                driver_csv << ego_chassis->GetPos().y() << ",";
-                driver_csv << ego_chassis->GetSpeed() * MS_TO_MPH  << ",";
-                driver_csv << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << ",";
+                buffer << isManual << ",";
+                buffer << currDriver->GetSteering() << ",";
+                buffer << currDriver->GetThrottle() << ",";
+                buffer << currDriver->GetBraking()  << ",";
+                buffer << ego_chassis->GetPos().x() << ",";
+                buffer << ego_chassis->GetPos().y() << ",";
+                buffer << ego_chassis->GetSpeed() * MS_TO_MPH  << ",";
+                buffer << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << ",";
                 double dist = (ego_chassis->GetPos()-lead_vehicle.GetChassis()->GetPos()).Length() - AUDI_LENGTH;
-                driver_csv << dist << ",";  // Distance bumper-to-bumber
+                buffer << dist << ",";  // Distance bumper-to-bumber
                 double  proj_dist = (ego_chassis->GetPos()-lead_vehicle.GetChassis()->GetPos()) ^ ChMatrix33<>(ego_chassis->GetRot()).Get_A_Xaxis() - AUDI_LENGTH;
-                driver_csv << proj_dist << " ";  // Projected distance bumper-to-bumber
-                
-                driver_csv << "\n";
+                buffer << proj_dist << " ";  // Projected distance bumper-to-bumber
+
+                buffer << "\n";
                 if ((step_number % int(30/step_size) == 0 )){
-                    driver_csv.write_to_file(output_file_path, 
-                    "Legend: numsteps, isManual, Steering, Throttle, Braking, x, y, speed[mph], acceleration [m/s^2], dist [m], dist_projected[m]}  \n ");                }
+                    printf("Writing to file...=%i", buffer.tellp() );
+                    filestream << buffer.rdbuf();
+                    buffer.str("");
+                }
+
             }
         }
     }
