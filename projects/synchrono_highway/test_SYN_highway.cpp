@@ -109,7 +109,7 @@ ChContactMethod contact_method = ChContactMethod::SMC;
 
 // camera parameters
 float frame_rate = 30.0;
-int super_samples = 1;
+int super_samples = 2;
 unsigned int image_width = 3840 / 2;  // 1920;   // / 2;
 unsigned int image_height = 720 / 2;  // / 2;
 unsigned int fullscreen_image_width = 3840;
@@ -142,8 +142,8 @@ std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
 
 // Driver parameters
 std::vector<std::vector<double>> leaderParam;
-std::string scenario_parameters = demo_data_path+ "/Environments/Iowa/parameters/scenario_parameters.json";
-std::string simulation_parameters = demo_data_path+ "/Environments/Iowa/parameters/simulation_parameters.json";
+std::string scenario_parameters = demo_data_path + "/Environments/Iowa/parameters/scenario_parameters.json";
+std::string simulation_parameters = demo_data_path + "/Environments/Iowa/parameters/simulation_parameters.json";
 // cruise speed [mph]
 double cruise_speed = 45;
 
@@ -154,7 +154,7 @@ double tsave = 2e-2;
 // path where the output is saved
 std::string output_file_path = "./output.txt";
 std::stringstream buffer;
-std::ofstream filestream (output_file_path);
+std::ofstream filestream(output_file_path);
 
 using namespace std::chrono;
 
@@ -162,15 +162,14 @@ using namespace std::chrono;
 
 // button callback placeholder
 void customButtonCallback();
-
 // distribution of trees near the road
 void AddTrees(ChSystem* chsystem);
-
 // terrain and texture system
 void AddTerrain(ChSystem* chsystem);
-
 // signs along the road and the road itself
 void AddRoadway(ChSystem* chsystem);
+// buildings in the environment
+void AddBuildings(ChSystem* chsystem);
 
 void ReadParameterFiles() {
     {  // Simulation parameter file
@@ -214,12 +213,11 @@ void ReadParameterFiles() {
             int msize1 = marr[0].Size();
             assert(msize1 == 6);
             leaderParam.resize(msize0);
-            //printf("ARRAY DIM = %i \n", msize);
-            for(auto it = marr.begin(); it != marr.end(); ++it) {
+            // printf("ARRAY DIM = %i \n", msize);
+            for (auto it = marr.begin(); it != marr.end(); ++it) {
                 auto i = std::distance(marr.begin(), it);
                 leaderParam[i].resize(msize1);
-                for(auto jt = marr.begin(); jt != marr.end(); ++jt) {
-
+                for (auto jt = marr.begin(); jt != marr.end(); ++jt) {
                     auto j = std::distance(marr.begin(), jt);
                     leaderParam[i][j] = marr[i][j].GetDouble();
                 }
@@ -228,10 +226,9 @@ void ReadParameterFiles() {
             leaderParam.resize(1);
             leaderParam[0] = {0.5, 1.5, 55.0, 5.0, 628.3, 0.0};
         }
-        if(d.HasMember("CruiseSpeed")){
+        if (d.HasMember("CruiseSpeed")) {
             cruise_speed = d["CruiseSpeed"].GetDouble();
         }
-
     }
 }
 
@@ -399,6 +396,9 @@ int main(int argc, char* argv[]) {
     // Add trees near the road
     AddTrees(vehicle.GetSystem());
 
+    // Add buildings away from the road to break up the horizon
+    AddBuildings(vehicle.GetSystem());
+
     // -----------------
     // Initialize output
     // -----------------
@@ -446,8 +446,7 @@ int main(int argc, char* argv[]) {
     std::string steering_controller_file = demo_data_path + "/Environments/Iowa/Driver/SteeringController.json";
     std::string speed_controller_file = demo_data_path + "/Environments/Iowa/Driver/SpeedController.json";
     auto PFdriver = chrono_types::make_shared<ChPathFollowerDriver>(
-        vehicle, steering_controller_file, speed_controller_file, path,
-        "road", cruise_speed * MPH_TO_MS, true);
+        vehicle, steering_controller_file, speed_controller_file, path, "road", cruise_speed * MPH_TO_MS, true);
     PFdriver->Initialize();
 
     if (!disable_joystick) {
@@ -458,13 +457,14 @@ int main(int argc, char* argv[]) {
     }
 
     // Leader Driver
-    auto lead_PFdriver = chrono_types::make_shared<ChNSFLeaderDriver>(
-        lead_vehicle, steering_controller_file, speed_controller_file, path,
-        "road", cruise_speed * MPH_TO_MS, leaderParam, true);
+    auto lead_PFdriver =
+        chrono_types::make_shared<ChNSFLeaderDriver>(lead_vehicle, steering_controller_file, speed_controller_file,
+                                                     path, "road", cruise_speed * MPH_TO_MS, leaderParam, true);
     lead_PFdriver->Initialize();
 
-    if(save_driver)
-        filestream << "Legend: numsteps, isManual, Steering, Throttle, Braking, x, y, speed[mph], acceleration [m/s^2], dist [m], dist_projected[m]}  \n ";
+    if (save_driver)
+        filestream << "Legend: numsteps, isManual, Steering, Throttle, Braking, x, y, speed[mph], acceleration "
+                      "[m/s^2], dist [m], dist_projected[m]}  \n ";
 
     // ---------------
     // Simulation loop
@@ -499,11 +499,11 @@ int main(int argc, char* argv[]) {
     // Create a camera and add it to the sensor manager
     // ------------------------------------------------
     auto cam = chrono_types::make_shared<ChCameraSensor>(
-        vehicle.GetChassisBody(),                                                    // body camera is attached to
-        frame_rate,                                                                  // update rate in Hz
-        chrono::ChFrame<double>({0, 0, 500}, Q_from_AngAxis(CH_C_PI_2, {0, 1, 0})),  // offset pose
-        1920,                                                                        // image width
-        1080,                                                                        // image height
+        vehicle.GetChassisBody(),                                                     // body camera is attached to
+        10,                                                                           // update rate in Hz
+        chrono::ChFrame<double>({0, 0, 3000}, Q_from_AngAxis(CH_C_PI_2, {0, 1, 0})),  // offset pose
+        1920,                                                                         // image width
+        1080,                                                                         // image height
         CH_C_PI_4,
         super_samples);  // fov, lag, exposure
     cam->SetName("Camera Sensor");
@@ -511,7 +511,7 @@ int main(int argc, char* argv[]) {
         cam->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720));
 
     // add sensor to the manager
-    // manager->AddSensor(cam);
+    manager->AddSensor(cam);
 
     // -------------------------------------------------------
     // Create a second camera and add it to the sensor manager
@@ -633,16 +633,15 @@ int main(int argc, char* argv[]) {
             double since_last_sync = time - last_sim_sync;
             last_sim_sync = time;
             auto tt0 = high_resolution_clock::now();
-            realtime_timer.Spin(since_last_sync);
+            // realtime_timer.Spin(since_last_sync);
             auto tt1 = high_resolution_clock::now();
             extra_time += duration_cast<duration<double>>(tt1 - tt0).count();
         }
 
         if (save_driver) {
-
-            if (step_number % int(tsave/step_size ) == 0) {
+            if (step_number % int(tsave / step_size) == 0) {
                 buffer << std::fixed << std::setprecision(3);
-                buffer<< std::to_string(step_number) + " ,";
+                buffer << std::to_string(step_number) + " ,";
                 ChDriver* currDriver;
                 bool isManual;
                 if (driver_mode == HUMAN) {
@@ -656,23 +655,23 @@ int main(int argc, char* argv[]) {
                 buffer << isManual << ",";
                 buffer << currDriver->GetSteering() << ",";
                 buffer << currDriver->GetThrottle() << ",";
-                buffer << currDriver->GetBraking()  << ",";
+                buffer << currDriver->GetBraking() << ",";
                 buffer << ego_chassis->GetPos().x() << ",";
                 buffer << ego_chassis->GetPos().y() << ",";
-                buffer << ego_chassis->GetSpeed() * MS_TO_MPH  << ",";
+                buffer << ego_chassis->GetSpeed() * MS_TO_MPH << ",";
                 buffer << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << ",";
-                double dist = (ego_chassis->GetPos()-lead_vehicle.GetChassis()->GetPos()).Length() - AUDI_LENGTH;
+                double dist = (ego_chassis->GetPos() - lead_vehicle.GetChassis()->GetPos()).Length() - AUDI_LENGTH;
                 buffer << dist << ",";  // Distance bumper-to-bumber
-                double  proj_dist = (ego_chassis->GetPos()-lead_vehicle.GetChassis()->GetPos()) ^ ChMatrix33<>(ego_chassis->GetRot()).Get_A_Xaxis() - AUDI_LENGTH;
+                double proj_dist = (ego_chassis->GetPos() - lead_vehicle.GetChassis()->GetPos()) ^
+                                   ChMatrix33<>(ego_chassis->GetRot()).Get_A_Xaxis() - AUDI_LENGTH;
                 buffer << proj_dist << " ";  // Projected distance bumper-to-bumber
 
                 buffer << "\n";
-                if ((step_number % int(30/step_size) == 0 )){
-                    printf("Writing to file...=%i", buffer.tellp() );
+                if ((step_number % int(30 / step_size) == 0)) {
+                    printf("Writing to file...=%i", buffer.tellp());
                     filestream << buffer.rdbuf();
                     buffer.str("");
                 }
-
             }
         }
     }
@@ -702,7 +701,8 @@ void AddTrees(ChSystem* chsystem) {
     tree_mesh_3->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/foliage/trees/oaktree_03.obj", false, true);
     tree_mesh_3->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
 
-    std::vector<std::shared_ptr<ChTriangleMeshConnected>> tree_meshes = {tree_mesh_0, tree_mesh_1, tree_mesh_2, tree_mesh_3};
+    std::vector<std::shared_ptr<ChTriangleMeshConnected>> tree_meshes = {tree_mesh_0, tree_mesh_1, tree_mesh_2,
+                                                                         tree_mesh_3};
 
     ChSetRandomSeed(4);
 
@@ -722,7 +722,7 @@ void AddTrees(ChSystem* chsystem) {
     for (int i = 0; i < x_count; i++) {
         for (int j = 0; j < y_count; j++) {
             auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
-            trimesh_shape->SetMesh(tree_meshes[int(ChRandom()*tree_meshes.size()-.001)]);
+            trimesh_shape->SetMesh(tree_meshes[int(ChRandom() * tree_meshes.size() - .001)]);
             trimesh_shape->SetName("Tree");
             trimesh_shape->SetStatic(true);
             float scale = scale_nominal + scale_variation * (ChRandom() - .5);
@@ -744,7 +744,7 @@ void AddTrees(ChSystem* chsystem) {
     for (int i = 0; i < x_count; i++) {
         for (int j = 0; j < y_count; j++) {
             auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
-            trimesh_shape->SetMesh(tree_meshes[int(ChRandom()*tree_meshes.size()-.001)]);
+            trimesh_shape->SetMesh(tree_meshes[int(ChRandom() * tree_meshes.size() - .001)]);
             trimesh_shape->SetName("Tree");
             trimesh_shape->SetStatic(true);
             float scale = scale_nominal + scale_variation * (ChRandom() - .5);
@@ -784,6 +784,92 @@ void AddRoadway(ChSystem* chsystem) {
     }
 }
 
+void AddBuildings(ChSystem* chsystem) {
+    std::vector<std::string> environment_meshes = {"/Environments/Iowa/buildings/farm_01.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_02.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_04.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_03.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_02.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_04.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_01.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_03.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_02.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_04.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_03.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_02.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_01.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_04.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_03.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_04.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_02.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_03.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_01.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_04.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_02.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_01.obj",  //
+                                                   "/Environments/Iowa/buildings/farm_03.obj",  //
+
+                                                   "/Environments/Iowa/buildings/radio_tower.obj",  //
+                                                   "/Environments/Iowa/buildings/radio_tower.obj",  //
+                                                   "/Environments/Iowa/buildings/radio_tower.obj",  //
+                                                   "/Environments/Iowa/buildings/radio_tower.obj",  //
+                                                   "/Environments/Iowa/buildings/water_tower.obj",  //
+                                                   "/Environments/Iowa/buildings/water_tower.obj"};
+    std::vector<ChVector<>> offsets = {
+        {4150, 12776, 0},            // farm 4000
+        {3800, 10209, 0},            // farm
+        {3920, 8372, 0},             // farm
+        {4200, 5251, 0},             // farm
+        {3850, 500, 0.0},            // farm
+        {4120, -1787, 0},            // farm
+        {3900, -3623, 0},            // farm
+        {3860, -5458, 0},            // farm
+        {4180, -8000, 0},            // farm
+        {3510, -14004, 0},           // farm
+        {-1832, -15665, 0},          // farm
+        {-4050 + 200, -10654, 0.0},  // farm -4050 200
+        {-4050 + 180, -8683, 0.0},   // farm 180
+        {-4050 - 120, -6634, 0.0},   // farm -120
+        {-4050 + 150, -2990, 0.0},   // farm 150
+        {-4050 - 120, -1040, 0.0},   // farm -120
+        {-4050 - 180, -797, 0.0},    // farm -180
+        {-4050 + 160, 2626, 0.0},    // farm 160
+        {-4050 - 110, 4461, 0.0},    // farm -110
+        {-4050 + 130, 6292, 0.0},    // farm 130
+        {-4050 + 100, 8730, 0.0},    // farm 100
+        {-2602, 15320, 0.0},         // farm
+        {-1312, 15459, 0.0},         // farm
+        {-4167, 7087, 0.0},          // radio tower
+        {-4167, 10630, 0.0},         // radio tower
+        {4100, -10630, 0.0},         // radio tower
+        {4100, 3543, 0.0},           // radio tower
+        {2657, 14488, 0.0},          // water tower
+        {-2922, -14611, 0.0}         // water tower
+    };
+
+    if (offsets.size() != environment_meshes.size()) {
+        std::cout << "ERROR: incorrect number of offsets for building meshes\n";
+        return;
+    }
+    for (int i = 0; i < environment_meshes.size(); i++) {
+        // additional environment assets
+        auto trimesh = chrono_types::make_shared<ChTriangleMeshConnected>();
+        trimesh->LoadWavefrontMesh(demo_data_path + environment_meshes[i], false, true);
+        trimesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
+        auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+        trimesh_shape->SetMesh(trimesh);
+        trimesh_shape->SetName(environment_meshes[i]);
+        trimesh_shape->SetStatic(true);
+        trimesh_shape->SetScale({3, 3, 3});
+        auto mesh_body = chrono_types::make_shared<ChBody>();
+        mesh_body->SetPos(offsets[i]);
+        mesh_body->SetRot(Q_from_AngZ(CH_C_2PI * ChRandom()));
+        mesh_body->AddAsset(trimesh_shape);
+        mesh_body->SetBodyFixed(true);
+        chsystem->Add(mesh_body);
+    }
+}
+
 void AddTerrain(ChSystem* chsystem) {
     // add terrain with weighted textures
     auto terrain_mesh = chrono_types::make_shared<ChTriangleMeshConnected>();
@@ -813,7 +899,7 @@ void AddTerrain(ChSystem* chsystem) {
                                      "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_ROUGH_500.jpg");
     grass_tex_1->SetNormalMapTexture(demo_data_path +
                                      "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_NRM_500.jpg");
-    grass_tex_1->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_Grass_A_v1.png");
+    grass_tex_1->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_Grass_A_v2.png");
     grass_tex_1->SetTextureScale({1000.0, 1000.0, 1.0});
     grass_tex_1->SetSpecularColor({.0f, .0f, .0f});
     grass_tex_1->SetRoughness(1.f);
@@ -827,7 +913,7 @@ void AddTerrain(ChSystem* chsystem) {
                                      "/Environments/Iowa/terrain/Grass/GroundGrassGreenPatchy002_ROUGH_500.png");
     grass_tex_2->SetNormalMapTexture(demo_data_path +
                                      "/Environments/Iowa/terrain/Grass/GroundGrassGreenPatchy002_NRM_500.jpg");
-    grass_tex_2->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_Grass_B_v1.png");
+    grass_tex_2->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_Grass_B_v2.png");
     grass_tex_2->SetSpecularColor({.0f, .0f, .0f});
     grass_tex_2->SetTextureScale({1000.0, 1000.0, 1.0});
     grass_tex_2->SetRoughness(1.f);
@@ -839,7 +925,7 @@ void AddTerrain(ChSystem* chsystem) {
     field_tex->SetRoughnessTexture(demo_data_path +
                                    "/Environments/Iowa/terrain/Grass/GroundMudCracked006_ROUGH_500.png");
     field_tex->SetNormalMapTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundMudCracked006_NRM_500.jpg");
-    field_tex->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_DirtFields_v1.png");
+    field_tex->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_DirtFields_v2.png");
     field_tex->SetSpecularColor({.0f, .0f, .0f});
     field_tex->SetTextureScale({1000.0, 1000.0, 1.0});
     field_tex->SetRoughness(1.f);
