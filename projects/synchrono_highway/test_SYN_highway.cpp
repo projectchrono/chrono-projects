@@ -217,9 +217,9 @@ void ReadParameterFiles() {
             for (auto it = marr.begin(); it != marr.end(); ++it) {
                 auto i = std::distance(marr.begin(), it);
                 leaderParam[i].resize(msize1);
-                for (auto jt = marr.begin(); jt != marr.end(); ++jt) {
-                    auto j = std::distance(marr.begin(), jt);
+                for(int j = 0; j < marr[i].Size(); j++) {
                     leaderParam[i][j] = marr[i][j].GetDouble();
+                    //std::cout<< "param :" << i << "," << j << ":" << marr[i][j].GetDouble() << "\n";
                 }
             }
         } else {
@@ -441,7 +441,7 @@ int main(int argc, char* argv[]) {
     IGdriver->Initialize();
 
     std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
-    // std::string path_file = demo_data_path + "/Environments/Iowa/Driver/untitled.txt";
+    //std::string path_file = demo_data_path + "/Environments/Iowa/Driver/inner.txt";
     auto path = ChBezierCurve::read(path_file);
     std::string steering_controller_file = demo_data_path + "/Environments/Iowa/Driver/SteeringController.json";
     std::string speed_controller_file = demo_data_path + "/Environments/Iowa/Driver/SpeedController.json";
@@ -613,8 +613,6 @@ int main(int argc, char* argv[]) {
                 app.GetDevice()->getVideoDriver()->getTexture(
                     (demo_data_path + "/miscellaneous/Speedometer.png").c_str()),
                 irr::core::position2d<irr::s32>(0, 0));
-            /*app.GetDevice()->getVideoDriver()->draw2DImage(app.GetDevice()->getVideoDriver()->getTexture((demo_data_path
-               + "/miscellaneous/Needle.png").c_str()), irr::core::position2d<irr::s32>(200, 200));*/
             double speed_mph = vehicle.GetVehicleSpeedCOM() * MS_TO_MPH;
             double theta = ((270 / 140) * speed_mph) * (CH_C_PI / 180);
             app.GetDevice()->getVideoDriver()->draw2DLine(
@@ -662,8 +660,9 @@ int main(int argc, char* argv[]) {
                 buffer << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << ",";
                 double dist = (ego_chassis->GetPos() - lead_vehicle.GetChassis()->GetPos()).Length() - AUDI_LENGTH;
                 buffer << dist << ",";  // Distance bumper-to-bumber
-                double proj_dist = (ego_chassis->GetPos() - lead_vehicle.GetChassis()->GetPos()) ^
-                                   ChMatrix33<>(ego_chassis->GetRot()).Get_A_Xaxis() - AUDI_LENGTH;
+                ChVector<> dist_v = lead_vehicle.GetChassis()->GetPos() - ego_chassis->GetPos();
+                ChVector<> car_xaxis = ChMatrix33<>(ego_chassis->GetRot()).Get_A_Xaxis();
+                double  proj_dist = (dist_v ^ car_xaxis)  - AUDI_LENGTH;
                 buffer << proj_dist << " ";  // Projected distance bumper-to-bumber
 
                 buffer << "\n";

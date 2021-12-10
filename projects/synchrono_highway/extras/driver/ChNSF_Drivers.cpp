@@ -62,6 +62,8 @@ void ChNSFLeaderDriver::Synchronize(double time) {
                 SetDesiredSpeed(cruise_speed);
             else{
                 double v_mph =  piece_data[2] + piece_data[3] *  sin( CH_C_2PI * (1/piece_data[4]) * dist + piece_data[5]);
+                //double des_speed = v_mph * MPH_TO_MS ;
+                //std::cout<< "Miles traveled:" << dist << "   Desired Speed is :" << des_speed << "\n";
                 SetDesiredSpeed(v_mph * MPH_TO_MS);
             }
         }
