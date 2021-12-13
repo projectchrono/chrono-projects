@@ -449,6 +449,9 @@ int main(int argc, char* argv[]) {
         vehicle, steering_controller_file, speed_controller_file, path, "road", cruise_speed * MPH_TO_MS, true);
     PFdriver->Initialize();
 
+    // we call the callback explicitly to start the timer
+    customButtonCallback();
+
     if (!disable_joystick) {
         driver_mode = HUMAN;
     } else {
@@ -511,7 +514,7 @@ int main(int argc, char* argv[]) {
         cam->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720));
 
     // add sensor to the manager
-    manager->AddSensor(cam);
+    //manager->AddSensor(cam);
 
     // -------------------------------------------------------
     // Create a second camera and add it to the sensor manager
