@@ -466,7 +466,7 @@ int main(int argc, char* argv[]) {
     lead_PFdriver->Initialize();
 
     if (save_driver)
-        filestream << "Legend: numsteps, isManual, Steering, Throttle, Braking, x, y, speed[mph], acceleration "
+        filestream << "Legend: numsteps, time, isManual, Steering, Throttle, Braking, x, y, speed[mph], acceleration "
                       "[m/s^2], dist [m], dist_projected[m]}  \n ";
 
     // ---------------
@@ -643,6 +643,7 @@ int main(int argc, char* argv[]) {
             if (step_number % int(tsave / step_size) == 0) {
                 buffer << std::fixed << std::setprecision(3);
                 buffer << std::to_string(step_number) + " ,";
+                buffer << std::to_string(time) + " ,";
                 ChDriver* currDriver;
                 bool isManual;
                 if (driver_mode == HUMAN) {
