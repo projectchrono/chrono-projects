@@ -142,6 +142,7 @@ std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
 
 // Driver parameters
 std::vector<std::vector<double>> leaderParam;
+std::vector<std::vector<double>> followerParam;
 std::string scenario_parameters = demo_data_path + "/Environments/Iowa/parameters/scenario_parameters.json";
 std::string simulation_parameters = demo_data_path + "/Environments/Iowa/parameters/simulation_parameters.json";
 // cruise speed [mph]
@@ -225,6 +226,25 @@ void ReadParameterFiles() {
         } else {
             leaderParam.resize(1);
             leaderParam[0] = {0.5, 1.5, 55.0, 5.0, 628.3, 0.0};
+        }
+        if (d.HasMember("FollowerDriverParam")) {
+            auto marr = d["FollowerDriverParam"].GetArray();
+            int msize0 = marr.Size();
+            int msize1 = marr[0].Size();
+            assert(msize1 == 6);
+            followerParam.resize(msize0);
+            // printf("ARRAY DIM = %i \n", msize);
+            for (auto it = marr.begin(); it != marr.end(); ++it) {
+                auto i = std::distance(marr.begin(), it);
+                followerParam[i].resize(msize1);
+                for(int j = 0; j < marr[i].Size(); j++) {
+                    followerParam[i][j] = marr[i][j].GetDouble();
+                    //std::cout<< "param :" << i << "," << j << ":" << marr[i][j].GetDouble() << "\n";
+                }
+            }
+        } else {
+            followerParam.resize(1);
+            followerParam[0] = {0.5, 1.5, 55.0, 5.0, 628.3, 0.0};
         }
         if (d.HasMember("CruiseSpeed")) {
             cruise_speed = d["CruiseSpeed"].GetDouble();
@@ -445,8 +465,8 @@ int main(int argc, char* argv[]) {
     auto path = ChBezierCurve::read(path_file);
     std::string steering_controller_file = demo_data_path + "/Environments/Iowa/Driver/SteeringController.json";
     std::string speed_controller_file = demo_data_path + "/Environments/Iowa/Driver/SpeedController.json";
-    auto PFdriver = chrono_types::make_shared<ChPathFollowerDriver>(
-        vehicle, steering_controller_file, speed_controller_file, path, "road", cruise_speed * MPH_TO_MS, true);
+    auto PFdriver = chrono_types::make_shared<ChNSFFollowererDriver>(
+        vehicle, steering_controller_file, speed_controller_file, path, "road", cruise_speed * MPH_TO_MS, lead_vehicle, followerParam, true);
     PFdriver->Initialize();
 
     // we call the callback explicitly to start the timer
