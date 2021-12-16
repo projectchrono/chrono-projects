@@ -65,13 +65,10 @@ using namespace chrono::synchrono;
 // -----------------------------------------------------------------------------
 
 // Initial vehicle location and orientation
-// ChVector<> initLoc(-788, -195, -1);
-// ChVector<> initLoc(3990.1, -1200.3124, .75); //middle-ish of oval highway
-// ChVector<> initLoc(3991.5, 0.0, .75);
-ChVector<> initLoc(5011.5, -445, .75);  // near mile marker
+ChVector<> initLoc(5011.5, -445, 100.75);  // near mile marker
 // ChQuaternion<> initRot(1, 0, 0, 0);
 // ChQuaternion<> initRot = Q_from_AngZ(-CH_C_PI_2);
-ChQuaternion<> initRot = Q_from_AngZ(CH_C_PI_2);
+ChQuaternion<> initRot = Q_from_AngZ(-CH_C_PI_2);
 
 // ChVector<> driver_eye(-.2, .4, .95);
 ChVector<> driver_eye(-.3, .4, .98);
@@ -231,7 +228,7 @@ void ReadParameterFiles() {
             auto marr = d["FollowerDriverParam"].GetArray();
             int msize0 = marr.Size();
             int msize1 = marr[0].Size();
-            assert(msize1 == 6);
+            assert(msize1 == 8);
             followerParam.resize(msize0);
             // printf("ARRAY DIM = %i \n", msize);
             for (auto it = marr.begin(); it != marr.end(); ++it) {
@@ -244,7 +241,7 @@ void ReadParameterFiles() {
             }
         } else {
             followerParam.resize(1);
-            followerParam[0] = {0.5, 1.5, 55.0, 5.0, 628.3, 0.0};
+            followerParam[0] = {0.1, 3.2, 55, 5.0, 25.0, 1.3, 5.0, 1.2};
         }
         if (d.HasMember("CruiseSpeed")) {
             cruise_speed = d["CruiseSpeed"].GetDouble();
@@ -257,7 +254,7 @@ void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<double>("Simulation", "e,end_time", "End time", std::to_string(t_end));
 
     // options for human driver
-    cli.AddOption<bool>("Simulation", "nojoystick", "Turn off joystick control", "false");
+    cli.AddOption<bool>("Simulation", "nojoystick", "Turn off joystick control", "true");
     cli.AddOption<bool>("Simulation", "lbj", "Switch Joystick axes as used by LBJ", "false");
     cli.AddOption<bool>("Simulation", "fullscreen", "Use full screen camera display", std::to_string(use_fullscreen));
     cli.AddOption<bool>("Simulation", "record", "Record human driver inputs to file", "false");
@@ -361,7 +358,7 @@ int main(int argc, char* argv[]) {
     // Add a leader vehicle
     WheeledVehicle lead_vehicle(vehicle.GetSystem(), vehicle_file);
     auto lead_powertrain = ReadPowertrainJSON(powertrain_file);
-    lead_vehicle.Initialize(ChCoordsys<>(initLoc + initRot.Rotate(ChVector<>(20, 0, 0)), initRot));
+    lead_vehicle.Initialize(ChCoordsys<>(initLoc + initRot.Rotate(ChVector<>(60, 0, 0)), initRot));
     lead_vehicle.GetChassis()->SetFixed(false);
     lead_vehicle.SetChassisVisualizationType(chassis_vis_type);
     lead_vehicle.SetSuspensionVisualizationType(suspension_vis_type);
@@ -460,8 +457,8 @@ int main(int argc, char* argv[]) {
                               ChIrrGuiDriver::JoystickAxes::AXIS_X, ChIrrGuiDriver::JoystickAxes::NONE);
     IGdriver->Initialize();
 
-    std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
-    //std::string path_file = demo_data_path + "/Environments/Iowa/Driver/inner.txt";
+    //std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
+    std::string path_file = demo_data_path + "/Environments/Iowa/Driver/geom_outer.txt";
     auto path = ChBezierCurve::read(path_file);
     std::string steering_controller_file = demo_data_path + "/Environments/Iowa/Driver/SteeringController.json";
     std::string speed_controller_file = demo_data_path + "/Environments/Iowa/Driver/SpeedController.json";
@@ -602,7 +599,7 @@ int main(int argc, char* argv[]) {
 
         // Update modules (process inputs from other modules)
         if (driver_mode == AUTONOMOUS)
-            PFdriver->Synchronize(time);
+            PFdriver->Synchronize(time, step_size);
         else
             IGdriver->Synchronize(time);
 
