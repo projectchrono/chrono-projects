@@ -39,7 +39,6 @@ using namespace chrono::sensor;
 #define AUDI_LENGTH 4.86
 #define M_TO_MILE 0.000621371
 namespace chrono {
-namespace synchrono {
 
 // Driver for the leader vehicle, it adjusts its target speed according to a piecewise sinusoidal function
 // In the buffer-areas between pieces it keeps the target speed specified in target_speed
@@ -62,7 +61,9 @@ class CH_VEHICLE_API ChNSFLeaderDriver : public ChPathFollowerDriver {
 
   private:
     // starting pos to compare with to obtain traveled dist 
-    ChVector<> startingPos;
+    ChVector<> previousPos;
+    // traveldistance 
+    double dist;
     // vector of vectors containing the instruction for target speed
     std::vector<std::vector<double>> behavior_data;
     // Cruise speed between sinusoidal stretches
@@ -92,7 +93,9 @@ class CH_VEHICLE_API ChNSFFollowererDriver : public ChPathFollowerDriver {
 
   private:
     // starting pos to compare with to obtain traveled dist 
-    ChVector<> startingPos;
+    ChVector<> previousPos;
+    // traveldistance 
+    double dist;
     // vector of vectors containing the instruction for target speed
     std::vector<std::vector<double>> behavior_data;
     // Cruise speed between sinusoidal stretches
@@ -102,7 +105,6 @@ class CH_VEHICLE_API ChNSFFollowererDriver : public ChPathFollowerDriver {
 
 };
 
-}  // namespace synchrono
 }  // namespace chrono
 
 #endif

@@ -154,6 +154,11 @@ std::string output_file_path = "./output.txt";
 std::stringstream buffer;
 std::ofstream filestream(output_file_path);
 
+// Number of leaders in the platoon
+int num_lead = 3;
+// Number of leader in the platoon
+double lead_heading = 3;
+
 using namespace std::chrono;
 
 // =============================================================================
@@ -246,6 +251,12 @@ void ReadParameterFiles() {
         if (d.HasMember("CruiseSpeed")) {
             cruise_speed = d["CruiseSpeed"].GetDouble();
         }
+        if (d.HasMember("NumLeaders")) {
+            num_lead = d["NumLeaders"].GetInt();
+        }
+        if (d.HasMember("LeadersHeading")) {
+            lead_heading = d["LeadersHeading"].GetDouble();
+        }
     }
 }
 
@@ -254,7 +265,7 @@ void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<double>("Simulation", "e,end_time", "End time", std::to_string(t_end));
 
     // options for human driver
-    cli.AddOption<bool>("Simulation", "nojoystick", "Turn off joystick control", "true");
+    cli.AddOption<bool>("Simulation", "nojoystick", "Turn off joystick control", "false");
     cli.AddOption<bool>("Simulation", "lbj", "Switch Joystick axes as used by LBJ", "false");
     cli.AddOption<bool>("Simulation", "fullscreen", "Use full screen camera display", std::to_string(use_fullscreen));
     cli.AddOption<bool>("Simulation", "record", "Record human driver inputs to file", "false");
@@ -356,22 +367,26 @@ int main(int argc, char* argv[]) {
     vehicle.GetChassisBody()->AddAsset(rvw_mirror_shape);
 
     // Add a leader vehicle
-    WheeledVehicle lead_vehicle(vehicle.GetSystem(), vehicle_file);
-    auto lead_powertrain = ReadPowertrainJSON(powertrain_file);
-    lead_vehicle.Initialize(ChCoordsys<>(initLoc + initRot.Rotate(ChVector<>(60, 0, 0)), initRot));
-    lead_vehicle.GetChassis()->SetFixed(false);
-    lead_vehicle.SetChassisVisualizationType(chassis_vis_type);
-    lead_vehicle.SetSuspensionVisualizationType(suspension_vis_type);
-    lead_vehicle.SetSteeringVisualizationType(steering_vis_type);
-    lead_vehicle.SetWheelVisualizationType(wheel_vis_type);
-    lead_vehicle.InitializePowertrain(lead_powertrain);
+    std::vector<std::shared_ptr<WheeledVehicle>> lead_vehicles;
+    for (int i =0; i<num_lead; i++){
+        auto lead_vehicle = chrono_types::make_shared<WheeledVehicle>(vehicle.GetSystem(), vehicle_file);
+        auto lead_powertrain = ReadPowertrainJSON(powertrain_file);
+        lead_vehicle->Initialize(ChCoordsys<>(initLoc + initRot.Rotate(ChVector<>(lead_heading*(i+1), 0, 0)), initRot));
+        lead_vehicle->GetChassis()->SetFixed(false);
+        lead_vehicle->SetChassisVisualizationType(chassis_vis_type);
+        lead_vehicle->SetSuspensionVisualizationType(suspension_vis_type);
+        lead_vehicle->SetSteeringVisualizationType(steering_vis_type);
+        lead_vehicle->SetWheelVisualizationType(wheel_vis_type);
+        lead_vehicle->InitializePowertrain(lead_powertrain);
 
-    // Create and initialize the tires
-    for (auto& axle : lead_vehicle.GetAxles()) {
-        for (auto& wheel : axle->GetWheels()) {
-            auto tire = ReadTireJSON(tire_file);
-            lead_vehicle.InitializeTire(tire, wheel, tire_vis_type);
+        // Create and initialize the tires
+        for (auto& axle : lead_vehicle->GetAxles()) {
+            for (auto& wheel : axle->GetWheels()) {
+                auto tire = ReadTireJSON(tire_file);
+                lead_vehicle->InitializeTire(tire, wheel, tire_vis_type);
+            }
         }
+        lead_vehicles.push_back(lead_vehicle);
     }
 
     // Create the terrain
@@ -463,7 +478,7 @@ int main(int argc, char* argv[]) {
     std::string steering_controller_file = demo_data_path + "/Environments/Iowa/Driver/SteeringController.json";
     std::string speed_controller_file = demo_data_path + "/Environments/Iowa/Driver/SpeedController.json";
     auto PFdriver = chrono_types::make_shared<ChNSFFollowererDriver>(
-        vehicle, steering_controller_file, speed_controller_file, path, "road", cruise_speed * MPH_TO_MS, lead_vehicle, followerParam, true);
+        vehicle, steering_controller_file, speed_controller_file, path, "road", cruise_speed * MPH_TO_MS, *lead_vehicles[0], followerParam, true);
     PFdriver->Initialize();
 
     // we call the callback explicitly to start the timer
@@ -477,10 +492,14 @@ int main(int argc, char* argv[]) {
     }
 
     // Leader Driver
-    auto lead_PFdriver =
-        chrono_types::make_shared<ChNSFLeaderDriver>(lead_vehicle, steering_controller_file, speed_controller_file,
-                                                     path, "road", cruise_speed * MPH_TO_MS, leaderParam, true);
-    lead_PFdriver->Initialize();
+    std::vector<std::shared_ptr<ChNSFLeaderDriver>> lead_PFdrivers;
+    for (int i =0; i<num_lead; i++){
+        auto lead_PFdriver =
+            chrono_types::make_shared<ChNSFLeaderDriver>(*lead_vehicles[i], steering_controller_file, speed_controller_file,
+                                                        path, "road", cruise_speed * MPH_TO_MS, leaderParam, true);
+        lead_PFdriver->Initialize();
+        lead_PFdrivers.push_back(lead_PFdriver);
+    }
 
     if (save_driver)
         filestream << "Legend: numsteps, time, isManual, Steering, Throttle, Braking, x, y, speed[mph], acceleration "
@@ -590,7 +609,7 @@ int main(int argc, char* argv[]) {
         // driver_inputs.m_throttle = 0;
         // driver_inputs.m_steering *= -1;
         if (step_number % int(1 / step_size) == 0) {
-            auto speed = lead_vehicle.GetVehicleSpeed() * MS_TO_MPH;
+            auto speed = lead_vehicles[0]->GetVehicleSpeed() * MS_TO_MPH;
             auto wall_time = high_resolution_clock::now();
             printf("Sim Time=%f, \tWall Time=%f, \tExtra Time=%f, \tSpeed mph=%f\n", time,
                    duration_cast<duration<double>>(wall_time - t0).count(), extra_time, speed);
@@ -622,11 +641,13 @@ int main(int argc, char* argv[]) {
         vehicle.Advance(step);
 
         app.Advance(step_size);
-        ChDriver::Inputs lead_driver_inputs = lead_PFdriver->GetInputs();
-        lead_PFdriver->Synchronize(time);
-        lead_vehicle.Synchronize(time, lead_driver_inputs, terrain);
-        lead_PFdriver->Advance(step);
-        lead_vehicle.Advance(step);
+        for (int i =0; i<num_lead; i++){
+            ChDriver::Inputs lead_driver_inputs = lead_PFdrivers[i]->GetInputs();
+            lead_PFdrivers[i]->Synchronize(time);
+            lead_vehicles[i]->Synchronize(time, lead_driver_inputs, terrain);
+            lead_PFdrivers[i]->Advance(step);
+            lead_vehicles[i]->Advance(step);
+        }
         if (step_number % int(1 / (60 * step_size)) == 0) {
             /// irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0), false);
             app.GetDevice()->getVideoDriver()->draw2DImage(
@@ -679,9 +700,9 @@ int main(int argc, char* argv[]) {
                 buffer << ego_chassis->GetPos().y() << ",";
                 buffer << ego_chassis->GetSpeed() * MS_TO_MPH << ",";
                 buffer << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << ",";
-                double dist = (ego_chassis->GetPos() - lead_vehicle.GetChassis()->GetPos()).Length() - AUDI_LENGTH;
+                double dist = (ego_chassis->GetPos() - lead_vehicles[0]->GetChassis()->GetPos()).Length() - AUDI_LENGTH;
                 buffer << dist << ",";  // Distance bumper-to-bumber
-                ChVector<> dist_v = lead_vehicle.GetChassis()->GetPos() - ego_chassis->GetPos();
+                ChVector<> dist_v = lead_vehicles[0]->GetChassis()->GetPos() - ego_chassis->GetPos();
                 ChVector<> car_xaxis = ChMatrix33<>(ego_chassis->GetRot()).Get_A_Xaxis();
                 double  proj_dist = (dist_v ^ car_xaxis)  - AUDI_LENGTH;
                 buffer << proj_dist << " ";  // Projected distance bumper-to-bumber

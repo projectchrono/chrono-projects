@@ -29,7 +29,6 @@
 #include <sstream>
 
 namespace chrono {
-namespace synchrono {
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
@@ -43,7 +42,8 @@ ChNSFLeaderDriver::ChNSFLeaderDriver(ChVehicle& vehicle,             ///< associ
                          bool isClosedPath)                          ///< Treat the path as a closed loop
     : ChPathFollowerDriver(vehicle, steering_filename, speed_filename,  path, path_name, target_speed, isClosedPath), 
         behavior_data(behavior), cruise_speed(target_speed) {
-        startingPos = vehicle.GetChassis()->GetPos();
+        previousPos = vehicle.GetChassis()->GetPos();
+        dist = 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -51,7 +51,8 @@ ChNSFLeaderDriver::ChNSFLeaderDriver(ChVehicle& vehicle,             ///< associ
 void ChNSFLeaderDriver::Synchronize(double time) {
     // In this portion we adjust the target speed according to custom piece-wise sinusoidal defined in behavior_data:
     // start [miles], end [miles], offset [mph], amplitude [mph], period [miles], phase [miles]
-    double dist = (m_vehicle.GetChassis()->GetPos() - startingPos).Length() * M_TO_MILE;
+    dist += (m_vehicle.GetChassis()->GetPos() - previousPos).Length() * M_TO_MILE;
+    previousPos = m_vehicle.GetChassis()->GetPos();
     for (auto piece_data : behavior_data){
         // if the traveled dist is > max, we inspect the following piece 
         if(dist > piece_data[1])
@@ -84,7 +85,8 @@ ChNSFFollowererDriver::ChNSFFollowererDriver(ChVehicle& vehicle,             ///
                          bool isClosedPath)                          ///< Treat the path as a closed loop
     : ChPathFollowerDriver(vehicle, steering_filename, speed_filename,  path, path_name, target_speed, isClosedPath), 
         behavior_data(params), cruise_speed(target_speed), leader(lead_vehicle) {
-        startingPos = vehicle.GetChassis()->GetPos();
+        previousPos = vehicle.GetChassis()->GetPos();
+        dist = 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -94,7 +96,8 @@ void ChNSFFollowererDriver::Synchronize(double time, double step) {
     // We use the driver model explained here, using a desired speed instead: https://traffic-simulation.de/info/info_IDM.html
     // the parameters are: start [miles], end [miles], v0 desired v [m/s], T desired time headway [s], 
     // desired space headway [m], a: accel reate a [m/s^2], b: comfort decel [m/s^2], delta: accel exponent 
-    double dist = (m_vehicle.GetChassis()->GetPos() - startingPos).Length() * M_TO_MILE;
+    dist += (m_vehicle.GetChassis()->GetPos() - previousPos).Length() * M_TO_MILE;
+    previousPos = m_vehicle.GetChassis()->GetPos();
     for (auto piece_data : behavior_data){
         // if the traveled dist is > max, we inspect the following piece 
         if(dist > piece_data[1])
@@ -121,5 +124,4 @@ void ChNSFFollowererDriver::Synchronize(double time, double step) {
 }
 
 
-}  // namespace synchrono
 }  // end namespace chrono
