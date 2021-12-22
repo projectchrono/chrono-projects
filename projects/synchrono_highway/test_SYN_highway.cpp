@@ -473,7 +473,7 @@ int main(int argc, char* argv[]) {
     IGdriver->Initialize();
 
     //std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
-    std::string path_file = demo_data_path + "/Environments/Iowa/Driver/geom_outer.txt";
+    std::string path_file = demo_data_path + "/Environments/Iowa/Driver/OnOuterLane.txt";
     auto path = ChBezierCurve::read(path_file);
     std::string steering_controller_file = demo_data_path + "/Environments/Iowa/Driver/SteeringController.json";
     std::string speed_controller_file = demo_data_path + "/Environments/Iowa/Driver/SpeedController.json";
