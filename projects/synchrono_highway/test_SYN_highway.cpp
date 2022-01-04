@@ -108,7 +108,7 @@ ChContactMethod contact_method = ChContactMethod::SMC;
 float frame_rate = 30.0;
 int super_samples = 2;
 unsigned int image_width = 3840 / 2;  // 1920;   // / 2;
-unsigned int image_height = 720 / 2;  // / 2;
+unsigned int image_height = 720;      // / 2;
 unsigned int fullscreen_image_width = 3840;
 unsigned int fullscreen_image_height = 720;
 float cam_fov = 1.608f;
@@ -220,9 +220,9 @@ void ReadParameterFiles() {
             for (auto it = marr.begin(); it != marr.end(); ++it) {
                 auto i = std::distance(marr.begin(), it);
                 leaderParam[i].resize(msize1);
-                for(int j = 0; j < marr[i].Size(); j++) {
+                for (int j = 0; j < marr[i].Size(); j++) {
                     leaderParam[i][j] = marr[i][j].GetDouble();
-                    //std::cout<< "param :" << i << "," << j << ":" << marr[i][j].GetDouble() << "\n";
+                    // std::cout<< "param :" << i << "," << j << ":" << marr[i][j].GetDouble() << "\n";
                 }
             }
         } else {
@@ -239,9 +239,9 @@ void ReadParameterFiles() {
             for (auto it = marr.begin(); it != marr.end(); ++it) {
                 auto i = std::distance(marr.begin(), it);
                 followerParam[i].resize(msize1);
-                for(int j = 0; j < marr[i].Size(); j++) {
+                for (int j = 0; j < marr[i].Size(); j++) {
                     followerParam[i][j] = marr[i][j].GetDouble();
-                    //std::cout<< "param :" << i << "," << j << ":" << marr[i][j].GetDouble() << "\n";
+                    // std::cout<< "param :" << i << "," << j << ":" << marr[i][j].GetDouble() << "\n";
                 }
             }
         } else {
@@ -368,10 +368,11 @@ int main(int argc, char* argv[]) {
 
     // Add a leader vehicle
     std::vector<std::shared_ptr<WheeledVehicle>> lead_vehicles;
-    for (int i =0; i<num_lead; i++){
+    for (int i = 0; i < num_lead; i++) {
         auto lead_vehicle = chrono_types::make_shared<WheeledVehicle>(vehicle.GetSystem(), vehicle_file);
         auto lead_powertrain = ReadPowertrainJSON(powertrain_file);
-        lead_vehicle->Initialize(ChCoordsys<>(initLoc + initRot.Rotate(ChVector<>(lead_heading*(i+1), 0, 0)), initRot));
+        lead_vehicle->Initialize(
+            ChCoordsys<>(initLoc + initRot.Rotate(ChVector<>(lead_heading * (i + 1), 0, 0)), initRot));
         lead_vehicle->GetChassis()->SetFixed(false);
         lead_vehicle->SetChassisVisualizationType(chassis_vis_type);
         lead_vehicle->SetSuspensionVisualizationType(suspension_vis_type);
@@ -472,13 +473,16 @@ int main(int argc, char* argv[]) {
                               ChIrrGuiDriver::JoystickAxes::AXIS_X, ChIrrGuiDriver::JoystickAxes::NONE);
     IGdriver->Initialize();
 
-    //std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
+    // std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
     std::string path_file = demo_data_path + "/Environments/Iowa/Driver/OnOuterLane.txt";
     auto path = ChBezierCurve::read(path_file);
-    std::string steering_controller_file = demo_data_path + "/Environments/Iowa/Driver/SteeringController.json";
-    std::string speed_controller_file = demo_data_path + "/Environments/Iowa/Driver/SpeedController.json";
+    std::string steering_controller_file_IG = demo_data_path + "/Environments/Iowa/Driver/SteeringController_IG.json";
+    std::string steering_controller_file_LD = demo_data_path + "/Environments/Iowa/Driver/SteeringController_LD.json";
+    std::string speed_controller_file_IG = demo_data_path + "/Environments/Iowa/Driver/SpeedController_IG.json";
+    std::string speed_controller_file_LD = demo_data_path + "/Environments/Iowa/Driver/SpeedController_LD.json";
     auto PFdriver = chrono_types::make_shared<ChNSFFollowererDriver>(
-        vehicle, steering_controller_file, speed_controller_file, path, "road", cruise_speed * MPH_TO_MS, *lead_vehicles[0], followerParam, true);
+        vehicle, steering_controller_file_IG, speed_controller_file_IG, path, "road", cruise_speed * MPH_TO_MS,
+        *lead_vehicles[0], followerParam, true);
     PFdriver->Initialize();
 
     // we call the callback explicitly to start the timer
@@ -493,10 +497,10 @@ int main(int argc, char* argv[]) {
 
     // Leader Driver
     std::vector<std::shared_ptr<ChNSFLeaderDriver>> lead_PFdrivers;
-    for (int i =0; i<num_lead; i++){
-        auto lead_PFdriver =
-            chrono_types::make_shared<ChNSFLeaderDriver>(*lead_vehicles[i], steering_controller_file, speed_controller_file,
-                                                        path, "road", cruise_speed * MPH_TO_MS, leaderParam, true);
+    for (int i = 0; i < num_lead; i++) {
+        auto lead_PFdriver = chrono_types::make_shared<ChNSFLeaderDriver>(
+            *lead_vehicles[i], steering_controller_file_LD, speed_controller_file_LD, path, "road",
+            cruise_speed * MPH_TO_MS, leaderParam, true);
         lead_PFdriver->Initialize();
         lead_PFdrivers.push_back(lead_PFdriver);
     }
@@ -550,7 +554,7 @@ int main(int argc, char* argv[]) {
         cam->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720));
 
     // add sensor to the manager
-    //manager->AddSensor(cam);
+    // manager->AddSensor(cam);
 
     // -------------------------------------------------------
     // Create a second camera and add it to the sensor manager
@@ -641,7 +645,7 @@ int main(int argc, char* argv[]) {
         vehicle.Advance(step);
 
         app.Advance(step_size);
-        for (int i =0; i<num_lead; i++){
+        for (int i = 0; i < num_lead; i++) {
             ChDriver::Inputs lead_driver_inputs = lead_PFdrivers[i]->GetInputs();
             lead_PFdrivers[i]->Synchronize(time);
             lead_vehicles[i]->Synchronize(time, lead_driver_inputs, terrain);
@@ -704,7 +708,7 @@ int main(int argc, char* argv[]) {
                 buffer << dist << ",";  // Distance bumper-to-bumber
                 ChVector<> dist_v = lead_vehicles[0]->GetChassis()->GetPos() - ego_chassis->GetPos();
                 ChVector<> car_xaxis = ChMatrix33<>(ego_chassis->GetRot()).Get_A_Xaxis();
-                double  proj_dist = (dist_v ^ car_xaxis)  - AUDI_LENGTH;
+                double proj_dist = (dist_v ^ car_xaxis) - AUDI_LENGTH;
                 buffer << proj_dist << " ";  // Projected distance bumper-to-bumber
 
                 buffer << "\n";

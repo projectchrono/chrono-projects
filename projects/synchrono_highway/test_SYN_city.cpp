@@ -42,8 +42,6 @@
 #include "chrono_vehicle/driver/ChPathFollowerACCDriver.h"
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 
-#include "chrono_sensor/sensors/ChCameraSensor.h"
-#include "chrono_sensor/sensors/ChLidarSensor.h"
 #include "chrono_sensor/ChSensorManager.h"
 #include "chrono_sensor/filters/ChFilterAccess.h"
 #include "chrono_sensor/filters/ChFilterLidarNoise.h"
@@ -53,6 +51,8 @@
 #include "chrono_sensor/filters/ChFilterSavePtCloud.h"
 #include "chrono_sensor/filters/ChFilterVisualize.h"
 #include "chrono_sensor/filters/ChFilterVisualizePointCloud.h"
+#include "chrono_sensor/sensors/ChCameraSensor.h"
+#include "chrono_sensor/sensors/ChLidarSensor.h"
 
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
 
@@ -128,7 +128,7 @@ bool load_roads_only = false;
 
 // Resolution of the CSL 3-monitor setup
 const int FS_WIDTH = 3840;
-const int FS_HEIGHT = 720;
+const int FS_HEIGHT = 1080;
 
 std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
 
@@ -163,7 +163,7 @@ std::vector<PathVehicleSetup> demo_config = {
     {SUV, {751.234, 148.93, -64.8}, Q_from_AngZ(3.14), "/paths/2.txt", suv_lookahead, suv_pgain},
     {CITYBUS, {727.834, 124.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", 5.0, 1.0},
     {SUV, {727.834, 85.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", suv_lookahead, suv_pgain},
-    {AUDI, {727.834, 40.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", audi_tight_lookahead,audi_pgain},
+    {AUDI, {727.834, 40.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
     {SUV, {727.834, -34.27, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", suv_lookahead, suv_pgain},
     {AUDI, {727.834, -100.27, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
     {AUDI, {727.834, -212.97, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
@@ -440,7 +440,7 @@ int main(int argc, char* argv[]) {
             camera = chrono_types::make_shared<ChCameraSensor>(
                 vehicle.GetChassisBody(),  // body camera is attached to
                 30.f,                      // update rate in Hz
-                chrono::ChFrame<double>({-2.0*cam_distance, 0, .45 * cam_distance},
+                chrono::ChFrame<double>({-2.0 * cam_distance, 0, .45 * cam_distance},
                                         Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
                 1280,                                                   // image width
                 720,                                                    // image height
@@ -569,10 +569,10 @@ int main(int argc, char* argv[]) {
 
         app.Set(temp_app);
         driver = irr_driver;
-    // } else if (node_id == leader && cli.GetAsType<bool>("console")) {
-    //     // Use custom CSL driver instead of irr driver
-    //     auto csl_driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
-    //     driver = csl_driver;
+        // } else if (node_id == leader && cli.GetAsType<bool>("console")) {
+        //     // Use custom CSL driver instead of irr driver
+        //     auto csl_driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
+        //     driver = csl_driver;
     } else {
         auto path = ChBezierCurve::read(GetChronoDataFile(demo_config[node_id].path_file));
         double target_speed = 11.2;
