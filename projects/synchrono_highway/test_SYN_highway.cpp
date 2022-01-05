@@ -217,9 +217,9 @@ void ReadParameterFiles() {
             for (auto it = marr.begin(); it != marr.end(); ++it) {
                 auto i = std::distance(marr.begin(), it);
                 leaderParam[i].resize(msize1);
-                for(int j = 0; j < marr[i].Size(); j++) {
+                for (int j = 0; j < marr[i].Size(); j++) {
                     leaderParam[i][j] = marr[i][j].GetDouble();
-                    //std::cout<< "param :" << i << "," << j << ":" << marr[i][j].GetDouble() << "\n";
+                    // std::cout<< "param :" << i << "," << j << ":" << marr[i][j].GetDouble() << "\n";
                 }
             }
         } else {
@@ -242,6 +242,8 @@ void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<bool>("Simulation", "fullscreen", "Use full screen camera display", std::to_string(use_fullscreen));
     cli.AddOption<bool>("Simulation", "record", "Record human driver inputs to file", "false");
     cli.AddOption<bool>("Simulation", "replay", "Replay human driver inputs from file", "false");
+
+    cli.AddOption<bool>("Simulation", "birdseye", "Enable birds eye camera", "false");
 
     cli.AddOption<std::string>("Simulation", "scenario_params", "Path to scenario configuration file",
                                scenario_parameters);
@@ -441,7 +443,7 @@ int main(int argc, char* argv[]) {
     IGdriver->Initialize();
 
     std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
-    //std::string path_file = demo_data_path + "/Environments/Iowa/Driver/inner.txt";
+    // std::string path_file = demo_data_path + "/Environments/Iowa/Driver/inner.txt";
     auto path = ChBezierCurve::read(path_file);
     std::string steering_controller_file = demo_data_path + "/Environments/Iowa/Driver/SteeringController.json";
     std::string speed_controller_file = demo_data_path + "/Environments/Iowa/Driver/SpeedController.json";
@@ -485,7 +487,9 @@ int main(int argc, char* argv[]) {
     float intensity = 2.0;
     manager->scene->AddPointLight({0, 0, 1e8}, {intensity, intensity, intensity}, 1e12);
     manager->scene->SetAmbientLight({.1, .1, .1});
-    manager->scene->SetSceneEpsilon(.01);
+    manager->scene->SetSceneEpsilon(1e-3);
+    manager->scene->EnableDynamicOrigin(true);
+    manager->scene->SetOriginOffsetThreshold(500.f);
 
     // Set environment map
     Background b;
@@ -511,7 +515,8 @@ int main(int argc, char* argv[]) {
         cam->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720));
 
     // add sensor to the manager
-    manager->AddSensor(cam);
+    if (cli.GetAsType<bool>("birdseye"))
+        manager->AddSensor(cam);
 
     // -------------------------------------------------------
     // Create a second camera and add it to the sensor manager
@@ -525,7 +530,6 @@ int main(int argc, char* argv[]) {
         cam_fov,
         super_samples);  // fov, lag, exposure
     cam2->SetName("Camera Sensor");
-
     if (sensor_vis)
         cam2->PushFilter(
             chrono_types::make_shared<ChFilterVisualize>(image_width, image_height, "Driver View", use_fullscreen));
@@ -662,7 +666,7 @@ int main(int argc, char* argv[]) {
                 buffer << dist << ",";  // Distance bumper-to-bumber
                 ChVector<> dist_v = lead_vehicle.GetChassis()->GetPos() - ego_chassis->GetPos();
                 ChVector<> car_xaxis = ChMatrix33<>(ego_chassis->GetRot()).Get_A_Xaxis();
-                double  proj_dist = (dist_v ^ car_xaxis)  - AUDI_LENGTH;
+                double proj_dist = (dist_v ^ car_xaxis) - AUDI_LENGTH;
                 buffer << proj_dist << " ";  // Projected distance bumper-to-bumber
 
                 buffer << "\n";
