@@ -39,8 +39,9 @@ using namespace chrono::sensor;
 #define AUDI_LENGTH 4.86
 #define M_TO_MILE 0.000621371
 namespace chrono {
-namespace synchrono {
 
+// Driver for the leader vehicle, it adjusts its target speed according to a piecewise sinusoidal function
+// In the buffer-areas between pieces it keeps the target speed specified in target_speed
 class CH_VEHICLE_API ChNSFLeaderDriver : public ChPathFollowerDriver {
   public:
     /// Construct an interactive driver.
@@ -60,15 +61,50 @@ class CH_VEHICLE_API ChNSFLeaderDriver : public ChPathFollowerDriver {
 
   private:
     // starting pos to compare with to obtain traveled dist 
-    ChVector<> startingPos;
-    //JSON file containing the instruction for target speed
+    ChVector<> previousPos;
+    // traveldistance 
+    double dist;
+    // vector of vectors containing the instruction for target speed
     std::vector<std::vector<double>> behavior_data;
     // Cruise speed between sinusoidal stretches
     double cruise_speed;
 
 };
 
-}  // namespace synchrono
+
+// Driver for the follower vehicle, it adjust its speed 
+class CH_VEHICLE_API ChNSFFollowererDriver : public ChPathFollowerDriver {
+  public:
+    /// Construct an interactive driver.
+    ChNSFFollowererDriver(ChVehicle& vehicle,                                  ///< associated vehicle
+                         const std::string& steering_filename,                 ///< JSON file with steering controller specification
+                         const std::string& speed_filename,                    ///< JSON file with speed controller specification
+                         std::shared_ptr<ChBezierCurve> path,                  ///< Bezier curve with target path
+                         const std::string& path_name,                         ///< name of the path curve
+                         double target_speed,                                  ///< constant target speed
+                         const ChVehicle& lead_vehicle,                        ///< followed_vehicle
+                         std::vector<std::vector<double>> params,              ///< JSON file with piecewise params
+                         bool isClosedPath = false                             ///< Treat the path as a closed loop
+    );
+
+    virtual ~ChNSFFollowererDriver() {}
+
+    void Synchronize(double time, double step);
+
+  private:
+    // starting pos to compare with to obtain traveled dist 
+    ChVector<> previousPos;
+    // traveldistance 
+    double dist;
+    // vector of vectors containing the instruction for target speed
+    std::vector<std::vector<double>> behavior_data;
+    // Cruise speed between sinusoidal stretches
+    double cruise_speed;
+    // leader vehicle to follow
+    const ChVehicle& leader;
+
+};
+
 }  // namespace chrono
 
 #endif
