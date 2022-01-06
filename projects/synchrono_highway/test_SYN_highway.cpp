@@ -159,6 +159,11 @@ int num_lead = 3;
 // Number of leader in the platoon
 double lead_heading = 3;
 
+// Fog parameters
+bool fog_enabled = false;
+ChVector<float> fog_color = {.8, .8, .8};
+float fog_distance = 2000.0;
+
 using namespace std::chrono;
 
 // =============================================================================
@@ -196,6 +201,18 @@ void ReadParameterFiles() {
             }
             if (camera_params.HasMember("FieldOfView")) {
                 cam_fov = camera_params["FieldOfView"].GetFloat() * CH_C_DEG_TO_RAD;
+            }
+        }
+        if (d.HasMember("Fog")) {
+            const rapidjson::Value& fog_params = d["Fog"];
+            if (fog_params.HasMember("Enabled")) {
+                fog_enabled = fog_params["Enabled"].GetBool();
+            }
+            if (fog_params.HasMember("Color")) {
+                fog_color = vehicle::ReadVectorJSON(fog_params["Color"]);
+            }
+            if (fog_params.HasMember("Distance")) {
+                fog_distance = fog_params["Distance"].GetFloat();
             }
         }
     }
@@ -540,8 +557,10 @@ int main(int argc, char* argv[]) {
     b.mode = BackgroundMode::ENVIRONMENT_MAP;
     b.env_tex = GetChronoDataFile("sensor/textures/sunflowers_4k.hdr");
     manager->scene->SetBackground(b);
-    // manager->scene->SetFogScatteringFromDistance(2000.0);
-    // manager->scene->SetFogColor({.8, .8, .8});
+    if (fog_enabled) {
+        manager->scene->SetFogScatteringFromDistance(fog_distance);
+        manager->scene->SetFogColor(fog_color);
+    }
 
     // ------------------------------------------------
     // Create a camera and add it to the sensor manager
