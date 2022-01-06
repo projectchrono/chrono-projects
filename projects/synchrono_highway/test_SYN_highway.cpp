@@ -316,7 +316,7 @@ int main(int argc, char* argv[]) {
     std::string powertrain_file = vehicle::GetDataFile("audi/json/audi_SimpleMapPowertrain.json");
     std::string tire_file = vehicle::GetDataFile("audi/json/audi_TMeasyTire.json");
 
-    WheeledVehicle vehicle(vehicle_file, ChContactMethod::NSC);
+    WheeledVehicle vehicle(vehicle_file, ChContactMethod::SMC);
     auto ego_chassis = vehicle.GetChassis();
     vehicle.Initialize(ChCoordsys<>(initLoc, initRot));
     vehicle.GetChassis()->SetFixed(false);
@@ -399,6 +399,7 @@ int main(int argc, char* argv[]) {
     minfo.mu = 0.9f;
     minfo.cr = 0.01f;
     minfo.Y = 2e7f;
+    minfo.gt = 3000;
     auto patch_mat = minfo.CreateMaterial(contact_method);
 
     std::shared_ptr<RigidTerrain::Patch> patch;
@@ -621,6 +622,7 @@ int main(int argc, char* argv[]) {
             auto wall_time = high_resolution_clock::now();
             printf("Sim Time=%f, \tWall Time=%f, \tExtra Time=%f, \tSpeed mph=%f\n", time,
                    duration_cast<duration<double>>(wall_time - t0).count(), extra_time, speed);
+            std::cout << "Current Gear: " << vehicle.GetPowertrain()->GetCurrentTransmissionGear() << std::endl;
             extra_time = 0.0;
         }
 
