@@ -969,7 +969,7 @@ void AddTerrain(ChSystem* chsystem) {
                                      "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_ROUGH_500.jpg");
     grass_tex_1->SetNormalMapTexture(demo_data_path +
                                      "/Environments/Iowa/terrain/Grass/GroundGrassGreen001_NRM_500.jpg");
-    grass_tex_1->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_Grass_A_v2.png");
+    grass_tex_1->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_Grass_A_v3.png");
     grass_tex_1->SetTextureScale({1000.0, 1000.0, 1.0});
     grass_tex_1->SetSpecularColor({.0f, .0f, .0f});
     grass_tex_1->SetRoughness(1.f);
@@ -983,24 +983,24 @@ void AddTerrain(ChSystem* chsystem) {
                                      "/Environments/Iowa/terrain/Grass/GroundGrassGreenPatchy002_ROUGH_500.png");
     grass_tex_2->SetNormalMapTexture(demo_data_path +
                                      "/Environments/Iowa/terrain/Grass/GroundGrassGreenPatchy002_NRM_500.jpg");
-    grass_tex_2->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_Grass_B_v2.png");
+    grass_tex_2->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_Grass_B_v3.png");
     grass_tex_2->SetSpecularColor({.0f, .0f, .0f});
     grass_tex_2->SetTextureScale({1000.0, 1000.0, 1.0});
     grass_tex_2->SetRoughness(1.f);
     grass_tex_2->SetUseSpecularWorkflow(false);
     terrain_shape->material_list.push_back(grass_tex_2);
 
-    auto field_tex = chrono_types::make_shared<ChVisualMaterial>();
-    field_tex->SetKdTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundMudCracked006_COL_500.jpg");
-    field_tex->SetRoughnessTexture(demo_data_path +
-                                   "/Environments/Iowa/terrain/Grass/GroundMudCracked006_ROUGH_500.png");
-    field_tex->SetNormalMapTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundMudCracked006_NRM_500.jpg");
-    field_tex->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_DirtFields_v2.png");
-    field_tex->SetSpecularColor({.0f, .0f, .0f});
-    field_tex->SetTextureScale({1000.0, 1000.0, 1.0});
-    field_tex->SetRoughness(1.f);
-    field_tex->SetUseSpecularWorkflow(false);
-    terrain_shape->material_list.push_back(field_tex);
+    // auto field_tex = chrono_types::make_shared<ChVisualMaterial>();
+    // field_tex->SetKdTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundMudCracked006_COL_500.jpg");
+    // field_tex->SetRoughnessTexture(demo_data_path +
+    //                                "/Environments/Iowa/terrain/Grass/GroundMudCracked006_ROUGH_500.png");
+    // field_tex->SetNormalMapTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundMudCracked006_NRM_500.jpg");
+    // field_tex->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_DirtFields_v2.png");
+    // field_tex->SetSpecularColor({.0f, .0f, .0f});
+    // field_tex->SetTextureScale({1000.0, 1000.0, 1.0});
+    // field_tex->SetRoughness(1.f);
+    // field_tex->SetUseSpecularWorkflow(false);
+    // terrain_shape->material_list.push_back(field_tex);
 
     auto terrain_body = chrono_types::make_shared<ChBody>();
     terrain_body->SetPos({0, 0, -.01});
