@@ -637,10 +637,11 @@ int main(int argc, char* argv[]) {
         // driver_inputs.m_throttle = 0;
         // driver_inputs.m_steering *= -1;
         if (step_number % int(1 / step_size) == 0) {
-            auto speed = lead_vehicles[0]->GetVehicleSpeed() * MS_TO_MPH;
+            auto ld_speed = lead_vehicles[0]->GetVehicleSpeed() * MS_TO_MPH;
+            auto ig_speed = vehicle.GetVehicleSpeed() * MS_TO_MPH;
             auto wall_time = high_resolution_clock::now();
-            printf("Sim Time=%f, \tWall Time=%f, \tExtra Time=%f, \tSpeed mph=%f\n", time,
-                   duration_cast<duration<double>>(wall_time - t0).count(), extra_time, speed);
+            printf("Sim Time=%f, \tWall Time=%f, \tExtra Time=%f, \tLD_Speed mph=%f, \tIG_Speed mph=%f\n", time,
+                   duration_cast<duration<double>>(wall_time - t0).count(), extra_time, ld_speed, ig_speed);
             std::cout << "Current Gear: " << vehicle.GetPowertrain()->GetCurrentTransmissionGear() << std::endl;
             extra_time = 0.0;
         }
@@ -684,7 +685,7 @@ int main(int argc, char* argv[]) {
                     (demo_data_path + "/miscellaneous/Speedometer.png").c_str()),
                 irr::core::position2d<irr::s32>(0, 0));
             double speed_mph = vehicle.GetVehicleSpeedCOM() * MS_TO_MPH;
-            double theta = ((270 / 140) * speed_mph) * (CH_C_PI / 180);
+            double theta = ((265 / 130) * speed_mph) * (CH_C_PI / 180);
             app.GetDevice()->getVideoDriver()->draw2DLine(
                 sm_center + irr::core::position2d<irr::s32>(-sm_needle * sin(theta), sm_needle * cos(theta)), sm_center,
                 irr::video::SColor(255, 255, 0, 0));
@@ -994,9 +995,9 @@ void AddTerrain(ChSystem* chsystem) {
     // field_tex->SetKdTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundMudCracked006_COL_500.jpg");
     // field_tex->SetRoughnessTexture(demo_data_path +
     //                                "/Environments/Iowa/terrain/Grass/GroundMudCracked006_ROUGH_500.png");
-    // field_tex->SetNormalMapTexture(demo_data_path + "/Environments/Iowa/terrain/Grass/GroundMudCracked006_NRM_500.jpg");
-    // field_tex->SetWeightTexture(demo_data_path + "/Environments/Iowa/terrain/Terrain_Weightmap_DirtFields_v2.png");
-    // field_tex->SetSpecularColor({.0f, .0f, .0f});
+    // field_tex->SetNormalMapTexture(demo_data_path +
+    // "/Environments/Iowa/terrain/Grass/GroundMudCracked006_NRM_500.jpg"); field_tex->SetWeightTexture(demo_data_path +
+    // "/Environments/Iowa/terrain/Terrain_Weightmap_DirtFields_v2.png"); field_tex->SetSpecularColor({.0f, .0f, .0f});
     // field_tex->SetTextureScale({1000.0, 1000.0, 1.0});
     // field_tex->SetRoughness(1.f);
     // field_tex->SetUseSpecularWorkflow(false);
