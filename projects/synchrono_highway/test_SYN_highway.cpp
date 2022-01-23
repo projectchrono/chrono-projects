@@ -150,7 +150,7 @@ bool save_driver = true;
 // time interval between data savings
 double tsave = 2e-2;
 // path where the output is saved
-std::string output_file_path = "./output.txt";
+std::string output_file_path = "./output.csv";
 std::stringstream buffer;
 std::ofstream filestream(output_file_path);
 
@@ -526,7 +526,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (save_driver)
-        filestream << "Legend: numsteps, time, isManual, Steering, Throttle, Braking, x, y, speed[mph], acceleration "
+        filestream << "time, isManual, Steering, Throttle, Braking, x, y, speed[mph], acceleration "
                       "[m/s^2], dist [m], dist_projected[m]}  \n ";
 
     // ---------------
@@ -710,7 +710,6 @@ int main(int argc, char* argv[]) {
         if (save_driver) {
             if (step_number % int(tsave / step_size) == 0) {
                 buffer << std::fixed << std::setprecision(3);
-                buffer << std::to_string(step_number) + " ,";
                 buffer << std::to_string(time) + " ,";
                 ChDriver* currDriver;
                 bool isManual;
