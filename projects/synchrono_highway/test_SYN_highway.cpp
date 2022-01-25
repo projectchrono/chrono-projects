@@ -61,6 +61,11 @@ using namespace chrono::sensor;
 using namespace chrono::synchrono;
 
 // -----------------------------------------------------------------------------
+// rad to RPM conversion
+// -----------------------------------------------------------------------------
+const double rads2rpm = 30 / CH_C_PI;
+
+// -----------------------------------------------------------------------------
 // Vehicle parameters
 // -----------------------------------------------------------------------------
 
@@ -132,7 +137,10 @@ bool sensor_save = false;
 bool sensor_vis = true;
 
 /// Speedometer image data
-irr::core::position2d<irr::s32> sm_center(300, 200);
+irr::core::position2d<irr::s32> sm_center(216, 212);
+irr::core::position2d<irr::s32> rpm_center(606, 212);
+irr::core::position2d<irr::s32> gr_center(385, 20);
+irr::core::position2d<irr::s32> auto_center(355, 335);
 double sm_needle = 140;
 
 std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
@@ -409,6 +417,9 @@ int main(int argc, char* argv[]) {
         lead_vehicles.push_back(lead_vehicle);
     }
 
+    // Obtain lead vehicle chassis
+    auto lead_chassis = lead_vehicles[lead_vehicles.size() - 1]->GetChassis();
+
     // Create the terrain
     RigidTerrain terrain(vehicle.GetSystem());
 
@@ -465,7 +476,7 @@ int main(int argc, char* argv[]) {
     // Create the driver system
     // ------------------------
 
-    ChWheeledVehicleIrrApp app(&vehicle, L"  ", irr::core::dimension2d<irr::u32>(600, 400));
+    ChWheeledVehicleIrrApp app(&vehicle, L"  ", irr::core::dimension2d<irr::u32>(810, 420));
     ChRealtimeStepTimer realtime_timer;
     /*
     SPEEDOMETER: we want to use the irrlicht app to display the speedometer, but calling endscene would update the
@@ -526,8 +537,9 @@ int main(int argc, char* argv[]) {
     }
 
     if (save_driver)
-        filestream << "time, isManual, Steering, Throttle, Braking, x, y, speed[mph], acceleration "
-                      "[m/s^2], dist [m], dist_projected[m]}  \n ";
+        filestream << "time, isManual, Steering, Throttle, Braking, x[m], y[m], speed[mph], acceleration[m/s^2], "
+                      "dist[m], dist_projected[m], IG_mile[mile], LD_x[m], LD_y[m], LD_speed[mph], "
+                      "LD_acc[m/s^2], LD_mile[mile]   \n ";
 
     // ---------------
     // Simulation loop
@@ -682,13 +694,76 @@ int main(int argc, char* argv[]) {
             /// irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0), false);
             app.GetDevice()->getVideoDriver()->draw2DImage(
                 app.GetDevice()->getVideoDriver()->getTexture(
-                    (demo_data_path + "/miscellaneous/Speedometer.png").c_str()),
+                    (demo_data_path + "/miscellaneous/dashboard.png").c_str()),
                 irr::core::position2d<irr::s32>(0, 0));
+
+            int curr_gear = vehicle.GetPowertrain()->GetCurrentTransmissionGear();
+
+            switch (curr_gear) {
+                case 1:
+                    app.GetDevice()->getVideoDriver()->draw2DImage(
+                        app.GetDevice()->getVideoDriver()->getTexture(
+                            (demo_data_path + "/miscellaneous/GEAR1.png").c_str()),
+                        gr_center);
+                    break;
+
+                case 2:
+                    app.GetDevice()->getVideoDriver()->draw2DImage(
+                        app.GetDevice()->getVideoDriver()->getTexture(
+                            (demo_data_path + "/miscellaneous/GEAR2.png").c_str()),
+                        gr_center);
+                    break;
+
+                case 3:
+                    app.GetDevice()->getVideoDriver()->draw2DImage(
+                        app.GetDevice()->getVideoDriver()->getTexture(
+                            (demo_data_path + "/miscellaneous/GEAR3.png").c_str()),
+                        gr_center);
+                    break;
+
+                case 4:
+                    app.GetDevice()->getVideoDriver()->draw2DImage(
+                        app.GetDevice()->getVideoDriver()->getTexture(
+                            (demo_data_path + "/miscellaneous/GEAR4.png").c_str()),
+                        gr_center);
+                    break;
+
+                case 5:
+                    app.GetDevice()->getVideoDriver()->draw2DImage(
+                        app.GetDevice()->getVideoDriver()->getTexture(
+                            (demo_data_path + "/miscellaneous/GEAR5.png").c_str()),
+                        gr_center);
+                    break;
+
+                case 6:
+                    app.GetDevice()->getVideoDriver()->draw2DImage(
+                        app.GetDevice()->getVideoDriver()->getTexture(
+                            (demo_data_path + "/miscellaneous/GEAR6.png").c_str()),
+                        gr_center);
+                    break;
+
+                default:
+                    break;
+            }
+
             double speed_mph = vehicle.GetVehicleSpeedCOM() * MS_TO_MPH;
             double theta = ((265 / 130) * speed_mph) * (CH_C_PI / 180);
             app.GetDevice()->getVideoDriver()->draw2DLine(
                 sm_center + irr::core::position2d<irr::s32>(-sm_needle * sin(theta), sm_needle * cos(theta)), sm_center,
                 irr::video::SColor(255, 255, 0, 0));
+
+            double engine_rpm = powertrain->GetMotorSpeed() * rads2rpm;
+            double alpha = ((265.0 / 6500.0) * engine_rpm) * (CH_C_PI / 180);
+            app.GetDevice()->getVideoDriver()->draw2DLine(
+                rpm_center + irr::core::position2d<irr::s32>(-sm_needle * sin(alpha), sm_needle * cos(alpha)),
+                rpm_center, irr::video::SColor(255, 255, 0, 0));
+
+            if (driver_mode == AUTONOMOUS) {
+                app.GetDevice()->getVideoDriver()->draw2DImage(
+                    app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/auto.png").c_str()),
+                    auto_center);
+            }
+
             app.GetDevice()->getVideoDriver()->endScene();
         }
 
@@ -734,7 +809,19 @@ int main(int argc, char* argv[]) {
                 ChVector<> dist_v = lead_vehicles[0]->GetChassis()->GetPos() - ego_chassis->GetPos();
                 ChVector<> car_xaxis = ChMatrix33<>(ego_chassis->GetRot()).Get_A_Xaxis();
                 double proj_dist = (dist_v ^ car_xaxis) - AUDI_LENGTH;
-                buffer << proj_dist << " ";  // Projected distance bumper-to-bumber
+                buffer << proj_dist << ",";  // Projected distance bumper-to-bumber
+
+                // output mile marker
+                buffer << abs((ego_chassis->GetPos().y() - initLoc.y()) / 1609.34) << ",";
+
+                // the last lead vehicle data
+                buffer << lead_chassis->GetPos().x() << ",";
+                buffer << lead_chassis->GetPos().y() << ",";
+                buffer << lead_chassis->GetSpeed() * MS_TO_MPH << ",";
+                buffer << lead_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << ",";
+
+                // output mile marker
+                buffer << abs((lead_chassis->GetPos().y() - initLoc.y()) / 1609.34);
 
                 buffer << "\n";
                 if ((step_number % int(30 / step_size) == 0)) {
