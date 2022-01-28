@@ -463,6 +463,39 @@ int main(int argc, char* argv[]) {
     // Add buildings away from the road to break up the horizon
     AddBuildings(vehicle.GetSystem());
 
+    // 01/27 Test Region
+    // -----------------
+    // Add dummy vehicles
+    // -----------------
+
+    float dummy_speed = 5;
+
+    std::vector<std::shared_ptr<ChBodyAuxRef>> dummies;
+
+    for (int i = 0; i < 5; i++) {
+        auto dummy = chrono_types::make_shared<ChBodyAuxRef>();
+
+        auto mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
+        mmesh->LoadWavefrontMesh(demo_data_path + "/vehicles/sedan/FullSedan.obj", false, true);
+        mmesh->RepairDuplicateVertexes(1e-9);
+
+        dummy->SetCollide(false);
+        dummy->SetPos(initLoc + ChVector<>(0, -10 - i * 8, -0.3));
+        dummy->SetRot(Q_from_Euler123(ChVector<>(0, 0, -CH_C_PI / 2 - 0.019997334)));
+        dummy->SetBodyFixed(true);
+
+        auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+        trimesh_shape->SetMesh(mmesh);
+
+        dummy->AddAsset(trimesh_shape);
+
+        vehicle.GetSystem()->AddBody(dummy);
+
+        dummies.push_back(dummy);
+    }
+
+    // End 01/27 test
+
     // -----------------
     // Initialize output
     // -----------------
@@ -683,6 +716,12 @@ int main(int argc, char* argv[]) {
         vehicle.Advance(step);
 
         app.Advance(step_size);
+
+        // 01/27 dummy update
+        for (int i = 0; i < 5; i++) {
+            dummies[i]->SetPos((dummies[i]->GetPos()) + ChVector<>(-0.2 * step_size, -dummy_speed * step_size, 0));
+        }
+
         for (int i = 0; i < num_lead; i++) {
             ChDriver::Inputs lead_driver_inputs = lead_PFdrivers[i]->GetInputs();
             lead_PFdrivers[i]->Synchronize(time);
