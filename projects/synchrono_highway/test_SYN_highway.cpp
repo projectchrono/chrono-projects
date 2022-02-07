@@ -21,6 +21,7 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 #include <irrlicht.h>
+#include <limits>
 #include "chrono_models/vehicle/hmmwv/HMMWV.h"
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
@@ -172,6 +173,10 @@ bool fog_enabled = false;
 ChVector<float> fog_color = {.8, .8, .8};
 float fog_distance = 2000.0;
 
+// Dummy vehicle offset
+float dummy_sedan_z_offset = -18.30;
+float dummy_patrol_z_offset = -18.0;
+
 using namespace std::chrono;
 
 // =============================================================================
@@ -186,6 +191,13 @@ void AddTerrain(ChSystem* chsystem);
 void AddRoadway(ChSystem* chsystem);
 // buildings in the environment
 void AddBuildings(ChSystem* chsystem);
+
+void updateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
+                 std::shared_ptr<ChBezierCurve> curve,
+                 float dummy_speed,
+                 float step_size,
+                 float z_offset,
+                 ChBezierCurveTracker tracker);
 
 void ReadParameterFiles() {
     {  // Simulation parameter file
@@ -341,6 +353,12 @@ int main(int argc, char* argv[]) {
     std::string powertrain_file = vehicle::GetDataFile("audi/json/audi_SimpleMapPowertrain.json");
     std::string tire_file = vehicle::GetDataFile("audi/json/audi_TMeasyTire.json");
 
+    // std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
+    std::string path_file = demo_data_path + "/Environments/Iowa/Driver/OnOuterLane.txt";
+    auto path = ChBezierCurve::read(path_file);
+    auto dummy_path_file = demo_data_path + "/Environments/Iowa/Driver/OnOuterLane.txt";
+    auto dummy_path = ChBezierCurve::read(dummy_path_file);
+
     WheeledVehicle vehicle(vehicle_file, ChContactMethod::SMC);
     auto ego_chassis = vehicle.GetChassis();
     vehicle.Initialize(ChCoordsys<>(initLoc, initRot));
@@ -468,20 +486,48 @@ int main(int argc, char* argv[]) {
     // Add dummy vehicles
     // -----------------
 
-    float dummy_speed = 5;
+    int num_dummy = 3;
+    float dummy_speed = 45;
+
+    std::vector<ChVector<>> dummy_start;
+    std::vector<ChBezierCurveTracker> tracker_vec;
+
+    for (int i = 0; i < num_dummy; i++) {
+        ChBezierCurveTracker tracker(dummy_path);
+        tracker.setIsClosedPath(true);
+        tracker_vec.push_back(tracker);
+    }
+
+    for (int i = 0; i < num_dummy; i++) {
+        dummy_start.push_back(ChVector<>(0, 0, 0));
+        tracker_vec[i].calcClosestPoint(initLoc + ChVector<>(0, -15 - 10 * i, 0), dummy_start[i]);
+    }
 
     std::vector<std::shared_ptr<ChBodyAuxRef>> dummies;
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < num_dummy; i++) {
+        std::string mesh_name;
+        float dummy_z_offset;
+        if (i == 0) {
+            mesh_name = "/vehicles/sedan/FullSedan.obj";
+            dummy_z_offset = dummy_sedan_z_offset;
+        } else if (i == 1) {
+            mesh_name = "/vehicles/Nissan_Patrol/FullPatrol.obj";
+            dummy_z_offset = dummy_patrol_z_offset;
+        } else if (i == 2) {
+            mesh_name = "/vehicles/Nissan_Patrol/FullPatrol.obj";
+            dummy_z_offset = dummy_patrol_z_offset;
+        }
+
         auto dummy = chrono_types::make_shared<ChBodyAuxRef>();
 
         auto mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
-        mmesh->LoadWavefrontMesh(demo_data_path + "/vehicles/sedan/FullSedan.obj", false, true);
+        mmesh->LoadWavefrontMesh(demo_data_path + mesh_name, false, true);
         mmesh->RepairDuplicateVertexes(1e-9);
 
         dummy->SetCollide(false);
-        dummy->SetPos(initLoc + ChVector<>(0, -10 - i * 8, -0.3));
-        dummy->SetRot(Q_from_Euler123(ChVector<>(0, 0, -CH_C_PI / 2 - 0.019997334)));
+        dummy->SetPos(dummy_start[i] + ChVector<>(0, 0, dummy_z_offset));
+
         dummy->SetBodyFixed(true);
 
         auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
@@ -537,9 +583,6 @@ int main(int argc, char* argv[]) {
                               ChIrrGuiDriver::JoystickAxes::AXIS_X, ChIrrGuiDriver::JoystickAxes::NONE);
     IGdriver->Initialize();
 
-    // std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
-    std::string path_file = demo_data_path + "/Environments/Iowa/Driver/OnOuterLane.txt";
-    auto path = ChBezierCurve::read(path_file);
     std::string steering_controller_file_IG = demo_data_path + "/Environments/Iowa/Driver/SteeringController_IG.json";
     std::string steering_controller_file_LD = demo_data_path + "/Environments/Iowa/Driver/SteeringController_LD.json";
     std::string speed_controller_file_IG = demo_data_path + "/Environments/Iowa/Driver/SpeedController_IG.json";
@@ -688,6 +731,7 @@ int main(int argc, char* argv[]) {
             printf("Sim Time=%f, \tWall Time=%f, \tExtra Time=%f, \tLD_Speed mph=%f, \tIG_Speed mph=%f\n", time,
                    duration_cast<duration<double>>(wall_time - t0).count(), extra_time, ld_speed, ig_speed);
             std::cout << "Current Gear: " << vehicle.GetPowertrain()->GetCurrentTransmissionGear() << std::endl;
+            std::cout << "Heading: " << lead_vehicles[0]->GetVehiclePointVelocity(ChVector<>(0, 0, 0)) << std::endl;
             extra_time = 0.0;
         }
 
@@ -718,8 +762,16 @@ int main(int argc, char* argv[]) {
         app.Advance(step_size);
 
         // 01/27 dummy update
-        for (int i = 0; i < 5; i++) {
-            dummies[i]->SetPos((dummies[i]->GetPos()) + ChVector<>(-0.2 * step_size, -dummy_speed * step_size, 0));
+        for (int i = 0; i < num_dummy; i++) {
+            float temp_z_offset;
+            if (i == 0) {
+                temp_z_offset = dummy_sedan_z_offset;
+            } else if (i == 1) {
+                temp_z_offset = dummy_patrol_z_offset;
+            } else if (i == 2) {
+                temp_z_offset = dummy_patrol_z_offset;
+            }
+            updateDummy(dummies[i], dummy_path, dummy_speed, step_size, temp_z_offset, tracker_vec[i]);
         }
 
         for (int i = 0; i < num_lead; i++) {
@@ -1150,4 +1202,35 @@ void customButtonCallback() {
         last_invoked = current_invoke;
     } else
         std::cout << "Callback Not Invoked, call was too close to the last one \n";
+}
+
+// Update dummy vehicles based on bazier curve and speed
+void updateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
+                 std::shared_ptr<ChBezierCurve> curve,
+                 float dummy_speed,
+                 float step_size,
+                 float z_offset,
+                 ChBezierCurveTracker tracker) {
+    ChVector<> sen = dummy_vehicle->GetPos();
+    ChVector<> prev_pos = sen;
+
+    ChVector<> target;
+    ChFrame<> frame;
+    double curv;
+
+    tracker.calcClosestPoint(sen, frame, curv);
+    ChVector<> vel_dir = -frame.TransformDirectionLocalToParent(ChVector<>(1, 0, 0));
+    vel_dir.Normalize();
+
+    tracker.calcClosestPoint(sen + (vel_dir * dummy_speed * MPH_TO_MS * step_size), target);
+
+    target = target + ChVector<>(0, 0, z_offset);
+
+    // ChVector<> diff_vec = vel_dir;
+    //  ChVector<> base(0.306848, -0.951757, -0.0013998);
+    float angle = atan2(vel_dir[1], vel_dir[0]);
+
+    dummy_vehicle->SetRot(Q_from_Euler123(ChVector<>(0, 0, angle)));
+
+    dummy_vehicle->SetPos(target);
 }
