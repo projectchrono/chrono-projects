@@ -45,16 +45,19 @@ using namespace cascade;
 //
 
 int main(int argc, char* argv[]) {
+    // Set path to Chrono data directories
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     // 1- Create a ChronoENGINE physical system: all bodies and constraints
     //    will be handled by this ChSystemNSC object.
     ChSystemNSC my_system;
 
     // Create the Irrlicht visualization
     ChIrrApp application(&my_system, L"Load a robot model from STEP file", core::dimension2d<u32>(800, 600));
-    application.AddTypicalLogo();
-    application.AddTypicalSky();
-    application.AddTypicalLights(core::vector3df(30, 100, 30), core::vector3df(30, -80, -30), 200, 130);
-    application.AddTypicalCamera(core::vector3df(0.2f, 1.6f, -3.5f), core::vector3df(0.0f, 1.0f, 0.0f));
+    application.AddLogo();
+    application.AddSkyBox();
+    application.AddTypicalLights();
+    application.AddCamera(core::vector3df(0.2f, 1.6f, -3.5f), core::vector3df(0.0f, 1.0f, 0.0f));
 
     //
     // Load a STEP file, containing a mechanism. The demo STEP file has been

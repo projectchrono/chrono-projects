@@ -270,10 +270,10 @@ int main(int argc, char* argv[]) {
     // Create Irrlicht window and camera
     // ---------------------------------
     ChIrrApp application(&system, L"Inverted Pendulum", core::dimension2d<u32>(800, 600));
-    application.AddTypicalLogo();
-    application.AddTypicalSky();
+    application.AddLogo();
+    application.AddSkyBox();
     application.AddTypicalLights();
-    application.AddTypicalCamera(core::vector3df(2.8f, 0, 1.8f), core::vector3df(1.2f, 0, -0.3f));
+    application.AddCamera(core::vector3df(2.8f, 0, 1.8f), core::vector3df(1.2f, 0, -0.3f));
 
     application.AssetBindAll();
     application.AssetUpdateAll();

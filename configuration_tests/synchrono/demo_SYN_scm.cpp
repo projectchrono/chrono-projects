@@ -282,10 +282,8 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<ChWheeledVehicleIrrApp> app;
     if (cli.HasValueInVector<int>("irr", node_id)) {
         app = chrono_types::make_shared<ChWheeledVehicleIrrApp>(&hmmwv.GetVehicle(), L"SynChrono SCM Demo");
-        app->SetSkyBox();
-        app->AddTypicalLogo();
-        app->AddTypicalLights(irr::core::vector3df(30.f, -30.f, 100.f), irr::core::vector3df(30.f, 50.f, 100.f), 250,
-                              130);
+        app->AddLogo();
+        app->AddTypicalLights();
         app->SetChaseCamera(trackPoint, 6.0, 0.5);
         app->SetTimestep(step_size);
         app->AssetBindAll();

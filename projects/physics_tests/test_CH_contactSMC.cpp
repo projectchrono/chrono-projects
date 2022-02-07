@@ -153,10 +153,10 @@ int main(int argc, char* argv[]) {
 
     // Create the Irrlicht visualization
     ChIrrApp application(&system, L"SMC demo", core::dimension2d<u32>(800, 600));
-    application.AddTypicalLogo();
-    application.AddTypicalSky();
+    application.AddLogo();
+    application.AddSkyBox();
     application.AddTypicalLights();
-    application.AddTypicalCamera(core::vector3df(0, 3, -6));
+    application.AddCamera(core::vector3df(0, 3, -6));
 
     // This means that contactforces will be shown in Irrlicht application
     application.SetSymbolscale(1e-4);

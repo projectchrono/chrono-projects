@@ -67,10 +67,10 @@ int main(int argc, char* argv[]) {
     ChSystemNSC system;
 
     ChIrrApp application(&system, L"Paths", core::dimension2d<u32>(800, 600));
-    application.AddTypicalLogo();
-    application.AddTypicalSky();
+    application.AddLogo();
+    application.AddSkyBox();
     application.AddTypicalLights();
-    application.AddTypicalCamera(core::vector3df(0.5, 0.5, -1));
+    application.AddCamera(core::vector3df(0.5, 0.5, -1));
 
     // Show contact forces in Irrlicht application
     application.SetSymbolscale(0.2);

@@ -97,10 +97,10 @@ int main(int argc, char* argv[]) {
 
     // Create the Irrlicht visualization
     ChIrrApp application(&system, L"Brake test", core::dimension2d<u32>(800, 600));
-    application.AddTypicalLogo();
-    application.AddTypicalSky();
+    application.AddLogo();
+    application.AddSkyBox();
     application.AddTypicalLights();
-    application.AddTypicalCamera(core::vector3df(1, 0.5, -1));
+    application.AddCamera(core::vector3df(1, 0.5, -1));
     application.AssetBindAll();
     application.AssetUpdateAll();
 

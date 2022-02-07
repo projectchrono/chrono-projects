@@ -25,7 +25,7 @@
 #include "chrono/core/ChStream.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
-#include "chrono/parallel/ChOpenMP.h"
+#include "chrono/utils/ChOpenMP.h"
 
 #ifdef CHRONO_PARDISO_MKL
 #include "chrono_pardisomkl/ChSolverPardisoMKL.h"
@@ -245,8 +245,7 @@ int main(int argc, char* argv[]) {
 
     // Create the vehicle Irrlicht interface
     ChWheeledVehicleIrrApp app(&my_hmmwv.GetVehicle(), L"HMMWV ANCF tires Test");
-    app.SetSkyBox();
-    app.AddTypicalLights(irr::core::vector3df(30.f, -30.f, 100.f), irr::core::vector3df(30.f, 50.f, 100.f), 250, 130);
+    app.AddTypicalLights();
     app.SetChaseCamera(trackPoint, 6.0, 0.5);
     app.SetTimestep(step_size);
     app.AssetBindAll();

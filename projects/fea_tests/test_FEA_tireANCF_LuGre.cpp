@@ -1227,12 +1227,10 @@ int main(int argc, char* argv[]) {
     auto my_mesh = chrono_types::make_shared<ChMesh>();
     // Visualization:
     ChIrrApp application(&my_system, L"ANCF Rolling Tire", core::dimension2d<u32>(1080, 800));
-    application.AddTypicalLogo();
-    application.AddTypicalSky();
+    application.AddLogo();
+    application.AddSkyBox();
+    application.AddCamera(core::vector3df(0.5f, 0.5f, 1.15f), core::vector3df(-1.15f, 0.0f, 0.0f));
     application.AddTypicalLights();
-    application.AddTypicalCamera(core::vector3df(0.5f, 0.5f, 1.15f), core::vector3df(-1.15f, 0.0f, 0.0f));
-    application.AddTypicalLights(irr::core::vector3df(30.f, -30.f, 100.f), irr::core::vector3df(30.f, 50.f, 100.f), 160,
-                                 70);
     utils::CSV_writer out("\t");
     out.stream().setf(std::ios::scientific | std::ios::showpos);
     out.stream().precision(7);

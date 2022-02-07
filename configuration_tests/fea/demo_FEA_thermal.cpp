@@ -57,11 +57,10 @@ int main(int argc, char* argv[]) {
     ChIrrApp application(&my_system, L"FEM thermal", core::dimension2d<u32>(800, 600));
 
     // Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
-    application.AddTypicalLogo();
-    application.AddTypicalSky();
-    application.AddTypicalLights(core::vector3df(20, 20, 20), core::vector3df(-20, 20, -20), 90, 90,
-                                 irr::video::SColorf(0.5, 0.5, 0.5));
-    application.AddTypicalCamera(core::vector3df(0, (f32)0.7, -1), core::vector3df(0, (f32)0.4, 0));
+    application.AddLogo();
+    application.AddSkyBox();
+    application.AddTypicalLights();
+    application.AddCamera(core::vector3df(0, (f32)0.7, -1), core::vector3df(0, (f32)0.4, 0));
 
     // Create a mesh, that is a container for groups
     // of elements and their referenced nodes.

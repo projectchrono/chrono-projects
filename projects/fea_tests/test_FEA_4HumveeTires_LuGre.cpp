@@ -527,13 +527,12 @@ int main(int argc, char* argv[]) {
     ChSystemNSC my_system;
 
     ChIrrApp application(&my_system, L"ANCF Rolling Tire", core::dimension2d<u32>(1080, 800));
-    application.AddTypicalLogo();
-    application.AddTypicalSky();
+    application.AddLogo();
+    application.AddSkyBox();
     application.AddTypicalLights();
-    application.AddTypicalCamera(core::vector3df(0.5f, 0.5f, 1.15f),   // camera location
-                                 core::vector3df(0.65f, 0.0f, 0.0f));  // "look at" location
-    application.AddTypicalLights(irr::core::vector3df(30.f, -30.f, 100.f), irr::core::vector3df(30.f, 50.f, 100.f), 160,
-                                 70);
+    application.AddCamera(core::vector3df(0.5f, 0.5f, 1.15f),   // camera location
+                          core::vector3df(0.65f, 0.0f, 0.0f));  // "look at" location
+    application.AddTypicalLights();
     utils::CSV_writer out("\t");
     out.stream().setf(std::ios::scientific | std::ios::showpos);
     out.stream().precision(7);

@@ -52,10 +52,10 @@ int main(int argc, char* argv[]) {
     // Create the Irrlicht visualization (open the Irrlicht device,
     // bind a simple user interface, etc. etc.)
     ChIrrApp application(&my_system, L"Beams and constraints", core::dimension2d<u32>(800, 600));
-    application.AddTypicalLogo();
-    application.AddTypicalSky();
+    application.AddLogo();
+    application.AddSkyBox();
     application.AddTypicalLights();
-    application.AddTypicalCamera(core::vector3df(0, (f32)(scales * 0.01), (f32)(scales * 0.01)));
+    application.AddCamera(core::vector3df(0, (f32)(scales * 0.01), (f32)(scales * 0.01)));
     application.GetSceneManager()->getActiveCamera()->setNearValue(0.001f);
     application.GetSceneManager()->getActiveCamera()->setFarValue((f32)(scales * 0.03));
 

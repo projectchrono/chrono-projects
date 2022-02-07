@@ -19,7 +19,7 @@
 #include "chrono/physics/ChLoaderUV.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/physics/ChSystemSMC.h"
-#include "chrono/parallel/ChOpenMP.h"
+#include "chrono/utils/ChOpenMP.h"
 
 #include "chrono/fea/ChMesh.h"
 #include "chrono/fea/ChMeshFileLoader.h"
@@ -299,10 +299,10 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_IRRLICHT
         // Create Irrlicht visualization application
         ChIrrApp application(&my_system, L"ABAQUS tire demo", core::dimension2d<u32>(1280, 720));
-        application.AddTypicalLogo();
-        application.AddTypicalSky();
+        application.AddLogo();
+        application.AddSkyBox();
         application.AddTypicalLights();
-        application.AddTypicalCamera(core::vector3df(1.0f, 1.4f, -1.2f), core::vector3df(0, (f32)tire_rad, 0));
+        application.AddCamera(core::vector3df(1.0f, 1.4f, -1.2f), core::vector3df(0, (f32)tire_rad, 0));
         application.AddLightWithShadow(core::vector3df(1.5f, 5.5f, -2.5f), core::vector3df(0, 0, 0), 3, 2.2, 7.2, 40, 512,
                                        video::SColorf(0.8f, 0.8f, 1.0f));
         application.AddShadowAll();

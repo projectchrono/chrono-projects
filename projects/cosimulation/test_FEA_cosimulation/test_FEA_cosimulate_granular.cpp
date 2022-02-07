@@ -108,10 +108,10 @@ int main(int argc, char* argv[]) {
     // Create the Irrlicht visualization (open the Irrlicht device,
     // bind a simple user interface, etc. etc.)
     ChIrrApp application(&my_system, L"FEA contacts", core::dimension2d<u32>(1280, 720));
-    application.AddTypicalLogo();
-    application.AddTypicalSky();
+    application.AddLogo();
+    application.AddSkyBox();
     application.AddTypicalLights();
-    application.AddTypicalCamera(core::vector3dfCH(ChVector<>(3, 1.4, -3.2)), core::vector3dfCH(ChVector<>(0, 0, 0)));
+    application.AddCamera(core::vector3dfCH(ChVector<>(3, 1.4, -3.2)), core::vector3dfCH(ChVector<>(0, 0, 0)));
     application.AddLightWithShadow(core::vector3dfCH(ChVector<>(1.5, 5.5, -2.5)), core::vector3df(0, 0, 0), 3, 2.2, 7.2,
                                    40, 512, video::SColorf((f32)0.8, (f32)0.8, (f32)1.0));
 #endif
