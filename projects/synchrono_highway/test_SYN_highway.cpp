@@ -175,7 +175,9 @@ float fog_distance = 2000.0;
 
 // Dummy vehicle offset
 float dummy_sedan_z_offset = -18.30;
-float dummy_patrol_z_offset = -18.0;
+float dummy_patrol_z_offset = -18.00;
+float dummy_vwbus_z_offset = -18.20;
+float dummy_hmmwv_z_offset = -18.05;
 
 using namespace std::chrono;
 
@@ -486,7 +488,7 @@ int main(int argc, char* argv[]) {
     // Add dummy vehicles
     // -----------------
 
-    int num_dummy = 3;
+    int num_dummy = 5;
     float dummy_speed = 45;
 
     std::vector<ChVector<>> dummy_start;
@@ -500,7 +502,7 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < num_dummy; i++) {
         dummy_start.push_back(ChVector<>(0, 0, 0));
-        tracker_vec[i].calcClosestPoint(initLoc + ChVector<>(0, -15 - 10 * i, 0), dummy_start[i]);
+        tracker_vec[i].calcClosestPoint(initLoc + ChVector<>(0, -15 - 15 * i, 0), dummy_start[i]);
     }
 
     std::vector<std::shared_ptr<ChBodyAuxRef>> dummies;
@@ -517,6 +519,12 @@ int main(int argc, char* argv[]) {
         } else if (i == 2) {
             mesh_name = "/vehicles/Nissan_Patrol/FullPatrol.obj";
             dummy_z_offset = dummy_patrol_z_offset;
+        } else if (i == 3) {
+            mesh_name = "/vehicles/VW_microbus/FullVW.obj";
+            dummy_z_offset = dummy_vwbus_z_offset;
+        } else if (i == 4) {
+            mesh_name = "/vehicles/hmmwv/Fullhmmwv.obj";
+            dummy_z_offset = dummy_hmmwv_z_offset;
         }
 
         auto dummy = chrono_types::make_shared<ChBodyAuxRef>();
@@ -770,6 +778,10 @@ int main(int argc, char* argv[]) {
                 temp_z_offset = dummy_patrol_z_offset;
             } else if (i == 2) {
                 temp_z_offset = dummy_patrol_z_offset;
+            } else if (i == 3) {
+                temp_z_offset = dummy_vwbus_z_offset;
+            } else if (i == 4) {
+                temp_z_offset = dummy_hmmwv_z_offset;
             }
             updateDummy(dummies[i], dummy_path, dummy_speed, step_size, temp_z_offset, tracker_vec[i]);
         }
