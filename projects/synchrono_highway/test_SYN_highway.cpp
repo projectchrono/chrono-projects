@@ -502,50 +502,50 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < num_dummy; i++) {
         dummy_start.push_back(ChVector<>(0, 0, 0));
-        tracker_vec[i].calcClosestPoint(initLoc + ChVector<>(0, -15 - 15 * i, 0), dummy_start[i]);
+        tracker_vec[i].calcClosestPoint(initLoc + ChVector<>(0, -15 - 20 * i, 0), dummy_start[i]);
     }
 
     std::vector<std::shared_ptr<ChBodyAuxRef>> dummies;
 
+    // declare universal dummy mesh for multiple dummy objects
+    // full nissan patrol mesh
+    std::string suv_mesh_name = "/vehicles/Nissan_Patrol/FullPatrol.obj";
+    auto suv_mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
+    suv_mmesh->LoadWavefrontMesh(demo_data_path + suv_mesh_name, false, true);
+    suv_mmesh->RepairDuplicateVertexes(1e-9);
+
+    auto suv_trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+    suv_trimesh_shape->SetMesh(suv_mmesh);
+
+    // full sedan mesh
+    std::string sedan_mesh_name = "/vehicles/sedan/FullSedan.obj";
+    auto sedan_mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
+    sedan_mmesh->LoadWavefrontMesh(demo_data_path + sedan_mesh_name, false, true);
+    sedan_mmesh->RepairDuplicateVertexes(1e-9);
+
+    auto sedan_trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+    sedan_trimesh_shape->SetMesh(sedan_mmesh);
+
     for (int i = 0; i < num_dummy; i++) {
         std::string mesh_name;
         float dummy_z_offset;
-        if (i == 0) {
-            mesh_name = "/vehicles/sedan/FullSedan.obj";
-            dummy_z_offset = dummy_sedan_z_offset;
-        } else if (i == 1) {
-            mesh_name = "/vehicles/Nissan_Patrol/FullPatrol.obj";
-            dummy_z_offset = dummy_patrol_z_offset;
-        } else if (i == 2) {
-            mesh_name = "/vehicles/Nissan_Patrol/FullPatrol.obj";
-            dummy_z_offset = dummy_patrol_z_offset;
-        } else if (i == 3) {
-            mesh_name = "/vehicles/VW_microbus/FullVW.obj";
-            dummy_z_offset = dummy_vwbus_z_offset;
-        } else if (i == 4) {
-            mesh_name = "/vehicles/hmmwv/Fullhmmwv.obj";
-            dummy_z_offset = dummy_hmmwv_z_offset;
+        if (i % 2 == 0) {
+            auto dummy = chrono_types::make_shared<ChBodyAuxRef>();
+            dummy->SetCollide(false);
+            dummy->SetPos(dummy_start[i] + ChVector<>(0, 0, dummy_patrol_z_offset));
+            dummy->SetBodyFixed(true);
+            dummy->AddAsset(suv_trimesh_shape);
+            vehicle.GetSystem()->AddBody(dummy);
+            dummies.push_back(dummy);
+        } else if (i % 2 == 1) {
+            auto dummy = chrono_types::make_shared<ChBodyAuxRef>();
+            dummy->SetCollide(false);
+            dummy->SetPos(dummy_start[i] + ChVector<>(0, 0, dummy_sedan_z_offset));
+            dummy->SetBodyFixed(true);
+            dummy->AddAsset(sedan_trimesh_shape);
+            vehicle.GetSystem()->AddBody(dummy);
+            dummies.push_back(dummy);
         }
-
-        auto dummy = chrono_types::make_shared<ChBodyAuxRef>();
-
-        auto mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
-        mmesh->LoadWavefrontMesh(demo_data_path + mesh_name, false, true);
-        mmesh->RepairDuplicateVertexes(1e-9);
-
-        dummy->SetCollide(false);
-        dummy->SetPos(dummy_start[i] + ChVector<>(0, 0, dummy_z_offset));
-
-        dummy->SetBodyFixed(true);
-
-        auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
-        trimesh_shape->SetMesh(mmesh);
-
-        dummy->AddAsset(trimesh_shape);
-
-        vehicle.GetSystem()->AddBody(dummy);
-
-        dummies.push_back(dummy);
     }
 
     // End 01/27 test
@@ -739,7 +739,6 @@ int main(int argc, char* argv[]) {
             printf("Sim Time=%f, \tWall Time=%f, \tExtra Time=%f, \tLD_Speed mph=%f, \tIG_Speed mph=%f\n", time,
                    duration_cast<duration<double>>(wall_time - t0).count(), extra_time, ld_speed, ig_speed);
             std::cout << "Current Gear: " << vehicle.GetPowertrain()->GetCurrentTransmissionGear() << std::endl;
-            std::cout << "Heading: " << lead_vehicles[0]->GetVehiclePointVelocity(ChVector<>(0, 0, 0)) << std::endl;
             extra_time = 0.0;
         }
 
@@ -772,16 +771,10 @@ int main(int argc, char* argv[]) {
         // 01/27 dummy update
         for (int i = 0; i < num_dummy; i++) {
             float temp_z_offset;
-            if (i == 0) {
+            if (i % 2 == 0) {
+                temp_z_offset = dummy_patrol_z_offset;
+            } else if (i % 2 == 1) {
                 temp_z_offset = dummy_sedan_z_offset;
-            } else if (i == 1) {
-                temp_z_offset = dummy_patrol_z_offset;
-            } else if (i == 2) {
-                temp_z_offset = dummy_patrol_z_offset;
-            } else if (i == 3) {
-                temp_z_offset = dummy_vwbus_z_offset;
-            } else if (i == 4) {
-                temp_z_offset = dummy_hmmwv_z_offset;
             }
             updateDummy(dummies[i], dummy_path, dummy_speed, step_size, temp_z_offset, tracker_vec[i]);
         }
