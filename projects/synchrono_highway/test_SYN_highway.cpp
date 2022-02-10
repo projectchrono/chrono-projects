@@ -173,6 +173,17 @@ bool fog_enabled = false;
 ChVector<float> fog_color = {.8, .8, .8};
 float fog_distance = 2000.0;
 
+// mirrors position and rotations
+ChVector<> mirror_rearview_pos = {0.0, 0.0, 0.0};
+ChQuaternion<> mirror_rearview_rot = {1.0, 0.0, 0.0, 0.0};
+ChVector<> mirror_wingleft_pos = {0.0, 0.0, 0.0};
+ChQuaternion<> mirror_wingleft_rot = {1.0, 0.0, 0.0, 0.0};
+ChVector<> mirror_wingright_pos = {0.0, 0.0, 0.0};
+ChQuaternion<> mirror_wingright_rot = {1.0, 0.0, 0.0, 0.0};
+
+// benchmarking
+bool benchmark = false;
+
 // Dummy vehicle offset
 float dummy_sedan_z_offset = -18.30;
 float dummy_patrol_z_offset = -18.00;
@@ -235,6 +246,37 @@ void ReadParameterFiles() {
             }
             if (fog_params.HasMember("Distance")) {
                 fog_distance = fog_params["Distance"].GetFloat();
+            }
+        }
+
+        if (d.HasMember("Mirrors")) {
+            const rapidjson::Value& mirror_params = d["Mirrors"];
+            if (mirror_params.HasMember("Rearview")) {
+                const rapidjson::Value& rearview_params = mirror_params["Rearview"];
+                if (rearview_params.HasMember("Position")) {
+                    mirror_rearview_pos = vehicle::ReadVectorJSON(rearview_params["Position"]);
+                }
+                if (rearview_params.HasMember("Rotation")) {
+                    mirror_rearview_rot = Q_from_Euler123(CH_C_DEG_TO_RAD*vehicle::ReadVectorJSON(rearview_params["Rotation"]));
+                }
+            }
+            if (mirror_params.HasMember("WingLeft")) {
+                const rapidjson::Value& wingleft_params = mirror_params["WingLeft"];
+                if (wingleft_params.HasMember("Position")) {
+                    mirror_wingleft_pos = vehicle::ReadVectorJSON(wingleft_params["Position"]);
+                }
+                if (wingleft_params.HasMember("Rotation")) {
+                    mirror_wingleft_rot = Q_from_Euler123(CH_C_DEG_TO_RAD * vehicle::ReadVectorJSON(wingleft_params["Rotation"]));
+                }
+            }
+            if (mirror_params.HasMember("WingRight")) {
+                const rapidjson::Value& wingright_params = mirror_params["WingRight"];
+                if (wingright_params.HasMember("Position")) {
+                    mirror_wingright_pos = vehicle::ReadVectorJSON(wingright_params["Position"]);
+                }
+                if (wingright_params.HasMember("Rotation")) {
+                    mirror_wingright_rot = Q_from_Euler123(CH_C_DEG_TO_RAD * vehicle::ReadVectorJSON(wingright_params["Rotation"]));
+                }
             }
         }
     }
@@ -311,6 +353,7 @@ void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<bool>("Simulation", "replay", "Replay human driver inputs from file", "false");
 
     cli.AddOption<bool>("Simulation", "birdseye", "Enable birds eye camera", "false");
+    cli.AddOption<bool>("Simulation", "benchmark", "Benchmark the simulation", "false");
 
     cli.AddOption<std::string>("Simulation", "scenario_params", "Path to scenario configuration file",
                                scenario_parameters);
@@ -345,6 +388,13 @@ int main(int argc, char* argv[]) {
     simulation_parameters = cli.GetAsType<std::string>("sim_params");
 
     ReadParameterFiles();
+
+    benchmark = cli.GetAsType<bool>("benchmark");
+    if (benchmark) {
+        disable_joystick = true;
+        lbj_joystick = false;
+        t_end = cli.GetAsType<double>("end_time");
+    }
 
     SetChronoDataPath(CHRONO_DATA_DIR);
     vehicle::SetDataPath(CHRONO_DATA_DIR + std::string("vehicle/"));
@@ -384,7 +434,7 @@ int main(int argc, char* argv[]) {
     vehicle.GetChassisBody()->GetAssets().clear();
 
     auto audi_mesh = chrono_types::make_shared<ChTriangleMeshConnected>();
-    audi_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/vehicles/audi_chassis_windowless.obj", false,
+    audi_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/vehicles/audi_chassis_windowless_2.obj", false,
                                  true);
     audi_mesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
     auto audi_shape = chrono_types::make_shared<ChTriangleMeshShape>();
@@ -394,24 +444,58 @@ int main(int argc, char* argv[]) {
     vehicle.GetChassisBody()->AddAsset(audi_shape);
 
     // add rearview mirror
-    auto rvw_mirror_mesh = chrono_types::make_shared<ChTriangleMeshConnected>();
-    rvw_mirror_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/vehicles/audi_rearview_mirror.obj", false,
-                                       true);
-    rvw_mirror_mesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
-    auto rvw_mirror_shape = chrono_types::make_shared<ChTriangleMeshShape>();
-    rvw_mirror_shape->SetMesh(rvw_mirror_mesh);
-    rvw_mirror_shape->SetName("Windowless Audi");
-    rvw_mirror_shape->SetStatic(true);
-    rvw_mirror_shape->Pos = ChVector<>(0.442, 0.0, 1.096);
-    rvw_mirror_shape->Rot = Q_from_AngY(-.08) * Q_from_AngZ(-.25);
+    auto mirror_mesh = chrono_types::make_shared<ChTriangleMeshConnected>();
+    mirror_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/vehicles/audi_rearview_mirror.obj", false,
+                                   true);
+    mirror_mesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
 
     auto mirror_mat = chrono_types::make_shared<ChVisualMaterial>();
     mirror_mat->SetDiffuseColor({0.2f, 0.2f, 0.2f});
     mirror_mat->SetRoughness(0.f);
     mirror_mat->SetMetallic(1.0f);
     mirror_mat->SetUseSpecularWorkflow(false);
+
+    auto rvw_mirror_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+    rvw_mirror_shape->SetMesh(mirror_mesh);
+    rvw_mirror_shape->SetName("Windowless Audi");
+    rvw_mirror_shape->SetStatic(true);
+    rvw_mirror_shape->SetScale({1,1.8,1.2});
+    rvw_mirror_shape->Pos = mirror_rearview_pos;
+    rvw_mirror_shape->Rot = mirror_rearview_rot;  // Q_from_AngY(-.08) * Q_from_AngZ(-.25);
     rvw_mirror_shape->material_list.push_back(mirror_mat);
     vehicle.GetChassisBody()->AddAsset(rvw_mirror_shape);
+
+    // add left wing mirror
+    auto lwm_mesh = chrono_types::make_shared<ChTriangleMeshConnected>();
+    lwm_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/vehicles/audi_left_wing_mirror.obj", false,
+                                   true);
+    lwm_mesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
+
+    auto lwm_mirror_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+    lwm_mirror_shape->SetMesh(lwm_mesh);
+    lwm_mirror_shape->SetName("Windowless Audi");
+    lwm_mirror_shape->SetStatic(true);
+    lwm_mirror_shape->SetScale({1,.95,.95});
+    lwm_mirror_shape->Pos = mirror_wingleft_pos;
+    lwm_mirror_shape->Rot = mirror_wingleft_rot;  // Q_from_AngY(-.08) * Q_from_AngZ(-.25);
+    lwm_mirror_shape->material_list.push_back(mirror_mat);
+    vehicle.GetChassisBody()->AddAsset(lwm_mirror_shape);
+
+    // add left wing mirror
+    auto rwm_mesh = chrono_types::make_shared<ChTriangleMeshConnected>();
+    rwm_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/vehicles/audi_right_wing_mirror.obj", false,
+                                   true);
+    rwm_mesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
+
+    auto rwm_mirror_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+    rwm_mirror_shape->SetMesh(rwm_mesh);
+    rwm_mirror_shape->SetName("Windowless Audi");
+    rwm_mirror_shape->SetStatic(true);
+    rwm_mirror_shape->SetScale({1,.98,.98});
+    rwm_mirror_shape->Pos = mirror_wingright_pos;
+    rwm_mirror_shape->Rot = mirror_wingright_rot;  // Q_from_AngY(-.08) * Q_from_AngZ(-.25);
+    rwm_mirror_shape->material_list.push_back(mirror_mat);
+    vehicle.GetChassisBody()->AddAsset(rwm_mirror_shape);
 
     // Add a leader vehicle
     std::vector<std::shared_ptr<WheeledVehicle>> lead_vehicles;
@@ -732,7 +816,7 @@ int main(int argc, char* argv[]) {
         //        driver_inputs.m_steering);
         // driver_inputs.m_throttle = 0;
         // driver_inputs.m_steering *= -1;
-        if (step_number % int(1 / step_size) == 0) {
+        if (step_number % int(1 / step_size) == 0 && !benchmark) {
             auto ld_speed = lead_vehicles[0]->GetVehicleSpeed() * MS_TO_MPH;
             auto ig_speed = vehicle.GetVehicleSpeed() * MS_TO_MPH;
             auto wall_time = high_resolution_clock::now();
@@ -869,11 +953,11 @@ int main(int argc, char* argv[]) {
         // Increment frame number
         step_number++;
 
-        if (step_number % (int)(2.0 / frame_rate / step_size) == 0) {
+        if (step_number % (int)(2.0 / frame_rate / step_size) == 0 && !benchmark) {
             double since_last_sync = time - last_sim_sync;
             last_sim_sync = time;
             auto tt0 = high_resolution_clock::now();
-            // realtime_timer.Spin(since_last_sync);
+            realtime_timer.Spin(since_last_sync);
             auto tt1 = high_resolution_clock::now();
             extra_time += duration_cast<duration<double>>(tt1 - tt0).count();
         }
