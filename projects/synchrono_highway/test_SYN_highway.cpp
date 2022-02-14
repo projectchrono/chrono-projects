@@ -257,7 +257,8 @@ void ReadParameterFiles() {
                     mirror_rearview_pos = vehicle::ReadVectorJSON(rearview_params["Position"]);
                 }
                 if (rearview_params.HasMember("Rotation")) {
-                    mirror_rearview_rot = Q_from_Euler123(CH_C_DEG_TO_RAD*vehicle::ReadVectorJSON(rearview_params["Rotation"]));
+                    mirror_rearview_rot =
+                        Q_from_Euler123(CH_C_DEG_TO_RAD * vehicle::ReadVectorJSON(rearview_params["Rotation"]));
                 }
             }
             if (mirror_params.HasMember("WingLeft")) {
@@ -266,7 +267,8 @@ void ReadParameterFiles() {
                     mirror_wingleft_pos = vehicle::ReadVectorJSON(wingleft_params["Position"]);
                 }
                 if (wingleft_params.HasMember("Rotation")) {
-                    mirror_wingleft_rot = Q_from_Euler123(CH_C_DEG_TO_RAD * vehicle::ReadVectorJSON(wingleft_params["Rotation"]));
+                    mirror_wingleft_rot =
+                        Q_from_Euler123(CH_C_DEG_TO_RAD * vehicle::ReadVectorJSON(wingleft_params["Rotation"]));
                 }
             }
             if (mirror_params.HasMember("WingRight")) {
@@ -275,7 +277,8 @@ void ReadParameterFiles() {
                     mirror_wingright_pos = vehicle::ReadVectorJSON(wingright_params["Position"]);
                 }
                 if (wingright_params.HasMember("Rotation")) {
-                    mirror_wingright_rot = Q_from_Euler123(CH_C_DEG_TO_RAD * vehicle::ReadVectorJSON(wingright_params["Rotation"]));
+                    mirror_wingright_rot =
+                        Q_from_Euler123(CH_C_DEG_TO_RAD * vehicle::ReadVectorJSON(wingright_params["Rotation"]));
                 }
             }
         }
@@ -459,7 +462,7 @@ int main(int argc, char* argv[]) {
     rvw_mirror_shape->SetMesh(mirror_mesh);
     rvw_mirror_shape->SetName("Windowless Audi");
     rvw_mirror_shape->SetStatic(true);
-    rvw_mirror_shape->SetScale({1,1.8,1.2});
+    rvw_mirror_shape->SetScale({1, 1.8, 1.2});
     rvw_mirror_shape->Pos = mirror_rearview_pos;
     rvw_mirror_shape->Rot = mirror_rearview_rot;  // Q_from_AngY(-.08) * Q_from_AngZ(-.25);
     rvw_mirror_shape->material_list.push_back(mirror_mat);
@@ -467,15 +470,14 @@ int main(int argc, char* argv[]) {
 
     // add left wing mirror
     auto lwm_mesh = chrono_types::make_shared<ChTriangleMeshConnected>();
-    lwm_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/vehicles/audi_left_wing_mirror.obj", false,
-                                   true);
+    lwm_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/vehicles/audi_left_wing_mirror.obj", false, true);
     lwm_mesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
 
     auto lwm_mirror_shape = chrono_types::make_shared<ChTriangleMeshShape>();
     lwm_mirror_shape->SetMesh(lwm_mesh);
     lwm_mirror_shape->SetName("Windowless Audi");
     lwm_mirror_shape->SetStatic(true);
-    lwm_mirror_shape->SetScale({1,.95,.95});
+    lwm_mirror_shape->SetScale({1, .95, .95});
     lwm_mirror_shape->Pos = mirror_wingleft_pos;
     lwm_mirror_shape->Rot = mirror_wingleft_rot;  // Q_from_AngY(-.08) * Q_from_AngZ(-.25);
     lwm_mirror_shape->material_list.push_back(mirror_mat);
@@ -483,15 +485,14 @@ int main(int argc, char* argv[]) {
 
     // add left wing mirror
     auto rwm_mesh = chrono_types::make_shared<ChTriangleMeshConnected>();
-    rwm_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/vehicles/audi_right_wing_mirror.obj", false,
-                                   true);
+    rwm_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/vehicles/audi_right_wing_mirror.obj", false, true);
     rwm_mesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
 
     auto rwm_mirror_shape = chrono_types::make_shared<ChTriangleMeshShape>();
     rwm_mirror_shape->SetMesh(rwm_mesh);
     rwm_mirror_shape->SetName("Windowless Audi");
     rwm_mirror_shape->SetStatic(true);
-    rwm_mirror_shape->SetScale({1,.98,.98});
+    rwm_mirror_shape->SetScale({1, .98, .98});
     rwm_mirror_shape->Pos = mirror_wingright_pos;
     rwm_mirror_shape->Rot = mirror_wingright_rot;  // Q_from_AngY(-.08) * Q_from_AngZ(-.25);
     rwm_mirror_shape->material_list.push_back(mirror_mat);
