@@ -185,11 +185,8 @@ ChQuaternion<> mirror_wingright_rot = {1.0, 0.0, 0.0, 0.0};
 bool benchmark = false;
 
 // Dummy vehicle offset
-float dummy_sedan_z_offset = -18.30;
-float dummy_patrol_z_offset = -18.00;
-float dummy_vwbus_z_offset = -18.20;
-float dummy_hmmwv_z_offset = -18.05;
-
+float dummy_sedan_z_offset = 0.2;
+float dummy_patrol_z_offset = 0.5;
 using namespace std::chrono;
 
 // =============================================================================
@@ -411,7 +408,7 @@ int main(int argc, char* argv[]) {
     // std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
     std::string path_file = demo_data_path + "/Environments/Iowa/Driver/OnOuterLane.txt";
     auto path = ChBezierCurve::read(path_file);
-    auto dummy_path_file = demo_data_path + "/Environments/Iowa/Driver/OnOuterLane.txt";
+    auto dummy_path_file = demo_data_path + "/Environments/Iowa/Driver/OnInnerLane.txt";
     auto dummy_path = ChBezierCurve::read(dummy_path_file);
 
     WheeledVehicle vehicle(vehicle_file, ChContactMethod::SMC);
