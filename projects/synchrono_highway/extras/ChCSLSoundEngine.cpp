@@ -48,15 +48,39 @@ ChCSLSoundEngine::~ChCSLSoundEngine() {
 
 void ChCSLSoundEngine::Synchronize(double time) {
     // update every 0.01 sec
-    if (time - last_time_played > 0.5) {
+    if (time - last_time_played > 0.2) {
         last_time_played = time;
+        int cur_gear = thisvehicle->GetPowertrain()->GetCurrentTransmissionGear();
         double rpm = thisvehicle->GetPowertrain()->GetMotorSpeed() * 60 / CH_C_2PI;
-        double soundspeed = rpm / (6000.);  // denominator: to guess
-        if (soundspeed < 0.1)
-            soundspeed = 0.1;
-        if (car_sound->getIsPaused())
-            car_sound->setIsPaused(false);
-        car_sound->setPlaybackSpeed((irrklang::ik_f32)soundspeed);
+        if (cur_gear == 1) {
+            double soundspeed = rpm / (10000.);  // denominator: to guess
+            if (soundspeed < 0.1)
+                soundspeed = 0.1;
+            if (car_sound->getIsPaused())
+                car_sound->setIsPaused(false);
+            car_sound->setPlaybackSpeed((irrklang::ik_f32)soundspeed);
+        } else if (cur_gear == 2) {
+            double soundspeed = rpm / (8000.);  // denominator: to guess
+            if (soundspeed < 0.1)
+                soundspeed = 0.1;
+            if (car_sound->getIsPaused())
+                car_sound->setIsPaused(false);
+            car_sound->setPlaybackSpeed((irrklang::ik_f32)soundspeed);
+        } else if (cur_gear == 3) {
+            double soundspeed = rpm / (8000.);  // denominator: to guess
+            if (soundspeed < 0.1)
+                soundspeed = 0.1;
+            if (car_sound->getIsPaused())
+                car_sound->setIsPaused(false);
+            car_sound->setPlaybackSpeed((irrklang::ik_f32)soundspeed);
+        } else {
+            double soundspeed = rpm / (6000.);  // denominator: to guess
+            if (soundspeed < 0.1)
+                soundspeed = 0.1;
+            if (car_sound->getIsPaused())
+                car_sound->setIsPaused(false);
+            car_sound->setPlaybackSpeed((irrklang::ik_f32)soundspeed);
+        }
     }
 
     // we round it to change only every 500 rpm

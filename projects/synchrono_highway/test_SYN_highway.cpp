@@ -411,6 +411,13 @@ int main(int argc, char* argv[]) {
     auto dummy_path_file = demo_data_path + "/Environments/Iowa/Driver/OnInnerLane.txt";
     auto dummy_path = ChBezierCurve::read(dummy_path_file);
 
+    // IG vehicle lane number tracker
+    // lane 1 - inner lane; lane 2 - outer lanes
+    auto lane_0_path_file = demo_data_path + "/Environments/Iowa/Driver/OnInnerLane.txt";
+    auto lane_0_path = ChBezierCurve::read(lane_0_path_file);
+    auto lane_1_path_file = demo_data_path + "/Environments/Iowa/Driver/OnOuterLane.txt";
+    auto lane_1_path = ChBezierCurve::read(lane_1_path_file);
+
     WheeledVehicle vehicle(vehicle_file, ChContactMethod::SMC);
     auto ego_chassis = vehicle.GetChassis();
     vehicle.Initialize(ChCoordsys<>(initLoc, initRot));
@@ -575,6 +582,7 @@ int main(int argc, char* argv[]) {
 
     std::vector<ChVector<>> dummy_start;
     std::vector<ChBezierCurveTracker> tracker_vec;
+    std::vector<ChBezierCurveTracker> csv_tracker_vec;
 
     for (int i = 0; i < num_dummy; i++) {
         ChBezierCurveTracker tracker(dummy_path);
@@ -704,7 +712,8 @@ int main(int argc, char* argv[]) {
 
     if (save_driver)
         filestream << "time, isManual, Steering, Throttle, Braking, x[m], y[m], speed[mph], acceleration[m/s^2], "
-                      "dist[m], dist_projected[m], IG_mile[mile], LD_x[m], LD_y[m], LD_speed[mph], "
+                      "dist[m], dist_projected[m], IG_mile[mile], IG_lane[0-inner/1-outer/-1-invalid], LD_x[m], "
+                      "LD_y[m], LD_speed[mph], "
                       "LD_acc[m/s^2], LD_mile[mile]   \n ";
 
     // ---------------
@@ -991,6 +1000,42 @@ int main(int argc, char* argv[]) {
 
                 // output mile marker
                 buffer << abs((ego_chassis->GetPos().y() - initLoc.y()) / 1609.34) << ",";
+
+                ChBezierCurveTracker lane_0_tracker(lane_0_path);
+                ChBezierCurveTracker lane_1_tracker(lane_1_path);
+
+                lane_0_tracker.setIsClosedPath(true);
+                lane_1_tracker.setIsClosedPath(true);
+
+                ChVector<> lane_0_target;
+                ChVector<> lane_1_target;
+
+                lane_0_tracker.calcClosestPoint(ego_chassis->GetPos(), lane_0_target);
+                lane_1_tracker.calcClosestPoint(ego_chassis->GetPos(), lane_1_target);
+
+                ChVector<> chassis_pos = ego_chassis->GetPos();
+                float dist_0 = (lane_0_target.x() - chassis_pos.x()) * (lane_0_target.x() - chassis_pos.x()) +
+                               (lane_0_target.y() - chassis_pos.y()) * (lane_0_target.y() - chassis_pos.y());
+
+                float dist_1 = (lane_1_target.x() - chassis_pos.x()) * (lane_1_target.x() - chassis_pos.x()) +
+                               (lane_1_target.y() - chassis_pos.y()) * (lane_1_target.y() - chassis_pos.y());
+
+                int lane_num = -2;
+                float min_dist;
+                if (dist_0 < dist_1) {
+                    lane_num = 0;
+                    min_dist = dist_0;
+                } else {
+                    lane_num = 1;
+                    min_dist = dist_1;
+                }
+
+                if (min_dist > 5) {
+                    lane_num = -1;
+                }
+
+                // output IG vehicle lane number
+                buffer << lane_num << ",";
 
                 // the last lead vehicle data
                 buffer << lead_chassis->GetPos().x() << ",";
