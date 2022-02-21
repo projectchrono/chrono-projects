@@ -9,11 +9,12 @@
 // http://projectchrono.org/license-chrono.txt.
 //
 // =============================================================================
-// Authors: Radu Serban, Asher Elmquist
+// Authors: Radu Serban, Asher Elmquist, Simone Benatti, Jason Zhou
 // =============================================================================
 //
-// Chrono demonstration of the sensor module
-// Attach multiple sensors to a hmmwv full vehicle model
+// Iowa Highway Simulation
+// This demo includes IG interactive vehicle, autonomous dynamic vehicles and
+// autonomous dummy vehicles
 //
 // =============================================================================
 
@@ -62,7 +63,7 @@ using namespace chrono::sensor;
 using namespace chrono::synchrono;
 
 // -----------------------------------------------------------------------------
-// rad to RPM conversion
+// rad to RPM conversion parameters
 // -----------------------------------------------------------------------------
 const double rads2rpm = 30 / CH_C_PI;
 
@@ -185,7 +186,7 @@ ChQuaternion<> mirror_wingright_rot = {1.0, 0.0, 0.0, 0.0};
 bool benchmark = false;
 
 // Dummy vehicle offset
-float dummy_sedan_z_offset = 0.2;
+float dummy_audi_z_offset = 0.25;
 float dummy_patrol_z_offset = 0.5;
 using namespace std::chrono;
 
@@ -572,29 +573,31 @@ int main(int argc, char* argv[]) {
     // Add buildings away from the road to break up the horizon
     AddBuildings(vehicle.GetSystem());
 
-    // 01/27 Test Region
-    // -----------------
+    // ======================================================================
     // Add dummy vehicles
-    // -----------------
+    // Note that dummy vhicles are placed on the inner lane of the outer loop
+    // ======================================================================
 
     int num_dummy = 5;
     float dummy_speed = 45;
 
-    std::vector<ChVector<>> dummy_start;
-    std::vector<ChBezierCurveTracker> tracker_vec;
-    std::vector<ChBezierCurveTracker> csv_tracker_vec;
+    std::vector<ChVector<>> dummy_start;            // dummy vehicle start locations
+    std::vector<ChBezierCurveTracker> tracker_vec;  // bezier curve tracker for dummy's path following functionality
 
+    // tracker objects initialization
     for (int i = 0; i < num_dummy; i++) {
         ChBezierCurveTracker tracker(dummy_path);
         tracker.setIsClosedPath(true);
         tracker_vec.push_back(tracker);
     }
 
+    // start location initialization
     for (int i = 0; i < num_dummy; i++) {
         dummy_start.push_back(ChVector<>(0, 0, 0));
         tracker_vec[i].calcClosestPoint(initLoc + ChVector<>(0, -15 - 20 * i, 0), dummy_start[i]);
     }
 
+    // vector which stores dummy vehicles
     std::vector<std::shared_ptr<ChBodyAuxRef>> dummies;
 
     // declare universal dummy mesh for multiple dummy objects
@@ -607,19 +610,20 @@ int main(int argc, char* argv[]) {
     auto suv_trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
     suv_trimesh_shape->SetMesh(suv_mmesh);
 
-    // full sedan mesh
-    std::string sedan_mesh_name = "/vehicles/sedan/FullSedan.obj";
-    auto sedan_mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
-    sedan_mmesh->LoadWavefrontMesh(demo_data_path + sedan_mesh_name, false, true);
-    sedan_mmesh->RepairDuplicateVertexes(1e-9);
+    // full audi mesh
+    std::string audi_mesh_name = "/vehicles/audi/Full_Audi.obj";
+    auto audi_mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
+    audi_mmesh->LoadWavefrontMesh(demo_data_path + audi_mesh_name, false, true);
+    audi_mmesh->RepairDuplicateVertexes(1e-9);
 
-    auto sedan_trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
-    sedan_trimesh_shape->SetMesh(sedan_mmesh);
+    auto audi_trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+    audi_trimesh_shape->SetMesh(audi_mmesh);
 
     for (int i = 0; i < num_dummy; i++) {
         std::string mesh_name;
         float dummy_z_offset;
         if (i % 2 == 0) {
+            // if the index%2 == 0, we initialize the dummy as a Nissan Patrol
             auto dummy = chrono_types::make_shared<ChBodyAuxRef>();
             dummy->SetCollide(false);
             dummy->SetPos(dummy_start[i] + ChVector<>(0, 0, dummy_patrol_z_offset));
@@ -628,17 +632,16 @@ int main(int argc, char* argv[]) {
             vehicle.GetSystem()->AddBody(dummy);
             dummies.push_back(dummy);
         } else if (i % 2 == 1) {
+            // if the index%2 == 1, we initialize the dummy as an audi
             auto dummy = chrono_types::make_shared<ChBodyAuxRef>();
             dummy->SetCollide(false);
-            dummy->SetPos(dummy_start[i] + ChVector<>(0, 0, dummy_sedan_z_offset));
+            dummy->SetPos(dummy_start[i] + ChVector<>(0, 0, dummy_audi_z_offset));
             dummy->SetBodyFixed(true);
-            dummy->AddAsset(sedan_trimesh_shape);
+            dummy->AddAsset(audi_trimesh_shape);
             vehicle.GetSystem()->AddBody(dummy);
             dummies.push_back(dummy);
         }
     }
-
-    // End 01/27 test
 
     // -----------------
     // Initialize output
@@ -859,13 +862,13 @@ int main(int argc, char* argv[]) {
 
         app.Advance(step_size);
 
-        // 01/27 dummy update
+        // dummy update
         for (int i = 0; i < num_dummy; i++) {
             float temp_z_offset;
             if (i % 2 == 0) {
                 temp_z_offset = dummy_patrol_z_offset;
             } else if (i % 2 == 1) {
-                temp_z_offset = dummy_sedan_z_offset;
+                temp_z_offset = dummy_audi_z_offset;
             }
             updateDummy(dummies[i], dummy_path, dummy_speed, step_size, temp_z_offset, tracker_vec[i]);
         }
@@ -969,6 +972,12 @@ int main(int argc, char* argv[]) {
             extra_time += duration_cast<duration<double>>(tt1 - tt0).count();
         }
 
+        ChBezierCurveTracker lane_0_tracker(lane_0_path);
+        ChBezierCurveTracker lane_1_tracker(lane_1_path);
+
+        lane_0_tracker.setIsClosedPath(true);
+        lane_1_tracker.setIsClosedPath(true);
+
         if (save_driver) {
             if (step_number % int(tsave / step_size) == 0) {
                 buffer << std::fixed << std::setprecision(3);
@@ -1000,12 +1009,6 @@ int main(int argc, char* argv[]) {
 
                 // output mile marker
                 buffer << abs((ego_chassis->GetPos().y() - initLoc.y()) / 1609.34) << ",";
-
-                ChBezierCurveTracker lane_0_tracker(lane_0_path);
-                ChBezierCurveTracker lane_1_tracker(lane_1_path);
-
-                lane_0_tracker.setIsClosedPath(true);
-                lane_1_tracker.setIsClosedPath(true);
 
                 ChVector<> lane_0_target;
                 ChVector<> lane_1_target;
@@ -1343,6 +1346,7 @@ void updateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
                  float step_size,
                  float z_offset,
                  ChBezierCurveTracker tracker) {
+    // sentinel point fo the current dummy vehicle position
     ChVector<> sen = dummy_vehicle->GetPos();
     ChVector<> prev_pos = sen;
 
@@ -1350,19 +1354,21 @@ void updateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
     ChFrame<> frame;
     double curv;
 
+    // obtain the tangent direction on the cloest bezier curve
     tracker.calcClosestPoint(sen, frame, curv);
     ChVector<> vel_dir = -frame.TransformDirectionLocalToParent(ChVector<>(1, 0, 0));
+    // normalize velocity vector
     vel_dir.Normalize();
 
+    // proceed vehicle by time_step*vel_dir, calculate the closest target point on the bezier curve
     tracker.calcClosestPoint(sen + (vel_dir * dummy_speed * MPH_TO_MS * step_size), target);
 
     target = target + ChVector<>(0, 0, z_offset);
 
-    // ChVector<> diff_vec = vel_dir;
-    //  ChVector<> base(0.306848, -0.951757, -0.0013998);
+    // compute angle
     float angle = atan2(vel_dir[1], vel_dir[0]);
 
+    // finally update dummy vehicle position and rotated direction
     dummy_vehicle->SetRot(Q_from_Euler123(ChVector<>(0, 0, angle)));
-
     dummy_vehicle->SetPos(target);
 }
