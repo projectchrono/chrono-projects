@@ -73,13 +73,11 @@ const double rads2rpm = 30 / CH_C_PI;
 
 // Initial vehicle location and orientation
 ChVector<> initLoc(5011.5, -445, 100.75);  // near mile marker
-// ChQuaternion<> initRot(1, 0, 0, 0);
-// ChQuaternion<> initRot = Q_from_AngZ(-CH_C_PI_2);
+
 ChQuaternion<> initRot = Q_from_AngZ(-CH_C_PI_2);
 
-// ChVector<> driver_eye(-.2, .4, .95);
 ChVector<> driver_eye(-.3, .4, .98);
-// ChVector<> driver_eye(1.0, .4, .95);
+
 ChQuaternion<> driver_view_direction = Q_from_AngAxis(0, {1, 0, 0});
 
 enum DriverMode { HUMAN, AUTONOMOUS };
@@ -152,6 +150,7 @@ std::vector<std::vector<double>> leaderParam;
 std::vector<std::vector<double>> followerParam;
 std::string scenario_parameters = demo_data_path + "/Environments/Iowa/parameters/scenario_parameters.json";
 std::string simulation_parameters = demo_data_path + "/Environments/Iowa/parameters/simulation_parameters.json";
+std::string lead_parameters = demo_data_path + "/Environments/Iowa/parameters/lead_parameters.json";
 // cruise speed [mph]
 double cruise_speed = 45;
 
@@ -163,11 +162,6 @@ double tsave = 2e-2;
 std::string output_file_path = "./output.csv";
 std::stringstream buffer;
 std::ofstream filestream(output_file_path);
-
-// Number of leaders in the platoon
-int num_lead = 3;
-// Number of leader in the platoon
-double lead_heading = 3;
 
 // Fog parameters
 bool fog_enabled = false;
@@ -190,6 +184,18 @@ float dummy_audi_z_offset = 0.25;
 float dummy_patrol_z_offset = 0.5;
 using namespace std::chrono;
 
+// Define all lead vehicles
+int num_dummy = 0;    // number of dummy vehicles
+int num_dynamic = 0;  // number of dynamic vehicles
+// Dummies
+std::vector<ChVector<>> dummy_pos;
+std::vector<float> dummy_cruise_speed;
+std::vector<int> dummy_lane;  // 0 for inner, 1 for outer
+
+// Dynamic Leaders
+std::vector<ChVector<>> dynamic_pos;
+std::vector<float> dynamic_cruise_speed;
+std::vector<int> dynamic_lane;
 // =============================================================================
 
 // button callback placeholder
@@ -333,11 +339,38 @@ void ReadParameterFiles() {
         if (d.HasMember("CruiseSpeed")) {
             cruise_speed = d["CruiseSpeed"].GetDouble();
         }
-        if (d.HasMember("NumLeaders")) {
-            num_lead = d["NumLeaders"].GetInt();
-        }
-        if (d.HasMember("LeadersHeading")) {
-            lead_heading = d["LeadersHeading"].GetDouble();
+    }
+
+    {
+        // Leading Vehicles Scenario parameter file
+        // Scenario parameter file
+        rapidjson::Document d;
+        vehicle::ReadFileJSON(lead_parameters, d);
+
+        int lead_count = 0;
+        while (true) {
+            std::string entry_name = "lead_" + std::to_string(lead_count);
+            lead_count++;
+
+            std::cout << entry_name << std::endl;
+
+            if (d.HasMember(entry_name.c_str())) {
+                std::cout << "lead_count:" << lead_count << std::endl;
+                auto first_level_json = d[entry_name.c_str()].GetObject();
+                if (first_level_json["is_dummy"].GetInt() == 0) {
+                    dynamic_pos.push_back(vehicle::ReadVectorJSON(first_level_json["initial_pos"]));
+                    dynamic_cruise_speed.push_back(first_level_json["cruise_speed"].GetDouble());
+                    dynamic_lane.push_back(first_level_json["lane"].GetInt());
+                    num_dynamic++;
+                } else {
+                    dummy_pos.push_back(vehicle::ReadVectorJSON(first_level_json["initial_pos"]));
+                    dummy_cruise_speed.push_back(first_level_json["cruise_speed"].GetDouble());
+                    dummy_lane.push_back(first_level_json["lane"].GetInt());
+                    num_dummy++;
+                }
+            } else {
+                break;
+            }
         }
     }
 }
@@ -407,10 +440,10 @@ int main(int argc, char* argv[]) {
     std::string tire_file = vehicle::GetDataFile("audi/json/audi_TMeasyTire.json");
 
     // std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
-    std::string path_file = demo_data_path + "/Environments/Iowa/Driver/OnOuterLane.txt";
-    auto path = ChBezierCurve::read(path_file);
-    auto dummy_path_file = demo_data_path + "/Environments/Iowa/Driver/OnInnerLane.txt";
-    auto dummy_path = ChBezierCurve::read(dummy_path_file);
+    std::string outer_path_file = demo_data_path + "/Environments/Iowa/Driver/OnOuterLane.txt";
+    auto outer_path = ChBezierCurve::read(outer_path_file);
+    auto inner_path_file = demo_data_path + "/Environments/Iowa/Driver/OnInnerLane.txt";
+    auto inner_path = ChBezierCurve::read(inner_path_file);
 
     // IG vehicle lane number tracker
     // lane 1 - inner lane; lane 2 - outer lanes
@@ -503,13 +536,14 @@ int main(int argc, char* argv[]) {
     rwm_mirror_shape->material_list.push_back(mirror_mat);
     vehicle.GetChassisBody()->AddAsset(rwm_mirror_shape);
 
-    // Add a leader vehicle
+    // Add leader vehicles
     std::vector<std::shared_ptr<WheeledVehicle>> lead_vehicles;
-    for (int i = 0; i < num_lead; i++) {
+    for (int i = 0; i < num_dynamic; i++) {
         auto lead_vehicle = chrono_types::make_shared<WheeledVehicle>(vehicle.GetSystem(), vehicle_file);
         auto lead_powertrain = ReadPowertrainJSON(powertrain_file);
-        lead_vehicle->Initialize(
-            ChCoordsys<>(initLoc + initRot.Rotate(ChVector<>(lead_heading * (i + 1), 0, 0)), initRot));
+        // lead_vehicle->Initialize(ChCoordsys<>(dynamic_pos[i] + initRot.Rotate(ChVector<>(lead_heading * (i + 1), 0,
+        // 0)), initRot));
+        lead_vehicle->Initialize(ChCoordsys<>(dynamic_pos[i], initRot));
         lead_vehicle->GetChassis()->SetFixed(false);
         lead_vehicle->SetChassisVisualizationType(chassis_vis_type);
         lead_vehicle->SetSuspensionVisualizationType(suspension_vis_type);
@@ -577,24 +611,26 @@ int main(int argc, char* argv[]) {
     // Add dummy vehicles
     // Note that dummy vhicles are placed on the inner lane of the outer loop
     // ======================================================================
-
-    int num_dummy = 5;
-    float dummy_speed = 45;
-
-    std::vector<ChVector<>> dummy_start;            // dummy vehicle start locations
     std::vector<ChBezierCurveTracker> tracker_vec;  // bezier curve tracker for dummy's path following functionality
+    std::vector<ChVector<>> dummy_start;
 
     // tracker objects initialization
     for (int i = 0; i < num_dummy; i++) {
-        ChBezierCurveTracker tracker(dummy_path);
-        tracker.setIsClosedPath(true);
-        tracker_vec.push_back(tracker);
+        if (dummy_lane[i] == 0) {
+            ChBezierCurveTracker tracker(inner_path);
+            tracker.setIsClosedPath(true);
+            tracker_vec.push_back(tracker);
+        } else {
+            ChBezierCurveTracker tracker(outer_path);
+            tracker.setIsClosedPath(true);
+            tracker_vec.push_back(tracker);
+        }
     }
 
     // start location initialization
     for (int i = 0; i < num_dummy; i++) {
         dummy_start.push_back(ChVector<>(0, 0, 0));
-        tracker_vec[i].calcClosestPoint(initLoc + ChVector<>(0, -15 - 20 * i, 0), dummy_start[i]);
+        tracker_vec[i].calcClosestPoint(dummy_pos[i], dummy_start[i]);
     }
 
     // vector which stores dummy vehicles
@@ -660,8 +696,8 @@ int main(int argc, char* argv[]) {
     ChRealtimeStepTimer realtime_timer;
     /*
     SPEEDOMETER: we want to use the irrlicht app to display the speedometer, but calling endscene would update the
-    entire (massive) scenario. In order to do so, we first have to clean app the Irrlichr app. Once we delete the node,
-    we remove all cached meshes and textures. The order is important, otherwise meshes are re-cached!!
+    entire (massive) scenario. In order to do so, we first have to clean app the Irrlichr app. Once we delete the
+    node, we remove all cached meshes and textures. The order is important, otherwise meshes are re-cached!!
     */
     irr::scene::ISceneNode* mnode = app.GetContainer();
     mnode->remove();
@@ -689,7 +725,7 @@ int main(int argc, char* argv[]) {
     std::string speed_controller_file_IG = demo_data_path + "/Environments/Iowa/Driver/SpeedController_IG.json";
     std::string speed_controller_file_LD = demo_data_path + "/Environments/Iowa/Driver/SpeedController_LD.json";
     auto PFdriver = chrono_types::make_shared<ChNSFFollowererDriver>(
-        vehicle, steering_controller_file_IG, speed_controller_file_IG, path, "road", cruise_speed * MPH_TO_MS,
+        vehicle, steering_controller_file_IG, speed_controller_file_IG, outer_path, "road", cruise_speed * MPH_TO_MS,
         *lead_vehicles[0], followerParam, true);
     PFdriver->Initialize();
 
@@ -705,12 +741,20 @@ int main(int argc, char* argv[]) {
 
     // Leader Driver
     std::vector<std::shared_ptr<ChNSFLeaderDriver>> lead_PFdrivers;
-    for (int i = 0; i < num_lead; i++) {
-        auto lead_PFdriver = chrono_types::make_shared<ChNSFLeaderDriver>(
-            *lead_vehicles[i], steering_controller_file_LD, speed_controller_file_LD, path, "road",
-            cruise_speed * MPH_TO_MS, leaderParam, true);
-        lead_PFdriver->Initialize();
-        lead_PFdrivers.push_back(lead_PFdriver);
+    for (int i = 0; i < num_dynamic; i++) {
+        if (dynamic_lane[i] == 0) {
+            auto lead_PFdriver = chrono_types::make_shared<ChNSFLeaderDriver>(
+                *lead_vehicles[i], steering_controller_file_LD, speed_controller_file_LD, inner_path, "road",
+                dynamic_cruise_speed[i] * MPH_TO_MS, leaderParam, true);
+            lead_PFdriver->Initialize();
+            lead_PFdrivers.push_back(lead_PFdriver);
+        } else {
+            auto lead_PFdriver = chrono_types::make_shared<ChNSFLeaderDriver>(
+                *lead_vehicles[i], steering_controller_file_LD, speed_controller_file_LD, outer_path, "road",
+                dynamic_cruise_speed[i] * MPH_TO_MS, leaderParam, true);
+            lead_PFdriver->Initialize();
+            lead_PFdrivers.push_back(lead_PFdriver);
+        }
     }
 
     if (save_driver)
@@ -809,8 +853,8 @@ int main(int argc, char* argv[]) {
             break;
 
         // cam->SetOffsetPose(
-        //     chrono::ChFrame<double>({-orbit_radius * cos(time * orbit_rate), -orbit_radius * sin(time * orbit_rate),
-        //     orbit_radius/5.0},
+        //     chrono::ChFrame<double>({-orbit_radius * cos(time * orbit_rate), -orbit_radius * sin(time *
+        //     orbit_rate), orbit_radius/5.0},
         //                             Q_from_AngAxis(time * orbit_rate, {0, 0,1})));
 
         // Collect output data from modules (for inter-module communication)
@@ -870,10 +914,15 @@ int main(int argc, char* argv[]) {
             } else if (i % 2 == 1) {
                 temp_z_offset = dummy_audi_z_offset;
             }
-            updateDummy(dummies[i], dummy_path, dummy_speed, step_size, temp_z_offset, tracker_vec[i]);
+
+            if (dummy_lane[i] == 0) {
+                updateDummy(dummies[i], inner_path, dummy_cruise_speed[i], step_size, temp_z_offset, tracker_vec[i]);
+            } else {
+                updateDummy(dummies[i], outer_path, dummy_cruise_speed[i], step_size, temp_z_offset, tracker_vec[i]);
+            }
         }
 
-        for (int i = 0; i < num_lead; i++) {
+        for (int i = 0; i < num_dynamic; i++) {
             ChDriver::Inputs lead_driver_inputs = lead_PFdrivers[i]->GetInputs();
             lead_PFdrivers[i]->Synchronize(time);
             lead_vehicles[i]->Synchronize(time, lead_driver_inputs, terrain);
@@ -1308,10 +1357,10 @@ void AddTerrain(ChSystem* chsystem) {
     // field_tex->SetRoughnessTexture(demo_data_path +
     //                                "/Environments/Iowa/terrain/Grass/GroundMudCracked006_ROUGH_500.png");
     // field_tex->SetNormalMapTexture(demo_data_path +
-    // "/Environments/Iowa/terrain/Grass/GroundMudCracked006_NRM_500.jpg"); field_tex->SetWeightTexture(demo_data_path +
-    // "/Environments/Iowa/terrain/Terrain_Weightmap_DirtFields_v2.png"); field_tex->SetSpecularColor({.0f, .0f, .0f});
-    // field_tex->SetTextureScale({1000.0, 1000.0, 1.0});
-    // field_tex->SetRoughness(1.f);
+    // "/Environments/Iowa/terrain/Grass/GroundMudCracked006_NRM_500.jpg");
+    // field_tex->SetWeightTexture(demo_data_path +
+    // "/Environments/Iowa/terrain/Terrain_Weightmap_DirtFields_v2.png"); field_tex->SetSpecularColor({.0f, .0f,
+    // .0f}); field_tex->SetTextureScale({1000.0, 1000.0, 1.0}); field_tex->SetRoughness(1.f);
     // field_tex->SetUseSpecularWorkflow(false);
     // terrain_shape->material_list.push_back(field_tex);
 
