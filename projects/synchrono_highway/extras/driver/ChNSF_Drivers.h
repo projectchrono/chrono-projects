@@ -12,7 +12,7 @@
 // Authors: Simone Benatti
 // =============================================================================
 //
-// Custom drivers for the NSF project. 
+// Custom drivers for the NSF project.
 // Both are specialization of ChPathFollowerDriver
 // The leader will adjust its behavior depending on the traveled distance
 // The follower will adjust the speed to reach a target gap with the leader
@@ -45,56 +45,58 @@ namespace chrono {
 class CH_VEHICLE_API ChNSFLeaderDriver : public ChPathFollowerDriver {
   public:
     /// Construct an interactive driver.
-    ChNSFLeaderDriver(ChVehicle& vehicle,                                      ///< associated vehicle
-                         const std::string& steering_filename,                 ///< JSON file with steering controller specification
-                         const std::string& speed_filename,                    ///< JSON file with speed controller specification
-                         std::shared_ptr<ChBezierCurve> path,                  ///< Bezier curve with target path
-                         const std::string& path_name,                         ///< name of the path curve
-                         double target_speed,                                  ///< constant target speed
-                         std::vector<std::vector<double>> behavior,            ///< piecewise directives
-                         bool isClosedPath = false                             ///< Treat the path as a closed loop
+    ChNSFLeaderDriver(ChVehicle& vehicle,                         ///< associated vehicle
+                      const std::string& steering_filename,       ///< JSON file with steering controller specification
+                      const std::string& speed_filename,          ///< JSON file with speed controller specification
+                      std::shared_ptr<ChBezierCurve> path,        ///< Bezier curve with target path
+                      const std::string& path_name,               ///< name of the path curve
+                      double target_speed,                        ///< constant target speed
+                      std::vector<std::vector<double>> behavior,  ///< piecewise directives
+                      bool isClosedPath = false                   ///< Treat the path as a closed loop
     );
 
     virtual ~ChNSFLeaderDriver() {}
 
     void Synchronize(double time);
 
+    void SetCruiseSpeed(double speed);
+
   private:
-    // starting pos to compare with to obtain traveled dist 
+    // starting pos to compare with to obtain traveled dist
     ChVector<> previousPos;
-    // traveldistance 
+    // traveldistance
     double dist;
     // vector of vectors containing the instruction for target speed
     std::vector<std::vector<double>> behavior_data;
     // Cruise speed between sinusoidal stretches
     double cruise_speed;
-
 };
 
-
-// Driver for the follower vehicle, it adjust its speed 
+// Driver for the follower vehicle, it adjust its speed
 class CH_VEHICLE_API ChNSFFollowererDriver : public ChPathFollowerDriver {
   public:
     /// Construct an interactive driver.
-    ChNSFFollowererDriver(ChVehicle& vehicle,                                  ///< associated vehicle
-                         const std::string& steering_filename,                 ///< JSON file with steering controller specification
-                         const std::string& speed_filename,                    ///< JSON file with speed controller specification
-                         std::shared_ptr<ChBezierCurve> path,                  ///< Bezier curve with target path
-                         const std::string& path_name,                         ///< name of the path curve
-                         double target_speed,                                  ///< constant target speed
-                         const ChVehicle& lead_vehicle,                        ///< followed_vehicle
-                         std::vector<std::vector<double>> params,              ///< JSON file with piecewise params
-                         bool isClosedPath = false                             ///< Treat the path as a closed loop
+    ChNSFFollowererDriver(ChVehicle& vehicle,                    ///< associated vehicle
+                          const std::string& steering_filename,  ///< JSON file with steering controller specification
+                          const std::string& speed_filename,     ///< JSON file with speed controller specification
+                          std::shared_ptr<ChBezierCurve> path,   ///< Bezier curve with target path
+                          const std::string& path_name,          ///< name of the path curve
+                          double target_speed,                   ///< constant target speed
+                          const ChVehicle& lead_vehicle,         ///< followed_vehicle
+                          std::vector<std::vector<double>> params,  ///< JSON file with piecewise params
+                          bool isClosedPath = false                 ///< Treat the path as a closed loop
     );
 
     virtual ~ChNSFFollowererDriver() {}
 
     void Synchronize(double time, double step);
 
+    void SetCruiseSpeed(double speed);
+
   private:
-    // starting pos to compare with to obtain traveled dist 
+    // starting pos to compare with to obtain traveled dist
     ChVector<> previousPos;
-    // traveldistance 
+    // traveldistance
     double dist;
     // vector of vectors containing the instruction for target speed
     std::vector<std::vector<double>> behavior_data;
@@ -102,7 +104,6 @@ class CH_VEHICLE_API ChNSFFollowererDriver : public ChPathFollowerDriver {
     double cruise_speed;
     // leader vehicle to follow
     const ChVehicle& leader;
-
 };
 
 }  // namespace chrono
