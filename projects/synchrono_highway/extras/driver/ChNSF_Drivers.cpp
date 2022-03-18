@@ -133,10 +133,6 @@ void ChNSFFollowererDriver::Synchronize(double time, double step) {
     ChPathFollowerDriver::Synchronize(time);
 }
 
-void ChNSFFollowererDriver::SetCruiseSpeed(double speed) {
-    cruise_speed = speed;
-}
-
 void ChNSFLeaderDriver::SetCruiseSpeed(double speed) {
     cruise_speed = speed;
 }
