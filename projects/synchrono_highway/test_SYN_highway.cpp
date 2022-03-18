@@ -473,6 +473,14 @@ int main(int argc, char* argv[]) {
     ChCLI cli(argv[0]);
     AddCommandLineOptions(cli);
 
+    // read from argument line
+    if (argc > 1) {
+        std::string parameter_json(argv[1]);
+        lead_parameters = demo_data_path + "/Environments/Iowa/parameters/" + parameter_json;
+    } else {
+        std::cout << "WARNING: No Lead Parameter JSON file, searching for default JSON file - lead_parameter.json";
+    }
+
     if (!cli.Parse(argc, argv, true))
         return 0;
 
