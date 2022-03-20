@@ -543,9 +543,10 @@ int main(int argc, char* argv[]) {
         driver = data_driver;
     } else if (node_id == leader && cli.GetAsType<bool>("irr")) {
         auto temp_app = chrono_types::make_shared<ChWheeledVehicleIrrApp>(&vehicle, L"SynChrono Wheeled Vehicle Demo");
-        temp_app->SetSkyBox();
-        temp_app->AddTypicalLights(irr::core::vector3df(30.f, -30.f, 100.f), irr::core::vector3df(30.f, 50.f, 100.f),
-                                   250, 130);
+        temp_app->AddSkyBox();
+        // temp_app->AddTypicalLights(irr::core::vector3df(30.f, -30.f, 100.f), irr::core::vector3df(30.f, 50.f, 100.f),
+        //                            250, 130);
+        temp_app->AddTypicalLights();
         temp_app->SetChaseCamera(trackPoint, cam_distance, 0.5);
         temp_app->SetTimestep(step_size);
         temp_app->AssetBindAll();
