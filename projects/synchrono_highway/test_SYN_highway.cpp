@@ -22,6 +22,7 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 #include <irrlicht.h>
+#include <time.h>
 #include <limits>
 #include "chrono_models/vehicle/hmmwv/HMMWV.h"
 #include "chrono_vehicle/ChConfigVehicle.h"
@@ -106,8 +107,16 @@ ChVector<> trackPoint(0.0, 0.0, 1.75);
 ChContactMethod contact_method = ChContactMethod::SMC;
 
 // -----------------------------------------------------------------------------
-// Sensor parameters
+// Steering wheel parameters
 // -----------------------------------------------------------------------------
+// steering wheel button settings
+// change mapping if on a different steering wheel
+int l_1 = 7;
+int l_2 = 20;
+int l_3 = 21;
+int r_1 = 6;
+int r_2 = 18;
+int r_3 = 19;
 
 // camera parameters
 float frame_rate = 30.0;
@@ -159,8 +168,11 @@ bool save_driver = true;
 double tsave = 2e-2;
 // path where the output is saved
 std::string output_file_path = "./output.csv";
+std::string dummy_button_path = "./button_info.csv";
 std::stringstream buffer;
+std::stringstream button_buffer;
 std::ofstream filestream(output_file_path);
+std::ofstream buttonstream(dummy_button_path);
 
 // Fog parameters
 bool fog_enabled = false;
@@ -209,10 +221,21 @@ std::vector<std::vector<float>> dynamic_control_speed;
 std::vector<int> dynamic_time_mode;  // 0 if dist mode, 1 means using sim time, 2 means using wall time (real time)
 
 std::vector<std::vector<std::vector<double>>> leaderParam;
+
+// Comment section in csv output
+bool is_csv_comments = false;
+std::string csv_comments;
 // =============================================================================
 
 // button callback placeholder
 void customButtonCallback();
+
+void dummyButtonCallback_l_1();
+// void dummyButtonCallback_l_2();
+// void dummyButtonCallback_l_3();
+// void dummyButtonCallback_l_2();
+// void dummyButtonCallback_l_3();
+
 // distribution of trees near the road
 void AddTrees(ChSystem* chsystem);
 // terrain and texture system
@@ -348,6 +371,11 @@ void ReadParameterFiles() {
         // Scenario parameter file
         rapidjson::Document d;
         vehicle::ReadFileJSON(lead_parameters, d);
+
+        if (d.HasMember("csv_comments")) {
+            is_csv_comments = true;
+            csv_comments = d["csv_comments"].GetString();
+        }
 
         int lead_count = 0;
         while (true) {
@@ -820,7 +848,9 @@ int main(int argc, char* argv[]) {
     // ChCSLDriver driver(vehicle);
     // driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
     auto IGdriver = chrono_types::make_shared<ChIrrGuiDriver>(app);
-    IGdriver->SetButtonCallback(6, &customButtonCallback);
+    IGdriver->SetButtonCallback(r_1, &customButtonCallback);
+    IGdriver->SetButtonCallback(l_1, &dummyButtonCallback_l_1);
+
     IGdriver->SetJoystickAxes(ChIrrGuiDriver::JoystickAxes::AXIS_Z, ChIrrGuiDriver::JoystickAxes::AXIS_R,
                               ChIrrGuiDriver::JoystickAxes::AXIS_X, ChIrrGuiDriver::JoystickAxes::NONE);
     IGdriver->Initialize();
@@ -836,6 +866,7 @@ int main(int argc, char* argv[]) {
 
     // we call the callback explicitly to start the timer
     customButtonCallback();
+    dummyButtonCallback_l_1();
 
     if (!disable_joystick) {
         driver_mode = HUMAN;
@@ -862,12 +893,19 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    if (save_driver)
+    if (save_driver) {
+        if (is_csv_comments == true) {
+            filestream << "csv comments: " << csv_comments << " \n";
+        }
+
         filestream
             << "time, wallTime, isManual, Steering, Throttle, Braking, x[m], y[m], speed[mph], acceleration[m/s^2], "
                "dist[m], dist_projected[m], IG_mile[mile], IG_lane[0-inner/1-outer/-1-invalid], LD_x[m], "
                "LD_y[m], LD_speed[mph], "
                "LD_acc[m/s^2], LD_mile[mile]   \n ";
+
+        buttonstream << "start recording buttons pressed \n";
+    }
 
     // ---------------
     // Simulation loop
@@ -1255,10 +1293,16 @@ int main(int argc, char* argv[]) {
                 buffer << abs((lead_chassis->GetPos().y() - initLoc.y()) / 1609.34);
 
                 buffer << "\n";
-                if ((step_number % int(30 / step_size) == 0)) {
-                    printf("Writing to file...=%i", buffer.tellp());
+                if ((step_number % int(20 / step_size) == 0)) {
+                    printf("Writing to output file...=%i", buffer.tellp());
                     filestream << buffer.rdbuf();
                     buffer.str("");
+
+                    printf("Writing to button file...=%i", button_buffer.tellp());
+                    std::cout << "button_buffer:" << button_buffer.str() << std::endl;
+                    buttonstream << button_buffer.rdbuf();
+                    button_buffer.str("");
+                    // buttonstream.close();
                 }
             }
         }
@@ -1532,7 +1576,7 @@ void customButtonCallback() {
     // We use an "anti bounce":
     static auto last_invoked = std::chrono::system_clock::now().time_since_epoch();
     auto current_invoke = std::chrono::system_clock::now().time_since_epoch();
-    if (std::chrono::duration_cast<std::chrono::seconds>(current_invoke - last_invoked).count() > 5.0) {
+    if (std::chrono::duration_cast<std::chrono::seconds>(current_invoke - last_invoked).count() > 3.0) {
         std::cout << "Button Callback Invoked \n";
         if (driver_mode == HUMAN)
             driver_mode = AUTONOMOUS;
@@ -1542,6 +1586,20 @@ void customButtonCallback() {
         last_invoked = current_invoke;
     } else
         std::cout << "Callback Not Invoked, call was too close to the last one \n";
+}
+
+// Wheel botton callback to record button press without any functionalities
+void dummyButtonCallback_l_1() {
+    static auto last_invoked_dummy = std::chrono::system_clock::now().time_since_epoch();
+    auto current_invoke_dummy = std::chrono::system_clock::now().time_since_epoch();
+
+    if (std::chrono::duration_cast<std::chrono::seconds>(current_invoke_dummy - last_invoked_dummy).count() > 1.0) {
+        std::cout << "Button l_1 dummy Callback Invoked: " << std::endl;
+        time_t my_time = time(NULL);
+        button_buffer << "button l_1 pressed; time: " << ctime(&my_time);
+    }
+
+    last_invoked_dummy = current_invoke_dummy;
 }
 
 // Update dummy vehicles based on bazier curve and speed
