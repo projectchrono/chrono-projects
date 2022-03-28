@@ -162,13 +162,15 @@ std::string lead_parameters = demo_data_path + "/Environments/Iowa/parameters/le
 // cruise speed [mph]
 double cruise_speed = 45;
 
+int correct_ratio = 200;
+
 // Data saving
 bool save_driver = true;
 // time interval between data savings
 double tsave = 2e-2;
 // path where the output is saved
 std::string output_file_path = "./output.csv";
-std::string dummy_button_path = "./button_info.csv";
+std::string dummy_button_path = "./buttoninfo.csv";
 std::stringstream buffer;
 std::stringstream button_buffer;
 std::ofstream filestream(output_file_path);
@@ -229,12 +231,11 @@ std::string csv_comments;
 
 // button callback placeholder
 void customButtonCallback();
-
 void dummyButtonCallback_l_1();
-// void dummyButtonCallback_l_2();
-// void dummyButtonCallback_l_3();
-// void dummyButtonCallback_l_2();
-// void dummyButtonCallback_l_3();
+void dummyButtonCallback_l_2();
+void dummyButtonCallback_l_3();
+void dummyButtonCallback_r_2();
+void dummyButtonCallback_r_3();
 
 // distribution of trees near the road
 void AddTrees(ChSystem* chsystem);
@@ -358,7 +359,7 @@ void ReadParameterFiles() {
             }
         } else {
             followerParam.resize(1);
-            followerParam[0] = {0.1, 3.2, 55, 5.0, 25.0, 1.3, 5.0, 1.2};
+            followerParam[0] = {0.1, 3.2, 28, 1.5, 2.0, 5.0, 3.0, 4.0};
         }
 
         if (d.HasMember("CruiseSpeed")) {
@@ -850,6 +851,13 @@ int main(int argc, char* argv[]) {
     auto IGdriver = chrono_types::make_shared<ChIrrGuiDriver>(app);
     IGdriver->SetButtonCallback(r_1, &customButtonCallback);
     IGdriver->SetButtonCallback(l_1, &dummyButtonCallback_l_1);
+    IGdriver->SetButtonCallback(l_2, &dummyButtonCallback_l_2);
+    IGdriver->SetButtonCallback(l_3, &dummyButtonCallback_l_3);
+    IGdriver->SetButtonCallback(r_2, &dummyButtonCallback_r_2);
+    IGdriver->SetButtonCallback(r_3, &dummyButtonCallback_r_3);
+    // for (int a = 0; a < 23; a++) {
+    //    IGdriver->SetButtonCallback(a, &dummyButtonCallback_test);
+    //}
 
     IGdriver->SetJoystickAxes(ChIrrGuiDriver::JoystickAxes::AXIS_Z, ChIrrGuiDriver::JoystickAxes::AXIS_R,
                               ChIrrGuiDriver::JoystickAxes::AXIS_X, ChIrrGuiDriver::JoystickAxes::NONE);
@@ -867,6 +875,10 @@ int main(int argc, char* argv[]) {
     // we call the callback explicitly to start the timer
     customButtonCallback();
     dummyButtonCallback_l_1();
+    dummyButtonCallback_l_2();
+    dummyButtonCallback_l_3();
+    dummyButtonCallback_r_2();
+    dummyButtonCallback_r_3();
 
     if (!disable_joystick) {
         driver_mode = HUMAN;
@@ -1299,10 +1311,9 @@ int main(int argc, char* argv[]) {
                     buffer.str("");
 
                     printf("Writing to button file...=%i", button_buffer.tellp());
-                    std::cout << "button_buffer:" << button_buffer.str() << std::endl;
                     buttonstream << button_buffer.rdbuf();
+                    buttonstream.flush();
                     button_buffer.str("");
-                    // buttonstream.close();
                 }
             }
         }
@@ -1588,20 +1599,6 @@ void customButtonCallback() {
         std::cout << "Callback Not Invoked, call was too close to the last one \n";
 }
 
-// Wheel botton callback to record button press without any functionalities
-void dummyButtonCallback_l_1() {
-    static auto last_invoked_dummy = std::chrono::system_clock::now().time_since_epoch();
-    auto current_invoke_dummy = std::chrono::system_clock::now().time_since_epoch();
-
-    if (std::chrono::duration_cast<std::chrono::seconds>(current_invoke_dummy - last_invoked_dummy).count() > 1.0) {
-        std::cout << "Button l_1 dummy Callback Invoked: " << std::endl;
-        time_t my_time = time(NULL);
-        button_buffer << "button l_1 pressed; time: " << ctime(&my_time);
-    }
-
-    last_invoked_dummy = current_invoke_dummy;
-}
-
 // Update dummy vehicles based on bazier curve and speed
 void updateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
                  std::shared_ptr<ChBezierCurve> curve,
@@ -1654,4 +1651,77 @@ float controlFindSpeed_time(std::vector<float> time_vec,
     } else {
         return speed_vec[target_idx - 1];
     }
+}
+
+// dummy button call function
+// this section of the code should be optimized !
+// Wheel botton callback to record button press without any functionalities
+void dummyButtonCallback_l_1() {
+    static auto last_invoked_dummy_1 = std::chrono::system_clock::now().time_since_epoch();
+    auto current_invoke_dummy_1 = std::chrono::system_clock::now().time_since_epoch();
+
+    if (std::chrono::duration_cast<std::chrono::seconds>(current_invoke_dummy_1 - last_invoked_dummy_1).count() > 1.0) {
+        std::cout << "Button l_1 dummy Callback Invoked: " << std::endl;
+        time_t my_time = time(NULL);
+        button_buffer << "button l_1 pressed; time: ";
+        button_buffer << ctime(&my_time);
+    }
+
+    last_invoked_dummy_1 = current_invoke_dummy_1;
+}
+
+void dummyButtonCallback_l_2() {
+    static auto last_invoked_dummy_2 = std::chrono::system_clock::now().time_since_epoch();
+    auto current_invoke_dummy_2 = std::chrono::system_clock::now().time_since_epoch();
+
+    if (std::chrono::duration_cast<std::chrono::seconds>(current_invoke_dummy_2 - last_invoked_dummy_2).count() > 1.0) {
+        std::cout << "Button l_2 dummy Callback Invoked: " << std::endl;
+        time_t my_time = time(NULL);
+        button_buffer << "button l_2 pressed; time: ";
+        button_buffer << ctime(&my_time);
+    }
+
+    last_invoked_dummy_2 = current_invoke_dummy_2;
+}
+
+void dummyButtonCallback_l_3() {
+    static auto last_invoked_dummy_3 = std::chrono::system_clock::now().time_since_epoch();
+    auto current_invoke_dummy_3 = std::chrono::system_clock::now().time_since_epoch();
+
+    if (std::chrono::duration_cast<std::chrono::seconds>(current_invoke_dummy_3 - last_invoked_dummy_3).count() > 1.0) {
+        std::cout << "Button l_3 dummy Callback Invoked: " << std::endl;
+        time_t my_time = time(NULL);
+        button_buffer << "button l_3 pressed; time: ";
+        button_buffer << ctime(&my_time);
+    }
+
+    last_invoked_dummy_3 = current_invoke_dummy_3;
+}
+
+void dummyButtonCallback_r_2() {
+    static auto last_invoked_dummy_4 = std::chrono::system_clock::now().time_since_epoch();
+    auto current_invoke_dummy_4 = std::chrono::system_clock::now().time_since_epoch();
+
+    if (std::chrono::duration_cast<std::chrono::seconds>(current_invoke_dummy_4 - last_invoked_dummy_4).count() > 1.0) {
+        std::cout << "Button r_2 dummy Callback Invoked: " << std::endl;
+        time_t my_time = time(NULL);
+        button_buffer << "button r_2 pressed; time: ";
+        button_buffer << ctime(&my_time);
+    }
+
+    last_invoked_dummy_4 = current_invoke_dummy_4;
+}
+
+void dummyButtonCallback_r_3() {
+    static auto last_invoked_dummy_5 = std::chrono::system_clock::now().time_since_epoch();
+    auto current_invoke_dummy_5 = std::chrono::system_clock::now().time_since_epoch();
+
+    if (std::chrono::duration_cast<std::chrono::seconds>(current_invoke_dummy_5 - last_invoked_dummy_5).count() > 1.0) {
+        std::cout << "Button r_3 dummy Callback Invoked: " << std::endl;
+        time_t my_time = time(NULL);
+        button_buffer << "button r_3 pressed; time: ";
+        button_buffer << ctime(&my_time);
+    }
+
+    last_invoked_dummy_5 = current_invoke_dummy_5;
 }

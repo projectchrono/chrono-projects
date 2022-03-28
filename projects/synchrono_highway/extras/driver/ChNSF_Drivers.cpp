@@ -112,19 +112,18 @@ void ChNSFFollowererDriver::Synchronize(double time, double step) {
             continue;
         else {
             // if the new piece has not been reached yet, we keep cruise speed:
-            if (dist < piece_data[0])
+            if (dist < piece_data[0]) {
+                double v = m_vehicle.GetChassis()->GetSpeed();
                 SetDesiredSpeed(cruise_speed);
-            else {
+            } else {
                 double s = (m_vehicle.GetChassis()->GetPos() - leader.GetChassis()->GetPos()).Length() - AUDI_LENGTH;
                 double v = m_vehicle.GetChassis()->GetSpeed();
                 double delta_v = v - leader.GetChassis()->GetSpeed();
-                double s_star =
-                    piece_data[4] +
-                    ChMax(0.0, v * piece_data[3] + (v * delta_v) / (2 * sqrt(piece_data[5] * piece_data[6])));
+                double s_star = piece_data[4] +
+                                ChMax(0.0, v * piece_data[3] + (v * delta_v) / 2 * sqrt(piece_data[5] * piece_data[6]));
                 double dv_dt = piece_data[5] * (1 - pow(v / piece_data[2], piece_data[7]) - pow(s_star / s, 2));
-                double v_ms = ChMax(0.0, v + dv_dt * step);
-                // double des_speed = v_mph * MPH_TO_MS ;
-                // std::cout<< "Miles traveled:" << dist << "   Desired Speed is :" << des_speed << "\n";
+                double v_ms = ChMax(0.0, v + dv_dt * step * 50);
+                double des_speed = v_ms * MS_TO_MPH;
                 SetDesiredSpeed(v_ms);
             }
         }
