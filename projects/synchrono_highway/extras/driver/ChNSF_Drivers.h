@@ -83,8 +83,8 @@ class CH_VEHICLE_API ChNSFFollowererDriver : public ChPathFollowerDriver {
                           const std::string& path_name,          ///< name of the path curve
                           double target_speed,                   ///< constant target speed
                           const ChVehicle& lead_vehicle,         ///< followed_vehicle
-                          std::vector<std::vector<double>> params,  ///< JSON file with piecewise params
-                          bool isClosedPath = false                 ///< Treat the path as a closed loop
+                          std::vector<double> params,            ///< JSON file with piecewise params
+                          bool isClosedPath = false              ///< Treat the path as a closed loop
     );
 
     virtual ~ChNSFFollowererDriver() {}
@@ -99,7 +99,7 @@ class CH_VEHICLE_API ChNSFFollowererDriver : public ChPathFollowerDriver {
     // traveldistance
     double dist;
     // vector of vectors containing the instruction for target speed
-    std::vector<std::vector<double>> behavior_data;
+    std::vector<double> behavior_data;
     // Cruise speed between sinusoidal stretches
     double cruise_speed;
     // leader vehicle to follow

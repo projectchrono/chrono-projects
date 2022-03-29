@@ -79,15 +79,15 @@ void ChNSFLeaderDriver::Synchronize(double time) {
 }
 
 ChNSFFollowererDriver::ChNSFFollowererDriver(
-    ChVehicle& vehicle,                       ///< associated vehicle
-    const std::string& steering_filename,     ///< JSON file with steering controller specification
-    const std::string& speed_filename,        ///< JSON file with speed controller specification
-    std::shared_ptr<ChBezierCurve> path,      ///< Bezier curve with target path
-    const std::string& path_name,             ///< name of the path curve
-    double target_speed,                      ///< constant target speed
-    const ChVehicle& lead_vehicle,            ///< followed_vehicle
-    std::vector<std::vector<double>> params,  ///< JSON file with piecewise params
-    bool isClosedPath)                        ///< Treat the path as a closed loop
+    ChVehicle& vehicle,                    ///< associated vehicle
+    const std::string& steering_filename,  ///< JSON file with steering controller specification
+    const std::string& speed_filename,     ///< JSON file with speed controller specification
+    std::shared_ptr<ChBezierCurve> path,   ///< Bezier curve with target path
+    const std::string& path_name,          ///< name of the path curve
+    double target_speed,                   ///< constant target speed
+    const ChVehicle& lead_vehicle,         ///< followed_vehicle
+    std::vector<double> params,            ///< JSON file with piecewise params
+    bool isClosedPath)                     ///< Treat the path as a closed loop
     : ChPathFollowerDriver(vehicle, steering_filename, speed_filename, path, path_name, target_speed, isClosedPath),
       behavior_data(params),
       cruise_speed(target_speed),
@@ -106,28 +106,16 @@ void ChNSFFollowererDriver::Synchronize(double time, double step) {
     // delta: accel exponent
     dist += (m_vehicle.GetChassis()->GetPos() - previousPos).Length() * M_TO_MILE;
     previousPos = m_vehicle.GetChassis()->GetPos();
-    for (auto piece_data : behavior_data) {
-        // if the traveled dist is > max, we inspect the following piece
-        if (dist > piece_data[1])
-            continue;
-        else {
-            // if the new piece has not been reached yet, we keep cruise speed:
-            if (dist < piece_data[0]) {
-                double v = m_vehicle.GetChassis()->GetSpeed();
-                SetDesiredSpeed(cruise_speed);
-            } else {
-                double s = (m_vehicle.GetChassis()->GetPos() - leader.GetChassis()->GetPos()).Length() - AUDI_LENGTH;
-                double v = m_vehicle.GetChassis()->GetSpeed();
-                double delta_v = v - leader.GetChassis()->GetSpeed();
-                double s_star = piece_data[4] +
-                                ChMax(0.0, v * piece_data[3] + (v * delta_v) / 2 * sqrt(piece_data[5] * piece_data[6]));
-                double dv_dt = piece_data[5] * (1 - pow(v / piece_data[2], piece_data[7]) - pow(s_star / s, 2));
-                double v_ms = ChMax(0.0, v + dv_dt * step * 50);
-                double des_speed = v_ms * MS_TO_MPH;
-                SetDesiredSpeed(v_ms);
-            }
-        }
-    }
+
+    double s = (m_vehicle.GetChassis()->GetPos() - leader.GetChassis()->GetPos()).Length() - AUDI_LENGTH;
+    double v = m_vehicle.GetChassis()->GetSpeed();
+    double delta_v = v - leader.GetChassis()->GetSpeed();
+    double s_star = behavior_data[2] +
+                    ChMax(0.0, v * behavior_data[1] + (v * delta_v) / 2 * sqrt(behavior_data[3] * behavior_data[4]));
+    double dv_dt = behavior_data[3] * (1 - pow(v / behavior_data[0], behavior_data[5]) - pow(s_star / s, 2));
+    double v_ms = ChMax(0.0, v + dv_dt * step * 50);
+    double des_speed = v_ms * MS_TO_MPH;
+    SetDesiredSpeed(v_ms);
 
     ChPathFollowerDriver::Synchronize(time);
 }
