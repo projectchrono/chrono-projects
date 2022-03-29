@@ -111,12 +111,8 @@ ChContactMethod contact_method = ChContactMethod::SMC;
 // -----------------------------------------------------------------------------
 // steering wheel button settings
 // change mapping if on a different steering wheel
-int l_1 = 7;
-int l_2 = 20;
-int l_3 = 21;
-int r_1 = 6;
-int r_2 = 18;
 int r_3 = 19;
+int r_1 = 6;
 
 // camera parameters
 float frame_rate = 30.0;
@@ -231,7 +227,7 @@ std::string csv_comments;
 
 // button callback placeholder
 void customButtonCallback();
-void dummyButtonCallback_l_1();
+void dummyButtonCallback_r_3();
 
 // distribution of trees near the road
 void AddTrees(ChSystem* chsystem);
@@ -840,7 +836,7 @@ int main(int argc, char* argv[]) {
     // driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
     auto IGdriver = chrono_types::make_shared<ChIrrGuiDriver>(app);
     IGdriver->SetButtonCallback(r_1, &customButtonCallback);
-    IGdriver->SetButtonCallback(l_1, &dummyButtonCallback_l_1);
+    IGdriver->SetButtonCallback(r_3, &dummyButtonCallback_r_3);
 
     // for (int a = 0; a < 23; a++) {
     //    IGdriver->SetButtonCallback(a, &dummyButtonCallback_test);
@@ -861,7 +857,7 @@ int main(int argc, char* argv[]) {
 
     // we call the callback explicitly to start the timer
     customButtonCallback();
-    dummyButtonCallback_l_1();
+    dummyButtonCallback_r_3();
 
     if (!disable_joystick) {
         driver_mode = HUMAN;
@@ -893,11 +889,11 @@ int main(int argc, char* argv[]) {
             filestream << "csv comments: " << csv_comments << " \n";
         }
 
-        filestream
-            << "time, wallTime, isManual, Steering, Throttle, Braking, x[m], y[m], speed[mph], acceleration[m/s^2], "
-               "dist[m], dist_projected[m], IG_mile[mile], IG_lane[0-inner/1-outer/-1-invalid], LD_x[m], "
-               "LD_y[m], LD_speed[mph], "
-               "LD_acc[m/s^2], LD_mile[mile]   \n ";
+        filestream << "tstamp,time,wallTime,isManual,Steering,Throttle,Braking,x[m],y[m],speed[mph],"
+                      "acceleration[m/s^2],"
+                      "dist[m],dist_projected[m],IG_mile[mile],IG_lane[0-inner/1-outer/-1-invalid],LD_x[m],"
+                      "LD_y[m],LD_speed[mph],"
+                      "LD_acc[m/s^2],LD_mile[mile]\n";
 
         buttonstream << "start recording buttons pressed \n";
     }
@@ -912,7 +908,7 @@ int main(int argc, char* argv[]) {
     // Initialize simulation frame counter and simulation time
     int step_number = 0;
     int render_frame = 0;
-    double time = 0;
+    double sim_time = 0;
 
     // ---------------------------------------------
     // Create a sensor manager and add a point light
@@ -985,10 +981,10 @@ int main(int argc, char* argv[]) {
     double last_sim_sync = 0;
 
     while (app.GetDevice()->run()) {
-        time = vehicle.GetSystem()->GetChTime();
+        sim_time = vehicle.GetSystem()->GetChTime();
 
         // End simulation
-        if (time >= t_end)
+        if (sim_time >= t_end)
             break;
 
         // cam->SetOffsetPose(
@@ -1013,7 +1009,7 @@ int main(int argc, char* argv[]) {
             auto ld_speed = lead_vehicles[0]->GetVehicleSpeed() * MS_TO_MPH;
             auto ig_speed = vehicle.GetVehicleSpeed() * MS_TO_MPH;
             auto wall_time = high_resolution_clock::now();
-            printf("Sim Time=%f, \tWall Time=%f, \tExtra Time=%f, \tLD_Speed mph=%f, \tIG_Speed mph=%f\n", time,
+            printf("Sim Time=%f, \tWall Time=%f, \tExtra Time=%f, \tLD_Speed mph=%f, \tIG_Speed mph=%f\n", sim_time,
                    duration_cast<duration<double>>(wall_time - t0).count(), extra_time, ld_speed, ig_speed);
             std::cout << "Current Gear: " << vehicle.GetPowertrain()->GetCurrentTransmissionGear() << std::endl;
             extra_time = 0.0;
@@ -1021,16 +1017,16 @@ int main(int argc, char* argv[]) {
 
         // Update modules (process inputs from other modules)
         if (driver_mode == AUTONOMOUS)
-            PFdriver->Synchronize(time, step_size);
+            PFdriver->Synchronize(sim_time, step_size);
         else
-            IGdriver->Synchronize(time);
+            IGdriver->Synchronize(sim_time);
 
-        terrain.Synchronize(time);
-        vehicle.Synchronize(time, driver_inputs, terrain);
+        terrain.Synchronize(sim_time);
+        vehicle.Synchronize(sim_time, driver_inputs, terrain);
 
         app.Synchronize("", driver_inputs);
 #ifdef CHRONO_IRRKLANG
-        soundEng.Synchronize(time);
+        soundEng.Synchronize(sim_time);
 #endif
         // Advance simulation for one timestep for all modules
         double step = step_size;
@@ -1066,7 +1062,7 @@ int main(int argc, char* argv[]) {
                 } else {
                     float target_speed;
                     if (dummy_time_mode[i] == 1) {
-                        target_speed = controlFindSpeed_time(dummy_control_time[i], dummy_control_speed[i], time,
+                        target_speed = controlFindSpeed_time(dummy_control_time[i], dummy_control_speed[i], sim_time,
                                                              dummy_cruise_speed[i]);
                     } else if (dummy_time_mode[i] == 2) {
                         target_speed = controlFindSpeed_time(dummy_control_time[i], dummy_control_speed[i], wall_time,
@@ -1086,7 +1082,7 @@ int main(int argc, char* argv[]) {
                 } else {
                     float target_speed;
                     if (dummy_time_mode[i] == 1) {
-                        target_speed = controlFindSpeed_time(dummy_control_time[i], dummy_control_speed[i], time,
+                        target_speed = controlFindSpeed_time(dummy_control_time[i], dummy_control_speed[i], sim_time,
                                                              dummy_cruise_speed[i]);
                     } else if (dummy_time_mode[i] == 2) {
                         target_speed = controlFindSpeed_time(dummy_control_time[i], dummy_control_speed[i], wall_time,
@@ -1102,7 +1098,7 @@ int main(int argc, char* argv[]) {
             if (dynamic_control[i] == 1) {
                 float target_speed;
                 if (dynamic_time_mode[i] == 1) {
-                    target_speed = controlFindSpeed_time(dynamic_control_time[i], dynamic_control_speed[i], time,
+                    target_speed = controlFindSpeed_time(dynamic_control_time[i], dynamic_control_speed[i], sim_time,
                                                          dynamic_cruise_speed[i]);
                 } else if (dynamic_time_mode[i] == 2) {
                     target_speed = controlFindSpeed_time(dynamic_control_time[i], dynamic_control_speed[i], wall_time,
@@ -1111,8 +1107,8 @@ int main(int argc, char* argv[]) {
                 lead_PFdrivers[i]->SetCruiseSpeed(target_speed * MPH_TO_MS);
             }
             ChDriver::Inputs lead_driver_inputs = lead_PFdrivers[i]->GetInputs();
-            lead_PFdrivers[i]->Synchronize(time);
-            lead_vehicles[i]->Synchronize(time, lead_driver_inputs, terrain);
+            lead_PFdrivers[i]->Synchronize(sim_time);
+            lead_vehicles[i]->Synchronize(sim_time, lead_driver_inputs, terrain);
             lead_PFdrivers[i]->Advance(step);
             lead_vehicles[i]->Advance(step);
         }
@@ -1201,8 +1197,8 @@ int main(int argc, char* argv[]) {
         step_number++;
 
         if (step_number % (int)(2.0 / frame_rate / step_size) == 0 && !benchmark) {
-            double since_last_sync = time - last_sim_sync;
-            last_sim_sync = time;
+            double since_last_sync = sim_time - last_sim_sync;
+            last_sim_sync = sim_time;
             auto tt0 = high_resolution_clock::now();
             realtime_timer.Spin(since_last_sync);
             auto tt1 = high_resolution_clock::now();
@@ -1218,8 +1214,12 @@ int main(int argc, char* argv[]) {
         if (save_driver) {
             if (step_number % int(tsave / step_size) == 0) {
                 buffer << std::fixed << std::setprecision(3);
-                buffer << std::to_string(time) + " ,";
-                buffer << std::to_string(wall_time) << ", ";
+
+                time_t my_time = time(NULL);
+                buffer << strtok(ctime(&my_time), "\n");
+                buffer << ",";
+                buffer << std::to_string(sim_time) + ",";
+                buffer << std::to_string(wall_time) << ",";
                 ChDriver* currDriver;
                 bool isManual;
                 if (driver_mode == HUMAN) {
@@ -1639,14 +1639,14 @@ float controlFindSpeed_time(std::vector<float> time_vec,
 // dummy button call function
 // this section of the code should be optimized !
 // Wheel botton callback to record button press without any functionalities
-void dummyButtonCallback_l_1() {
+void dummyButtonCallback_r_3() {
     static auto last_invoked_dummy_1 = std::chrono::system_clock::now().time_since_epoch();
     auto current_invoke_dummy_1 = std::chrono::system_clock::now().time_since_epoch();
 
     if (std::chrono::duration_cast<std::chrono::seconds>(current_invoke_dummy_1 - last_invoked_dummy_1).count() > 1.0) {
-        std::cout << "Button l_1 dummy Callback Invoked: " << std::endl;
+        std::cout << "Button dummy r_3 Callback Invoked: " << std::endl;
         time_t my_time = time(NULL);
-        button_buffer << "button l_1 pressed; time: ";
+        button_buffer << "button dummy r_3 pressed; time: ";
         button_buffer << ctime(&my_time);
     }
 
