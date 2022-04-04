@@ -38,6 +38,7 @@ using namespace chrono::sensor;
 #define MPH_TO_MS 0.44704
 #define AUDI_LENGTH 4.86
 #define M_TO_MILE 0.000621371
+#define MILE_TO_M 1609.34449789
 namespace chrono {
 
 // Driver for the leader vehicle, it adjusts its target speed according to a piecewise sinusoidal function
@@ -92,6 +93,8 @@ class CH_VEHICLE_API ChNSFFollowererDriver : public ChPathFollowerDriver {
     void Synchronize(double time, double step);
 
     void SetCruiseSpeed(double speed);
+
+    double Get_Dist();
 
   private:
     // starting pos to compare with to obtain traveled dist
