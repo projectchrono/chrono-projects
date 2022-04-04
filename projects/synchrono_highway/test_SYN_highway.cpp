@@ -151,7 +151,7 @@ irr::core::position2d<irr::s32> sm_center(219, 215);
 irr::core::position2d<irr::s32> rpm_center(609, 215);
 irr::core::position2d<irr::s32> gr_center(388, 23);
 irr::core::position2d<irr::s32> auto_center(358, 338);
-irr::core::position2d<irr::s32> cur_left(950, 60);
+irr::core::position2d<irr::s32> cur_left(950, 70);
 irr::core::position2d<irr::s32> end_left(950, 190);
 irr::core::position2d<irr::s32> eta_left(950, 310);
 double sm_needle = 140;
