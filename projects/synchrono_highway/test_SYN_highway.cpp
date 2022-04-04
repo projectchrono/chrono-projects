@@ -109,7 +109,7 @@ ChContactMethod contact_method = ChContactMethod::SMC;
 
 // Global Variable to track miles the car traveled
 float IG_dist = 0;
-utils::ChRunningAverage IG_speed_avg(1000);
+utils::ChRunningAverage IG_speed_avg(100);
 
 // -----------------------------------------------------------------------------
 // Steering wheel parameters
@@ -989,6 +989,7 @@ int main(int argc, char* argv[]) {
     double last_sim_sync = 0;
 
     ChVector<> prev_IG_pos;
+    bool IG_started_driving = false;
 
     while (app.GetDevice()->run()) {
         sim_time = vehicle.GetSystem()->GetChTime();
@@ -1021,7 +1022,7 @@ int main(int argc, char* argv[]) {
             auto wall_time = high_resolution_clock::now();
             printf("Sim Time=%f, \tWall Time=%f, \tExtra Time=%f, \tLD_Speed mph=%f, \tIG_Speed mph=%f\n", sim_time,
                    duration_cast<duration<double>>(wall_time - t0).count(), extra_time, ld_speed, ig_speed);
-            std::cout << "Current Gear: " << vehicle.GetPowertrain()->GetCurrentTransmissionGear() << std::endl;
+            // std::cout << "Current Gear: " << vehicle.GetPowertrain()->GetCurrentTransmissionGear() << std::endl;
             extra_time = 0.0;
         }
 
@@ -1134,7 +1135,7 @@ int main(int argc, char* argv[]) {
         if (step_number % int(1 / (60 * step_size)) == 0) {
             /// irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0), false);
             app.GetDevice()->getVideoDriver()->draw2DImage(
-                app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/dash_4_3.jpg").c_str()),
+                app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/dash_4_4.jpg").c_str()),
                 irr::core::position2d<irr::s32>(0, 0));
 
             int curr_gear = vehicle.GetPowertrain()->GetCurrentTransmissionGear();
@@ -1260,11 +1261,18 @@ int main(int argc, char* argv[]) {
             static int end_m;
             static int end_h;
 
-            if (step_number == 0) {
-                // display end time
-                end_s = s + 5;
+            if (vehicle.GetVehicleSpeedCOM() >= 0.5 && IG_started_driving == false) {
+                time_t curr_time = time(NULL);
+                struct tm* tmp = localtime(&curr_time);
+
+                int temp_h = tmp->tm_hour;
+                int temp_m = tmp->tm_min;
+                int temp_s = tmp->tm_sec;
+
+                end_s = s;
                 end_m = m + 4;
                 end_h = h;
+
                 if (end_s >= 60) {
                     end_s = end_s - 60;
                     end_m = end_m + 1;
@@ -1273,55 +1281,76 @@ int main(int argc, char* argv[]) {
                     end_m = end_m - 60;
                     end_h = end_h + 1;
                 }
+
+                IG_started_driving = true;
             }
-            std::vector<int> display_end_int;
-            display_end_int.push_back(end_h / 10);
-            display_end_int.push_back(end_h % 10);
-            display_end_int.push_back(end_m / 10);
-            display_end_int.push_back(end_m % 10);
-            display_end_int.push_back(end_s / 10);
-            display_end_int.push_back(end_s % 10);
 
-            for (int i = 0; i < display_end_int.size() + 2; i++) {
-                irr::core::position2d<irr::s32> offset(50, 0);
-                irr::core::position2d<irr::s32> colon_offset1(25, 0);
-                irr::core::position2d<irr::s32> colon_offset2(25, 0);
+            if (IG_started_driving == true) {
+                std::vector<int> display_end_int;
+                display_end_int.push_back(end_h / 10);
+                display_end_int.push_back(end_h % 10);
+                display_end_int.push_back(end_m / 10);
+                display_end_int.push_back(end_m % 10);
+                display_end_int.push_back(end_s / 10);
+                display_end_int.push_back(end_s % 10);
 
-                if (i < 2) {
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture(
-                            (demo_data_path + "/miscellaneous/numerical/" + std::to_string(display_end_int[i]) + ".png")
-                                .c_str()),
-                        end_left + offset * i);
-                } else if (i == 2) {
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture(
-                            (demo_data_path + "/miscellaneous/numerical/colon.png").c_str()),
-                        end_left + offset * i);
-                } else if (i < 5) {
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/" +
-                                                                       std::to_string(display_end_int[i - 1]) + ".png")
-                                                                          .c_str()),
-                        end_left + offset * (i - 1) + colon_offset1);
-                } else if (i == 5) {
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture(
-                            (demo_data_path + "/miscellaneous/numerical/colon.png").c_str()),
-                        end_left + offset * (i - 1) + colon_offset1);
-                } else if (i <= 7) {
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/" +
-                                                                       std::to_string(display_end_int[i - 2]) + ".png")
-                                                                          .c_str()),
-                        end_left + offset * (i - 2) + colon_offset1 + colon_offset2);
+                for (int i = 0; i < display_end_int.size() + 2; i++) {
+                    irr::core::position2d<irr::s32> offset(50, 0);
+                    irr::core::position2d<irr::s32> colon_offset1(25, 0);
+                    irr::core::position2d<irr::s32> colon_offset2(25, 0);
+
+                    if (i < 2) {
+                        app.GetDevice()->getVideoDriver()->draw2DImage(
+                            app.GetDevice()->getVideoDriver()->getTexture((demo_data_path +
+                                                                           "/miscellaneous/numerical/" +
+                                                                           std::to_string(display_end_int[i]) + ".png")
+                                                                              .c_str()),
+                            end_left + offset * i);
+                    } else if (i == 2) {
+                        app.GetDevice()->getVideoDriver()->draw2DImage(
+                            app.GetDevice()->getVideoDriver()->getTexture(
+                                (demo_data_path + "/miscellaneous/numerical/colon.png").c_str()),
+                            end_left + offset * i);
+                    } else if (i < 5) {
+                        app.GetDevice()->getVideoDriver()->draw2DImage(
+                            app.GetDevice()->getVideoDriver()->getTexture(
+                                (demo_data_path + "/miscellaneous/numerical/" + std::to_string(display_end_int[i - 1]) +
+                                 ".png")
+                                    .c_str()),
+                            end_left + offset * (i - 1) + colon_offset1);
+                    } else if (i == 5) {
+                        app.GetDevice()->getVideoDriver()->draw2DImage(
+                            app.GetDevice()->getVideoDriver()->getTexture(
+                                (demo_data_path + "/miscellaneous/numerical/colon.png").c_str()),
+                            end_left + offset * (i - 1) + colon_offset1);
+                    } else if (i <= 7) {
+                        app.GetDevice()->getVideoDriver()->draw2DImage(
+                            app.GetDevice()->getVideoDriver()->getTexture(
+                                (demo_data_path + "/miscellaneous/numerical/" + std::to_string(display_end_int[i - 2]) +
+                                 ".png")
+                                    .c_str()),
+                            end_left + offset * (i - 2) + colon_offset1 + colon_offset2);
+                    }
                 }
             }
 
             // compute and display ETA
-            float remaining = 3.6f * MILE_TO_M - IG_dist;
-            float avg_speed = IG_speed_avg.Add(ego_chassis->GetSpeed());
-            int sec_remaining = remaining / avg_speed;
+
+            static int sec_remaining = 0;
+
+            if (step_number % 50 == 0) {
+                float remaining = 3.6f * MILE_TO_M - IG_dist;
+                float avg_speed = IG_speed_avg.Add(ego_chassis->GetSpeed());
+                sec_remaining = remaining / avg_speed;
+            }
+
+            // panic algorithm
+            // if below 0, set to 0
+            // if above max, set to 0
+
+            if (sec_remaining < 0 || sec_remaining > 356518) {
+                sec_remaining = 0;
+            }
 
             int eta_h = sec_remaining / 3600;
             int eta_m = (sec_remaining % 3600) / 60;
