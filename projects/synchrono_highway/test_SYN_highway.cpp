@@ -177,7 +177,7 @@ std::string output_file_path = "./output.csv";
 std::string dummy_button_path = "./buttoninfo.csv";
 std::stringstream buffer;
 std::stringstream button_buffer;
-std::ofstream filestream(output_file_path);
+std::ofstream filestream;
 std::ofstream buttonstream(dummy_button_path);
 
 // Fog parameters
@@ -369,6 +369,16 @@ void ReadParameterFiles() {
         if (d.HasMember("csv_comments")) {
             is_csv_comments = true;
             csv_comments = d["csv_comments"].GetString();
+        }
+
+        if (d.HasMember("csv_filename")) {
+            output_file_path = "./output_" + std::string(d["csv_filename"].GetString()) + ".csv ";
+            dummy_button_path = "./buttoninfo_" + std::string(d["csv_filename"].GetString()) + ".csv ";
+            filestream = std::ofstream(output_file_path);
+            buttonstream = std::ofstream(dummy_button_path);
+        } else {
+            filestream = std::ofstream(output_file_path);
+            buttonstream = std::ofstream(dummy_button_path);
         }
 
         int lead_count = 0;
