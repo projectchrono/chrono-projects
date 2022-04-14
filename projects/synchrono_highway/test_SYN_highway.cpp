@@ -192,6 +192,9 @@ ChQuaternion<> mirror_wingleft_rot = {1.0, 0.0, 0.0, 0.0};
 ChVector<> mirror_wingright_pos = {0.0, 0.0, 0.0};
 ChQuaternion<> mirror_wingright_rot = {1.0, 0.0, 0.0, 0.0};
 
+ChVector<> arrived_sign_pos = {0.0, 0.0, 0.0};
+ChQuaternion<> arrived_sign_rot = {1.0, 0.0, 0.0, 0.0};
+
 // benchmarking
 bool benchmark = false;
 
@@ -356,6 +359,16 @@ void ReadParameterFiles() {
 
         if (d.HasMember("CruiseSpeed")) {
             cruise_speed = d["CruiseSpeed"].GetDouble();
+        }
+        if (d.HasMember("ArrivedSign")) {
+            const rapidjson::Value& arrived_sign_params = d["ArrivedSign"];
+            if (arrived_sign_params.HasMember("Position")) {
+                arrived_sign_pos = vehicle::ReadVectorJSON(arrived_sign_params["Position"]);
+            }
+            if (arrived_sign_params.HasMember("Rotation")) {
+                arrived_sign_rot =
+                    Q_from_Euler123(CH_C_DEG_TO_RAD * vehicle::ReadVectorJSON(arrived_sign_params["Rotation"]));
+            }
         }
     }
 
@@ -557,6 +570,9 @@ int main(int argc, char* argv[]) {
 
     scenario_parameters = cli.GetAsType<std::string>("scenario_params");
     simulation_parameters = cli.GetAsType<std::string>("sim_params");
+
+    std::cout << "Scen params: " << scenario_parameters << "\n";
+    std::cout << "Sim params" << simulation_parameters << "\n";
 
     ReadParameterFiles();
 
@@ -1618,6 +1634,24 @@ void AddRoadway(ChSystem* chsystem) {
         trimesh_shape->SetStatic(true);
         auto mesh_body = chrono_types::make_shared<ChBody>();
         mesh_body->SetPos(offsets[i]);
+        mesh_body->AddAsset(trimesh_shape);
+        mesh_body->SetBodyFixed(true);
+        chsystem->Add(mesh_body);
+    }
+
+    // Add arrived sign
+    { 
+        std::string meshname = "/Environments/Iowa/signs/arrived.obj";
+        auto trimesh = chrono_types::make_shared<ChTriangleMeshConnected>();
+        trimesh->LoadWavefrontMesh(demo_data_path + meshname, false, true);
+        trimesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
+        auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+        trimesh_shape->SetMesh(trimesh);
+        trimesh_shape->SetName(meshname);
+        trimesh_shape->SetStatic(true);
+        auto mesh_body = chrono_types::make_shared<ChBody>();
+        mesh_body->SetPos(arrived_sign_pos);
+        mesh_body->SetRot(arrived_sign_rot);
         mesh_body->AddAsset(trimesh_shape);
         mesh_body->SetBodyFixed(true);
         chsystem->Add(mesh_body);
