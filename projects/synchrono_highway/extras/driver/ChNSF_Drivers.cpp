@@ -78,6 +78,14 @@ void ChNSFLeaderDriver::Synchronize(double time) {
     ChPathFollowerDriver::Synchronize(time);
 }
 
+double ChNSFLeaderDriver::Get_Dist() {
+    return dist;
+}
+
+void ChNSFLeaderDriver::SetCruiseSpeed(double speed) {
+    cruise_speed = speed;
+}
+
 ChNSFFollowererDriver::ChNSFFollowererDriver(
     ChVehicle& vehicle,                    ///< associated vehicle
     const std::string& steering_filename,  ///< JSON file with steering controller specification
@@ -120,8 +128,8 @@ void ChNSFFollowererDriver::Synchronize(double time, double step) {
     ChPathFollowerDriver::Synchronize(time);
 }
 
-void ChNSFLeaderDriver::SetCruiseSpeed(double speed) {
-    cruise_speed = speed;
+double ChNSFFollowererDriver::Get_Dist() {
+    return dist;
 }
 
 }  // end namespace chrono

@@ -62,6 +62,8 @@ class CH_VEHICLE_API ChNSFLeaderDriver : public ChPathFollowerDriver {
 
     void SetCruiseSpeed(double speed);
 
+    double Get_Dist();
+
   private:
     // starting pos to compare with to obtain traveled dist
     ChVector<> previousPos;

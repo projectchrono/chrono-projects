@@ -108,7 +108,6 @@ ChVector<> trackPoint(0.0, 0.0, 1.75);
 ChContactMethod contact_method = ChContactMethod::SMC;
 
 // Global Variable to track miles the car traveled
-float IG_dist = 0;
 utils::ChRunningAverage IG_speed_avg(100);
 
 // -----------------------------------------------------------------------------
@@ -1134,14 +1133,6 @@ int main(int argc, char* argv[]) {
             lead_vehicles[i]->Advance(step);
         }
 
-        // update distance marker
-        if (step_number == 0) {
-            prev_IG_pos = vehicle.GetChassis()->GetPos();
-        } else {
-            IG_dist += (vehicle.GetChassis()->GetPos() - prev_IG_pos).Length();
-            prev_IG_pos = vehicle.GetChassis()->GetPos();
-        }
-
         if (step_number % int(1 / (60 * step_size)) == 0) {
             /// irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0), false);
             app.GetDevice()->getVideoDriver()->draw2DImage(
@@ -1349,7 +1340,7 @@ int main(int argc, char* argv[]) {
             static int sec_remaining = 0;
 
             if (step_number % 50 == 0) {
-                float remaining = 3.6f * MILE_TO_M - IG_dist;
+                float remaining = 3.6f * MILE_TO_M - PFdriver->Get_Dist();
                 float avg_speed = IG_speed_avg.Add(ego_chassis->GetSpeed());
                 sec_remaining = remaining / avg_speed;
             }
