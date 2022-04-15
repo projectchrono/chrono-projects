@@ -161,7 +161,7 @@ std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
 std::vector<double> followerParam;
 std::string scenario_parameters = demo_data_path + "/Environments/Iowa/parameters/scenario_parameters.json";
 std::string simulation_parameters = demo_data_path + "/Environments/Iowa/parameters/simulation_parameters.json";
-std::string lead_parameters = demo_data_path + "/Environments/Iowa/parameters/lead_parameters.json";
+std::string lead_parameters = demo_data_path + "/Environments/Iowa/parameters/lead_parameters_1.json";
 // cruise speed [mph]
 double cruise_speed = 45;
 
@@ -233,6 +233,10 @@ std::vector<std::vector<std::vector<double>>> leaderParam;
 // Comment section in csv output
 bool is_csv_comments = false;
 std::string csv_comments;
+
+// distance variable
+float IG_dist = 0;
+ChVector<> IG_prev_pos;
 // =============================================================================
 
 // button callback placeholder
@@ -535,20 +539,21 @@ void AddCommandLineOptions(ChCLI& cli) {
                                scenario_parameters);
     cli.AddOption<std::string>("Simulation", "sim_params", "Path to simulation configuration file",
                                simulation_parameters);
+    cli.AddOption<std::string>("Simulation", "lead_params", "Path to lead configuration file", lead_parameters);
 }
 
 int main(int argc, char* argv[]) {
     ChCLI cli(argv[0]);
     AddCommandLineOptions(cli);
-
-    // read from argument line
-    if (argc > 1) {
-        std::string parameter_json(argv[1]);
-        lead_parameters = demo_data_path + "/Environments/Iowa/parameters/" + parameter_json;
-    } else {
-        std::cout << "WARNING: No Lead Parameter JSON file, searching for default JSON file - lead_parameter.json";
-    }
-
+    /*
+        // read from argument line
+        if (argc > 1) {
+            std::string parameter_json(argv[1]);
+            lead_parameters = demo_data_path + "/Environments/Iowa/parameters/" + parameter_json;
+        } else {
+            std::cout << "WARNING: No Lead Parameter JSON file, searching for default JSON file - lead_parameter.json";
+        }
+    */
     if (!cli.Parse(argc, argv, true))
         return 0;
 
@@ -570,9 +575,11 @@ int main(int argc, char* argv[]) {
 
     scenario_parameters = cli.GetAsType<std::string>("scenario_params");
     simulation_parameters = cli.GetAsType<std::string>("sim_params");
+    lead_parameters = demo_data_path + "/Environments/Iowa/parameters/" + cli.GetAsType<std::string>("lead_params");
 
     std::cout << "Scen params: " << scenario_parameters << "\n";
-    std::cout << "Sim params" << simulation_parameters << "\n";
+    std::cout << "Sim params:" << simulation_parameters << "\n";
+    std::cout << "Lead params:" << lead_parameters << "\n";
 
     ReadParameterFiles();
 
@@ -1355,8 +1362,15 @@ int main(int argc, char* argv[]) {
 
             static int sec_remaining = 0;
 
+            if (step_number == 0) {
+                IG_prev_pos = ego_chassis->GetPos();
+            }
+
+            IG_dist = IG_dist + (ego_chassis->GetPos() - IG_prev_pos).Length();
+            IG_prev_pos = ego_chassis->GetPos();
+
             if (step_number % 50 == 0) {
-                float remaining = 3.6f * MILE_TO_M - PFdriver->Get_Dist();
+                float remaining = 3.6 * MILE_TO_M - IG_dist;
                 float avg_speed = IG_speed_avg.Add(ego_chassis->GetSpeed());
                 sec_remaining = remaining / avg_speed;
             }
@@ -1640,7 +1654,7 @@ void AddRoadway(ChSystem* chsystem) {
     }
 
     // Add arrived sign
-    { 
+    {
         std::string meshname = "/Environments/Iowa/signs/arrived.obj";
         auto trimesh = chrono_types::make_shared<ChTriangleMeshConnected>();
         trimesh->LoadWavefrontMesh(demo_data_path + meshname, false, true);

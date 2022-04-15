@@ -112,7 +112,7 @@ void ChNSFFollowererDriver::Synchronize(double time, double step) {
     // https://traffic-simulation.de/info/info_IDM.html the parameters are: start [miles], end [miles], v0 desired v
     // [m/s], T desired time headway [s], desired space headway [m], a: accel reate a [m/s^2], b: comfort decel [m/s^2],
     // delta: accel exponent
-    dist += (m_vehicle.GetChassis()->GetPos() - previousPos).Length() * M_TO_MILE;
+    dist += (m_vehicle.GetChassis()->GetPos() - previousPos).Length();
     previousPos = m_vehicle.GetChassis()->GetPos();
 
     double s = (m_vehicle.GetChassis()->GetPos() - leader.GetChassis()->GetPos()).Length() - AUDI_LENGTH;
