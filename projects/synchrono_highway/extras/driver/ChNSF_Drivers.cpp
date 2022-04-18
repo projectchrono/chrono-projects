@@ -121,7 +121,9 @@ void ChNSFFollowererDriver::Synchronize(double time, double step) {
     double s_star = behavior_data[2] +
                     ChMax(0.0, v * behavior_data[1] + (v * delta_v) / 2 * sqrt(behavior_data[3] * behavior_data[4]));
     double dv_dt = behavior_data[3] * (1 - pow(v / behavior_data[0], behavior_data[5]) - pow(s_star / s, 2));
-    double v_ms = ChMax(0.0, v + dv_dt * step * 50);
+    thero_speed = thero_speed + dv_dt * step;
+    std::cout << "thero_speed: " << thero_speed << std::endl;
+    double v_ms = ChMax(0.0, thero_speed);
     double des_speed = v_ms * MS_TO_MPH;
     SetDesiredSpeed(v_ms);
 

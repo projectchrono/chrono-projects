@@ -103,6 +103,8 @@ class CH_VEHICLE_API ChNSFFollowererDriver : public ChPathFollowerDriver {
     ChVector<> previousPos;
     // traveldistance
     double dist;
+    // theoretical speed
+    double thero_speed = 0;
     // vector of vectors containing the instruction for target speed
     std::vector<double> behavior_data;
     // Cruise speed between sinusoidal stretches
