@@ -177,7 +177,7 @@ std::string dummy_button_path = "./buttoninfo.csv";
 std::stringstream buffer;
 std::stringstream button_buffer;
 std::ofstream filestream;
-std::ofstream buttonstream(dummy_button_path);
+std::ofstream buttonstream;
 
 // Fog parameters
 bool fog_enabled = false;
@@ -237,6 +237,11 @@ std::string csv_comments;
 // distance variable
 float IG_dist = 0;
 ChVector<> IG_prev_pos;
+
+// driver global variables
+// TODO: maybe there is a better way to handle this
+std::shared_ptr<ChNSFFollowererDriver> PF_driver_ptr;
+float cur_follower_speed;
 // =============================================================================
 
 // button callback placeholder
@@ -897,6 +902,8 @@ int main(int argc, char* argv[]) {
         *lead_vehicles[0], followerParam, true);
     PFdriver->Initialize();
 
+    PF_driver_ptr = PFdriver;
+
     // we call the callback explicitly to start the timer
     customButtonCallback();
     dummyButtonCallback_r_3();
@@ -1059,6 +1066,9 @@ int main(int argc, char* argv[]) {
             // std::cout << "Current Gear: " << vehicle.GetPowertrain()->GetCurrentTransmissionGear() << std::endl;
             extra_time = 0.0;
         }
+
+        // update current vehicle speed
+        cur_follower_speed = vehicle.GetVehicleSpeed();
 
         // Update modules (process inputs from other modules)
         if (driver_mode == AUTONOMOUS)
@@ -1836,8 +1846,11 @@ void customButtonCallback() {
     auto current_invoke = std::chrono::system_clock::now().time_since_epoch();
     if (std::chrono::duration_cast<std::chrono::seconds>(current_invoke - last_invoked).count() > 3.0) {
         std::cout << "Button Callback Invoked \n";
-        if (driver_mode == HUMAN)
+        if (driver_mode == HUMAN) {
             driver_mode = AUTONOMOUS;
+            PF_driver_ptr->Set_TheroSpeed(cur_follower_speed);
+        }
+
         else
             driver_mode = HUMAN;
         // last, update the last call

@@ -98,6 +98,8 @@ class CH_VEHICLE_API ChNSFFollowererDriver : public ChPathFollowerDriver {
 
     double Get_Dist();
 
+    void Set_TheroSpeed(float target_thero_speed);
+
   private:
     // starting pos to compare with to obtain traveled dist
     ChVector<> previousPos;
