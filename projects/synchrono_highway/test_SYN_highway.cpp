@@ -1124,6 +1124,7 @@ int main(int argc, char* argv[]) {
                                                              dummy_cruise_speed[i]);
                     }
 
+                    target_speed = target_speed * MPH_TO_MS;
                     // if dummy has a control parameter setting, we adjust speed based on given data
                     updateDummy(dummies[i], inner_path, target_speed, step_size, temp_z_offset, tracker_vec[i]);
                 }
@@ -1143,6 +1144,7 @@ int main(int argc, char* argv[]) {
                         target_speed = controlFindSpeed_time(dummy_control_time[i], dummy_control_speed[i], wall_time,
                                                              dummy_cruise_speed[i]);
                     }
+                    target_speed = target_speed * MPH_TO_MS;
                     updateDummy(dummies[i], outer_path, target_speed, step_size, temp_z_offset, tracker_vec[i]);
                 }
             }
@@ -1881,7 +1883,7 @@ void updateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
     vel_dir.Normalize();
 
     // proceed vehicle by time_step*vel_dir, calculate the closest target point on the bezier curve
-    tracker.calcClosestPoint(sen + (vel_dir * dummy_speed * MPH_TO_MS * step_size), target);
+    tracker.calcClosestPoint(sen + (vel_dir * dummy_speed * step_size), target);
 
     target = target + ChVector<>(0, 0, z_offset);
 
