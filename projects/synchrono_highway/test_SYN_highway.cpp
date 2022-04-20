@@ -242,6 +242,9 @@ ChVector<> IG_prev_pos;
 // TODO: maybe there is a better way to handle this
 std::shared_ptr<ChNSFFollowererDriver> PF_driver_ptr;
 float cur_follower_speed;
+
+// Experiment parameters
+int meet_time = 4;  // this meet time is defined in full minutes
 // =============================================================================
 
 // button callback placeholder
@@ -350,6 +353,10 @@ void ReadParameterFiles() {
         }
         if (d.HasMember("EndTime")) {
             t_end = d["EndTime"].GetDouble();
+        }
+
+        if (d.HasMember("MeetTime")) {
+            meet_time = d["MeetTime"].GetInt();
         }
 
         // TODO: figure out what is happening there, not sure necessary
@@ -1308,7 +1315,7 @@ int main(int argc, char* argv[]) {
                 int temp_s = tmp->tm_sec;
 
                 end_s = s;
-                end_m = m + 4;
+                end_m = m + meet_time;
                 end_h = h;
 
                 if (end_s >= 60) {
@@ -1318,6 +1325,9 @@ int main(int argc, char* argv[]) {
                 if (end_m >= 60) {
                     end_m = end_m - 60;
                     end_h = end_h + 1;
+                }
+                if (end_h >= 23) {
+                    end_h = end_h % 24;
                 }
 
                 IG_started_driving = true;
