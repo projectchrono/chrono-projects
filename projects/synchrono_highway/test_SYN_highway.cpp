@@ -244,7 +244,8 @@ std::shared_ptr<ChNSFFollowererDriver> PF_driver_ptr;
 float cur_follower_speed;
 
 // Experiment parameters
-int meet_time = 4;  // this meet time is defined in full minutes
+int meet_time = 4;      // this meet time is defined in full minutes
+double eta_dist = 3.6;  // eta counter distance
 // =============================================================================
 
 // button callback placeholder
@@ -359,6 +360,9 @@ void ReadParameterFiles() {
             meet_time = d["MeetTime"].GetInt();
         }
 
+        if (d.HasMember("ETADist")) {
+            eta_dist = d["ETADist"].GetDouble();
+        }
         // TODO: figure out what is happening there, not sure necessary
         if (d.HasMember("FollowerDriverParam")) {
             auto marr = d["FollowerDriverParam"].GetArray();
@@ -1394,7 +1398,7 @@ int main(int argc, char* argv[]) {
             IG_prev_pos = ego_chassis->GetPos();
 
             if (step_number % 50 == 0) {
-                float remaining = 3.6 * MILE_TO_M - IG_dist;
+                float remaining = eta_dist * MILE_TO_M - IG_dist;
                 float avg_speed = IG_speed_avg.Add(ego_chassis->GetSpeed());
                 sec_remaining = remaining / avg_speed;
             }

@@ -117,14 +117,13 @@ foreach(PROGRAM ${DEMOS})
 
   add_executable(${PROGRAM}  "${PROGRAM}.cpp" ${EXTRAS})
   source_group(""  FILES "${PROGRAM}.cpp")
-  
-  separate_arguments(CHRONO_LINKER_FLAGS)
   set_target_properties(${PROGRAM} PROPERTIES
     FOLDER demos
+    COMPILE_FLAGS "${COMPILE_FLAGS}"
     COMPILE_DEFINITIONS "PROJECTS_DATA_DIR=\"${PROJECTS_DATA_DIR}\";CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\""
-    LINK_FLAGS ${CHRONO_LINKER_FLAGS}
+    LINK_FLAGS "${CHRONO_LINKER_FLAGS}"
   )
-  target_compile_options(${PROGRAM} PRIVATE ${COMPILE_FLAGS})
-  target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES} "-L/usr/local/cuda/lib64")# -lcudart")
+
+	target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES} "-L/usr/local/cuda/lib64")# -lcudart")
 
 endforeach(PROGRAM)
