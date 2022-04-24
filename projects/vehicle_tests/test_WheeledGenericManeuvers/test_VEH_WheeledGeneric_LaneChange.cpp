@@ -169,7 +169,7 @@ int main(int argc, char* argv[]) {
     driver.Initialize();
 
     // Report out the mass of the entire vehicle to the screen
-    std::cout << "Vehicle Mass: " << vehicle.GetVehicleMass() << std::endl;
+    std::cout << "Vehicle Mass: " << vehicle.GetMass() << std::endl;
 
 #ifdef CHRONO_IRRLICHT
 
@@ -266,7 +266,7 @@ int main(int argc, char* argv[]) {
         // Extract accelerations to add to the filter
         ChVector<> acc_CG = vehicle.GetChassisBody()->GetPos_dtdt();
         acc_CG = vehicle.GetChassisBody()->GetCoord().TransformDirectionParentToLocal(acc_CG);
-        ChVector<> acc_driver = vehicle.GetVehiclePointAcceleration(driver_pos);
+        ChVector<> acc_driver = vehicle.GetPointAcceleration(driver_pos);
         double fwd_acc_CG = fwd_acc_GC_filter.Add(acc_CG.x());
         double lat_acc_CG = lat_acc_GC_filter.Add(acc_CG.y());
         double vert_acc_CG = vert_acc_GC_filter.Add(acc_CG.z());

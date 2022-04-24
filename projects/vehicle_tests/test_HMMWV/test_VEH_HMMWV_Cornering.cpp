@@ -240,7 +240,7 @@ int main(int argc, char* argv[]) {
         // Extract system state
         double time = my_hmmwv.GetSystem()->GetChTime();
         ChVector<> acc_CG = my_hmmwv.GetVehicle().GetChassisBody()->GetPos_dtdt();
-        ChVector<> acc_driver = my_hmmwv.GetVehicle().GetVehiclePointAcceleration(driver_pos);
+        ChVector<> acc_driver = my_hmmwv.GetVehicle().GetPointAcceleration(driver_pos);
 
         // End simulation
         if (time >= t_end)

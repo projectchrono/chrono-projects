@@ -178,11 +178,11 @@ int main(int argc, char* argv[]) {
         if (!settling) {
             const ChVector<> sentinel = driver.GetSteeringController().GetSentinelLocation();
             const ChVector<> target = driver.GetSteeringController().GetTargetLocation();
-            const ChVector<> vehicle_location = vehicle.GetVehiclePos();
+            const ChVector<> vehicle_location = vehicle.GetPos();
             ChVector<> vehicle_target;
             tracker.calcClosestPoint(vehicle_location, vehicle_target);
             ChVector<> vehicle_err = vehicle_target - vehicle_location;
-            double speed_err = target_speed - vehicle.GetVehicleSpeed();
+            double speed_err = target_speed - vehicle.GetSpeed();
 
             csv << vehicle.GetChTime() << vehicle_location << vehicle_target << vehicle_err << speed_err << std::endl;
 
