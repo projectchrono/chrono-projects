@@ -239,7 +239,7 @@ std::vector<std::vector<std::vector<double>>> leaderParam;
 // Comment section in csv output
 bool is_csv_comments = false;
 std::string csv_comments;
-float syn_heartbeat = 0.005;
+float syn_heartbeat = 0.002;
 
 // distance variable
 float IG_dist = 0;
@@ -253,6 +253,8 @@ float cur_follower_speed;
 // Experiment parameters
 int meet_time = 4;      // this meet time is defined in full minutes
 double eta_dist = 3.6;  // eta counter distance
+
+utils::ChRunningAverage rtf_avg(1000);
 
 // =============================================================================
 
@@ -1217,8 +1219,9 @@ int main(int argc, char* argv[]) {
         }
 
         if (node_id == 0) {
-            if (step_number % int(1 / (60 * step_size)) == 0) {
-                /// irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0), false);
+            if (step_number % 15 == 0) {
+                /// irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0),
+                // false);
                 app->GetDevice()->getVideoDriver()->draw2DImage(
                     app->GetDevice()->getVideoDriver()->getTexture(
                         (demo_data_path + "/miscellaneous/dash_4_4.jpg").c_str()),
@@ -1514,23 +1517,28 @@ int main(int argc, char* argv[]) {
         // Increment frame number
         step_number++;
 
-        if (step_number % (int)(2.0 / frame_rate / step_size) == 0 && !benchmark) {
-            double since_last_sync = sim_time - last_sim_sync;
-            last_sim_sync = sim_time;
-            auto tt0 = high_resolution_clock::now();
-            realtime_timer.Spin(since_last_sync);
-            auto tt1 = high_resolution_clock::now();
-            extra_time += duration_cast<duration<double>>(tt1 - tt0).count();
-        }
+        /*
+                if (step_number % (int)(2.0 / frame_rate / step_size) == 0 && !benchmark) {
+                    double since_last_sync = sim_time - last_sim_sync;
+                    last_sim_sync = sim_time;
+                    auto tt0 = high_resolution_clock::now();
+                    realtime_timer.Spin(since_last_sync);
+                    auto tt1 = high_resolution_clock::now();
+                    extra_time += duration_cast<duration<double>>(tt1 - tt0).count();
+                }
+                */
 
         if (node_id == 0) {
             auto t1 = high_resolution_clock::now();
             duration<double> time_span = duration_cast<duration<double>>(t1 - t0);
-            if (step_number == 1) {
-                first_reading = time_span.count();
+
+            if (step_number > 1000) {
+                std::cout << "Simulation Time: " << sim_time << ", Wall Time: " << time_span.count()
+                          << ", RTF:" << rtf_avg.Add((time_span.count() - first_reading) / step_size)
+                          << ", first_reading: " << first_reading << std::endl;
             }
-            std::cout << "Simulation Time: " << sim_time << ", Wall Time: " << time_span.count()
-                      << ", RTF:" << (time_span.count() - first_reading) / sim_time << std::endl;
+
+            first_reading = time_span.count();
         }
     }
     syn_manager.QuitSimulation();
