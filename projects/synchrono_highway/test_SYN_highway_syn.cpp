@@ -909,6 +909,10 @@ int main(int argc, char* argv[]) {
 
     std::shared_ptr<ChWheeledVehicleIrrApp> app;
 
+#ifdef CHRONO_IRRKLANG
+    ChCSLSoundEngine soundEng(&vehicle);
+#endif
+
     if (node_id == 0) {
         // Set up vehicle output
         vehicle.SetChassisOutput(true);
@@ -935,7 +939,6 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_IRRKLANG
         GetLog() << "USING IRRKLANG"
                  << "\n\n";
-        ChCSLSoundEngine soundEng(&vehicle);
 #endif
 
         // Create the interactive driver system
