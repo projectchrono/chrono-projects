@@ -202,7 +202,7 @@ ChVector<> arrived_sign_pos = {0.0, 0.0, 0.0};
 ChQuaternion<> arrived_sign_rot = {1.0, 0.0, 0.0, 0.0};
 
 // benchmarking
-bool benchmark = false;
+bool benchmark = true;
 
 // Dummy vehicle offset
 float dummy_audi_z_offset = 0.25;
@@ -897,7 +897,7 @@ int main(int argc, char* argv[]) {
     // Initialize output
     // -----------------
     std::shared_ptr<ChNSFLeaderDriver> lead_PFdriver;
-    std::shared_ptr<ChNSFFollowererDriver> PFdriver;
+    std::shared_ptr<ChNSFLeaderDriver> PFdriver;
     std::shared_ptr<chrono::vehicle::ChIrrGuiDriver> IGdriver;
 
     std::string steering_controller_file_IG = demo_data_path + "/Environments/Iowa/Driver/SteeringController_IG.json";
@@ -952,12 +952,14 @@ int main(int argc, char* argv[]) {
         IGdriver->SetJoystickAxes(ChIrrGuiDriver::JoystickAxes::AXIS_Z, ChIrrGuiDriver::JoystickAxes::AXIS_R,
                                   ChIrrGuiDriver::JoystickAxes::AXIS_X, ChIrrGuiDriver::JoystickAxes::NONE);
         IGdriver->Initialize();
-        auto PFdriver = chrono_types::make_shared<ChNSFFollowererDriver>(
-            vehicle, steering_controller_file_IG, speed_controller_file_IG, outer_path, "road",
-            cruise_speed * MPH_TO_MS, vehicle, followerParam, true);
+        // auto PFdriver = chrono_types::make_shared<ChNSFFollowererDriver>(
+        //     vehicle, steering_controller_file_IG, speed_controller_file_IG, outer_path, "road",
+        //     cruise_speed * MPH_TO_MS, vehicle, followerParam, true);
+        // PFdriver->Initialize();
+        PFdriver =
+            chrono_types::make_shared<ChNSFLeaderDriver>(vehicle, steering_controller_file_LD, speed_controller_file_LD,
+                                                         inner_path, "road", 15 * MPH_TO_MS, leaderParam[0], true);
         PFdriver->Initialize();
-
-        PF_driver_ptr = PFdriver;
 
         // we call the callback explicitly to start the timer
         customButtonCallback();
@@ -1073,6 +1075,8 @@ int main(int argc, char* argv[]) {
     float first_reading = 0.f;
 
     while (true) {
+        driver_mode = AUTONOMOUS;
+
         ChDriver::Inputs driver_inputs;
 
         sim_time = vehicle.GetSystem()->GetChTime();
@@ -1103,7 +1107,7 @@ int main(int argc, char* argv[]) {
 
             // Update modules (process inputs from other modules)
             if (driver_mode == AUTONOMOUS)
-                PFdriver->Synchronize(sim_time, step_size);
+                PFdriver->Synchronize(sim_time);
             else
                 IGdriver->Synchronize(sim_time);
             terrain.Synchronize(sim_time);
