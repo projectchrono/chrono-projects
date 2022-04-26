@@ -40,14 +40,13 @@
 #include "chrono_sensor/utils/ChVisualMaterialUtils.h"
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
 //#include "chrono_vehicle/driver/ChPathFollowerDriver.h"
-#include "chrono_vehicle/utils/ChUtilsJSON.h"
+
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
 #include "extras/driver/ChCSLDriver.h"
 #include "extras/driver/ChNSF_Drivers.h"
 
 #include "chrono/utils/ChFilters.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
-#include "chrono_vehicle/utils/ChUtilsJSON.h"
 
 #include <fstream>
 #include <iomanip>
@@ -57,6 +56,8 @@
 #ifdef CHRONO_IRRKLANG
 #include "extras/ChCSLSoundEngine.h"
 #endif
+
+#include "chrono_vehicle/utils/ChUtilsJSON.h"
 
 using namespace chrono;
 using namespace chrono::geometry;

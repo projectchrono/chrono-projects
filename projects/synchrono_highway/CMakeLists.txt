@@ -8,9 +8,9 @@
 #--------------------------------------------------------------
 
 set(DEMOS
-    test_SYN_city
+    #test_SYN_city
 	test_SYN_highway
-	test_SYN_highway_syn
+	#test_SYN_highway_syn
 )
 
 #--------------------------------------------------------------
