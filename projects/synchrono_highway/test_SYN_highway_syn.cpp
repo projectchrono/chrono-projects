@@ -1027,21 +1027,24 @@ int main(int argc, char* argv[]) {
         // ------------------------------------------------
         // Create a camera and add it to the sensor manager
         // ------------------------------------------------
-        auto cam = chrono_types::make_shared<ChCameraSensor>(
-            vehicle.GetChassisBody(),                                                     // body camera is attached to
-            10,                                                                           // update rate in Hz
-            chrono::ChFrame<double>({0, 0, 3000}, Q_from_AngAxis(CH_C_PI_2, {0, 1, 0})),  // offset pose
-            1920,                                                                         // image width
-            1080,                                                                         // image height
-            CH_C_PI_4,
-            super_samples);  // fov, lag, exposure
-        cam->SetName("Camera Sensor");
-        if (sensor_vis)
-            // cam->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720));
+        if (cli.GetAsType<bool>("birdseye")) {
+            auto cam = chrono_types::make_shared<ChCameraSensor>(
+                vehicle.GetChassisBody(),  // body camera is attached to
+                10,                        // update rate in Hz
+                chrono::ChFrame<double>({0, 0, 3000}, Q_from_AngAxis(CH_C_PI_2, {0, 1, 0})),  // offset pose
+                1920,                                                                         // image width
+                1080,                                                                         // image height
+                CH_C_PI_4,
+                super_samples);  // fov, lag, exposure
+            cam->SetName("Camera Sensor");
+
+            if (sensor_vis)
+                cam->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720, "", false));
 
             // add sensor to the manager
-            if (cli.GetAsType<bool>("birdseye"))
-                manager.AddSensor(cam);
+
+            manager.AddSensor(cam);
+        }
 
         // -------------------------------------------------------
         // Create a second camera and add it to the sensor manager
@@ -1080,7 +1083,7 @@ int main(int argc, char* argv[]) {
     float first_reading = 0.f;
 
     while (true) {
-        driver_mode = AUTONOMOUS;
+        driver_mode = HUMAN;
 
         ChDriver::Inputs driver_inputs;
 
@@ -1093,6 +1096,7 @@ int main(int argc, char* argv[]) {
             break;
 
         if (node_id == 0) {
+            app->GetDevice()->run();
             // cam->SetOffsetPose(
             //     chrono::ChFrame<double>({-orbit_radius * cos(time * orbit_rate), -orbit_radius * sin(time *
             //     orbit_rate), orbit_radius/5.0},
