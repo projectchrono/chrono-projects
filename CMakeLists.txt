@@ -92,7 +92,6 @@ endif()
 
 # Options for configuring/building individual sets of programs
 option(ENABLE_CONFIG_TESTS "Build the programs for checking Chrono configuration" ON)
-#option(ENABLE_METRICS_TESTS "Build the programs for metrics testing" OFF)
 
 
 # Keep track of all DLLs. Each submodule should append to this list.
@@ -103,10 +102,6 @@ if(ENABLE_CONFIG_TESTS)
   message(STATUS "\n==== Chrono configuration programs ====")
   add_subdirectory(configuration_tests)
 endif()
-#if(ENABLE_METRICS_TESTS)
-#  message(STATUS "\n==== Chrono metrics programs ====")
-#  add_subdirectory(metrics_tests)
-#endif()
 
 add_subdirectory(projects)
 
