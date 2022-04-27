@@ -207,6 +207,7 @@ using namespace std::chrono;
 // Define all lead vehicles
 int num_dummy = 0;    // number of dummy vehicles
 int num_dynamic = 0;  // number of dynamic vehicles
+int lead_count = 0;
 // Dummies
 std::vector<ChVector<>> dummy_pos;
 std::vector<float> dummy_cruise_speed;
@@ -414,10 +415,8 @@ void ReadParameterFiles() {
             buttonstream = std::ofstream(dummy_button_path);
         }
 
-        int lead_count = 0;
         while (true) {
             std::string entry_name = "lead_" + std::to_string(lead_count);
-            lead_count++;
 
             std::cout << entry_name << std::endl;
 
@@ -531,6 +530,7 @@ void ReadParameterFiles() {
                         dummy_time_mode.push_back(0);
                     }
                 }
+                lead_count++;
             } else {
                 break;
             }
@@ -740,9 +740,6 @@ int main(int argc, char* argv[]) {
         lead_vehicles.push_back(lead_vehicle);
     }
 
-    // Obtain lead vehicle chassis
-    auto lead_chassis = lead_vehicles[lead_vehicles.size() - 1]->GetChassis();
-
     // Create the terrain
     RigidTerrain terrain(vehicle.GetSystem());
 
@@ -906,12 +903,27 @@ int main(int argc, char* argv[]) {
     IGdriver->Initialize();
 
     std::string steering_controller_file_IG = demo_data_path + "/Environments/Iowa/Driver/SteeringController_IG.json";
+    std::string steering_controller_file_IG_nl =
+        demo_data_path + "/Environments/Iowa/Driver/SteeringController_IG_nl.json";
     std::string steering_controller_file_LD = demo_data_path + "/Environments/Iowa/Driver/SteeringController_LD.json";
+
     std::string speed_controller_file_IG = demo_data_path + "/Environments/Iowa/Driver/SpeedController_IG.json";
+    std::string speed_controller_file_IG_nl = demo_data_path + "/Environments/Iowa/Driver/SpeedController_IG_nl.json";
     std::string speed_controller_file_LD = demo_data_path + "/Environments/Iowa/Driver/SpeedController_LD.json";
-    auto PFdriver = chrono_types::make_shared<ChNSFFollowererDriver>(
-        vehicle, steering_controller_file_IG, speed_controller_file_IG, outer_path, "road", cruise_speed * MPH_TO_MS,
-        *lead_vehicles[0], followerParam, true);
+
+    std::cout << "lead_count: " << lead_count << std::endl;
+    // lead_count
+    std::shared_ptr<ChNSFFollowererDriver> PFdriver;
+    if (lead_count == 0) {
+        PFdriver = chrono_types::make_shared<ChNSFFollowererDriver>(vehicle, steering_controller_file_IG_nl,
+                                                                    speed_controller_file_IG_nl, outer_path, "road",
+                                                                    cruise_speed * MPH_TO_MS, followerParam, true);
+    } else {
+        PFdriver = chrono_types::make_shared<ChNSFFollowererDriver>(
+            vehicle, steering_controller_file_IG, speed_controller_file_IG, outer_path, "road",
+            cruise_speed * MPH_TO_MS, lead_vehicles[0], followerParam, true);
+    }
+
     PFdriver->Initialize();
 
     PF_driver_ptr = PFdriver;
@@ -950,11 +962,17 @@ int main(int argc, char* argv[]) {
             filestream << "csv comments: " << csv_comments << " \n";
         }
 
-        filestream << "tstamp,time,wallTime,isManual,Steering,Throttle,Braking,x[m],y[m],speed[mph],"
-                      "acceleration[m/s^2],"
-                      "dist[m],dist_projected[m],IG_mile[mile],IG_lane[0-inner/1-outer/-1-invalid],LD_x[m],"
-                      "LD_y[m],LD_speed[mph],"
-                      "LD_acc[m/s^2],LD_mile[mile]\n";
+        if (lead_count != 0) {
+            filestream << "tstamp,time,wallTime,isManual,Steering,Throttle,Braking,x[m],y[m],speed[mph],"
+                          "acceleration[m/s^2],"
+                          "dist[m],dist_projected[m],IG_mile[mile],IG_lane[0-inner/1-outer/-1-invalid],LD_x[m],"
+                          "LD_y[m],LD_speed[mph],"
+                          "LD_acc[m/s^2],LD_mile[mile]\n";
+        } else {
+            filestream << "tstamp,time,wallTime,isManual,Steering,Throttle,Braking,x[m],y[m],speed[mph],"
+                          "acceleration[m/s^2],"
+                          "IG_mile[mile],IG_lane[0-inner/1-outer/-1-invalid]\n";
+        }
 
         buttonstream << "start recording buttons pressed \n";
     }
@@ -1070,13 +1088,22 @@ int main(int argc, char* argv[]) {
         // driver_inputs.m_throttle = 0;
         // driver_inputs.m_steering *= -1;
         if (step_number % int(1 / step_size) == 0 && !benchmark) {
-            auto ld_speed = lead_vehicles[0]->GetVehicleSpeed() * MS_TO_MPH;
-            auto ig_speed = vehicle.GetVehicleSpeed() * MS_TO_MPH;
-            auto wall_time = high_resolution_clock::now();
-            printf("Sim Time=%f, \tWall Time=%f, \tExtra Time=%f, \tLD_Speed mph=%f, \tIG_Speed mph=%f\n", sim_time,
-                   duration_cast<duration<double>>(wall_time - t0).count(), extra_time, ld_speed, ig_speed);
-            // std::cout << "Current Gear: " << vehicle.GetPowertrain()->GetCurrentTransmissionGear() << std::endl;
-            extra_time = 0.0;
+            if (lead_count != 0) {
+                auto ld_speed = lead_vehicles[0]->GetVehicleSpeed() * MS_TO_MPH;
+                auto ig_speed = vehicle.GetVehicleSpeed() * MS_TO_MPH;
+                auto wall_time = high_resolution_clock::now();
+                printf("Sim Time=%f, \tWall Time=%f, \tExtra Time=%f, \tLD_Speed mph=%f, \tIG_Speed mph=%f\n", sim_time,
+                       duration_cast<duration<double>>(wall_time - t0).count(), extra_time, ld_speed, ig_speed);
+                // std::cout << "Current Gear: " << vehicle.GetPowertrain()->GetCurrentTransmissionGear() << std::endl;
+                extra_time = 0.0;
+            } else {
+                auto ig_speed = vehicle.GetVehicleSpeed() * MS_TO_MPH;
+                auto wall_time = high_resolution_clock::now();
+                printf("Sim Time=%f, \tWall Time=%f, \tExtra Time=%f, \tIG_Speed mph=%f\n", sim_time,
+                       duration_cast<duration<double>>(wall_time - t0).count(), extra_time, ig_speed);
+                // std::cout << "Current Gear: " << vehicle.GetPowertrain()->GetCurrentTransmissionGear() << std::endl;
+                extra_time = 0.0;
+            }
         }
 
         // update current vehicle speed
@@ -1511,12 +1538,18 @@ int main(int argc, char* argv[]) {
                 buffer << ego_chassis->GetPos().y() << ",";
                 buffer << ego_chassis->GetSpeed() * MS_TO_MPH << ",";
                 buffer << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << ",";
-                double dist = (ego_chassis->GetPos() - lead_vehicles[0]->GetChassis()->GetPos()).Length() - AUDI_LENGTH;
-                buffer << dist << ",";  // Distance bumper-to-bumber
-                ChVector<> dist_v = lead_vehicles[0]->GetChassis()->GetPos() - ego_chassis->GetPos();
-                ChVector<> car_xaxis = ChMatrix33<>(ego_chassis->GetRot()).Get_A_Xaxis();
-                double proj_dist = (dist_v ^ car_xaxis) - AUDI_LENGTH;
-                buffer << proj_dist << ",";  // Projected distance bumper-to-bumber
+
+                if (lead_count != 0) {
+                    // Obtain lead vehicle chassis
+                    auto lead_chassis = lead_vehicles[lead_vehicles.size() - 1]->GetChassis();
+                    double dist =
+                        (ego_chassis->GetPos() - lead_vehicles[0]->GetChassis()->GetPos()).Length() - AUDI_LENGTH;
+                    buffer << dist << ",";  // Distance bumper-to-bumber
+                    ChVector<> dist_v = lead_vehicles[0]->GetChassis()->GetPos() - ego_chassis->GetPos();
+                    ChVector<> car_xaxis = ChMatrix33<>(ego_chassis->GetRot()).Get_A_Xaxis();
+                    double proj_dist = (dist_v ^ car_xaxis) - AUDI_LENGTH;
+                    buffer << proj_dist << ",";  // Projected distance bumper-to-bumber
+                }
 
                 // output mile marker
                 buffer << abs((ego_chassis->GetPos().y() - initLoc.y()) / 1609.34) << ",";
@@ -1552,13 +1585,16 @@ int main(int argc, char* argv[]) {
                 buffer << lane_num << ",";
 
                 // the last lead vehicle data
-                buffer << lead_chassis->GetPos().x() << ",";
-                buffer << lead_chassis->GetPos().y() << ",";
-                buffer << lead_chassis->GetSpeed() * MS_TO_MPH << ",";
-                buffer << lead_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << ",";
-
-                // output mile marker
-                buffer << abs((lead_chassis->GetPos().y() - initLoc.y()) / 1609.34);
+                if (lead_count != 0) {
+                    // Obtain lead vehicle chassis
+                    auto lead_chassis = lead_vehicles[lead_vehicles.size() - 1]->GetChassis();
+                    buffer << lead_chassis->GetPos().x() << ",";
+                    buffer << lead_chassis->GetPos().y() << ",";
+                    buffer << lead_chassis->GetSpeed() * MS_TO_MPH << ",";
+                    buffer << lead_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length()
+                           << ",";  // output mile marker
+                    buffer << abs((lead_chassis->GetPos().y() - initLoc.y()) / 1609.34);
+                }
 
                 buffer << "\n";
                 if ((step_number % int(20 / step_size) == 0)) {

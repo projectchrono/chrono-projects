@@ -85,10 +85,18 @@ class CH_VEHICLE_API ChNSFFollowererDriver : public ChPathFollowerDriver {
                           std::shared_ptr<ChBezierCurve> path,   ///< Bezier curve with target path
                           const std::string& path_name,          ///< name of the path curve
                           double target_speed,                   ///< constant target speed
-                          const ChVehicle& lead_vehicle,         ///< followed_vehicle
+                          std::shared_ptr<ChVehicle> lead_vehicle,  ///< followed_vehicle
+                          std::vector<double> params,               ///< JSON file with piecewise params
+                          bool isClosedPath);                       ///< Treat the path as a closed loop
+
+    ChNSFFollowererDriver(ChVehicle& vehicle,                    ///< associated vehicle
+                          const std::string& steering_filename,  ///< JSON file with steering controller specification
+                          const std::string& speed_filename,     ///< JSON file with speed controller specification
+                          std::shared_ptr<ChBezierCurve> path,   ///< Bezier curve with target path
+                          const std::string& path_name,          ///< name of the path curve
+                          double target_speed,                   ///< constant target speed
                           std::vector<double> params,            ///< JSON file with piecewise params
-                          bool isClosedPath = false              ///< Treat the path as a closed loop
-    );
+                          bool isClosedPath);                    ///< Treat the path as a closed loop
 
     virtual ~ChNSFFollowererDriver() {}
 
@@ -107,12 +115,14 @@ class CH_VEHICLE_API ChNSFFollowererDriver : public ChPathFollowerDriver {
     double dist;
     // theoretical speed
     double thero_speed = 0;
+    // no lead indicator (if no lead, then PID should be set seperately than IDM)
+    bool m_no_lead = false;
     // vector of vectors containing the instruction for target speed
     std::vector<double> behavior_data;
     // Cruise speed between sinusoidal stretches
     double cruise_speed;
     // leader vehicle to follow
-    const ChVehicle& leader;
+    std::shared_ptr<ChVehicle> leader;
 };
 
 }  // namespace chrono

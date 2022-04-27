@@ -27,7 +27,6 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-
 namespace chrono {
 
 // -----------------------------------------------------------------------------
@@ -87,51 +86,76 @@ void ChNSFLeaderDriver::SetCruiseSpeed(double speed) {
 }
 
 ChNSFFollowererDriver::ChNSFFollowererDriver(
-    ChVehicle& vehicle,                    ///< associated vehicle
-    const std::string& steering_filename,  ///< JSON file with steering controller specification
-    const std::string& speed_filename,     ///< JSON file with speed controller specification
-    std::shared_ptr<ChBezierCurve> path,   ///< Bezier curve with target path
-    const std::string& path_name,          ///< name of the path curve
-    double target_speed,                   ///< constant target speed
-    const ChVehicle& lead_vehicle,         ///< followed_vehicle
-    std::vector<double> params,            ///< JSON file with piecewise params
-    bool isClosedPath)                     ///< Treat the path as a closed loop
+    ChVehicle& vehicle,                       ///< associated vehicle
+    const std::string& steering_filename,     ///< JSON file with steering controller specification
+    const std::string& speed_filename,        ///< JSON file with speed controller specification
+    std::shared_ptr<ChBezierCurve> path,      ///< Bezier curve with target path
+    const std::string& path_name,             ///< name of the path curve
+    double target_speed,                      ///< constant target speed
+    std::shared_ptr<ChVehicle> lead_vehicle,  ///< followed_vehicle
+    std::vector<double> params,               ///< JSON file with piecewise params
+    bool isClosedPath)                        ///< Treat the path as a closed loop
     : ChPathFollowerDriver(vehicle, steering_filename, speed_filename, path, path_name, target_speed, isClosedPath),
       behavior_data(params),
       cruise_speed(target_speed),
       leader(lead_vehicle) {
     previousPos = vehicle.GetChassis()->GetPos();
     dist = 0;
+    m_no_lead = false;
 }
 
+ChNSFFollowererDriver::ChNSFFollowererDriver(
+    ChVehicle& vehicle,                    ///< associated vehicle
+    const std::string& steering_filename,  ///< JSON file with steering controller specification
+    const std::string& speed_filename,     ///< JSON file with speed controller specification
+    std::shared_ptr<ChBezierCurve> path,   ///< Bezier curve with target path
+    const std::string& path_name,          ///< name of the path curve
+    double target_speed,                   ///< constant target speed
+    std::vector<double> params,            ///< JSON file with piecewise params
+    bool isClosedPath)                     ///< Treat the path as a closed loop
+    : ChPathFollowerDriver(vehicle, steering_filename, speed_filename, path, path_name, target_speed, isClosedPath),
+      behavior_data(params),
+      cruise_speed(target_speed) {
+    previousPos = vehicle.GetChassis()->GetPos();
+    dist = 0;
+    m_no_lead = true;
+}
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 void ChNSFFollowererDriver::Synchronize(double time, double step) {
-    // In this portion we adjust the target speed according to custom piece-wise sinusoidal defined in behavior_data.
-    // We use the driver model explained here, using a desired speed instead:
+    // In this portion we adjust the target speed according to custom piece-wise sinusoidal defined in
+    // behavior_data. We use the driver model explained here, using a desired speed instead:
     // https://traffic-simulation.de/info/info_IDM.html the parameters are: start [miles], end [miles], v0 desired v
-    // [m/s], T desired time headway [s], desired space headway [m], a: accel reate a [m/s^2], b: comfort decel [m/s^2],
-    // delta: accel exponent
-    dist += (m_vehicle.GetChassis()->GetPos() - previousPos).Length();
-    previousPos = m_vehicle.GetChassis()->GetPos();
+    // [m/s], T desired time headway [s], desired space headway [m], a: accel reate a [m/s^2], b: comfort decel
+    // [m/s^2], delta: accel exponent
+    if (m_no_lead == false) {
+        dist += (m_vehicle.GetChassis()->GetPos() - previousPos).Length();
+        previousPos = m_vehicle.GetChassis()->GetPos();
 
-    double s = (m_vehicle.GetChassis()->GetPos() - leader.GetChassis()->GetPos()).Length() - AUDI_LENGTH;
-    double v = m_vehicle.GetChassis()->GetSpeed();
-    double delta_v = v - leader.GetChassis()->GetSpeed();
-    double s_star = behavior_data[2] +
-                    ChMax(0.0, v * behavior_data[1] + (v * delta_v) / 2 * sqrt(behavior_data[3] * behavior_data[4]));
-    double dv_dt = behavior_data[3] * (1 - pow(v / behavior_data[0], behavior_data[5]) - pow(s_star / s, 2));
+        double s = (m_vehicle.GetChassis()->GetPos() - leader->GetChassis()->GetPos()).Length() - AUDI_LENGTH;
+        double v = m_vehicle.GetChassis()->GetSpeed();
+        double delta_v = v - leader->GetChassis()->GetSpeed();
+        double s_star =
+            behavior_data[2] +
+            ChMax(0.0, v * behavior_data[1] + (v * delta_v) / 2 * sqrt(behavior_data[3] * behavior_data[4]));
+        double dv_dt = behavior_data[3] * (1 - pow(v / behavior_data[0], behavior_data[5]) - pow(s_star / s, 2));
 
-    // integrate intended acceleration into theoretical soeed
-    thero_speed = thero_speed + dv_dt * step;
-    double v_ms = ChMax(0.0, thero_speed);
+        // integrate intended acceleration into theoretical soeed
+        thero_speed = thero_speed + dv_dt * step;
+        double v_ms = ChMax(0.0, thero_speed);
 
-    // to avoid large negative value during self drive
-    if (thero_speed < 0) {
-        thero_speed = 0;
+        // to avoid large negative value during self drive
+        if (thero_speed < 0) {
+            thero_speed = 0;
+        }
+
+        SetDesiredSpeed(v_ms);
+    } else {
+        dist += (m_vehicle.GetChassis()->GetPos() - previousPos).Length();
+        previousPos = m_vehicle.GetChassis()->GetPos();
+
+        SetDesiredSpeed(cruise_speed);
     }
-
-    SetDesiredSpeed(v_ms);
 
     ChPathFollowerDriver::Synchronize(time);
 }
