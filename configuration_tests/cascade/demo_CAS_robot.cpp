@@ -20,29 +20,19 @@
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/physics/ChBodyEasy.h"
-#include "chrono_cascade/ChBodyEasyCascade.h"
+#include "chrono_cascade/ChCascadeBodyEasy.h"
 #include "chrono_cascade/ChCascadeDoc.h"
-#include "chrono_cascade/ChCascadeShapeAsset.h"
-#include "chrono_irrlicht/ChIrrApp.h"
+#include "chrono_cascade/ChCascadeVisualShape.h"
+#include "chrono/solver/ChSolverADMM.h"
+
+#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 
 // Use the namespace of Chrono
 using namespace chrono;
 using namespace chrono::irrlicht;
 
-// Use the main namespaces of Irlicht
-using namespace irr;
-using namespace core;
-using namespace scene;
-using namespace video;
-using namespace io;
-using namespace gui;
-
 // Use the namespace with OpenCascade stuff
 using namespace cascade;
-
-//
-// This is the program which is executed
-//
 
 int main(int argc, char* argv[]) {
     // Set path to Chrono data directories
@@ -50,14 +40,12 @@ int main(int argc, char* argv[]) {
 
     // 1- Create a ChronoENGINE physical system: all bodies and constraints
     //    will be handled by this ChSystemNSC object.
-    ChSystemNSC my_system;
+    ChSystemNSC sys;
 
-    // Create the Irrlicht visualization
-    ChIrrApp application(&my_system, L"Load a robot model from STEP file", core::dimension2d<u32>(800, 600));
-    application.AddLogo();
-    application.AddSkyBox();
-    application.AddTypicalLights();
-    application.AddCamera(core::vector3df(0.2f, 1.6f, -3.5f), core::vector3df(0.0f, 1.0f, 0.0f));
+    // Create a surface material to be used for collisions, if any
+    auto mysurfmaterial = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    mysurfmaterial->SetFriction(0.3f);
+    mysurfmaterial->SetRestitution(0);
 
     //
     // Load a STEP file, containing a mechanism. The demo STEP file has been
@@ -83,15 +71,15 @@ int main(int argc, char* argv[]) {
     // syntax and * or ? wldcards, etc.
     //
 
-    std::shared_ptr<ChBodyEasyCascade> mrigidBody_base;
-    std::shared_ptr<ChBodyEasyCascade> mrigidBody_turret;
-    std::shared_ptr<ChBodyEasyCascade> mrigidBody_bicep;
-    std::shared_ptr<ChBodyEasyCascade> mrigidBody_elbow;
-    std::shared_ptr<ChBodyEasyCascade> mrigidBody_forearm;
-    std::shared_ptr<ChBodyEasyCascade> mrigidBody_wrist;
-    std::shared_ptr<ChBodyEasyCascade> mrigidBody_hand;
-    std::shared_ptr<ChBodyEasyCascade> mrigidBody_cylinder;
-    std::shared_ptr<ChBodyEasyCascade> mrigidBody_rod;
+    std::shared_ptr<ChCascadeBodyEasy> body_base;
+    std::shared_ptr<ChCascadeBodyEasy> body_turret;
+    std::shared_ptr<ChCascadeBodyEasy> body_bicep;
+    std::shared_ptr<ChCascadeBodyEasy> body_elbow;
+    std::shared_ptr<ChCascadeBodyEasy> body_forearm;
+    std::shared_ptr<ChCascadeBodyEasy> body_wrist;
+    std::shared_ptr<ChCascadeBodyEasy> body_hand;
+    std::shared_ptr<ChCascadeBodyEasy> body_cylinder;
+    std::shared_ptr<ChCascadeBodyEasy> body_rod;
 
     // Note, In most CADs the Y axis is horizontal, but we want it vertical.
     // So define a root transformation for rotating all the imported objects.
@@ -105,103 +93,101 @@ int main(int argc, char* argv[]) {
     if (load_ok) {
         TopoDS_Shape shape_base;
         if (mydoc.GetNamedShape(shape_base, "Assem10/Assem8")) {
-            auto mbody = chrono_types::make_shared<ChBodyEasyCascade>(shape_base, 1000, true, false);
-            mrigidBody_base = mbody;
-
-            my_system.Add(mrigidBody_base);
+            body_base = chrono_types::make_shared<ChCascadeBodyEasy>(shape_base, 1000, true, false);
+            sys.Add(body_base);
 
             // The base is fixed to the ground
-            mrigidBody_base->SetBodyFixed(true);
-
-            mrigidBody_base->ConcatenatePreTransformation(root_frame);
+            body_base->SetBodyFixed(true);
+            body_base->ConcatenatePreTransformation(root_frame);
         } else
             GetLog() << "Warning. Desired object not found in document \n";
 
         TopoDS_Shape shape_turret;
         if (mydoc.GetNamedShape(shape_turret, "Assem10/Assem4")) {
-            auto mbody = chrono_types::make_shared<ChBodyEasyCascade>(shape_turret, 1000, true, false);
-            mrigidBody_turret = mbody;
-            my_system.Add(mrigidBody_turret);
+            auto mbody = chrono_types::make_shared<ChCascadeBodyEasy>(shape_turret, 1000, true, false);
+            body_turret = mbody;
+            sys.Add(body_turret);
             // Move the body as for global displacement/rotation
-            mrigidBody_turret->ConcatenatePreTransformation(root_frame);
+            body_turret->ConcatenatePreTransformation(root_frame);
         } else
             GetLog() << "Warning. Desired object not found in document \n";
 
         TopoDS_Shape shape_bicep;
         if (mydoc.GetNamedShape(shape_bicep, "Assem10/Assem1")) {
-            auto mbody = chrono_types::make_shared<ChBodyEasyCascade>(shape_bicep, 1000, true, false);
-            mrigidBody_bicep = mbody;
-            my_system.Add(mrigidBody_bicep);
+            body_bicep = chrono_types::make_shared<ChCascadeBodyEasy>(shape_bicep, 1000, true, false);
+            sys.Add(body_bicep);
             // Move the body as for global displacement/rotation
-            mrigidBody_bicep->ConcatenatePreTransformation(root_frame);
+            body_bicep->ConcatenatePreTransformation(root_frame);
         } else
             GetLog() << "Warning. Desired object not found in document \n";
 
         TopoDS_Shape shape_elbow;
         if (mydoc.GetNamedShape(shape_elbow, "Assem10/Assem5")) {
-            auto mbody = chrono_types::make_shared<ChBodyEasyCascade>(shape_elbow, 1000, true, false);
-            mrigidBody_elbow = mbody;
-            my_system.Add(mrigidBody_elbow);
+            body_elbow = chrono_types::make_shared<ChCascadeBodyEasy>(shape_elbow, 1000, true, false);
+            sys.Add(body_elbow);
             // Move the body as for global displacement/rotation
-            mrigidBody_elbow->ConcatenatePreTransformation(root_frame);
+            body_elbow->ConcatenatePreTransformation(root_frame);
         } else
             GetLog() << "Warning. Desired object not found in document \n";
 
         TopoDS_Shape shape_forearm;
         if (mydoc.GetNamedShape(shape_forearm, "Assem10/Assem7")) {
-            auto mbody = chrono_types::make_shared<ChBodyEasyCascade>(shape_forearm, 1000, true, false);
-            mrigidBody_forearm = mbody;
-            my_system.Add(mrigidBody_forearm);
+            body_forearm = chrono_types::make_shared<ChCascadeBodyEasy>(shape_forearm, 1000, true, false);
+            sys.Add(body_forearm);
             // Move the body as for global displacement/rotation
-            mrigidBody_forearm->ConcatenatePreTransformation(root_frame);
+            body_forearm->ConcatenatePreTransformation(root_frame);
         } else
             GetLog() << "Warning. Desired object not found in document \n";
 
         TopoDS_Shape shape_wrist;
         if (mydoc.GetNamedShape(shape_wrist, "Assem10/Assem6")) {
-            auto mbody = chrono_types::make_shared<ChBodyEasyCascade>(shape_wrist, 1000, true, false);
-            mrigidBody_wrist = mbody;
-            my_system.Add(mrigidBody_wrist);
+            body_wrist = chrono_types::make_shared<ChCascadeBodyEasy>(shape_wrist, 1000, true, false);
+            sys.Add(body_wrist);
             // Move the body as for global displacement/rotation
-            mrigidBody_wrist->ConcatenatePreTransformation(root_frame);
+            body_wrist->ConcatenatePreTransformation(root_frame);
         } else
             GetLog() << "Warning. Desired object not found in document \n";
 
         TopoDS_Shape shape_hand;
         if (mydoc.GetNamedShape(shape_hand, "Assem10/Assem9")) {
-            auto mbody = chrono_types::make_shared<ChBodyEasyCascade>(shape_hand, 1000, true, false);
-            mrigidBody_hand = mbody;
-            my_system.Add(mrigidBody_hand);
+            body_hand = chrono_types::make_shared<ChCascadeBodyEasy>(shape_hand, 1000, true, false);
+            sys.Add(body_hand);
             // Move the body as for global displacement/rotation
-            mrigidBody_hand->ConcatenatePreTransformation(root_frame);
+            body_hand->ConcatenatePreTransformation(root_frame);
+
+            // also create a collision shape attached to the hand:
+            auto mcube = chrono_types::make_shared<ChBodyEasyBox>(0.2, 0.08, 0.08, 1000, true, true, mysurfmaterial);
+            mcube->SetCoord(ChCoordsys<>(ChVector<>(0.1, 0, 0)) >> body_hand->GetCoord());
+            sys.Add(mcube);
+            auto mcubelink = chrono_types::make_shared<ChLinkLockLock>();
+            mcubelink->Initialize(mcube, body_hand, mcube->GetCoord());
+            sys.Add(mcubelink);
+
         } else
             GetLog() << "Warning. Desired object not found in document \n";
 
         TopoDS_Shape shape_cylinder;
         if (mydoc.GetNamedShape(shape_cylinder, "Assem10/Assem3")) {
-            auto mbody = chrono_types::make_shared<ChBodyEasyCascade>(shape_cylinder, 1000, true, false);
-            mrigidBody_cylinder = mbody;
-            my_system.Add(mrigidBody_cylinder);
+            body_cylinder = chrono_types::make_shared<ChCascadeBodyEasy>(shape_cylinder, 1000, true, false);
+            sys.Add(body_cylinder);
             // Move the body as for global displacement/rotation
-            mrigidBody_cylinder->ConcatenatePreTransformation(root_frame);
+            body_cylinder->ConcatenatePreTransformation(root_frame);
         } else
             GetLog() << "Warning. Desired object not found in document \n";
 
         TopoDS_Shape shape_rod;
         if (mydoc.GetNamedShape(shape_rod, "Assem10/Assem2")) {
-            auto mbody = chrono_types::make_shared<ChBodyEasyCascade>(shape_rod, 1000, true, false);
-            mrigidBody_rod = mbody;
-            my_system.Add(mrigidBody_rod);
+            body_rod = chrono_types::make_shared<ChCascadeBodyEasy>(shape_rod, 1000, true, false);
+            sys.Add(body_rod);
             // Move the body as for global displacement/rotation
-            mrigidBody_rod->ConcatenatePreTransformation(root_frame);
+            body_rod->ConcatenatePreTransformation(root_frame);
         } else
             GetLog() << "Warning. Desired object not found in document \n";
 
     } else
         GetLog() << "Warning. Desired STEP file could not be opened/parsed \n";
 
-    if (!mrigidBody_base || !mrigidBody_turret || !mrigidBody_bicep || !mrigidBody_elbow || !mrigidBody_forearm ||
-        !mrigidBody_wrist || !mrigidBody_hand) {
+    if (!body_base || !body_turret || !body_bicep || !body_elbow || !body_forearm || !body_wrist || !body_hand) {
         return 1;
     }
 
@@ -222,8 +208,8 @@ int main(int argc, char* argv[]) {
     frame_marker_base_turret %= root_frame;
 
     std::shared_ptr<ChLinkLockRevolute> my_link1(new ChLinkLockRevolute);
-    my_link1->Initialize(mrigidBody_base, mrigidBody_turret, frame_marker_base_turret.GetCoord());
-    my_system.AddLink(my_link1);
+    my_link1->Initialize(body_base, body_turret, frame_marker_base_turret.GetCoord());
+    sys.AddLink(my_link1);
 
     ChFrame<> frame_marker_turret_bicep;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem4/marker#2"))
@@ -233,8 +219,8 @@ int main(int argc, char* argv[]) {
     frame_marker_turret_bicep %= root_frame;
 
     std::shared_ptr<ChLinkLockRevolute> my_link2(new ChLinkLockRevolute);
-    my_link2->Initialize(mrigidBody_turret, mrigidBody_bicep, frame_marker_turret_bicep.GetCoord());
-    my_system.AddLink(my_link2);
+    my_link2->Initialize(body_turret, body_bicep, frame_marker_turret_bicep.GetCoord());
+    sys.AddLink(my_link2);
 
     ChFrame<> frame_marker_bicep_elbow;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem1/marker#2"))
@@ -244,8 +230,8 @@ int main(int argc, char* argv[]) {
     frame_marker_bicep_elbow %= root_frame;
 
     std::shared_ptr<ChLinkLockRevolute> my_link3(new ChLinkLockRevolute);
-    my_link3->Initialize(mrigidBody_bicep, mrigidBody_elbow, frame_marker_bicep_elbow.GetCoord());
-    my_system.AddLink(my_link3);
+    my_link3->Initialize(body_bicep, body_elbow, frame_marker_bicep_elbow.GetCoord());
+    sys.AddLink(my_link3);
 
     ChFrame<> frame_marker_elbow_forearm;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem5/marker#2"))
@@ -255,8 +241,8 @@ int main(int argc, char* argv[]) {
     frame_marker_elbow_forearm %= root_frame;
 
     std::shared_ptr<ChLinkLockRevolute> my_link4(new ChLinkLockRevolute);
-    my_link4->Initialize(mrigidBody_elbow, mrigidBody_forearm, frame_marker_elbow_forearm.GetCoord());
-    my_system.AddLink(my_link4);
+    my_link4->Initialize(body_elbow, body_forearm, frame_marker_elbow_forearm.GetCoord());
+    sys.AddLink(my_link4);
 
     ChFrame<> frame_marker_forearm_wrist;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem7/marker#2"))
@@ -266,8 +252,8 @@ int main(int argc, char* argv[]) {
     frame_marker_forearm_wrist %= root_frame;
 
     std::shared_ptr<ChLinkLockRevolute> my_link5(new ChLinkLockRevolute);
-    my_link5->Initialize(mrigidBody_forearm, mrigidBody_wrist, frame_marker_forearm_wrist.GetCoord());
-    my_system.AddLink(my_link5);
+    my_link5->Initialize(body_forearm, body_wrist, frame_marker_forearm_wrist.GetCoord());
+    sys.AddLink(my_link5);
 
     ChFrame<> frame_marker_wrist_hand;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem6/marker#2"))
@@ -277,8 +263,8 @@ int main(int argc, char* argv[]) {
     frame_marker_wrist_hand %= root_frame;
 
     std::shared_ptr<ChLinkLockRevolute> my_link6(new ChLinkLockRevolute);
-    my_link6->Initialize(mrigidBody_wrist, mrigidBody_hand, frame_marker_wrist_hand.GetCoord());
-    my_system.AddLink(my_link6);
+    my_link6->Initialize(body_wrist, body_hand, frame_marker_wrist_hand.GetCoord());
+    sys.AddLink(my_link6);
 
     ChFrame<> frame_marker_turret_cylinder;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem4/marker#3"))
@@ -288,8 +274,8 @@ int main(int argc, char* argv[]) {
     frame_marker_turret_cylinder %= root_frame;
 
     std::shared_ptr<ChLinkLockRevolute> my_link7(new ChLinkLockRevolute);
-    my_link7->Initialize(mrigidBody_turret, mrigidBody_cylinder, frame_marker_turret_cylinder.GetCoord());
-    my_system.AddLink(my_link7);
+    my_link7->Initialize(body_turret, body_cylinder, frame_marker_turret_cylinder.GetCoord());
+    sys.AddLink(my_link7);
 
     ChFrame<> frame_marker_cylinder_rod;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem3/marker#2"))
@@ -299,8 +285,8 @@ int main(int argc, char* argv[]) {
     frame_marker_cylinder_rod %= root_frame;
 
     std::shared_ptr<ChLinkLockCylindrical> my_link8(new ChLinkLockCylindrical);
-    my_link8->Initialize(mrigidBody_cylinder, mrigidBody_rod, frame_marker_cylinder_rod.GetCoord());
-    my_system.AddLink(my_link8);
+    my_link8->Initialize(body_cylinder, body_rod, frame_marker_cylinder_rod.GetCoord());
+    sys.AddLink(my_link8);
 
     ChFrame<> frame_marker_rod_bicep;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem2/marker#2"))
@@ -310,8 +296,8 @@ int main(int argc, char* argv[]) {
     frame_marker_rod_bicep %= root_frame;
 
     std::shared_ptr<ChLinkLockCylindrical> my_link9(new ChLinkLockCylindrical);
-    my_link9->Initialize(mrigidBody_rod, mrigidBody_bicep, frame_marker_rod_bicep.GetCoord());
-    my_system.AddLink(my_link9);
+    my_link9->Initialize(body_rod, body_bicep, frame_marker_rod_bicep.GetCoord());
+    sys.AddLink(my_link9);
 
     // Add a couple of markers for the 'lock' constraint between the hand and the
     // absolute reference: when we will move the marker in absolute reference, the
@@ -320,8 +306,8 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<ChMarker> my_marker_hand(new ChMarker);
     std::shared_ptr<ChMarker> my_marker_move(new ChMarker);
 
-    mrigidBody_hand->AddMarker(my_marker_hand);
-    mrigidBody_base->AddMarker(my_marker_move);
+    body_hand->AddMarker(my_marker_hand);
+    body_base->AddMarker(my_marker_move);
 
     ChQuaternion<> rot_on_x;
     rot_on_x.Q_from_AngAxis(CH_C_PI / 2, VECT_X);
@@ -332,7 +318,7 @@ int main(int argc, char* argv[]) {
 
     std::shared_ptr<ChLinkLockLock> my_link_teacher(new ChLinkLockLock);
     my_link_teacher->Initialize(my_marker_hand, my_marker_move);
-    my_system.AddLink(my_link_teacher);
+    sys.AddLink(my_link_teacher);
 
     // Set motions for Z and Y coordinates of the 'my_link_teacher' marker,
     // so that the hand will follow it. To do so, we create four segments of
@@ -378,24 +364,39 @@ int main(int argc, char* argv[]) {
 
     // Create a large cube as a floor.
 
-    std::shared_ptr<ChBodyEasyBox> mfloor(new ChBodyEasyBox(6, 1, 6, 1000, true, true));
-    mfloor->SetPos(ChVector<>(0, -0.5, 0));
-    my_system.Add(mfloor);
+    std::shared_ptr<ChBodyEasyBox> mfloor(new ChBodyEasyBox(8, 1, 8, 1000, true, true, mysurfmaterial));
     mfloor->SetBodyFixed(true);
+    mfloor->SetPos(ChVector<>(0, -0.5, 0));
+    mfloor->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/blue.png"));
+    sys.Add(mfloor);
 
-    std::shared_ptr<ChTexture> mtexture(new ChTexture(GetChronoDataFile("textures/blue.png").c_str()));
-    mfloor->AddAsset(mtexture);
+    // Create a stack of boxes to be impacted
+    if (true) {
+        double brick_h = 0.3;
+        for (int ix = 0; ix < 3; ++ix)
+            for (int ib = 0; ib < 6; ++ib) {
+                std::shared_ptr<ChBodyEasyBox> cube(
+                    new ChBodyEasyBox(0.4, brick_h, 0.4, 1000, true, true, mysurfmaterial));
+                cube->SetPos(ChVector<>(-1.4, (0.5 * brick_h) + ib * brick_h, -0.4 - 0.5 * ix));
+                cube->SetRot(Q_from_AngAxis(ib * 0.1, VECT_Y));
+                cube->GetVisualShape(0)->SetColor(ChColor(0.5f + float(0.5 * ChRandom()),  //
+                                                          0.5f + float(0.5 * ChRandom()),  //
+                                                          0.5f + float(0.5 * ChRandom())   //
+                                                          ));
+                sys.Add(cube);
+            }
+    }
 
-    // Use this function for adding a ChIrrNodeAsset to all items
-    // Otherwise use application.AssetBind(myitem); on a per-item basis.
-    application.AssetBindAll();
-
-    // Use this function for 'converting' assets into Irrlicht meshes
-    application.AssetUpdateAll();
-
-    //
-    // THE SOFT-REAL-TIME CYCLE, SHOWING THE SIMULATION
-    //
+    // Create the Irrlicht visualization system
+    auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
+    sys.SetVisualSystem(vis);
+    vis->SetWindowSize(800, 600);
+    vis->SetWindowTitle("Load a robot model from STEP file");
+    vis->Initialize();
+    vis->AddLogo();
+    vis->AddSkyBox();
+    vis->AddCamera(ChVector<>(0.2, 1.6, 3.5), ChVector<>(0, 1, 0));
+    vis->AddTypicalLights();
 
     // Modify the settings of the solver.
     // By default, the solver might not have sufficient precision to keep the
@@ -406,31 +407,32 @@ int main(int argc, char* argv[]) {
     // 'teaching mode' IK.
     // So switch to a more precise solver, ex. BARZILAIBORWEIN
 
-    my_system.SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
-    my_system.SetSolverMaxIterations(120);
+    sys.SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
+    sys.SetSolverMaxIterations(200);
 
-    //
-    // THE SOFT-REAL-TIME CYCLE, SHOWING THE SIMULATION
-    //
+    /*
+    // Alternative: the ADMM solver offers higher precision and it can also support FEA + nonsmooth contacts
+    auto solver = chrono_types::make_shared<ChSolverADMM>(); //faster, if MKL enabled:
+    chrono_types::make_shared<ChSolverPardisoMKL>()); solver->EnableWarmStart(true); solver->SetMaxIterations(60);
+    solver->SetRho(1);
+    solver->SetSigma(1e-8);
+    solver->SetStepAdjustPolicy(ChSolverADMM::AdmmStepType::BALANCED_UNSCALED);
+    sys.SetSolver(solver);
+    */
 
-    application.SetTimestep(0.01);
-    application.SetTryRealtime(true);
+    // Simulation loop
+    ChRealtimeStepTimer realtime_timer;
+    double time_step = 0.01;
 
-    while (application.GetDevice()->run()) {
-        // Irrlicht must prepare frame to draw
-        application.BeginScene(true, true, video::SColor(255, 140, 161, 192));
+    while (vis->Run()) {
+        vis->BeginScene();
+        vis->DrawAll();
+        tools::drawChFunction(vis->GetDevice(), motlaw_z.get(), 0, 10, -0.9, 0.2, 10, 400, 300, 80);
+        tools::drawChFunction(vis->GetDevice(), motlaw_y.get(), 0, 10, -0.9, 0.2, 10, 500, 300, 80);
+        vis->EndScene();
 
-        // .. draw solid 3D items (boxes, cylinders, shapes) belonging to Irrlicht scene, if any
-        application.DrawAll();
-
-        // .. perform timestep simulation
-        application.DoStep();
-
-        // .. plot something on realtime view
-        tools::drawChFunction(application.GetDevice(), motlaw_z.get(), 0, 10, -0.9, 0.2, 10, 400, 300, 80);
-        tools::drawChFunction(application.GetDevice(), motlaw_y.get(), 0, 10, -0.9, 0.2, 10, 500, 300, 80);
-
-        application.EndScene();
+        sys.DoStepDynamics(time_step);
+        realtime_timer.Spin(time_step);
     }
 
     return 0;

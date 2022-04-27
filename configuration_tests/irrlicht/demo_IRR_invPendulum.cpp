@@ -27,17 +27,16 @@
 
 #include <cmath>
 
-#include "chrono/physics/ChSystemNSC.h"
-#include "chrono/core/ChRealtimeStep.h"
-#include "chrono/assets/ChSphereShape.h"
 #include "chrono/assets/ChBoxShape.h"
 #include "chrono/assets/ChCylinderShape.h"
+#include "chrono/assets/ChSphereShape.h"
+#include "chrono/core/ChRealtimeStep.h"
+#include "chrono/physics/ChSystemNSC.h"
 
-#include "chrono_irrlicht/ChIrrApp.h"
+#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 
 using namespace chrono;
 using namespace chrono::irrlicht;
-using namespace irr;
 
 // =============================================================================
 // MyController class
@@ -79,8 +78,8 @@ class MyController {
     double m_Ki_pend;
     double m_Kd_pend;
 
-    double m_x_cart;   // reference cart x location
-    double m_a_pend;   // reference pendulum angle
+    double m_x_cart;  // reference cart x location
+    double m_a_pend;  // reference pendulum angle
 
     double m_e_cart;   // error in cart x location
     double m_ed_cart;  // derivative of error in cart x location
@@ -90,7 +89,7 @@ class MyController {
     double m_ed_pend;  // derivative of error in pendulum angle
     double m_ei_pend;  // integral of error in pendulum angle
 
-    double m_force;    // controller output force (horizontal force on cart body)
+    double m_force;  // controller output force (horizontal force on cart body)
 };
 
 MyController::MyController(std::shared_ptr<ChBody> cart, std::shared_ptr<ChBody> pend)
@@ -175,11 +174,11 @@ int main(int argc, char* argv[]) {
 
     // Problem parameters
     // ------------------
-    double mass_cart = 1.0;    // mass of the cart
-    double mass_pend = 0.5;    // mass of the pendulum
-    double hlen_pend = 0.5;    // half-length of the pendulum
-    double r_pend = 0.02;      // radius of pendulum (visualization only)
-    double J_pend = 0.5;       // pendulum moment of inertia (Z component)
+    double mass_cart = 1.0;  // mass of the cart
+    double mass_pend = 0.5;  // mass of the pendulum
+    double hlen_pend = 0.5;  // half-length of the pendulum
+    double r_pend = 0.02;    // radius of pendulum (visualization only)
+    double J_pend = 0.5;     // pendulum moment of inertia (Z component)
 
     double travel_dist = 2;
     double switch_period = 20;
@@ -198,17 +197,13 @@ int main(int argc, char* argv[]) {
     // Attach visualization assets
     auto sphere1_g = chrono_types::make_shared<ChSphereShape>();
     sphere1_g->GetSphereGeometry().rad = 0.02;
-    sphere1_g->Pos = ChVector<>(travel_dist, 0, 0);
-    ground->AddAsset(sphere1_g);
+    sphere1_g->SetColor(ChColor(0, 0.8f, 0.8f));
+    ground->AddVisualShape(sphere1_g, ChFrame<>(ChVector<>(travel_dist, 0, 0)));
 
     auto sphere2_g = chrono_types::make_shared<ChSphereShape>();
     sphere2_g->GetSphereGeometry().rad = 0.03;
-    sphere2_g->Pos = ChVector<>(-travel_dist, 0, 0);
-    ground->AddAsset(sphere2_g);
-
-    auto col_g = chrono_types::make_shared<ChColorAsset>();
-    col_g->SetColor(ChColor(0, 0.8f, 0.8f));
-    ground->AddAsset(col_g);
+    sphere2_g->SetColor(ChColor(0, 0.8f, 0.8f));
+    ground->AddVisualShape(sphere2_g, ChFrame<>(ChVector<>(-travel_dist, 0, 0)));
 
     // Create the cart body
     // --------------------
@@ -222,12 +217,8 @@ int main(int argc, char* argv[]) {
     // Attach visualization assets.
     auto box_c = chrono_types::make_shared<ChBoxShape>();
     box_c->GetBoxGeometry().Size = ChVector<>(0.1, 0.1, 0.1);
-    box_c->Pos = ChVector<>(0, -0.1, 0);
-    cart->AddAsset(box_c);
-
-    auto col_c = chrono_types::make_shared<ChColorAsset>();
-    col_c->SetColor(ChColor(0, 0.6f, 0.8f));
-    cart->AddAsset(col_c);
+    box_c->SetColor(ChColor(0, 0.6f, 0.8f));
+    cart->AddVisualShape(box_c, ChFrame<>(ChVector<>(0, -0.1, 0)));
 
     // Create the pendulum body
     // ------------------------
@@ -243,11 +234,8 @@ int main(int argc, char* argv[]) {
     cyl_p->GetCylinderGeometry().p1 = ChVector<>(0, -hlen_pend, 0);
     cyl_p->GetCylinderGeometry().p2 = ChVector<>(0, hlen_pend, 0);
     cyl_p->GetCylinderGeometry().rad = r_pend;
-    pend->AddAsset(cyl_p);
-
-    auto col_p = chrono_types::make_shared<ChColorAsset>();
-    col_p->SetColor(ChColor(1.0f, 0.2f, 0));
-    pend->AddAsset(col_p);
+    cyl_p->SetColor(ChColor(1.0f, 0.2f, 0));
+    pend->AddVisualShape(cyl_p);
 
     // Translational joint ground-cart
     // -------------------------------
@@ -269,14 +257,15 @@ int main(int argc, char* argv[]) {
 
     // Create Irrlicht window and camera
     // ---------------------------------
-    ChIrrApp application(&system, L"Inverted Pendulum", core::dimension2d<u32>(800, 600));
-    application.AddLogo();
-    application.AddSkyBox();
-    application.AddTypicalLights();
-    application.AddCamera(core::vector3df(2.8f, 0, 1.8f), core::vector3df(1.2f, 0, -0.3f));
-
-    application.AssetBindAll();
-    application.AssetUpdateAll();
+    auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
+    system.SetVisualSystem(vis);
+    vis->SetWindowSize(800, 600);
+    vis->SetWindowTitle("Inverted Pendulum");
+    vis->Initialize();
+    vis->AddLogo();
+    vis->AddSkyBox();
+    vis->AddCamera(ChVector<>(2.8f, 0, 1.8f), ChVector<>(1.2f, 0, -0.3f));
+    vis->AddTypicalLights();
 
     // Simulation loop
     // ---------------
@@ -287,19 +276,19 @@ int main(int argc, char* argv[]) {
     int target_id = 0;
     double switch_time = 0;
 
-    while (application.GetDevice()->run()) {
-        application.BeginScene();
-        application.DrawAll();
+    while (vis->Run()) {
+        vis->BeginScene();
+        vis->DrawAll();
 
         // Render a grid
-        tools::drawGrid(application.GetVideoDriver(), 0.5, 0.5, 40, 40, CSYSNORM, video::SColor(0, 204, 204, 0), true);
+        tools::drawGrid(vis->GetVideoDriver(), 0.5, 0.5, 40, 40, CSYSNORM, irr::video::SColor(0, 204, 204, 0), true);
 
         // Render text with current time
         char msg[40];
         sprintf(msg, "Time = %6.2f s", system.GetChTime());
-        gui::IGUIFont* font =
-            application.GetIGUIEnvironment()->getFont(chrono::GetChronoDataFile("fonts/arial8.xml").c_str());
-        font->draw(msg, irr::core::rect<s32>(720, 20, 780, 40), irr::video::SColor(255, 20, 20, 20));
+        irr::gui::IGUIFont* font =
+            vis->GetGUIEnvironment()->getFont(chrono::GetChronoDataFile("fonts/arial8.xml").c_str());
+        font->draw(msg, irr::core::rect<irr::s32>(720, 20, 780, 40), irr::video::SColor(255, 20, 20, 20));
 
         // At a switch time, flip target for cart location
         if (system.GetChTime() > switch_time) {
@@ -314,7 +303,7 @@ int main(int argc, char* argv[]) {
         system.DoStepDynamics(step);
         controller.Advance(step);
 
-        application.EndScene();
+        vis->EndScene();
     }
 
     return 0;

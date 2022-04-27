@@ -18,12 +18,12 @@
 #include <ctime>
 
 /// Chrono includes
-#include "chrono/assets/ChBoxShape.h"
-#include "chrono/core/ChTransform.h"
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsGeometry.h"
+#include "chrono/assets/ChBoxShape.h"
+#include "chrono/core/ChTransform.h"
 
 /// Chrono fsi includes
 #include "chrono_fsi/ChSystemFsi.h"
@@ -32,6 +32,7 @@
 using namespace chrono;
 using namespace chrono::collision;
 using namespace chrono::fsi;
+
 
 /// Output directories and settings
 const std::string out_dir = GetChronoOutputPath() + "FSI_CYLINDER_DROP/";
@@ -70,7 +71,6 @@ void AddWall(std::shared_ptr<ChBody> body,
     body->GetCollisionModel()->AddBox(mat, dim.x(), dim.y(), dim.z(), loc);
     auto box = chrono_types::make_shared<ChBoxShape>();
     box->GetBoxGeometry().Size = dim;
-    box->GetBoxGeometry().Pos = loc;
 }
 
 //------------------------------------------------------------------
@@ -154,7 +154,7 @@ void SaveParaViewFiles(ChSystemFsi& myFsiSystem,
     double frame_time = 1.0 / paramsH->out_fps;
 
     /// Output data to files
-    if (save_output && std::abs(mTime - (this_frame)*frame_time) < 1e-9) {
+    if (save_output && std::abs(mTime - (this_frame)*frame_time) < 1e-5) {
         /// save particles to cvs files
         myFsiSystem.PrintParticleToFile(demo_dir);
 
@@ -175,7 +175,9 @@ void SaveParaViewFiles(ChSystemFsi& myFsiSystem,
 // Create the objects of the MBD system. Rigid bodies, and if FSI,
 // their BCE representation are created and added to the systems
 //------------------------------------------------------------------
-void CreateSolidPhase(ChSystemSMC& mphysicalSystem, ChSystemFsi& myFsiSystem, std::shared_ptr<fsi::SimParams> paramsH) {
+void CreateSolidPhase(ChSystemSMC& mphysicalSystem,
+                      ChSystemFsi& myFsiSystem,
+                      std::shared_ptr<fsi::SimParams> paramsH) {
     /// Set gravity to the rigid body system in chrono
     ChVector<> gravity = ChVector<>(paramsH->gravity.x, paramsH->gravity.y, paramsH->gravity.z);
     mphysicalSystem.Set_G_acc(gravity);
@@ -254,8 +256,8 @@ void CreateSolidPhase(ChSystemSMC& mphysicalSystem, ChSystemFsi& myFsiSystem, st
     cylinder->SetBodyFixed(false);
     cylinder->GetCollisionModel()->ClearModel();
     cylinder->GetCollisionModel()->SetSafeMargin(initSpace0);
-    chrono::utils::AddCylinderGeometry(cylinder.get(), mysurfmaterial, cyl_radius, cyl_length,
-                                       ChVector<>(0.0, 0.0, 0.0), cyl_rot);
+    chrono::utils::AddCylinderGeometry(cylinder.get(), mysurfmaterial, cyl_radius, cyl_length, ChVector<>(0.0, 0.0, 0.0),
+                               cyl_rot);
     cylinder->GetCollisionModel()->BuildModel();
 
     /// Add this body to chrono system
@@ -265,8 +267,8 @@ void CreateSolidPhase(ChSystemSMC& mphysicalSystem, ChSystemFsi& myFsiSystem, st
     myFsiSystem.AddFsiBody(cylinder);
 
     /// Add BCE particles attached on the cylinder into FSI system
-    myFsiSystem.AddBceCylinder(paramsH, cylinder, ChVector<>(0), ChQuaternion<>(1, 0, 0, 0), cyl_radius,
-                               cyl_length + initSpace0, paramsH->HSML, false);
+    myFsiSystem.AddBceCylinder(paramsH, cylinder, ChVector<>(0), ChQuaternion<>(1, 0, 0, 0), 
+        cyl_radius, cyl_length + initSpace0, paramsH->HSML, false);
 }
 
 // =============================================================================
@@ -282,18 +284,18 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<fsi::SimParams> paramsH = myFsiSystem.GetSimParams();
     std::string inputJson = GetChronoDataFile("fsi/input_json/demo_FSI_CylinderDrop_Explicit.json");
     if (argc == 1) {
-        std::cout << "Use the default JSON file \n" << std::endl;
+        std::cout << "Use the default JSON file" << std::endl;
     } else if (argc == 2) {
-        std::cout << "Use the specified JSON file \n" << std::endl;
+        std::cout << "Use the specified JSON file" << std::endl;
         std::string my_inputJson = std::string(argv[1]);
-        inputJson = GetChronoDataFile(my_inputJson);
+        inputJson = my_inputJson;
     } else {
         ShowUsage();
         return 1;
     }
     myFsiSystem.SetSimParameter(inputJson, paramsH, ChVector<>(bxDim, byDim, bzDim));
 
-    /// Reset the domain size
+    /// Reset the domain size 
     bxDim = paramsH->boxDimX;
     byDim = paramsH->boxDimY;
     bzDim = paramsH->boxDimZ;
@@ -309,12 +311,11 @@ int main(int argc, char* argv[]) {
     /// Set the periodic boundary condition (if not, set relative larger values)
     auto initSpace0 = paramsH->MULT_INITSPACE * paramsH->HSML;
     ChVector<> cMin(-bxDim / 2 * 10, -byDim / 2 * 10, -bzDim * 10);
-    ChVector<> cMax(bxDim / 2 * 10, byDim / 2 * 10, bzDim * 10);
+    ChVector<> cMax( bxDim / 2 * 10,  byDim / 2 * 10,  bzDim * 10);
     myFsiSystem.SetBoundaries(cMin, cMax, paramsH);
 
-    /// Set the time integration type and the linear solver type (only for ISPH)
+    /// Set the time integration type
     myFsiSystem.SetFluidDynamics(paramsH->fluid_dynamic_type);
-    myFsiSystem.SetFluidSystemLinearSolver(paramsH->LinearSolver);
 
     /// Setup sub doamins for a faster neighbor particle searching
     myFsiSystem.SetSubDomain(paramsH);
@@ -324,7 +325,7 @@ int main(int argc, char* argv[]) {
 
     /// Create an initial box for the terrain patch
     chrono::utils::GridSampler<> sampler(initSpace0);
-
+    
     /// Use a chrono sampler to create a bucket of granular material
     ChVector<> boxCenter(0, 0, fzDim / 2);
     ChVector<> boxHalfDim(fxDim / 2, fyDim / 2, fzDim / 2);
@@ -335,8 +336,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < numPart; i++) {
         double pre_ini = paramsH->rho0 * abs(paramsH->gravity.z) * (-points[i].z() + fzDim);
         double rho_ini = paramsH->rho0 + pre_ini / (paramsH->Cs * paramsH->Cs);
-        myFsiSystem.AddSphMarker(points[i], rho_ini, pre_ini, paramsH->mu0, paramsH->HSML, -1,
-                                 ChVector<>(0.0e0));  // initial velocity
+        myFsiSystem.AddSphMarker(points[i], rho_ini, pre_ini, paramsH->mu0, paramsH->HSML, -1, ChVector<>(0));
     }
     myFsiSystem.AddRefArray(0, (int)numPart, -1, -1);
 
@@ -362,7 +362,7 @@ int main(int argc, char* argv[]) {
     for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
         printf("\nstep : %d, time= : %f (s) \n", tStep, time);
         double frame_time = 1.0 / paramsH->out_fps;
-        int this_frame = (int)floor((time + 1e-9) / frame_time);
+        int this_frame = (int)floor((time + 1e-6) / frame_time);
 
         /// Get the position of the container and cylinder
         auto box = mphysicalSystem.Get_bodylist()[0];

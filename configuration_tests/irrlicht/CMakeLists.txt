@@ -11,7 +11,7 @@ message("\n---- IRRLICHT configuration test")
 #--------------------------------------------------------------
 
 set(DEMOS
-    demo_IRR_collision
+    demo_IRR_collisionNSC
     demo_IRR_invPendulum
     #demo_IRR_sliderCrank
 )

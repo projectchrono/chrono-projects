@@ -47,7 +47,7 @@ using namespace chrono::collision;
 // blade attached through a revolute joint to ground. The mixer is constrained
 // to rotate at constant angular velocity.
 // -----------------------------------------------------------------------------
-void AddContainer(ChSystemMulticoreSMC* sys) {
+std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
     // IDs for the two bodies
     int binId = -200;
     int mixerId = -201;
@@ -59,7 +59,7 @@ void AddContainer(ChSystemMulticoreSMC* sys) {
     mat->SetRestitution(0.1f);
 
     // Create the containing bin (2 x 2 x 1)
-    auto bin = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto bin = std::shared_ptr<ChBody>(sys->NewBody());
     bin->SetIdentifier(binId);
     bin->SetMass(1);
     bin->SetPos(ChVector<>(0, 0, 0));
@@ -87,7 +87,7 @@ void AddContainer(ChSystemMulticoreSMC* sys) {
     sys->AddBody(bin);
 
     // The rotating mixer body (1.6 x 0.2 x 0.4)
-    auto mixer = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto mixer = std::shared_ptr<ChBody>(sys->NewBody());
     mixer->SetIdentifier(mixerId);
     mixer->SetMass(10.0);
     mixer->SetInertiaXX(ChVector<>(50, 50, 50));
@@ -109,6 +109,8 @@ void AddContainer(ChSystemMulticoreSMC* sys) {
     motor->Initialize(mixer, bin, ChFrame<>(ChVector<>(0, 0, 0), ChQuaternion<>(1, 0, 0, 0)));
     motor->SetAngleFunction(chrono_types::make_shared<ChFunction_Ramp>(0, CH_C_PI / 2));
     sys->AddLink(motor);
+
+    return mixer;
 }
 
 // -----------------------------------------------------------------------------
@@ -131,7 +133,7 @@ void AddFallingBalls(ChSystemMulticoreSMC* sys) {
         for (int iy = -2; iy < 3; iy++) {
             ChVector<> pos(0.4 * ix, 0.4 * iy, 1);
 
-            auto ball = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+            auto ball = std::shared_ptr<ChBody>(sys->NewBody());
             ball->SetIdentifier(ballId++);
             ball->SetMass(mass);
             ball->SetInertiaXX(inertia);
@@ -163,9 +165,6 @@ int main(int argc, char* argv[]) {
 
     double gravity = 9.81;
     double time_step = 1e-4;
-    double time_end = 1;
-
-    double out_fps = 50;
 
     uint max_iteration = 50;
     real tolerance = 1e-3;
@@ -176,7 +175,7 @@ int main(int argc, char* argv[]) {
     ChSystemMulticoreSMC msystem;
 
     // Set number of threads
-    msystem.SetNumThreads(std::min(8, ChOMP::GetNumProcs()));
+    msystem.SetNumThreads(8);
 
     // Set gravitational acceleration
     msystem.Set_G_acc(ChVector<>(0, 0, -gravity));
@@ -185,7 +184,7 @@ int main(int argc, char* argv[]) {
     msystem.GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
 
     // Select the narrow phase collision algorithm
-    msystem.GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::PRIMS;
+    msystem.GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::HYBRID;
 
     // Set tolerance and maximum number of iterations for bilateral constraint solver
     msystem.GetSettings()->solver.max_iteration_bilateral = max_iteration;
@@ -194,11 +193,11 @@ int main(int argc, char* argv[]) {
     // Create the fixed and moving bodies
     // ----------------------------------
 
-    AddContainer(&msystem);
+    auto mixer = AddContainer(&msystem);
     AddFallingBalls(&msystem);
 
-// Perform the simulation
-// ----------------------
+    // Perform the simulation
+    // ----------------------
 
 #ifdef CHRONO_OPENGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
@@ -206,21 +205,17 @@ int main(int argc, char* argv[]) {
     gl_window.SetCamera(ChVector<>(0, -3, 2), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
     gl_window.SetRenderMode(opengl::WIREFRAME);
 
-    // Uncomment the following two lines for the OpenGL manager to automatically
-    // run the simulation in an infinite loop.
-    // gl_window.StartDrawLoop(time_step);
-    // return 0;
+    while (gl_window.Active()) {
+        gl_window.DoStepDynamics(time_step);
+        gl_window.Render();
 
-    while (true) {
-        if (gl_window.Active()) {
-            gl_window.DoStepDynamics(time_step);
-            gl_window.Render();
-        } else {
-            break;
-        }
+        ////auto frc = mixer->GetAppliedForce();
+        ////auto trq = mixer->GetAppliedTorque();
+        ////std::cout << msystem.GetChTime() << "  force: " << frc << "  torque: " << trq << std::endl;
     }
 #else
     // Run simulation for specified time
+    double time_end = 1;
     int num_steps = (int)std::ceil(time_end / time_step);
     double time = 0;
     for (int i = 0; i < num_steps; i++) {
