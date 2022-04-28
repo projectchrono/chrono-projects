@@ -24,8 +24,8 @@
 
 #include "chrono/core/ChStream.h"
 #include "chrono/physics/ChSystem.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChOpenMP.h"
+#include "chrono/utils/ChUtilsInputOutput.h"
 
 #ifdef CHRONO_PARDISO_MKL
 #include "chrono_pardisomkl/ChSolverPardisoMKL.h"
@@ -33,10 +33,10 @@
 
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
-#include "chrono_vehicle/terrain/RigidTerrain.h"
-#include "chrono_vehicle/driver/ChIrrGuiDriver.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
-#include "chrono_vehicle/wheeled_vehicle/utils/ChWheeledVehicleIrrApp.h"
+#include "chrono_vehicle/driver/ChIrrGuiDriver.h"
+#include "chrono_vehicle/terrain/RigidTerrain.h"
+#include "chrono_vehicle/wheeled_vehicle/utils/ChWheeledVehicleVisualSystemIrrlicht.h"
 
 #include "chrono_models/vehicle/hmmwv/HMMWV.h"
 #include "chrono_models/vehicle/hmmwv/HMMWV_ANCFTire.h"
@@ -112,7 +112,7 @@ bool povray_output = false;
 // =============================================================================
 
 class MyDriver : public ChDriver {
-public:
+  public:
     MyDriver(ChVehicle& vehicle, double delay) : ChDriver(vehicle), m_delay(delay) {}
     ~MyDriver() {}
 
@@ -133,7 +133,7 @@ public:
             m_throttle = 4 * eff_time;
     }
 
-private:
+  private:
     double m_delay;
 };
 
@@ -231,8 +231,8 @@ int main(int argc, char* argv[]) {
             patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 200);
             break;
         case RigidTerrain::PatchType::HEIGHT_MAP:
-            patch = terrain.AddPatch(patch_mat, CSYSNORM, vehicle::GetDataFile("terrain/height_maps/test64.bmp"),
-                                     128, 128, 0, 4);
+            patch = terrain.AddPatch(patch_mat, CSYSNORM, vehicle::GetDataFile("terrain/height_maps/test64.bmp"), 128,
+                                     128, 0, 4);
             patch->SetTexture(vehicle::GetDataFile("terrain/textures/grass.jpg"), 16, 16);
             break;
         case RigidTerrain::PatchType::MESH:
@@ -244,12 +244,14 @@ int main(int argc, char* argv[]) {
     terrain.Initialize();
 
     // Create the vehicle Irrlicht interface
-    ChWheeledVehicleIrrApp app(&my_hmmwv.GetVehicle(), L"HMMWV ANCF tires Test");
-    app.AddTypicalLights();
-    app.SetChaseCamera(trackPoint, 6.0, 0.5);
-    app.SetTimestep(step_size);
-    app.AssetBindAll();
-    app.AssetUpdateAll();
+    auto vis = chrono_types::make_shared<ChWheeledVehicleVisualSystemIrrlicht>();
+    vis->SetWindowTitle("HMMWV ANCF tires Test");
+    vis->SetChaseCamera(trackPoint, 6.0, 0.5);
+    vis->Initialize();
+    vis->AddTypicalLights();
+    vis->AddSkyBox();
+    vis->AddLogo();
+    my_hmmwv.GetVehicle().SetVisualSystem(vis);
 
     // -----------------
     // Initialize output
@@ -292,16 +294,16 @@ int main(int argc, char* argv[]) {
     int render_frame = 0;
     double time = 0;
 
-    while (app.GetDevice()->run()) {
+    while (vis->Run()) {
         time = my_hmmwv.GetSystem()->GetChTime();
 
         // End simulation
         if (time >= t_end)
             break;
 
-        app.BeginScene(true, true, irr::video::SColor(255, 140, 161, 192));
-        app.DrawAll();
-        app.EndScene();
+        vis->BeginScene();
+        vis->DrawAll();
+        vis->EndScene();
 
         // Render scene and output POV-Ray data
         if (povray_output && step_number % render_steps == 0) {
@@ -325,13 +327,13 @@ int main(int argc, char* argv[]) {
         driver.Synchronize(time);
         terrain.Synchronize(time);
         my_hmmwv.Synchronize(time, driver_inputs, terrain);
-        app.Synchronize("", driver_inputs);
+        vis->Synchronize("", driver_inputs);
 
         // Advance simulation for one timestep for all modules
         driver.Advance(step_size);
         terrain.Advance(step_size);
         my_hmmwv.Advance(step_size);
-        app.Advance(step_size);
+        vis->Advance(step_size);
 
         // Increment frame number
         step_number++;

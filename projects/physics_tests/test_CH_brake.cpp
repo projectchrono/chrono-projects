@@ -13,11 +13,10 @@
 
 #include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/physics/ChSystemNSC.h"
-#include "chrono_irrlicht/ChIrrApp.h"
+#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 
 using namespace chrono;
 using namespace chrono::irrlicht;
-using namespace irr;
 
 // ====================================================================================
 
@@ -75,11 +74,8 @@ int main(int argc, char* argv[]) {
     cyl->GetCylinderGeometry().rad = 0.2;
     cyl->GetCylinderGeometry().p1 = ChVector<>(0, 0, -0.05);
     cyl->GetCylinderGeometry().p2 = ChVector<>(0, 0,  0.05);
-    wheel->AddAsset(cyl);
-
-    auto texture = chrono_types::make_shared<ChTexture>();
-    texture->SetTextureFilename(GetChronoDataFile("textures/bluewhite.png"));
-    wheel->AddAsset(texture);
+    cyl->SetTexture(GetChronoDataFile("textures/bluewhite.png"));
+    wheel->AddVisualShape(cyl);
 
     // Revolute joint
     auto joint = chrono_types::make_shared<ChLinkLockRevolute>();
@@ -96,13 +92,15 @@ int main(int argc, char* argv[]) {
     brake->Initialize(ground, wheel, true, joint->GetMarker1()->GetCoord(), joint->GetMarker2()->GetCoord());
 
     // Create the Irrlicht visualization
-    ChIrrApp application(&system, L"Brake test", core::dimension2d<u32>(800, 600));
-    application.AddLogo();
-    application.AddSkyBox();
-    application.AddTypicalLights();
-    application.AddCamera(core::vector3df(1, 0.5, -1));
-    application.AssetBindAll();
-    application.AssetUpdateAll();
+    auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
+    system.SetVisualSystem(vis);
+    vis->SetWindowSize(800, 600);
+    vis->SetWindowTitle("Brake test");
+    vis->Initialize();
+    vis->AddLogo();
+    vis->AddSkyBox();
+    vis->AddCamera(ChVector<>(1, 0.5, -1));
+    vis->AddTypicalLights();
 
     // Set solver
     auto minres_solver = chrono_types::make_shared<ChSolverMINRES>();
@@ -114,12 +112,11 @@ int main(int argc, char* argv[]) {
     // ---------------
     // Simulation loop
     // ---------------
-    application.SetTimestep(time_step);
 
-    irr::gui::IGUIFont* font = application.GetIGUIEnvironment()->getBuiltInFont();
-    irr::core::rect<s32> text_box1(600, 100, 700, 120);
-    irr::core::rect<s32> text_box2(600, 130, 700, 150);
-    irr::core::rect<s32> text_box3(600, 160, 700, 180);
+    irr::gui::IGUIFont* font = vis->GetGUIEnvironment()->getBuiltInFont();
+    irr::core::rect<irr::s32> text_box1(600, 100, 700, 120);
+    irr::core::rect<irr::s32> text_box2(600, 130, 700, 150);
+    irr::core::rect<irr::s32> text_box3(600, 160, 700, 180);
     irr::video::SColor text_col(255, 20, 20, 20);
     char msg[100];
 
@@ -127,20 +124,21 @@ int main(int argc, char* argv[]) {
     double max_torque = 200;
     bool monitor = true;
 
-    while (application.GetDevice()->run()) {
+    while (vis->Run()) {
         double time = system.GetChTime();
 
-        application.BeginScene();
-        application.DrawAll();
-        tools::drawAllCOGs(system, application.GetVideoDriver(), 1);
+        vis->BeginScene();
+        vis->DrawAll();
+        tools::drawAllCOGs(system, vis->GetVideoDriver(), 1);
         sprintf(msg, "Time:    %.2f", time);
         font->draw(msg, text_box1, text_col);
         sprintf(msg, "Omega:   %.2f", wheel->GetWvel_loc().z());
         font->draw(msg, text_box2, text_col);
         sprintf(msg, "Braking: %.2f", modulation);
         font->draw(msg, text_box3, text_col);
-        application.DoStep();
-        application.EndScene();
+        vis->EndScene();
+
+        system.DoStepDynamics(time_step);
 
         if (time > 2) {
             if (time < 3) modulation = time - 2;

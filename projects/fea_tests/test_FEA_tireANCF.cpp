@@ -31,7 +31,6 @@
 #include "chrono/fea/ChLinkDirFrame.h"
 #include "chrono/fea/ChLinkPointFrame.h"
 #include "chrono/fea/ChMesh.h"
-#include "chrono/fea/ChVisualizationFEAmesh.h"
 
 #ifdef CHRONO_PARDISO_MKL
 #include "chrono_pardisomkl/ChSolverPardisoMKL.h"
@@ -563,7 +562,7 @@ int main(int argc, char* argv[]) {
     mtrussmesh->GetMesh()->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_chassis_simple.obj"));
     // mtrussmesh->GetMesh()->Transform(VNULL, Q_from_AngAxis(CH_C_PI_2, VECT_Z) % Q_from_AngAxis(CH_C_PI_2, VECT_Y));
     mtrussmesh->GetMesh()->Transform(VNULL, Q_from_AngX(0));
-    SimpChassis->AddAsset(mtrussmesh);
+    SimpChassis->AddVisualShape(mtrussmesh);
 
     auto Bump = chrono_types::make_shared<ChBody>();
     Bump->SetMass(10);
@@ -575,7 +574,7 @@ int main(int argc, char* argv[]) {
     cyl_wheel->GetCylinderGeometry().p1 = ChVector<>(0, -0.5, 0);
     cyl_wheel->GetCylinderGeometry().p2 = ChVector<>(0, 0.5, 0);
     cyl_wheel->GetCylinderGeometry().rad = BumpRadius;
-    Bump->AddAsset(cyl_wheel);
+    Bump->AddVisualShape(cyl_wheel);
 
     // Create joints between chassis and hubs
     auto RevTr_1 = chrono_types::make_shared<ChLinkRevoluteTranslational>();

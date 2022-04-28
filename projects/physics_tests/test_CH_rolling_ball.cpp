@@ -109,10 +109,8 @@ int main(int argc, char* argv[]) {
 
     auto box = chrono_types::make_shared<ChBoxShape>();
     box->GetBoxGeometry().Size = ChVector<>(4, 2, 1);
-    box->GetBoxGeometry().Pos = ChVector<>(0, 0, -0.5);
     box->SetColor(ChColor(1, 0, 0));
-    box->SetFading(0.6f);
-    ground->AddAsset(box);
+    ground->AddVisualShape(box, ChFrame<>(ChVector<>(0, 0, -0.5)));
 
     // Crank
     auto ball = chrono_types::make_shared<ChBody>();
@@ -129,7 +127,7 @@ int main(int argc, char* argv[]) {
 
     auto sphere = chrono_types::make_shared<ChSphereShape>();
     sphere->GetSphereGeometry().rad = 1;
-    ball->AddAsset(sphere);
+    ball->AddVisualShape(sphere);
 
     // Functor class for contact reporting
     auto cmanager = chrono_types::make_shared<ContactManager>();

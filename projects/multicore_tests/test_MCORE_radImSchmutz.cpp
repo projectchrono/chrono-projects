@@ -24,7 +24,6 @@
 #include "chrono/core/ChStream.h"
 #include "chrono/assets/ChBoxShape.h"
 #include "chrono/assets/ChCapsuleShape.h"
-#include "chrono/assets/ChColorAsset.h"
 #include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
@@ -208,13 +207,8 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
 
     auto box_sled = chrono_types::make_shared<ChBoxShape>();
     box_sled->GetBoxGeometry().Size = ChVector<>(e, e / 3, e / 3);
-    box_sled->Pos = ChVector<>(0, 0, 0);
-    box_sled->Rot = ChQuaternion<>(1, 0, 0, 0);
-    m_sled->AddAsset(box_sled);
-
-    auto col_sled = chrono_types::make_shared<ChColorAsset>();
-    col_sled->SetColor(ChColor(0.7f, 0.3f, 0.3f));
-    m_sled->AddAsset(col_sled);
+    box_sled->SetColor(ChColor(0.7f, 0.3f, 0.3f));
+    m_sled->AddVisualShape(box_sled);
 
     system->AddBody(m_sled);
 
@@ -255,13 +249,8 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     auto cap_wheel = chrono_types::make_shared<ChCapsuleShape>();
     cap_wheel->GetCapsuleGeometry().hlen = (a + c) / 2 - w_w / 4;
     cap_wheel->GetCapsuleGeometry().rad = w_w / 4;
-    cap_wheel->Pos = ChVector<>((c - a) / 2, 0, -b);
-    cap_wheel->Rot = Q_from_AngZ(CH_C_PI_2);
-    m_wheel->AddAsset(cap_wheel);
-
-    auto col_wheel = chrono_types::make_shared<ChColorAsset>();
-    col_wheel->SetColor(ChColor(0.3f, 0.3f, 0.7f));
-    m_wheel->AddAsset(col_wheel);
+    cap_wheel->SetColor(ChColor(0.3f, 0.3f, 0.7f));
+    m_wheel->AddVisualShape(cap_wheel, ChFrame<>(ChVector<>((c - a) / 2, 0, -b), Q_from_AngZ(CH_C_PI_2)));
 
     system->AddBody(m_wheel);
 

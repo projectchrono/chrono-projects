@@ -19,21 +19,19 @@
 
 #include <cmath>
 
-#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/core/ChMathematics.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLoadContainer.h"
+#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsValidation.h"
-#include "chrono/core/ChMathematics.h"
 
 #include "chrono/fea/ChElementShellANCF_3423.h"
-#include "chrono/fea/ChMesh.h"
-#include "chrono/fea/ChLinkPointFrame.h"
 #include "chrono/fea/ChLinkDirFrame.h"
+#include "chrono/fea/ChLinkPointFrame.h"
+#include "chrono/fea/ChMesh.h"
 
-#include "chrono/fea/ChVisualizationFEAmesh.h"
-#include "chrono_irrlicht/ChIrrAppInterface.h"
-#include "chrono_irrlicht/ChIrrApp.h"
+#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 #include "chrono_pardisomkl/ChSolverPardisoMKL.h"
 
 // Remember to use the namespace 'chrono' because all classes
@@ -42,9 +40,6 @@
 using namespace chrono;
 using namespace fea;
 using namespace chrono::irrlicht;
-
-using namespace irr;
-using namespace irr::scene;
 
 class ChCoulombFriction : public ChLoadCustomMultiple {
   public:
@@ -58,7 +53,7 @@ class ChCoulombFriction : public ChLoadCustomMultiple {
 
     virtual void ComputeQ(ChState* state_x,      ///< state position to evaluate Q
                           ChStateDelta* state_w  ///< state speed to evaluate Q
-                          ) {
+    ) {
         ChMatrixDynamic<double> FlexPos(6, (int)loadables.size());
         ChMatrixDynamic<double> FlexVel(6, (int)loadables.size());
         double Kg;
@@ -439,9 +434,8 @@ class ChLoaderLuGre : public ChLoadCustomMultiple {
         dt = tval - t(left);
         h = t(right) - t(left);
 
-        yval = y(left) +
-               dt * ((y(right) - y(left)) / h - (ypp(right) / 6.0 + ypp(left) / 3.0) * h +
-                     dt * (0.5 * ypp(left) + dt * ((ypp(right) - ypp(left)) / (6.0 * h))));
+        yval = y(left) + dt * ((y(right) - y(left)) / h - (ypp(right) / 6.0 + ypp(left) / 3.0) * h +
+                               dt * (0.5 * ypp(left) + dt * ((ypp(right) - ypp(left)) / (6.0 * h))));
         ypval = (y(right) - y(left)) / h - (ypp(right) / 6.0 + ypp(left) / 3.0) * h +
                 dt * (ypp(left) + dt * (0.5 * (ypp(right) - ypp(left)) / h));
         yppval = ypp(left) + dt * (ypp(right) - ypp(left)) / h;
@@ -901,10 +895,10 @@ class ChLoaderLuGre : public ChLoadCustomMultiple {
 
     virtual void ComputeQ(ChState* state_x,      ///< state position to evaluate Q
                           ChStateDelta* state_w  ///< state speed to evaluate Q
-                          ) {
+    ) {
         ChMatrixDynamic<double> FlexPos(6, (int)loadables.size());  // Matrix of nodal coordinates
         ChMatrixDynamic<double> FlexVel(6, (int)loadables.size());  // Matrix of nodal velocities
-        ChMatrixDynamic<double> RigidPos(7, 2);                // Matrix for rigid body positions (includes ground body)
+        ChMatrixDynamic<double> RigidPos(7, 2);  // Matrix for rigid body positions (includes ground body)
         ChMatrixDynamic<double> RigidVel(7, 2);  // Matrix for rigid body velocities (includes ground body)
         ChMatrixDynamic<int> TempCJN((int)loadables.size(), 1);
         ChMatrixDynamic<double> TempContactFRCE(3, (int)loadables.size());
@@ -971,8 +965,8 @@ class ChLoaderLuGre : public ChLoadCustomMultiple {
             }
 
             // Function for LuGre force calculation
-            LuGre_SteadyState((int)loadables.size(), 24, RigidPos, RigidVel, FlexPos, FlexVel, TempContactFRCE, TempSlipVel,
-                              TempROMG);
+            LuGre_SteadyState((int)loadables.size(), 24, RigidPos, RigidVel, FlexPos, FlexVel, TempContactFRCE,
+                              TempSlipVel, TempROMG);
 
             for (int ie = 0; ie < loadables.size(); ie++)  // Loop over all nodes in the circumferential direction
             {
@@ -983,7 +977,7 @@ class ChLoaderLuGre : public ChLoadCustomMultiple {
 
                 // Load the contact force to be written to a file
                 NodeContactForce(0, ie) = TempContactFRCE(0, ie);
-                NodeContactForce(1, ie) = TempContactFRCE(1, ie); 
+                NodeContactForce(1, ie) = TempContactFRCE(1, ie);
                 NodeContactForce(2, ie) = TempContactFRCE(2, ie);
                 NodeContactForce(3, ie) = 0.0;
                 NodeContactForce(4, ie) = 0.0;
@@ -1225,12 +1219,7 @@ int main(int argc, char* argv[]) {
     // Create a mesh, that is a container for groups
     // of elements and their referenced nodes.
     auto my_mesh = chrono_types::make_shared<ChMesh>();
-    // Visualization:
-    ChIrrApp application(&my_system, L"ANCF Rolling Tire", core::dimension2d<u32>(1080, 800));
-    application.AddLogo();
-    application.AddSkyBox();
-    application.AddCamera(core::vector3df(0.5f, 0.5f, 1.15f), core::vector3df(-1.15f, 0.0f, 0.0f));
-    application.AddTypicalLights();
+
     utils::CSV_writer out("\t");
     out.stream().setf(std::ios::scientific | std::ios::showpos);
     out.stream().precision(7);
@@ -1251,10 +1240,10 @@ int main(int argc, char* argv[]) {
     int TotalNumElements;
     int NumElements_x;
     int NumElements_y;
-    ChVectorN<int, 2880> SectionID;  // Catagorizes which tire section the elements are a part of
-    ChMatrixNM<double, 15, 2> LayPROP;   // Thickness and ply angles of the layered elements
-    ChMatrixNM<int, 15, 7> MatID;        // Catagorizes the material of each layer
-    ChMatrixNM<double, 7, 12> MPROP;     // Material properties
+    ChVectorN<int, 2880> SectionID;     // Catagorizes which tire section the elements are a part of
+    ChMatrixNM<double, 15, 2> LayPROP;  // Thickness and ply angles of the layered elements
+    ChMatrixNM<int, 15, 7> MatID;       // Catagorizes the material of each layer
+    ChMatrixNM<double, 7, 12> MPROP;    // Material properties
     ChVectorN<int, 3> NumLayPerSection;
     int NumCont = 0;        // Number of nodes in contact with the ground
     double ContactZ = 0.0;  // Vertical location of the flat ground
@@ -1291,8 +1280,9 @@ int main(int argc, char* argv[]) {
 
     // Create a set of nodes for the tire based on the input data
     for (int i = 0; i < TotalNumNodes; i++) {
-        auto node = chrono_types::make_shared<ChNodeFEAxyzD>(ChVector<>(COORDFlex(i, 0), COORDFlex(i, 1), COORDFlex(i, 2)),
-                              ChVector<>(COORDFlex(i, 3), COORDFlex(i, 4), COORDFlex(i, 5)));
+        auto node =
+            chrono_types::make_shared<ChNodeFEAxyzD>(ChVector<>(COORDFlex(i, 0), COORDFlex(i, 1), COORDFlex(i, 2)),
+                                                     ChVector<>(COORDFlex(i, 3), COORDFlex(i, 4), COORDFlex(i, 5)));
         node->SetPos_dt(ChVector<>(VELCYFlex(i, 0), VELCYFlex(i, 1), VELCYFlex(i, 2)));
         node->SetD_dt(ChVector<>(VELCYFlex(i, 3), VELCYFlex(i, 4), VELCYFlex(i, 5)));
         node->SetPos_dtdt(ChVector<>(ACCELFlex(i, 0), ACCELFlex(i, 1), ACCELFlex(i, 2)));
@@ -1319,10 +1309,10 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < TotalNumElements; i++) {
         auto element = chrono_types::make_shared<ChElementShellANCF_3423>();
         element->SetNodes(std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(NodesPerElement(i, 0) - 1)),
-            std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(NodesPerElement(i, 1) - 1)),
-            std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(NodesPerElement(i, 2) - 1)),
-            std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(NodesPerElement(i, 3) - 1)));
-         
+                          std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(NodesPerElement(i, 1) - 1)),
+                          std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(NodesPerElement(i, 2) - 1)),
+                          std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(NodesPerElement(i, 3) - 1)));
+
         element->SetDimensions(ElemLength(i, 0), ElemLength(i, 1));
 
         // Determine the section in which the current element resides
@@ -1393,7 +1383,8 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < NumElements_y + 1; i++) {
         std::vector<std::shared_ptr<ChLoadable>> mnodelist;
         for (int inode = 0; inode < (TotalNumNodes / (NumElements_y + 1)); inode++) {
-            auto FrictionNode = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode((i * TotalNumNodes / (NumElements_y + 1)) + inode));
+            auto FrictionNode = std::dynamic_pointer_cast<ChNodeFEAxyzD>(
+                my_mesh->GetNode((i * TotalNumNodes / (NumElements_y + 1)) + inode));
             mnodelist.push_back(FrictionNode);
         }
 
@@ -1523,7 +1514,7 @@ int main(int argc, char* argv[]) {
             ConstrainedNode = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(i));
 
             // Add position constraints
-            constraint = chrono_types::make_shared<ChLinkPointFrame>(); 
+            constraint = chrono_types::make_shared<ChLinkPointFrame>();
             constraint->Initialize(ConstrainedNode, Rim);
             my_system.Add(constraint);
 
@@ -1536,7 +1527,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Constrain only the lateral displacement of the Rim
-    constraintLateral = chrono_types::make_shared<ChLinkLockPointPlane>(); 
+    constraintLateral = chrono_types::make_shared<ChLinkLockPointPlane>();
     my_system.AddLink(constraintLateral);
     constraintLateral->Initialize(Rim, Ground, ChCoordsys<>(Rim->GetPos(), Q_from_AngX(CH_C_PI_2)));
 
@@ -1563,35 +1554,39 @@ int main(int argc, char* argv[]) {
     // Rim->AddAsset(mobjmesh);
 
     double start = std::clock();
-    auto mvisualizemeshC = chrono_types::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
-    mvisualizemeshC->SetFEMglyphType(ChVisualizationFEAmesh::E_GLYPH_NODE_DOT_POS);
-    mvisualizemeshC->SetFEMdataType(ChVisualizationFEAmesh::E_PLOT_NONE);
+    auto mvisualizemeshC = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
+    mvisualizemeshC->SetFEMglyphType(ChVisualShapeFEA::GlyphType::NODE_DOT_POS);
+    mvisualizemeshC->SetFEMdataType(ChVisualShapeFEA::DataType::NONE);
     mvisualizemeshC->SetSymbolsThickness(0.003);
-    my_mesh->AddAsset(mvisualizemeshC);
+    my_mesh->AddVisualShapeFEA(mvisualizemeshC);
 
-    auto mvisualizemeshwire = chrono_types::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
-    mvisualizemeshwire->SetFEMdataType(ChVisualizationFEAmesh::E_PLOT_NONE);
+    auto mvisualizemeshwire = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
+    mvisualizemeshwire->SetFEMdataType(ChVisualShapeFEA::DataType::NONE);
     mvisualizemeshwire->SetWireframe(true);
-    my_mesh->AddAsset(mvisualizemeshwire);
+    my_mesh->AddVisualShapeFEA(mvisualizemeshwire);
 
-    auto mvisualizemesh = chrono_types::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
-    mvisualizemesh->SetFEMdataType(ChVisualizationFEAmesh::E_PLOT_NODE_SPEED_NORM);
+    auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
+    mvisualizemesh->SetFEMdataType(ChVisualShapeFEA::DataType::NODE_SPEED_NORM);
     mvisualizemesh->SetColorscaleMinMax(0.0, 30);
     mvisualizemesh->SetSmoothFaces(true);
-    my_mesh->AddAsset(mvisualizemesh);
-
+    my_mesh->AddVisualShapeFEA(mvisualizemesh);
 
     // Create the a plane using body of 'box' type:
-    auto mrigidBody = chrono_types::make_shared<ChBodyEasyBox>(10, 10, 0.000001, 1000, true, false); // no collision
+    auto mrigidBody = chrono_types::make_shared<ChBodyEasyBox>(10, 10, 0.000001, 1000, true, false);  // no collision
     my_system.Add(mrigidBody);
     mrigidBody->SetPos(ChVector<>(0, 0, ContactZ));
     mrigidBody->SetBodyFixed(true);
 
-
-    application.AssetBindAll();
-    application.AssetUpdateAll();
-
-    ///////
+    // Create the Irrlicht visualization system
+    auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
+    my_system.SetVisualSystem(vis);
+    vis->SetWindowSize(1080, 800);
+    vis->SetWindowTitle("ANCF Rolling Tire");
+    vis->Initialize();
+    vis->AddLogo();
+    vis->AddSkyBox();
+    vis->AddCamera(ChVector<>(0.5, 0.5, 1.15), ChVector<>(-1.15, 0.0, 0.0));
+    vis->AddTypicalLights();
 
     my_system.Setup();
     my_system.Update();
@@ -1681,145 +1676,140 @@ int main(int argc, char* argv[]) {
                  << " - Press SPACE to start dynamic simulation \n - Press F10 for nonlinear statics - Press F11 for "
                     "linear statics. \n";
 
-        // at beginning, no analysis is running..
-        application.SetPaused(true);
         int AccuNoIterations = 0;
-        application.SetStepManage(true);
-        application.SetTimestep(timestep);
-        application.SetTryRealtime(true);
         double ChTime = 0.0;
 
         // utils::CSV_writer out("\t");
         //	out.stream().setf(std::ios::scientific | std::ios::showpos);
         out.stream().precision(7);
-        while (application.GetDevice()->run()) {
+
+        while (vis->Run()) {
             // Apply vertical load to rim body
             Rim->Empty_forces_accumulators();
             Rim->Accumulate_force(ChVector<>(0.0, 0.0, -5000.0), Rim->GetPos(), 0);
-            application.BeginScene();
-            application.DrawAll();
-            application.DoStep();
-            application.EndScene();
-            if (!application.GetPaused()) {
-                std::cout << "Time t = " << my_system.GetChTime() << "s \n";
-                AccuNoIterations += mystepper->GetNumIterations();
+            vis->BeginScene();
+            vis->DrawAll();
+            vis->EndScene();
+            my_system.DoStepDynamics(timestep);
 
-                //==============================//
-                //== Output programs ===========//
-                //==============================//
+            std::cout << "Time t = " << my_system.GetChTime() << "s \n";
+            AccuNoIterations += mystepper->GetNumIterations();
 
-                GetLog() << " t=  " << my_system.GetChTime() << "\n\n";
-                NumCont = 0;
-                NetContact.x() = 0.0;
-                NetContact.y() = 0.0;
-                NetContact.z() = 0.0;
+            //==============================//
+            //== Output programs ===========//
+            //==============================//
 
-                // Loop over nodes to determine total number of contact nodes
+            GetLog() << " t=  " << my_system.GetChTime() << "\n\n";
+            NumCont = 0;
+            NetContact.x() = 0.0;
+            NetContact.y() = 0.0;
+            NetContact.z() = 0.0;
+
+            // Loop over nodes to determine total number of contact nodes
+            for (int ii = 0; ii < TotalNumNodes; ii++) {
+                auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(ii));
+                if (nodetip->GetPos().z() < ContactZ) {
+                    NumCont++;
+                }
+            }
+
+            // Set number of contact nodes and collect net contact forces
+            for (int i = 0; i < NumElements_y + 1; i++) {
+                LoadList[i]->NumContact = NumCont;
+                NetContact += LoadList[i]->NetContactForce;
+            }
+
+            // Output time history of nodal coordinates
+            if (output) {
+                fprintf(outputfile, "%15.7e  ", my_system.GetChTime());
                 for (int ii = 0; ii < TotalNumNodes; ii++) {
                     auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(ii));
-                    if (nodetip->GetPos().z() < ContactZ) {
-                        NumCont++;
-                    }
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetPos().x());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetPos().y());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetPos().z());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetD().x());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetD().y());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetD().z());
                 }
 
-                // Set number of contact nodes and collect net contact forces
-                for (int i = 0; i < NumElements_y + 1; i++) {
-                    LoadList[i]->NumContact = NumCont;
-                    NetContact += LoadList[i]->NetContactForce;
+                for (int ii = 0; ii < TotalNumNodes; ii++) {
+                    auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(ii));
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetPos_dt().x());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetPos_dt().y());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetPos_dt().z());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetD_dt().x());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetD_dt().y());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetD_dt().z());
                 }
-
-                // Output time history of nodal coordinates
-                if (output) {
-                    fprintf(outputfile, "%15.7e  ", my_system.GetChTime());
-                    for (int ii = 0; ii < TotalNumNodes; ii++) {
-                        auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(ii));
-                        fprintf(outputfile, "%15.7e  ", nodetip->GetPos().x());
-                        fprintf(outputfile, "%15.7e  ", nodetip->GetPos().y());
-                        fprintf(outputfile, "%15.7e  ", nodetip->GetPos().z());
-                        fprintf(outputfile, "%15.7e  ", nodetip->GetD().x());
-                        fprintf(outputfile, "%15.7e  ", nodetip->GetD().y());
-                        fprintf(outputfile, "%15.7e  ", nodetip->GetD().z());
-                    }
-
-                    for (int ii = 0; ii < TotalNumNodes; ii++) {
-                        auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(ii));
-                        fprintf(outputfile, "%15.7e  ", nodetip->GetPos_dt().x());
-                        fprintf(outputfile, "%15.7e  ", nodetip->GetPos_dt().y());
-                        fprintf(outputfile, "%15.7e  ", nodetip->GetPos_dt().z());
-                        fprintf(outputfile, "%15.7e  ", nodetip->GetD_dt().x());
-                        fprintf(outputfile, "%15.7e  ", nodetip->GetD_dt().y());
-                        fprintf(outputfile, "%15.7e  ", nodetip->GetD_dt().z());
-                    }
-                    fprintf(outputfile, "\n  ");
-                }
-
-                // Output time history of rigid bodies
-                if (output1) {
-                    fprintf(outputfile1, "%15.7e  ", my_system.GetChTime());
-                    fprintf(outputfile1, "%15.7e  ", 0.0);
-                    fprintf(outputfile1, "%15.7e  ", 0.0);
-                    fprintf(outputfile1, "%15.7e  ", 0.0);
-                    fprintf(outputfile1, "%15.7e  ", 1.0);
-                    fprintf(outputfile1, "%15.7e  ", 0.0);
-                    fprintf(outputfile1, "%15.7e  ", 0.0);
-                    fprintf(outputfile1, "%15.7e  ", 0.0);
-                    fprintf(outputfile1, "%15.7e  ", Rim->GetPos().x());
-                    fprintf(outputfile1, "%15.7e  ", Rim->GetPos().y());
-                    fprintf(outputfile1, "%15.7e  ", Rim->GetPos().z());
-                    fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e0());
-                    fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e1());
-                    fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e2());
-                    fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e3());
-                    fprintf(outputfile1, "\n  ");
-                }
-
-                // Output ground location, net contact forces, and number of contact nodes
-                if (output2) {
-                    fprintf(outputfile2, "%15.7e  ", my_system.GetChTime());
-                    fprintf(outputfile2, "%15.7e  ", ContactZ);
-                    fprintf(outputfile2, "%15.7e  ", NetContact.x());
-                    fprintf(outputfile2, "%15.7e  ", NetContact.y());
-                    fprintf(outputfile2, "%15.7e  ", NetContact.z());
-                    fprintf(outputfile2, "%d  ", NumCont);
-                    fprintf(outputfile2, "\n  ");
-                }
-
-                // Output current time and number of iterations per time step
-                if (output3) {
-                    fprintf(outputfile3, "%15.7e  ", my_system.GetChTime());
-                    fprintf(outputfile3, "%d  ", mystepper->GetNumIterations());
-                    fprintf(outputfile3, "\n  ");
-                }
-
-                // Output time history contact forces per nodal coordinate
-                if (output4) {
-                    fprintf(outputfile4, "%15.7e  ", my_system.GetChTime());
-                    for (int i = 0; i < NumElements_y + 1; i++) {
-                        for (int j = 0; j < NumElements_x; j++) {
-                            fprintf(outputfile4, "%15.7e  ", LoadList[i]->NodeContactForce(0, j));
-                            fprintf(outputfile4, "%15.7e  ", LoadList[i]->NodeContactForce(1, j));
-                            fprintf(outputfile4, "%15.7e  ", LoadList[i]->NodeContactForce(2, j));
-                            fprintf(outputfile4, "%15.7e  ", LoadList[i]->NodeContactForce(3, j));
-                            fprintf(outputfile4, "%15.7e  ", LoadList[i]->NodeContactForce(4, j));
-                            fprintf(outputfile4, "%15.7e  ", LoadList[i]->NodeContactForce(5, j));
-                        }
-                    }
-                    fprintf(outputfile4, "\n   ");
-                }
-
-                GetLog() << "Contact Line: " << ContactZ << "\n";
-                GetLog() << "Contact ForceX: " << NetContact.x() << "\n";
-                GetLog() << "Contact ForceY: " << NetContact.y() << "\n";
-                GetLog() << "Contact ForceZ: " << NetContact.z() << "\n";
-                GetLog() << "Rim X: " << Rim->GetPos().x() << "\n";
-                GetLog() << "Rim Y: " << Rim->GetPos().y() << "\n";
-                GetLog() << "Rim Z: " << Rim->GetPos().z() << "\n";
-                GetLog() << "Rim Vel X: " << Rim->GetPos_dt().x() << "\n";
-                GetLog() << "Number of Contact Points: " << NumCont << "\n\n\n";
-
-                // out << my_system.GetChTime() << Rim->GetPos().x() << Rim->GetPos().y() << Rim->GetPos().z()<< std::endl;
-                // out.write_to_file("../VertPosRim.txt");
+                fprintf(outputfile, "\n  ");
             }
+
+            // Output time history of rigid bodies
+            if (output1) {
+                fprintf(outputfile1, "%15.7e  ", my_system.GetChTime());
+                fprintf(outputfile1, "%15.7e  ", 0.0);
+                fprintf(outputfile1, "%15.7e  ", 0.0);
+                fprintf(outputfile1, "%15.7e  ", 0.0);
+                fprintf(outputfile1, "%15.7e  ", 1.0);
+                fprintf(outputfile1, "%15.7e  ", 0.0);
+                fprintf(outputfile1, "%15.7e  ", 0.0);
+                fprintf(outputfile1, "%15.7e  ", 0.0);
+                fprintf(outputfile1, "%15.7e  ", Rim->GetPos().x());
+                fprintf(outputfile1, "%15.7e  ", Rim->GetPos().y());
+                fprintf(outputfile1, "%15.7e  ", Rim->GetPos().z());
+                fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e0());
+                fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e1());
+                fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e2());
+                fprintf(outputfile1, "%15.7e  ", Rim->GetRot().e3());
+                fprintf(outputfile1, "\n  ");
+            }
+
+            // Output ground location, net contact forces, and number of contact nodes
+            if (output2) {
+                fprintf(outputfile2, "%15.7e  ", my_system.GetChTime());
+                fprintf(outputfile2, "%15.7e  ", ContactZ);
+                fprintf(outputfile2, "%15.7e  ", NetContact.x());
+                fprintf(outputfile2, "%15.7e  ", NetContact.y());
+                fprintf(outputfile2, "%15.7e  ", NetContact.z());
+                fprintf(outputfile2, "%d  ", NumCont);
+                fprintf(outputfile2, "\n  ");
+            }
+
+            // Output current time and number of iterations per time step
+            if (output3) {
+                fprintf(outputfile3, "%15.7e  ", my_system.GetChTime());
+                fprintf(outputfile3, "%d  ", mystepper->GetNumIterations());
+                fprintf(outputfile3, "\n  ");
+            }
+
+            // Output time history contact forces per nodal coordinate
+            if (output4) {
+                fprintf(outputfile4, "%15.7e  ", my_system.GetChTime());
+                for (int i = 0; i < NumElements_y + 1; i++) {
+                    for (int j = 0; j < NumElements_x; j++) {
+                        fprintf(outputfile4, "%15.7e  ", LoadList[i]->NodeContactForce(0, j));
+                        fprintf(outputfile4, "%15.7e  ", LoadList[i]->NodeContactForce(1, j));
+                        fprintf(outputfile4, "%15.7e  ", LoadList[i]->NodeContactForce(2, j));
+                        fprintf(outputfile4, "%15.7e  ", LoadList[i]->NodeContactForce(3, j));
+                        fprintf(outputfile4, "%15.7e  ", LoadList[i]->NodeContactForce(4, j));
+                        fprintf(outputfile4, "%15.7e  ", LoadList[i]->NodeContactForce(5, j));
+                    }
+                }
+                fprintf(outputfile4, "\n   ");
+            }
+
+            GetLog() << "Contact Line: " << ContactZ << "\n";
+            GetLog() << "Contact ForceX: " << NetContact.x() << "\n";
+            GetLog() << "Contact ForceY: " << NetContact.y() << "\n";
+            GetLog() << "Contact ForceZ: " << NetContact.z() << "\n";
+            GetLog() << "Rim X: " << Rim->GetPos().x() << "\n";
+            GetLog() << "Rim Y: " << Rim->GetPos().y() << "\n";
+            GetLog() << "Rim Z: " << Rim->GetPos().z() << "\n";
+            GetLog() << "Rim Vel X: " << Rim->GetPos_dt().x() << "\n";
+            GetLog() << "Number of Contact Points: " << NumCont << "\n\n\n";
+
+            // out << my_system.GetChTime() << Rim->GetPos().x() << Rim->GetPos().y() << Rim->GetPos().z()<< std::endl;
+            // out.write_to_file("../VertPosRim.txt");
         }
     } else {
         ////////////////////////////////////////////////////

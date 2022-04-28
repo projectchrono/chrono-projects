@@ -10,26 +10,24 @@
 //
 
 #include "chrono/ChConfig.h"
-#include "chrono/assets/ChColorAsset.h"
-#include "chrono/assets/ChTexture.h"
 #include "chrono/assets/ChObjShapeFile.h"
-#include "chrono/solver/ChIterativeSolverLS.h"
+#include "chrono/assets/ChTexture.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChLoaderUV.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/physics/ChSystemSMC.h"
+#include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/utils/ChOpenMP.h"
 
-#include "chrono/fea/ChMesh.h"
-#include "chrono/fea/ChMeshFileLoader.h"
 #include "chrono/fea/ChContactSurfaceMesh.h"
 #include "chrono/fea/ChContactSurfaceNodeCloud.h"
-#include "chrono/fea/ChVisualizationFEAmesh.h"
 #include "chrono/fea/ChLinkPointFrame.h"
+#include "chrono/fea/ChMesh.h"
+#include "chrono/fea/ChMeshFileLoader.h"
 
 #ifdef CHRONO_IRRLICHT
-#include "chrono_irrlicht/ChIrrApp.h"
+#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 #endif
 
 #ifdef CHRONO_PARDISO_MKL
@@ -45,7 +43,6 @@ using namespace chrono::fea;
 
 #ifdef CHRONO_IRRLICHT
 using namespace chrono::irrlicht;
-using namespace irr;
 #endif
 
 int main(int argc, char* argv[]) {
@@ -74,7 +71,7 @@ int main(int argc, char* argv[]) {
     // Model parameters
     // --------------------------
 
-    double tire_vel_z0 = 0;//// -3;
+    double tire_vel_z0 = 0;  //// -3;
 
     bool include_wheel_body = true;
     bool include_tire_contact = false;
@@ -93,7 +90,7 @@ int main(int argc, char* argv[]) {
     my_system.SetNumThreads(std::min(num_threads, ChOMP::GetNumProcs()));
 #else
     GetLog() << "No OpenMP\n";
-#endif 
+#endif
 
     // Global parameter for tire
     double tire_rad = 0.8;
@@ -133,18 +130,19 @@ int main(int argc, char* argv[]) {
 
     // Mesh visualization
     if (visualization) {
-        auto mvisualizemesh = chrono_types::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
-        mvisualizemesh->SetFEMdataType(ChVisualizationFEAmesh::E_PLOT_NODE_SPEED_NORM);
+        auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
+        mvisualizemesh->SetFEMdataType(ChVisualShapeFEA::DataType::NODE_SPEED_NORM);
         mvisualizemesh->SetColorscaleMinMax(0.0, 10);
         mvisualizemesh->SetSmoothFaces(true);
-        my_mesh->AddAsset(mvisualizemesh);
+        my_mesh->AddVisualShapeFEA(mvisualizemesh);
     }
 
     // Apply initial speed and angular speed
-    for (unsigned int i = 0; i< my_mesh->GetNnodes(); ++i) {
+    for (unsigned int i = 0; i < my_mesh->GetNnodes(); ++i) {
         ChVector<> node_pos = std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))->GetPos();
         ChVector<> tang_vel = Vcross(ChVector<>(tire_w0, 0, 0), node_pos - tire_center);
-        std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))->SetPos_dt(ChVector<>(0, 0, tire_vel_z0) + tang_vel);
+        std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))
+            ->SetPos_dt(ChVector<>(0, 0, tire_vel_z0) + tang_vel);
     }
 
     // Create the contact surface
@@ -171,8 +169,8 @@ int main(int argc, char* argv[]) {
 
         for (int i = 0; i < mmeshsurf->GetFacesList().size(); ++i) {
             auto aface = std::shared_ptr<ChLoadableUV>(mmeshsurf->GetFacesList()[i]);
-            auto faceload = chrono_types::make_shared<ChLoad< ChLoaderPressure > >(aface);
-            faceload->loader.SetPressure(10000); // low pressure... the tire has no ply!
+            auto faceload = chrono_types::make_shared<ChLoad<ChLoaderPressure>>(aface);
+            faceload->loader.SetPressure(10000);  // low pressure... the tire has no ply!
             mloadcontainer->Add(faceload);
         }
     }
@@ -197,7 +195,7 @@ int main(int argc, char* argv[]) {
         if (visualization) {
             auto mobjmesh = chrono_types::make_shared<ChObjShapeFile>();
             mobjmesh->SetFilename(GetChronoDataFile("fea/tractor_wheel_rim.obj"));
-            wheel->AddAsset(mobjmesh);
+            wheel->AddVisualShape(mobjmesh);
         }
 
         // Conect rim and tire using constraints.
@@ -216,9 +214,7 @@ int main(int argc, char* argv[]) {
     my_system.Add(mfloor);
 
     if (visualization) {
-        auto mtexture = chrono_types::make_shared<ChTexture>();
-        mtexture->SetTextureFilename(GetChronoDataFile("textures/concrete.jpg"));
-        mfloor->AddAsset(mtexture);
+        mfloor->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/concrete.jpg"));
     }
 
     // Create obstacles
@@ -232,9 +228,7 @@ int main(int argc, char* argv[]) {
             my_system.Add(mcube);
 
             if (visualization) {
-                auto mcubecol = chrono_types::make_shared<ChColorAsset>();
-                mcubecol->SetColor(ChColor(0.3f, 0.3f, 0.3f));
-                mcube->AddAsset(mcubecol);
+                mcube->GetVisualShape(0)->SetColor(ChColor(0.3f, 0.3f, 0.3f));
             }
         }
     }
@@ -249,7 +243,7 @@ int main(int argc, char* argv[]) {
 #endif
 
     switch (solver_type) {
-        case ChSolver::Type::MINRES : {
+        case ChSolver::Type::MINRES: {
             GetLog() << "Using MINRES solver\n";
             auto solver = chrono_types::make_shared<ChSolverMINRES>();
             solver->EnableWarmStart(true);
@@ -259,7 +253,7 @@ int main(int argc, char* argv[]) {
             my_system.SetSolverForceTolerance(1e-10);
             break;
         }
-        case ChSolver::Type::PARDISO_MKL : {
+        case ChSolver::Type::PARDISO_MKL: {
 #ifdef CHRONO_PARDISO_MKL
             GetLog() << "Using PardisoMKL solver\n";
             auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
@@ -288,38 +282,32 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // ------------------
-    // Perform simulation
-    // ------------------
+        // ------------------
+        // Perform simulation
+        // ------------------
 #ifndef CHRONO_IRRLICHT
     visualization = false;
 #endif
 
     if (visualization) {
 #ifdef CHRONO_IRRLICHT
-        // Create Irrlicht visualization application
-        ChIrrApp application(&my_system, L"ABAQUS tire demo", core::dimension2d<u32>(1280, 720));
-        application.AddLogo();
-        application.AddSkyBox();
-        application.AddTypicalLights();
-        application.AddCamera(core::vector3df(1.0f, 1.4f, -1.2f), core::vector3df(0, (f32)tire_rad, 0));
-        application.AddLightWithShadow(core::vector3df(1.5f, 5.5f, -2.5f), core::vector3df(0, 0, 0), 3, 2.2, 7.2, 40, 512,
-                                       video::SColorf(0.8f, 0.8f, 1.0f));
-        application.AddShadowAll();
-        ////application.SetContactsDrawMode(IrrContactsDrawMode::CONTACT_DISTANCES);
-
-        // Bind assets
-        application.AssetBindAll();
-        application.AssetUpdateAll();
+        // Create the Irrlicht visualization system
+        auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
+        my_system.SetVisualSystem(vis);
+        vis->SetWindowSize(1280, 720);
+        vis->SetWindowTitle("ABAQUS tire demo");
+        vis->Initialize();
+        vis->AddLogo();
+        vis->AddSkyBox();
+        vis->AddCamera(ChVector<>(1, 1.4, -1.2), ChVector<>(0, tire_rad, 0));
+        vis->AddTypicalLights();
 
         // Simulation loop
-        application.SetTimestep(step_size);
-
-        while (application.GetDevice()->run()) {
-            application.BeginScene();
-            application.DrawAll();
-            application.DoStep();
-            application.EndScene();
+        while (vis->Run()) {
+            vis->BeginScene();
+            vis->DrawAll();
+            vis->EndScene();
+            my_system.DoStepDynamics(step_size);
         }
 #endif
     } else {

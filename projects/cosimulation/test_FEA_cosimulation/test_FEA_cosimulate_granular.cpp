@@ -27,8 +27,7 @@
 #include "chrono/fea/ChLoadContactSurfaceMesh.h"
 #include "chrono/fea/ChMesh.h"
 #include "chrono/fea/ChMeshFileLoader.h"
-#include "chrono/fea/ChVisualizationFEAmesh.h"
-#include "chrono_irrlicht/ChIrrApp.h"
+#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 
@@ -49,12 +48,10 @@ using namespace chrono::fea;
 using namespace chrono::irrlicht;
 using namespace chrono::collision;
 
-using namespace irr;
-
 // Utility to draw some triangles that are affected by cosimulation.
 // Also plot forces as vectors.
 // Mostly for debugging.
-void draw_affected_triangles(ChIrrApp& application,
+void draw_affected_triangles(ChVisualSystemIrrlicht& vis,
                              std::vector<ChVector<>>& vert_pos,
                              std::vector<ChVector<int>>& triangles,
                              std::vector<int>& vert_indexes,
@@ -70,14 +67,14 @@ void draw_affected_triangles(ChIrrApp& application,
         if (vert_hit == true) {
             std::vector<chrono::ChVector<>> fourpoints = {vert_pos[triangles[it].x()], vert_pos[triangles[it].y()],
                                                           vert_pos[triangles[it].z()], vert_pos[triangles[it].x()]};
-            tools::drawPolyline(application.GetVideoDriver(), fourpoints, irr::video::SColor(255, 240, 200, 0), true);
+            tools::drawPolyline(vis.GetVideoDriver(), fourpoints, irr::video::SColor(255, 240, 200, 0), true);
         }
     }
     if (forcescale > 0)
         for (int io = 0; io < vert_indexes.size(); ++io) {
             std::vector<chrono::ChVector<>> forceline = {vert_pos[vert_indexes[io]],
                                                          vert_pos[vert_indexes[io]] + vert_forces[io] * forcescale};
-            tools::drawPolyline(application.GetVideoDriver(), forceline, irr::video::SColor(100, 240, 0, 0), true);
+            tools::drawPolyline(vis.GetVideoDriver(), forceline, irr::video::SColor(100, 240, 0, 0), true);
         }
 }
 
@@ -104,17 +101,7 @@ int main(int argc, char* argv[]) {
 
     // Create a Chrono::Engine physical system
     ChSystemSMC my_system;
-#ifndef CHRONO_OPENGL
-    // Create the Irrlicht visualization (open the Irrlicht device,
-    // bind a simple user interface, etc. etc.)
-    ChIrrApp application(&my_system, L"FEA contacts", core::dimension2d<u32>(1280, 720));
-    application.AddLogo();
-    application.AddSkyBox();
-    application.AddTypicalLights();
-    application.AddCamera(core::vector3dfCH(ChVector<>(3, 1.4, -3.2)), core::vector3dfCH(ChVector<>(0, 0, 0)));
-    application.AddLightWithShadow(core::vector3dfCH(ChVector<>(1.5, 5.5, -2.5)), core::vector3df(0, 0, 0), 3, 2.2, 7.2,
-                                   40, 512, video::SColorf((f32)0.8, (f32)0.8, (f32)1.0));
-#endif
+
     //
     // CREATE A FINITE ELEMENT MESH
     //
@@ -171,11 +158,11 @@ int main(int argc, char* argv[]) {
     // This will automatically update a triangle mesh (a ChTriangleMeshShape
     // asset that is internally managed) by setting  proper
     // coordinates and vertex colours as in the FEM elements.
-    auto mvisualizemesh = chrono_types::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
-    mvisualizemesh->SetFEMdataType(ChVisualizationFEAmesh::E_PLOT_NODE_SPEED_NORM);
+    auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
+    mvisualizemesh->SetFEMdataType(ChVisualShapeFEA::DataType::NODE_SPEED_NORM);
     mvisualizemesh->SetColorscaleMinMax(0.0, 10);
     mvisualizemesh->SetSmoothFaces(true);
-    my_mesh->AddAsset(mvisualizemesh);
+    my_mesh->AddVisualShapeFEA(mvisualizemesh);
 
     //
     // END CREATE A FINITE ELEMENT MESH
@@ -222,14 +209,15 @@ int main(int argc, char* argv[]) {
     */
 
 #ifndef CHRONO_OPENGL
-    // ==IMPORTANT!== Use this function for adding a ChIrrNodeAsset to all items
-    application.AssetBindAll();
-
-    // ==IMPORTANT!== Use this function for 'converting' into Irrlicht meshes the assets
-    application.AssetUpdateAll();
-
-    // Use shadows in realtime view
-    application.AddShadowAll();
+    auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
+    my_system.SetVisualSystem(vis);
+    vis->SetWindowSize(800, 600);
+    vis->SetWindowTitle("FEA contacts");
+    vis->Initialize();
+    vis->AddLogo();
+    vis->AddSkyBox();
+    vis->AddCamera(ChVector<>(3, 1.4, -3.2));
+    vis->AddTypicalLights();
 #endif
 
     //
@@ -247,10 +235,6 @@ int main(int argc, char* argv[]) {
 
     // Change type of integrator:
     my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
-
-#ifndef CHRONO_OPENGL
-    application.SetTimestep(time_step);
-#endif
 
     // BEGIN MULTICORE SYSTEM INITIALIZATION
     ChSystemMulticoreNSC* systemG = new ChSystemMulticoreNSC();
@@ -361,7 +345,7 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_OPENGL
     while (true) {
 #else
-    while (application.GetDevice()->run()) {
+    while (vis->Run()) {
 #endif
 // while (time<time_end) {
 
@@ -419,11 +403,10 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_OPENGL
         my_system.DoStepDynamics(time_step);
 #else
-        application.BeginScene();
+        vis->BeginScene();
+        vis->DrawAll();
 
-        application.DrawAll();
-
-        application.DoStep();
+        my_system.DoStepDynamics(time_step);
 
         if (timeIndex % out_steps == 0 && saveData) {
             // takeScreenshot(application.GetDevice(),frameIndex);
@@ -486,16 +469,16 @@ int main(int argc, char* argv[]) {
                 vert_indexesVisualization.push_back(vert_indexes[i]);
             }
         }
-        draw_affected_triangles(application, vert_pos, triangles, vert_indexesVisualization, vert_forcesVisualization,
+        draw_affected_triangles(*vis, vert_pos, triangles, vert_indexesVisualization, vert_forcesVisualization,
                                 0.01);
 
         // End of cosimulation block
         // -------------------------------------------------------------------------
 
-        tools::drawGrid(application.GetVideoDriver(), 0.1, 0.1, 20, 20, ChCoordsys<>(VNULL, CH_C_PI_2, VECT_X),
-                        video::SColor(50, 90, 90, 90), true);
+        tools::drawGrid(vis->GetVideoDriver(), 0.1, 0.1, 20, 20, ChCoordsys<>(VNULL, CH_C_PI_2, VECT_X),
+                        irr::video::SColor(50, 90, 90, 90), true);
 
-        application.EndScene();
+        vis->EndScene();
 #endif
         timeIndex++;
         time += time_step;

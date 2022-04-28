@@ -10,11 +10,11 @@
 //
 
 #include "chrono/ChConfig.h"
-#include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/physics/ChContactContainerSMC.h"
 #include "chrono/physics/ChSystemSMC.h"
+#include "chrono/solver/ChIterativeSolverLS.h"
 
-#include "chrono_irrlicht/ChIrrApp.h"
+#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 
 #ifdef CHRONO_PARDISO_MKL
 #include "chrono_pardisomkl/ChSolverPardisoMKL.h"
@@ -24,11 +24,10 @@
 
 using namespace chrono;
 using namespace chrono::irrlicht;
-using namespace irr;
 
 // Custom contact container -- get access to the contact lists in the base class.
 class MyContactContainer : public ChContactContainerSMC {
-public:
+  public:
     MyContactContainer() {}
 
     // Traverse the list contactlist_6_6
@@ -40,20 +39,17 @@ public:
             ChVector<> pA = (*iter)->GetContactP1();
             ChVector<> pB = (*iter)->GetContactP2();
 
-
             GetLog().SetNumFormat("%12.3e");
-            
+
             int iball;
             if (objA == ball.get()) {
                 iball = 0;
                 GetLog() << "pA = " << pA << "\n";
-            }
-            else if (objB == ball.get()) {
+            } else if (objB == ball.get()) {
                 iball = 1;
                 GetLog() << "pB = " << pB << "\n";
             }
 
-            
             const ChKblockGeneric* KRM = (*iter)->GetJacobianKRM();
             const ChMatrixDynamic<double>* K = (*iter)->GetJacobianK();
             const ChMatrixDynamic<double>* R = (*iter)->GetJacobianR();
@@ -116,7 +112,7 @@ int main(int argc, char* argv[]) {
     // -------------------------------
     // Parameters for the falling ball
     // -------------------------------
-    
+
     int ballId = 100;
     double radius = 1;
     double mass = 1000;
@@ -140,7 +136,7 @@ int main(int argc, char* argv[]) {
 
     ChSystemSMC system(use_mat_properties);
 
-    // Set the SMC contact force model 
+    // Set the SMC contact force model
     system.SetContactForceModel(force_model);
 
     // Set tangential displacement model
@@ -150,17 +146,6 @@ int main(int argc, char* argv[]) {
     system.SetStiffContact(stiff_contact);
 
     system.Set_G_acc(ChVector<>(0, gravity, 0));
-
-    // Create the Irrlicht visualization
-    ChIrrApp application(&system, L"SMC demo", core::dimension2d<u32>(800, 600));
-    application.AddLogo();
-    application.AddSkyBox();
-    application.AddTypicalLights();
-    application.AddCamera(core::vector3df(0, 3, -6));
-
-    // This means that contactforces will be shown in Irrlicht application
-    application.SetSymbolscale(1e-4);
-    application.SetContactsDrawMode(IrrContactsDrawMode::CONTACT_FORCES);
 
     // Create a material (will be used by both objects)
     auto material = chrono_types::make_shared<ChMaterialSurfaceSMC>();
@@ -192,11 +177,8 @@ int main(int argc, char* argv[]) {
 
     auto sphere = chrono_types::make_shared<ChSphereShape>();
     sphere->GetSphereGeometry().rad = radius;
-    ball->AddAsset(sphere);
-
-    auto mtexture = chrono_types::make_shared<ChTexture>();
-    mtexture->SetTextureFilename(GetChronoDataFile("textures/bluewhite.png"));
-    ball->AddAsset(mtexture);
+    sphere->SetTexture(GetChronoDataFile("textures/bluewhite.png"));
+    ball->AddVisualShape(sphere);
 
     system.AddBody(ball);
 
@@ -216,14 +198,22 @@ int main(int argc, char* argv[]) {
 
     auto box = chrono_types::make_shared<ChBoxShape>();
     box->GetBoxGeometry().Size = ChVector<>(width, thickness, length);
-    box->GetBoxGeometry().Pos = ChVector<>(0, -thickness, 0);
-    ground->AddAsset(box);
+    ground->AddVisualShape(box, ChFrame<>(ChVector<>(0, -thickness, 0)));
 
     system.AddBody(ground);
 
-    // Complete asset construction
-    application.AssetBindAll();
-    application.AssetUpdateAll();
+    // Create the Irrlicht visualization
+    auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
+    system.SetVisualSystem(vis);
+    vis->SetWindowSize(800, 600);
+    vis->SetWindowTitle("SMC demo");
+    vis->Initialize();
+    vis->AddLogo();
+    vis->AddSkyBox();
+    vis->AddCamera(ChVector<>(0, 3, -6));
+    vis->AddTypicalLights();
+    vis->SetSymbolScale(1e-4);
+    vis->EnableContactDrawing(IrrContactsDrawMode::CONTACT_FORCES);
 
     // ----------------------------
     // Use custom contact container
@@ -245,7 +235,7 @@ int main(int argc, char* argv[]) {
 #endif
 
     switch (solver_type) {
-        case ChSolver::Type::MINRES : {
+        case ChSolver::Type::MINRES: {
             GetLog() << "Using MINRES solver.\n";
             auto minres_solver = chrono_types::make_shared<ChSolverMINRES>();
             minres_solver->EnableDiagonalPreconditioner(true);
@@ -288,17 +278,16 @@ int main(int argc, char* argv[]) {
     // ---------------
     // Simulation loop
     // ---------------
-    while (application.GetDevice()->run()) {
-        application.BeginScene();
-        application.DrawAll();
+    while (vis->Run()) {
+        vis->BeginScene();
+        vis->DrawAll();
+        vis->EndScene();
 
         system.DoStepDynamics(time_step);
         if (ball->GetPos().y() <= radius) {
             container->ScanContacts(ball);
             GetLog() << "t = " << system.GetChTime() << "  NR iters. = " << integrator->GetNumIterations() << "\n";
         }
-
-        application.EndScene();
     }
 
     return 0;

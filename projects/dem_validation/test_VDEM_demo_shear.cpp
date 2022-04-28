@@ -130,10 +130,8 @@ void AddWall(std::shared_ptr<ChBody>& body, std::shared_ptr<ChMaterialSurface> m
     if (visible == true) {
         auto box = chrono_types::make_shared<ChBoxShape>();
         box->GetBoxGeometry().Size = dim;
-        box->Pos = loc;
         box->SetColor(ChColor(1, 0, 0));
-        box->SetFading(0.6f);
-        body->AddAsset(box);
+        body->AddVisualShape(box, ChFrame<>(loc));
     }
 }
 
@@ -385,10 +383,9 @@ int main(int argc, char* argv[]) {
                 ball->GetCollisionModel()->BuildModel();
 
                 auto sphere = chrono_types::make_shared<ChSphereShape>();
-
                 sphere->GetSphereGeometry().rad = radius;
                 sphere->SetColor(ChColor(1, 0, 1));
-                ball->AddAsset(sphere);
+                ball->AddVisualShape(sphere);
 
                 my_system->AddBody(ball);
             }

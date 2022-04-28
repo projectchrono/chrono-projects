@@ -1,24 +1,17 @@
 #include <cmath>
 
-#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/physics/ChBody.h"
+#include "chrono/physics/ChSystemNSC.h"
 
+#include "chrono/geometry/ChLineArc.h"
 #include "chrono/geometry/ChLinePath.h"
 #include "chrono/geometry/ChLineSegment.h"
-#include "chrono/geometry/ChLineArc.h"
 
-#include "chrono_irrlicht/ChIrrApp.h"
+#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 
 using namespace chrono;
 using namespace chrono::geometry;
 using namespace chrono::irrlicht;
-
-using namespace irr;
-using namespace irr::core;
-using namespace irr::scene;
-using namespace irr::video;
-using namespace irr::io;
-using namespace irr::gui;
 
 // -----------------------------------------------------------------------------
 std::shared_ptr<geometry::ChLinePath> CreateProfile(int num_teeth, double R_T, double R_C, double R) {
@@ -66,16 +59,6 @@ int main(int argc, char* argv[]) {
 
     ChSystemNSC system;
 
-    ChIrrApp application(&system, L"Paths", core::dimension2d<u32>(800, 600));
-    application.AddLogo();
-    application.AddSkyBox();
-    application.AddTypicalLights();
-    application.AddCamera(core::vector3df(0.5, 0.5, -1));
-
-    // Show contact forces in Irrlicht application
-    application.SetSymbolscale(0.2);
-    application.SetContactsDrawMode(IrrContactsDrawMode::CONTACT_NORMALS);
-
     // Create a shared material (default properties)
     auto mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
 
@@ -86,7 +69,7 @@ int main(int argc, char* argv[]) {
     auto ground = chrono_types::make_shared<ChBody>();
     ground->SetIdentifier(-1);
     ground->SetBodyFixed(true);
-    application.GetSystem()->AddBody(ground);
+    system.AddBody(ground);
 
     // -----------------------------
     // Create the rotating gear body
@@ -97,8 +80,8 @@ int main(int argc, char* argv[]) {
     auto gear = chrono_types::make_shared<ChBody>();
     gear->SetIdentifier(0);
     gear->SetPos(gear_loc);
-    //gear->SetWvel_loc(ChVector<>(0, 0, 0.1));
-    application.GetSystem()->AddBody(gear);
+    // gear->SetWvel_loc(ChVector<>(0, 0, 0.1));
+    system.AddBody(gear);
 
     int n_teeth = 10;
     double R_T = 0.2605;
@@ -119,26 +102,24 @@ int main(int argc, char* argv[]) {
     // Add ChLineShape visualization asset to gear
     auto gear_profile_plus = chrono_types::make_shared<ChLineShape>();
     gear_profile_plus->SetLineGeometry(gear_profile);
-    gear_profile_plus->Pos = ChVector<>(0, 0, separation / 2);
     gear_profile_plus->SetColor(ChColor(1, 0, 0));
-    gear->AddAsset(gear_profile_plus);
+    gear->AddVisualShape(gear_profile_plus, ChFrame<>(ChVector<>(0, 0, separation / 2)));
 
     auto gear_profile_minus = chrono_types::make_shared<ChLineShape>();
     gear_profile_minus->SetLineGeometry(gear_profile);
     gear_profile_minus->SetColor(ChColor(0, 1, 0));
-    gear_profile_minus->Pos = ChVector<>(0, 0, -separation / 2);
-    gear->AddAsset(gear_profile_minus);
+    gear->AddVisualShape(gear_profile_minus, ChFrame<>(ChVector<>(0, 0, -separation / 2)));
 
     auto gear_axle = chrono_types::make_shared<ChCylinderShape>();
     gear_axle->GetCylinderGeometry().p1 = ChVector<>(0, 0, separation / 2);
     gear_axle->GetCylinderGeometry().p2 = ChVector<>(0, 0, -separation / 2);
     gear_axle->GetCylinderGeometry().rad = 0.1 * R;
-    gear->AddAsset(gear_axle);
+    gear->AddVisualShape(gear_axle);
 
     // Revolute constraint (gear-ground)
     auto revolute = chrono_types::make_shared<ChLinkLockRevolute>();
     revolute->Initialize(gear, ground, ChCoordsys<>(gear_loc));
-    application.GetSystem()->Add(revolute);
+    system.Add(revolute);
 
     // ---------------------
     // Create a falling body
@@ -151,8 +132,8 @@ int main(int argc, char* argv[]) {
     auto pin = chrono_types::make_shared<ChBody>();
     pin->SetIdentifier(1);
     pin->SetPos(pin_loc);
-    //pin->SetBodyFixed(true);
-    application.GetSystem()->AddBody(pin);
+    // pin->SetBodyFixed(true);
+    system.AddBody(pin);
 
     auto pin_profile = chrono_types::make_shared<ChLinePath>();
     ChLineArc pin_circle(ChCoordsys<>(), pin_radius, CH_C_2PI, 0, false);
@@ -164,7 +145,7 @@ int main(int argc, char* argv[]) {
     pin->GetCollisionModel()->ClearModel();
     pin->GetCollisionModel()->Add2Dpath(mat, pin_profile, ChVector<>(0, 0, separation / 2));
     pin->GetCollisionModel()->Add2Dpath(mat, pin_profile, ChVector<>(0, 0, -separation / 2));
-    //pin->GetCollisionModel()->AddCylinder(pin_radius, pin_radius, pin_hlen);
+    // pin->GetCollisionModel()->AddCylinder(pin_radius, pin_radius, pin_hlen);
     pin->GetCollisionModel()->BuildModel();
 
     // Add pin visualization
@@ -172,25 +153,31 @@ int main(int argc, char* argv[]) {
     pin_cyl->GetCylinderGeometry().p1 = ChVector<>(0, 0, pin_hlen);
     pin_cyl->GetCylinderGeometry().p2 = ChVector<>(0, 0, -pin_hlen);
     pin_cyl->GetCylinderGeometry().rad = pin_radius;
-    pin->AddAsset(pin_cyl);
-    auto pin_col = chrono_types::make_shared<ChColorAsset>();
-    pin_col->SetColor(ChColor(0.2f, 0.5f, 0.8f));
-    pin->AddAsset(pin_col);
+    pin_cyl->SetColor(ChColor(0.2f, 0.5f, 0.8f));
+    pin->AddVisualShape(pin_cyl);
+
+    // Create the Irrlicht visualization
+    auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
+    system.SetVisualSystem(vis);
+    vis->SetWindowSize(800, 600);
+    vis->SetWindowTitle("Paths");
+    vis->Initialize();
+    vis->AddLogo();
+    vis->AddSkyBox();
+    vis->AddCamera(ChVector<>(0.5, 0.5, -1));
+    vis->AddTypicalLights();
+    vis->SetSymbolScale(1e-4);
+    vis->EnableContactDrawing(IrrContactsDrawMode::CONTACT_FORCES);
 
     // ---------------
     // Simulation loop
     // ---------------
 
-    application.AssetBindAll();
-    application.AssetUpdateAll();
-    application.SetTimestep(0.01);
-    application.SetTryRealtime(true);
-
-    while (application.GetDevice()->run()) {
-        application.BeginScene();
-        application.DrawAll();
-        application.DoStep();
-        application.EndScene();
+    while (vis->Run()) {
+        vis->BeginScene();
+        vis->DrawAll();
+        vis->EndScene();
+        system.DoStepDynamics(0.01);
     }
 
     return 0;

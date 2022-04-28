@@ -22,15 +22,13 @@
 #include "chrono/physics/ChLinkMate.h"
 #include "chrono/physics/ChLinkRackpinion.h"
 #include "chrono/physics/ChBodyEasy.h"
-#include "chrono/assets/ChVisualization.h"
 #include "chrono/solver/ChIterativeSolverLS.h"
 
 #include "chrono/fea/ChElementBeamEuler.h"
 #include "chrono/fea/ChBuilderBeam.h"
 #include "chrono/fea/ChMesh.h"
-#include "chrono/fea/ChVisualizationFEAmesh.h"
 
-#include "chrono_irrlicht/ChIrrApp.h"
+#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 
 #include "chrono_matlab/ChMatlabEngine.h"
 #include "chrono_matlab/ChSolverMatlab.h"
@@ -38,7 +36,6 @@
 using namespace chrono;
 using namespace chrono::fea;
 using namespace chrono::irrlicht;
-using namespace irr;
 
 int main(int argc, char* argv[]) {
     // Set path to Chrono data directory
@@ -49,15 +46,6 @@ int main(int argc, char* argv[]) {
 
     double scales = 100;
 
-    // Create the Irrlicht visualization (open the Irrlicht device,
-    // bind a simple user interface, etc. etc.)
-    ChIrrApp application(&my_system, L"Beams and constraints", core::dimension2d<u32>(800, 600));
-    application.AddLogo();
-    application.AddSkyBox();
-    application.AddTypicalLights();
-    application.AddCamera(core::vector3df(0, (f32)(scales * 0.01), (f32)(scales * 0.01)));
-    application.GetSceneManager()->getActiveCamera()->setNearValue(0.001f);
-    application.GetSceneManager()->getActiveCamera()->setFarValue((f32)(scales * 0.03));
 
     double thickZ = scales * 0.00015;
     double hbarW = scales * 0.00070;
@@ -226,20 +214,20 @@ int main(int argc, char* argv[]) {
     // postprocessor that can handle a coloured ChTriangleMeshShape).
     // Do not forget AddAsset() at the end!
 
-    auto mvisualizebeamA = chrono_types::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
-    mvisualizebeamA->SetFEMdataType(ChVisualizationFEAmesh::E_PLOT_NODE_SPEED_NORM);  // E_PLOT_ELEM_BEAM_MZ);
+    auto mvisualizebeamA = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
+    mvisualizebeamA->SetFEMdataType(ChVisualShapeFEA::DataType::NODE_SPEED_NORM);
     mvisualizebeamA->SetColorscaleMinMax(-30, 30);
     mvisualizebeamA->SetSmoothFaces(true);
     mvisualizebeamA->SetWireframe(false);
-    my_mesh->AddAsset(mvisualizebeamA);
+    my_mesh->AddVisualShapeFEA(mvisualizebeamA);
 
-    auto mvisualizebeamC = chrono_types::make_shared<ChVisualizationFEAmesh>(*(my_mesh.get()));
-    mvisualizebeamC->SetFEMglyphType(ChVisualizationFEAmesh::E_GLYPH_NODE_CSYS);
-    mvisualizebeamC->SetFEMdataType(ChVisualizationFEAmesh::E_PLOT_NONE);
+    auto mvisualizebeamC = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
+    mvisualizebeamC->SetFEMglyphType(ChVisualShapeFEA::GlyphType::NODE_CSYS);
+    mvisualizebeamC->SetFEMdataType(ChVisualShapeFEA::DataType::NONE);
     mvisualizebeamC->SetSymbolsThickness(0.001);
     mvisualizebeamC->SetSymbolsScale(0.01);
     mvisualizebeamC->SetZbufferHide(false);
-    my_mesh->AddAsset(mvisualizebeamC);
+    my_mesh->AddVisualShapeFEA(mvisualizebeamC);
 
     //
     // The balance and the rigid rach
@@ -268,16 +256,14 @@ int main(int argc, char* argv[]) {
                 ChVector<>(sin(phi) * Rbalance * 0.8, Wbalance, cos(phi) * Rbalance * 0.8);
             vshape->GetCylinderGeometry().p2 = vshape->GetCylinderGeometry().p1 + ChVector<>(0, 2 * Wbalance, 0);
             vshape->GetCylinderGeometry().rad = Rbalance * 0.1;
-            balance->AddAsset(vshape);
+            balance->AddVisualShape(vshape);
         }
         auto vshaft = chrono_types::make_shared<ChCylinderShape>();
         vshaft->GetCylinderGeometry().p1 = vP + ChVector<>(0, -OffPin * 10, 0);
         vshaft->GetCylinderGeometry().p2 = vP + ChVector<>(0, OffPin * 10, 0);
         vshaft->GetCylinderGeometry().rad = Rpinion;
-        balance->AddAsset(vshaft);
-        auto mcol = chrono_types::make_shared<ChColorAsset>();
-        mcol->SetColor(ChColor(0.5f, 0.9f, 0.9f));
-        balance->AddAsset(mcol);
+        vshaft->SetColor(ChColor(0.5f, 0.9f, 0.9f));
+        balance->AddVisualShape(vshaft);
 
         my_system.Add(balance);
 
@@ -304,18 +290,17 @@ int main(int argc, char* argv[]) {
 
         balance->SetWvel_par(ChVector<>(0, 0, 1.5));
     }
-
-    // ==IMPORTANT!== Use this function for adding a ChIrrNodeAsset to all items
-    // in the system. These ChIrrNodeAsset assets are 'proxies' to the Irrlicht meshes.
-    // If you need a finer control on which item really needs a visualization proxy in
-    // Irrlicht, just use application.AssetBind(myitem); on a per-item basis.
-
-    application.AssetBindAll();
-
-    // ==IMPORTANT!== Use this function for 'converting' into Irrlicht meshes the assets
-    // that you added to the bodies into 3D shapes, they can be visualized by Irrlicht!
-
-    application.AssetUpdateAll();
+    
+    // Create the Irrlicht visualization system
+    auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
+    my_system.SetVisualSystem(vis);
+    vis->SetWindowSize(800, 600);
+    vis->SetWindowTitle("Beams and constraints");
+    vis->Initialize();
+    vis->AddLogo();
+    vis->AddSkyBox();
+    vis->AddCamera(ChVector<>(0, 0.01*scales, 0.01*scales));
+    vis->AddTypicalLights();
 
     //
     // THE SOFT-REAL-TIME CYCLE
@@ -336,9 +321,6 @@ int main(int argc, char* argv[]) {
 
     my_system.Set_G_acc(ChVector<>(0, 0, 0));
 
-    // Do a static solution
-    application.SetPaused(true);
-
     GetLog() << "STATIC linear solve ----\n";
     node_Cl->SetForce(ChVector<>(50, 0, 0));
     // application.GetSystem()->DoStaticLinear();
@@ -346,25 +328,17 @@ int main(int argc, char* argv[]) {
 
     if (simple_rack) {
         node_Cl->SetForce(ChVector<>(50, 0, 0));
-        application.GetSystem()->DoStaticNonlinear(12);
+        my_system.DoStaticNonlinear(12);
         node_Cl->SetForce(ChVector<>(0, 0, 0));
     }
 
-    application.SetTimestep(0.01);
-    application.SetVideoframeSaveInterval(10);
-    application.SetSymbolscale(0.01);
-
-    while (application.GetDevice()->run()) {
-        application.BeginScene();
-
-        application.DrawAll();
-
-        tools::drawGrid(application.GetVideoDriver(), 0.2, 0.2, 10, 10, ChCoordsys<>(VNULL, CH_C_PI_2, VECT_Z),
-                        video::SColor(50, 90, 100, 100), true);
-
-        application.DoStep();
-
-        application.EndScene();
+    while (vis->Run()) {
+        vis->BeginScene();
+        vis->DrawAll();
+        tools::drawGrid(vis->GetVideoDriver(), 0.2, 0.2, 10, 10, ChCoordsys<>(VNULL, CH_C_PI_2, VECT_Z),
+                        irr::video::SColor(50, 90, 100, 100), true);
+        vis->EndScene();
+        my_system.DoStepDynamics(0.01);
     }
 
     return 0;

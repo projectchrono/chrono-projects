@@ -20,7 +20,7 @@
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/physics/ChSystemSMC.h"
 
-#include "chrono_irrlicht/ChIrrApp.h"
+#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 
 using namespace chrono;
 using namespace chrono::irrlicht;
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     // Set path to Chrono data directory
     // ---------------------------------
     SetChronoDataPath(CHRONO_DATA_DIR);
-    
+
     // ---------------------
     // Simulation parameters
     // ---------------------
@@ -103,17 +103,6 @@ int main(int argc, char* argv[]) {
 
     system->Set_G_acc(ChVector<>(0, 0, -gravity));
 
-    // Create the Irrlicht visualization
-    ChIrrApp application(system, L"mesh collision", irr::core::dimension2d<irr::u32>(800, 600));
-    application.AddLogo();
-    application.AddSkyBox();
-    application.AddTypicalLights();
-    application.AddCamera(irr::core::vector3df(0, 4, -0.2f), irr::core::vector3df(0, 0, 0));
-
-    // This means that contact forces will be shown in Irrlicht application
-    application.SetSymbolscale(1e-4);
-    application.SetContactsDrawMode(IrrContactsDrawMode::CONTACT_FORCES);
-
     // Create the falling object
     auto object = std::shared_ptr<ChBody>(system->NewBody());
     system->AddBody(object);
@@ -156,16 +145,14 @@ int main(int argc, char* argv[]) {
     trimesh->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_tire.obj"), true, false);
 
     object->GetCollisionModel()->ClearModel();
-    object->GetCollisionModel()->AddTriangleMesh(object_mat, trimesh, false, false, ChVector<>(0), ChMatrix33<>(1), 0.01);
+    object->GetCollisionModel()->AddTriangleMesh(object_mat, trimesh, false, false, ChVector<>(0), ChMatrix33<>(1),
+                                                 0.01);
     object->GetCollisionModel()->BuildModel();
 
     auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
     trimesh_shape->SetMesh(trimesh);
-    object->AddAsset(trimesh_shape);
-
-    std::shared_ptr<ChColorAsset> mcol(new ChColorAsset);
-    mcol->SetColor(ChColor(0.3f, 0.3f, 0.3f));
-    object->AddAsset(mcol);
+    trimesh_shape->SetColor(ChColor(0.3f, 0.3f, 0.3f));
+    object->AddVisualShape(trimesh_shape);
 
     // Create ground body
     auto ground = std::shared_ptr<ChBody>(system->NewBody());
@@ -208,23 +195,29 @@ int main(int argc, char* argv[]) {
 
     auto box = chrono_types::make_shared<ChBoxShape>();
     box->GetBoxGeometry().Size = ChVector<>(width, length, thickness);
-    box->GetBoxGeometry().Pos = ChVector<>(0, 0, -thickness);
-    ground->AddAsset(box);
+    ground->AddVisualShape(box, ChFrame<>(ChVector<>(0, 0, -thickness)));
 
-    // Complete asset construction
-    application.AssetBindAll();
-    application.AssetUpdateAll();
+    // Create the Irrlicht visualization
+    auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
+    system->SetVisualSystem(vis);
+    vis->SetWindowSize(800, 600);
+    vis->SetWindowTitle("Mesh collision test");
+    vis->Initialize();
+    vis->AddLogo();
+    vis->AddSkyBox();
+    vis->AddCamera(ChVector<>(0, 4, -0.2));
+    vis->AddTypicalLights();
+    vis->SetSymbolScale(1e-4);
+    vis->EnableContactDrawing(IrrContactsDrawMode::CONTACT_FORCES);
 
     // ---------------
     // Simulation loop
     // ---------------
-    while (application.GetDevice()->run()) {
-        application.BeginScene();
-        application.DrawAll();
-
+    while (vis->Run()) {
+        vis->BeginScene();
+        vis->DrawAll();
+        vis->EndScene();
         system->DoStepDynamics(time_step);
-
-        application.EndScene();
     }
 
     return 0;

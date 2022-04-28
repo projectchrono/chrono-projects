@@ -151,8 +151,7 @@ int main(int argc, char* argv[]) {
     real3 bsize = 0.5 * (bmax - bmin);
     real3 bpos = 0.5 * (bmax + bmin);
     bbox->GetBoxGeometry().Size = ChVector<>(bsize.x, bsize.y, bsize.z);
-    bbox->Pos = ChVector<>(bpos.x, bpos.y, bpos.z);
-    ground->AddAsset(bbox);
+    ground->AddVisualShape(bbox, ChFrame<>(ChVector<>(bpos.x, bpos.y, bpos.z)));
 
     std::cout << "Bmin:  " << bmin.x << " " << bmin.y << " " << bmin.z << std::endl;
     std::cout << "Bmax:  " << bmax.x << " " << bmax.y << " " << bmax.z << std::endl;
