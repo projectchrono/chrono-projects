@@ -281,7 +281,7 @@ int main(int argc, char* argv[]) {
         vis->DrawAll();
 
         // Render a grid
-        tools::drawGrid(vis->GetVideoDriver(), 0.5, 0.5, 40, 40, CSYSNORM, irr::video::SColor(0, 204, 204, 0), true);
+        tools::drawGrid(vis.get(), 0.5, 0.5, 40, 40, CSYSNORM, ChColor(0.9f, 0.9f, 0), true);
 
         // Render text with current time
         char msg[40];

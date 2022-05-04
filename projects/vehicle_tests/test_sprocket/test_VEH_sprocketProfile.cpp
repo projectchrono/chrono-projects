@@ -167,7 +167,7 @@ int main(int argc, char* argv[]) {
     vis->AddCamera(ChVector<>(0.5, 0.5, -1));
     vis->AddTypicalLights();
     vis->SetSymbolScale(1e-4);
-    vis->EnableContactDrawing(IrrContactsDrawMode::CONTACT_FORCES);
+    vis->EnableContactDrawing(ContactsDrawMode::CONTACT_FORCES);
 
     // ---------------
     // Simulation loop

@@ -335,8 +335,8 @@ int main(int argc, char* argv[]) {
     while (vis->Run()) {
         vis->BeginScene();
         vis->DrawAll();
-        tools::drawGrid(vis->GetVideoDriver(), 0.2, 0.2, 10, 10, ChCoordsys<>(VNULL, CH_C_PI_2, VECT_Z),
-                        irr::video::SColor(50, 90, 100, 100), true);
+        tools::drawGrid(vis.get(), 0.2, 0.2, 10, 10, ChCoordsys<>(VNULL, CH_C_PI_2, VECT_Z), ChColor(0.4f, 0.5f, 0.5f),
+                        true);
         vis->EndScene();
         my_system.DoStepDynamics(0.01);
     }

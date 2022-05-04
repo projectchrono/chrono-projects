@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
 
         vis->BeginScene();
         vis->DrawAll();
-        tools::drawAllCOGs(system, vis->GetVideoDriver(), 1);
+        tools::drawAllCOGs(vis.get(), 1);
         sprintf(msg, "Time:    %.2f", time);
         font->draw(msg, text_box1, text_col);
         sprintf(msg, "Omega:   %.2f", wheel->GetWvel_loc().z());
