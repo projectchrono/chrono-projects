@@ -215,9 +215,13 @@ std::vector<int> dummy_lane;  // 0 for inner, 1 for outer
 // 0 for no control(constant speed), 1 for distance control, 2 for time control
 std::vector<int> dummy_control;
 // time control variables
-std::vector<std::vector<float>> dummy_control_time;
-std::vector<std::vector<float>> dummy_control_speed;
-std::vector<int> dummy_time_mode;  // 0 if dist mode, 1 means using sim time, 2 means using wall time (real time)
+std::vector<std::vector<float>> dummy_control_x;
+std::vector<std::vector<float>> dummy_control_y;
+std::vector<int> dummy_time_mode;  // 0 if dist mode or this field is N/A, 1 means using sim time, 2 means using wall
+                                   // time (real time)
+std::vector<double>
+    dummy_dist;  // since dummy vehicle do not have a tracker, we need to track the distance of the dummy vehicle
+std::vector<ChVector<>> dummy_prev_pos;
 
 // Dynamic Leaders
 std::vector<ChVector<>> dynamic_pos;
@@ -226,9 +230,10 @@ std::vector<int> dynamic_lane;  // 0 for inner, 1 for outer
 // 0 for no control(constant speed), 1 for distance control, 2 for time control
 std::vector<int> dynamic_control;
 // time control variables
-std::vector<std::vector<float>> dynamic_control_time;
-std::vector<std::vector<float>> dynamic_control_speed;
-std::vector<int> dynamic_time_mode;  // 0 if dist mode, 1 means using sim time, 2 means using wall time (real time)
+std::vector<std::vector<float>> dynamic_control_x;
+std::vector<std::vector<float>> dynamic_control_y;
+std::vector<int> dynamic_time_mode;  // 0 if dist mode or this field is N/A, 1 means using sim time, 2 means using wall
+                                     // time (real time)
 
 std::vector<std::vector<std::vector<double>>> leaderParam;
 
@@ -269,11 +274,13 @@ void updateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
                  float dummy_speed,
                  float step_size,
                  float z_offset,
-                 ChBezierCurveTracker tracker);
+                 ChBezierCurveTracker tracker,
+                 double& dummy_dist,
+                 ChVector<>& dummy_prev_pos);
 
 // compute desired speed for dynamic vehicles
 // based on json defined, time-dependent, piecewise speed data
-float controlFindSpeed_time(std::vector<float> time_vec, std::vector<float> speed_vec, float time, float default_speed);
+float controlFindSpeed_x_y(std::vector<float> time_vec, std::vector<float> speed_vec, float time, float default_speed);
 
 void ReadParameterFiles() {
     {  // Simulation parameter file
@@ -431,7 +438,7 @@ void ReadParameterFiles() {
 
                     // read speed control
                     if (first_level_json.HasMember("time_speed_control")) {
-                        dynamic_control.push_back(1);
+                        dynamic_control.push_back(2);
                         std::vector<float> temp_time;
                         std::vector<float> temp_speed;
 
@@ -445,8 +452,8 @@ void ReadParameterFiles() {
                                 }
                             }
                         }
-                        dynamic_control_time.push_back(temp_time);
-                        dynamic_control_speed.push_back(temp_speed);
+                        dynamic_control_x.push_back(temp_time);
+                        dynamic_control_y.push_back(temp_speed);
 
                         // update the dummy_time_mode
                         if (first_level_json.HasMember("time_mode")) {
@@ -454,11 +461,31 @@ void ReadParameterFiles() {
                         } else {
                             dynamic_time_mode.push_back(1);
                         }
+                    } else if ((first_level_json.HasMember("dist_speed_control"))) {
+                        dynamic_control.push_back(1);
+                        std::vector<float> temp_dist;
+                        std::vector<float> temp_speed;
+
+                        auto marr = first_level_json["dist_speed_control"].GetArray();
+                        for (int i = 0; i < marr[0].Size(); i++) {
+                            for (int j = 0; j < marr[1].Size(); j++) {
+                                if (i == 0) {
+                                    temp_dist.push_back(marr[i][j].GetDouble());
+                                } else if (i == 1) {
+                                    temp_speed.push_back(marr[i][j].GetDouble());
+                                }
+                            }
+                        }
+                        dynamic_control_x.push_back(temp_dist);
+                        dynamic_control_y.push_back(temp_speed);
+
+                        // update the dummy_time_mode
+                        dynamic_time_mode.push_back(0);
                     } else {
-                        std::vector<float> empty_vec_time;
-                        std::vector<float> empty_vec_speed;
-                        dynamic_control_time.push_back(empty_vec_time);
-                        dynamic_control_speed.push_back(empty_vec_speed);
+                        std::vector<float> empty_vec_x;
+                        std::vector<float> empty_vec_y;
+                        dynamic_control_x.push_back(empty_vec_x);
+                        dynamic_control_y.push_back(empty_vec_y);
                         dynamic_control.push_back(0);
 
                         dynamic_time_mode.push_back(0);
@@ -496,11 +523,10 @@ void ReadParameterFiles() {
 
                     // read speed control
                     if (first_level_json.HasMember("time_speed_control")) {
-                        dummy_control.push_back(1);
+                        dummy_control.push_back(2);
                         std::vector<float> temp_time;
                         std::vector<float> temp_speed;
 
-                        dummy_control.push_back(1);
                         auto marr = first_level_json["time_speed_control"].GetArray();
                         for (int i = 0; i < marr[0].Size(); i++) {
                             for (int j = 0; j < marr[1].Size(); j++) {
@@ -511,8 +537,10 @@ void ReadParameterFiles() {
                                 }
                             }
                         }
-                        dummy_control_time.push_back(temp_time);
-                        dummy_control_speed.push_back(temp_speed);
+                        dummy_control_x.push_back(temp_time);
+                        dummy_control_y.push_back(temp_speed);
+                        dummy_dist.push_back(0.0);
+                        dummy_prev_pos.push_back(dummy_pos[dummy_pos.size() - 1]);
 
                         // update the dummy_time_mode
                         if (first_level_json.HasMember("time_mode")) {
@@ -520,12 +548,36 @@ void ReadParameterFiles() {
                         } else {
                             dummy_time_mode.push_back(1);
                         }
+                    } else if ((first_level_json.HasMember("dist_speed_control"))) {
+                        dummy_control.push_back(1);
+                        std::vector<float> temp_dist;
+                        std::vector<float> temp_speed;
+
+                        auto marr = first_level_json["dist_speed_control"].GetArray();
+                        for (int i = 0; i < marr[0].Size(); i++) {
+                            for (int j = 0; j < marr[1].Size(); j++) {
+                                if (i == 0) {
+                                    temp_dist.push_back(marr[i][j].GetDouble());
+                                } else if (i == 1) {
+                                    temp_speed.push_back(marr[i][j].GetDouble());
+                                }
+                            }
+                        }
+                        dummy_control_x.push_back(temp_dist);
+                        dummy_control_y.push_back(temp_speed);
+                        dummy_dist.push_back(0.0);
+                        dummy_prev_pos.push_back(dummy_pos[dummy_pos.size() - 1]);
+
+                        dummy_time_mode.push_back(0);
+
                     } else {
-                        std::vector<float> empty_vec_time;
-                        std::vector<float> empty_vec_speed;
-                        dummy_control_time.push_back(empty_vec_time);
-                        dummy_control_speed.push_back(empty_vec_speed);
+                        std::vector<float> empty_vec_x;
+                        std::vector<float> empty_vec_y;
+                        dummy_control_x.push_back(empty_vec_x);
+                        dummy_control_y.push_back(empty_vec_y);
                         dummy_control.push_back(0);
+                        dummy_dist.push_back(0.0);
+                        dummy_prev_pos.push_back(dummy_pos[dummy_pos.size() - 1]);
 
                         dummy_time_mode.push_back(0);
                     }
@@ -560,17 +612,10 @@ void AddCommandLineOptions(ChCLI& cli) {
 }
 
 int main(int argc, char* argv[]) {
+    // create cli tool
     ChCLI cli(argv[0]);
     AddCommandLineOptions(cli);
-    /*
-        // read from argument line
-        if (argc > 1) {
-            std::string parameter_json(argv[1]);
-            lead_parameters = demo_data_path + "/Environments/Iowa/parameters/" + parameter_json;
-        } else {
-            std::cout << "WARNING: No Lead Parameter JSON file, searching for default JSON file - lead_parameter.json";
-        }
-    */
+
     if (!cli.Parse(argc, argv, true))
         return 0;
 
@@ -1088,6 +1133,8 @@ int main(int argc, char* argv[]) {
         // driver_inputs.m_throttle = 0;
         // driver_inputs.m_steering *= -1;
         if (step_number % int(1 / step_size) == 0 && !benchmark) {
+            std::cout << "dynamic dist: " << lead_PFdrivers[0]->Get_Dist() << std::endl;
+
             if (lead_count != 0) {
                 auto ld_speed = lead_vehicles[0]->GetVehicleSpeed() * MS_TO_MPH;
                 auto ig_speed = vehicle.GetVehicleSpeed() * MS_TO_MPH;
@@ -1151,55 +1198,77 @@ int main(int argc, char* argv[]) {
                 // when in inner lane
                 if (dummy_control[i] == 0) {
                     // if dummy doesn't have any control, we just use cruise speed setting always
-                    updateDummy(dummies[i], inner_path, dummy_cruise_speed[i], step_size, temp_z_offset,
-                                tracker_vec[i]);
+                    updateDummy(dummies[i], inner_path, dummy_cruise_speed[i], step_size, temp_z_offset, tracker_vec[i],
+                                dummy_dist[i], dummy_prev_pos[i]);
+                } else if (dummy_control[i] == 1) {
+                    float target_speed;
+                    target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], dummy_dist[i],
+                                                        dummy_cruise_speed[i]);
+                    target_speed = target_speed * MPH_TO_MS;
+                    updateDummy(dummies[i], inner_path, target_speed, step_size, temp_z_offset, tracker_vec[i],
+                                dummy_dist[i], dummy_prev_pos[i]);
                 } else {
                     float target_speed;
                     if (dummy_time_mode[i] == 1) {
-                        target_speed = controlFindSpeed_time(dummy_control_time[i], dummy_control_speed[i], sim_time,
-                                                             dummy_cruise_speed[i]);
+                        target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], sim_time,
+                                                            dummy_cruise_speed[i]);
                     } else if (dummy_time_mode[i] == 2) {
-                        target_speed = controlFindSpeed_time(dummy_control_time[i], dummy_control_speed[i], wall_time,
-                                                             dummy_cruise_speed[i]);
+                        target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], wall_time,
+                                                            dummy_cruise_speed[i]);
                     }
 
                     target_speed = target_speed * MPH_TO_MS;
                     // if dummy has a control parameter setting, we adjust speed based on given data
-                    updateDummy(dummies[i], inner_path, target_speed, step_size, temp_z_offset, tracker_vec[i]);
+                    updateDummy(dummies[i], inner_path, target_speed, step_size, temp_z_offset, tracker_vec[i],
+                                dummy_dist[i], dummy_prev_pos[i]);
                 }
 
             } else {
                 // when in outer lane
                 if (dummy_control[i] == 0) {
                     // if dummy doesn't have any control, we just use cruise speed setting always
-                    updateDummy(dummies[i], outer_path, dummy_cruise_speed[i], step_size, temp_z_offset,
-                                tracker_vec[i]);
+                    updateDummy(dummies[i], outer_path, dummy_cruise_speed[i], step_size, temp_z_offset, tracker_vec[i],
+                                dummy_dist[i], dummy_prev_pos[i]);
+                } else if (dummy_control[i] == 1) {
+                    float target_speed;
+                    target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], dummy_dist[i],
+                                                        dummy_cruise_speed[i]);
+                    target_speed = target_speed * MPH_TO_MS;
+                    updateDummy(dummies[i], outer_path, target_speed, step_size, temp_z_offset, tracker_vec[i],
+                                dummy_dist[i], dummy_prev_pos[i]);
                 } else {
                     float target_speed;
                     if (dummy_time_mode[i] == 1) {
-                        target_speed = controlFindSpeed_time(dummy_control_time[i], dummy_control_speed[i], sim_time,
-                                                             dummy_cruise_speed[i]);
+                        target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], sim_time,
+                                                            dummy_cruise_speed[i]);
                     } else if (dummy_time_mode[i] == 2) {
-                        target_speed = controlFindSpeed_time(dummy_control_time[i], dummy_control_speed[i], wall_time,
-                                                             dummy_cruise_speed[i]);
+                        target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], wall_time,
+                                                            dummy_cruise_speed[i]);
                     }
                     target_speed = target_speed * MPH_TO_MS;
-                    updateDummy(dummies[i], outer_path, target_speed, step_size, temp_z_offset, tracker_vec[i]);
+                    updateDummy(dummies[i], outer_path, target_speed, step_size, temp_z_offset, tracker_vec[i],
+                                dummy_dist[i], dummy_prev_pos[i]);
                 }
             }
         }
 
         for (int i = 0; i < num_dynamic; i++) {
             // set speed control
-            if (dynamic_control[i] == 1) {
+            if (dynamic_control[i] == 2) {
                 float target_speed;
                 if (dynamic_time_mode[i] == 1) {
-                    target_speed = controlFindSpeed_time(dynamic_control_time[i], dynamic_control_speed[i], sim_time,
-                                                         dynamic_cruise_speed[i]);
+                    target_speed = controlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i], sim_time,
+                                                        dynamic_cruise_speed[i]);
                 } else if (dynamic_time_mode[i] == 2) {
-                    target_speed = controlFindSpeed_time(dynamic_control_time[i], dynamic_control_speed[i], wall_time,
-                                                         dynamic_cruise_speed[i]);
+                    target_speed = controlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i], wall_time,
+                                                        dynamic_cruise_speed[i]);
                 }
+                lead_PFdrivers[i]->SetCruiseSpeed(target_speed * MPH_TO_MS);
+            } else if (dynamic_control[i] == 1) {
+                float target_speed;
+                target_speed = controlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
+                                                    lead_PFdrivers[i]->Get_Dist(), dynamic_cruise_speed[i]);
+
                 lead_PFdrivers[i]->SetCruiseSpeed(target_speed * MPH_TO_MS);
             }
             ChDriver::Inputs lead_driver_inputs = lead_PFdrivers[i]->GetInputs();
@@ -1918,7 +1987,9 @@ void updateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
                  float dummy_speed,
                  float step_size,
                  float z_offset,
-                 ChBezierCurveTracker tracker) {
+                 ChBezierCurveTracker tracker,
+                 double& dummy_dist,
+                 ChVector<>& dummy_prev_pos) {
     // sentinel point fo the current dummy vehicle position
     ChVector<> sen = dummy_vehicle->GetPos();
     ChVector<> prev_pos = sen;
@@ -1944,12 +2015,13 @@ void updateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
     // finally update dummy vehicle position and rotated direction
     dummy_vehicle->SetRot(Q_from_Euler123(ChVector<>(0, 0, angle)));
     dummy_vehicle->SetPos(target);
+
+    // update distance and previous position
+    dummy_dist = dummy_dist + ((dummy_vehicle->GetPos() - dummy_prev_pos).Length()) * M_TO_MILE;
+    dummy_prev_pos = dummy_vehicle->GetPos();
 }
 
-float controlFindSpeed_time(std::vector<float> time_vec,
-                            std::vector<float> speed_vec,
-                            float time,
-                            float default_speed) {
+float controlFindSpeed_x_y(std::vector<float> time_vec, std::vector<float> speed_vec, float time, float default_speed) {
     int n = time_vec.size();
     int target_idx = n;
     // find out which range the 'time' argument falls into
