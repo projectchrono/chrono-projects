@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
         }
 
         // Collect output data from modules (for inter-module communication)
-        ChDriver::Inputs driver_inputs = driver.GetInputs();
+        DriverInputs driver_inputs = driver.GetInputs();
         if (settling) {
             driver_inputs.m_throttle = 0;
             driver_inputs.m_steering = 0;

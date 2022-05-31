@@ -296,7 +296,7 @@ int main(int argc, char* argv[]) {
 #endif
 
         // Driver inputs
-        ChDriver::Inputs driver_inputs = driver.GetInputs();
+        DriverInputs driver_inputs = driver.GetInputs();
 
         // Render scene
         if (step_number % render_steps == 0) {

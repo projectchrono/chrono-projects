@@ -282,7 +282,7 @@ int main(int argc, char* argv[]) {
         ballT->setPosition(irr::core::vector3df((irr::f32)pT.x(), (irr::f32)pT.y(), (irr::f32)pT.z()));
 #endif
         // Driver inputs
-        ChDriver::Inputs driver_inputs = driver.GetInputs();
+        DriverInputs driver_inputs = driver.GetInputs();
 
         // Render scene
         if (step_number % render_steps == 0) {

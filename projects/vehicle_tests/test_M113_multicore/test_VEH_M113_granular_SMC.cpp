@@ -301,8 +301,9 @@ int main(int argc, char* argv[]) {
     // Construct the M113 vehicle
     // --------------------------
 
-    auto vehicle = chrono_types::make_shared<M113_Vehicle>(true, TrackShoeType::SINGLE_PIN, DrivelineTypeTV::SIMPLE,
-                                                           BrakeType::SIMPLE, &system);
+    auto vehicle = chrono_types::make_shared<M113_Vehicle>(
+        true, TrackShoeType::SINGLE_PIN, DoublePinTrackShoeType::ONE_CONNECTOR, DrivelineTypeTV::SIMPLE,
+        BrakeType::SIMPLE, false, false, false, &system);
     auto powertrain = chrono_types::make_shared<M113_SimpleCVTPowertrain>("Powertrain");
 
     vehicle->Initialize(ChCoordsys<>(initLoc + ChVector<>(0.0, 0.0, vertical_offset), initRot));
@@ -378,7 +379,7 @@ int main(int argc, char* argv[]) {
 
     while (time < time_end) {
         // Collect output data from modules
-        ChDriver::Inputs driver_inputs = driver.GetInputs();
+        DriverInputs driver_inputs = driver.GetInputs();
         vehicle->GetTrackShoeStates(LEFT, shoe_states_left);
         vehicle->GetTrackShoeStates(RIGHT, shoe_states_right);
 
