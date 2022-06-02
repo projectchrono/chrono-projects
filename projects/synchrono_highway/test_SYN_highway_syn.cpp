@@ -432,20 +432,19 @@ void ReadParameterFiles() {
 
             if (d.HasMember(entry_name.c_str())) {
                 std::cout << "lead_count:" << lead_count << std::endl;
-                auto first_level_json = d[entry_name.c_str()].GetObject();
-                if (first_level_json["is_dummy"].GetInt() == 0) {
-                    dynamic_pos.push_back(vehicle::ReadVectorJSON(first_level_json["initial_pos"]));
-                    dynamic_cruise_speed.push_back(first_level_json["cruise_speed"].GetDouble());
-                    dynamic_lane.push_back(first_level_json["lane"].GetInt());
+                if (d[entry_name.c_str()]["is_dummy"].GetInt() == 0) {
+                    dynamic_pos.push_back(vehicle::ReadVectorJSON(d[entry_name.c_str()]["initial_pos"]));
+                    dynamic_cruise_speed.push_back(d[entry_name.c_str()]["cruise_speed"].GetDouble());
+                    dynamic_lane.push_back(d[entry_name.c_str()]["lane"].GetInt());
                     num_dynamic++;
 
                     // read speed control
-                    if (first_level_json.HasMember("time_speed_control")) {
+                    if (d[entry_name.c_str()].HasMember("time_speed_control")) {
                         dynamic_control.push_back(1);
                         std::vector<float> temp_time;
                         std::vector<float> temp_speed;
 
-                        auto marr = first_level_json["time_speed_control"].GetArray();
+                        auto marr = d[entry_name.c_str()]["time_speed_control"].GetArray();
                         for (int i = 0; i < marr[0].Size(); i++) {
                             for (int j = 0; j < marr[1].Size(); j++) {
                                 if (i == 0) {
@@ -459,8 +458,8 @@ void ReadParameterFiles() {
                         dynamic_control_speed.push_back(temp_speed);
 
                         // update the dummy_time_mode
-                        if (first_level_json.HasMember("time_mode")) {
-                            dynamic_time_mode.push_back(first_level_json["time_mode"].GetInt());
+                        if (d[entry_name.c_str()].HasMember("time_mode")) {
+                            dynamic_time_mode.push_back(d[entry_name.c_str()]["time_mode"].GetInt());
                         } else {
                             dynamic_time_mode.push_back(1);
                         }
@@ -474,9 +473,9 @@ void ReadParameterFiles() {
                         dynamic_time_mode.push_back(0);
                     }
 
-                    if (first_level_json.HasMember("LeaderDriverParam")) {
+                    if (d[entry_name.c_str()].HasMember("LeaderDriverParam")) {
                         std::vector<std::vector<double>> temp_leaderParam;
-                        auto marr = first_level_json["LeaderDriverParam"].GetArray();
+                        auto marr = d[entry_name.c_str()]["LeaderDriverParam"].GetArray();
                         int msize0 = marr.Size();
                         int msize1 = marr[0].Size();
                         assert(msize1 == 6);
@@ -499,19 +498,19 @@ void ReadParameterFiles() {
                     }
 
                 } else {
-                    dummy_pos.push_back(vehicle::ReadVectorJSON(first_level_json["initial_pos"]));
-                    dummy_cruise_speed.push_back(first_level_json["cruise_speed"].GetDouble());
-                    dummy_lane.push_back(first_level_json["lane"].GetInt());
+                    dummy_pos.push_back(vehicle::ReadVectorJSON(d[entry_name.c_str()]["initial_pos"]));
+                    dummy_cruise_speed.push_back(d[entry_name.c_str()]["cruise_speed"].GetDouble());
+                    dummy_lane.push_back(d[entry_name.c_str()]["lane"].GetInt());
                     num_dummy++;
 
                     // read speed control
-                    if (first_level_json.HasMember("time_speed_control")) {
+                    if (d[entry_name.c_str()].HasMember("time_speed_control")) {
                         dummy_control.push_back(1);
                         std::vector<float> temp_time;
                         std::vector<float> temp_speed;
 
                         dummy_control.push_back(1);
-                        auto marr = first_level_json["time_speed_control"].GetArray();
+                        auto marr = d[entry_name.c_str()]["time_speed_control"].GetArray();
                         for (int i = 0; i < marr[0].Size(); i++) {
                             for (int j = 0; j < marr[1].Size(); j++) {
                                 if (i == 0) {
@@ -525,8 +524,8 @@ void ReadParameterFiles() {
                         dummy_control_speed.push_back(temp_speed);
 
                         // update the dummy_time_mode
-                        if (first_level_json.HasMember("time_mode")) {
-                            dummy_time_mode.push_back(first_level_json["time_mode"].GetInt());
+                        if (d[entry_name.c_str()].HasMember("time_mode")) {
+                            dummy_time_mode.push_back(d[entry_name.c_str()]["time_mode"].GetInt());
                         } else {
                             dummy_time_mode.push_back(1);
                         }
