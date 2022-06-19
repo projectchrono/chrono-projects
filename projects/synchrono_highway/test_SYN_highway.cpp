@@ -171,7 +171,7 @@ int correct_ratio = 200;
 // Data saving
 bool save_driver = true;
 // time interval between data savings
-double tsave = 2e-2;
+double tsave = 1e-2;
 // path where the output is saved
 std::string output_file_path = "./output.csv";
 std::string dummy_button_path = "./buttoninfo.csv";
