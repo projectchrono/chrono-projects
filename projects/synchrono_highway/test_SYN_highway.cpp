@@ -238,8 +238,8 @@ std::vector<int> dynamic_time_mode;  // 0 if dist mode or this field is N/A, 1 m
 std::vector<std::vector<std::vector<double>>> leaderParam;
 
 // Comment section in csv output
-bool is_csv_comments = false;
 std::string csv_comments;
+std::string filename;
 
 // distance variable
 float IG_dist = 0;
@@ -253,6 +253,10 @@ float cur_follower_speed;
 // Experiment parameters
 int meet_time = 4;      // this meet time is defined in full minutes
 double eta_dist = 3.6;  // eta counter distance
+
+// Start Stamp
+float start_sim_time;
+float start_wall_time;
 // =============================================================================
 
 // button callback placeholder
@@ -406,21 +410,6 @@ void ReadParameterFiles() {
         // Scenario parameter file
         rapidjson::Document d;
         vehicle::ReadFileJSON(lead_parameters, d);
-
-        if (d.HasMember("csv_comments")) {
-            is_csv_comments = true;
-            csv_comments = d["csv_comments"].GetString();
-        }
-
-        if (d.HasMember("csv_filename")) {
-            output_file_path = "./output_" + std::string(d["csv_filename"].GetString()) + ".csv ";
-            dummy_button_path = "./buttoninfo_" + std::string(d["csv_filename"].GetString()) + ".csv ";
-            filestream = std::ofstream(output_file_path);
-            buttonstream = std::ofstream(dummy_button_path);
-        } else {
-            filestream = std::ofstream(output_file_path);
-            buttonstream = std::ofstream(dummy_button_path);
-        }
 
         while (true) {
             std::string entry_name = "lead_" + std::to_string(lead_count);
@@ -608,6 +597,9 @@ void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<std::string>("Simulation", "sim_params", "Path to simulation configuration file",
                                simulation_parameters);
     cli.AddOption<std::string>("Simulation", "lead_params", "Path to lead configuration file", lead_parameters);
+
+    cli.AddOption<std::string>("Simulation", "filename", "Output Filenames", filename);
+    cli.AddOption<std::string>("Simulation", "csv_comments", "CSV output comments", csv_comments);
 }
 
 int main(int argc, char* argv[]) {
@@ -685,6 +677,11 @@ int main(int argc, char* argv[]) {
     vehicle.SetWheelVisualizationType(wheel_vis_type);
     auto powertrain = ReadPowertrainJSON(powertrain_file);
     vehicle.InitializePowertrain(powertrain);
+
+    output_file_path = "./output_" + cli.GetAsType<std::string>("filename") + ".csv ";
+    dummy_button_path = "./buttoninfo_" + cli.GetAsType<std::string>("filename") + ".csv ";
+    filestream = std::ofstream(output_file_path);
+    buttonstream = std::ofstream(dummy_button_path);
 
     // Create and initialize the tires
     for (auto& axle : vehicle.GetAxles()) {
@@ -1002,9 +999,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (save_driver) {
-        if (is_csv_comments == true) {
-            filestream << "csv comments: " << csv_comments << " \n";
-        }
+        filestream << "csv comments: " << cli.GetAsType<std::string>("csv_comments") << " \n";
 
         if (lead_count != 0) {
             filestream << "tstamp,time,wallTime,isManual,Steering,Throttle,Braking,x[m],y[m],speed[mph],"
@@ -1214,6 +1209,12 @@ int main(int argc, char* argv[]) {
                     } else if (dummy_time_mode[i] == 2) {
                         target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], wall_time,
                                                             dummy_cruise_speed[i]);
+                    } else if (dummy_time_mode[i] == 3) {
+                        target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i],
+                                                            sim_time - start_sim_time, dummy_cruise_speed[i]);
+                    } else if (dummy_time_mode[i] == 4) {
+                        target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i],
+                                                            wall_time - start_wall_time, dummy_cruise_speed[i]);
                     }
 
                     target_speed = target_speed * MPH_TO_MS;
@@ -1261,6 +1262,12 @@ int main(int argc, char* argv[]) {
                 } else if (dynamic_time_mode[i] == 2) {
                     target_speed = controlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i], wall_time,
                                                         dynamic_cruise_speed[i]);
+                } else if (dynamic_time_mode[i] == 3) {
+                    target_speed = controlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
+                                                        sim_time - start_sim_time, dynamic_cruise_speed[i]);
+                } else if (dynamic_time_mode[i] == 4) {
+                    target_speed = controlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
+                                                        wall_time - start_wall_time, dynamic_cruise_speed[i]);
                 }
                 lead_PFdrivers[i]->SetCruiseSpeed(target_speed * MPH_TO_MS);
             } else if (dynamic_control[i] == 1) {
@@ -1276,6 +1283,9 @@ int main(int argc, char* argv[]) {
             lead_PFdrivers[i]->Advance(step);
             lead_vehicles[i]->Advance(step);
         }
+
+        std::cout << "sim_time: " << sim_time
+                  << "  lead_speed: " << lead_vehicles[0]->GetChassis()->GetSpeed() * MS_TO_MPH << std::endl;
 
         if (step_number % int(1 / (60 * step_size)) == 0) {
             /// irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0), false);
@@ -1407,6 +1417,10 @@ int main(int argc, char* argv[]) {
             static int end_h;
 
             if (vehicle.GetVehicleSpeedCOM() >= 0.5 && IG_started_driving == false) {
+                start_sim_time = sim_time;
+                auto t1_temp = high_resolution_clock::now();
+                start_wall_time += duration_cast<duration<double>>(t1_temp - t0).count();
+
                 time_t curr_time = time(NULL);
                 struct tm* tmp = localtime(&curr_time);
 
@@ -1620,7 +1634,7 @@ int main(int argc, char* argv[]) {
                 }
 
                 // output mile marker
-                buffer << abs((ego_chassis->GetPos().y() - initLoc.y()) / 1609.34) << ",";
+                buffer << IG_dist * M_TO_MILE << ",";
 
                 ChVector<> lane_0_target;
                 ChVector<> lane_1_target;
@@ -1661,7 +1675,7 @@ int main(int argc, char* argv[]) {
                     buffer << lead_chassis->GetSpeed() * MS_TO_MPH << ",";
                     buffer << lead_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length()
                            << ",";  // output mile marker
-                    buffer << abs((lead_chassis->GetPos().y() - initLoc.y()) / 1609.34);
+                    buffer << lead_PFdrivers[lead_PFdrivers.size() - 1]->Get_Dist();
                 }
 
                 buffer << "\n";
