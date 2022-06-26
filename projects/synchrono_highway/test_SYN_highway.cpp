@@ -1284,8 +1284,8 @@ int main(int argc, char* argv[]) {
             lead_vehicles[i]->Advance(step);
         }
 
-        std::cout << "sim_time: " << sim_time
-                  << "  lead_speed: " << lead_vehicles[0]->GetChassis()->GetSpeed() * MS_TO_MPH << std::endl;
+        // std::cout << "sim_time: " << sim_time
+        //           << "  lead_speed: " << lead_vehicles[0]->GetChassis()->GetSpeed() * MS_TO_MPH << std::endl;
 
         if (step_number % int(1 / (60 * step_size)) == 0) {
             /// irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0), false);
