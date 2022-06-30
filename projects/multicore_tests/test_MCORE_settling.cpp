@@ -293,7 +293,8 @@ int main(int argc, char** argv) {
 
     if (render) {
         opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-        gl_window.Initialize(1280, 720, "Settling test", system);
+        gl_window.AttachSystem(system);
+        gl_window.Initialize(1280, 720, "Settling test");
         gl_window.SetCamera(ChVector<>(0, -1, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1), 0.05f);
         gl_window.SetRenderMode(opengl::WIREFRAME);
     }

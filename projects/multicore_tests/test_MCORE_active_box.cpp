@@ -160,7 +160,8 @@ int main(int argc, char* argv[]) {
 
     // Initialize OpenGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.Initialize(1280, 720, "Test AABB", system);
+    gl_window.AttachSystem(system);
+    gl_window.Initialize(1280, 720, "Test AABB");
     gl_window.SetCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
     gl_window.SetRenderMode(opengl::WIREFRAME);
 

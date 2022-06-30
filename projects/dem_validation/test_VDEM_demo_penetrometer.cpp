@@ -526,7 +526,8 @@ int main(int argc, char* argv[]) {
 
 #ifdef CHRONO_OPENGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.Initialize(1280, 720, "Penetrator Test", msystem);
+    gl_window.AttachSystem(msystem);
+    gl_window.Initialize(1280, 720, "Penetrator Test");
     gl_window.SetCamera(ChVector<>(0, -10 * hDimY, hDimZ), ChVector<>(0, 0, hDimZ), ChVector<>(0, 0, 1), 0.02f);
     gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif

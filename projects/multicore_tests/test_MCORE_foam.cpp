@@ -186,7 +186,8 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_OPENGL
     // Initialize OpenGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.Initialize(1280, 720, "Foam demo", msystem);
+    gl_window.AttachSystem(msystem);
+    gl_window.Initialize(1280, 720, "Foam demo");
     gl_window.SetCamera(ChVector<>(4, -5, 4), ChVector<>(9, 0, 3), ChVector<>(0, 0, 1));
     gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif

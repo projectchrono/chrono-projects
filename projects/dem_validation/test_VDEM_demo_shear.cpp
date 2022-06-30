@@ -414,7 +414,8 @@ int main(int argc, char* argv[]) {
 
 #ifdef CHRONO_OPENGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.Initialize(800, 600, title.c_str(), my_system);
+    gl_window.AttachSystem(my_system);
+    gl_window.Initialize(800, 600, title.c_str());
     gl_window.SetCamera(ChVector<>(3 * width, 0, 0), ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), (float)radius, (float)radius);
     gl_window.SetRenderMode(opengl::SOLID);
 #endif

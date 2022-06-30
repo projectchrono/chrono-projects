@@ -382,7 +382,8 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_OPENGL
     // Initialize OpenGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.Initialize(1280, 720, title, msystem);
+    gl_window.AttachSystem(msystem);
+    gl_window.Initialize(1280, 720, title);
     gl_window.SetCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
 
     // Let the OpenGL manager run the simulation until interrupted.
