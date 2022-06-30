@@ -377,7 +377,8 @@ void ReadParameterFiles() {
         if (d.HasMember("FollowerDriverParam")) {
             auto marr = d["FollowerDriverParam"].GetArray();
             int msize = marr.Size();
-            assert(msize == 6);
+            std::cout << "msize:" << msize << std::endl;
+            assert(msize == 7);
             followerParam.resize(msize);
             for (int j = 0; j < marr.Size(); j++) {
                 followerParam[j] = marr[j].GetDouble();

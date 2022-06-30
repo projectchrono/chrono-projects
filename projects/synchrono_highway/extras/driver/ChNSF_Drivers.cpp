@@ -137,7 +137,7 @@ void ChNSFFollowerDriver::Synchronize(double time, double step) {
         double delta_v = v - leader->GetChassis()->GetSpeed();
         double s_star =
             behavior_data[2] +
-            ChMax(0.0, v * behavior_data[1] + (v * delta_v) / 2 * sqrt(behavior_data[3] * behavior_data[4]));
+            ChMax(0.0, v * behavior_data[1] + (v * delta_v) / (2 * sqrt(behavior_data[3] * behavior_data[4])));
         double dv_dt = behavior_data[3] * (1 - pow(v / behavior_data[0], behavior_data[5]) - pow(s_star / s, 2));
 
         // integrate intended acceleration into theoretical soeed
