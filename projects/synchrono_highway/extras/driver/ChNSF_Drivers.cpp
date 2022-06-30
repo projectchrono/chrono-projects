@@ -85,7 +85,7 @@ void ChNSFLeaderDriver::SetCruiseSpeed(double speed) {
     cruise_speed = speed;
 }
 
-ChNSFFollowererDriver::ChNSFFollowererDriver(
+ChNSFFollowerDriver::ChNSFFollowerDriver(
     ChVehicle& vehicle,                       ///< associated vehicle
     const std::string& steering_filename,     ///< JSON file with steering controller specification
     const std::string& speed_filename,        ///< JSON file with speed controller specification
@@ -104,7 +104,7 @@ ChNSFFollowererDriver::ChNSFFollowererDriver(
     m_no_lead = false;
 }
 
-ChNSFFollowererDriver::ChNSFFollowererDriver(
+ChNSFFollowerDriver::ChNSFFollowerDriver(
     ChVehicle& vehicle,                    ///< associated vehicle
     const std::string& steering_filename,  ///< JSON file with steering controller specification
     const std::string& speed_filename,     ///< JSON file with speed controller specification
@@ -122,7 +122,7 @@ ChNSFFollowererDriver::ChNSFFollowererDriver(
 }
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-void ChNSFFollowererDriver::Synchronize(double time, double step) {
+void ChNSFFollowerDriver::Synchronize(double time, double step) {
     // In this portion we adjust the target speed according to custom piece-wise sinusoidal defined in
     // behavior_data. We use the driver model explained here, using a desired speed instead:
     // https://traffic-simulation.de/info/info_IDM.html the parameters are: start [miles], end [miles], v0 desired v
@@ -132,7 +132,7 @@ void ChNSFFollowererDriver::Synchronize(double time, double step) {
         dist += (m_vehicle.GetChassis()->GetPos() - previousPos).Length();
         previousPos = m_vehicle.GetChassis()->GetPos();
 
-        double s = (m_vehicle.GetChassis()->GetPos() - leader->GetChassis()->GetPos()).Length() - AUDI_LENGTH;
+        double s = (m_vehicle.GetChassis()->GetPos() - leader->GetChassis()->GetPos()).Length() - behavior_data[6];
         double v = m_vehicle.GetChassis()->GetSpeed();
         double delta_v = v - leader->GetChassis()->GetSpeed();
         double s_star =
@@ -160,11 +160,11 @@ void ChNSFFollowererDriver::Synchronize(double time, double step) {
     ChPathFollowerDriver::Synchronize(time);
 }
 
-double ChNSFFollowererDriver::Get_Dist() {
+double ChNSFFollowerDriver::Get_Dist() {
     return dist;
 }
 
-void ChNSFFollowererDriver::Set_TheroSpeed(float target_thero_speed) {
+void ChNSFFollowerDriver::Set_TheroSpeed(float target_thero_speed) {
     thero_speed = target_thero_speed;
 }
 

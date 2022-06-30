@@ -247,7 +247,7 @@ ChVector<> IG_prev_pos;
 
 // driver global variables
 // TODO: maybe there is a better way to handle this
-std::shared_ptr<ChNSFFollowererDriver> PF_driver_ptr;
+std::shared_ptr<ChNSFFollowerDriver> PF_driver_ptr;
 float cur_follower_speed;
 
 // Experiment parameters
@@ -380,14 +380,14 @@ void ReadParameterFiles() {
         if (d.HasMember("FollowerDriverParam")) {
             auto marr = d["FollowerDriverParam"].GetArray();
             int msize = marr.Size();
-            assert(msize == 6);
+            assert(msize == 7);
             followerParam.resize(msize);
             for (int j = 0; j < marr.Size(); j++) {
                 followerParam[j] = marr[j].GetDouble();
             }
         } else {
             followerParam.resize(6);
-            followerParam = {30, 1.5, 2.0, 5.0, 3.0, 4.0};
+            followerParam = {30, 1.5, 2.0, 5.0, 3.0, 4.0, AUDI_LENGTH};
         }
 
         if (d.HasMember("CruiseSpeed")) {
@@ -755,6 +755,7 @@ int main(int argc, char* argv[]) {
     rwm_mirror_shape->Rot = mirror_wingright_rot;  // Q_from_AngY(-.08) * Q_from_AngZ(-.25);
     rwm_mirror_shape->material_list.push_back(mirror_mat);
     vehicle.GetChassisBody()->AddAsset(rwm_mirror_shape);
+    // vehicle.GetVehicle().EnableRealtime(false);
 
     // Add leader vehicles
     std::vector<std::shared_ptr<WheeledVehicle>> lead_vehicles;
@@ -778,6 +779,9 @@ int main(int argc, char* argv[]) {
                 lead_vehicle->InitializeTire(tire, wheel, tire_vis_type);
             }
         }
+
+        // lead_vehicle->GetVehicle().EnableRealtime(false);
+
         lead_vehicles.push_back(lead_vehicle);
     }
 
@@ -954,13 +958,13 @@ int main(int argc, char* argv[]) {
 
     std::cout << "lead_count: " << lead_count << std::endl;
     // lead_count
-    std::shared_ptr<ChNSFFollowererDriver> PFdriver;
+    std::shared_ptr<ChNSFFollowerDriver> PFdriver;
     if (lead_count == 0) {
-        PFdriver = chrono_types::make_shared<ChNSFFollowererDriver>(vehicle, steering_controller_file_IG_nl,
-                                                                    speed_controller_file_IG_nl, outer_path, "road",
-                                                                    cruise_speed * MPH_TO_MS, followerParam, true);
+        PFdriver = chrono_types::make_shared<ChNSFFollowerDriver>(vehicle, steering_controller_file_IG_nl,
+                                                                  speed_controller_file_IG_nl, outer_path, "road",
+                                                                  cruise_speed * MPH_TO_MS, followerParam, true);
     } else {
-        PFdriver = chrono_types::make_shared<ChNSFFollowererDriver>(
+        PFdriver = chrono_types::make_shared<ChNSFFollowerDriver>(
             vehicle, steering_controller_file_IG, speed_controller_file_IG, outer_path, "road",
             cruise_speed * MPH_TO_MS, lead_vehicles[0], followerParam, true);
     }
@@ -1093,13 +1097,13 @@ int main(int argc, char* argv[]) {
     float orbit_radius = 1000.f;
     float orbit_rate = .5;
 
-    auto t0 = high_resolution_clock::now();
-
     double extra_time = 0.0;
     double last_sim_sync = 0;
 
     ChVector<> prev_IG_pos;
     bool IG_started_driving = false;
+
+    auto t0 = high_resolution_clock::now();
 
     while (app.GetDevice()->run()) {
         sim_time = vehicle.GetSystem()->GetChTime();

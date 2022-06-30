@@ -76,29 +76,29 @@ class CH_VEHICLE_API ChNSFLeaderDriver : public ChPathFollowerDriver {
 };
 
 // Driver for the follower vehicle, it adjust its speed
-class CH_VEHICLE_API ChNSFFollowererDriver : public ChPathFollowerDriver {
+class CH_VEHICLE_API ChNSFFollowerDriver : public ChPathFollowerDriver {
   public:
     /// Construct an interactive driver.
-    ChNSFFollowererDriver(ChVehicle& vehicle,                    ///< associated vehicle
-                          const std::string& steering_filename,  ///< JSON file with steering controller specification
-                          const std::string& speed_filename,     ///< JSON file with speed controller specification
-                          std::shared_ptr<ChBezierCurve> path,   ///< Bezier curve with target path
-                          const std::string& path_name,          ///< name of the path curve
-                          double target_speed,                   ///< constant target speed
-                          std::shared_ptr<ChVehicle> lead_vehicle,  ///< followed_vehicle
-                          std::vector<double> params,               ///< JSON file with piecewise params
-                          bool isClosedPath);                       ///< Treat the path as a closed loop
+    ChNSFFollowerDriver(ChVehicle& vehicle,                       ///< associated vehicle
+                        const std::string& steering_filename,     ///< JSON file with steering controller specification
+                        const std::string& speed_filename,        ///< JSON file with speed controller specification
+                        std::shared_ptr<ChBezierCurve> path,      ///< Bezier curve with target path
+                        const std::string& path_name,             ///< name of the path curve
+                        double target_speed,                      ///< constant target speed
+                        std::shared_ptr<ChVehicle> lead_vehicle,  ///< followed_vehicle
+                        std::vector<double> params,               ///< JSON file with piecewise params
+                        bool isClosedPath);                       ///< Treat the path as a closed loop
 
-    ChNSFFollowererDriver(ChVehicle& vehicle,                    ///< associated vehicle
-                          const std::string& steering_filename,  ///< JSON file with steering controller specification
-                          const std::string& speed_filename,     ///< JSON file with speed controller specification
-                          std::shared_ptr<ChBezierCurve> path,   ///< Bezier curve with target path
-                          const std::string& path_name,          ///< name of the path curve
-                          double target_speed,                   ///< constant target speed
-                          std::vector<double> params,            ///< JSON file with piecewise params
-                          bool isClosedPath);                    ///< Treat the path as a closed loop
+    ChNSFFollowerDriver(ChVehicle& vehicle,                    ///< associated vehicle
+                        const std::string& steering_filename,  ///< JSON file with steering controller specification
+                        const std::string& speed_filename,     ///< JSON file with speed controller specification
+                        std::shared_ptr<ChBezierCurve> path,   ///< Bezier curve with target path
+                        const std::string& path_name,          ///< name of the path curve
+                        double target_speed,                   ///< constant target speed
+                        std::vector<double> params,            ///< JSON file with piecewise params
+                        bool isClosedPath);                    ///< Treat the path as a closed loop
 
-    virtual ~ChNSFFollowererDriver() {}
+    virtual ~ChNSFFollowerDriver() {}
 
     void Synchronize(double time, double step);
 

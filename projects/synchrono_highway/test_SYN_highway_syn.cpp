@@ -247,7 +247,7 @@ ChVector<> IG_prev_pos;
 
 // driver global variables
 // TODO: maybe there is a better way to handle this
-std::shared_ptr<ChNSFFollowererDriver> PF_driver_ptr;
+std::shared_ptr<ChNSFFollowerDriver> PF_driver_ptr;
 float cur_follower_speed;
 
 // Experiment parameters
@@ -956,7 +956,7 @@ int main(int argc, char* argv[]) {
         IGdriver->SetJoystickAxes(ChIrrGuiDriver::JoystickAxes::AXIS_Z, ChIrrGuiDriver::JoystickAxes::AXIS_R,
                                   ChIrrGuiDriver::JoystickAxes::AXIS_X, ChIrrGuiDriver::JoystickAxes::NONE);
         IGdriver->Initialize();
-        // auto PFdriver = chrono_types::make_shared<ChNSFFollowererDriver>(
+        // auto PFdriver = chrono_types::make_shared<ChNSFFollowerDriver>(
         //     vehicle, steering_controller_file_IG, speed_controller_file_IG, outer_path, "road",
         //     cruise_speed * MPH_TO_MS, vehicle, followerParam, true);
         // PFdriver->Initialize();
