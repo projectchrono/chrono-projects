@@ -81,7 +81,7 @@ void runBallDrop(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params) {
     ball_body->AddVisualShape(sph);
     sys_ball.AddBody(ball_body);
 
-    ChGpuVisualization gpu_vis(&gpu_sys, &sys_ball);
+    ChGpuVisualization gpu_vis(&gpu_sys);
     if (render) {
         gpu_vis.SetTitle("Chrono::Gpu ball cosim demo");
         gpu_vis.SetCameraPosition(ChVector<>(0, -200, 100), ChVector<>(0, 0, 0));

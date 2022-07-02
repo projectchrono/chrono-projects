@@ -1,34 +1,35 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono::Gpu module.
+# CMake configuration file for projects requiring the Chrono Vehicle and 
+# Irrlicht modules
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
 
-message("\n---- GPU configuration test")
+message("\n---- VEHICLE configuration test")
 
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
 
 set(DEMOS
-    demo_GPU_ballcosim
+    demo_VEH_CityBus
 )
 
 #--------------------------------------------------------------
-# Find the Chrono package with required and optional components
+# Find the Chrono package with required components
 #--------------------------------------------------------------
 
 # Invoke find_package in CONFIG mode
 
 find_package(Chrono QUIET
-             COMPONENTS Gpu
+             COMPONENTS Vehicle Irrlicht
              CONFIG
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
 
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for GPU projects")
+  message("Could not find requirements for Vehicle projects")
   return()
 endif()
 
@@ -53,17 +54,26 @@ include_directories(
 )
 
 #--------------------------------------------------------------
-# Append to the parent's list of DLLs
+# Append to the parent's list of DLLs (and make it visible up)
 #--------------------------------------------------------------
 
 list(APPEND ALL_DLLS "${CHRONO_DLLS}")
 set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 
 #--------------------------------------------------------------
+# Compilation flags
+#--------------------------------------------------------------
+
+# Disable some warnings triggered by Irrlicht (Windows only)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    add_compile_options(/wd4251)
+endif()
+
+#--------------------------------------------------------------
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Configuration tests for Chrono::GPU...")
+message(STATUS "Configuration tests for Chrono::Vehicle...")
 
 foreach(PROGRAM ${DEMOS})
 
@@ -75,6 +85,7 @@ foreach(PROGRAM ${DEMOS})
   set_property(TARGET ${PROGRAM} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${PROGRAM}>")
 
   target_compile_definitions(${PROGRAM} PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
+  target_compile_definitions(${PROGRAM} PUBLIC "CHRONO_VEHICLE_DATA_DIR=\"${CHRONO_VEHICLE_DATA_DIR}\"")
   target_compile_options(${PROGRAM} PUBLIC ${CHRONO_CXX_FLAGS})
   target_link_options(${PROGRAM} PUBLIC ${CHRONO_LINKER_FLAGS})
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
