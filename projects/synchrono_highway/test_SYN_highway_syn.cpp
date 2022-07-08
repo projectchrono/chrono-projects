@@ -1530,8 +1530,7 @@ int main(int argc, char* argv[]) {
                     auto tt1 = high_resolution_clock::now();
                     extra_time += duration_cast<duration<double>>(tt1 - tt0).count();
                 }
-                */
-
+        */
         if (node_id == 0) {
             auto t1 = high_resolution_clock::now();
             duration<double> time_span = duration_cast<duration<double>>(t1 - t0);

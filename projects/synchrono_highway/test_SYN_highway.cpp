@@ -111,6 +111,8 @@ ChContactMethod contact_method = ChContactMethod::SMC;
 // Global Variable to track miles the car traveled
 utils::ChRunningAverage IG_speed_avg(100);
 
+bool render = true;
+
 // -----------------------------------------------------------------------------
 // Steering wheel parameters
 // -----------------------------------------------------------------------------
@@ -1105,6 +1107,36 @@ int main(int argc, char* argv[]) {
 
     auto t0 = high_resolution_clock::now();
 
+    auto texture_DASH =
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/dash_4_4.jpg").c_str());
+    auto texture_GEAR1 =
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/GEAR1.png").c_str());
+    auto texture_GEAR2 =
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/GEAR2.png").c_str());
+    auto texture_GEAR3 =
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/GEAR3.png").c_str());
+    auto texture_GEAR4 =
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/GEAR4.png").c_str());
+    auto texture_GEAR5 =
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/GEAR5.png").c_str());
+    auto texture_GEAR6 =
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/GEAR6.png").c_str());
+    auto texture_AUTO =
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/auto.png").c_str());
+    auto texture_COLON =
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/colon.png").c_str());
+    irr::video::ITexture* texture_NUMERICAL[] = {
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/0.png").c_str()),
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/1.png").c_str()),
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/2.png").c_str()),
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/3.png").c_str()),
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/4.png").c_str()),
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/5.png").c_str()),
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/6.png").c_str()),
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/7.png").c_str()),
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/8.png").c_str()),
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/9.png").c_str())};
+
     while (app.GetDevice()->run()) {
         sim_time = vehicle.GetSystem()->GetChTime();
 
@@ -1131,8 +1163,6 @@ int main(int argc, char* argv[]) {
         // driver_inputs.m_throttle = 0;
         // driver_inputs.m_steering *= -1;
         if (step_number % int(1 / step_size) == 0 && !benchmark) {
-            std::cout << "dynamic dist: " << lead_PFdrivers[0]->Get_Dist() << std::endl;
-
             if (lead_count != 0) {
                 auto ld_speed = lead_vehicles[0]->GetVehicleSpeed() * MS_TO_MPH;
                 auto ig_speed = vehicle.GetVehicleSpeed() * MS_TO_MPH;
@@ -1291,55 +1321,35 @@ int main(int argc, char* argv[]) {
         // std::cout << "sim_time: " << sim_time
         //           << "  lead_speed: " << lead_vehicles[0]->GetChassis()->GetSpeed() * MS_TO_MPH << std::endl;
 
-        if (step_number % int(1 / (60 * step_size)) == 0) {
+        if (step_number % 20 == 0) {
             /// irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0), false);
-            app.GetDevice()->getVideoDriver()->draw2DImage(
-                app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/dash_4_4.jpg").c_str()),
-                irr::core::position2d<irr::s32>(0, 0));
+            app.GetDevice()->getVideoDriver()->draw2DImage(texture_DASH, irr::core::position2d<irr::s32>(0, 0));
 
             int curr_gear = vehicle.GetPowertrain()->GetCurrentTransmissionGear();
 
             switch (curr_gear) {
                 case 1:
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture(
-                            (demo_data_path + "/miscellaneous/GEAR1.png").c_str()),
-                        gr_center);
+                    app.GetDevice()->getVideoDriver()->draw2DImage(texture_GEAR1, gr_center);
                     break;
 
                 case 2:
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture(
-                            (demo_data_path + "/miscellaneous/GEAR2.png").c_str()),
-                        gr_center);
+                    app.GetDevice()->getVideoDriver()->draw2DImage(texture_GEAR2, gr_center);
                     break;
 
                 case 3:
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture(
-                            (demo_data_path + "/miscellaneous/GEAR3.png").c_str()),
-                        gr_center);
+                    app.GetDevice()->getVideoDriver()->draw2DImage(texture_GEAR3, gr_center);
                     break;
 
                 case 4:
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture(
-                            (demo_data_path + "/miscellaneous/GEAR4.png").c_str()),
-                        gr_center);
+                    app.GetDevice()->getVideoDriver()->draw2DImage(texture_GEAR4, gr_center);
                     break;
 
                 case 5:
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture(
-                            (demo_data_path + "/miscellaneous/GEAR5.png").c_str()),
-                        gr_center);
+                    app.GetDevice()->getVideoDriver()->draw2DImage(texture_GEAR5, gr_center);
                     break;
 
                 case 6:
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture(
-                            (demo_data_path + "/miscellaneous/GEAR6.png").c_str()),
-                        gr_center);
+                    app.GetDevice()->getVideoDriver()->draw2DImage(texture_GEAR6, gr_center);
                     break;
 
                 default:
@@ -1359,9 +1369,7 @@ int main(int argc, char* argv[]) {
                 rpm_center, irr::video::SColor(255, 255, 0, 0));
 
             if (driver_mode == AUTONOMOUS) {
-                app.GetDevice()->getVideoDriver()->draw2DImage(
-                    app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/auto.png").c_str()),
-                    auto_center);
+                app.GetDevice()->getVideoDriver()->draw2DImage(texture_AUTO, auto_center);
             }
 
             // display current time
@@ -1386,32 +1394,19 @@ int main(int argc, char* argv[]) {
                 irr::core::position2d<irr::s32> colon_offset2(25, 0);
 
                 if (i < 2) {
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture(
-                            (demo_data_path + "/miscellaneous/numerical/" + std::to_string(display_cur_int[i]) + ".png")
-                                .c_str()),
-                        cur_left + offset * i);
+                    app.GetDevice()->getVideoDriver()->draw2DImage(texture_NUMERICAL[display_cur_int[i]],
+                                                                   cur_left + offset * i);
                 } else if (i == 2) {
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture(
-                            (demo_data_path + "/miscellaneous/numerical/colon.png").c_str()),
-                        cur_left + offset * i);
+                    app.GetDevice()->getVideoDriver()->draw2DImage(texture_COLON, cur_left + offset * i);
                 } else if (i < 5) {
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/" +
-                                                                       std::to_string(display_cur_int[i - 1]) + ".png")
-                                                                          .c_str()),
-                        cur_left + offset * (i - 1) + colon_offset1);
+                    app.GetDevice()->getVideoDriver()->draw2DImage(texture_NUMERICAL[display_cur_int[i - 1]],
+                                                                   cur_left + offset * (i - 1) + colon_offset1);
                 } else if (i == 5) {
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture(
-                            (demo_data_path + "/miscellaneous/numerical/colon.png").c_str()),
-                        cur_left + offset * (i - 1) + colon_offset1);
+                    app.GetDevice()->getVideoDriver()->draw2DImage(texture_COLON,
+                                                                   cur_left + offset * (i - 1) + colon_offset1);
                 } else if (i <= 7) {
                     app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/" +
-                                                                       std::to_string(display_cur_int[i - 2]) + ".png")
-                                                                          .c_str()),
+                        texture_NUMERICAL[display_cur_int[i - 2]],
                         cur_left + offset * (i - 2) + colon_offset1 + colon_offset2);
                 }
             }
@@ -1466,35 +1461,19 @@ int main(int argc, char* argv[]) {
                     irr::core::position2d<irr::s32> colon_offset2(25, 0);
 
                     if (i < 2) {
-                        app.GetDevice()->getVideoDriver()->draw2DImage(
-                            app.GetDevice()->getVideoDriver()->getTexture((demo_data_path +
-                                                                           "/miscellaneous/numerical/" +
-                                                                           std::to_string(display_end_int[i]) + ".png")
-                                                                              .c_str()),
-                            end_left + offset * i);
+                        app.GetDevice()->getVideoDriver()->draw2DImage(texture_NUMERICAL[display_end_int[i]],
+                                                                       end_left + offset * i);
                     } else if (i == 2) {
-                        app.GetDevice()->getVideoDriver()->draw2DImage(
-                            app.GetDevice()->getVideoDriver()->getTexture(
-                                (demo_data_path + "/miscellaneous/numerical/colon.png").c_str()),
-                            end_left + offset * i);
+                        app.GetDevice()->getVideoDriver()->draw2DImage(texture_COLON, end_left + offset * i);
                     } else if (i < 5) {
-                        app.GetDevice()->getVideoDriver()->draw2DImage(
-                            app.GetDevice()->getVideoDriver()->getTexture(
-                                (demo_data_path + "/miscellaneous/numerical/" + std::to_string(display_end_int[i - 1]) +
-                                 ".png")
-                                    .c_str()),
-                            end_left + offset * (i - 1) + colon_offset1);
+                        app.GetDevice()->getVideoDriver()->draw2DImage(texture_NUMERICAL[display_end_int[i - 1]],
+                                                                       end_left + offset * (i - 1) + colon_offset1);
                     } else if (i == 5) {
-                        app.GetDevice()->getVideoDriver()->draw2DImage(
-                            app.GetDevice()->getVideoDriver()->getTexture(
-                                (demo_data_path + "/miscellaneous/numerical/colon.png").c_str()),
-                            end_left + offset * (i - 1) + colon_offset1);
+                        app.GetDevice()->getVideoDriver()->draw2DImage(texture_COLON,
+                                                                       end_left + offset * (i - 1) + colon_offset1);
                     } else if (i <= 7) {
                         app.GetDevice()->getVideoDriver()->draw2DImage(
-                            app.GetDevice()->getVideoDriver()->getTexture(
-                                (demo_data_path + "/miscellaneous/numerical/" + std::to_string(display_end_int[i - 2]) +
-                                 ".png")
-                                    .c_str()),
+                            texture_NUMERICAL[display_end_int[i - 2]],
                             end_left + offset * (i - 2) + colon_offset1 + colon_offset2);
                     }
                 }
@@ -1543,32 +1522,19 @@ int main(int argc, char* argv[]) {
                 irr::core::position2d<irr::s32> colon_offset2(25, 0);
 
                 if (i < 2) {
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture(
-                            (demo_data_path + "/miscellaneous/numerical/" + std::to_string(display_eta_int[i]) + ".png")
-                                .c_str()),
-                        eta_left + offset * i);
+                    app.GetDevice()->getVideoDriver()->draw2DImage(texture_NUMERICAL[display_eta_int[i]],
+                                                                   eta_left + offset * i);
                 } else if (i == 2) {
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture(
-                            (demo_data_path + "/miscellaneous/numerical/colon.png").c_str()),
-                        eta_left + offset * i);
+                    app.GetDevice()->getVideoDriver()->draw2DImage(texture_COLON, eta_left + offset * i);
                 } else if (i < 5) {
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/" +
-                                                                       std::to_string(display_eta_int[i - 1]) + ".png")
-                                                                          .c_str()),
-                        eta_left + offset * (i - 1) + colon_offset1);
+                    app.GetDevice()->getVideoDriver()->draw2DImage(texture_NUMERICAL[display_eta_int[i - 1]],
+                                                                   eta_left + offset * (i - 1) + colon_offset1);
                 } else if (i == 5) {
-                    app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture(
-                            (demo_data_path + "/miscellaneous/numerical/colon.png").c_str()),
-                        eta_left + offset * (i - 1) + colon_offset1);
+                    app.GetDevice()->getVideoDriver()->draw2DImage(texture_COLON,
+                                                                   eta_left + offset * (i - 1) + colon_offset1);
                 } else if (i <= 7) {
                     app.GetDevice()->getVideoDriver()->draw2DImage(
-                        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/" +
-                                                                       std::to_string(display_eta_int[i - 2]) + ".png")
-                                                                          .c_str()),
+                        texture_NUMERICAL[display_eta_int[i - 2]],
                         eta_left + offset * (i - 2) + colon_offset1 + colon_offset2);
                 }
             }
@@ -1577,20 +1543,23 @@ int main(int argc, char* argv[]) {
         }
 
         // Update the sensor manager
-        manager->Update();
+        if (render) {
+            manager->Update();
+        }
 
         // Increment frame number
         step_number++;
 
-        if (step_number % (int)(2.0 / frame_rate / step_size) == 0 && !benchmark) {
-            double since_last_sync = sim_time - last_sim_sync;
-            last_sim_sync = sim_time;
-            auto tt0 = high_resolution_clock::now();
-            realtime_timer.Spin(since_last_sync);
-            auto tt1 = high_resolution_clock::now();
-            extra_time += duration_cast<duration<double>>(tt1 - tt0).count();
-        }
-
+        /*
+                if (step_number % (int)(2.0 / frame_rate / step_size) == 0 && !benchmark) {
+                    double since_last_sync = sim_time - last_sim_sync;
+                    last_sim_sync = sim_time;
+                    auto tt0 = high_resolution_clock::now();
+                    realtime_timer.Spin(since_last_sync);
+                    auto tt1 = high_resolution_clock::now();
+                    extra_time += duration_cast<duration<double>>(tt1 - tt0).count();
+                }
+        */
         ChBezierCurveTracker lane_0_tracker(lane_0_path);
         ChBezierCurveTracker lane_1_tracker(lane_1_path);
 
