@@ -103,6 +103,7 @@ set(EXTRAS
 	extras/ChCSLSoundEngine.cpp
 	extras/driver/ChNSF_Drivers.h
 	extras/driver/ChNSF_Drivers.cpp
+	extras/timer/ChRealTimerCulmulative.h
 )
 
 #--------------------------------------------------------------
