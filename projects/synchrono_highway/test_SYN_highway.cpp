@@ -44,7 +44,7 @@
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
 #include "extras/driver/ChCSLDriver.h"
 #include "extras/driver/ChNSF_Drivers.h"
-#include "extras/timer/ChRealTimerCulmulative.h"
+#include "extras/timer/ChRealtimeCumulative.h"
 
 #include "chrono/utils/ChFilters.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -113,6 +113,8 @@ ChContactMethod contact_method = ChContactMethod::SMC;
 utils::ChRunningAverage IG_speed_avg(100);
 
 bool render = true;
+
+bool enable_realtime = true;
 
 // -----------------------------------------------------------------------------
 // Steering wheel parameters
@@ -629,6 +631,8 @@ void AddCommandLineOptions(ChCLI& cli) {
 
     cli.AddOption<std::string>("Simulation", "filename", "Output Filenames", filename);
     cli.AddOption<std::string>("Simulation", "csv_comments", "CSV output comments", csv_comments);
+    cli.AddOption<bool>("Simulation", "enable_realtime",
+                        "Use a cumulative realtimer to sync sim_time and wall_time every 0.01s", "true");
 }
 
 int main(int argc, char* argv[]) {
@@ -642,6 +646,9 @@ int main(int argc, char* argv[]) {
     // parse command line inputs
     step_size = cli.GetAsType<double>("step_size");
     t_end = cli.GetAsType<double>("end_time");
+    enable_realtime = cli.GetAsType<bool>("enable_realtime");
+
+    std::cout << "enable_realtime: " << enable_realtime << std::endl;
 
     use_fullscreen = cli.GetAsType<bool>("fullscreen");
     if (use_fullscreen) {
@@ -651,6 +658,7 @@ int main(int argc, char* argv[]) {
     }
     bool disable_joystick = cli.GetAsType<bool>("nojoystick");
     bool lbj_joystick = cli.GetAsType<bool>("lbj");
+
     std::cout << "disable_joystick=" << disable_joystick << std::endl;
     //  = cli.GetAsType<bool>("record");
     //  = cli.GetAsType<bool>("replay");
@@ -1127,7 +1135,7 @@ int main(int argc, char* argv[]) {
     bool IG_started_driving = false;
 
     auto t0 = high_resolution_clock::now();
-    ChRealtimeCulmulative realtime_timer;
+    ChRealtimeCumulative realtime_timer;
 
     IrrDashLoadTextures(app);
 
@@ -1318,7 +1326,7 @@ int main(int argc, char* argv[]) {
             manager->Update();
         }
 
-        if (step_number == 0) {
+        if (step_number == 0 && enable_realtime) {
             realtime_timer.Reset();
             t0 = high_resolution_clock::now();
         }
@@ -1326,7 +1334,7 @@ int main(int argc, char* argv[]) {
         // Increment frame number
         step_number++;
 
-        if (step_number % 5 == 0 && !benchmark) {
+        if (step_number % 5 == 0 && !benchmark && enable_realtime) {
             auto tt0 = high_resolution_clock::now();
             realtime_timer.Spin(sim_time);
             auto tt1 = high_resolution_clock::now();

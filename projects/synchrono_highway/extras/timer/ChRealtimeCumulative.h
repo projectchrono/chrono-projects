@@ -1,7 +1,7 @@
 
 
-#ifndef CHREALTIMECULM_H
-#define CHREALTIMECULM_H
+#ifndef CHREALTIMECUM_H
+#define CHREALTIMECUM_H
 
 #include <limits>
 
@@ -10,10 +10,10 @@
 namespace chrono {
 
 /// Class for a timer which attempts to enforce soft real-time.
-class ChRealtimeCulmulative : public ChTimer<double> {
+class ChRealtimeCumulative : public ChTimer<double> {
   public:
     /// Create the timer (outside the simulation loop, preferably just before beginning the loop)
-    ChRealtimeCulmulative() { start(); }
+    ChRealtimeCumulative() { start(); }
 
     /// Call this function INSIDE the simulation loop, just ONCE per loop (preferably as the last call in the loop),
     /// passing it the integration step size used at this step. If the time elapsed over the last step (i.e., from
