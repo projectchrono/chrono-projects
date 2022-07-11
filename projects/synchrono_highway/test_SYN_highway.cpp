@@ -1326,8 +1326,11 @@ int main(int argc, char* argv[]) {
             manager->Update();
         }
 
-        if (step_number == 0 && enable_realtime) {
-            realtime_timer.Reset();
+        if (step_number == 0) {
+            if (enable_realtime) {
+                realtime_timer.Reset();
+            }
+
             t0 = high_resolution_clock::now();
         }
 
