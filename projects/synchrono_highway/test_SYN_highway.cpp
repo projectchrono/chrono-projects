@@ -114,6 +114,7 @@ utils::ChRunningAverage IG_speed_avg(100);
 
 bool render = true;
 
+// Whether to enable realtime in the simulation
 bool enable_realtime = true;
 
 // -----------------------------------------------------------------------------
@@ -278,8 +279,8 @@ irr::video::ITexture* texture_NUMERICAL[10];
 // =============================================================================
 
 // button callback placeholder
-void customButtonCallback();
-void dummyButtonCallback_r_3();
+void CustomButtonCallback();
+void DummyButtonCallback_r_3();
 
 // distribution of trees near the road
 void AddTrees(ChSystem* chsystem);
@@ -305,7 +306,7 @@ void IrrDashUpdate(double sim_time,
                    bool& IG_started_driving);
 
 // helper function to update dummy vehicles
-void updateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
+void UpdateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
                  std::shared_ptr<ChBezierCurve> curve,
                  float dummy_speed,
                  float step_size,
@@ -316,7 +317,7 @@ void updateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
 
 // compute desired speed for dynamic vehicles
 // based on json defined, time-dependent, piecewise speed data
-float controlFindSpeed_x_y(std::vector<float> time_vec, std::vector<float> speed_vec, float time, float default_speed);
+float ControlFindSpeed_x_y(std::vector<float> time_vec, std::vector<float> speed_vec, float time, float default_speed);
 
 void ReadParameterFiles() {
     {  // Simulation parameter file
@@ -967,8 +968,8 @@ int main(int argc, char* argv[]) {
     // ChCSLDriver driver(vehicle);
     // driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
     auto IGdriver = chrono_types::make_shared<ChIrrGuiDriver>(app);
-    IGdriver->SetButtonCallback(r_1, &customButtonCallback);
-    IGdriver->SetButtonCallback(r_3, &dummyButtonCallback_r_3);
+    IGdriver->SetButtonCallback(r_1, &CustomButtonCallback);
+    IGdriver->SetButtonCallback(r_3, &DummyButtonCallback_r_3);
 
     // for (int a = 0; a < 23; a++) {
     //    IGdriver->SetButtonCallback(a, &dummyButtonCallback_test);
@@ -1005,8 +1006,8 @@ int main(int argc, char* argv[]) {
     PF_driver_ptr = PFdriver;
 
     // we call the callback explicitly to start the timer
-    customButtonCallback();
-    dummyButtonCallback_r_3();
+    CustomButtonCallback();
+    DummyButtonCallback_r_3();
 
     if (!disable_joystick) {
         driver_mode = HUMAN;
@@ -1221,34 +1222,34 @@ int main(int argc, char* argv[]) {
                 // when in inner lane
                 if (dummy_control[i] == 0) {
                     // if dummy doesn't have any control, we just use cruise speed setting always
-                    updateDummy(dummies[i], inner_path, dummy_cruise_speed[i], step_size, temp_z_offset, tracker_vec[i],
+                    UpdateDummy(dummies[i], inner_path, dummy_cruise_speed[i], step_size, temp_z_offset, tracker_vec[i],
                                 dummy_dist[i], dummy_prev_pos[i]);
                 } else if (dummy_control[i] == 1) {
                     float target_speed;
-                    target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], dummy_dist[i],
+                    target_speed = ControlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], dummy_dist[i],
                                                         dummy_cruise_speed[i]);
                     target_speed = target_speed * MPH_TO_MS;
-                    updateDummy(dummies[i], inner_path, target_speed, step_size, temp_z_offset, tracker_vec[i],
+                    UpdateDummy(dummies[i], inner_path, target_speed, step_size, temp_z_offset, tracker_vec[i],
                                 dummy_dist[i], dummy_prev_pos[i]);
                 } else {
                     float target_speed;
                     if (dummy_time_mode[i] == 1) {
-                        target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], sim_time,
+                        target_speed = ControlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], sim_time,
                                                             dummy_cruise_speed[i]);
                     } else if (dummy_time_mode[i] == 2) {
-                        target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], wall_time,
+                        target_speed = ControlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], wall_time,
                                                             dummy_cruise_speed[i]);
                     } else if (dummy_time_mode[i] == 3) {
-                        target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i],
+                        target_speed = ControlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i],
                                                             sim_time - start_sim_time, dummy_cruise_speed[i]);
                     } else if (dummy_time_mode[i] == 4) {
-                        target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i],
+                        target_speed = ControlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i],
                                                             wall_time - start_wall_time, dummy_cruise_speed[i]);
                     }
 
                     target_speed = target_speed * MPH_TO_MS;
                     // if dummy has a control parameter setting, we adjust speed based on given data
-                    updateDummy(dummies[i], inner_path, target_speed, step_size, temp_z_offset, tracker_vec[i],
+                    UpdateDummy(dummies[i], inner_path, target_speed, step_size, temp_z_offset, tracker_vec[i],
                                 dummy_dist[i], dummy_prev_pos[i]);
                 }
 
@@ -1256,26 +1257,26 @@ int main(int argc, char* argv[]) {
                 // when in outer lane
                 if (dummy_control[i] == 0) {
                     // if dummy doesn't have any control, we just use cruise speed setting always
-                    updateDummy(dummies[i], outer_path, dummy_cruise_speed[i], step_size, temp_z_offset, tracker_vec[i],
+                    UpdateDummy(dummies[i], outer_path, dummy_cruise_speed[i], step_size, temp_z_offset, tracker_vec[i],
                                 dummy_dist[i], dummy_prev_pos[i]);
                 } else if (dummy_control[i] == 1) {
                     float target_speed;
-                    target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], dummy_dist[i],
+                    target_speed = ControlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], dummy_dist[i],
                                                         dummy_cruise_speed[i]);
                     target_speed = target_speed * MPH_TO_MS;
-                    updateDummy(dummies[i], outer_path, target_speed, step_size, temp_z_offset, tracker_vec[i],
+                    UpdateDummy(dummies[i], outer_path, target_speed, step_size, temp_z_offset, tracker_vec[i],
                                 dummy_dist[i], dummy_prev_pos[i]);
                 } else {
                     float target_speed;
                     if (dummy_time_mode[i] == 1) {
-                        target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], sim_time,
+                        target_speed = ControlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], sim_time,
                                                             dummy_cruise_speed[i]);
                     } else if (dummy_time_mode[i] == 2) {
-                        target_speed = controlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], wall_time,
+                        target_speed = ControlFindSpeed_x_y(dummy_control_x[i], dummy_control_y[i], wall_time,
                                                             dummy_cruise_speed[i]);
                     }
                     target_speed = target_speed * MPH_TO_MS;
-                    updateDummy(dummies[i], outer_path, target_speed, step_size, temp_z_offset, tracker_vec[i],
+                    UpdateDummy(dummies[i], outer_path, target_speed, step_size, temp_z_offset, tracker_vec[i],
                                 dummy_dist[i], dummy_prev_pos[i]);
                 }
             }
@@ -1286,22 +1287,22 @@ int main(int argc, char* argv[]) {
             if (dynamic_control[i] == 2) {
                 float target_speed;
                 if (dynamic_time_mode[i] == 1) {
-                    target_speed = controlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i], sim_time,
+                    target_speed = ControlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i], sim_time,
                                                         dynamic_cruise_speed[i]);
                 } else if (dynamic_time_mode[i] == 2) {
-                    target_speed = controlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i], wall_time,
+                    target_speed = ControlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i], wall_time,
                                                         dynamic_cruise_speed[i]);
                 } else if (dynamic_time_mode[i] == 3) {
-                    target_speed = controlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
+                    target_speed = ControlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
                                                         sim_time - start_sim_time, dynamic_cruise_speed[i]);
                 } else if (dynamic_time_mode[i] == 4) {
-                    target_speed = controlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
+                    target_speed = ControlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
                                                         wall_time - start_wall_time, dynamic_cruise_speed[i]);
                 }
                 lead_PFdrivers[i]->SetCruiseSpeed(target_speed * MPH_TO_MS);
             } else if (dynamic_control[i] == 1) {
                 float target_speed;
-                target_speed = controlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
+                target_speed = ControlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
                                                     lead_PFdrivers[i]->Get_Dist(), dynamic_cruise_speed[i]);
 
                 lead_PFdrivers[i]->SetCruiseSpeed(target_speed * MPH_TO_MS);
@@ -1436,18 +1437,19 @@ int main(int argc, char* argv[]) {
                 }
 
                 buffer << "\n";
-                if ((step_number % int(20 / step_size) == 0)) {
-                    printf("Writing to output file...=%i", buffer.tellp());
-                    filestream << buffer.rdbuf();
-                    buffer.str("");
-
-                    printf("Writing to button file...=%i", button_buffer.tellp());
-                    buttonstream << button_buffer.rdbuf();
-                    buttonstream.flush();
-                    button_buffer.str("");
-                }
             }
         }
+    }
+
+    if (save_driver) {
+        printf("Writing to output file...=%i", buffer.tellp());
+        filestream << buffer.rdbuf();
+        buffer.str("");
+
+        printf("Writing to button file...=%i", button_buffer.tellp());
+        buttonstream << button_buffer.rdbuf();
+        buttonstream.flush();
+        button_buffer.str("");
     }
 
     auto t1 = high_resolution_clock::now();
@@ -1732,7 +1734,7 @@ void AddTerrain(ChSystem* chsystem) {
 }
 
 // Wheel button callback to switch between driving modes
-void customButtonCallback() {
+void CustomButtonCallback() {
     // We use an "anti bounce":
     static auto last_invoked = std::chrono::system_clock::now().time_since_epoch();
     auto current_invoke = std::chrono::system_clock::now().time_since_epoch();
@@ -1752,7 +1754,7 @@ void customButtonCallback() {
 }
 
 // Update dummy vehicles based on bazier curve and speed
-void updateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
+void UpdateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
                  std::shared_ptr<ChBezierCurve> curve,
                  float dummy_speed,
                  float step_size,
@@ -1791,7 +1793,7 @@ void updateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
     dummy_prev_pos = dummy_vehicle->GetPos();
 }
 
-float controlFindSpeed_x_y(std::vector<float> time_vec, std::vector<float> speed_vec, float time, float default_speed) {
+float ControlFindSpeed_x_y(std::vector<float> time_vec, std::vector<float> speed_vec, float time, float default_speed) {
     int n = time_vec.size();
     int target_idx = n;
     // find out which range the 'time' argument falls into
@@ -1811,7 +1813,7 @@ float controlFindSpeed_x_y(std::vector<float> time_vec, std::vector<float> speed
 // dummy button call function
 // this section of the code should be optimized !
 // Wheel botton callback to record button press without any functionalities
-void dummyButtonCallback_r_3() {
+void DummyButtonCallback_r_3() {
     static auto last_invoked_dummy_1 = std::chrono::system_clock::now().time_since_epoch();
     auto current_invoke_dummy_1 = std::chrono::system_clock::now().time_since_epoch();
 
