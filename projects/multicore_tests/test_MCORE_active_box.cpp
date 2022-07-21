@@ -25,7 +25,7 @@
 #include "chrono/assets/ChBoxShape.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono_multicore/physics/ChSystemMulticore.h"
-#include "chrono_opengl/ChOpenGLWindow.h"
+#include "chrono_opengl/ChVisualSystemOpenGL.h"
 
 using namespace chrono;
 using namespace chrono::collision;
@@ -159,20 +159,19 @@ int main(int argc, char* argv[]) {
     std::cout << "Bpos:  " << bpos.x << " " << bpos.y << " " << bpos.z << std::endl;
 
     // Initialize OpenGL
-    opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.AttachSystem(system);
-    gl_window.Initialize(1280, 720, "Test AABB");
-    gl_window.SetCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1));
-    gl_window.SetRenderMode(opengl::WIREFRAME);
+    opengl::ChVisualSystemOpenGL vis;
+    vis.AttachSystem(system);
+    vis.SetWindowTitle("Test AABB");
+    vis.SetWindowSize(1280, 720);
+    vis.SetRenderMode(opengl::WIREFRAME);
+    vis.Initialize();
+    vis.SetCameraPosition(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0));
+    vis.SetCameraVertical(CameraVerticalDir::Z);
 
     // Run simulation loop
-    while (true) {
-        if (gl_window.Active()) {
-            gl_window.DoStepDynamics(time_step);
-            gl_window.Render();
-        } else {
-            break;
-        }
+    while (vis.Run()) {
+            system->DoStepDynamics(time_step);
+            vis.Render();
     }
 
     return 0;

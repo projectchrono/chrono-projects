@@ -209,7 +209,7 @@ int main(int argc, char* argv[]) {
     patch_mat->SetRestitution(0.01f);
     RigidTerrain terrain(vehicle.GetSystem());
     auto patch =
-        terrain.AddPatch(patch_mat, ChVector<>(0, 0, terrainHeight), ChVector<>(0, 0, 1), terrainLength, terrainWidth);
+        terrain.AddPatch(patch_mat, ChCoordsys<>(ChVector<>(0, 0, terrainHeight), QUNIT), terrainLength, terrainWidth);
     patch->SetColor(ChColor(0.5f, 0.8f, 0.5f));
     patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 600, 600);
     terrain.Initialize();
@@ -259,7 +259,7 @@ int main(int argc, char* argv[]) {
     vis->AddTypicalLights();
     vis->AddSkyBox();
     vis->AddLogo();
-    vehicle.SetVisualSystem(vis);
+    vis->AttachVehicle(&vehicle);
 
     // Visualization of controller points (sentinel & target)
     irr::scene::IMeshSceneNode* ballS = vis->GetSceneManager()->addSphereSceneNode(0.1f);
@@ -368,7 +368,7 @@ int main(int argc, char* argv[]) {
         if (step_number % render_steps == 0) {
 #ifdef CHRONO_IRRLICHT
             vis->BeginScene();
-            vis->DrawAll();
+            vis->Render();
             vis->EndScene();
 #endif
 

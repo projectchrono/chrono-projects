@@ -45,7 +45,7 @@
 //#undef CHRONO_OPENGL
 
 #ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChOpenGLWindow.h"
+#include "chrono_opengl/ChVisualSystemOpenGL.h"
 #endif
 
 #include "../utils.h"
@@ -208,47 +208,47 @@ int main(int argc, char* argv[]) {
 #ifdef USE_SMC
     cout << "Create SMC system" << endl;
     const std::string title = "soft-sphere (SMC) direct shear box test";
-    ChSystemMulticoreSMC* my_system = new ChSystemMulticoreSMC();
+    ChSystemMulticoreSMC* sys = new ChSystemMulticoreSMC();
 #else
     cout << "Create NSC system" << endl;
     const std::string title = "hard-sphere (NSC) direct shear box test";
-    ChSystemMulticoreNSC* my_system = new ChSystemMulticoreNSC();
+    ChSystemMulticoreNSC* sys = new ChSystemMulticoreNSC();
 #endif
 
-    my_system->Set_G_acc(ChVector<>(0, -gravity, 0));
+    sys->Set_G_acc(ChVector<>(0, -gravity, 0));
 
     // Set number of threads
 
     int max_threads = omp_get_num_procs();
     if (threads > max_threads)
         threads = max_threads;
-    my_system->SetNumThreads(threads);
+    sys->SetNumThreads(threads);
 
     // Edit system settings
 
-    my_system->GetSettings()->solver.use_full_inertia_tensor = false;
-    my_system->GetSettings()->solver.tolerance = tolerance;
-    my_system->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
-    my_system->GetSettings()->solver.clamp_bilaterals = clamp_bilaterals;
-    my_system->GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
+    sys->GetSettings()->solver.use_full_inertia_tensor = false;
+    sys->GetSettings()->solver.tolerance = tolerance;
+    sys->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
+    sys->GetSettings()->solver.clamp_bilaterals = clamp_bilaterals;
+    sys->GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
 
 #ifdef USE_SMC
-    my_system->GetSettings()->solver.contact_force_model = ChSystemSMC::ContactForceModel::Hertz;
-    my_system->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::MultiStep;
+    sys->GetSettings()->solver.contact_force_model = ChSystemSMC::ContactForceModel::Hertz;
+    sys->GetSettings()->solver.tangential_displ_mode = ChSystemSMC::TangentialDisplacementModel::MultiStep;
 #else
-    my_system->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
-    my_system->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
-    my_system->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
-    my_system->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
-    my_system->GetSettings()->solver.alpha = 0;
-    my_system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-    my_system->ChangeSolverType(SolverType::APGD);
+    sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
+    sys->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
+    sys->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
+    sys->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
+    sys->GetSettings()->solver.alpha = 0;
+    sys->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
+    sys->ChangeSolverType(SolverType::APGD);
 
-    my_system->GetSettings()->collision.collision_envelope = 0.05 * radius;
+    sys->GetSettings()->collision.collision_envelope = 0.05 * radius;
 #endif
 
-    my_system->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
-    my_system->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::HYBRID;
+    sys->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
+    sys->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::HYBRID;
 
 // Create a ball material (will be used by balls only)
 
@@ -304,7 +304,7 @@ int main(int argc, char* argv[]) {
     bin->GetCollisionModel()->SetFamilyMaskDoCollisionWithFamily(4);
     bin->GetCollisionModel()->BuildModel();
 
-    my_system->AddBody(bin);
+    sys->AddBody(bin);
 
     // Create upper shear box
 
@@ -331,7 +331,7 @@ int main(int argc, char* argv[]) {
     box->GetCollisionModel()->SetFamilyMaskDoCollisionWithFamily(4);
     box->GetCollisionModel()->BuildModel();
 
-    my_system->AddBody(box);
+    sys->AddBody(box);
 
     // Create upper load plate
 
@@ -353,7 +353,7 @@ int main(int argc, char* argv[]) {
     plate->GetCollisionModel()->SetFamilyMaskDoCollisionWithFamily(4);
     plate->GetCollisionModel()->BuildModel();
 
-    my_system->AddBody(plate);
+    sys->AddBody(plate);
 
     // Create (a X b X c) many falling balls
 
@@ -387,7 +387,7 @@ int main(int argc, char* argv[]) {
                 sphere->SetColor(ChColor(1, 0, 1));
                 ball->AddVisualShape(sphere);
 
-                my_system->AddBody(ball);
+                sys->AddBody(ball);
             }
         }
     }
@@ -400,7 +400,7 @@ int main(int argc, char* argv[]) {
     auto prismatic_plate_box = chrono_types::make_shared<ChLinkLockPrismatic>();
     prismatic_plate_box->SetName("prismatic_plate_box");
     prismatic_plate_box->Initialize(plate, box, ChCoordsys<>(ChVector<>(0, 0, 0), z2y));
-    my_system->AddLink(prismatic_plate_box);
+    sys->AddLink(prismatic_plate_box);
 
     // Setup output
 
@@ -413,11 +413,14 @@ int main(int argc, char* argv[]) {
 // Create the OpenGL visualization window
 
 #ifdef CHRONO_OPENGL
-    opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.AttachSystem(my_system);
-    gl_window.Initialize(800, 600, title.c_str());
-    gl_window.SetCamera(ChVector<>(3 * width, 0, 0), ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), (float)radius, (float)radius);
-    gl_window.SetRenderMode(opengl::SOLID);
+    opengl::ChVisualSystemOpenGL vis;
+    vis.AttachSystem(sys);
+    vis.SetWindowTitle(title);
+    vis.SetWindowSize(1280, 720);
+    vis.SetRenderMode(opengl::WIREFRAME);
+    vis.Initialize();
+    vis.SetCameraPosition(ChVector<>(3 * width, 0, 0), ChVector<>(0, 0, 0));
+    vis.SetCameraVertical(CameraVerticalDir::Y);
 #endif
 
     // Begin simulation
@@ -428,8 +431,8 @@ int main(int argc, char* argv[]) {
     int data_out_frame = 0;
     int visual_out_frame = 0;
 
-    while (my_system->GetChTime() < end_simulation_time) {
-        if (my_system->GetChTime() > settling_time && settling == true) {
+    while (sys->GetChTime() < end_simulation_time) {
+        if (sys->GetChTime() > settling_time && settling == true) {
             if (dense == true)
                 material->SetFriction(0.01f);
             plate->SetPos(ChVector<>(0, height, 0));
@@ -437,7 +440,7 @@ int main(int argc, char* argv[]) {
             settling = false;
         }
 
-        if (my_system->GetChTime() > begin_shear_time && shearing == false) {
+        if (sys->GetChTime() > begin_shear_time && shearing == false) {
             if (dense == true)
                 material->SetFriction(mu);
             shear_Height = plate->GetPos().y();
@@ -447,7 +450,7 @@ int main(int argc, char* argv[]) {
 
         if (shearing == true) {
             bin->SetPos(
-                ChVector<>(0, -height / 2, -shear_speed * begin_shear_time + shear_speed * my_system->GetChTime()));
+                ChVector<>(0, -height / 2, -shear_speed * begin_shear_time + shear_speed * sys->GetChTime()));
             bin->SetPos_dt(
                 ChVector<>(0, 0, shear_speed));  // This is needed for the tangential contact displacement history model
             bin->SetRot(QUNIT);
@@ -460,30 +463,30 @@ int main(int argc, char* argv[]) {
 //  Do time step
 
 #ifdef CHRONO_OPENGL
-        if (gl_window.Active()) {
-            gl_window.DoStepDynamics(time_step);
-            gl_window.Render();
+        if (vis.Run()) {
+            sys->DoStepDynamics(time_step);
+            vis.Render();
         } else
             break;
 #else
-        my_system->DoStepDynamics(time_step);
+        sys->DoStepDynamics(time_step);
 #endif
 
-        TimingOutput(my_system, &statsStream);
+        TimingOutput(sys, &statsStream);
 
         //  Output to files
 
-        if (my_system->GetChTime() >= data_out_frame * data_out_step) {
+        if (sys->GetChTime() >= data_out_frame * data_out_step) {
 #ifndef USE_SMC
-            my_system->CalculateContactForces();
+            sys->CalculateContactForces();
 #endif
-            force = my_system->GetBodyContactForce(0);
+            force = sys->GetBodyContactForce(0);
 
-            forceStream << my_system->GetChTime() << "\t" << plate->GetPos().y() - bin->GetPos().y() << "\t"
+            forceStream << sys->GetChTime() << "\t" << plate->GetPos().y() - bin->GetPos().y() << "\t"
                         << bin->GetPos().x() << "\t" << bin->GetPos().y() << "\t" << bin->GetPos().z() << "\t" << force.x
                         << "\t" << force.y << "\t" << force.z << "\n";
 
-            cout << my_system->GetChTime() << "\t" << plate->GetPos().y() - bin->GetPos().y() << "\t" << bin->GetPos().x()
+            cout << sys->GetChTime() << "\t" << plate->GetPos().y() - bin->GetPos().y() << "\t" << bin->GetPos().x()
                  << "\t" << bin->GetPos().y() << "\t" << bin->GetPos().z() << "\t" << force.x << "\t" << force.y << "\t"
                  << force.z << "\n";
 
@@ -504,10 +507,10 @@ int main(int argc, char* argv[]) {
 
         //  Output to POV-Ray
 
-        if (write_povray_data && my_system->GetChTime() >= visual_out_frame * visual_out_step) {
+        if (write_povray_data && sys->GetChTime() >= visual_out_frame * visual_out_step) {
             char filename[100];
             sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), visual_out_frame + 1);
-            utils::WriteVisualizationAssets(my_system, filename, false);
+            utils::WriteVisualizationAssets(sys, filename, false);
 
             visual_out_frame++;
         }

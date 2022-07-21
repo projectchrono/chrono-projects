@@ -39,7 +39,7 @@
 //#undef CHRONO_OPENGL
 
 #ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChOpenGLWindow.h"
+#include "chrono_opengl/ChVisualSystemOpenGL.h"
 #endif
 
 using namespace chrono;
@@ -674,49 +674,53 @@ int main(int argc, char* argv[]) {
     // Create system
     // -------------
 
-    ChSystemMulticoreNSC msystem;
+    ChSystemMulticoreNSC sys;
 
     // Set gravitational acceleration
-    msystem.Set_G_acc(ChVector<>(0, -gravity, 0));
+    sys.Set_G_acc(ChVector<>(0, -gravity, 0));
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();
     if (threads > max_threads)
         threads = max_threads;
-    msystem.SetNumThreads(threads);
+    sys.SetNumThreads(threads);
     std::cout << "Using " << threads << " threads" << std::endl;
 
     // Edit system settings
-    msystem.GetSettings()->solver.tolerance = tolerance;
-    msystem.GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
-    msystem.GetSettings()->solver.clamp_bilaterals = clamp_bilaterals;
-    msystem.GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
-    msystem.GetSettings()->solver.solver_mode = SolverMode::SLIDING;
-    msystem.GetSettings()->solver.max_iteration_normal = max_iteration_normal;
-    msystem.GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
-    msystem.GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
-    msystem.GetSettings()->solver.alpha = 0;
-    msystem.GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-    msystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
-    msystem.ChangeSolverType(SolverType::APGDREF);
+    sys.GetSettings()->solver.tolerance = tolerance;
+    sys.GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
+    sys.GetSettings()->solver.clamp_bilaterals = clamp_bilaterals;
+    sys.GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
+    sys.GetSettings()->solver.solver_mode = SolverMode::SLIDING;
+    sys.GetSettings()->solver.max_iteration_normal = max_iteration_normal;
+    sys.GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
+    sys.GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
+    sys.GetSettings()->solver.alpha = 0;
+    sys.GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
+    sys.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
+    sys.ChangeSolverType(SolverType::APGDREF);
 
-    msystem.GetSettings()->collision.collision_envelope = 0.01;
-    msystem.GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
+    sys.GetSettings()->collision.collision_envelope = 0.01;
+    sys.GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
 
     // Create the fixed and moving bodies
     // ----------------------------------
 
-    AddGround(&msystem);
-    MySimpleCar* mycar = new MySimpleCar(&msystem);
+    AddGround(&sys);
+    MySimpleCar* mycar = new MySimpleCar(&sys);
 
 // Perform the simulation
 // ----------------------
 
 #ifdef CHRONO_OPENGL
-    opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.AttachSystem(&msystem);
-    gl_window.Initialize(1280, 720, "Suspension");
-    gl_window.SetCamera(ChVector<>(0, 0, -10), ChVector<>(0, 0, 0), ChVector<>(0, 1, 0));
+    opengl::ChVisualSystemOpenGL vis;
+    vis.AttachSystem(&sys);
+    vis.SetWindowTitle("Suspension");
+    vis.SetWindowSize(1280, 720);
+    vis.SetRenderMode(opengl::WIREFRAME);
+    vis.Initialize();
+    vis.SetCameraPosition(ChVector<>(0, 0, -10), ChVector<>(0, 0, 0));
+    vis.SetCameraVertical(CameraVerticalDir::Z);
 #endif
 
     // Run simulation for specified time
@@ -727,18 +731,18 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < num_steps; i++) {
         if (i % out_steps == 0) {
-            OutputData(&msystem, out_frame, time);
+            OutputData(&sys, out_frame, time);
             out_frame++;
         }
 
 #ifdef CHRONO_OPENGL
-        if (gl_window.Active()) {
-            gl_window.DoStepDynamics(time_step);
-            gl_window.Render();
+        if (vis.Run()) {
+            sys.DoStepDynamics(time_step);
+            vis.Render();
         } else
             break;
 #else
-        msystem.DoStepDynamics(time_step);
+        sys.DoStepDynamics(time_step);
 #endif
 
         time += time_step;

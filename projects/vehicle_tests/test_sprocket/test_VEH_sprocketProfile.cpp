@@ -158,7 +158,6 @@ int main(int argc, char* argv[]) {
 
     // Create the Irrlicht visualization
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
-    system.SetVisualSystem(vis);
     vis->SetWindowSize(800, 600);
     vis->SetWindowTitle("Paths");
     vis->Initialize();
@@ -168,6 +167,7 @@ int main(int argc, char* argv[]) {
     vis->AddTypicalLights();
     vis->SetSymbolScale(1e-4);
     vis->EnableContactDrawing(ContactsDrawMode::CONTACT_FORCES);
+    vis->AttachSystem(&system);
 
     // ---------------
     // Simulation loop
@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
 
     while (vis->Run()) {
         vis->BeginScene();
-        vis->DrawAll();
+        vis->Render();
         vis->EndScene();
         system.DoStepDynamics(0.01);
     }

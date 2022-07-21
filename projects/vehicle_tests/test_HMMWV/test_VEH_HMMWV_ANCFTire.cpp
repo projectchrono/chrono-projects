@@ -226,7 +226,7 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<RigidTerrain::Patch> patch;
     switch (terrain_model) {
         case RigidTerrain::PatchType::BOX:
-            patch = terrain.AddPatch(patch_mat, ChVector<>(0, 0, terrainHeight), ChVector<>(0, 0, 1), terrainLength,
+            patch = terrain.AddPatch(patch_mat, ChCoordsys<>(ChVector<>(0, 0, terrainHeight), QUNIT), terrainLength,
                                      terrainWidth);
             patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 200);
             break;
@@ -251,7 +251,7 @@ int main(int argc, char* argv[]) {
     vis->AddTypicalLights();
     vis->AddSkyBox();
     vis->AddLogo();
-    my_hmmwv.GetVehicle().SetVisualSystem(vis);
+    vis->AttachVehicle(&my_hmmwv.GetVehicle());
 
     // -----------------
     // Initialize output
@@ -302,7 +302,7 @@ int main(int argc, char* argv[]) {
             break;
 
         vis->BeginScene();
-        vis->DrawAll();
+        vis->Render();
         vis->EndScene();
 
         // Render scene and output POV-Ray data

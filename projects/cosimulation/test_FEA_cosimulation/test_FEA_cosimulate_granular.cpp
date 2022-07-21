@@ -40,7 +40,7 @@
 #undef CHRONO_OPENGL
 
 #ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChOpenGLWindow.h"
+#include "chrono_opengl/ChVisualSystemOpenGL.h"
 #endif
 
 using namespace chrono;
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
     double tire_w0 = tire_vel_z0 / tire_rad;
 
     // Create a Chrono::Engine physical system
-    ChSystemSMC my_system;
+    ChSystemSMC sys;
 
     //
     // CREATE A FINITE ELEMENT MESH
@@ -118,7 +118,7 @@ int main(int argc, char* argv[]) {
     // Create a mesh, that is a container for groups
     // of FEA elements and their referenced nodes.
     auto my_mesh = chrono_types::make_shared<ChMesh>();
-    my_system.Add(my_mesh);
+    sys.Add(my_mesh);
 
     // Create a material, that must be assigned to each solid element in the mesh,
     // and set its parameters
@@ -150,7 +150,7 @@ int main(int argc, char* argv[]) {
     /// Create a mesh load for cosimulation, acting on the contact surface above
     /// (forces on nodes will be computed by an external procedure)
     auto mloadcontainer = chrono_types::make_shared<ChLoadContainer>();
-    my_system.Add(mloadcontainer);
+    sys.Add(mloadcontainer);
     auto mrigidmeshload = chrono_types::make_shared<ChLoadContactSurfaceMesh>(mcontactsurf);
     mloadcontainer->Add(mrigidmeshload);
 
@@ -178,7 +178,7 @@ int main(int argc, char* argv[]) {
     // will use the ChLoadBodyMesh class:
 
     auto mrigidbody = chrono_types::make_shared<ChBody>();
-    my_system.Add(mrigidbody);
+    sys.Add(mrigidbody);
     mrigidbody->SetMass(200);
     mrigidbody->SetInertiaXX(ChVector<>(20,20,20));
     mrigidbody->SetPos(tire_center);
@@ -196,7 +196,7 @@ int main(int argc, char* argv[]) {
     /// (forces on nodes will be computed by an external procedure)
 
     auto mloadcontainer = chrono_types::make_shared<ChLoadContainer>();
-    my_system.Add(mloadcontainer);
+    sys.Add(mloadcontainer);
 
     // this is used to use the mesh in cosimulation!
     auto mrigidmeshload = chrono_types::make_shared<ChLoadBodyMesh>(mrigidbody, mrigidmesh->GetMesh());
@@ -210,7 +210,6 @@ int main(int argc, char* argv[]) {
 
 #ifndef CHRONO_OPENGL
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
-    my_system.SetVisualSystem(vis);
     vis->SetWindowSize(800, 600);
     vis->SetWindowTitle("FEA contacts");
     vis->Initialize();
@@ -218,6 +217,7 @@ int main(int argc, char* argv[]) {
     vis->AddSkyBox();
     vis->AddCamera(ChVector<>(3, 1.4, -3.2));
     vis->AddTypicalLights();
+    vis->AttachSystem(&sys);
 #endif
 
     //
@@ -230,17 +230,17 @@ int main(int argc, char* argv[]) {
     auto solver = chrono_types::make_shared<ChSolverMINRES>();
     solver->EnableWarmStart(true);
     solver->SetMaxIterations(40);
-    my_system.SetSolver(solver);
-    my_system.SetSolverForceTolerance(1e-10);
+    sys.SetSolver(solver);
+    sys.SetSolverForceTolerance(1e-10);
 
     // Change type of integrator:
-    my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
+    sys.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
 
     // BEGIN MULTICORE SYSTEM INITIALIZATION
     ChSystemMulticoreNSC* systemG = new ChSystemMulticoreNSC();
 
     // Set gravitational acceleration
-    systemG->Set_G_acc(my_system.Get_G_acc());
+    systemG->Set_G_acc(sys.Get_G_acc());
 
     // Set solver parameters
     systemG->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
@@ -401,12 +401,12 @@ int main(int argc, char* argv[]) {
 
 // STEP 3: ADVANCE DYNAMICS OF TIRE SYSTEM
 #ifdef CHRONO_OPENGL
-        my_system.DoStepDynamics(time_step);
+        sys.DoStepDynamics(time_step);
 #else
         vis->BeginScene();
-        vis->DrawAll();
+        vis->Render();
 
-        my_system.DoStepDynamics(time_step);
+        sys.DoStepDynamics(time_step);
 
         if (timeIndex % out_steps == 0 && saveData) {
             // takeScreenshot(application.GetDevice(),frameIndex);

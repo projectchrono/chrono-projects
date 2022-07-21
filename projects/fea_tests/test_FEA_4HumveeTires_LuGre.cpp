@@ -283,14 +283,14 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
     virtual bool IsStiff() { return true; }
 };
 
-void MakeANCFHumveeWheel(ChSystem& my_system,
+void MakeANCFHumveeWheel(ChSystem& sys,
                          const ChVector<> rim_center,
                          std::shared_ptr<ChBody>& Hub_1,
                          double TirePressure,
                          double ForVelocity,
                          int Ident) {
     // Create rim for this mesh
-    my_system.AddBody(Hub_1);
+    sys.AddBody(Hub_1);
     Hub_1->SetIdentifier(Ident);
     Hub_1->SetBodyFixed(false);
     Hub_1->SetCollide(false);
@@ -437,13 +437,13 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
                 // Add position constraints
                 constraint = chrono_types::make_shared<ChLinkPointFrame>();
                 constraint->Initialize(ConstrainedNode, Hub_1);
-                my_system.Add(constraint);
+                sys.Add(constraint);
 
                 // Add rotation constraints
                 constraintD = chrono_types::make_shared<ChLinkDirFrame>();
                 constraintD->Initialize(ConstrainedNode, Hub_1);
                 constraintD->SetDirectionInAbsoluteCoords(ConstrainedNode->GetD());
-                my_system.Add(constraintD);
+                sys.Add(constraintD);
             }
         }
     }
@@ -462,7 +462,7 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
     TireMesh->SetAutomaticGravity(false);
 
     // Add the mesh to the system
-    my_system.Add(TireMesh);
+    sys.Add(TireMesh);
     auto Mloadcontainer = chrono_types::make_shared<ChLoadContainer>();
     // Add constant pressure using ChLoaderPressure (preferred for simple, constant pressure)
     if (addPressureAlessandro) {
@@ -475,7 +475,7 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
             Mloadcontainer->Add(faceload);
         }
     }
-    my_system.Add(Mloadcontainer);
+    sys.Add(Mloadcontainer);
     // Constraints for each mesh rim
     auto mloadcontainerGround = chrono_types::make_shared<ChLoadContainer>();
 
@@ -491,7 +491,7 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
         }
 
     }  // End loop over tires
-    my_system.Add(mloadcontainerGround);
+    sys.Add(mloadcontainerGround);
 
     if (showVisual) {
         auto mvisualizemeshC = chrono_types::make_shared<ChVisualShapeFEA>(TireMesh);
@@ -519,7 +519,7 @@ int main(int argc, char* argv[]) {
     SetChronoDataPath(CHRONO_DATA_DIR);
 
     // Definition of the model
-    ChSystemNSC my_system;
+    ChSystemNSC sys;
 
     utils::CSV_writer out("\t");
     out.stream().setf(std::ios::scientific | std::ios::showpos);
@@ -528,7 +528,7 @@ int main(int argc, char* argv[]) {
 
     // Body 1: Ground
     BGround = chrono_types::make_shared<ChBody>();
-    my_system.AddBody(BGround);
+    sys.AddBody(BGround);
     BGround->SetIdentifier(1);
     BGround->SetBodyFixed(true);
     BGround->SetCollide(false);
@@ -549,10 +549,10 @@ int main(int argc, char* argv[]) {
     ChVector<> rim_center_3(-Lwx, Lwy, HumveeVertPos);
     ChVector<> rim_center_4(-Lwx, -Lwy, HumveeVertPos);
 
-    MakeANCFHumveeWheel(my_system, rim_center_1, Hub_1, TirePressure, ForVelocity, 2);
-    MakeANCFHumveeWheel(my_system, rim_center_2, Hub_2, TirePressure, ForVelocity, 3);
-    MakeANCFHumveeWheel(my_system, rim_center_3, Hub_3, TirePressure, ForVelocity, 4);
-    MakeANCFHumveeWheel(my_system, rim_center_4, Hub_4, TirePressure, ForVelocity, 5);
+    MakeANCFHumveeWheel(sys, rim_center_1, Hub_1, TirePressure, ForVelocity, 2);
+    MakeANCFHumveeWheel(sys, rim_center_2, Hub_2, TirePressure, ForVelocity, 3);
+    MakeANCFHumveeWheel(sys, rim_center_3, Hub_3, TirePressure, ForVelocity, 4);
+    MakeANCFHumveeWheel(sys, rim_center_4, Hub_4, TirePressure, ForVelocity, 5);
 
     auto mmaterial = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mmaterial->SetFriction(0.4f);
@@ -564,7 +564,7 @@ int main(int argc, char* argv[]) {
                                                            2800,           // density
                                                            true,           // visualization?
                                                            false);         // collision?
-    my_system.AddBody(SimpChassis);
+    sys.AddBody(SimpChassis);
     // optional, attach a texture for better visualization
     SimpChassis->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/cubetexture_bluewhite.png"));
     auto mtexturebox = chrono_types::make_shared<ChTexture>();
@@ -574,22 +574,22 @@ int main(int argc, char* argv[]) {
     // */
     // Create joints between chassis and hubs
     auto RevTr_1 = chrono_types::make_shared<ChLinkRevoluteTranslational>();
-    my_system.AddLink(RevTr_1);
+    sys.AddLink(RevTr_1);
     RevTr_1->Initialize(Hub_1, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), ChVector<>(Lwx, -Lwy, 0.1),
                         ChVector<>(0, 0, 1), ChVector<>(1, 0, 0), true);
 
     auto RevTr_2 = chrono_types::make_shared<ChLinkRevoluteTranslational>();
-    my_system.AddLink(RevTr_2);
+    sys.AddLink(RevTr_2);
     RevTr_2->Initialize(Hub_2, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), ChVector<>(Lwx, Lwy, 0.1),
                         ChVector<>(0, 0, 1), ChVector<>(1, 0, 0), true);
 
     auto RevTr_3 = chrono_types::make_shared<ChLinkRevoluteTranslational>();
-    my_system.AddLink(RevTr_3);
+    sys.AddLink(RevTr_3);
     RevTr_3->Initialize(Hub_3, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), ChVector<>(-Lwx, Lwy, 0.1),
                         ChVector<>(0, 0, 1), ChVector<>(1, 0, 0), true);
 
     auto RevTr_4 = chrono_types::make_shared<ChLinkRevoluteTranslational>();
-    my_system.AddLink(RevTr_4);
+    sys.AddLink(RevTr_4);
     RevTr_4->Initialize(Hub_4, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), ChVector<>(-Lwx, -Lwy, 0.1),
                         ChVector<>(0, 0, 1), ChVector<>(1, 0, 0), true);
 
@@ -598,42 +598,42 @@ int main(int argc, char* argv[]) {
     spring1->Initialize(Hub_1, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(Lwx, -Lwy, 0));
     spring1->SetSpringCoefficient(spring_coef);
     spring1->SetDampingCoefficient(damping_coef);
-    my_system.AddLink(spring1);
+    sys.AddLink(spring1);
 
     auto spring2 = chrono_types::make_shared<ChLinkTSDA>();
     spring2->Initialize(Hub_2, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(-Lwx, -Lwy, 0));
     spring2->SetSpringCoefficient(spring_coef);
     spring2->SetDampingCoefficient(damping_coef);
-    my_system.AddLink(spring2);
+    sys.AddLink(spring2);
 
     auto spring3 = chrono_types::make_shared<ChLinkTSDA>();
     spring3->Initialize(Hub_3, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(-Lwx, Lwy, 0));
     spring3->SetSpringCoefficient(spring_coef);
     spring3->SetDampingCoefficient(damping_coef);
-    my_system.AddLink(spring3);
+    sys.AddLink(spring3);
 
     auto spring4 = chrono_types::make_shared<ChLinkTSDA>();
     spring4->Initialize(Hub_4, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(Lwx, Lwy, 0));
     spring4->SetSpringCoefficient(spring_coef);
     spring4->SetDampingCoefficient(damping_coef);
-    my_system.AddLink(spring4);
+    sys.AddLink(spring4);
 
     // Create a large cube as a floor.
 
     auto mrigidBody = chrono_types::make_shared<ChBodyEasyBox>(10, 10, 0.00001, 1000, true, false);
-    my_system.Add(mrigidBody);
+    sys.Add(mrigidBody);
     mrigidBody->SetPos(ChVector<>(0, 0, GroundLoc));
     mrigidBody->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/concrete.jpg"));
     mrigidBody->SetBodyFixed(true);
 
-    my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
+    sys.Set_G_acc(ChVector<>(0, 0, -9.81));
     auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
-    my_system.SetSolver(mkl_solver);
+    sys.SetSolver(mkl_solver);
     mkl_solver->LockSparsityPattern(true);
 
-    my_system.SetTimestepperType(ChTimestepper::Type::HHT);
-    // my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
-    auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
+    sys.SetTimestepperType(ChTimestepper::Type::HHT);
+    // sys.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
+    auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(sys.GetTimestepper());
     mystepper->SetAlpha(-0.3);  // Important for convergence
     mystepper->SetMaxiters(20);
     mystepper->SetAbsTolerances(6e-03, 2.5);
@@ -658,7 +658,6 @@ int main(int argc, char* argv[]) {
 
     // Create the Irrlicht visualization system
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
-    my_system.SetVisualSystem(vis);
     vis->SetWindowSize(1080, 800);
     vis->SetWindowTitle("HMMWV ANCF tire");
     vis->Initialize();
@@ -666,9 +665,10 @@ int main(int argc, char* argv[]) {
     vis->AddSkyBox();
     vis->AddCamera(ChVector<>(0.5, 0.5, 1.15), ChVector<>(0.65, 0, 0));
     vis->AddTypicalLights();
+    vis->AttachSystem(&sys);
 
-    my_system.Setup();
-    my_system.Update();
+    sys.Setup();
+    sys.Update();
 
     chrono::GetLog()
         << "\n\nREADME\n\n"
@@ -686,19 +686,19 @@ int main(int argc, char* argv[]) {
 
     while (vis->Run()) {
         vis->BeginScene();
-        vis->DrawAll();
+        vis->Render();
         vis->EndScene();
 
-        my_system.DoStepDynamics(time_step);
+        sys.DoStepDynamics(time_step);
 
-        std::cout << "Time t = " << my_system.GetChTime() << "s \n";
+        std::cout << "Time t = " << sys.GetChTime() << "s \n";
         // AccuNoIterations += mystepper->GetNumIterations();
         printf("Vertical position of Tires:      %12.4e       %12.4e       %12.4e       %12.4e  Chassis   \n",
                Hub_1->GetPos().y(), Hub_2->GetPos().y(), Hub_3->GetPos().y(), Hub_4->GetPos().y());
 
         printf("Longitudinal position of Tires:      %12.4e       %12.4e       %12.4e       %12.4e  Chassis  ",
                Hub_1->GetPos().z(), Hub_2->GetPos().z(), Hub_3->GetPos().z(), Hub_4->GetPos().z());
-        out << my_system.GetChTime() << Hub_1->GetPos().x() << Hub_1->GetPos().y() << Hub_1->GetPos().z()
+        out << sys.GetChTime() << Hub_1->GetPos().x() << Hub_1->GetPos().y() << Hub_1->GetPos().z()
             << Hub_2->GetPos().x() << Hub_2->GetPos().y() << Hub_2->GetPos().z() << Hub_3->GetPos().x()
             << Hub_3->GetPos().y() << Hub_3->GetPos().z() << std::endl;
         out.write_to_file("../VertPosRim.txt");
@@ -710,12 +710,12 @@ int main(int argc, char* argv[]) {
     /*
     ChVectorDynamic<double> Cp;
     ChVectorDynamic<double> Cd;  // Matrices for storing constraint violations
-    my_system.Setup();
-    my_system.Update();
-    my_system.SetupInitial();
+    sys.Setup();
+    sys.Update();
+    sys.SetupInitial();
     for (unsigned int it = 0; it < num_steps; it++) {
-        my_system.DoStepDynamics(time_step);
-        std::cout << "Time t = " << my_system.GetChTime() << "s \n";
+        sys.DoStepDynamics(time_step);
+        std::cout << "Time t = " << sys.GetChTime() << "s \n";
         // std::cout << "nodetip->pos.z() = " << nodetip->pos.z() << "\n";
         // std::cout << "mystepper->GetNumIterations()= " << mystepper->GetNumIterations() << "\n";
         if (addConstRim) {

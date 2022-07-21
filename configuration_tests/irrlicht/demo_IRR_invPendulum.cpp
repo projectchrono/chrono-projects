@@ -258,7 +258,6 @@ int main(int argc, char* argv[]) {
     // Create Irrlicht window and camera
     // ---------------------------------
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
-    system.SetVisualSystem(vis);
     vis->SetWindowSize(800, 600);
     vis->SetWindowTitle("Inverted Pendulum");
     vis->Initialize();
@@ -266,6 +265,7 @@ int main(int argc, char* argv[]) {
     vis->AddSkyBox();
     vis->AddCamera(ChVector<>(2.8f, 0, 1.8f), ChVector<>(1.2f, 0, -0.3f));
     vis->AddTypicalLights();
+    vis->AttachSystem(&system);
 
     // Simulation loop
     // ---------------
@@ -278,7 +278,7 @@ int main(int argc, char* argv[]) {
 
     while (vis->Run()) {
         vis->BeginScene();
-        vis->DrawAll();
+        vis->Render();
 
         // Render a grid
         tools::drawGrid(vis.get(), 0.5, 0.5, 40, 40, CSYSNORM, ChColor(0.9f, 0.9f, 0), true);

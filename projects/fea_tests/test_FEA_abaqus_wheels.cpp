@@ -36,7 +36,7 @@ using namespace chrono;
 using namespace chrono::fea;
 using namespace chrono::irrlicht;
 
-void MakeWheel(ChSystemSMC& my_system,
+void MakeWheel(ChSystemSMC& sys,
                const ChVector<> tire_center,
                const ChQuaternion<> tire_alignment,
                const double tire_scale_R,
@@ -85,7 +85,7 @@ void MakeWheel(ChSystemSMC& my_system,
     }
 
     // Remember to add the mesh to the system!
-    my_system.Add(my_mesh);
+    sys.Add(my_mesh);
 
     // Add a rim
     auto mwheel_rim = chrono_types::make_shared<ChBody>();
@@ -95,7 +95,7 @@ void MakeWheel(ChSystemSMC& my_system,
     mwheel_rim->SetRot(tire_alignment);
     mwheel_rim->SetPos_dt(ChVector<>(0, 0, tire_vel_z0));
     mwheel_rim->SetWvel_par(ChVector<>(tire_w0, 0, 0));
-    my_system.Add(mwheel_rim);
+    sys.Add(mwheel_rim);
 
     auto mobjmesh = chrono_types::make_shared<ChTriangleMeshShape>();
     mobjmesh->GetMesh()->LoadWavefrontMesh(GetChronoDataFile("fea/tractor_wheel_rim.obj"));
@@ -110,7 +110,7 @@ void MakeWheel(ChSystemSMC& my_system,
     for (auto i = 0; i < node_sets.at(nodeset_sel).size(); ++i) {
         auto mlink = chrono_types::make_shared<ChLinkPointFrame>();
         mlink->Initialize(std::dynamic_pointer_cast<ChNodeFEAxyz>(node_sets[nodeset_sel][i]), mwheel_rim);
-        my_system.Add(mlink);
+        sys.Add(mlink);
     }
 
     /// Create a mesh surface, for applying loads:
@@ -123,7 +123,7 @@ void MakeWheel(ChSystemSMC& my_system,
 
     /// Apply load to all surfaces in the mesh surface
     auto mloadcontainer = chrono_types::make_shared<ChLoadContainer>();
-    my_system.Add(mloadcontainer);
+    sys.Add(mloadcontainer);
 
     for (int i = 0; i < mmeshsurf->GetFacesList().size(); ++i) {
         auto aface = std::shared_ptr<ChLoadableUV>(mmeshsurf->GetFacesList()[i]);
@@ -163,7 +163,7 @@ int main(int argc, char* argv[]) {
     double tire_w0 = tire_vel_z0 / tire_rad;
 
     // Create a Chrono::Engine physical system
-    ChSystemSMC my_system;
+    ChSystemSMC sys;
 
 
     //
@@ -188,7 +188,7 @@ int main(int argc, char* argv[]) {
     auto mfloor = chrono_types::make_shared<ChBodyEasyBox>(15, 0.2, 15, 2700, true, true, mysurfmaterial);
     mfloor->SetBodyFixed(true);
     mfloor->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/concrete.jpg"));
-    my_system.Add(mfloor);
+    sys.Add(mfloor);
 
     // Create the car truss
     auto mtruss = chrono_types::make_shared<ChBodyAuxRef>();
@@ -197,7 +197,7 @@ int main(int argc, char* argv[]) {
     mtruss->SetBodyFixed(false);
     mtruss->SetMass(100);
     mtruss->SetInertiaXX(ChVector<>(100, 100, 100));
-    my_system.Add(mtruss);
+    sys.Add(mtruss);
 
     auto mtrussmesh = chrono_types::make_shared<ChTriangleMeshShape>();
     mtrussmesh->GetMesh()->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_chassis_simple.obj"));
@@ -209,7 +209,7 @@ int main(int argc, char* argv[]) {
         auto mfloor_step = chrono_types::make_shared<ChBodyEasyBox>(3, 0.2, 0.5, 2700, true, true, mysurfmaterial);
         mfloor_step->SetPos(ChVector<>(2, 0.1, -1.8));
         mfloor_step->SetBodyFixed(true);
-        my_system.Add(mfloor_step);
+        sys.Add(mfloor_step);
     }
 
     // Create some bent rectangular fixed slabs
@@ -225,7 +225,7 @@ int main(int argc, char* argv[]) {
             mcube->SetPos(ChVector<>((ChRandom() - 0.5) * 2.8, ChRandom() * 0.1, -ChRandom() * 3.2 - 1.1));
             mcube->SetBodyFixed(true);
             mcube->GetVisualShape(0)->SetColor(ChColor(0.3f, 0.3f, 0.3f));
-            my_system.Add(mcube);
+            sys.Add(mcube);
         }
     }
 
@@ -238,7 +238,7 @@ int main(int argc, char* argv[]) {
             mcube->Move(ChCoordsys<>(VNULL, vrot));
             mcube->SetPos(ChVector<>((ChRandom() - 0.5) * 1.4, ChRandom() * 0.2 + 0.05, -ChRandom() * 2.6 + 0.2));
             mcube->GetVisualShape(0)->SetColor(ChColor(0.3f, 0.3f, 0.3f));
-            my_system.Add(mcube);
+            sys.Add(mcube);
         }
     }
 
@@ -255,41 +255,40 @@ int main(int argc, char* argv[]) {
 
     // Make a wheel and connect it to truss:
     std::shared_ptr<ChBody> mrim_BL;
-    MakeWheel(my_system, tire_center_BL, tire_alignment, tire_scaleR, tire_scaleW, tire_w0, tire_vel_z0, mysurfmaterial,
+    MakeWheel(sys, tire_center_BL, tire_alignment, tire_scaleR, tire_scaleW, tire_w0, tire_vel_z0, mysurfmaterial,
               mtirematerial, mrim_BL);
 
     auto mrevolute_BL = chrono_types::make_shared<ChLinkLockRevolute>();
-    my_system.Add(mrevolute_BL);
+    sys.Add(mrevolute_BL);
     mrevolute_BL->Initialize(mtruss, mrim_BL, ChCoordsys<>(tire_center_BL, Q_from_AngAxis(CH_C_PI_2, VECT_Y)));
 
     // Make a wheel and connect it to truss:
     std::shared_ptr<ChBody> mrim_FL;
-    MakeWheel(my_system, tire_center_FL, tire_alignment, tire_scaleR, tire_scaleW, tire_w0, tire_vel_z0, mysurfmaterial,
+    MakeWheel(sys, tire_center_FL, tire_alignment, tire_scaleR, tire_scaleW, tire_w0, tire_vel_z0, mysurfmaterial,
               mtirematerial, mrim_FL);
     auto mrevolute_FL = chrono_types::make_shared<ChLinkLockRevolute>();
-    my_system.Add(mrevolute_FL);
+    sys.Add(mrevolute_FL);
     mrevolute_FL->Initialize(mtruss, mrim_FL, ChCoordsys<>(tire_center_FL, Q_from_AngAxis(CH_C_PI_2, VECT_Y)));
 
     // Make a wheel and connect it to truss:
     std::shared_ptr<ChBody> mrim_BR;
-    MakeWheel(my_system, tire_center_BR, tire_alignment, tire_scaleR, tire_scaleW, tire_w0, tire_vel_z0, mysurfmaterial,
+    MakeWheel(sys, tire_center_BR, tire_alignment, tire_scaleR, tire_scaleW, tire_w0, tire_vel_z0, mysurfmaterial,
               mtirematerial, mrim_BR);
     auto mrevolute_BR = chrono_types::make_shared<ChLinkLockRevolute>();
-    my_system.Add(mrevolute_BR);
+    sys.Add(mrevolute_BR);
     mrevolute_BR->Initialize(mtruss, mrim_BR, ChCoordsys<>(tire_center_BR, Q_from_AngAxis(CH_C_PI_2, VECT_Y)));
 
     // Make a wheel and connect it to truss:
     std::shared_ptr<ChBody> mrim_FR;
-    MakeWheel(my_system, tire_center_FR, tire_alignment, tire_scaleR, tire_scaleW, tire_w0, tire_vel_z0, mysurfmaterial,
+    MakeWheel(sys, tire_center_FR, tire_alignment, tire_scaleR, tire_scaleW, tire_w0, tire_vel_z0, mysurfmaterial,
               mtirematerial, mrim_FR);
 
     auto mrevolute_FR = chrono_types::make_shared<ChLinkLockRevolute>();
-    my_system.Add(mrevolute_FR);
+    sys.Add(mrevolute_FR);
     mrevolute_FR->Initialize(mtruss, mrim_FR, ChCoordsys<>(tire_center_FR, Q_from_AngAxis(CH_C_PI_2, VECT_Y)));
 
     // Create the Irrlicht visualization system
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
-    my_system.SetVisualSystem(vis);
     vis->SetWindowSize(1280, 720);
     vis->SetWindowTitle("FEA contacts");
     vis->Initialize();
@@ -297,6 +296,7 @@ int main(int argc, char* argv[]) {
     vis->AddSkyBox();
     vis->AddCamera(ChVector<>(3, 3, -4), ChVector<>(0, tire_rad, 0));
     vis->AddTypicalLights();
+    vis->AttachSystem(&sys);
 
     //
     // THE SOFT-REAL-TIME CYCLE
@@ -308,21 +308,21 @@ int main(int argc, char* argv[]) {
         solver->EnableWarmStart(true);
         solver->SetMaxIterations(90);
         solver->SetVerbose(false);
-        my_system.SetSolver(solver);
-        my_system.SetSolverForceTolerance(1e-10);
+        sys.SetSolver(solver);
+        sys.SetSolverForceTolerance(1e-10);
     */
     // Change solver to pluggable PardisoMKL
     auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
-    my_system.SetSolver(mkl_solver);
+    sys.SetSolver(mkl_solver);
     mkl_solver->LockSparsityPattern(true);
-    my_system.Update();
+    sys.Update();
 
     // Change type of integrator:
-    my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
-    // my_system.SetTimestepperType(chrono::ChTimestepper::Type::HHT);  // precise,slower, might iterate each step
+    sys.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
+    // sys.SetTimestepperType(chrono::ChTimestepper::Type::HHT);  // precise,slower, might iterate each step
 
     // if later you want to change integrator settings:
-    if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper())) {
+    if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(sys.GetTimestepper())) {
         mystepper->SetAlpha(-0.2);
         mystepper->SetMaxiters(2);
         mystepper->SetAbsTolerances(1e-6);
@@ -330,9 +330,9 @@ int main(int argc, char* argv[]) {
 
     while (vis->Run()) {
         vis->BeginScene();
-        vis->DrawAll();
+        vis->Render();
         vis->EndScene();
-        my_system.DoStepDynamics(1e-3);
+        sys.DoStepDynamics(1e-3);
     }
 
     return 0;

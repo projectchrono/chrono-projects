@@ -38,7 +38,7 @@
 //#undef CHRONO_OPENGL
 
 #ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChOpenGLWindow.h"
+#include "chrono_opengl/ChVisualSystemOpenGL.h"
 #endif
 
 #include "../utils.h"
@@ -116,26 +116,26 @@ int SpawnParticles() {
 // ========================================================================
 int main(int argc, char* argv[]) {
     // Create system
-    ChSystemMulticoreSMC* msystem = new ChSystemMulticoreSMC();
+    ChSystemMulticoreSMC* sys = new ChSystemMulticoreSMC();
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();
     if (threads > max_threads)
         threads = max_threads;
-    msystem->SetNumThreads(threads);
+    sys->SetNumThreads(threads);
 
     // Set gravitational acceleration
-    msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
+    sys->Set_G_acc(ChVector<>(0, 0, -gravity));
 
     // Using constant adhesion model
-    msystem->GetSettings()->solver.adhesion_force_model = ChSystemSMC::AdhesionForceModel::Constant;
+    sys->GetSettings()->solver.adhesion_force_model = ChSystemSMC::AdhesionForceModel::Constant;
 
     // Edit system settings
-    msystem->GetSettings()->solver.tolerance = 1e-4;
+    sys->GetSettings()->solver.tolerance = 1e-4;
 
-    msystem->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
+    sys->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
 
-    msystem->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::PRIMS;
+    sys->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::PRIMS;
 
     // Create a material for the granular material
     auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
@@ -152,14 +152,14 @@ int main(int argc, char* argv[]) {
     mat_c->SetAdhesion(cohesion_c);
 
     // Create the containing bin
-    utils::CreateBoxContainer(msystem, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(sys, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 
     // Create a mixture entirely made out of spheres
     double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
     double mass_g = rho_g * vol_g;
     ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
-    gen = new utils::Generator(msystem);
+    gen = new utils::Generator(sys);
 
     std::shared_ptr<utils::MixtureIngredient> m1 = gen->AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
     m1->setDefaultMaterial(mat_g);
@@ -185,11 +185,14 @@ int main(int argc, char* argv[]) {
 
 #ifdef CHRONO_OPENGL
     // Initialize OpenGL
-    opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.AttachSystem(msystem);
-    gl_window.Initialize(1280, 720, "Foam demo");
-    gl_window.SetCamera(ChVector<>(4, -5, 4), ChVector<>(9, 0, 3), ChVector<>(0, 0, 1));
-    gl_window.SetRenderMode(opengl::WIREFRAME);
+    opengl::ChVisualSystemOpenGL vis;
+    vis.AttachSystem(sys);
+    vis.SetWindowTitle("Foam demo");
+    vis.SetWindowSize(1280, 720);
+    vis.SetRenderMode(opengl::WIREFRAME);
+    vis.Initialize();
+    vis.SetCameraPosition(ChVector<>(4, -5, 4), ChVector<>(9, 0, 3));
+    vis.SetCameraVertical(CameraVerticalDir::Z);
 #endif
 
     // Perform the simulation
@@ -200,7 +203,7 @@ int main(int argc, char* argv[]) {
     ChStreamOutAsciiFile ofile(out_file.c_str());
 
     while (time < time_end) {
-        int numParticles = (int)msystem->Get_bodylist().size() - 1;
+        int numParticles = (int)sys->Get_bodylist().size() - 1;
 
         if (numParticles < maxNumParticles && sim_frame % gen_steps == 0) {
             SpawnParticles();
@@ -209,7 +212,7 @@ int main(int argc, char* argv[]) {
         if (sim_frame % out_steps == 0) {
             char filename[100];
             sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
-            utils::WriteVisualizationAssets(msystem, filename);
+            utils::WriteVisualizationAssets(sys, filename);
 
             cout << " --------------------------------- Output frame:   " << out_frame + 1 << endl;
             cout << "                                   Sim frame:      " << sim_frame << endl;
@@ -218,30 +221,30 @@ int main(int argc, char* argv[]) {
             cout << "                                   Num. bodies:    " << numParticles << endl;
 
             ofile << sim_frame << "  " << time << "  " << exec_time << "  " << numParticles << "  "
-                  << msystem->GetNcontacts() << "\n";
+                  << sys->GetNcontacts() << "\n";
 
             out_frame++;
         }
 
 // Advance dynamics.
 #ifdef CHRONO_OPENGL
-        if (gl_window.Active()) {
-            gl_window.DoStepDynamics(time_step);
-            gl_window.Render();
+        if (vis.Run()) {
+            sys->DoStepDynamics(time_step);
+            vis.Render();
         } else
             break;
 #else
-        msystem->DoStepDynamics(time_step);
+        sys->DoStepDynamics(time_step);
 #endif
 
         time += time_step;
         sim_frame++;
-        exec_time += msystem->GetTimerStep();
+        exec_time += sys->GetTimerStep();
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies: " << msystem->Get_bodylist().size() << endl;
+    cout << "Number of bodies: " << sys->Get_bodylist().size() << endl;
     cout << "Simulation time: " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;
 

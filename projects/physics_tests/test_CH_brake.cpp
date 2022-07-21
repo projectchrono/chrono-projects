@@ -93,7 +93,6 @@ int main(int argc, char* argv[]) {
 
     // Create the Irrlicht visualization
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
-    system.SetVisualSystem(vis);
     vis->SetWindowSize(800, 600);
     vis->SetWindowTitle("Brake test");
     vis->Initialize();
@@ -101,6 +100,7 @@ int main(int argc, char* argv[]) {
     vis->AddSkyBox();
     vis->AddCamera(ChVector<>(1, 0.5, -1));
     vis->AddTypicalLights();
+    vis->AttachSystem(&system);
 
     // Set solver
     auto minres_solver = chrono_types::make_shared<ChSolverMINRES>();
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
         double time = system.GetChTime();
 
         vis->BeginScene();
-        vis->DrawAll();
+        vis->Render();
         tools::drawAllCOGs(vis.get(), 1);
         sprintf(msg, "Time:    %.2f", time);
         font->draw(msg, text_box1, text_col);

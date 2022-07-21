@@ -389,7 +389,6 @@ int main(int argc, char* argv[]) {
 
     // Create the Irrlicht visualization system
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
-    sys.SetVisualSystem(vis);
     vis->SetWindowSize(800, 600);
     vis->SetWindowTitle("Load a robot model from STEP file");
     vis->Initialize();
@@ -397,6 +396,7 @@ int main(int argc, char* argv[]) {
     vis->AddSkyBox();
     vis->AddCamera(ChVector<>(0.2, 1.6, 3.5), ChVector<>(0, 1, 0));
     vis->AddTypicalLights();
+    vis->AttachSystem(&sys);
 
     // Modify the settings of the solver.
     // By default, the solver might not have sufficient precision to keep the
@@ -426,7 +426,7 @@ int main(int argc, char* argv[]) {
 
     while (vis->Run()) {
         vis->BeginScene();
-        vis->DrawAll();
+        vis->Render();
         tools::drawChFunction(vis.get(), motlaw_z.get(), 0, 10, -0.9, 0.2, 10, 400, 300, 80);
         tools::drawChFunction(vis.get(), motlaw_y.get(), 0, 10, -0.9, 0.2, 10, 500, 300, 80);
         vis->EndScene();

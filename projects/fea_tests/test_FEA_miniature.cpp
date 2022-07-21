@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
     SetChronoDataPath(CHRONO_DATA_DIR);
 
     // Create a Chrono::Engine physical system
-    ChSystemNSC my_system;
+    ChSystemNSC sys;
 
     double scales = 100;
 
@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
 
     body_truss->SetBodyFixed(true);
 
-    my_system.AddBody(body_truss);
+    sys.AddBody(body_truss);
 
     /*
     // Attach a 'box' shape asset for visualization.
@@ -204,7 +204,7 @@ int main(int argc, char* argv[]) {
     //
 
     // Remember to add the mesh to the system!
-    my_system.Add(my_mesh);
+    sys.Add(my_mesh);
 
     // ==Asset== attach a visualization of the FEM mesh.
     // This will automatically update a triangle mesh (a ChTriangleMeshShape
@@ -236,15 +236,15 @@ int main(int argc, char* argv[]) {
     if (!simple_rack) {
         auto rack = chrono_types::make_shared<ChBodyEasyBox>(hbarL2, hbarW, thickZ, 7000, true, false);
         rack->SetPos(0.5 * (vBl + vCl));
-        my_system.Add(rack);
+        sys.Add(rack);
 
         auto constr_B = chrono_types::make_shared<ChLinkMateGeneric>();
         constr_B->Initialize(node_Bl, rack, false, node_Bl->Frame(), node_Bl->Frame());
-        my_system.Add(constr_B);
+        sys.Add(constr_B);
 
         auto constr_C = chrono_types::make_shared<ChLinkMateGeneric>();
         constr_C->Initialize(node_Cl, rack, false, node_Cl->Frame(), node_Cl->Frame());
-        my_system.Add(constr_C);
+        sys.Add(constr_C);
 
         auto balance = chrono_types::make_shared<ChBodyEasyCylinder>(Rbalance, Wbalance, 7000, true, false);
         balance->SetPos(vP + ChVector<>(0, 0, -OffPin));
@@ -265,13 +265,13 @@ int main(int argc, char* argv[]) {
         vshaft->SetColor(ChColor(0.5f, 0.9f, 0.9f));
         balance->AddVisualShape(vshaft);
 
-        my_system.Add(balance);
+        sys.Add(balance);
 
         auto revolute = chrono_types::make_shared<ChLinkLockRevolute>();
         std::shared_ptr<ChBody> mbalance = balance;
         revolute->Initialize(mbalance, body_truss, ChCoordsys<>(vP + ChVector<>(0, 0, -0.01)));
 
-        my_system.Add(revolute);
+        sys.Add(revolute);
 
         auto constr_rack = chrono_types::make_shared<ChLinkRackpinion>();
         constr_rack->Initialize(balance, rack, false, ChFrame<>(), ChFrame<>());
@@ -286,14 +286,13 @@ int main(int argc, char* argv[]) {
         constr_rack->SetPinionFrame(f_pin);
         constr_rack->SetRackFrame(f_rack);
 
-        my_system.Add(constr_rack);
+        sys.Add(constr_rack);
 
         balance->SetWvel_par(ChVector<>(0, 0, 1.5));
     }
     
     // Create the Irrlicht visualization system
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
-    my_system.SetVisualSystem(vis);
     vis->SetWindowSize(800, 600);
     vis->SetWindowTitle("Beams and constraints");
     vis->Initialize();
@@ -301,6 +300,7 @@ int main(int argc, char* argv[]) {
     vis->AddSkyBox();
     vis->AddCamera(ChVector<>(0, 0.01*scales, 0.01*scales));
     vis->AddTypicalLights();
+    vis->AttachSystem(&sys);
 
     //
     // THE SOFT-REAL-TIME CYCLE
@@ -311,15 +311,15 @@ int main(int argc, char* argv[]) {
     solver->EnableWarmStart(true);
     solver->SetMaxIterations(400);
     solver->SetVerbose(true);
-    my_system.SetSolver(solver);
-    my_system.SetSolverForceTolerance(1e-12);
+    sys.SetSolver(solver);
+    sys.SetSolverForceTolerance(1e-12);
 
     //***TEST***
     ChMatlabEngine matlab_engine;
     auto matlab_solver = chrono_types::make_shared<ChSolverMatlab>(matlab_engine);
-    my_system.SetSolver(matlab_solver);
+    sys.SetSolver(matlab_solver);
 
-    my_system.Set_G_acc(ChVector<>(0, 0, 0));
+    sys.Set_G_acc(ChVector<>(0, 0, 0));
 
     GetLog() << "STATIC linear solve ----\n";
     node_Cl->SetForce(ChVector<>(50, 0, 0));
@@ -328,17 +328,17 @@ int main(int argc, char* argv[]) {
 
     if (simple_rack) {
         node_Cl->SetForce(ChVector<>(50, 0, 0));
-        my_system.DoStaticNonlinear(12);
+        sys.DoStaticNonlinear(12);
         node_Cl->SetForce(ChVector<>(0, 0, 0));
     }
 
     while (vis->Run()) {
         vis->BeginScene();
-        vis->DrawAll();
+        vis->Render();
         tools::drawGrid(vis.get(), 0.2, 0.2, 10, 10, ChCoordsys<>(VNULL, CH_C_PI_2, VECT_Z), ChColor(0.4f, 0.5f, 0.5f),
                         true);
         vis->EndScene();
-        my_system.DoStepDynamics(0.01);
+        sys.DoStepDynamics(0.01);
     }
 
     return 0;

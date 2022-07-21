@@ -42,7 +42,7 @@
 //#undef CHRONO_OPENGL
 
 #ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChOpenGLWindow.h"
+#include "chrono_opengl/ChVisualSystemOpenGL.h"
 #endif
 
 #include "../utils.h"
@@ -173,7 +173,7 @@ double h = 10e-2;
 //   radius)
 // - a containing bin consisting of five boxes (no top)
 // -----------------------------------------------------------------------------
-int CreateObjects(ChSystemMulticore* msystem) {
+int CreateObjects(ChSystemMulticore* sys) {
 // Create the containing bin
 #ifdef USE_SMC
     auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
@@ -181,12 +181,12 @@ int CreateObjects(ChSystemMulticore* msystem) {
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
 
-    utils::CreateBoxContainer(msystem, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(sys, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 #else
     auto mat_c = chrono_types::make_shared<ChMaterialSurfaceNSC>();
     mat_c->SetFriction(mu_c);
 
-    utils::CreateBoxContainer(msystem, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(sys, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
 #endif
 
 // Create a material for the granular material
@@ -203,7 +203,7 @@ int CreateObjects(ChSystemMulticore* msystem) {
     // Create a mixture entirely made out of spheres
     double r = 1.01 * r_g;
     utils::PDSampler<double> sampler(2 * r);
-    utils::Generator gen(msystem);
+    utils::Generator gen(sys);
 
     std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
     m1->setDefaultMaterial(mat_g);
@@ -321,9 +321,9 @@ double FindLowest(ChSystem* sys) {
 // Create the falling object such that its bottom point is at the specified height
 // and its downward initial velocity has the specified magnitude.
 // -----------------------------------------------------------------------------
-std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* msystem) {
+std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* sys) {
     // Estimate object initial location and velocity
-    double z = FindHighest(msystem);
+    double z = FindHighest(sys);
     double vz = std::sqrt(2 * gravity * h);
     double initLoc = RecalcPenetratorLocation(z);
     cout << "creating object at " << initLoc << " and velocity " << vz << endl;
@@ -356,7 +356,7 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* msystem) {
 
     CreatePenetratorGeometry(obj, mat);
 
-    msystem->AddBody(obj);
+    sys->AddBody(obj);
     return obj;
 }
 
@@ -425,48 +425,48 @@ int main(int argc, char* argv[]) {
 // Create system
 #ifdef USE_SMC
     cout << "Create SMC system" << endl;
-    ChSystemMulticoreSMC* msystem = new ChSystemMulticoreSMC();
+    ChSystemMulticoreSMC* sys = new ChSystemMulticoreSMC();
 #else
     cout << "Create NSC system" << endl;
-    ChSystemMulticoreNSC* msystem = new ChSystemMulticoreNSC();
+    ChSystemMulticoreNSC* sys = new ChSystemMulticoreNSC();
 #endif
 
     // Debug log messages.
-    ////msystem->SetLoggingLevel(LOG_INFO, true);
-    ////msystem->SetLoggingLevel(LOG_TRACE, true);
+    ////sys->SetLoggingLevel(LOG_INFO, true);
+    ////sys->SetLoggingLevel(LOG_TRACE, true);
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();
     if (threads > max_threads)
         threads = max_threads;
-    msystem->SetNumThreads(threads);
+    sys->SetNumThreads(threads);
     cout << "Using " << threads << " threads" << endl;
 
     // Set gravitational acceleration
-    msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
+    sys->Set_G_acc(ChVector<>(0, 0, -gravity));
 
     // Edit system settings
-    msystem->GetSettings()->solver.use_full_inertia_tensor = false;
-    msystem->GetSettings()->solver.tolerance = tolerance;
+    sys->GetSettings()->solver.use_full_inertia_tensor = false;
+    sys->GetSettings()->solver.tolerance = tolerance;
 
 #ifdef USE_SMC
-    msystem->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::HYBRID;
+    sys->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::HYBRID;
 
-    msystem->GetSettings()->solver.contact_force_model = contact_force_model;
-    msystem->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
+    sys->GetSettings()->solver.contact_force_model = contact_force_model;
+    sys->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 #else
-    msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
-    msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
-    msystem->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
-    msystem->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
-    msystem->GetSettings()->solver.alpha = 0;
-    msystem->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-    msystem->ChangeSolverType(SolverType::APGD);
+    sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
+    sys->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
+    sys->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
+    sys->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
+    sys->GetSettings()->solver.alpha = 0;
+    sys->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
+    sys->ChangeSolverType(SolverType::APGD);
 
-    msystem->GetSettings()->collision.collision_envelope = 0.05 * r_g;
+    sys->GetSettings()->collision.collision_envelope = 0.05 * r_g;
 #endif
 
-    msystem->GetSettings()->collision.bins_per_axis = vec3(20, 20, 20);
+    sys->GetSettings()->collision.bins_per_axis = vec3(20, 20, 20);
 
     // Depending on problem type:
     // - Select end simulation time
@@ -482,7 +482,7 @@ int main(int argc, char* argv[]) {
         out_fps = out_fps_settling;
 
         cout << "Create granular material" << endl;
-        CreateObjects(msystem);
+        CreateObjects(sys);
     }
 
     if (problem == DROPPING) {
@@ -491,9 +491,9 @@ int main(int argc, char* argv[]) {
 
         // Create the granular material and the container from the checkpoint file.
         cout << "Read checkpoint data from " << checkpoint_file;
-        utils::ReadCheckpoint(msystem, checkpoint_file);
-        cout << "  done.  Read " << msystem->Get_bodylist().size() << " bodies." << endl;
-        obj = CreatePenetrator(msystem);
+        utils::ReadCheckpoint(sys, checkpoint_file);
+        cout << "  done.  Read " << sys->Get_bodylist().size() << " bodies." << endl;
+        obj = CreatePenetrator(sys);
     }
 
     // Number of steps
@@ -525,11 +525,14 @@ int main(int argc, char* argv[]) {
     std::ofstream hfile(height_file.c_str());
 
 #ifdef CHRONO_OPENGL
-    opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.AttachSystem(msystem);
-    gl_window.Initialize(1280, 720, "Penetrator Test");
-    gl_window.SetCamera(ChVector<>(0, -10 * hDimY, hDimZ), ChVector<>(0, 0, hDimZ), ChVector<>(0, 0, 1), 0.02f);
-    gl_window.SetRenderMode(opengl::WIREFRAME);
+    opengl::ChVisualSystemOpenGL vis;
+    vis.AttachSystem(sys);
+    vis.SetWindowTitle("Penetrator Test");
+    vis.SetWindowSize(1280, 720);
+    vis.SetRenderMode(opengl::WIREFRAME);
+    vis.Initialize();
+    vis.SetCameraPosition(ChVector<>(0, -10 * hDimY, hDimZ), ChVector<>(0, 0, hDimZ));
+    vis.SetCameraVertical(CameraVerticalDir::Z);
 #endif
 
     while (time < time_end) {
@@ -538,7 +541,7 @@ int main(int argc, char* argv[]) {
             cout << "---- Frame:          " << out_frame << endl;
             cout << "     Sim frame:      " << sim_frame << endl;
             cout << "     Time:           " << time << endl;
-            cout << "     Lowest point:   " << FindLowest(msystem) << endl;
+            cout << "     Lowest point:   " << FindLowest(sys) << endl;
             cout << "     Avg. contacts:  " << num_contacts / out_steps << endl;
             cout << "     Execution time: " << exec_time << endl;
 
@@ -548,14 +551,14 @@ int main(int argc, char* argv[]) {
             if (povray_output) {
                 char filename[100];
                 sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
-                utils::WriteVisualizationAssets(msystem, filename, false);
+                utils::WriteVisualizationAssets(sys, filename, false);
             }
 
             // Create a checkpoint from the current state.
             if (problem == SETTLING) {
                 cout << "     Write checkpoint data " << flush;
-//                utils::WriteCheckpoint(msystem, checkpoint_file);
-                cout << msystem->Get_bodylist().size() << " bodies" << endl;
+//                utils::WriteCheckpoint(sys, checkpoint_file);
+                cout << sys->Get_bodylist().size() << " bodies" << endl;
             }
 
             // Save current penetrator height.
@@ -570,46 +573,46 @@ int main(int argc, char* argv[]) {
             num_contacts = 0;
         }
 
-        if (problem == SETTLING && time > time_settling_min && CheckSettled(msystem, zero_v)) {
+        if (problem == SETTLING && time > time_settling_min && CheckSettled(sys, zero_v)) {
             cout << "Granular material settled...  time = " << time << endl;
             break;
         }
 
 // Advance simulation by one step
 #ifdef CHRONO_OPENGL
-        if (gl_window.Active()) {
-            gl_window.DoStepDynamics(time_step);
-            gl_window.Render();
+        if (vis.Run()) {
+            sys->DoStepDynamics(time_step);
+            vis.Render();
         } else
             break;
 #else
-        msystem->DoStepDynamics(time_step);
+        sys->DoStepDynamics(time_step);
 #endif
 
         ////progressbar(out_steps + sim_frame - next_out_frame + 1, out_steps);
-        //TimingOutput(msystem);
+        //TimingOutput(sys);
 
         time += time_step;
         sim_frame++;
-        exec_time += msystem->GetTimerStep();
-        num_contacts += msystem->GetNcontacts();
+        exec_time += sys->GetTimerStep();
+        num_contacts += sys->GetNcontacts();
 
         // If requested, output detailed timing information for this step
         if (sim_frame == timing_frame)
-            msystem->PrintStepStats();
+            sys->PrintStepStats();
     }
 
     // Create a checkpoint from the last state
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
-        utils::WriteCheckpoint(msystem, checkpoint_file);
-        cout << "  done.  Wrote " << msystem->Get_bodylist().size() << " bodies." << endl;
+        utils::WriteCheckpoint(sys, checkpoint_file);
+        cout << "  done.  Wrote " << sys->Get_bodylist().size() << " bodies." << endl;
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies:  " << msystem->Get_bodylist().size() << endl;
-    cout << "Lowest position:   " << FindLowest(msystem) << endl;
+    cout << "Number of bodies:  " << sys->Get_bodylist().size() << endl;
+    cout << "Lowest position:   " << FindLowest(sys) << endl;
     cout << "Simulation time:   " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;
 

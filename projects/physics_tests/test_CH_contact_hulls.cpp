@@ -212,11 +212,11 @@ int main(int argc, char* argv[]) {
     double hthick = 0.2;
 
     // Create the system (Y up)
-    ChSystemSMC msystem;
-    msystem.Set_G_acc(ChVector<>(0, gravity, 0));
+    ChSystemSMC sys;
+    sys.Set_G_acc(ChVector<>(0, gravity, 0));
 
-    msystem.SetContactForceModel(ChSystemSMC::ContactForceModel::Hertz);
-    msystem.SetAdhesionForceModel(ChSystemSMC::AdhesionForceModel::Constant);
+    sys.SetContactForceModel(ChSystemSMC::ContactForceModel::Hertz);
+    sys.SetAdhesionForceModel(ChSystemSMC::AdhesionForceModel::Constant);
 
     // Create a material (will be used by both objects)
     auto material = chrono_types::make_shared<ChMaterialSurfaceSMC>();
@@ -246,7 +246,7 @@ int main(int argc, char* argv[]) {
     sphere->SetTexture(GetChronoDataFile("textures/bluewhite.png"));
     ball->AddVisualShape(sphere);
 
-    msystem.AddBody(ball);
+    sys.AddBody(ball);
 
     // Create container
     auto bin = chrono_types::make_shared<ChBody>();
@@ -262,11 +262,10 @@ int main(int argc, char* argv[]) {
     //BuildContainerMeshes(bin, material, hdimX, hdimY, hdimZ, hthick);
     BuildContainerHulls(bin, material, hdimX, hdimY, hdimZ, hthick);
 
-    msystem.AddBody(bin);
+    sys.AddBody(bin);
 
     // Create the Irrlicht visualization
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
-    msystem.SetVisualSystem(vis);
     vis->SetWindowSize(800, 600);
     vis->SetWindowTitle("Collision test");
     vis->Initialize();
@@ -276,14 +275,15 @@ int main(int argc, char* argv[]) {
     vis->AddTypicalLights();
     vis->SetSymbolScale(1e-4);
     vis->EnableContactDrawing(ContactsDrawMode::CONTACT_FORCES);
+    vis->AttachSystem(&sys);
 
     // Simulation loop
     while (vis->Run()) {
         vis->BeginScene();
-        vis->DrawAll();
+        vis->Render();
         vis->EndScene();
 
-        msystem.DoStepDynamics(time_step);
+        sys.DoStepDynamics(time_step);
     }
 
     return 0;

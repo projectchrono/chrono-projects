@@ -199,7 +199,6 @@ int main(int argc, char* argv[]) {
 
     // Create the Irrlicht visualization
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
-    system->SetVisualSystem(vis);
     vis->SetWindowSize(800, 600);
     vis->SetWindowTitle("Mesh collision test");
     vis->Initialize();
@@ -209,13 +208,14 @@ int main(int argc, char* argv[]) {
     vis->AddTypicalLights();
     vis->SetSymbolScale(1e-4);
     vis->EnableContactDrawing(ContactsDrawMode::CONTACT_FORCES);
+    vis->AttachSystem(system);
 
     // ---------------
     // Simulation loop
     // ---------------
     while (vis->Run()) {
         vis->BeginScene();
-        vis->DrawAll();
+        vis->Render();
         vis->EndScene();
         system->DoStepDynamics(time_step);
     }

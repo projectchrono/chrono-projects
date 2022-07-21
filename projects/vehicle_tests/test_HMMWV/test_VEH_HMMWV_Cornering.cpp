@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
     patch_mat->SetPoissonRatio(0.3f);
     RigidTerrain terrain(my_hmmwv.GetSystem());
     auto patch =
-        terrain.AddPatch(patch_mat, ChVector<>(0, 0, terrainHeight), ChVector<>(0, 0, 1), terrainLength, terrainWidth);
+        terrain.AddPatch(patch_mat, ChCoordsys<>(ChVector<>(0, 0, terrainHeight), QUNIT), terrainLength, terrainWidth);
     patch->SetColor(ChColor(1, 1, 1));
     patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 100, 50);
     terrain.Initialize();
@@ -208,7 +208,7 @@ int main(int argc, char* argv[]) {
     vis->AddTypicalLights();
     vis->AddSkyBox();
     vis->AddLogo();
-    my_hmmwv.GetVehicle().SetVisualSystem(vis);
+    vis->AttachVehicle(&my_hmmwv.GetVehicle());
 
     // Visualization of controller points (sentinel & target)
     irr::scene::IMeshSceneNode* ballS = vis->GetSceneManager()->addSphereSceneNode(0.1f);
@@ -254,7 +254,7 @@ int main(int argc, char* argv[]) {
         // Render scene and output POV-Ray data
         if (sim_frame % render_steps == 0) {
             vis->BeginScene();
-            vis->DrawAll();
+            vis->Render();
             vis->EndScene();
 
             render_frame++;

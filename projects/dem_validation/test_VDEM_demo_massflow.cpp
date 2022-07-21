@@ -42,7 +42,7 @@
 ////#undef CHRONO_OPENGL
 
 #ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChOpenGLWindow.h"
+#include "chrono_opengl/ChVisualSystemOpenGL.h"
 #endif
 
 using namespace chrono;
@@ -326,42 +326,42 @@ int main(int argc, char* argv[]) {
 // Create system
 #ifdef USE_SMC
     cout << "Create SMC system" << endl;
-    ChSystemMulticoreSMC* msystem = new ChSystemMulticoreSMC();
+    ChSystemMulticoreSMC* sys = new ChSystemMulticoreSMC();
 #else
     cout << "Create NSC system" << endl;
-    ChSystemMulticoreNSC* msystem = new ChSystemMulticoreNSC();
+    ChSystemMulticoreNSC* sys = new ChSystemMulticoreNSC();
 #endif
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();
     if (threads > max_threads)
         threads = max_threads;
-    msystem->SetNumThreads(threads);
+    sys->SetNumThreads(threads);
     cout << "Using " << threads << " threads" << endl;
 
     // Set gravitational acceleration
-    msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
+    sys->Set_G_acc(ChVector<>(0, 0, -gravity));
 
     // Edit system settings
-    msystem->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
-    msystem->GetSettings()->solver.tolerance = tolerance;
-    msystem->GetSettings()->solver.use_full_inertia_tensor = false;
+    sys->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
+    sys->GetSettings()->solver.tolerance = tolerance;
+    sys->GetSettings()->solver.use_full_inertia_tensor = false;
 
 #ifdef USE_SMC
-    msystem->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::PRIMS;
+    sys->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::PRIMS;
 #else
-    msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
-    msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
-    msystem->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
-    msystem->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
-    msystem->GetSettings()->solver.alpha = 0;
-    msystem->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-    msystem->ChangeSolverType(SolverType::APGDREF);
+    sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
+    sys->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
+    sys->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
+    sys->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
+    sys->GetSettings()->solver.alpha = 0;
+    sys->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
+    sys->ChangeSolverType(SolverType::APGDREF);
 
-    msystem->GetSettings()->collision.collision_envelope = 0.05 * r_g;
+    sys->GetSettings()->collision.collision_envelope = 0.05 * r_g;
 #endif
 
-    msystem->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
+    sys->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
 
     // Set simulation duration and create bodies (depending on problem type).
     double time_end;
@@ -372,15 +372,15 @@ int main(int argc, char* argv[]) {
         case SETTLING:
             time_end = time_settling_max;
             out_fps = out_fps_settling;
-            insert = CreateMechanism(msystem);
-            CreateParticles(msystem);
+            insert = CreateMechanism(sys);
+            CreateParticles(sys);
             break;
 
         case DROPPING:
             time_end = time_dropping_max;
             out_fps = out_fps_dropping;
-            utils::ReadCheckpoint(msystem, checkpoint_file);
-            insert = FindBodyById(msystem, 0);
+            utils::ReadCheckpoint(sys, checkpoint_file);
+            insert = FindBodyById(sys, 0);
             break;
     }
 
@@ -412,11 +412,14 @@ int main(int argc, char* argv[]) {
     ChStreamOutAsciiFile ffile(flow_file.c_str());
 
 #ifdef CHRONO_OPENGL
-    opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.AttachSystem(msystem);
-    gl_window.Initialize(1280, 720, "Mass Flow Test");
-    gl_window.SetCamera(ChVector<>(0, -12 * width, height), ChVector<>(0, 0, height), ChVector<>(0, 0, 1), 0.01f);
-    gl_window.SetRenderMode(opengl::WIREFRAME);
+    opengl::ChVisualSystemOpenGL vis;
+    vis.AttachSystem(sys);
+    vis.SetWindowTitle("Foam demo");
+    vis.SetWindowSize(1280, 720);
+    vis.SetRenderMode(opengl::WIREFRAME);
+    vis.Initialize();
+    vis.SetCameraPosition(ChVector<>(0, -12 * width, height), ChVector<>(0, 0, height));
+    vis.SetCameraVertical(CameraVerticalDir::Z);
 #endif
 
     while (time < time_end) {
@@ -424,7 +427,7 @@ int main(int argc, char* argv[]) {
         if (sim_frame == next_out_frame) {
             char filename[100];
             sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
-            utils::WriteVisualizationAssets(msystem, filename);
+            utils::WriteVisualizationAssets(sys, filename);
 
             cout << "------------ Output frame:   " << out_frame << endl;
             cout << "             Sim frame:      " << sim_frame << endl;
@@ -433,7 +436,7 @@ int main(int argc, char* argv[]) {
             cout << "             Execution time: " << exec_time << endl;
 
             double opening = insert->GetPos().x() + 0.5 * height + delta;
-            int count = GetNumParticlesBelowHeight(msystem, 0);
+            int count = GetNumParticlesBelowHeight(sys, 0);
 
             cout << "             Gap:            " << -opening << endl;
             cout << "             Flow:           " << count << endl;
@@ -444,8 +447,8 @@ int main(int argc, char* argv[]) {
             switch (problem) {
                 case SETTLING:
                     // Create a checkpoint from the current state.
-                    utils::WriteCheckpoint(msystem, checkpoint_file);
-                    cout << "             Checkpoint:     " << msystem->Get_bodylist().size() << " bodies" << endl;
+                    utils::WriteCheckpoint(sys, checkpoint_file);
+                    cout << "             Checkpoint:     " << sys->Get_bodylist().size() << " bodies" << endl;
                     break;
                 case DROPPING:
                     // Save current gap opening and number of dropped particles.
@@ -460,14 +463,14 @@ int main(int argc, char* argv[]) {
         }
 
         // Check for early termination of settling phase.
-        if (problem == SETTLING && time > time_settling_min && CheckSettled(msystem, zero_v)) {
+        if (problem == SETTLING && time > time_settling_min && CheckSettled(sys, zero_v)) {
             cout << "Granular material settled...  time = " << time << endl;
             break;
         }
 
         // Check for early termination of dropping phase.
         if (problem == DROPPING && time > time_opening &&
-            GetNumParticlesAboveHeight(msystem, -pos_collector / 2) == 0) {
+            GetNumParticlesAboveHeight(sys, -pos_collector / 2) == 0) {
             cout << "Granular material exhausted... time = " << time << endl;
             break;
         }
@@ -475,13 +478,13 @@ int main(int argc, char* argv[]) {
 // Advance system state by one step.
 // Advance simulation by one step
 #ifdef CHRONO_OPENGL
-        if (gl_window.Active()) {
-            gl_window.DoStepDynamics(time_step);
-            gl_window.Render();
+        if (vis.Run()) {
+            sys->DoStepDynamics(time_step);
+            vis.Render();
         } else
             break;
 #else
-        msystem->DoStepDynamics(time_step);
+        sys->DoStepDynamics(time_step);
 #endif
 
         // Open the gate until it reaches the specified gap distance.
@@ -492,24 +495,24 @@ int main(int argc, char* argv[]) {
 
         time += time_step;
         sim_frame++;
-        exec_time += msystem->GetTimerStep();
-        num_contacts += msystem->GetNcontacts();
+        exec_time += sys->GetTimerStep();
+        num_contacts += sys->GetNcontacts();
 
         // If requested, output detailed timing information for this step
         if (sim_frame == timing_frame)
-            msystem->PrintStepStats();
+            sys->PrintStepStats();
     }
 
     // Create a checkpoint from the last state
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
-        utils::WriteCheckpoint(msystem, checkpoint_file);
-        cout << "  done.  Wrote " << msystem->Get_bodylist().size() << " bodies." << endl;
+        utils::WriteCheckpoint(sys, checkpoint_file);
+        cout << "  done.  Wrote " << sys->Get_bodylist().size() << " bodies." << endl;
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies:  " << msystem->GetNumBodies() << endl;
+    cout << "Number of bodies:  " << sys->GetNumBodies() << endl;
     cout << "Simulation time:   " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;
 

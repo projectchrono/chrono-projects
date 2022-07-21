@@ -83,11 +83,11 @@ int main(int argc, char* argv[]) {
     // Create the physical system
     // --------------------------
 
-    ChSystemSMC my_system;
+    ChSystemSMC sys;
 
     // Set number of threads
 #ifdef CHRONO_OPENMP_ENABLED
-    my_system.SetNumThreads(std::min(num_threads, ChOMP::GetNumProcs()));
+    sys.SetNumThreads(std::min(num_threads, ChOMP::GetNumProcs()));
 #else
     GetLog() << "No OpenMP\n";
 #endif
@@ -165,7 +165,7 @@ int main(int argc, char* argv[]) {
 
         // Apply load to all surfaces in the mesh surface
         auto mloadcontainer = chrono_types::make_shared<ChLoadContainer>();
-        my_system.Add(mloadcontainer);
+        sys.Add(mloadcontainer);
 
         for (int i = 0; i < mmeshsurf->GetFacesList().size(); ++i) {
             auto aface = std::shared_ptr<ChLoadableUV>(mmeshsurf->GetFacesList()[i]);
@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    my_system.Add(my_mesh);
+    sys.Add(my_mesh);
 
     // -------------------
     // Create rigid bodies
@@ -190,7 +190,7 @@ int main(int argc, char* argv[]) {
         wheel->SetRot(tire_alignment);
         wheel->SetPos_dt(ChVector<>(0, 0, tire_vel_z0));
         wheel->SetWvel_par(ChVector<>(tire_w0, 0, 0));
-        my_system.Add(wheel);
+        sys.Add(wheel);
 
         if (visualization) {
             auto mobjmesh = chrono_types::make_shared<ChObjFileShape>();
@@ -204,14 +204,14 @@ int main(int argc, char* argv[]) {
         for (auto i = 0; i < node_sets.at(nodeset_sel).size(); ++i) {
             auto mlink = chrono_types::make_shared<ChLinkPointFrame>();
             mlink->Initialize(std::dynamic_pointer_cast<ChNodeFEAxyz>(node_sets[nodeset_sel][i]), wheel);
-            my_system.Add(mlink);
+            sys.Add(mlink);
         }
     }
 
     // Create ground
     auto mfloor = chrono_types::make_shared<ChBodyEasyBox>(2, 0.2, 6, 2700, true, true, mysurfmaterial);
     mfloor->SetBodyFixed(true);
-    my_system.Add(mfloor);
+    sys.Add(mfloor);
 
     if (visualization) {
         mfloor->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/concrete.jpg"));
@@ -225,7 +225,7 @@ int main(int argc, char* argv[]) {
             vrot.Q_from_AngAxis(ChRandom() * CH_C_2PI, VECT_Y);
             mcube->Move(ChCoordsys<>(VNULL, vrot));
             mcube->SetPos(ChVector<>((ChRandom() - 0.5) * 1.4, ChRandom() * 0.2 + 0.05, -ChRandom() * 2.6 + 0.2));
-            my_system.Add(mcube);
+            sys.Add(mcube);
 
             if (visualization) {
                 mcube->GetVisualShape(0)->SetColor(ChColor(0.3f, 0.3f, 0.3f));
@@ -249,8 +249,8 @@ int main(int argc, char* argv[]) {
             solver->EnableWarmStart(true);
             solver->SetMaxIterations(40);
             solver->SetVerbose(false);
-            my_system.SetSolver(solver);
-            my_system.SetSolverForceTolerance(1e-10);
+            sys.SetSolver(solver);
+            sys.SetSolverForceTolerance(1e-10);
             break;
         }
         case ChSolver::Type::PARDISO_MKL: {
@@ -258,7 +258,7 @@ int main(int argc, char* argv[]) {
             GetLog() << "Using PardisoMKL solver\n";
             auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
             mkl_solver->LockSparsityPattern(true);
-            my_system.SetSolver(mkl_solver);
+            sys.SetSolver(mkl_solver);
 #endif
             break;
         }
@@ -268,12 +268,12 @@ int main(int argc, char* argv[]) {
     switch (integrator_type) {
         case EULER:
             GetLog() << "Using EULER_IMPLICIT_LINEARIZED integrator\n";
-            my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
+            sys.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
             break;
         case HHT: {
             GetLog() << "Using HHT integrator\n";
-            my_system.SetTimestepperType(ChTimestepper::Type::HHT);
-            auto integrator = std::static_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
+            sys.SetTimestepperType(ChTimestepper::Type::HHT);
+            auto integrator = std::static_pointer_cast<ChTimestepperHHT>(sys.GetTimestepper());
             integrator->SetAlpha(-0.2);
             integrator->SetMaxiters(10);
             integrator->SetAbsTolerances(1e-3, 1e-2);
@@ -293,7 +293,6 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_IRRLICHT
         // Create the Irrlicht visualization system
         auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
-        my_system.SetVisualSystem(vis);
         vis->SetWindowSize(1280, 720);
         vis->SetWindowTitle("ABAQUS tire demo");
         vis->Initialize();
@@ -301,13 +300,14 @@ int main(int argc, char* argv[]) {
         vis->AddSkyBox();
         vis->AddCamera(ChVector<>(1, 1.4, -1.2), ChVector<>(0, tire_rad, 0));
         vis->AddTypicalLights();
+        vis->AttachSystem(&sys);
 
         // Simulation loop
         while (vis->Run()) {
             vis->BeginScene();
-            vis->DrawAll();
+            vis->Render();
             vis->EndScene();
-            my_system.DoStepDynamics(step_size);
+            sys.DoStepDynamics(step_size);
         }
 #endif
     } else {
@@ -315,7 +315,7 @@ int main(int argc, char* argv[]) {
         ChTimer<> timer;
         timer.start();
         for (int istep = 0; istep < num_steps; istep++) {
-            my_system.DoStepDynamics(step_size);
+            sys.DoStepDynamics(step_size);
         }
         timer.stop();
 

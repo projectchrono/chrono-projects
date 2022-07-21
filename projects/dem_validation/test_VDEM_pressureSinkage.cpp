@@ -44,7 +44,7 @@
 //#undef CHRONO_OPENGL
 
 #ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChOpenGLWindow.h"
+#include "chrono_opengl/ChVisualSystemOpenGL.h"
 #endif
 
 #include "../utils.h"
@@ -433,46 +433,46 @@ int main(int argc, char* argv[]) {
 
 #ifdef USE_SMC
     cout << "Create SMC system" << endl;
-    ChSystemMulticoreSMC* msystem = new ChSystemMulticoreSMC();
+    ChSystemMulticoreSMC* sys = new ChSystemMulticoreSMC();
 #else
     cout << "Create NSC system" << endl;
-    ChSystemMulticoreNSC* msystem = new ChSystemMulticoreNSC();
+    ChSystemMulticoreNSC* sys = new ChSystemMulticoreNSC();
 #endif
 
-    msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
+    sys->Set_G_acc(ChVector<>(0, 0, -gravity));
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();
     if (threads > max_threads)
         threads = max_threads;
-    msystem->SetNumThreads(threads);
+    sys->SetNumThreads(threads);
     cout << "Using " << threads << " threads" << endl;
 
     // Edit system settings
-    msystem->GetSettings()->solver.use_full_inertia_tensor = false;
-    msystem->GetSettings()->solver.tolerance = tolerance;
-    msystem->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
-    msystem->GetSettings()->solver.clamp_bilaterals = clamp_bilaterals;
-    msystem->GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
+    sys->GetSettings()->solver.use_full_inertia_tensor = false;
+    sys->GetSettings()->solver.tolerance = tolerance;
+    sys->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
+    sys->GetSettings()->solver.clamp_bilaterals = clamp_bilaterals;
+    sys->GetSettings()->solver.bilateral_clamp_speed = bilateral_clamp_speed;
 
 #ifdef USE_SMC
-    msystem->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
-    msystem->GetSettings()->solver.contact_force_model = contact_force_model;
-    msystem->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
+    sys->GetSettings()->collision.narrowphase_algorithm = NarrowPhaseType::NARROWPHASE_R;
+    sys->GetSettings()->solver.contact_force_model = contact_force_model;
+    sys->GetSettings()->solver.tangential_displ_mode = tangential_displ_mode;
 #else
-    msystem->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
-    msystem->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
-    msystem->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
-    msystem->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
-    msystem->GetSettings()->solver.alpha = 0;
-    msystem->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
-    msystem->SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
-    msystem->ChangeSolverType(SolverType::APGDREF);
+    sys->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
+    sys->GetSettings()->solver.max_iteration_normal = max_iteration_normal;
+    sys->GetSettings()->solver.max_iteration_sliding = max_iteration_sliding;
+    sys->GetSettings()->solver.max_iteration_spinning = max_iteration_spinning;
+    sys->GetSettings()->solver.alpha = 0;
+    sys->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
+    sys->SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
+    sys->ChangeSolverType(SolverType::APGDREF);
 
-    msystem->GetSettings()->collision.collision_envelope = 0.05 * r_g;
+    sys->GetSettings()->collision.collision_envelope = 0.05 * r_g;
 #endif
 
-    msystem->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
+    sys->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
 
     // --------------
     // Problem set up
@@ -508,14 +508,14 @@ int main(int argc, char* argv[]) {
             out_fps = out_fps_settling;
 
             // Create the mechanism bodies (all fixed).
-            CreateMechanismBodies(msystem);
+            CreateMechanismBodies(sys);
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = msystem->Get_bodylist().at(0);
-            loadPlate = msystem->Get_bodylist().at(1);
+            ground = sys->Get_bodylist().at(0);
+            loadPlate = sys->Get_bodylist().at(1);
 
             // Create granular material.
-            int num_particles = CreateGranularMaterial(msystem);
+            int num_particles = CreateGranularMaterial(sys);
             cout << "Granular material:  " << num_particles << " particles" << endl;
 
             break;
@@ -528,16 +528,16 @@ int main(int argc, char* argv[]) {
 
             // Create bodies from checkpoint file.
             cout << "Read checkpoint data from " << settled_ckpnt_file;
-            utils::ReadCheckpoint(msystem, settled_ckpnt_file);
-            cout << "  done.  Read " << msystem->Get_bodylist().size() << " bodies." << endl;
+            utils::ReadCheckpoint(sys, settled_ckpnt_file);
+            cout << "  done.  Read " << sys->Get_bodylist().size() << " bodies." << endl;
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = msystem->Get_bodylist().at(0);
-            loadPlate = msystem->Get_bodylist().at(1);
+            ground = sys->Get_bodylist().at(0);
+            loadPlate = sys->Get_bodylist().at(1);
 
             // Move the load plate just above the granular material.
             double highest, lowest;
-            FindHeightRange(msystem, lowest, highest);
+            FindHeightRange(sys, lowest, highest);
             ChVector<> pos = loadPlate->GetPos();
             double z_new = highest + 1.01 * r_g;
             loadPlate->SetPos(ChVector<>(pos.x(), pos.y(), z_new));
@@ -550,9 +550,9 @@ int main(int argc, char* argv[]) {
 
             // If using an actuator, connect the load plate and get a handle to the actuator.
             if (use_actuator) {
-                ConnectLoadPlate(msystem, ground, loadPlate);
-                prismatic = std::static_pointer_cast<ChLinkLockPrismatic>(msystem->SearchLink("prismatic"));
-                actuator = std::static_pointer_cast<ChLinkLinActuator>(msystem->SearchLink("actuator"));
+                ConnectLoadPlate(sys, ground, loadPlate);
+                prismatic = std::static_pointer_cast<ChLinkLockPrismatic>(sys->SearchLink("prismatic"));
+                actuator = std::static_pointer_cast<ChLinkLinActuator>(sys->SearchLink("actuator"));
             }
 
             // Release the load plate.
@@ -569,14 +569,14 @@ int main(int argc, char* argv[]) {
             desiredVelocity = 0.5;
 
             // Create the mechanism bodies (all fixed).
-            CreateMechanismBodies(msystem);
+            CreateMechanismBodies(sys);
 
             // Create the test ball.
-            CreateBall(msystem);
+            CreateBall(sys);
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = msystem->Get_bodylist().at(0);
-            loadPlate = msystem->Get_bodylist().at(1);
+            ground = sys->Get_bodylist().at(0);
+            loadPlate = sys->Get_bodylist().at(1);
 
             // Move the load plate just above the test ball.
             ChVector<> pos = loadPlate->GetPos();
@@ -591,8 +591,8 @@ int main(int argc, char* argv[]) {
 
             // If using an actuator, connect the shear box and get a handle to the actuator.
             if (use_actuator) {
-                ConnectLoadPlate(msystem, ground, loadPlate);
-                actuator = std::static_pointer_cast<ChLinkLinActuator>(msystem->SearchLink("actuator"));
+                ConnectLoadPlate(sys, ground, loadPlate);
+                actuator = std::static_pointer_cast<ChLinkLinActuator>(sys->SearchLink("actuator"));
             }
 
             // Release the shear box when using an actuator.
@@ -631,11 +631,14 @@ int main(int argc, char* argv[]) {
     sinkageStream.SetNumFormat("%16.4e");
 
 #ifdef CHRONO_OPENGL
-    opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.AttachSystem(msystem);
-    gl_window.Initialize(1280, 720, "Pressure Sinkage Test");
-    gl_window.SetCamera(ChVector<>(0, -10 * hdimY, hdimZ), ChVector<>(0, 0, hdimZ), ChVector<>(0, 0, 1));
-    gl_window.SetRenderMode(opengl::WIREFRAME);
+    opengl::ChVisualSystemOpenGL vis;
+    vis.AttachSystem(sys);
+    vis.SetWindowTitle("Pressure Sinkage Test");
+    vis.SetWindowSize(1280, 720);
+    vis.SetRenderMode(opengl::WIREFRAME);
+    vis.Initialize();
+    vis.SetCameraPosition(ChVector<>(0, -10 * hdimY, hdimZ), ChVector<>(0, 0, hdimZ));
+    vis.SetCameraVertical(CameraVerticalDir::Z);
 #endif
 
     // Loop until reaching the end time...
@@ -646,7 +649,7 @@ int main(int argc, char* argv[]) {
 
         // Calculate minimum and maximum particle heights
         double highest, lowest;
-        FindHeightRange(msystem, lowest, highest);
+        FindHeightRange(sys, lowest, highest);
 
         // If at an output frame, write PovRay file and print info
         if (sim_frame == next_out_frame) {
@@ -662,17 +665,17 @@ int main(int argc, char* argv[]) {
             if (write_povray_data) {
                 char filename[100];
                 sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
-                utils::WriteVisualizationAssets(msystem, filename, false);
+                utils::WriteVisualizationAssets(sys, filename, false);
             }
 
             // Create a checkpoint from the current state.
             if (problem == SETTLING || problem == PRESSING) {
                 cout << "             Write checkpoint data " << flush;
                 if (problem == SETTLING)
-                    utils::WriteCheckpoint(msystem, settled_ckpnt_file);
+                    utils::WriteCheckpoint(sys, settled_ckpnt_file);
                 else
-                    utils::WriteCheckpoint(msystem, pressed_ckpnt_file);
-                cout << msystem->Get_bodylist().size() << " bodies" << endl;
+                    utils::WriteCheckpoint(sys, pressed_ckpnt_file);
+                cout << sys->Get_bodylist().size() << " bodies" << endl;
             }
 
             // Increment counters
@@ -702,24 +705,24 @@ int main(int argc, char* argv[]) {
 
 // Advance simulation by one step
 #ifdef CHRONO_OPENGL
-        if (gl_window.Active()) {
-            gl_window.DoStepDynamics(time_step);
-            gl_window.Render();
+        if (vis.Run()) {
+            sys->DoStepDynamics(time_step);
+            vis.Render();
         } else
             break;
 #else
-        msystem->DoStepDynamics(time_step);
+        sys->DoStepDynamics(time_step);
 #endif
 
-        TimingOutput(msystem);
+        TimingOutput(sys);
 
         // Record stats about the simulation
         if (sim_frame % write_steps == 0) {
             // write stat info
-            size_t numIters = msystem->data_manager->measures.solver.maxd_hist.size();
+            size_t numIters = sys->data_manager->measures.solver.maxd_hist.size();
             double residual = 0;
             if (numIters != 0)
-                residual = msystem->data_manager->measures.solver.residual;
+                residual = sys->data_manager->measures.solver.residual;
             statsStream << time << ", " << exec_time << ", " << num_contacts / write_steps << ", " << numIters << ", "
                         << residual << ", " << max_cnstr_viol[0] << ", " << max_cnstr_viol[1] << ", \n";
             statsStream.GetFstream().flush();
@@ -761,12 +764,12 @@ int main(int argc, char* argv[]) {
         // Increment counters
         time += time_step;
         sim_frame++;
-        exec_time += msystem->GetTimerStep();
-        num_contacts += msystem->GetNcontacts();
+        exec_time += sys->GetTimerStep();
+        num_contacts += sys->GetNcontacts();
 
         // If requested, output detailed timing information for this step
         if (sim_frame == timing_frame)
-            msystem->PrintStepStats();
+            sys->PrintStepStats();
     }
 
     // ----------------
@@ -777,15 +780,15 @@ int main(int argc, char* argv[]) {
     if (problem == SETTLING || problem == PRESSING) {
         cout << "             Write checkpoint data " << flush;
         if (problem == SETTLING)
-            utils::WriteCheckpoint(msystem, settled_ckpnt_file);
+            utils::WriteCheckpoint(sys, settled_ckpnt_file);
         else
-            utils::WriteCheckpoint(msystem, pressed_ckpnt_file);
-        cout << msystem->Get_bodylist().size() << " bodies" << endl;
+            utils::WriteCheckpoint(sys, pressed_ckpnt_file);
+        cout << sys->Get_bodylist().size() << " bodies" << endl;
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies:  " << msystem->Get_bodylist().size() << endl;
+    cout << "Number of bodies:  " << sys->Get_bodylist().size() << endl;
     cout << "Simulation time:   " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;
 

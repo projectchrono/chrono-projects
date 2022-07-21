@@ -1214,7 +1214,7 @@ int main(int argc, char* argv[]) {
     bool output4 = true;
 
     // The physical system: it contains all physical objects.
-    ChSystemNSC my_system;
+    ChSystemNSC sys;
 
     // Create a mesh, that is a container for groups
     // of elements and their referenced nodes.
@@ -1345,7 +1345,7 @@ int main(int argc, char* argv[]) {
 
     // Create rim body
     auto Rim = chrono_types::make_shared<ChBody>();
-    my_system.Add(Rim);
+    sys.Add(Rim);
     Rim->SetBodyFixed(false);
     Rim->SetPos(ChVector<>(0.0, 0.0, 0.4673));
     Rim->SetRot(ChQuaternion<>(1.0, 0.0, 0.0, 0.0));
@@ -1368,10 +1368,10 @@ int main(int argc, char* argv[]) {
     Ground->SetBodyFixed(true);
     Ground->SetPos(ChVector<>(0.0, 0.0, -0.02));
     Ground->SetRot(ChQuaternion<>(1.0, 0.0, 0.0, 0.0));
-    my_system.Add(Ground);
+    sys.Add(Ground);
 
     // Apply gravitational acceleration
-    my_system.Set_G_acc(ChVector<>(0.0, 0.0, 0.0));
+    sys.Set_G_acc(ChVector<>(0.0, 0.0, 0.0));
     my_mesh->SetAutomaticGravity(false);
 
     // First: loads must be added to "load containers",
@@ -1495,9 +1495,9 @@ int main(int argc, char* argv[]) {
         Mloadcontainer->Add(PressureElement);  // do not forget to add the load to the load container.
     }
 
-    my_system.Add(Mloadcontainer);
+    sys.Add(Mloadcontainer);
     // Remember to add the mesh to the system!
-    my_system.Add(my_mesh);
+    sys.Add(my_mesh);
 
     // Create constraints for the tire and rim
     std::shared_ptr<ChLinkPointFrame> constraint;
@@ -1516,30 +1516,30 @@ int main(int argc, char* argv[]) {
             // Add position constraints
             constraint = chrono_types::make_shared<ChLinkPointFrame>();
             constraint->Initialize(ConstrainedNode, Rim);
-            my_system.Add(constraint);
+            sys.Add(constraint);
 
             // Add rotation constraints
             constraintD = chrono_types::make_shared<ChLinkDirFrame>();
             constraintD->Initialize(ConstrainedNode, Rim);
             constraintD->SetDirectionInAbsoluteCoords(ConstrainedNode->GetD());
-            my_system.Add(constraintD);
+            sys.Add(constraintD);
         }
     }
 
     // Constrain only the lateral displacement of the Rim
     constraintLateral = chrono_types::make_shared<ChLinkLockPointPlane>();
-    my_system.AddLink(constraintLateral);
+    sys.AddLink(constraintLateral);
     constraintLateral->Initialize(Rim, Ground, ChCoordsys<>(Rim->GetPos(), Q_from_AngX(CH_C_PI_2)));
 
     // Use the PardisoMKL Solver
     auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
     mkl_solver->LockSparsityPattern(true);
-    my_system.SetSolver(mkl_solver);
-    my_system.Update();
+    sys.SetSolver(mkl_solver);
+    sys.Update();
 
     // Set the time integrator parameters
-    my_system.SetTimestepperType(ChTimestepper::Type::HHT);
-    auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
+    sys.SetTimestepperType(ChTimestepper::Type::HHT);
+    auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(sys.GetTimestepper());
     mystepper->SetAlpha(-0.2);
     mystepper->SetMaxiters(20);
     mystepper->SetAbsTolerances(4e-4, 1e-1);
@@ -1573,13 +1573,12 @@ int main(int argc, char* argv[]) {
 
     // Create the a plane using body of 'box' type:
     auto mrigidBody = chrono_types::make_shared<ChBodyEasyBox>(10, 10, 0.000001, 1000, true, false);  // no collision
-    my_system.Add(mrigidBody);
+    sys.Add(mrigidBody);
     mrigidBody->SetPos(ChVector<>(0, 0, ContactZ));
     mrigidBody->SetBodyFixed(true);
 
     // Create the Irrlicht visualization system
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
-    my_system.SetVisualSystem(vis);
     vis->SetWindowSize(1080, 800);
     vis->SetWindowTitle("ANCF Rolling Tire");
     vis->Initialize();
@@ -1587,9 +1586,10 @@ int main(int argc, char* argv[]) {
     vis->AddSkyBox();
     vis->AddCamera(ChVector<>(0.5, 0.5, 1.15), ChVector<>(-1.15, 0.0, 0.0));
     vis->AddTypicalLights();
+    vis->AttachSystem(&sys);
 
-    my_system.Setup();
-    my_system.Update();
+    sys.Setup();
+    sys.Update();
 
     // Create output files
     outputfile = fopen("OutPutBody1.txt", "w");          // Time history of nodal coordinates
@@ -1604,11 +1604,11 @@ int main(int argc, char* argv[]) {
     GetLog() << "Contact ForceY: " << NetContact.y() << "\n";
     GetLog() << "Contact ForceZ: " << NetContact.z() << "\n";
     GetLog() << "Number of Contact Points: " << NumCont << "\n";
-    GetLog() << " t=  " << my_system.GetChTime() << "\n\n";
+    GetLog() << " t=  " << sys.GetChTime() << "\n\n";
 
     // Output time history of nodal coordinates
     if (output) {
-        fprintf(outputfile, "%15.7e  ", my_system.GetChTime());  // Current time
+        fprintf(outputfile, "%15.7e  ", sys.GetChTime());  // Current time
 
         // Nodal coordinates for each node
         for (int ii = 0; ii < TotalNumNodes; ii++) {
@@ -1636,7 +1636,7 @@ int main(int argc, char* argv[]) {
 
     // Output time history of rigid body coordinates
     if (output1) {
-        fprintf(outputfile1, "%15.7e  ", my_system.GetChTime());
+        fprintf(outputfile1, "%15.7e  ", sys.GetChTime());
         fprintf(outputfile1, "%15.7e  ", 0.0);
         fprintf(outputfile1, "%15.7e  ", 0.0);
         fprintf(outputfile1, "%15.7e  ", 0.0);
@@ -1656,7 +1656,7 @@ int main(int argc, char* argv[]) {
 
     // Output time history contact forces per nodal coordinate
     if (output4) {
-        fprintf(outputfile4, "%15.7e  ", my_system.GetChTime());
+        fprintf(outputfile4, "%15.7e  ", sys.GetChTime());
         for (int i = 0; i < NumElements_y + 1; i++) {
             for (int j = 0; j < NumElements_x; j++) {
                 fprintf(outputfile4, "%15.7e  ", LoadList[i]->NodeContactForce(0, j));
@@ -1688,18 +1688,18 @@ int main(int argc, char* argv[]) {
             Rim->Empty_forces_accumulators();
             Rim->Accumulate_force(ChVector<>(0.0, 0.0, -5000.0), Rim->GetPos(), 0);
             vis->BeginScene();
-            vis->DrawAll();
+            vis->Render();
             vis->EndScene();
-            my_system.DoStepDynamics(timestep);
+            sys.DoStepDynamics(timestep);
 
-            std::cout << "Time t = " << my_system.GetChTime() << "s \n";
+            std::cout << "Time t = " << sys.GetChTime() << "s \n";
             AccuNoIterations += mystepper->GetNumIterations();
 
             //==============================//
             //== Output programs ===========//
             //==============================//
 
-            GetLog() << " t=  " << my_system.GetChTime() << "\n\n";
+            GetLog() << " t=  " << sys.GetChTime() << "\n\n";
             NumCont = 0;
             NetContact.x() = 0.0;
             NetContact.y() = 0.0;
@@ -1721,7 +1721,7 @@ int main(int argc, char* argv[]) {
 
             // Output time history of nodal coordinates
             if (output) {
-                fprintf(outputfile, "%15.7e  ", my_system.GetChTime());
+                fprintf(outputfile, "%15.7e  ", sys.GetChTime());
                 for (int ii = 0; ii < TotalNumNodes; ii++) {
                     auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(ii));
                     fprintf(outputfile, "%15.7e  ", nodetip->GetPos().x());
@@ -1746,7 +1746,7 @@ int main(int argc, char* argv[]) {
 
             // Output time history of rigid bodies
             if (output1) {
-                fprintf(outputfile1, "%15.7e  ", my_system.GetChTime());
+                fprintf(outputfile1, "%15.7e  ", sys.GetChTime());
                 fprintf(outputfile1, "%15.7e  ", 0.0);
                 fprintf(outputfile1, "%15.7e  ", 0.0);
                 fprintf(outputfile1, "%15.7e  ", 0.0);
@@ -1766,7 +1766,7 @@ int main(int argc, char* argv[]) {
 
             // Output ground location, net contact forces, and number of contact nodes
             if (output2) {
-                fprintf(outputfile2, "%15.7e  ", my_system.GetChTime());
+                fprintf(outputfile2, "%15.7e  ", sys.GetChTime());
                 fprintf(outputfile2, "%15.7e  ", ContactZ);
                 fprintf(outputfile2, "%15.7e  ", NetContact.x());
                 fprintf(outputfile2, "%15.7e  ", NetContact.y());
@@ -1777,14 +1777,14 @@ int main(int argc, char* argv[]) {
 
             // Output current time and number of iterations per time step
             if (output3) {
-                fprintf(outputfile3, "%15.7e  ", my_system.GetChTime());
+                fprintf(outputfile3, "%15.7e  ", sys.GetChTime());
                 fprintf(outputfile3, "%d  ", mystepper->GetNumIterations());
                 fprintf(outputfile3, "\n  ");
             }
 
             // Output time history contact forces per nodal coordinate
             if (output4) {
-                fprintf(outputfile4, "%15.7e  ", my_system.GetChTime());
+                fprintf(outputfile4, "%15.7e  ", sys.GetChTime());
                 for (int i = 0; i < NumElements_y + 1; i++) {
                     for (int j = 0; j < NumElements_x; j++) {
                         fprintf(outputfile4, "%15.7e  ", LoadList[i]->NodeContactForce(0, j));
@@ -1808,23 +1808,23 @@ int main(int argc, char* argv[]) {
             GetLog() << "Rim Vel X: " << Rim->GetPos_dt().x() << "\n";
             GetLog() << "Number of Contact Points: " << NumCont << "\n\n\n";
 
-            // out << my_system.GetChTime() << Rim->GetPos().x() << Rim->GetPos().y() << Rim->GetPos().z()<< std::endl;
+            // out << sys.GetChTime() << Rim->GetPos().x() << Rim->GetPos().y() << Rim->GetPos().z()<< std::endl;
             // out.write_to_file("../VertPosRim.txt");
         }
     } else {
         ////////////////////////////////////////////////////
         double start = std::clock();
-        while (my_system.GetChTime() < 0.2) {
+        while (sys.GetChTime() < 0.2) {
             Rim->Empty_forces_accumulators();
             Rim->Accumulate_force(ChVector<>(0.0, 0.0, -5000.0), Rim->GetPos(), 0);
             //==Start analysis==//
-            my_system.DoStepDynamics(timestep);
+            sys.DoStepDynamics(timestep);
 
             //==============================//
             //== Output programs ===========//
             //==============================//
 
-            GetLog() << " t=  " << my_system.GetChTime() << "\n\n";
+            GetLog() << " t=  " << sys.GetChTime() << "\n\n";
             NumCont = 0;
             NetContact.x() = 0.0;
             NetContact.y() = 0.0;
@@ -1846,7 +1846,7 @@ int main(int argc, char* argv[]) {
 
             // Output time history of nodal coordinates
             if (output) {
-                fprintf(outputfile, "%15.7e  ", my_system.GetChTime());
+                fprintf(outputfile, "%15.7e  ", sys.GetChTime());
                 for (int ii = 0; ii < TotalNumNodes; ii++) {
                     auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(ii));
                     fprintf(outputfile, "%15.7e  ", nodetip->GetPos().x());
@@ -1871,7 +1871,7 @@ int main(int argc, char* argv[]) {
 
             // Output time history of rigid bodies
             if (output1) {
-                fprintf(outputfile1, "%15.7e  ", my_system.GetChTime());
+                fprintf(outputfile1, "%15.7e  ", sys.GetChTime());
                 fprintf(outputfile1, "%15.7e  ", 0.0);
                 fprintf(outputfile1, "%15.7e  ", 0.0);
                 fprintf(outputfile1, "%15.7e  ", 0.0);
@@ -1891,7 +1891,7 @@ int main(int argc, char* argv[]) {
 
             // Output ground location, net contact forces, and number of contact nodes
             if (output2) {
-                fprintf(outputfile2, "%15.7e  ", my_system.GetChTime());
+                fprintf(outputfile2, "%15.7e  ", sys.GetChTime());
                 fprintf(outputfile2, "%15.7e  ", ContactZ);
                 fprintf(outputfile2, "%15.7e  ", NetContact.x());
                 fprintf(outputfile2, "%15.7e  ", NetContact.y());
@@ -1902,14 +1902,14 @@ int main(int argc, char* argv[]) {
 
             // Output current time and number of iterations per time step
             if (output3) {
-                fprintf(outputfile3, "%15.7e  ", my_system.GetChTime());
+                fprintf(outputfile3, "%15.7e  ", sys.GetChTime());
                 fprintf(outputfile3, "%d  ", mystepper->GetNumIterations());
                 fprintf(outputfile3, "\n  ");
             }
 
             // Output time history contact forces per nodal coordinate
             if (output4) {
-                fprintf(outputfile4, "%15.7e  ", my_system.GetChTime());
+                fprintf(outputfile4, "%15.7e  ", sys.GetChTime());
                 for (int i = 0; i < NumElements_y + 1; i++) {
                     for (int j = 0; j < NumElements_x; j++) {
                         fprintf(outputfile4, "%15.7e  ", LoadList[i]->NodeContactForce(0, j));
@@ -1938,7 +1938,7 @@ int main(int argc, char* argv[]) {
     }
 
     double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-    auto mystepper1 = std::dynamic_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
+    auto mystepper1 = std::dynamic_pointer_cast<ChTimestepperHHT>(sys.GetTimestepper());
     GetLog() << "Simulation Time: " << duration << "\n";
     fprintf(outputfile3, "%15.7e  ", duration);
     fprintf(outputfile3, "%d  ", mystepper1->GetNumIterations());
