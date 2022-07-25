@@ -241,7 +241,7 @@ std::vector<std::vector<float>> dynamic_control_y;
 std::vector<int> dynamic_time_mode;  // 0 if dist mode or this field is N/A, 1 means using sim time, 2 means using wall
                                      // time (real time)
 
-std::vector<std::vector<std::vector<double>>> leaderParam;
+std::vector<std::vector<double>> leaderParam;
 
 // Comment section in csv output
 std::string csv_comments;
@@ -255,6 +255,16 @@ ChVector<> IG_prev_pos;
 // TODO: maybe there is a better way to handle this
 std::shared_ptr<ChNSFFollowerDriver> PF_driver_ptr;
 float cur_follower_speed;
+
+// whether the IG_driver passes the LD_driver
+bool passed = false;
+
+// trigger bool
+bool trig_flag = false;
+double trig_dist_flag = 0.0;
+std::vector<double> trig_dist;
+double trig_time;
+double trig_wall_time;
 
 // Experiment parameters
 int meet_time = 4;      // this meet time is defined in full minutes
@@ -409,6 +419,11 @@ void ReadParameterFiles() {
         if (d.HasMember("ETADist")) {
             eta_dist = d["ETADist"].GetDouble();
         }
+
+        if (d.HasMember("TrigDist")) {
+            trig_dist_flag = d["TrigDist"].GetDouble();
+        }
+
         // TODO: figure out what is happening there, not sure necessary
         if (d.HasMember("FollowerDriverParam")) {
             auto marr = d["FollowerDriverParam"].GetArray();
@@ -513,25 +528,19 @@ void ReadParameterFiles() {
                     }
 
                     if (d[entry_name.c_str()].HasMember("LeaderDriverParam")) {
-                        std::vector<std::vector<double>> temp_leaderParam;
+                        std::vector<double> temp_leaderParam;
                         auto marr = d[entry_name.c_str()]["LeaderDriverParam"].GetArray();
-                        int msize0 = marr.Size();
-                        int msize1 = marr[0].Size();
-                        assert(msize1 == 6);
-                        temp_leaderParam.resize(msize0);
-                        // printf("ARRAY DIM = %i \n", msize);
-                        for (auto it = marr.begin(); it != marr.end(); ++it) {
-                            auto i = std::distance(marr.begin(), it);
-                            temp_leaderParam[i].resize(msize1);
-                            for (int j = 0; j < marr[i].Size(); j++) {
-                                temp_leaderParam[i][j] = marr[i][j].GetDouble();
-                            }
+                        int msize = marr.Size();
+                        assert(msize == 7);
+                        temp_leaderParam.resize(msize);
+                        for (int j = 0; j < marr.Size(); j++) {
+                            temp_leaderParam[j] = marr[j].GetDouble();
                         }
                         leaderParam.push_back(temp_leaderParam);
                     } else {
-                        std::vector<std::vector<double>> temp_leaderParam;
-                        temp_leaderParam.resize(1);
-                        temp_leaderParam[0] = {0.5, 1.5, 55.0, 5.0, 628.3, 0.0};
+                        std::vector<double> temp_leaderParam;
+                        temp_leaderParam.resize(7);
+                        temp_leaderParam = {30, 1.5, 2.0, 5.0, 3.0, 4.0, 4.86};
                         leaderParam.push_back(temp_leaderParam);
                     }
 
@@ -1019,18 +1028,34 @@ int main(int argc, char* argv[]) {
     // Leader Driver
     std::vector<std::shared_ptr<ChNSFLeaderDriver>> lead_PFdrivers;
     for (int i = 0; i < num_dynamic; i++) {
-        if (dynamic_lane[i] == 0) {
-            auto lead_PFdriver = chrono_types::make_shared<ChNSFLeaderDriver>(
-                *lead_vehicles[i], steering_controller_file_LD, speed_controller_file_LD, inner_path, "road",
-                dynamic_cruise_speed[i] * MPH_TO_MS, leaderParam[i], true);
-            lead_PFdriver->Initialize();
-            lead_PFdrivers.push_back(lead_PFdriver);
+        if (i == 0) {
+            if (dynamic_lane[i] == 0) {
+                auto lead_PFdriver = chrono_types::make_shared<ChNSFLeaderDriver>(
+                    *lead_vehicles[i], steering_controller_file_LD, speed_controller_file_LD, inner_path, "road",
+                    dynamic_cruise_speed[i] * MPH_TO_MS, &vehicle, leaderParam[i], true);
+                lead_PFdriver->Initialize();
+                lead_PFdrivers.push_back(lead_PFdriver);
+            } else {
+                auto lead_PFdriver = chrono_types::make_shared<ChNSFLeaderDriver>(
+                    *lead_vehicles[i], steering_controller_file_LD, speed_controller_file_LD, outer_path, "road",
+                    dynamic_cruise_speed[i] * MPH_TO_MS, &vehicle, leaderParam[i], true);
+                lead_PFdriver->Initialize();
+                lead_PFdrivers.push_back(lead_PFdriver);
+            }
         } else {
-            auto lead_PFdriver = chrono_types::make_shared<ChNSFLeaderDriver>(
-                *lead_vehicles[i], steering_controller_file_LD, speed_controller_file_LD, outer_path, "road",
-                dynamic_cruise_speed[i] * MPH_TO_MS, leaderParam[i], true);
-            lead_PFdriver->Initialize();
-            lead_PFdrivers.push_back(lead_PFdriver);
+            if (dynamic_lane[i] == 0) {
+                auto lead_PFdriver = chrono_types::make_shared<ChNSFLeaderDriver>(
+                    *lead_vehicles[i], steering_controller_file_LD, speed_controller_file_LD, inner_path, "road",
+                    dynamic_cruise_speed[i] * MPH_TO_MS, leaderParam[i], true);
+                lead_PFdriver->Initialize();
+                lead_PFdrivers.push_back(lead_PFdriver);
+            } else {
+                auto lead_PFdriver = chrono_types::make_shared<ChNSFLeaderDriver>(
+                    *lead_vehicles[i], steering_controller_file_LD, speed_controller_file_LD, outer_path, "road",
+                    dynamic_cruise_speed[i] * MPH_TO_MS, leaderParam[i], true);
+                lead_PFdriver->Initialize();
+                lead_PFdrivers.push_back(lead_PFdriver);
+            }
         }
     }
 
@@ -1180,9 +1205,20 @@ int main(int argc, char* argv[]) {
         // update current vehicle speed
         cur_follower_speed = vehicle.GetVehicleSpeed();
 
+        if (lead_count != 0) {
+            ChVector<> dist_v = lead_vehicles[0]->GetChassis()->GetPos() - ego_chassis->GetPos();
+            ChVector<> car_xaxis = ChMatrix33<>(ego_chassis->GetRot()).Get_A_Xaxis();
+            double proj_dist_without_length = (dist_v ^ car_xaxis);
+            if (proj_dist_without_length < 0) {
+                passed = true;
+            } else {
+                passed = false;
+            }
+        }
+
         // Update modules (process inputs from other modules)
         if (driver_mode == AUTONOMOUS)
-            PFdriver->Synchronize(sim_time, step_size);
+            PFdriver->Synchronize(sim_time, step_size, passed);
         else
             IGdriver->Synchronize(sim_time);
 
@@ -1209,6 +1245,14 @@ int main(int argc, char* argv[]) {
         auto t2 = high_resolution_clock::now();
         float wall_time = duration_cast<duration<double>>(t2 - t0).count();
 
+        if (trig_flag == false && (IG_dist * M_TO_MILE) >= trig_dist_flag) {
+            trig_flag = true;
+            trig_time = sim_time;
+            trig_wall_time = wall_time;
+            for (int i = 0; i < num_dynamic; i++) {
+                trig_dist.push_back(lead_PFdrivers[i]->Get_Dist());
+            }
+        }
         // dummy update
         for (int i = 0; i < num_dummy; i++) {
             float temp_z_offset;
@@ -1286,29 +1330,42 @@ int main(int argc, char* argv[]) {
             // set speed control
             if (dynamic_control[i] == 2) {
                 float target_speed;
-                if (dynamic_time_mode[i] == 1) {
-                    target_speed = ControlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i], sim_time,
-                                                        dynamic_cruise_speed[i]);
-                } else if (dynamic_time_mode[i] == 2) {
-                    target_speed = ControlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i], wall_time,
-                                                        dynamic_cruise_speed[i]);
-                } else if (dynamic_time_mode[i] == 3) {
-                    target_speed = ControlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
-                                                        sim_time - start_sim_time, dynamic_cruise_speed[i]);
-                } else if (dynamic_time_mode[i] == 4) {
-                    target_speed = ControlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
-                                                        wall_time - start_wall_time, dynamic_cruise_speed[i]);
+                if (trig_flag == false) {
+                    target_speed = 0;
+                } else {
+                    if (dynamic_time_mode[i] == 1) {
+                        target_speed = ControlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
+                                                            sim_time - trig_time, dynamic_cruise_speed[i]);
+                    } else if (dynamic_time_mode[i] == 2) {
+                        target_speed = ControlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
+                                                            wall_time - trig_wall_time, dynamic_cruise_speed[i]);
+                    }
+                    /*else if (dynamic_time_mode[i] == 3) {
+                        target_speed =
+                            ControlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
+                                                 sim_time - start_sim_time - trig_time, dynamic_cruise_speed[i]);
+                    } else if (dynamic_time_mode[i] == 4) {
+                        target_speed =
+                            ControlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
+                                                 wall_time - start_wall_time - trig_wall_time, dynamic_cruise_speed[i]);
+                    }*/
                 }
                 lead_PFdrivers[i]->SetCruiseSpeed(target_speed * MPH_TO_MS);
+
             } else if (dynamic_control[i] == 1) {
                 float target_speed;
-                target_speed = ControlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
-                                                    lead_PFdrivers[i]->Get_Dist(), dynamic_cruise_speed[i]);
+                if (trig_flag == false) {
+                    target_speed = 0;
+                } else {
+                    target_speed =
+                        ControlFindSpeed_x_y(dynamic_control_x[i], dynamic_control_y[i],
+                                             lead_PFdrivers[i]->Get_Dist() - trig_dist_flag, dynamic_cruise_speed[i]);
+                }
 
                 lead_PFdrivers[i]->SetCruiseSpeed(target_speed * MPH_TO_MS);
             }
             ChDriver::Inputs lead_driver_inputs = lead_PFdrivers[i]->GetInputs();
-            lead_PFdrivers[i]->Synchronize(sim_time);
+            lead_PFdrivers[i]->Synchronize(sim_time, step_size, passed);
             lead_vehicles[i]->Synchronize(sim_time, lead_driver_inputs, terrain);
             lead_PFdrivers[i]->Advance(step);
             lead_vehicles[i]->Advance(step);
@@ -1439,17 +1496,16 @@ int main(int argc, char* argv[]) {
                 buffer << "\n";
             }
         }
-    }
+        if ((step_number % int(20 / step_size) == 0)) {
+            printf("Writing to output file...=%i", buffer.tellp());
+            filestream << buffer.rdbuf();
+            buffer.str("");
 
-    if (save_driver) {
-        printf("Writing to output file...=%i", buffer.tellp());
-        filestream << buffer.rdbuf();
-        buffer.str("");
-
-        printf("Writing to button file...=%i", button_buffer.tellp());
-        buttonstream << button_buffer.rdbuf();
-        buttonstream.flush();
-        button_buffer.str("");
+            printf("Writing to button file...=%i", button_buffer.tellp());
+            buttonstream << button_buffer.rdbuf();
+            buttonstream.flush();
+            button_buffer.str("");
+        }
     }
 
     auto t1 = high_resolution_clock::now();

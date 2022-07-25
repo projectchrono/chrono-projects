@@ -46,19 +46,30 @@ namespace chrono {
 class CH_VEHICLE_API ChNSFLeaderDriver : public ChPathFollowerDriver {
   public:
     /// Construct an interactive driver.
-    ChNSFLeaderDriver(ChVehicle& vehicle,                         ///< associated vehicle
-                      const std::string& steering_filename,       ///< JSON file with steering controller specification
-                      const std::string& speed_filename,          ///< JSON file with speed controller specification
-                      std::shared_ptr<ChBezierCurve> path,        ///< Bezier curve with target path
-                      const std::string& path_name,               ///< name of the path curve
-                      double target_speed,                        ///< constant target speed
-                      std::vector<std::vector<double>> behavior,  ///< piecewise directives
-                      bool isClosedPath = false                   ///< Treat the path as a closed loop
+    ChNSFLeaderDriver(ChVehicle& vehicle,                    ///< associated vehicle
+                      const std::string& steering_filename,  ///< JSON file with steering controller specification
+                      const std::string& speed_filename,     ///< JSON file with speed controller specification
+                      std::shared_ptr<ChBezierCurve> path,   ///< Bezier curve with target path
+                      const std::string& path_name,          ///< name of the path curve
+                      double target_speed,                   ///< constant target speed
+                      std::vector<double> behavior,          ///< piecewise directives
+                      bool isClosedPath = false              ///< Treat the path as a closed loop
+    );
+
+    ChNSFLeaderDriver(ChVehicle& vehicle,                    ///< associated vehicle
+                      const std::string& steering_filename,  ///< JSON file with steering controller specification
+                      const std::string& speed_filename,     ///< JSON file with speed controller specification
+                      std::shared_ptr<ChBezierCurve> path,   ///< Bezier curve with target path
+                      const std::string& path_name,          ///< name of the path curve
+                      double target_speed,                   ///< constant target speed
+                      ChVehicle* ig_vehicle,                 ///< followed_vehicle
+                      std::vector<double> behavior,          ///< piecewise directives
+                      bool isClosedPath = false              ///< Treat the path as a closed loop
     );
 
     virtual ~ChNSFLeaderDriver() {}
 
-    void Synchronize(double time);
+    void Synchronize(double time, double step, bool passed);
 
     void SetCruiseSpeed(double speed);
 
@@ -69,10 +80,16 @@ class CH_VEHICLE_API ChNSFLeaderDriver : public ChPathFollowerDriver {
     ChVector<> previousPos;
     // traveldistance
     double dist;
+    // no follower indicator (if no follow, then PID should be set seperately than IDM)
+    bool m_no_ig = false;
     // vector of vectors containing the instruction for target speed
-    std::vector<std::vector<double>> behavior_data;
+    std::vector<double> behavior_data;
     // Cruise speed between sinusoidal stretches
     double cruise_speed;
+    // follower vehicle to track
+    ChVehicle* follower;
+    // theoretical speed
+    double thero_speed = 0;
 };
 
 // Driver for the follower vehicle, it adjust its speed
@@ -100,7 +117,7 @@ class CH_VEHICLE_API ChNSFFollowerDriver : public ChPathFollowerDriver {
 
     virtual ~ChNSFFollowerDriver() {}
 
-    void Synchronize(double time, double step);
+    void Synchronize(double time, double step, bool passed);
 
     void SetCruiseSpeed(double speed);
 
