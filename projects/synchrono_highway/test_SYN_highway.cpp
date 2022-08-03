@@ -420,10 +420,6 @@ void ReadParameterFiles() {
             eta_dist = d["ETADist"].GetDouble();
         }
 
-        if (d.HasMember("TrigDist")) {
-            trig_dist_flag = d["TrigDist"].GetDouble();
-        }
-
         // TODO: figure out what is happening there, not sure necessary
         if (d.HasMember("FollowerDriverParam")) {
             auto marr = d["FollowerDriverParam"].GetArray();
@@ -458,6 +454,10 @@ void ReadParameterFiles() {
         // Scenario parameter file
         rapidjson::Document d;
         vehicle::ReadFileJSON(lead_parameters, d);
+
+        if (d.HasMember("TrigDist")) {
+            trig_dist_flag = d["TrigDist"].GetDouble();
+        }
 
         while (true) {
             std::string entry_name = "lead_" + std::to_string(lead_count);
