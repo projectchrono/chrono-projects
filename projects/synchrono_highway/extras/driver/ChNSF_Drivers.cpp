@@ -101,6 +101,7 @@ void ChNSFLeaderDriver::Synchronize(double time, double step, bool passed) {
                 thero_speed = 0;
             }
             SetDesiredSpeed(v_ms);
+
         } else {
             dist += (m_vehicle.GetChassis()->GetPos() - previousPos).Length() * M_TO_MILE;
             previousPos = m_vehicle.GetChassis()->GetPos();
@@ -186,7 +187,7 @@ void ChNSFFollowerDriver::Synchronize(double time, double step, bool passed) {
     // [m/s], T desired time headway [s], desired space headway [m], a: accel reate a [m/s^2], b: comfort decel
     // [m/s^2], delta: accel exponent
     if (m_no_lead == false) {
-        if (passed = false) {
+        if (passed == false) {
             dist += (m_vehicle.GetChassis()->GetPos() - previousPos).Length();
             previousPos = m_vehicle.GetChassis()->GetPos();
 
