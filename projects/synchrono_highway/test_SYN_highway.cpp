@@ -2075,8 +2075,10 @@ void IrrDashUpdate(double sim_time,
     // if below 0, set to 0
     // if above max, set to 0
 
-    if (sec_remaining < 0 || sec_remaining > 356518) {
+    if (sec_remaining < 0) {
         sec_remaining = 0;
+    } else if (sec_remaining > 356518) {
+        sec_remaining = 356518;
     }
 
     int eta_h = sec_remaining / 3600;
