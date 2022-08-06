@@ -158,8 +158,8 @@ irr::core::position2d<irr::s32> rpm_center(609, 215);
 irr::core::position2d<irr::s32> gr_center(388, 23);
 irr::core::position2d<irr::s32> auto_center(358, 338);
 irr::core::position2d<irr::s32> cur_left(950, 70);
-irr::core::position2d<irr::s32> end_left(950, 190);
-irr::core::position2d<irr::s32> eta_left(950, 310);
+irr::core::position2d<irr::s32> eta_left(950, 190);
+irr::core::position2d<irr::s32> status_left(1025, 310);
 double sm_needle = 140;
 
 std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
@@ -285,6 +285,8 @@ irr::video::ITexture* texture_GEAR6;
 irr::video::ITexture* texture_AUTO;
 irr::video::ITexture* texture_COLON;
 irr::video::ITexture* texture_NUMERICAL[10];
+irr::video::ITexture* texture_delayed;
+irr::video::ITexture* texture_ontime;
 
 // =============================================================================
 
@@ -313,7 +315,8 @@ void IrrDashUpdate(double sim_time,
                    DriverMode driver_mode,
                    float& IG_dist,
                    ChVector<>& IG_prev_pos,
-                   bool& IG_started_driving);
+                   bool& IG_started_driving,
+                   int meet_time);
 
 // helper function to update dummy vehicles
 void UpdateDummy(std::shared_ptr<ChBodyAuxRef> dummy_vehicle,
@@ -540,7 +543,7 @@ void ReadParameterFiles() {
                     } else {
                         std::vector<double> temp_leaderParam;
                         temp_leaderParam.resize(7);
-                        temp_leaderParam = {30, 1.5, 2.0, 5.0, 3.0, 4.0, 4.86};
+                        temp_leaderParam = {30, 1.5, 10.0, 5.0, 8.0, 4.0, 4.86};
                         leaderParam.push_back(temp_leaderParam);
                     }
 
@@ -1376,7 +1379,7 @@ int main(int argc, char* argv[]) {
 
         if (step_number % 20 == 0) {
             IrrDashUpdate(sim_time, step_number, t0, app, vehicle, ego_chassis, driver_mode, IG_dist, IG_prev_pos,
-                          IG_started_driving);
+                          IG_started_driving, meet_time);
         }
 
         // Update the sensor manager
@@ -1886,7 +1889,7 @@ void DummyButtonCallback_r_3() {
 // load irr dashboard textures
 void IrrDashLoadTextures(ChWheeledVehicleIrrApp& app) {
     texture_DASH =
-        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/dash_4_4.jpg").c_str());
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/dash_8_6.jpg").c_str());
     texture_GEAR1 =
         app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/GEAR1.png").c_str());
     texture_GEAR2 =
@@ -1922,6 +1925,10 @@ void IrrDashLoadTextures(ChWheeledVehicleIrrApp& app) {
         app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/8.png").c_str());
     texture_NUMERICAL[9] =
         app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/numerical/9.png").c_str());
+    texture_delayed =
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/delayed.png").c_str());
+    texture_ontime =
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/ontime.png").c_str());
 }
 
 void IrrDashUpdate(double sim_time,
@@ -1933,7 +1940,8 @@ void IrrDashUpdate(double sim_time,
                    DriverMode driver_mode,
                    float& IG_dist,
                    ChVector<>& IG_prev_pos,
-                   bool& IG_started_driving) {
+                   bool& IG_started_driving,
+                   int meet_time) {
     /// irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0), false);
     app.GetDevice()->getVideoDriver()->draw2DImage(texture_DASH, irr::core::position2d<irr::s32>(0, 0));
 
@@ -1984,13 +1992,38 @@ void IrrDashUpdate(double sim_time,
         app.GetDevice()->getVideoDriver()->draw2DImage(texture_AUTO, auto_center);
     }
 
-    // display current time
-    time_t curr_time = time(NULL);
-    struct tm* tmp = localtime(&curr_time);
+    // display count down time
+    int h = 0;
+    int m = 0;
+    int s = 0;
+    if (vehicle.GetVehicleSpeedCOM() >= 0.5 && IG_started_driving == false) {
+        IG_started_driving = true;
+        auto t1_temp = high_resolution_clock::now();
+        start_wall_time = duration_cast<duration<int>>(t1_temp - t0).count();
+    }
 
-    int h = tmp->tm_hour;
-    int m = tmp->tm_min;
-    int s = tmp->tm_sec;
+    if (IG_started_driving == true) {
+        auto t2_temp = high_resolution_clock::now();
+        int t2_time = duration_cast<duration<int>>(t2_temp - t0).count();
+
+        int tot_s = meet_time * 60;
+
+        int left_s = tot_s - (t2_time - start_wall_time);
+
+        if (left_s < 0) {
+            left_s = 0;
+        }
+
+        h = left_s / 3600;
+        m = (left_s - h * 3600) / 60;
+        s = (left_s - h * 3600 - m * 60);
+    } else {
+        int tot_s = meet_time * 60;
+
+        h = tot_s / 3600;
+        m = (tot_s - h * 3600) / 60;
+        s = (tot_s - h * 3600 - m * 60);
+    }
 
     std::vector<int> display_cur_int;
     display_cur_int.push_back(h / 10);
@@ -2018,74 +2051,6 @@ void IrrDashUpdate(double sim_time,
         } else if (i <= 7) {
             app.GetDevice()->getVideoDriver()->draw2DImage(texture_NUMERICAL[display_cur_int[i - 2]],
                                                            cur_left + offset * (i - 2) + colon_offset1 + colon_offset2);
-        }
-    }
-
-    static int end_s;
-    static int end_m;
-    static int end_h;
-
-    if (vehicle.GetVehicleSpeedCOM() >= 0.5 && IG_started_driving == false) {
-        start_sim_time = sim_time;
-        auto t1_temp = high_resolution_clock::now();
-        start_wall_time += duration_cast<duration<double>>(t1_temp - t0).count();
-
-        time_t curr_time = time(NULL);
-        struct tm* tmp = localtime(&curr_time);
-
-        int temp_h = tmp->tm_hour;
-        int temp_m = tmp->tm_min;
-        int temp_s = tmp->tm_sec;
-
-        end_s = s;
-        end_m = m + meet_time;
-        end_h = h;
-
-        if (end_s >= 60) {
-            end_s = end_s - 60;
-            end_m = end_m + 1;
-        }
-        if (end_m >= 60) {
-            end_m = end_m - 60;
-            end_h = end_h + 1;
-        }
-        if (end_h >= 23) {
-            end_h = end_h % 24;
-        }
-
-        IG_started_driving = true;
-    }
-
-    if (IG_started_driving == true) {
-        std::vector<int> display_end_int;
-        display_end_int.push_back(end_h / 10);
-        display_end_int.push_back(end_h % 10);
-        display_end_int.push_back(end_m / 10);
-        display_end_int.push_back(end_m % 10);
-        display_end_int.push_back(end_s / 10);
-        display_end_int.push_back(end_s % 10);
-
-        for (int i = 0; i < display_end_int.size() + 2; i++) {
-            irr::core::position2d<irr::s32> offset(50, 0);
-            irr::core::position2d<irr::s32> colon_offset1(25, 0);
-            irr::core::position2d<irr::s32> colon_offset2(25, 0);
-
-            if (i < 2) {
-                app.GetDevice()->getVideoDriver()->draw2DImage(texture_NUMERICAL[display_end_int[i]],
-                                                               end_left + offset * i);
-            } else if (i == 2) {
-                app.GetDevice()->getVideoDriver()->draw2DImage(texture_COLON, end_left + offset * i);
-            } else if (i < 5) {
-                app.GetDevice()->getVideoDriver()->draw2DImage(texture_NUMERICAL[display_end_int[i - 1]],
-                                                               end_left + offset * (i - 1) + colon_offset1);
-            } else if (i == 5) {
-                app.GetDevice()->getVideoDriver()->draw2DImage(texture_COLON,
-                                                               end_left + offset * (i - 1) + colon_offset1);
-            } else if (i <= 7) {
-                app.GetDevice()->getVideoDriver()->draw2DImage(
-                    texture_NUMERICAL[display_end_int[i - 2]],
-                    end_left + offset * (i - 2) + colon_offset1 + colon_offset2);
-            }
         }
     }
 
@@ -2145,6 +2110,16 @@ void IrrDashUpdate(double sim_time,
             app.GetDevice()->getVideoDriver()->draw2DImage(texture_NUMERICAL[display_eta_int[i - 2]],
                                                            eta_left + offset * (i - 2) + colon_offset1 + colon_offset2);
         }
+    }
+
+    // compute and display status
+    int cd_tot_s = h * 3600 + m * 60 + s;
+    int eta_tot_s = eta_h * 3600 + eta_m * 60 + eta_s;
+
+    if (cd_tot_s > eta_tot_s) {
+        app.GetDevice()->getVideoDriver()->draw2DImage(texture_ontime, status_left);
+    } else {
+        app.GetDevice()->getVideoDriver()->draw2DImage(texture_delayed, status_left);
     }
 
     app.GetDevice()->getVideoDriver()->endScene();
