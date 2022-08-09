@@ -243,6 +243,9 @@ std::vector<int> dynamic_time_mode;  // 0 if dist mode or this field is N/A, 1 m
 
 std::vector<std::vector<double>> leaderParam;
 
+// traffic cone locations
+std::vector<ChVector<>> cone_locations;
+
 // Comment section in csv output
 std::string csv_comments;
 std::string filename;
@@ -302,6 +305,8 @@ void AddTerrain(ChSystem* chsystem);
 void AddRoadway(ChSystem* chsystem);
 // buildings in the environment
 void AddBuildings(ChSystem* chsystem);
+// cones in the environment
+void AddCones(ChSystem* chsystem);
 
 // load textures for dashboard
 void IrrDashLoadTextures(ChWheeledVehicleIrrApp& app);
@@ -448,6 +453,17 @@ void ReadParameterFiles() {
             if (arrived_sign_params.HasMember("Rotation")) {
                 arrived_sign_rot =
                     Q_from_Euler123(CH_C_DEG_TO_RAD * vehicle::ReadVectorJSON(arrived_sign_params["Rotation"]));
+            }
+        }
+
+        if (d.HasMember("TrafficCone")) {
+            int cur_cone_idx = 0;
+            while (d["TrafficCone"].HasMember(("cone" + std::to_string(cur_cone_idx)).c_str())) {
+                auto marr = d["TrafficCone"][("cone" + std::to_string(cur_cone_idx)).c_str()].GetArray();
+                int msize = marr.Size();
+                assert(msize == 3);
+                cone_locations.push_back(ChVector<>(marr[0].GetDouble(), marr[1].GetDouble(), marr[2].GetDouble()));
+                cur_cone_idx = cur_cone_idx + 1;
             }
         }
     }
@@ -869,6 +885,9 @@ int main(int argc, char* argv[]) {
 
     // Add trees near the road
     AddTrees(vehicle.GetSystem());
+
+    // Add cones
+    AddCones(vehicle.GetSystem());
 
     // Add buildings away from the road to break up the horizon
     AddBuildings(vehicle.GetSystem());
@@ -1516,6 +1535,28 @@ int main(int argc, char* argv[]) {
     std::cout << "Simulation Time: " << t_end << ", Wall Time: " << time_span.count() << std::endl;
 
     return 0;
+}
+
+void AddCones(ChSystem* chsystem) {
+    auto cone_mesh = chrono_types::make_shared<ChTriangleMeshConnected>();
+    cone_mesh->LoadWavefrontMesh(demo_data_path + "/Environments/Iowa/foliage/cone/cone.obj", false, true);
+    cone_mesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));  // scale to a different size
+    float scale = 0.3;
+
+    for (int i = 0; i < cone_locations.size(); i++) {
+        auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+        trimesh_shape->SetMesh(cone_mesh);
+        trimesh_shape->SetName("Cone");
+        trimesh_shape->SetStatic(true);
+        trimesh_shape->SetScale({scale, scale, scale});
+
+        auto mesh_body = chrono_types::make_shared<ChBody>();
+        mesh_body->SetPos(cone_locations[i]);
+        // mesh_body->SetRot(Q_from_AngZ(CH_C_PI_2 * ChRandom()));
+        mesh_body->AddAsset(trimesh_shape);
+        mesh_body->SetBodyFixed(true);
+        chsystem->Add(mesh_body);
+    }
 }
 
 void AddTrees(ChSystem* chsystem) {
