@@ -1431,6 +1431,7 @@ int main(int argc, char* argv[]) {
         lane_1_tracker.setIsClosedPath(true);
 
         if (save_driver) {
+            static float prev_speed = 0.0;
             if (step_number % int(tsave / step_size) == 0) {
                 buffer << std::fixed << std::setprecision(3);
 
@@ -1461,7 +1462,7 @@ int main(int argc, char* argv[]) {
                     std::cout << "spd:" << ego_chassis->GetSpeed() << std::endl;
                     std::cout << "acc:" << 0 << std::endl;
                 } else {
-                    if (currDriver->GetBraking() > 0) {
+                    if (ego_chassis->GetSpeed() < prev_speed) {
                         buffer << -(ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length()) << ",";
                         std::cout << "spd:" << ego_chassis->GetSpeed() << std::endl;
                         std::cout << "acc:" << -(ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length())
@@ -1473,6 +1474,8 @@ int main(int argc, char* argv[]) {
                                   << std::endl;
                     }
                 }
+
+                prev_speed = ego_chassis->GetSpeed();
 
                 if (lead_count != 0) {
                     // Obtain lead vehicle chassis
