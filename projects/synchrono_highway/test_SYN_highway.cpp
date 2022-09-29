@@ -1456,14 +1456,19 @@ int main(int argc, char* argv[]) {
                 buffer << ego_chassis->GetPos().x() << ",";
                 buffer << ego_chassis->GetPos().y() << ",";
                 buffer << ego_chassis->GetSpeed() * MS_TO_MPH << ",";
-                if (currDriver->GetBraking() > 0) {
-                    buffer << -(ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length()) << ",";
-                    std::cout << "acc:" << -(ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length())
-                              << std::endl;
+                if (ego_chassis->GetSpeed() < 0.005 && currDriver->GetBraking() > 0.2) {
+                    buffer << 0 << ",";
+                    std::cout << "acc:" << 0 << std::endl;
                 } else {
-                    buffer << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << ",";
-                    std::cout << "acc:" << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length()
-                              << std::endl;
+                    if (currDriver->GetBraking() > 0) {
+                        buffer << -(ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length()) << ",";
+                        std::cout << "acc:" << -(ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length())
+                                  << std::endl;
+                    } else {
+                        buffer << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << ",";
+                        std::cout << "acc:" << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length()
+                                  << std::endl;
+                    }
                 }
 
                 if (lead_count != 0) {
