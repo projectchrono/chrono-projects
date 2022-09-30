@@ -328,8 +328,8 @@ void ConnectShearBox(ChSystemMulticore* system, std::shared_ptr<ChBody> ground, 
     ChVector<> pt2(1, 0, 2 * hdimZ);
     actuator->Initialize(ground, box, false, ChCoordsys<>(pt1, QUNIT), ChCoordsys<>(pt2, QUNIT));
     actuator->SetName("actuator");
-    actuator->Set_lin_offset(1);
-    actuator->Set_dist_funct(actuator_fun);
+    actuator->SetDistanceOffset(1);
+    actuator->SetActuatorFunction(actuator_fun);
     system->AddLink(actuator);
 }
 

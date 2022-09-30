@@ -29,20 +29,20 @@ static inline void progressbar(unsigned int x, unsigned int n, unsigned int w = 
 // =============================================================================
 // Utility function to print to console a few important step statistics
 
-static inline void TimingOutput(chrono::ChSystem* mSys, chrono::ChStreamOutAsciiFile* ofile = NULL) {
-  double TIME = mSys->GetChTime();
-  double STEP = mSys->GetTimerStep();
-  double BROD = mSys->GetTimerCollisionBroad();
-  double NARR = mSys->GetTimerCollisionNarrow();
-  double SOLVER = mSys->GetTimerLSsolve();
-  double UPDT = mSys->GetTimerUpdate();
+static inline void TimingOutput(chrono::ChSystem* sys, chrono::ChStreamOutAsciiFile* ofile = NULL) {
+  double TIME = sys->GetChTime();
+  double STEP = sys->GetTimerStep();
+  double BROD = sys->GetTimerCollisionBroad();
+  double NARR = sys->GetTimerCollisionNarrow();
+  double SOLVER = sys->GetTimerLSsolve();
+  double UPDT = sys->GetTimerUpdate();
   double RESID = 0;
   int REQ_ITS = 0;
-  int BODS = mSys->GetNbodies();
-  int CNTC = mSys->GetNcontacts();
-  if (chrono::ChSystemMulticore* mc_sys = dynamic_cast<chrono::ChSystemMulticore*>(mSys)) {
-      RESID = std::static_pointer_cast<chrono::ChIterativeSolverMulticore>(mSys->GetSolver())->GetResidual();
-      REQ_ITS = std::static_pointer_cast<chrono::ChIterativeSolverMulticore>(mSys->GetSolver())->GetIterations();
+  int BODS = sys->GetNbodies();
+  int CNTC = sys->GetNcontacts();
+  if (chrono::ChSystemMulticore* mc_sys = dynamic_cast<chrono::ChSystemMulticore*>(sys)) {
+      RESID = std::static_pointer_cast<chrono::ChIterativeSolverMulticore>(sys->GetSolver())->GetResidual();
+      REQ_ITS = std::static_pointer_cast<chrono::ChIterativeSolverMulticore>(sys->GetSolver())->GetIterations();
       BODS = mc_sys->GetNbodies();
       CNTC = mc_sys->GetNcontacts();
   }

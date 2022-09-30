@@ -322,8 +322,8 @@ void ConnectChassisToGround(ChSystemMulticore* system, std::shared_ptr<ChBody> g
     actuator->Initialize(ground, chassis, false, ChCoordsys<>(chassis->GetPos(), QUNIT),
                          ChCoordsys<>(chassis->GetPos() + ChVector<>(1, 0, 0), QUNIT));
     actuator->SetName("actuator");
-    actuator->Set_lin_offset(1);
-    actuator->Set_dist_funct(actuator_fun);
+    actuator->SetDistanceOffset(1);
+    actuator->SetActuatorFunction(actuator_fun);
     system->AddLink(actuator);
 }
 

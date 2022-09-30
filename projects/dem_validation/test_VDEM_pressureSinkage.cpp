@@ -266,8 +266,8 @@ void ConnectLoadPlate(ChSystemMulticore* system, std::shared_ptr<ChBody> ground,
     ChVector<> pt2(0, 0, 2 * hdimZ);
     actuator->Initialize(ground, plate, false, ChCoordsys<>(pt1, QUNIT), ChCoordsys<>(pt2, QUNIT));
     actuator->SetName("actuator");
-    actuator->Set_lin_offset(1);
-    actuator->Set_dist_funct(actuator_fun);
+    actuator->SetDistanceOffset(1);
+    actuator->SetActuatorFunction(actuator_fun);
     system->AddLink(actuator);
 }
 

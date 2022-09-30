@@ -4,7 +4,7 @@
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
 
-message("\n---- IRRLICHT configuration test")
+message("\n---- MBS configuration test")
 
 #--------------------------------------------------------------
 # List of all executables

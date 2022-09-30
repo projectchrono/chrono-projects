@@ -4,7 +4,7 @@
 
 add_subdirectory(fea)
 add_subdirectory(fsi)
-add_subdirectory(irrlicht)
+add_subdirectory(mbs)
 add_subdirectory(multicore)
 add_subdirectory(python)
 add_subdirectory(cascade)

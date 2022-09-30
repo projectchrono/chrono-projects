@@ -312,7 +312,7 @@ int main(int argc, char* argv[]) {
     vehicle->SetChassisVisualizationType(VisualizationType::PRIMITIVES);
     vehicle->SetSprocketVisualizationType(VisualizationType::MESH);
     vehicle->SetIdlerVisualizationType(VisualizationType::MESH);
-    vehicle->SetRoadWheelAssemblyVisualizationType(VisualizationType::PRIMITIVES);
+    vehicle->SetSuspensionVisualizationType(VisualizationType::PRIMITIVES);
     vehicle->SetRoadWheelVisualizationType(VisualizationType::MESH);
     vehicle->SetTrackShoeVisualizationType(VisualizationType::MESH);
 
