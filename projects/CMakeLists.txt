@@ -35,6 +35,9 @@ cmake_dependent_option(ENABLE_PRJ_COSIMULATION
 cmake_dependent_option(ENABLE_PRJ_GPU_TESTS 
 	"Enable projects for Chrono::Gpu tests" ON
 	"ENABLE_PROJECTS" OFF)
+cmake_dependent_option(ENABLE_DEME_TESTS 
+	"Enable projects for co-sim between Chrono and DEM-Engine" OFF
+	"ENABLE_PROJECTS" OFF)
 cmake_dependent_option(ENABLE_PRJ_SYN_HIGHWAY 
 	"Enable projects for SynChrono Highway" OFF
 	"ENABLE_PROJECTS" OFF)
@@ -65,6 +68,10 @@ endif()
 
 if (ENABLE_PRJ_GPU_TESTS)
   add_subdirectory(gpu_tests)
+endif()
+
+if (ENABLE_DEME_TESTS)
+  add_subdirectory(DEME_tests)
 endif()
 
 if (ENABLE_PRJ_COSIMULATION)
