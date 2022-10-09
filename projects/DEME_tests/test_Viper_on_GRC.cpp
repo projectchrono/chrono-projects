@@ -27,7 +27,7 @@
 
 #include <DEM/API.h>
 //#include <core/ApiVersion.h>
-//#include <core/utils/ThreadManager.h>
+#include <core/utils/Paths.hpp>
 #include <DEM/HostSideHelpers.hpp>
 #include <DEM/utils/Samplers.hpp>
 
@@ -69,6 +69,11 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
 
 int main(int argc, char* argv[]) {
     GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
+
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
+    SetDEMEDataPath(DEME_DATA_DIR);
+    std::cout << "DEME dir is " << GetDEMEDataPath() << std::endl;
 
     // Global parameter for moving patch size:
     double wheel_range = 0.5;
@@ -156,7 +161,7 @@ int main(int argc, char* argv[]) {
     float wheel_IXX = (wheel_mass / 12) * (3 * wheel_rad * wheel_rad + wheel_width * wheel_width);
     float3 wheel_MOI = make_float3(wheel_IXX, wheel_IYY, wheel_IXX);
     auto wheel_template =
-        DEMSim.LoadClumpType(wheel_mass, wheel_MOI, "../data/clumps/ViperWheelSimple.csv", mat_type_wheel);
+        DEMSim.LoadClumpType(wheel_mass, wheel_MOI, GetDEMEDataFile("clumps/ViperWheelSimple.csv"), mat_type_wheel);
     // The file contains no wheel particles size info, so let's manually set them
     wheel_template->radii = std::vector<float>(wheel_template->nComp, 0.01 * m_cm_cov);
     // This wheel template is `lying down', but our reported MOI info is assuming it's in a position to roll
@@ -166,7 +171,7 @@ int main(int argc, char* argv[]) {
 
     // Then the ground particle template
     DEMClumpTemplate shape_template;
-    shape_template.ReadComponentFromFile("../data/clumps/triangular_flat.csv");
+    shape_template.ReadComponentFromFile(GetDEMEDataFile("clumps/triangular_flat.csv"));
     // Calculate its mass and MOI
     float mass = 2.6e3 * 5.5886717 * kg_g_conv;  // in kg or g
     float3 MOI = make_float3(1.8327927, 2.1580013, 0.77010059) * (double)2.6e3 * kg_g_conv / m_cm_cov / m_cm_cov;
@@ -315,7 +320,8 @@ int main(int argc, char* argv[]) {
     unsigned int report_steps = (unsigned int)(1.0 / (report_freq * step_size));
     unsigned int param_update_steps = (unsigned int)(1.0 / (param_update_freq * step_size));
 
-    path out_dir = current_path();
+    path out_dir = GetChronoOutputPath() + "DEME/";
+    // path out_dir = current_path();
     out_dir += "/Viper_on_GRC_reduced";
     path rover_dir = out_dir / "./rover";
     create_directory(out_dir);

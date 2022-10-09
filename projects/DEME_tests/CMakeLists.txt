@@ -92,6 +92,7 @@ FOREACH(PROGRAM ${TESTS})
     SOURCE_GROUP(""  FILES "${PROGRAM}.cpp")
 
     target_compile_definitions(${PROGRAM} PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
+    target_compile_definitions(${PROGRAM} PUBLIC "DEME_DATA_DIR=\"${DEME_DATA_DIRS}\"") 
     target_compile_options(${PROGRAM} PUBLIC ${CHRONO_CXX_FLAGS})
     target_link_options(${PROGRAM} PUBLIC ${CHRONO_LINKER_FLAGS})
     target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
