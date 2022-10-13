@@ -111,6 +111,7 @@ ChContactMethod contact_method = ChContactMethod::SMC;
 
 // Global Variable to track miles the car traveled
 utils::ChRunningAverage IG_speed_avg(100);
+utils::ChRunningAverage IG_acc_avg(100);
 
 bool render = true;
 
@@ -1457,15 +1458,16 @@ int main(int argc, char* argv[]) {
                 buffer << ego_chassis->GetPos().x() << ",";
                 buffer << ego_chassis->GetPos().y() << ",";
                 buffer << ego_chassis->GetSpeed() * MS_TO_MPH << ",";
-                if (ego_chassis->GetSpeed() < 0.01 && currDriver->GetBraking() > 0.1) {
-                    buffer << 0 << ",";
+
+                float ego_acc = 0.f;
+                if (ego_chassis->GetSpeed() < prev_speed) {
+                    ego_acc = -(ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length());
                 } else {
-                    if (ego_chassis->GetSpeed() < prev_speed) {
-                        buffer << -(ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length()) << ",";
-                    } else {
-                        buffer << ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length() << ",";
-                    }
+                    ego_acc = ego_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length();
                 }
+                float buffered_ego_acc = IG_acc_avg.Add(ego_acc);
+
+                buffer << buffered_ego_acc << ",";
 
                 prev_speed = ego_chassis->GetSpeed();
 
@@ -2179,10 +2181,21 @@ void IrrDashUpdate(double sim_time,
             app.GetDevice()->getVideoDriver()->draw2DImage(texture_delayed, status_left);
         }
     } else {
+        if (step_number == 0) {
+            IG_prev_pos = ego_chassis->GetPos();
+        }
+
+        IG_dist = IG_dist + (ego_chassis->GetPos() - IG_prev_pos).Length();
+        IG_prev_pos = ego_chassis->GetPos();
+
         // display late symbol
         app.GetDevice()->getVideoDriver()->draw2DImage(texture_delayed, status_left);
 
         int sec_lag = abs(meet_time * 60 - (t2_time - start_wall_time));
+
+        if (eta_dist * MILE_TO_M - IG_dist < 0) {
+            sec_lag = 0;
+        }
 
         int sec_lag_h = sec_lag / 3600;
         int sec_lag_m = (sec_lag - sec_lag_h * 3600) / 60;
