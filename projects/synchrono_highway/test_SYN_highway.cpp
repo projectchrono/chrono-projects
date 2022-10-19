@@ -112,6 +112,7 @@ ChContactMethod contact_method = ChContactMethod::SMC;
 // Global Variable to track miles the car traveled
 utils::ChRunningAverage IG_speed_avg(100);
 utils::ChRunningAverage IG_acc_avg(100);
+utils::ChRunningAverage LD_acc_avg(100);
 
 bool render = true;
 
@@ -1433,6 +1434,7 @@ int main(int argc, char* argv[]) {
 
         if (save_driver) {
             static float prev_speed = 0.0;
+            static float ld_prev_speed = 0.0;
             if (step_number % int(tsave / step_size) == 0) {
                 buffer << std::fixed << std::setprecision(3);
 
@@ -1523,8 +1525,23 @@ int main(int argc, char* argv[]) {
                     buffer << lead_chassis->GetPos().x() << ",";
                     buffer << lead_chassis->GetPos().y() << ",";
                     buffer << lead_chassis->GetSpeed() * MS_TO_MPH << ",";
-                    buffer << lead_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length()
-                           << ",";  // output mile marker
+
+                    // lead acceleration
+
+                    float ld_acc = 0.f;
+                    if (lead_chassis->GetSpeed() < ld_prev_speed) {
+                        ld_acc = -(lead_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length());
+                    } else {
+                        ld_acc = lead_chassis->GetBody()->GetFrame_REF_to_abs().GetPos_dtdt().Length();
+                    }
+                    float buffered_ld_acc = LD_acc_avg.Add(ld_acc);
+
+                    ld_prev_speed = lead_chassis->GetSpeed();
+
+                    buffer << buffered_ld_acc << ",";
+
+                    // =======================
+
                     buffer << lead_PFdrivers[lead_PFdrivers.size() - 1]->Get_Dist();
                 }
 
