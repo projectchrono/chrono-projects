@@ -2208,10 +2208,14 @@ void IrrDashUpdate(double sim_time,
         // display late symbol
         app.GetDevice()->getVideoDriver()->draw2DImage(texture_delayed, status_left);
 
+        static int prev_sec_lag = 0;
+
         int sec_lag = abs(meet_time * 60 - (t2_time - start_wall_time));
 
         if (eta_dist * MILE_TO_M - IG_dist < 0) {
-            sec_lag = 0;
+            sec_lag = prev_sec_lag;
+        } else {
+            prev_sec_lag = sec_lag;
         }
 
         int sec_lag_h = sec_lag / 3600;
