@@ -281,6 +281,10 @@ float start_wall_time;
 
 // Texture variables
 irr::video::ITexture* texture_DASH;
+irr::video::ITexture* texture_cdt;
+irr::video::ITexture* texture_s;
+irr::video::ITexture* texture_tpa;
+irr::video::ITexture* texture_tta;
 irr::video::ITexture* texture_GEAR1;
 irr::video::ITexture* texture_GEAR2;
 irr::video::ITexture* texture_GEAR3;
@@ -1960,7 +1964,11 @@ void DummyButtonCallback_r_3() {
 // load irr dashboard textures
 void IrrDashLoadTextures(ChWheeledVehicleIrrApp& app) {
     texture_DASH =
-        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/dash_8_6.jpg").c_str());
+        app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/dash_10_20.jpg").c_str());
+    texture_cdt = app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/cdt.png").c_str());
+    texture_s = app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/s.png").c_str());
+    texture_tpa = app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/tpa.png").c_str());
+    texture_tta = app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/tta.png").c_str());
     texture_GEAR1 =
         app.GetDevice()->getVideoDriver()->getTexture((demo_data_path + "/miscellaneous/GEAR1.png").c_str());
     texture_GEAR2 =
@@ -2015,6 +2023,8 @@ void IrrDashUpdate(double sim_time,
                    int meet_time) {
     /// irrlicht::tools::drawSegment(app.GetVideoDriver(), v1, v2, video::SColor(255, 80, 0, 0), false);
     app.GetDevice()->getVideoDriver()->draw2DImage(texture_DASH, irr::core::position2d<irr::s32>(0, 0));
+    app.GetDevice()->getVideoDriver()->draw2DImage(texture_cdt, irr::core::position2d<irr::s32>(810, 20));
+    app.GetDevice()->getVideoDriver()->draw2DImage(texture_s, irr::core::position2d<irr::s32>(810, 250));
 
     int curr_gear = vehicle.GetPowertrain()->GetCurrentTransmissionGear();
 
@@ -2197,6 +2207,8 @@ void IrrDashUpdate(double sim_time,
         } else {
             app.GetDevice()->getVideoDriver()->draw2DImage(texture_delayed, status_left);
         }
+
+        app.GetDevice()->getVideoDriver()->draw2DImage(texture_tta, irr::core::position2d<irr::s32>(810, 130));
     } else {
         if (step_number == 0) {
             IG_prev_pos = ego_chassis->GetPos();
@@ -2214,6 +2226,8 @@ void IrrDashUpdate(double sim_time,
 
         if (eta_dist * MILE_TO_M - IG_dist < 0) {
             sec_lag = prev_sec_lag;
+            // display label
+
         } else {
             prev_sec_lag = sec_lag;
         }
@@ -2252,6 +2266,7 @@ void IrrDashUpdate(double sim_time,
                     eta_left + offset * (i - 2) + colon_offset1 + colon_offset2);
             }
         }
+        app.GetDevice()->getVideoDriver()->draw2DImage(texture_tpa, irr::core::position2d<irr::s32>(810, 130));
     }
 
     app.GetDevice()->getVideoDriver()->endScene();
