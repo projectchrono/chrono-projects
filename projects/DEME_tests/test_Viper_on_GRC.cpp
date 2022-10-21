@@ -68,10 +68,11 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
 
 int main(int argc, char* argv[]) {
     SetChronoDataPath(CHRONO_DATA_DIR);
-    std::string wheel_obj_path = GetChronoDataFile("robot/viper/obj/viper_wheel.obj");
-
     SetDEMEDataPath(DEME_DATA_DIR);
     std::cout << "DEME dir is " << GetDEMEDataPath() << std::endl;
+
+    // std::string wheel_obj_path = GetChronoDataFile("robot/viper/obj/viper_wheel.obj");
+    std::string wheel_obj_path = GetDEMEDataFile("mesh/rover_wheels/viper_wheel_right.obj");
 
     // Global parameter for moving patch size:
     double wheel_range = 0.5;
@@ -309,8 +310,13 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < nW; i++) {
         // DEM_Wheels.push_back(DEMSim.AddClumps(wheel_template, make_float3(wheel_pos[i].x(), wheel_pos[i].y(),
         // wheel_pos[i].z())));
-        DEM_Wheels.push_back(DEMSim.AddWavefrontMeshObject(wheel_obj_path, mat_type_wheel));
         // DEM_Wheels[i]->InformCentroidPrincipal(make_float3(0), make_float4(0.7071, 0, 0, 0.7071));
+        DEM_Wheels.push_back(DEMSim.AddWavefrontMeshObject(wheel_obj_path, mat_type_wheel));
+        // If this is one of the left wheels, mirror it. It's not a big difference, but we should do...
+        // if (i == 0 || i == 2) {
+        //     DEM_Wheels[i]->Mirror(make_float3(0,0,0), make_float3(0,1,0));
+        // }
+
         DEM_Wheels[i]->SetFamily(100);
         DEM_Wheels[i]->SetMass(wheel_mass);
         DEM_Wheels[i]->SetMOI(wheel_MOI);
@@ -347,7 +353,7 @@ int main(int argc, char* argv[]) {
     // If you want to use a large UpdateFreq then you have to expand spheres to ensure safety
     DEMSim.SetCDUpdateFreq(15);
     // DEMSim.SetExpandFactor(1e-3);
-    DEMSim.SetMaxVelocity(30.0);
+    DEMSim.SetMaxVelocity(50.0);
     DEMSim.SetExpandSafetyParam(1.2);
     DEMSim.SetInitBinSize(scales.at(2));
     DEMSim.SetIntegrator(TIME_INTEGRATOR::EXTENDED_TAYLOR);
@@ -480,25 +486,8 @@ int main(int argc, char* argv[]) {
     // Find max z
     // float init_max_z =
     // 0.268923
-    unsigned int chrono_update_freq = 20;
+    unsigned int chrono_update_freq = 5;
     for (float t = 0; t < time_end; t += step_size, curr_step++, frame_accu += step_size) {
-        // if (curr_step % out_steps == 0) {
-        if (frame_accu >= frame_accu_thres) {
-            frame_accu = 0.;
-            std::cout << "Frame: " << currframe << std::endl;
-            DEMSim.ShowThreadCollaborationStats();
-            char filename[200];
-            sprintf(filename, "%s/DEMdemo_output_%04d.csv", out_dir.c_str(), currframe);
-            DEMSim.WriteSphereFile(std::string(filename));
-            SaveParaViewFiles(viper, rover_dir, currframe);
-            currframe++;
-        }
-        // Run DEM first
-        d_start = std::chrono::high_resolution_clock::now();
-        DEMSim.DoDynamics(step_size);
-        d_end = std::chrono::high_resolution_clock::now();
-        d_total += d_end - d_start;
-
         if (curr_step % chrono_update_freq == 0) {
             for (int i = 0; i < nW; i++) {
                 wheel_pos[i] = Wheels[i]->GetFrame_REF_to_abs().GetPos();
@@ -522,7 +511,32 @@ int main(int argc, char* argv[]) {
                 std::cout << "Wheel " << i << " angVel: " << wheel_angVel[i].x() << ", " << wheel_angVel[i].y() << ", "
                           << wheel_angVel[i].z() << std::endl;
             }
+            float3 body_pos = ChVec2Float(Body_1->GetFrame_REF_to_abs().GetPos());
+            std::cout << "Rover body is at " << body_pos.x << ", " << body_pos.y << ", " << body_pos.z << std::endl;
+            std::cout << "Time is " << t << std::endl;
+            max_v = max_v_finder->GetValue();
+            std::cout << "Max vel in simulation is " << max_v << std::endl;
+            std::cout << "========================" << std::endl;
         }
+
+        if (frame_accu >= frame_accu_thres) {
+            frame_accu = 0.;
+            std::cout << "Frame: " << currframe << std::endl;
+            DEMSim.ShowThreadCollaborationStats();
+            char filename[200], meshfilename[200];
+            sprintf(filename, "%s/DEMdemo_output_%04d.csv", out_dir.c_str(), currframe);
+            sprintf(meshfilename, "%s/DEMdemo_output_mesh_%04d.vtk", out_dir.c_str(), currframe);
+            DEMSim.WriteSphereFile(std::string(filename));
+            DEMSim.WriteMeshFile(std::string(meshfilename));
+            SaveParaViewFiles(viper, rover_dir, currframe);
+            currframe++;
+        }
+
+        // Run DEM first
+        d_start = std::chrono::high_resolution_clock::now();
+        DEMSim.DoDynamics(step_size);
+        d_end = std::chrono::high_resolution_clock::now();
+        d_total += d_end - d_start;
 
         // Then feed force
         if (curr_step % chrono_update_freq == 0) {
@@ -558,13 +572,15 @@ int main(int argc, char* argv[]) {
         //     std::cout << "Step size in simulation is " << step_size << std::endl;
         // }
 
-        // if (t > 0.5 && change_step == 0) {
-        //     DEMSim.DoDynamicsThenSync(0);
-        //     step_size = 1e-6;
-        //     DEMSim.SetInitTimeStep(step_size);
-        //     DEMSim.UpdateSimParams();
-        //     change_step = 1;
-        // } else if (t > 1.5 && change_step == 1) {
+        if (t > 1.0 && change_step == 0) {
+            DEMSim.DoDynamicsThenSync(0);
+            step_size = 1.5e-6;
+            DEMSim.SetInitTimeStep(step_size);
+            DEMSim.SetMaxVelocity(50.0);
+            DEMSim.UpdateSimParams();
+            change_step = 1;
+        } 
+        // else if (t > 3.0 && change_step == 1) {
         //     DEMSim.DoDynamicsThenSync(0);
         //     step_size = 2e-6;
         //     DEMSim.SetInitTimeStep(step_size);
@@ -572,7 +588,6 @@ int main(int argc, char* argv[]) {
         //     DEMSim.UpdateSimParams();
         //     change_step = 2;
         // }
-
         // else if (t > 2.0 && change_step == 2) {
         //     DEMSim.DoDynamicsThenSync(0);
         //     step_size = 3e-6;
@@ -588,14 +603,6 @@ int main(int argc, char* argv[]) {
         //     change_step = 4;
         // }
 
-        if (curr_step % report_steps == 0) {
-            float3 body_pos = ChVec2Float(Body_1->GetFrame_REF_to_abs().GetPos());
-            std::cout << "Rover body is at " << body_pos.x << ", " << body_pos.y << ", " << body_pos.z << std::endl;
-            std::cout << "Time is " << t << std::endl;
-            max_v = max_v_finder->GetValue();
-            std::cout << "Max vel in simulation is " << max_v << std::endl;
-            std::cout << "========================" << std::endl;
-        }
     }
     std::cout << h_total.count() << " seconds spent on host" << std::endl;
     std::cout << d_total.count() << " seconds spent on device" << std::endl;
