@@ -274,6 +274,7 @@ double trig_wall_time;
 // Experiment parameters
 int meet_time = 4;      // this meet time is defined in full minutes
 double eta_dist = 3.6;  // eta counter distance
+float eta_time = 0.0;
 
 // Start Stamp
 float start_sim_time;
@@ -1091,7 +1092,7 @@ int main(int argc, char* argv[]) {
         filestream << "csv comments: " << cli.GetAsType<std::string>("csv_comments") << " \n";
 
         if (lead_count != 0) {
-            filestream << "tstamp,time,wallTime,isManual,Steering,Throttle,Braking,x[m],y[m],speed[mph],"
+            filestream << "tstamp,time,wallTime,eta_time,isManual,Steering,Throttle,Braking,x[m],y[m],speed[mph],"
                           "acceleration[m/s^2],"
                           "dist[m],dist_projected[m],IG_mile[mile],IG_lane[0-inner/1-outer/-1-invalid],LD_x[m],"
                           "LD_y[m],LD_speed[mph],"
@@ -1447,6 +1448,7 @@ int main(int argc, char* argv[]) {
                 buffer << ",";
                 buffer << std::to_string(sim_time) + ",";
                 buffer << std::to_string(wall_time) << ",";
+                buffer << std::to_string(eta_time) << ",";
                 ChDriver* currDriver;
                 bool isManual;
                 if (driver_mode == HUMAN) {
@@ -2201,6 +2203,7 @@ void IrrDashUpdate(double sim_time,
         // compute and display status
         int cd_tot_s = h * 3600 + m * 60 + s;
         int eta_tot_s = eta_h * 3600 + eta_m * 60 + eta_s;
+        eta_time = eta_tot_s;
 
         if (cd_tot_s >= eta_tot_s) {
             app.GetDevice()->getVideoDriver()->draw2DImage(texture_ontime, status_left);
@@ -2210,6 +2213,8 @@ void IrrDashUpdate(double sim_time,
 
         app.GetDevice()->getVideoDriver()->draw2DImage(texture_tta, irr::core::position2d<irr::s32>(810, 130));
     } else {
+        eta_time = 0.0;
+
         if (step_number == 0) {
             IG_prev_pos = ego_chassis->GetPos();
         }
