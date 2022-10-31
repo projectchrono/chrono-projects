@@ -2080,6 +2080,9 @@ void IrrDashUpdate(double sim_time,
     int m = 0;
     int s = 0;
     int t2_time = 0;
+
+    static int prev_sec_cd = 0;
+
     if (vehicle.GetVehicleSpeedCOM() >= 0.5 && IG_started_driving == false) {
         IG_started_driving = true;
         auto t1_temp = high_resolution_clock::now();
@@ -2093,6 +2096,12 @@ void IrrDashUpdate(double sim_time,
         int tot_s = meet_time * 60;
 
         int left_s = tot_s - (t2_time - start_wall_time);
+
+        if (eta_dist * MILE_TO_M - IG_dist < 0) {
+            left_s = prev_sec_cd;
+        } else {
+            prev_sec_cd = left_s;
+        }
 
         if (left_s < 0) {
             left_s = 0;
