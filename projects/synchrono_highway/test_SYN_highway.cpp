@@ -23,6 +23,7 @@
 
 #include <irrlicht.h>
 #include <time.h>
+#include <chrono>
 #include <limits>
 #include "chrono_models/vehicle/hmmwv/HMMWV.h"
 #include "chrono_vehicle/ChConfigVehicle.h"
@@ -666,7 +667,6 @@ void AddCommandLineOptions(ChCLI& cli) {
     cli.AddOption<std::string>("Simulation", "lead_params", "Path to lead configuration file", lead_parameters);
 
     cli.AddOption<std::string>("Simulation", "filename", "Output Filenames", filename);
-    cli.AddOption<std::string>("Simulation", "csv_comments", "CSV output comments", csv_comments);
     cli.AddOption<bool>("Simulation", "enable_realtime",
                         "Use a cumulative realtimer to sync sim_time and wall_time every 0.01s", "true");
 }
@@ -1089,8 +1089,6 @@ int main(int argc, char* argv[]) {
     }
 
     if (save_driver) {
-        filestream << "csv comments: " << cli.GetAsType<std::string>("csv_comments") << " \n";
-
         if (lead_count != 0) {
             filestream << "tstamp,time,wallTime,eta_time,isManual,Steering,Throttle,Braking,x[m],y[m],speed[mph],"
                           "acceleration[m/s^2],"
@@ -1443,9 +1441,15 @@ int main(int argc, char* argv[]) {
             if (step_number % int(tsave / step_size) == 0) {
                 buffer << std::fixed << std::setprecision(3);
 
+                auto tse = system_clock::now();
+                auto tse_epoch = tse.time_since_epoch();
+                std::time_t time_t_now = std::chrono::system_clock::to_time_t(tse);
+                auto now_ms = duration_cast<milliseconds>(tse_epoch);
+                auto now_s = duration_cast<seconds>(tse_epoch);
+                auto now_ms_only = now_ms - now_s;
                 time_t my_time = time(NULL);
-                buffer << strtok(ctime(&my_time), "\n");
-                buffer << ",";
+                buffer << strtok(ctime(&time_t_now), "\n") << " ms:" << now_ms_only.count() << ",";
+
                 buffer << std::to_string(sim_time) + ",";
                 buffer << std::to_string(wall_time) << ",";
                 buffer << std::to_string(eta_time) << ",";
