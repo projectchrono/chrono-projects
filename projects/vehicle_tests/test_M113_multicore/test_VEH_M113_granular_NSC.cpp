@@ -35,9 +35,9 @@
 #endif
 
 // Chrono utility header files
-#include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
+#include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 // Chrono vehicle header files
@@ -46,8 +46,8 @@
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 
 // M113 model header files
-#include "chrono_models/vehicle/m113/M113_Vehicle.h"
 #include "chrono_models/vehicle/m113/M113_SimpleCVTPowertrain.h"
+#include "chrono_models/vehicle/m113/M113_Vehicle.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -187,9 +187,10 @@ double CreateParticles(ChSystem* system) {
 
     // Create a particle generator and a mixture entirely made out of spheres
     double r = 1.01 * r_g;
-    utils::PDSampler<double> sampler(2 * r);
-    utils::Generator gen(system);
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
+    chrono::utils::PDSampler<double> sampler(2 * r);
+    chrono::utils::Generator gen(system);
+    std::shared_ptr<chrono::utils::MixtureIngredient> m1 =
+        gen.AddMixtureIngredient(chrono::utils::MixtureType::SPHERE, 1.0);
     m1->setDefaultMaterial(mat_g);
     m1->setDefaultDensity(rho_g);
     m1->setDefaultSize(r_g);
@@ -276,23 +277,25 @@ int main(int argc, char* argv[]) {
     ground->GetCollisionModel()->ClearModel();
 
     // Bottom box
-    utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick),
-                          ChQuaternion<>(1, 0, 0, 0), true);
+    chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick),
+                                  ChQuaternion<>(1, 0, 0, 0), true);
     if (terrain_type == GRANULAR_TERRAIN) {
         // Front box
-        utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hthick, hdimY, hdimZ + hthick),
-                              ChVector<>(hdimX + hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), visible_walls);
+        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hthick, hdimY, hdimZ + hthick),
+                                      ChVector<>(hdimX + hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
+                                      visible_walls);
         // Rear box
-        utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hthick, hdimY, hdimZ + hthick),
-                              ChVector<>(-hdimX - hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
-                              visible_walls);
+        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hthick, hdimY, hdimZ + hthick),
+                                      ChVector<>(-hdimX - hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
+                                      visible_walls);
         // Left box
-        utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hdimX, hthick, hdimZ + hthick),
-                              ChVector<>(0, hdimY + hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), visible_walls);
+        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hdimX, hthick, hdimZ + hthick),
+                                      ChVector<>(0, hdimY + hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
+                                      visible_walls);
         // Right box
-        utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hdimX, hthick, hdimZ + hthick),
-                              ChVector<>(0, -hdimY - hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
-                              visible_walls);
+        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hdimX, hthick, hdimZ + hthick),
+                                      ChVector<>(0, -hdimY - hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
+                                      visible_walls);
     }
 
     ground->GetCollisionModel()->BuildModel();
@@ -311,9 +314,8 @@ int main(int argc, char* argv[]) {
     // --------------------------
 
     // Create and initialize vehicle systems
-    auto vehicle = chrono_types::make_shared<M113_Vehicle>(
-        true, TrackShoeType::SINGLE_PIN, DoublePinTrackShoeType::ONE_CONNECTOR, DrivelineTypeTV::SIMPLE,
-        BrakeType::SIMPLE, false, false, false, &system);
+    auto vehicle = chrono_types::make_shared<M113_Vehicle_SinglePin>(true, DrivelineTypeTV::SIMPLE, BrakeType::SIMPLE,
+                                                                     false, false, false, &system);
     auto powertrain = chrono_types::make_shared<M113_SimpleCVTPowertrain>("Powertrain");
 
     vehicle->Initialize(ChCoordsys<>(initLoc + ChVector<>(0.0, 0.0, vertical_offset), initRot));
@@ -337,11 +339,11 @@ int main(int argc, char* argv[]) {
     MyDriver driver_speed(*vehicle, 0.5);
     driver_speed.Initialize();
 
-	auto path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
+    auto path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
     ChPathFollowerDriver driver_steering(*vehicle, vehicle::GetDataFile(steering_controller_file),
-                                vehicle::GetDataFile(speed_controller_file), path, "my_path", 0.0);
+                                         vehicle::GetDataFile(speed_controller_file), path, "my_path", 0.0);
     driver_steering.Initialize();
-	
+
     // ------------------------------------
     // Prepare output directories and files
     // ------------------------------------
@@ -359,7 +361,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    utils::CSV_writer csv("\t");
+    chrono::utils::CSV_writer csv("\t");
     csv.stream().setf(std::ios::scientific | std::ios::showpos);
     csv.stream().precision(6);
 
@@ -434,7 +436,7 @@ int main(int argc, char* argv[]) {
             if (povray_output) {
                 char filename[100];
                 sprintf(filename, "%s/data_%03d.dat", pov_dir.c_str(), out_frame + 1);
-                utils::WriteVisualizationAssets(&system, filename);
+                chrono::utils::WriteVisualizationAssets(&system, filename);
             }
 
             out_frame++;
@@ -452,12 +454,12 @@ int main(int argc, char* argv[]) {
 
         // Update modules (process inputs from other modules)
         driver_speed.Synchronize(time);
-		driver_steering.Synchronize(time);
+        driver_steering.Synchronize(time);
         vehicle->Synchronize(time, driver_inputs, shoe_forces_left, shoe_forces_right);
 
         // Advance simulation for one timestep for all modules
         driver_speed.Advance(time_step);
-		driver_steering.Advance(time_step);
+        driver_steering.Advance(time_step);
         vehicle->Advance(time_step);
 
 #ifdef CHRONO_OPENGL

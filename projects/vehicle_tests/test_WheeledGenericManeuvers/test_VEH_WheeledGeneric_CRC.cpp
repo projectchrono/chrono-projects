@@ -240,7 +240,7 @@ int main(int argc, char* argv[]) {
     auto path = chrono_types::make_shared<ChBezierCurve>(points, inCV, outCV);
 
     ChPathFollowerDriver driver(vehicle, vehicle::GetDataFile(steering_controller_file),
-                                vehicle::GetDataFile(speed_controller_file), path, "my_path", initFwdSpd, false);
+                                vehicle::GetDataFile(speed_controller_file), path, "my_path", initFwdSpd);
     driver.Initialize();
 
     // Report out the mass of the entire vehicle to the screen
