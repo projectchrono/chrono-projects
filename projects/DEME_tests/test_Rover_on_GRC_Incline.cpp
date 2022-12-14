@@ -12,8 +12,8 @@
 // Authors: Ruochun Zhang
 // =============================================================================
 //
-// Demo to show Viper Rover operating on GRC-1 Terrain, with DEM-Engine providing
-// the DEM simulation support
+// Demo to show Rover operating on incline of GRC-1 simulant, with DEM-Engine
+// providing the DEM simulation support
 //
 // =============================================================================
 
@@ -44,6 +44,8 @@ using namespace chrono;
 using namespace chrono::geometry;
 using namespace chrono::viper;
 
+const double math_PI = 3.1415927;
+
 // Define Viper rover wheel type
 ViperWheelType wheel_type = ViperWheelType::RealWheel;
 
@@ -71,23 +73,40 @@ int main(int argc, char* argv[]) {
     SetDEMEDataPath(DEME_DATA_DIR);
     std::cout << "DEME dir is " << GetDEMEDataPath() << std::endl;
 
+    // `World'
+    float G_mag = 9.81;
+    float step_size = 1e-6;
+
+    // Define the wheel geometry
+    float wheel_rad = 0.25;
+    float wheel_width = 0.2;
+    float wheel_mass = 11.;
+    float total_pressure = 22. * 9.81;
+    float added_pressure = (total_pressure - wheel_mass * G_mag);
+    float wheel_IYY = wheel_mass * wheel_rad * wheel_rad / 2;
+    float wheel_IXX = (wheel_mass / 12) * (3 * wheel_rad * wheel_rad + wheel_width * wheel_width);
+    float3 wheel_MOI = make_float3(wheel_IXX, wheel_IYY, wheel_IXX);
+
     // std::string wheel_obj_path = GetChronoDataFile("robot/viper/obj/viper_wheel.obj");
-    std::string wheel_obj_path = GetDEMEDataFile("mesh/rover_wheels/viper_wheel_right.obj");
+    std::string wheel_obj_path = "./Moon_rover_wheel.obj";
 
     // Global parameter for moving patch size:
     double wheel_range = 0.5;
     ////double body_range = 1.2;
 
     // Create a Chrono::Engine physical system
+    float Slope_deg = 5;
+    double G_ang = Slope_deg * math_PI / 180.;
     ChSystemSMC sys;
-    ChVector<double> G = ChVector<double>(0, 0, -9.81);
+    ChVector<double> G = ChVector<double>(-G_mag * std::sin(G_ang), 0, -G_mag * std::cos(G_ang));
     sys.Set_G_acc(G);
 
     const int nW = 4;  // 4 wheels
 
     // Create the rover
     // auto driver = chrono_types::make_shared<ViperDCMotorControl>();
-    auto driver = chrono_types::make_shared<ViperSpeedDriver>(0, 3.14159 / 2);
+    float w_r = 0.8;
+    auto driver = chrono_types::make_shared<ViperSpeedDriver>(0, w_r);
     Viper viper(&sys, wheel_type);
     viper.SetDriver(driver);
 
@@ -111,8 +130,8 @@ int main(int argc, char* argv[]) {
     Wheels.push_back(viper.GetWheel(ViperWheelID::V_RB)->GetBody());
 
     auto Body_1 = viper.GetChassis()->GetBody();
-    double total_mass = viper.GetRoverMass();
-    double wheel_mass = viper.GetWheelMass();
+    std::cout << "Rover mass: " << viper.GetRoverMass() << std::endl;
+    std::cout << "Wheel mass: " << viper.GetWheelMass() << std::endl;
 
     for (int i = 0; i < nW; i++) {
         wheel_pos.push_back(Wheels[i]->GetFrame_REF_to_abs().GetPos());
@@ -134,9 +153,9 @@ int main(int argc, char* argv[]) {
     float m_cm_cov = 1;
     // Define materials
     auto mat_type_terrain =
-        DEMSim.LoadMaterial({{"E", 1e9 * kg_g_conv / m_cm_cov}, {"nu", 0.3}, {"CoR", 0.3}, {"mu", 0.5}, {"Crr", 0.0}});
+        DEMSim.LoadMaterial({{"E", 1e9 * kg_g_conv / m_cm_cov}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", 0.9}, {"Crr", 0.0}});
     auto mat_type_wheel =
-        DEMSim.LoadMaterial({{"E", 1e9 * kg_g_conv / m_cm_cov}, {"nu", 0.3}, {"CoR", 0.3}, {"mu", 0.5}, {"Crr", 0.0}});
+        DEMSim.LoadMaterial({{"E", 1e9 * kg_g_conv / m_cm_cov}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", 0.9}, {"Crr", 0.0}});
 
     // Define the simulation world
     double world_x_size = 4.0 * m_cm_cov;
@@ -150,25 +169,6 @@ int main(int argc, char* argv[]) {
     // X-dir bounding planes
     DEMSim.AddBCPlane(make_float3(-world_x_size / 2., 0, 0), make_float3(1, 0, 0), mat_type_terrain);
     DEMSim.AddBCPlane(make_float3(world_x_size / 2., 0, 0), make_float3(-1, 0, 0), mat_type_terrain);
-
-    // Define the wheel geometry
-    float wheel_rad = 0.25 * m_cm_cov;
-    float wheel_width = 0.25 * m_cm_cov;
-    wheel_mass *= kg_g_conv;  // in kg or g
-    float wheel_IYY = wheel_mass * wheel_rad * wheel_rad / 2;
-    float wheel_IXX = (wheel_mass / 12) * (3 * wheel_rad * wheel_rad + wheel_width * wheel_width);
-    float3 wheel_MOI = make_float3(wheel_IXX, wheel_IYY, wheel_IXX);
-    // The commented part is about the loading the spherical decomposition-represented wheels
-    /*
-    auto wheel_template =
-        DEMSim.LoadClumpType(wheel_mass, wheel_MOI, GetDEMEDataFile("clumps/ViperWheelSimple.csv"), mat_type_wheel);
-    // The file contains no wheel particles size info, so let's manually set them
-    wheel_template->radii = std::vector<float>(wheel_template->nComp, 0.01 * m_cm_cov);
-    // This wheel template is `lying down', but our reported MOI info is assuming it's in a position to roll
-    // along X direction. Let's make it clear its principal axes is not what we used to report its component
-    // sphere relative positions.
-    wheel_template->InformCentroidPrincipal(make_float3(0), make_float4(0.7071, 0, 0, 0.7071));
-    */
 
     // Then the ground particle template
     DEMClumpTemplate shape_template;
@@ -328,11 +328,12 @@ int main(int argc, char* argv[]) {
     //////
     // Make ready for DEM simulation
     ///////
-    auto max_v_finder = DEMSim.CreateInspector("clump_max_absv");
+    // Some inspectors
     auto max_z_finder = DEMSim.CreateInspector("clump_max_z");
-    auto void_ratio_finder =
-        DEMSim.CreateInspector("clump_volume", "return (abs(X) <= 0.48) && (abs(Y) <= 0.48) && (Z <= -0.44);");
-    float total_volume = 0.96 * 0.96 * 0.06;
+    auto min_z_finder = DEMSim.CreateInspector("clump_min_z");
+    auto total_mass_finder = DEMSim.CreateInspector("clump_mass");
+    auto partial_mass_finder = DEMSim.CreateInspector("clump_mass", "return (Z <= -0.41);");
+    auto max_v_finder = DEMSim.CreateInspector("clump_max_absv");
 
     /*
     // Now add a plane to compress the `road'
@@ -344,14 +345,13 @@ int main(int argc, char* argv[]) {
     auto compressor_tracker = DEMSim.Track(compressor);
     */
 
-    float step_size = 1e-6;
     float base_vel = 0.4;
     DEMSim.SetCoordSysOrigin(make_float3(world_x_size / 2., world_y_size / 2., world_y_size / 2.));
     DEMSim.SetInitTimeStep(step_size);
     DEMSim.SetGravitationalAcceleration(ChVec2Float(G));
     // If you want to use a large UpdateFreq then you have to expand spheres to ensure safety
     DEMSim.SetCDUpdateFreq(20);
-    DEMSim.SetMaxVelocity(40.);
+    DEMSim.SetMaxVelocity(50.);
     DEMSim.SetInitBinSize(scales.at(2));
     DEMSim.SetIntegrator(TIME_INTEGRATOR::EXTENDED_TAYLOR);
 
@@ -365,10 +365,10 @@ int main(int argc, char* argv[]) {
     // Compress the road first
     ///////////////////////////////////////////
 
-    float time_end = 5.0;
-    unsigned int fps = 30;
-    unsigned int report_freq = 5000;
-    unsigned int param_update_freq = 5000;
+    float time_end = 15.0;
+    unsigned int fps = 10;
+    unsigned int report_freq = 2000;
+    unsigned int param_update_freq = 10000;
     unsigned int out_steps = (unsigned int)(1.0 / (fps * step_size));
     float frame_accu_thres = 1.0 / fps;
     unsigned int report_steps = (unsigned int)(1.0 / (report_freq * step_size));
@@ -379,7 +379,7 @@ int main(int argc, char* argv[]) {
     create_directory(out_dir);
     out_dir += "/DEME";
     create_directory(out_dir);
-    out_dir += "/Viper_on_GRC";
+    out_dir += "/Rover_on_GRC_incline_" + std::to_string(Slope_deg) + "deg";
     path rover_dir = out_dir / "./rover";
     create_directory(out_dir);
     create_directory(rover_dir);
@@ -463,8 +463,14 @@ int main(int argc, char* argv[]) {
     ///////////////////////////////////////////
     // Real simulation
     ///////////////////////////////////////////
-    float matter_volume = void_ratio_finder->GetValue();
-    std::cout << "Void ratio before simulation: " << (total_volume - matter_volume) / matter_volume << std::endl;
+    // Put the wheel in place, then let the wheel sink in initially
+    float max_z = max_z_finder->GetValue();
+    // wheel_tracker->SetPos(make_float3(init_x, 0, max_z + 0.03 + wheel_rad));
+
+    float bulk_den_high = partial_mass_finder->GetValue() / ((-0.41 + 0.5) * world_x_size * world_y_size);
+    float bulk_den_low = total_mass_finder->GetValue() / ((max_z + 0.5) * world_x_size * world_y_size);
+    std::cout << "Bulk density high: " << bulk_den_high << std::endl;
+    std::cout << "Bulk density low: " << bulk_den_low << std::endl;
 
     // Timers
     std::chrono::high_resolution_clock::time_point h_start, d_start;
@@ -483,7 +489,7 @@ int main(int argc, char* argv[]) {
     // Find max z
     // float init_max_z =
     // 0.268923
-    unsigned int chrono_update_freq = 5;
+    unsigned int chrono_update_freq = 10;
     for (float t = 0; t < time_end; t += step_size, curr_step++, frame_accu += step_size) {
         if (curr_step % chrono_update_freq == 0) {
             for (int i = 0; i < nW; i++) {
@@ -498,20 +504,26 @@ int main(int argc, char* argv[]) {
             }
         }
         if (curr_step % report_steps == 0) {
-            for (int i = 0; i < nW; i++) {
-                std::cout << "Wheel " << i << " position: " << wheel_pos[i].x() << ", " << wheel_pos[i].y() << ", "
-                          << wheel_pos[i].z() << std::endl;
+            // for (int i = 0; i < nW; i++) {
+            //     std::cout << "Wheel " << i << " position: " << wheel_pos[i].x() << ", " << wheel_pos[i].y() << ", "
+            //               << wheel_pos[i].z() << std::endl;
 
-                std::cout << "Wheel " << i << " rotation: " << wheel_rot[i].e0() << ", " << wheel_rot[i].e1() << ", "
-                          << wheel_rot[i].e2() << ", " << wheel_rot[i].e3() << std::endl;
+            //     std::cout << "Wheel " << i << " rotation: " << wheel_rot[i].e0() << ", " << wheel_rot[i].e1() << ", "
+            //               << wheel_rot[i].e2() << ", " << wheel_rot[i].e3() << std::endl;
 
-                std::cout << "Wheel " << i << " angVel: " << wheel_angVel[i].x() << ", " << wheel_angVel[i].y() << ", "
-                          << wheel_angVel[i].z() << std::endl;
-            }
+            //     std::cout << "Wheel " << i << " angVel: " << wheel_angVel[i].x() << ", " << wheel_angVel[i].y() << ",
+            //     "
+            //               << wheel_angVel[i].z() << std::endl;
+            // }
             float3 body_pos = ChVec2Float(Body_1->GetFrame_REF_to_abs().GetPos());
-            std::cout << "Rover body is at " << body_pos.x << ", " << body_pos.y << ", " << body_pos.z << std::endl;
-            std::cout << "Time is " << t << std::endl;
+            float3 body_vel = ChVec2Float(Body_1->GetFrame_REF_to_abs().GetPos_dt());
+            float slip = 1.0 - body_vel.x / (w_r * wheel_rad);
             max_v = max_v_finder->GetValue();
+            std::cout << "Current slope: " << Slope_deg << std::endl;
+            std::cout << "Time is " << t << std::endl;
+            std::cout << "X: " << body_pos.x << std::endl;
+            std::cout << "V: " << body_vel.x << std::endl;
+            std::cout << "Slip: " << slip << std::endl;
             std::cout << "Max vel in simulation is " << max_v << std::endl;
             std::cout << "========================" << std::endl;
         }
@@ -522,9 +534,9 @@ int main(int argc, char* argv[]) {
             DEMSim.ShowThreadCollaborationStats();
             char filename[200], meshfilename[200];
             sprintf(filename, "%s/DEMdemo_output_%04d.csv", out_dir.c_str(), currframe);
-            sprintf(meshfilename, "%s/DEMdemo_output_mesh_%04d.vtk", out_dir.c_str(), currframe);
+            // sprintf(meshfilename, "%s/DEMdemo_output_mesh_%04d.vtk", out_dir.c_str(), currframe);
             DEMSim.WriteSphereFile(std::string(filename));
-            DEMSim.WriteMeshFile(std::string(meshfilename));
+            // DEMSim.WriteMeshFile(std::string(meshfilename));
             SaveParaViewFiles(viper, rover_dir, currframe);
             currframe++;
         }
@@ -569,14 +581,14 @@ int main(int argc, char* argv[]) {
         //     std::cout << "Step size in simulation is " << step_size << std::endl;
         // }
 
-        if (t > 1.0 && change_step == 0) {
-            DEMSim.DoDynamicsThenSync(0);
-            step_size = 1.5e-6;
-            DEMSim.SetInitTimeStep(step_size);
-            DEMSim.SetMaxVelocity(50.0);
-            DEMSim.UpdateSimParams();
-            change_step = 1;
-        }
+        // if (t > 1.5 && change_step == 0) {
+        //     DEMSim.DoDynamicsThenSync(0);
+        //     step_size = 1.5e-6;
+        //     DEMSim.SetInitTimeStep(step_size);
+        //     DEMSim.UpdateSimParams();
+        //     change_step = 1;
+        // }
+
         // else if (t > 3.0 && change_step == 1) {
         //     DEMSim.DoDynamicsThenSync(0);
         //     step_size = 2e-6;
@@ -605,6 +617,7 @@ int main(int argc, char* argv[]) {
 
     DEMSim.ShowThreadCollaborationStats();
     DEMSim.ShowTimingStats();
+    DEMSim.ShowAnomalies();
 
     return 0;
 }
@@ -671,7 +684,7 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
         }
 
         auto mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
-        std::string obj_path = GetChronoDataFile("robot/viper/obj/viper_wheel.obj");
+        std::string obj_path = "./Moon_rover_wheel.obj";
         double scale_ratio = 1.0;
         mmesh->LoadWavefrontMesh(obj_path, false, true);
         mmesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
