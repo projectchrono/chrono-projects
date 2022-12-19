@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
     ////double body_range = 1.2;
 
     // Create a Chrono::Engine physical system
-    float Slope_deg = 5;
+    float Slope_deg = 20;
     double G_ang = Slope_deg * math_PI / 180.;
     ChSystemSMC sys;
     ChVector<double> G = ChVector<double>(-G_mag * std::sin(G_ang), 0, -G_mag * std::cos(G_ang));
@@ -171,23 +171,30 @@ int main(int argc, char* argv[]) {
     DEMSim.AddBCPlane(make_float3(world_x_size / 2., 0, 0), make_float3(-1, 0, 0), mat_type_terrain);
 
     // Then the ground particle template
-    DEMClumpTemplate shape_template;
-    shape_template.ReadComponentFromFile(GetDEMEDataFile("clumps/triangular_flat.csv"));
+    DEMClumpTemplate shape_template1, shape_template2;
+    shape_template1.ReadComponentFromFile((GET_DATA_PATH() / "clumps/triangular_flat.csv").string());
+    shape_template2.ReadComponentFromFile((GET_DATA_PATH() / "clumps/triangular_flat_6comp.csv").string());
+    std::vector<DEMClumpTemplate> shape_template = {shape_template2, shape_template2, shape_template1, shape_template1,
+                                                    shape_template1, shape_template1, shape_template1};
     // Calculate its mass and MOI
-    float mass = 2.6e3 * 5.5886717 * kg_g_conv;  // in kg or g
-    float3 MOI = make_float3(1.8327927, 2.1580013, 0.77010059) * (double)2.6e3 * kg_g_conv / m_cm_cov / m_cm_cov;
-    std::for_each(shape_template.radii.begin(), shape_template.radii.end(), [m_cm_cov](float& r) { r *= m_cm_cov; });
-    std::for_each(shape_template.relPos.begin(), shape_template.relPos.end(), [m_cm_cov](float3& r) { r *= m_cm_cov; });
+    float mass1 = 2.6e3 * 5.5886717 * kg_g_conv;  // in kg or g
+    float3 MOI1 = make_float3(1.8327927, 2.1580013, 0.77010059) * 2.6e3 * kg_g_conv;
+    float mass2 = 2.6e3 * 2.7564385 * kg_g_conv;  // in kg or g
+    float3 MOI2 = make_float3(1.0352626, 0.9616627, 1.6978352) * 2.6e3 * kg_g_conv;
+    std::vector<float> mass = {mass2, mass2, mass1, mass1, mass1, mass1, mass1};
+    std::vector<float3> MOI = {MOI2, MOI2, MOI1, MOI1, MOI1, MOI1, MOI1};
     // Scale the template we just created
     std::vector<std::shared_ptr<DEMClumpTemplate>> ground_particle_templates;
-    std::vector<double> scales = {0.00063, 0.00033, 0.00022, 0.00015, 0.00009};
-    std::for_each(scales.begin(), scales.end(), [](double& r) { r *= 20.; });
+    std::vector<double> volume = {2.7564385, 2.7564385, 5.5886717, 5.5886717, 5.5886717, 5.5886717, 5.5886717};
+    std::vector<double> scales = {0.0014, 0.00075833, 0.00044, 0.0003, 0.0002, 0.00018333, 0.00017};
+    std::for_each(scales.begin(), scales.end(), [](double& r) { r *= 10.; });
+    unsigned int t_num = 0;
     for (double scaling : scales) {
-        auto this_template = shape_template;
-        this_template.mass = (double)mass * scaling * scaling * scaling;
-        this_template.MOI.x = (double)MOI.x * (double)(scaling * scaling * scaling * scaling * scaling);
-        this_template.MOI.y = (double)MOI.y * (double)(scaling * scaling * scaling * scaling * scaling);
-        this_template.MOI.z = (double)MOI.z * (double)(scaling * scaling * scaling * scaling * scaling);
+        auto this_template = shape_template[t_num];
+        this_template.mass = (double)mass[t_num] * scaling * scaling * scaling;
+        this_template.MOI.x = (double)MOI[t_num].x * (double)(scaling * scaling * scaling * scaling * scaling);
+        this_template.MOI.y = (double)MOI[t_num].y * (double)(scaling * scaling * scaling * scaling * scaling);
+        this_template.MOI.z = (double)MOI[t_num].z * (double)(scaling * scaling * scaling * scaling * scaling);
         std::cout << "Mass: " << this_template.mass << std::endl;
         std::cout << "MOIX: " << this_template.MOI.x << std::endl;
         std::cout << "MOIY: " << this_template.MOI.y << std::endl;
@@ -196,7 +203,13 @@ int main(int argc, char* argv[]) {
         std::for_each(this_template.radii.begin(), this_template.radii.end(), [scaling](float& r) { r *= scaling; });
         std::for_each(this_template.relPos.begin(), this_template.relPos.end(), [scaling](float3& r) { r *= scaling; });
         this_template.materials = std::vector<std::shared_ptr<DEMMaterial>>(this_template.nComp, mat_type_terrain);
+
+        // Give these templates names, 0000, 0001 etc.
+        char t_name[20];
+        sprintf(t_name, "%04d", t_num);
+        this_template.AssignName(std::string(t_name));
         ground_particle_templates.push_back(DEMSim.LoadClumpType(this_template));
+        t_num++;
     }
 
     // Now we load clump locations from a checkpointed file
