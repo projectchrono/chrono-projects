@@ -57,7 +57,6 @@ set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 
 message(STATUS "Programs...")
 add_subdirectory(test_steeringControl)
-#add_subdirectory(test_pacjekaTire)
 
 if (CHRONO_IRRLICHT_FOUND)
   message(STATUS "Programs using Chrono::Irrlicht...")
