@@ -20,12 +20,11 @@
 
 #include "chrono/core/ChGlobal.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-
 #include "chrono_gpu/physics/ChSystemGpu.h"
 #include "chrono_gpu/utils/ChGpuJsonParser.h"
-#include "chrono_gpu/ChGpuData.h"
-
 #include "chrono_thirdparty/filesystem/path.h"
+
+#include "../utils.h"
 
 using namespace chrono;
 using namespace chrono::gpu;
@@ -35,19 +34,8 @@ enum run_mode { FRICTIONLESS_NOCYL = 0, FRICTIONLESS_WITHCYL = 1, MULTI_STEP_NOC
 // whether or not to have a cylinder blocking the flow. Set by run_mode.
 bool use_cylinder = false;
 
-// expected number of args for param sweep
-constexpr int num_args_full = 7;
-
-void ShowUsage(std::string name) {
-    std::cout << "usage: " + name +
-                     " <json_file> <radius> <density> <run_mode: 0-FRICTIONLESS_NOCYL, "
-                     "1-FRICTIONLESS_WITHCYL, 2-MULTI_STEP_NOCYL, 3-MULTI_STEP_WITHCYL> <box_Y> <output_dir>"
-              << std::endl;
-    std::cout << "must have either 1 or " << num_args_full - 1 << " arguments" << std::endl;
-}
-
-std::string box_filename = gpu::GetDataFile("meshes/BD_Box.obj");
-std::string cyl_filename = gpu::GetDataFile("meshes/Gran_cylinder.obj");
+std::string box_filename = GetProjectsDataFile("gpu/meshes/BD_Box.obj");
+std::string cyl_filename = GetProjectsDataFile("gpu/meshes/Gran_cylinder.obj");
 
 ChGpuSimulationParameters params;
 
@@ -111,25 +99,28 @@ void writeZCylinderMesh(std::ostringstream& outstream, ChVector<> pos, float rad
 }
 
 int main(int argc, char* argv[]) {
-    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
-
-    // Some of the default values might be overwritten by user via command line
-    if (argc < 2 || argc > 2 && argc != num_args_full || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
-        ShowUsage(argv[0]);
+    std::string inputJson = GetProjectsDataFile("gpu/DamBreak.json");
+    int run_mode = 0;
+    if (argc == 2) {
+        inputJson = std::string(argv[1]);
+    } else if (argc == 3) {
+        inputJson = std::string(argv[1]);
+        run_mode = std::atoi(argv[2]);
+    } else if (argc > 1) {
+        std::cout << "Usage:\n./test_GPU_DamBreak <json_file> [run_mode]" << std::endl;
+        std::cout << "run_mode:  0-FRICTIONLESS_NOCYL, 1-FRICTIONLESS_WITHCYL, 2-MULTI_STEP_NOCYL, 3-MULTI_STEP_WITHCYL"
+                  << std::endl;
         return 1;
     }
 
-    if (argc == num_args_full){
-        params.sphere_radius = std::atof(argv[2]);
-        params.sphere_density = std::atof(argv[3]);
-        params.run_mode = std::atof(argv[4]);
-        params.box_Y = std::atof(argv[5]);
-        params.output_dir = std::string(argv[6]);
+    ChGpuSimulationParameters params;
+    if (!ParseJSON(inputJson, params)) {
+        std ::cout << "ERROR: reading input file " << inputJson << std::endl;
+        return 1;
     }
 
     std::cout << "Radius " << params.sphere_radius << std::endl;
     std::cout << "Density " << params.sphere_density << std::endl;
-    std::cout << "Run Mode " << params.run_mode << std::endl;
     std::cout << "box_Y " << params.box_Y << std::endl;
     std::cout << "output_dir " << params.output_dir << std::endl;
 
@@ -163,7 +154,7 @@ int main(int argc, char* argv[]) {
 
     gran_sys.SetBDFixed(true);
 
-    switch (params.run_mode) {
+    switch (run_mode) {
         case run_mode::MULTI_STEP_WITHCYL:
             gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
             use_cylinder = true;
@@ -182,7 +173,6 @@ int main(int argc, char* argv[]) {
             break;
         default:
             std::cout << "Invalid run_mode" << std::endl;
-            ShowUsage(argv[0]);
             return 1;
     }
 

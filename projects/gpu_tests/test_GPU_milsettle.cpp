@@ -21,9 +21,10 @@
 
 #include "chrono/core/ChTimer.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_gpu/ChGpuData.h"
 #include "chrono_gpu/physics/ChSystemGpu.h"
 #include "chrono_thirdparty/filesystem/path.h"
+
+#include "../utils.h"
 
 using namespace chrono;
 using namespace chrono::gpu;
@@ -104,7 +105,7 @@ double run_test(float box_size_X, float box_size_Y, float box_size_Z) {
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
-        std::cout << "usage: " + std::string(argv[0]) + " <results_log_file>" << std::endl;
+        std::cout << "Usage:\n./test_GPU_milsettle <results_log_file>" << std::endl;
     }
 
     // up to one million bodies

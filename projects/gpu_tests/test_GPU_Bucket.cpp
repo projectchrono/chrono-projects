@@ -26,30 +26,20 @@
 
 #include "chrono_gpu/physics/ChSystemGpu.h"
 #include "chrono_gpu/utils/ChGpuJsonParser.h"
-#include "chrono_gpu/ChGpuData.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
+
+#include "../utils.h"
 
 using namespace chrono;
 using namespace chrono::gpu;
 
-// expected number of args for param sweep
-constexpr int num_args_full = 5;
-
 int currcapture = 0;
 int currframe = 0;
 
-// -----------------------------------------------------------------------------
-// Show command line usage
-// -----------------------------------------------------------------------------
-void ShowUsage(std::string name) {
-    std::cout << "usage: " + name + " <json_file> [<run_mode> <box_Z> <output_dir>]" << std::endl;
-    std::cout << "must have either 1 or " << num_args_full - 1 << " arguments" << std::endl;
-}
-
 ChGpuSimulationParameters params;
 
-std::string box_filename = gpu::GetDataFile("meshes/BD_Box.obj");
+std::string box_filename = GetProjectsDataFile("gpu/meshes/BD_Box.obj");
 
 // Take a ChBody and write its
 void writeBoxMesh(std::ostringstream& outstream) {
@@ -118,25 +108,23 @@ void writeForcesFile(ChSystemGpu& gran_sys) {
 }
 
 int main(int argc, char* argv[]) {
-    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
-
-    // Some of the default values might be overwritten by user via command line
-    if (argc < 2 || argc > 2 && argc != num_args_full || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
-        ShowUsage(argv[0]);
+    std::string inputJson = GetProjectsDataFile("gpu/Bucket.json");
+    if (argc == 2) {
+        inputJson = std::string(argv[1]);
+    } else if (argc > 1) {
+        std::cout << "Usage:\n./test_GPU_Bucket <json_file>" << std::endl;
         return 1;
     }
 
-    if (argc == num_args_full) {
-        params.run_mode = std::atoi(argv[2]);
-        params.box_Z = std::atof(argv[3]);
-        params.output_dir = std::string(argv[4]);
-        printf("new parameters: run_mode is %d, height is %f, %s\n", params.run_mode, params.box_Z,
-               params.output_dir.c_str());
+    ChGpuSimulationParameters params;
+    if (!ParseJSON(inputJson, params)) {
+        std ::cout << "ERROR: reading input file " << inputJson << std::endl;
+        return 1;
     }
 
     // Setup simulation
     ChSystemGpu gran_sys(params.sphere_radius, params.sphere_density,
-                        ChVector<float>(params.box_X, params.box_Y, params.box_Z));
+                         ChVector<float>(params.box_X, params.box_Y, params.box_Z));
     gran_sys.SetPsiFactors(params.psi_T, params.psi_L);
 
     // normal force model
@@ -145,7 +133,7 @@ int main(int argc, char* argv[]) {
     gran_sys.SetGn_SPH2SPH(params.normalDampS2S);
     gran_sys.SetGn_SPH2WALL(params.normalDampS2W);
 
-    // tangential force model 
+    // tangential force model
     gran_sys.SetKt_SPH2SPH(params.tangentStiffS2S);
     gran_sys.SetKt_SPH2WALL(params.tangentStiffS2W);
     gran_sys.SetGt_SPH2SPH(params.tangentDampS2S);
@@ -162,7 +150,7 @@ int main(int argc, char* argv[]) {
     std::vector<ChVector<float>> body_points;
 
     {
-        //fill box, layer by layer
+        // fill box, layer by layer
         ChVector<> hdims(params.box_X / 2.f - 3, params.box_Y / 2.f - 3, params.box_Z / 2.f - 3);
         ChVector<> center(0, 0, 0);
 
@@ -257,7 +245,7 @@ int main(int argc, char* argv[]) {
 
     // number of times to capture force data per second
     int captures_per_second = 50;
-    
+
     // number of times to capture force before we capture a frame
     int captures_per_frame = 2;
 
@@ -303,9 +291,6 @@ int main(int argc, char* argv[]) {
             sprintf(filename, "%s/step%06d", params.output_dir.c_str(), currframe++);
             // gran_sys.WriteFile(std::string(filename));
         }
-
-
-
     }
 
     return 0;
