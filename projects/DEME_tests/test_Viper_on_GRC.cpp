@@ -389,7 +389,7 @@ int main(int argc, char* argv[]) {
     /*
     step_size = 1e-6;
     DEMSim.SetInitTimeStep(step_size);
-    DEMSim.UpdateSimParams();
+    DEMSim.UpdateStepSize();
     // Settle for a while...
     for (float t = 0; t < 1.5; t += step_size, curr_step++) {
         if (curr_step % out_steps == 0) {
@@ -408,7 +408,7 @@ int main(int argc, char* argv[]) {
     DEMSim.DoDynamicsThenSync(0);
     step_size = 1e-6;
     DEMSim.SetInitTimeStep(step_size);
-    DEMSim.UpdateSimParams();
+    DEMSim.UpdateStepSize();
     float matter_volume = void_ratio_finder->GetValue();
     std::cout << "Void ratio before simulation: " << (total_volume - matter_volume) / matter_volume << std::endl;
 
@@ -451,7 +451,7 @@ int main(int argc, char* argv[]) {
     DEMSim.DoDynamicsThenSync(0);
     step_size = 1e-6;
     DEMSim.SetInitTimeStep(step_size);
-    DEMSim.UpdateSimParams();
+    DEMSim.UpdateStepSize();
 
     DEMSim.EnableContactBetweenFamilies(100, 0);  // Re-enable wheel-ground contact
 
@@ -564,7 +564,7 @@ int main(int argc, char* argv[]) {
         //     step_size = base_step_size / multiplier;
         //     DEMSim.SetInitTimeStep(step_size);
         //     // DEMSim.SetMaxVelocity(max_v * 1.2);
-        //     DEMSim.UpdateSimParams();
+        //     DEMSim.UpdateStepSize();
         //     std::cout << "Max vel in simulation is " << max_v << std::endl;
         //     std::cout << "Step size in simulation is " << step_size << std::endl;
         // }
@@ -574,7 +574,7 @@ int main(int argc, char* argv[]) {
             step_size = 1.5e-6;
             DEMSim.SetInitTimeStep(step_size);
             DEMSim.SetMaxVelocity(50.0);
-            DEMSim.UpdateSimParams();
+            DEMSim.UpdateStepSize();
             change_step = 1;
         }
         // else if (t > 3.0 && change_step == 1) {
@@ -582,21 +582,21 @@ int main(int argc, char* argv[]) {
         //     step_size = 2e-6;
         //     DEMSim.SetInitTimeStep(step_size);
         //     DEMSim.SetMaxVelocity(20.0);
-        //     DEMSim.UpdateSimParams();
+        //     DEMSim.UpdateStepSize();
         //     change_step = 2;
         // }
         // else if (t > 2.0 && change_step == 2) {
         //     DEMSim.DoDynamicsThenSync(0);
         //     step_size = 3e-6;
         //     DEMSim.SetInitTimeStep(step_size);
-        //     DEMSim.UpdateSimParams();
+        //     DEMSim.UpdateStepSize();
         //     change_step = 3;
         // }
         // else if (t > 3.0 && change_step == 3) {
         //     DEMSim.DoDynamicsThenSync(0);
         //     step_size = 5e-6;
         //     DEMSim.SetInitTimeStep(step_size);
-        //     DEMSim.UpdateSimParams();
+        //     DEMSim.UpdateStepSize();
         //     change_step = 4;
         // }
     }

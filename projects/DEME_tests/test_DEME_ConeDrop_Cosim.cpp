@@ -250,7 +250,7 @@ int main() {
         // if (step_size_marker == 0 && t > 0.5) {
         //     step_size = 2e-6;
         //     DEMSim.SetInitTimeStep(step_size);
-        //     DEMSim.UpdateSimParams();
+        //     DEMSim.UpdateStepSize();
         //     step_size_marker = 1;
         // }
         std::cout << "Frame: " << currframe << std::endl;

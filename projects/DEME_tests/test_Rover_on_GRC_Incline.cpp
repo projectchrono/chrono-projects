@@ -81,21 +81,19 @@ int main(int argc, char* argv[]) {
     float wheel_rad = 0.25;
     float wheel_width = 0.2;
     float wheel_mass = 11.;
-    float total_pressure = 22. * 9.81;
-    float added_pressure = (total_pressure - wheel_mass * G_mag);
     float wheel_IYY = wheel_mass * wheel_rad * wheel_rad / 2;
     float wheel_IXX = (wheel_mass / 12) * (3 * wheel_rad * wheel_rad + wheel_width * wheel_width);
     float3 wheel_MOI = make_float3(wheel_IXX, wheel_IYY, wheel_IXX);
 
     // std::string wheel_obj_path = GetChronoDataFile("robot/viper/obj/viper_wheel.obj");
-    std::string wheel_obj_path = "./Moon_rover_wheel.obj";
+    std::string wheel_obj_path = "./Moon_rover_wheel.obj";  
 
     // Global parameter for moving patch size:
     double wheel_range = 0.5;
     ////double body_range = 1.2;
 
     // Create a Chrono::Engine physical system
-    float Slope_deg = 20;
+    float Slope_deg = 25;
     double G_ang = Slope_deg * math_PI / 180.;
     ChSystemSMC sys;
     ChVector<double> G = ChVector<double>(-G_mag * std::sin(G_ang), 0, -G_mag * std::cos(G_ang));
@@ -119,7 +117,9 @@ int main(int argc, char* argv[]) {
     // driver->SetMotorStallTorque(50.0, ViperWheelID::V_LB);
     // driver->SetMotorStallTorque(50.0, ViperWheelID::V_RB);
 
-    viper.Initialize(ChFrame<>(ChVector<>(-0.9, -0.0, -0.13), QUNIT));
+    float x_offset = (Slope_deg > 21) ? 0.7 : 0.0;
+    float z_offset = 0.025;
+    viper.Initialize(ChFrame<>(ChVector<>(-0.9 + x_offset, -0.0, -0.135 + z_offset), QUNIT));
 
     // Get wheels and bodies to set up SCM patches
     std::vector<std::shared_ptr<ChBodyAuxRef>> Wheels;
@@ -153,8 +153,10 @@ int main(int argc, char* argv[]) {
     float m_cm_cov = 1;
     // Define materials
     auto mat_type_terrain =
-        DEMSim.LoadMaterial({{"E", 1e9 * kg_g_conv / m_cm_cov}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", 0.9}, {"Crr", 0.0}});
+        DEMSim.LoadMaterial({{"E", 1e9 * kg_g_conv / m_cm_cov}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", 0.2}, {"Crr", 0.0}});
     auto mat_type_wheel =
+        DEMSim.LoadMaterial({{"E", 1e9 * kg_g_conv / m_cm_cov}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", 0.2}, {"Crr", 0.0}});
+    auto mat_type_wall =
         DEMSim.LoadMaterial({{"E", 1e9 * kg_g_conv / m_cm_cov}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", 0.9}, {"Crr", 0.0}});
 
     // Define the simulation world
@@ -163,12 +165,12 @@ int main(int argc, char* argv[]) {
     DEMSim.InstructBoxDomainDimension(world_x_size, world_y_size, world_y_size);
     // DEMSim.InstructBoxDomainNumVoxel(22, 21, 21, (world_y_size) / std::pow(2, 16) / std::pow(2, 21));
     float bottom = -0.5 * m_cm_cov;
-    DEMSim.AddBCPlane(make_float3(0, 0, bottom), make_float3(0, 0, 1), mat_type_terrain);
-    DEMSim.AddBCPlane(make_float3(0, world_y_size / 2, 0), make_float3(0, -1, 0), mat_type_terrain);
-    DEMSim.AddBCPlane(make_float3(0, -world_y_size / 2, 0), make_float3(0, 1, 0), mat_type_terrain);
+    DEMSim.AddBCPlane(make_float3(0, 0, bottom), make_float3(0, 0, 1), mat_type_wall);
+    DEMSim.AddBCPlane(make_float3(0, world_y_size / 2, 0), make_float3(0, -1, 0), mat_type_wall);
+    DEMSim.AddBCPlane(make_float3(0, -world_y_size / 2, 0), make_float3(0, 1, 0), mat_type_wall);
     // X-dir bounding planes
-    DEMSim.AddBCPlane(make_float3(-world_x_size / 2., 0, 0), make_float3(1, 0, 0), mat_type_terrain);
-    DEMSim.AddBCPlane(make_float3(world_x_size / 2., 0, 0), make_float3(-1, 0, 0), mat_type_terrain);
+    DEMSim.AddBCPlane(make_float3(-world_x_size / 2., 0, 0), make_float3(1, 0, 0), mat_type_wall);
+    DEMSim.AddBCPlane(make_float3(world_x_size / 2., 0, 0), make_float3(-1, 0, 0), mat_type_wall);
 
     // Then the ground particle template
     DEMClumpTemplate shape_template1, shape_template2;
@@ -215,8 +217,8 @@ int main(int argc, char* argv[]) {
     // Now we load clump locations from a checkpointed file
     {
         std::cout << "Making terrain..." << std::endl;
-        auto clump_xyz = DEMSim.ReadClumpXyzFromCsv("./GRC_20e6.csv");
-        auto clump_quaternion = DEMSim.ReadClumpQuatFromCsv("./GRC_20e6.csv");
+        auto clump_xyz = DEMSim.ReadClumpXyzFromCsv("./old_GRC2.csv");
+        auto clump_quaternion = DEMSim.ReadClumpQuatFromCsv("./old_GRC2.csv");
         std::vector<float3> in_xyz;
         std::vector<float4> in_quat;
         std::vector<std::shared_ptr<DEMClumpTemplate>> in_types;
@@ -363,10 +365,11 @@ int main(int argc, char* argv[]) {
     DEMSim.SetInitTimeStep(step_size);
     DEMSim.SetGravitationalAcceleration(ChVec2Float(G));
     // If you want to use a large UpdateFreq then you have to expand spheres to ensure safety
-    DEMSim.SetCDUpdateFreq(20);
-    DEMSim.SetMaxVelocity(50.);
+    DEMSim.SetCDUpdateFreq(30);
+    DEMSim.SetMaxVelocity(20.);
     DEMSim.SetInitBinSize(scales.at(2));
     DEMSim.SetIntegrator(TIME_INTEGRATOR::EXTENDED_TAYLOR);
+    DEMSim.SetForceCalcThreadsPerBlock(256);
 
     DEMSim.Initialize();
     for (const auto& tracker : trackers) {
@@ -402,7 +405,7 @@ int main(int argc, char* argv[]) {
     /*
     step_size = 1e-6;
     DEMSim.SetInitTimeStep(step_size);
-    DEMSim.UpdateSimParams();
+    DEMSim.UpdateStepSize();
     // Settle for a while...
     for (float t = 0; t < 1.5; t += step_size, curr_step++) {
         if (curr_step % out_steps == 0) {
@@ -421,7 +424,7 @@ int main(int argc, char* argv[]) {
     DEMSim.DoDynamicsThenSync(0);
     step_size = 1e-6;
     DEMSim.SetInitTimeStep(step_size);
-    DEMSim.UpdateSimParams();
+    DEMSim.UpdateStepSize();
     float matter_volume = void_ratio_finder->GetValue();
     std::cout << "Void ratio before simulation: " << (total_volume - matter_volume) / matter_volume << std::endl;
 
@@ -464,7 +467,7 @@ int main(int argc, char* argv[]) {
     DEMSim.DoDynamicsThenSync(0);
     step_size = 1e-6;
     DEMSim.SetInitTimeStep(step_size);
-    DEMSim.UpdateSimParams();
+    DEMSim.UpdateStepSize();
 
     DEMSim.EnableContactBetweenFamilies(100, 0);  // Re-enable wheel-ground contact
 
@@ -552,6 +555,7 @@ int main(int argc, char* argv[]) {
             // DEMSim.WriteMeshFile(std::string(meshfilename));
             SaveParaViewFiles(viper, rover_dir, currframe);
             currframe++;
+            DEMSim.ShowAnomalies();
         }
 
         // Run DEM first
@@ -589,7 +593,7 @@ int main(int argc, char* argv[]) {
         //     step_size = base_step_size / multiplier;
         //     DEMSim.SetInitTimeStep(step_size);
         //     // DEMSim.SetMaxVelocity(max_v * 1.2);
-        //     DEMSim.UpdateSimParams();
+        //     DEMSim.UpdateStepSize();
         //     std::cout << "Max vel in simulation is " << max_v << std::endl;
         //     std::cout << "Step size in simulation is " << step_size << std::endl;
         // }
@@ -598,7 +602,7 @@ int main(int argc, char* argv[]) {
         //     DEMSim.DoDynamicsThenSync(0);
         //     step_size = 1.5e-6;
         //     DEMSim.SetInitTimeStep(step_size);
-        //     DEMSim.UpdateSimParams();
+        //     DEMSim.UpdateStepSize();
         //     change_step = 1;
         // }
 
@@ -607,21 +611,21 @@ int main(int argc, char* argv[]) {
         //     step_size = 2e-6;
         //     DEMSim.SetInitTimeStep(step_size);
         //     DEMSim.SetMaxVelocity(20.0);
-        //     DEMSim.UpdateSimParams();
+        //     DEMSim.UpdateStepSize();
         //     change_step = 2;
         // }
         // else if (t > 2.0 && change_step == 2) {
         //     DEMSim.DoDynamicsThenSync(0);
         //     step_size = 3e-6;
         //     DEMSim.SetInitTimeStep(step_size);
-        //     DEMSim.UpdateSimParams();
+        //     DEMSim.UpdateStepSize();
         //     change_step = 3;
         // }
         // else if (t > 3.0 && change_step == 3) {
         //     DEMSim.DoDynamicsThenSync(0);
         //     step_size = 5e-6;
         //     DEMSim.SetInitTimeStep(step_size);
-        //     DEMSim.UpdateSimParams();
+        //     DEMSim.UpdateStepSize();
         //     change_step = 4;
         // }
     }

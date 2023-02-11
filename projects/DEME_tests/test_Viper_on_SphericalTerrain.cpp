@@ -256,7 +256,7 @@ int main(int argc, char* argv[]) {
 
     step_size = 5e-6;
     DEMSim.SetInitTimeStep(step_size);
-    DEMSim.UpdateSimParams();
+    DEMSim.UpdateStepSize();
 
     double now_z = -0.37;
     compressor_tracker->SetPos(make_float3(0, 0, now_z));
@@ -296,7 +296,7 @@ int main(int argc, char* argv[]) {
     DEMSim.DoDynamicsThenSync(0);
     step_size = 2e-5;
     DEMSim.SetInitTimeStep(step_size);
-    DEMSim.UpdateSimParams();
+    DEMSim.UpdateStepSize();
 
     ///////////////////////////////////////////
     // Real simulation
