@@ -142,7 +142,6 @@ int main(int argc, char* argv[]) {
     double world_x_size = 4.0 * m_cm_cov;
     double world_y_size = 2.0 * m_cm_cov;
     DEMSim.InstructBoxDomainDimension(world_x_size, world_y_size, world_y_size);
-    // DEMSim.InstructBoxDomainNumVoxel(22, 21, 21, (world_y_size) / std::pow(2, 16) / std::pow(2, 21));
     float bottom = -0.5 * m_cm_cov;
     DEMSim.AddBCPlane(make_float3(0, 0, bottom), make_float3(0, 0, 1), mat_type_terrain);
     DEMSim.AddBCPlane(make_float3(0, world_y_size / 2, 0), make_float3(0, -1, 0), mat_type_terrain);
@@ -346,7 +345,6 @@ int main(int argc, char* argv[]) {
 
     float step_size = 1e-6;
     float base_vel = 0.4;
-    DEMSim.SetCoordSysOrigin(make_float3(world_x_size / 2., world_y_size / 2., world_y_size / 2.));
     DEMSim.SetInitTimeStep(step_size);
     DEMSim.SetGravitationalAcceleration(ChVec2Float(G));
     // If you want to use a large UpdateFreq then you have to expand spheres to ensure safety

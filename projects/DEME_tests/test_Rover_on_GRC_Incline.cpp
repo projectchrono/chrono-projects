@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
     ////double body_range = 1.2;
 
     // Create a Chrono::Engine physical system
-    float Slope_deg = 25;
+    float Slope_deg = 15;
     double G_ang = Slope_deg * math_PI / 180.;
     ChSystemSMC sys;
     ChVector<double> G = ChVector<double>(-G_mag * std::sin(G_ang), 0, -G_mag * std::cos(G_ang));
@@ -147,23 +147,28 @@ int main(int argc, char* argv[]) {
     // DEMSim.SetOutputContent(OUTPUT_CONTENT::FAMILY);
     DEMSim.SetOutputContent(OUTPUT_CONTENT::XYZ);
 
+    // Family 1 is for fixed ground which does not participate the force calc.
+    DEMSim.SetFamilyFixed(1);
+    DEMSim.DisableContactBetweenFamilies(1, 1);
+    DEMSim.DisableContactBetweenFamilies(1, 255);
+
     srand(759);
 
     float kg_g_conv = 1;
     float m_cm_cov = 1;
     // Define materials
     auto mat_type_terrain =
-        DEMSim.LoadMaterial({{"E", 1e9 * kg_g_conv / m_cm_cov}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", 0.2}, {"Crr", 0.0}});
-    auto mat_type_wheel =
-        DEMSim.LoadMaterial({{"E", 1e9 * kg_g_conv / m_cm_cov}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", 0.2}, {"Crr", 0.0}});
-    auto mat_type_wall =
-        DEMSim.LoadMaterial({{"E", 1e9 * kg_g_conv / m_cm_cov}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", 0.9}, {"Crr", 0.0}});
+        DEMSim.LoadMaterial({{"E", 1e9 * kg_g_conv / m_cm_cov}, {"nu", 0.3}, {"CoR", 0.8}, {"mu", 0.3}, {"Crr", 0.0}});
+    auto mat_type_wheel = // mu = 0.5 between wheel and sand
+        DEMSim.LoadMaterial({{"E", 1e9 * kg_g_conv / m_cm_cov}, {"nu", 0.3}, {"CoR", 0.8}, {"mu", 0.7}, {"Crr", 0.0}});
+    auto mat_type_wall = // mu = 0.9 between wheel and sand
+        DEMSim.LoadMaterial({{"E", 1e9 * kg_g_conv / m_cm_cov}, {"nu", 0.3}, {"CoR", 0.8}, {"mu", 1.6}, {"Crr", 0.0}});
+    DEMSim.SetMaterialPropertyPair("mu", mat_type_terrain, mat_type_wheel, 0.7);
 
     // Define the simulation world
     double world_x_size = 4.0 * m_cm_cov;
     double world_y_size = 2.0 * m_cm_cov;
     DEMSim.InstructBoxDomainDimension(world_x_size, world_y_size, world_y_size);
-    // DEMSim.InstructBoxDomainNumVoxel(22, 21, 21, (world_y_size) / std::pow(2, 16) / std::pow(2, 21));
     float bottom = -0.5 * m_cm_cov;
     DEMSim.AddBCPlane(make_float3(0, 0, bottom), make_float3(0, 0, 1), mat_type_wall);
     DEMSim.AddBCPlane(make_float3(0, world_y_size / 2, 0), make_float3(0, -1, 0), mat_type_wall);
@@ -361,7 +366,6 @@ int main(int argc, char* argv[]) {
     */
 
     float base_vel = 0.4;
-    DEMSim.SetCoordSysOrigin(make_float3(world_x_size / 2., world_y_size / 2., world_y_size / 2.));
     DEMSim.SetInitTimeStep(step_size);
     DEMSim.SetGravitationalAcceleration(ChVec2Float(G));
     // If you want to use a large UpdateFreq then you have to expand spheres to ensure safety
@@ -383,6 +387,7 @@ int main(int argc, char* argv[]) {
 
     float time_end = 15.0;
     unsigned int fps = 10;
+    // unsigned int move_box_ps = 1;
     unsigned int report_freq = 2000;
     unsigned int param_update_freq = 10000;
     unsigned int out_steps = (unsigned int)(1.0 / (fps * step_size));
@@ -502,10 +507,10 @@ int main(int argc, char* argv[]) {
     int change_step = 0;
     float frame_accu = frame_accu_thres;
 
-    // Find max z
-    // float init_max_z =
-    // 0.268923
-    unsigned int chrono_update_freq = 10;
+    // Settle first
+    DEMSim.DoDynamicsThenSync(0.6);
+    std::cout << "Num contacts: " << DEMSim.GetNumContacts() << std::endl;
+    unsigned int chrono_update_freq = 20;
     for (float t = 0; t < time_end; t += step_size, curr_step++, frame_accu += step_size) {
         if (curr_step % chrono_update_freq == 0) {
             for (int i = 0; i < nW; i++) {
@@ -547,6 +552,7 @@ int main(int argc, char* argv[]) {
         if (frame_accu >= frame_accu_thres) {
             frame_accu = 0.;
             std::cout << "Frame: " << currframe << std::endl;
+            std::cout << "Num contacts: " << DEMSim.GetNumContacts() << std::endl;
             DEMSim.ShowThreadCollaborationStats();
             char filename[200], meshfilename[200];
             sprintf(filename, "%s/DEMdemo_output_%04d.csv", out_dir.c_str(), currframe);
@@ -555,7 +561,24 @@ int main(int argc, char* argv[]) {
             // DEMSim.WriteMeshFile(std::string(meshfilename));
             SaveParaViewFiles(viper, rover_dir, currframe);
             currframe++;
-            DEMSim.ShowAnomalies();
+            DEMSim.ShowTimingStats();
+            // std::cout << h_total.count() << " seconds spent on host" << std::endl;
+            // std::cout << d_total.count() << " seconds spent on device" << std::endl;
+
+            // Move the active box
+            {
+                DEMSim.ChangeClumpFamily(1);
+                size_t num_changed = 0;
+                for (int i = 0; i < nW; i++) {
+                    wheel_pos[i] = Wheels[i]->GetFrame_REF_to_abs().GetPos();
+                    float3 pos = ChVec2Float(wheel_pos[i]);
+                    std::pair<float, float> Xrange = std::pair<float, float>(pos.x - 0.4, pos.x + 0.4);
+                    std::pair<float, float> Yrange = std::pair<float, float>(pos.y - 0.2, pos.y + 0.2);
+                    num_changed += DEMSim.ChangeClumpFamily(0, Xrange, Yrange);
+                }
+                std::cout << num_changed << " particles changed family number." << std::endl;
+            }
+
         }
 
         // Run DEM first
