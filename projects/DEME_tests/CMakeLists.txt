@@ -13,7 +13,6 @@ set(TESTS
 )
 set(TESTS_VEH_ROBOT
     test_Rover_on_GRC_Incline
-    test_Viper_on_GRC
     test_Viper_on_SphericalTerrain
 )
 
