@@ -9,7 +9,7 @@ message("\n---- DEME projects")
 #--------------------------------------------------------------
 
 set(TESTS
-    test_DEME_ConeDrop_Cosim
+    test_DEME_BallDrop_Cosim
 )
 set(TESTS_VEH_ROBOT
     test_Rover_on_GRC_Incline

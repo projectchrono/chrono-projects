@@ -250,8 +250,6 @@ int main(int argc, char* argv[]) {
 
         DEMSim.AddClumps(base_batch);
 
-
-        
         // Maybe we need to make it thicker...
         float up_dist, remove_pos;
         up_dist = 0.1;
@@ -300,7 +298,6 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
-        
     }
 
     ///////////////////////
@@ -385,7 +382,6 @@ int main(int argc, char* argv[]) {
     ///////////////////////////////////////////
     // Real simulation
     ///////////////////////////////////////////
-    
 
     // Timers
     std::chrono::high_resolution_clock::time_point h_start, d_start;
@@ -403,12 +399,12 @@ int main(int argc, char* argv[]) {
 
     // Put the wheels somewhere that won't affect simulation
     for (int i = 0; i < nW; i++) {
-        trackers[i]->SetPos(make_float3(0,0,1));
+        trackers[i]->SetPos(make_float3(0, 0, 1));
     }
 
     // Settle first, then put the wheel in place, then let the wheel sink in initially
     DEMSim.DoDynamicsThenSync(0.3);
-    
+
     float max_z = max_z_finder->GetValue();
     // wheel_tracker->SetPos(make_float3(init_x, 0, max_z + 0.03 + wheel_rad));
 
@@ -419,7 +415,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Max Z initially: " << max_z << std::endl;
 
     std::cout << "Num contacts: " << DEMSim.GetNumContacts() << std::endl;
-    
+
     unsigned int chrono_update_freq = 10;
     for (float t = 0; t < time_end; t += step_size, curr_step++, frame_accu += step_size) {
         if (curr_step % chrono_update_freq == 0) {
@@ -434,7 +430,6 @@ int main(int argc, char* argv[]) {
                 trackers[i]->SetAngVel(ChVec2Float(wheel_angVel[i]));
             }
         }
-        
 
         if (frame_accu >= frame_accu_thres) {
             frame_accu = 0.;
@@ -492,7 +487,6 @@ int main(int argc, char* argv[]) {
             h_end = std::chrono::high_resolution_clock::now();
             h_total += h_end - h_start;
         }
-        
 
         if (curr_step % report_steps == 0) {
             // float wheel_accu_vel = 0., wheel_accu_x = 0.;
