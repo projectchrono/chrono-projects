@@ -22,25 +22,15 @@
 
 #include "chrono/core/ChGlobal.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-
-#include "chrono_gpu/ChGpuData.h"
 #include "chrono_gpu/physics/ChSystemGpu.h"
 #include "chrono_gpu/utils/ChGpuJsonParser.h"
 #include "chrono_gpu/utils/ChGpuVisualization.h"
-
 #include "chrono_thirdparty/filesystem/path.h"
+
+#include "../utils.h"
 
 using namespace chrono;
 using namespace chrono::gpu;
-
-// expected number of args for param sweep
-constexpr int num_args_full = 5;
-
-void ShowUsage(std::string name) {
-    std::cout << "usage: " + name + " <json_file> <output_dir> <radius> <density>" << std::endl;
-    std::cout << "must have either 1 or " << num_args_full - 1 << " arguments" << std::endl;
-
-}
 
 void writeMeshFrames(std::ostringstream& outstream,
                      const std::string obj_name,
@@ -71,20 +61,18 @@ void writeMeshFrames(std::ostringstream& outstream,
 }
 
 int main(int argc, char* argv[]) {
-    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
-
-    // Some of the default values might be overwritten by user via command line
-    ChGpuSimulationParameters params;
-    // Some of the default values might be overwritten by user via command line
-    if (argc < 2 || argc > 2 && argc != num_args_full || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
-        ShowUsage(argv[0]);
+    std::string inputJson = GetProjectsDataFile("gpu/comvessels.json");
+    if (argc == 2) {
+        inputJson = std::string(argv[1]);
+    } else if (argc > 1) {
+        std::cout << "Usage:\n./test_GPU_commvessels <json_file>" << std::endl;
         return 1;
     }
 
-    if (argc == num_args_full){
-        params.output_dir = argv[2];
-        params.sphere_radius = std::stof(argv[3]);
-        params.sphere_density = std::stof(argv[4]);
+    ChGpuSimulationParameters params;
+    if (!ParseJSON(inputJson, params)) {
+        std ::cout << "ERROR: reading input file " << inputJson << std::endl;
+        return 1;
     }
 
     float iteration_step = params.step_size;
@@ -134,7 +122,6 @@ int main(int argc, char* argv[]) {
     gran_sys.SetBDFixed(true);
     gran_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
 
-
     // Fill the entire height
     const float fill_bottom = -Bz / 2.f;
     const float fill_height = Bz;
@@ -166,7 +153,7 @@ int main(int argc, char* argv[]) {
     gran_sys.SetParticles(body_points);
 
     // Add mesh
-    std::string mesh_filename(gpu::GetDataFile("meshes/cylinder_refined.obj"));
+    std::string mesh_filename(GetProjectsDataFile("gpu/meshes/cylinder_refined.obj"));
     gran_sys.AddMesh(mesh_filename, ChVector<float>(0), ChMatrix33<float>(scaling), 10.0f);
 
     gran_sys.Initialize();
@@ -190,7 +177,7 @@ int main(int argc, char* argv[]) {
     ChVector<float> mesh_pos(0, 0, 0);
     ChQuaternion<float> mesh_rot(1, 0, 0, 0);
     ChVector<float> mesh_lin_vel(0, 0, 0);
-    ChVector<float> mesh_ang_vel(0, 0 , 0);
+    ChVector<float> mesh_ang_vel(0, 0, 0);
 
     gran_sys.ApplyMeshMotion(0, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
 
@@ -203,7 +190,7 @@ int main(int argc, char* argv[]) {
     unsigned int step = 0;
     bool settled = false;
     bool raised = false;
-//    ChVector<> pos_mesh(0, 0, mesh_z);
+    //    ChVector<> pos_mesh(0, 0, mesh_z);
 
     std::cout << "Settling..." << std::endl;
     for (float t = 0; t < time_settling + time_raising + time_sitting; t += iteration_step, step++) {
@@ -223,7 +210,8 @@ int main(int argc, char* argv[]) {
                 std::cout << "Raised." << std::endl;
                 raised = true;
                 mesh_lin_vel.z() = 0;
-            gran_sys.ApplyMeshMotion(0, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);            }
+                gran_sys.ApplyMeshMotion(0, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
+            }
         }
 
         if (step % out_steps == 0) {

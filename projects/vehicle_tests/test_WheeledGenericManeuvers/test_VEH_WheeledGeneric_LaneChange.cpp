@@ -43,7 +43,7 @@
 //#undef CHRONO_IRRLICHT
 
 #ifdef CHRONO_IRRLICHT
-#include "chrono_vehicle/wheeled_vehicle/utils/ChWheeledVehicleVisualSystemIrrlicht.h"
+#include "chrono_vehicle/wheeled_vehicle/ChWheeledVehicleVisualSystemIrrlicht.h"
 #endif
 
 // DEBUGGING:  Uncomment the following line to print shock data
@@ -361,7 +361,7 @@ int main(int argc, char* argv[]) {
         terrain.Synchronize(time);
         vehicle.Synchronize(time, driver_inputs, terrain);
 #ifdef CHRONO_IRRLICHT
-        vis->Synchronize("Follower driver", driver_inputs);
+        vis->Synchronize(time, driver_inputs);
 #endif
 
         // Advance simulation for one timestep for all modules

@@ -21,10 +21,11 @@
 
 #include "chrono/core/ChGlobal.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_gpu/ChGpuData.h"
 #include "chrono_gpu/physics/ChSystemGpu.h"
 #include "chrono_gpu/utils/ChGpuJsonParser.h"
 #include "chrono_thirdparty/filesystem/path.h"
+
+#include "../utils.h"
 
 using namespace chrono;
 using namespace chrono::gpu;
@@ -80,14 +81,8 @@ int currframe = 0;
 // Bowling ball starts on incline to accelerate
 enum TEST_TYPE { ROTF = 0, PYRAMID = 1, ROTF_MESH = 2, PYRAMID_MESH = 3, MESH_STEP = 4, MESH_FORCE = 5 };
 
-void ShowUsage(std::string name) {
-    std::cout << "usage: " + name + " <TEST_TYPE: 0:ROTF 1:PYRAMID 2:ROTF_MESH 3:PYRAMID_MESH 4:MESH_STEP 5:MESH_FORCE>"
-              << std::endl;
-}
-
 // Set common set of parameters for all tests
 void setCommonParameters(ChSystemGpu& gpu_sys) {
-
     gpu_sys.SetPsiFactors(psi_T, psi_L);
     gpu_sys.SetKn_SPH2SPH(normalStiffness_S2S);
     gpu_sys.SetKn_SPH2WALL(normalStiffness_S2W);
@@ -116,7 +111,6 @@ void setCommonParameters(ChSystemGpu& gpu_sys) {
 }
 
 void setCommonMeshParameters(ChSystemGpuMesh& gpu_sys) {
-
     gpu_sys.SetKn_SPH2MESH(normalStiffness_S2M);
     gpu_sys.SetGn_SPH2MESH(normalDampS2M);
     gpu_sys.SetKt_SPH2MESH(tangentStiffness_S2M);
@@ -219,7 +213,7 @@ void run_ROTF_MESH() {
     ChVector<> bot_plane_pos(0, 0, -box_Z / 2 + 2 * sphere_radius);
     ChVector<float> bot_plane_normal(0, 0, 1);
 
-    std::vector<string> mesh_filenames;
+    std::vector<std::string> mesh_filenames;
     std::vector<ChMatrix33<float>> mesh_rotscales;
     std::vector<ChVector<float>> mesh_translations;
     std::vector<float> mesh_masses;
@@ -227,12 +221,12 @@ void run_ROTF_MESH() {
     ChMatrix33<float> mesh_scaling(ChVector<float>(100, 100, 100));
 
     // make two plane meshes, one for ramp and one for bottom
-    mesh_filenames.push_back(GetDataFile("meshes/testsuite/square_plane_fine.obj"));
+    mesh_filenames.push_back(GetProjectsDataFile("gpu/meshes/testsuite/square_plane_fine.obj"));
     mesh_rotscales.push_back(mesh_scaling);
     mesh_translations.push_back(ChVector<float>(0, 0, 0));
     mesh_masses.push_back(10.f);
 
-    mesh_filenames.push_back(GetDataFile("meshes/testsuite/square_plane_fine.obj"));
+    mesh_filenames.push_back(GetProjectsDataFile("gpu/meshes/testsuite/square_plane_fine.obj"));
     mesh_rotscales.push_back(mesh_scaling);
     mesh_translations.push_back(ChVector<float>(0, 0, 0));
     mesh_masses.push_back(10.f);
@@ -255,11 +249,10 @@ void run_ROTF_MESH() {
     // this is a quaternion
     auto rot_quat = Q_from_AngY(CH_C_PI / 4);
 
-
     // Run settling experiments
     while (curr_time < timeEnd) {
-        gpu_sys.ApplyMeshMotion(0, bot_plane_pos, bot_quat, ChVector<>(0,0,0), ChVector<>(0,0,0));
-        gpu_sys.ApplyMeshMotion(1, plane_pos, rot_quat, ChVector<>(0,0,0), ChVector<>(0,0,0));
+        gpu_sys.ApplyMeshMotion(0, bot_plane_pos, bot_quat, ChVector<>(0, 0, 0), ChVector<>(0, 0, 0));
+        gpu_sys.ApplyMeshMotion(1, plane_pos, rot_quat, ChVector<>(0, 0, 0), ChVector<>(0, 0, 0));
         writeGranFile(gpu_sys);
         advanceGranSim(gpu_sys);
     }
@@ -324,7 +317,7 @@ void run_PYRAMID_MESH() {
     ChVector<> bot_plane_normal(0, 0, 1);
 
     // Add mesh
-    gpu_sys.AddMesh(GetDataFile("meshes/testsuite/tiny_triangle.obj"), ChVector<float>(0),
+    gpu_sys.AddMesh(GetProjectsDataFile("gpu/meshes/testsuite/tiny_triangle.obj"), ChVector<float>(0),
                     ChMatrix33<float>(ChVector<float>(1, 1, 1)), 10.0f);
 
     gpu_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
@@ -362,7 +355,7 @@ void run_PYRAMID_MESH() {
     auto quat = Q_from_AngY(0);
 
     while (curr_time < timeEnd) {
-        gpu_sys.ApplyMeshMotion(0,bot_plane_pos,quat,ChVector<>(0,0,0),ChVector<>(0,0,0));
+        gpu_sys.ApplyMeshMotion(0, bot_plane_pos, quat, ChVector<>(0, 0, 0), ChVector<>(0, 0, 0));
         writeGranFile(gpu_sys);
         char filename[100];
 
@@ -379,7 +372,7 @@ void run_MESH_STEP() {
     setCommonParameters(gpu_sys);
     setCommonMeshParameters(gpu_sys);
 
-    gpu_sys.AddMesh(GetDataFile("meshes/testsuite/step.obj"), ChVector<float>(0),
+    gpu_sys.AddMesh(GetProjectsDataFile("gpu/meshes/testsuite/step.obj"), ChVector<float>(0),
                     ChMatrix33<float>(ChVector<float>(box_X / 2, box_Y / 2, step_height)), step_mass);
 
     // Fill domain with particles
@@ -404,13 +397,13 @@ void run_MESH_STEP() {
     unsigned int nSoupFamilies = gpu_sys.GetNumMeshes();
     std::cout << nSoupFamilies << " soup families" << std::endl;
 
-    ChVector<> meshSoupLoc(0,0,-box_Z / 2 + 2 * sphere_radius);
-    auto quat = Q_from_AngY(0);    
+    ChVector<> meshSoupLoc(0, 0, -box_Z / 2 + 2 * sphere_radius);
+    auto quat = Q_from_AngY(0);
 
     gpu_sys.Initialize();
 
     for (float t = 0; t < timeEnd; t += frame_step) {
-        gpu_sys.ApplyMeshMotion(0,meshSoupLoc,quat,ChVector<>(0,0,0),ChVector<>(0,0,0));
+        gpu_sys.ApplyMeshMotion(0, meshSoupLoc, quat, ChVector<>(0, 0, 0), ChVector<>(0, 0, 0));
         std::cout << "Rendering frame " << currframe << std::endl;
         char filename[100];
         sprintf(filename, "%s/step%06u", output_dir.c_str(), currframe);
@@ -443,14 +436,14 @@ void run_MESH_FORCE() {
     gpu_sys.SetParticles(pos);
 
     // Add mesh
-    gpu_sys.AddMesh(GetDataFile("meshes/testsuite/square_box.obj"), ChVector<float>(0), 
-        ChMatrix33<float>(ChVector<float>(40, 40, 40)), 1.0f);
+    gpu_sys.AddMesh(GetProjectsDataFile("gpu/meshes/testsuite/square_box.obj"), ChVector<float>(0),
+                    ChMatrix33<float>(ChVector<float>(40, 40, 40)), 1.0f);
 
     unsigned int nSoupFamilies = gpu_sys.GetNumMeshes();
     std::cout << nSoupFamilies << " soup families" << std::endl;
 
     // Triangle remains at the origin
-    ChVector<> meshLoc(0,0,0);
+    ChVector<> meshLoc(0, 0, 0);
     auto quat = Q_from_AngY(0);
 
     gpu_sys.Initialize();
@@ -458,7 +451,7 @@ void run_MESH_FORCE() {
     // Run a loop that is typical of co-simulation. For instance, the wheeled is moved a bit, which moves the
     // particles. Conversely, the particles impress a force and torque upon the mesh soup
     for (float t = 0; t < timeEnd; t += frame_step) {
-        gpu_sys.ApplyMeshMotion(0,meshLoc,quat,ChVector<>(0,0,0),ChVector<>(0,0,0));
+        gpu_sys.ApplyMeshMotion(0, meshLoc, quat, ChVector<>(0, 0, 0), ChVector<>(0, 0, 0));
         std::cout << "Rendering frame " << currframe << std::endl;
         char filename[100];
         sprintf(filename, "%s/step%06u", output_dir.c_str(), currframe);
@@ -467,25 +460,24 @@ void run_MESH_FORCE() {
         // gpu_sys.checkSDCounts(std::string(filename) + "SU", true, false);
         ChVector<> force;
         ChVector<> torque;
-        gpu_sys.CollectMeshContactForces(0,force,torque);
+        gpu_sys.CollectMeshContactForces(0, force, torque);
         std::cout << "force_z: " << force.z() << "; total weight: " << total_weight << "; sphere weight "
                   << sphere_weight << std::endl;
         std::cout << "torque: " << torque.x() << ", " << torque.y() << ", " << torque.z() << std::endl;
 
         advanceGranSim(gpu_sys);
     }
-
 }
 
 int main(int argc, char* argv[]) {
-    TEST_TYPE curr_test = ROTF;
     if (argc != 2) {
-        ShowUsage(argv[0]);
+        std::cout << "Usage:\n./test_GPU_testsuite <test_type>" << std::endl;
+        std::cout << "  test_type : 0 - ROTF, 1 - PYRAMID, 2 - ROTF_MESH, 3 - PYRAMID_MESH, 4 - MESH_STEP 5:MESH_FORCE"
+                  << std::endl;
         return 1;
     }
-    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
 
-    curr_test = static_cast<TEST_TYPE>(std::atoi(argv[1]));
+    TEST_TYPE curr_test = static_cast<TEST_TYPE>(std::atoi(argv[1]));
 
     std::cout << "frame step is " << frame_step << std::endl;
 

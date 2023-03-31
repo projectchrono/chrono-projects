@@ -76,7 +76,7 @@ PowertrainModelType powertrain_model = PowertrainModelType::SHAFTS;
 // Drive type (FWD, RWD, or AWD)
 DrivelineTypeWV drive_type = DrivelineTypeWV::AWD;
 
-// Type of tire model (RIGID, RIGID_MESH, PACEJKA, LUGRE, FIALA)
+// Type of tire model (RIGID, RIGID_MESH, FIALA)
 TireModelType tire_model = TireModelType::RIGID;
 
 // Point on chassis tracked by the camera

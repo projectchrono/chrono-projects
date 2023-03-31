@@ -20,58 +20,43 @@
 
 #include "GpuDemoUtils.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-
 #include "chrono_gpu/physics/ChSystemGpu.h"
 #include "chrono_gpu/utils/ChGpuJsonParser.h"
-#include "chrono_gpu/ChGpuData.h"
 #include "chrono_thirdparty/filesystem/path.h"
+
+#include "../utils.h"
 
 using namespace chrono;
 using namespace chrono::gpu;
 
 ChVector<float> sphere_pos(0, 0, 0);
 
-enum RUN_MODE { NONE = 0, SCHWARTZ = 1 };
-
-// expected number of args for param sweep
-constexpr int num_args_full = 8;
-
-void ShowUsage(std::string name) {
-    std::cout << "usage: " + name +
-                     " <json_file> <output_dir> <psi_L> <roll_mode: 0-none, 1-schwartz> <mu_roll> <angle> <v_init>"
-              << std::endl;
-    std::cout << "must have either 1 or " << num_args_full - 1 << " arguments" << std::endl;
-
-}
+enum ROLL_MODE { NONE = 0, SCHWARTZ = 1 };
 
 int main(int argc, char* argv[]) {
-    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
+    std::string inputJson = GetProjectsDataFile("gpu/Incline.json");
+    ROLL_MODE roll_mode = ROLL_MODE::SCHWARTZ;
+    double theta = 5;
+    float v_init_mag = 2;
 
-    // Some of the default values are overwritten by user via command line
-    ChGpuSimulationParameters params;
-    // Some of the default values might be overwritten by user via command line
-    if (argc < 2 || argc > 2 && argc != num_args_full || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
-        ShowUsage(argv[0]);
+    if (argc == 2) {
+        inputJson = std::string(argv[1]);
+    } else if (argc == 5) {
+        inputJson = std::string(argv[1]);
+        roll_mode = (ROLL_MODE)std::atoi(argv[2]);
+        theta = std::stod(argv[3]);
+        v_init_mag = std::stof(argv[4]);
+    } else if (argc > 1) {
+        std::cout << "Usage:\n./test_GPU_incline <json_file> [<roll_mode> <angle> <vinit>]" << std::endl;
+        std::cout << "  roll_mode: 0 - none, 1 - schwartz" << std::endl;
         return 1;
     }
 
-    RUN_MODE run_mode = RUN_MODE::SCHWARTZ;
-    float mu_roll = 0.01;
-    double theta = 5;
-    float v_init_mag = 2;
-    if (argc == num_args_full){
-        params.output_dir = argv[2];
-        params.psi_L = std::stoi(argv[3]);
-        run_mode = (RUN_MODE)std::atoi(argv[4]);
-        mu_roll = std::stof(argv[5]);
-        theta = std::stod(argv[6]);
-        v_init_mag = std::stof(argv[7]);
-
+    ChGpuSimulationParameters params;
+    if (!ParseJSON(inputJson, params)) {
+        std ::cout << "ERROR: reading input file " << inputJson << std::endl;
+        return 1;
     }
-    params.rolling_friction_coeffS2S = mu_roll;
-    params.rolling_friction_coeffS2W = mu_roll;
-
-
 
     params.box_X = 60;
     params.box_Y = 60;
@@ -82,11 +67,11 @@ int main(int argc, char* argv[]) {
                          ChVector<float>(params.box_X, params.box_Y, params.box_Z));
     gran_sys.DisableMinLength();
 
-    switch (run_mode) {
-        case RUN_MODE::NONE:
+    switch (roll_mode) {
+        case ROLL_MODE::NONE:
             gran_sys.SetRollingMode(CHGPU_ROLLING_MODE::NO_RESISTANCE);
             break;
-        case RUN_MODE::SCHWARTZ:
+        case ROLL_MODE::SCHWARTZ:
             gran_sys.SetRollingMode(CHGPU_ROLLING_MODE::SCHWARTZ);
             gran_sys.SetRollingCoeff_SPH2SPH(params.rolling_friction_coeffS2S);
             gran_sys.SetRollingCoeff_SPH2WALL(params.rolling_friction_coeffS2W);
@@ -105,7 +90,7 @@ int main(int argc, char* argv[]) {
     gran_sys.SetGn_SPH2SPH(params.normalDampS2S);
     gran_sys.SetGn_SPH2WALL(params.normalDampS2W);
 
-    // tangential force model 
+    // tangential force model
     gran_sys.SetKt_SPH2SPH(params.tangentStiffS2S);
     gran_sys.SetKt_SPH2WALL(params.tangentStiffS2W);
     gran_sys.SetGt_SPH2SPH(params.tangentDampS2S);
@@ -129,7 +114,8 @@ int main(int argc, char* argv[]) {
     ChVector<float> v_init(ax, ax, az);
     v_init = (-v_init_mag / v_init.Length()) * v_init;
 
-    ChVector<float> plane_pos(-params.sphere_radius * n.x(), -params.sphere_radius * n.y(), -params.sphere_radius * n.z());
+    ChVector<float> plane_pos(-params.sphere_radius * n.x(), -params.sphere_radius * n.y(),
+                              -params.sphere_radius * n.z());
     ChVector<float> plane_normal(n.x(), n.y(), n.z());
     bool track_forces = false;
     gran_sys.CreateBCPlane(plane_pos, plane_normal, track_forces);

@@ -20,10 +20,11 @@
 
 #include "GpuDemoUtils.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_gpu/ChGpuData.h"
 #include "chrono_gpu/physics/ChSystemGpu.h"
 #include "chrono_gpu/utils/ChGpuJsonParser.h"
 #include "chrono_thirdparty/filesystem/path.h"
+
+#include "../utils.h"
 
 using namespace chrono;
 using namespace chrono::gpu;
@@ -36,26 +37,25 @@ bool axis_aligned = false;
 ChVector<float> sphere_pos(0, 0, 0);
 ChVector<float> v_init(10, -10, 0);
 
-void ShowUsage(std::string name) {
-    std::cout << "usage: " + name +
-                     " <json_file> <output_dir> <psi_L> <run_mode: 0-frictionless, 1-zero_friction, 2-small_friction, "
-                     "3-large_friction>"
-              << std::endl;
-}
-
 int main(int argc, char* argv[]) {
-    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
-
-    // Some of the default values are overwritten by user via command line
-    ChGpuSimulationParameters params;
-    if (argc != 5 || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
-        ShowUsage(argv[0]);
+    std::string inputJson = GetProjectsDataFile("gpu/Slide.json");
+    RUN_MODE run_mode = RUN_MODE::FRICTIONLESS;
+    if (argc == 2) {
+        inputJson = std::string(argv[1]);
+    } else if (argc == 3) {
+        inputJson = std::string(argv[1]);
+        run_mode = (RUN_MODE)std::atoi(argv[2]);
+    } else if (argc > 1) {
+        std::cout << "Usage:\n./test_GPU_slide <json_file> [<run_mode>]" << std::endl;
+        std::cout << "  run_mode: 0-frictionless, 1-zero_friction, 2-small_friction, 3-large_friction" << std::endl;
         return 1;
     }
-    params.output_dir = argv[2];
-    params.psi_L = std::stoi(argv[3]);
 
-    RUN_MODE run_mode = (RUN_MODE)std::stoi(argv[4]);
+    ChGpuSimulationParameters params;
+    if (!ParseJSON(inputJson, params)) {
+        std ::cout << "ERROR: reading input file " << inputJson << std::endl;
+        return 1;
+    }
 
     params.box_X = 15;
     params.box_Y = 15;
@@ -93,9 +93,6 @@ int main(int argc, char* argv[]) {
             gpu_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
             params.static_friction_coeffS2W = mu_large;
             break;
-        }
-        default: {
-            ShowUsage(argv[0]);
         }
     }
 

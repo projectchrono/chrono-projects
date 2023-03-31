@@ -29,10 +29,11 @@
 #include "chrono/timestepper/ChTimestepper.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_gpu/ChGpuData.h"
 #include "chrono_gpu/physics/ChSystemGpu.h"
 #include "chrono_gpu/utils/ChGpuJsonParser.h"
 #include "chrono_thirdparty/filesystem/path.h"
+
+#include "../utils.h"
 
 using namespace chrono;
 using namespace chrono::gpu;
@@ -88,13 +89,6 @@ std::vector<std::shared_ptr<chrono::ChBody>> wheel_bodies;
 
 // y is height, x and z are radial
 // starts as height=1, diameter = 1
-
-void ShowUsage(std::string name) {
-    std::cout << "usage: " + name +
-                     " <json_file> <run_mode: 0-settling, 1-running> <checkpoint_file_base> <gravity "
-                     "angle (deg)>"
-              << std::endl;
-}
 
 std::vector<ChVector<float>> loadCheckpointFile(std::string checkpoint_file) {
     // Read in checkpoint file
@@ -201,23 +195,31 @@ void writeMeshFrames(std::ostringstream& outstream,
 }
 
 int main(int argc, char* argv[]) {
-    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
-
-    ChGpuSimulationParameters params;
-    if (argc != 5 || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
-        ShowUsage(argv[0]);
+    std::string inputJson = GetProjectsDataFile("gpu/Rover.json");
+    if (argc != 5) {
+        std::cout << "Usage:" << std::endl;
+        std::cout << "./ test_GPU_rover <json_file> < run_mode> <checkpoint_file_base> <gravity_angle (deg)>"
+                  << std::endl;
+        std::cout << "  run_mode: 0 - settling, 1 - running " << std::endl;
         return 1;
     }
-    std::string chassis_filename = gpu::GetDataFile("meshes/rover/MER_body.obj");  // For output only
-    std::string wheel_filename = gpu::GetDataFile("meshes/rover/wheel_scaled.obj");
 
+    inputJson = std::string(argv[1]);
     RUN_MODE run_mode = (RUN_MODE)std::atoi(argv[2]);
     std::string checkpoint_file_base = std::string(argv[3]);
+    double input_grav_angle_deg = std::stod(argv[4]);
+
+    ChGpuSimulationParameters params;
+    if (!ParseJSON(inputJson, params)) {
+        std ::cout << "ERROR: reading input file " << inputJson << std::endl;
+        return 1;
+    }
+
+    std::string chassis_filename = GetProjectsDataFile("gpu/meshes/rover/MER_body.obj");  // For output only
+    std::string wheel_filename = GetProjectsDataFile("gpu/meshes/rover/wheel_scaled.obj");
 
     // Rotates gravity about +Y axis
-    double input_grav_angle_deg = std::stod(argv[4]);
     double grav_angle = 2.0 * CH_C_PI * input_grav_angle_deg / 360.0;
-
     double Gx = -mars_grav_mag * std::sin(grav_angle);
     double Gy = 0;
     double Gz = -mars_grav_mag * std::cos(grav_angle);
@@ -306,16 +308,22 @@ int main(int argc, char* argv[]) {
 
     // NOTE these must happen before the gran system loads meshes!!!
     // two wheels at front
-    addWheelBody(rover_sys, chassis_body, wheel_filename, ChVector<>(front_wheel_offset_x, front_wheel_offset_y, wheel_offset_z));
-    addWheelBody(rover_sys, chassis_body, wheel_filename, ChVector<>(front_wheel_offset_x, -front_wheel_offset_y, wheel_offset_z));
+    addWheelBody(rover_sys, chassis_body, wheel_filename,
+                 ChVector<>(front_wheel_offset_x, front_wheel_offset_y, wheel_offset_z));
+    addWheelBody(rover_sys, chassis_body, wheel_filename,
+                 ChVector<>(front_wheel_offset_x, -front_wheel_offset_y, wheel_offset_z));
 
     // two wheels at back
-    addWheelBody(rover_sys, chassis_body, wheel_filename, ChVector<>(middle_wheel_offset_x, middle_wheel_offset_y, wheel_offset_z));
-    addWheelBody(rover_sys, chassis_body, wheel_filename, ChVector<>(middle_wheel_offset_x, -middle_wheel_offset_y, wheel_offset_z));
+    addWheelBody(rover_sys, chassis_body, wheel_filename,
+                 ChVector<>(middle_wheel_offset_x, middle_wheel_offset_y, wheel_offset_z));
+    addWheelBody(rover_sys, chassis_body, wheel_filename,
+                 ChVector<>(middle_wheel_offset_x, -middle_wheel_offset_y, wheel_offset_z));
 
     // two wheels in middle of chassis
-    addWheelBody(rover_sys, chassis_body, wheel_filename, ChVector<>(rear_wheel_offset_x, rear_wheel_offset_y, wheel_offset_z));
-    addWheelBody(rover_sys, chassis_body, wheel_filename, ChVector<>(rear_wheel_offset_x, -rear_wheel_offset_y, wheel_offset_z));
+    addWheelBody(rover_sys, chassis_body, wheel_filename,
+                 ChVector<>(rear_wheel_offset_x, rear_wheel_offset_y, wheel_offset_z));
+    addWheelBody(rover_sys, chassis_body, wheel_filename,
+                 ChVector<>(rear_wheel_offset_x, -rear_wheel_offset_y, wheel_offset_z));
 
     // Add collision mesh to GPU system
     gpu_sys.AddMesh(wheel_filename, ChVector<float>(0), wheel_scaling, wheel_mass);
@@ -361,8 +369,8 @@ int main(int argc, char* argv[]) {
         for (unsigned int i = 0; i < wheel_bodies.size(); i++) {
             auto curr_body = wheel_bodies.at(i);
 
-            gpu_sys.ApplyMeshMotion(i, curr_body->GetPos(), curr_body->GetRot(), 
-                                    curr_body->GetPos_dt(), curr_body->GetWvel_par() );
+            gpu_sys.ApplyMeshMotion(i, curr_body->GetPos(), curr_body->GetRot(), curr_body->GetPos_dt(),
+                                    curr_body->GetWvel_par());
         }
 
         gpu_sys.AdvanceSimulation(iteration_step);
@@ -374,7 +382,7 @@ int main(int argc, char* argv[]) {
             auto curr_body = wheel_bodies.at(i);
 
             gpu_sys.CollectMeshContactForces(i, wheel_force, wheel_torque);
-            
+
             curr_body->Empty_forces_accumulators();
             curr_body->Accumulate_force(wheel_force, curr_body->GetPos(), false);
             curr_body->Accumulate_torque(wheel_torque, false);

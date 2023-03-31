@@ -10,7 +10,7 @@
 //
 
 #include "chrono/ChConfig.h"
-#include "chrono/assets/ChObjFileShape.h"
+#include "chrono/assets/ChModelFileShape.h"
 #include "chrono/assets/ChTexture.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLoadContainer.h"
@@ -193,7 +193,7 @@ int main(int argc, char* argv[]) {
         sys.Add(wheel);
 
         if (visualization) {
-            auto mobjmesh = chrono_types::make_shared<ChObjFileShape>();
+            auto mobjmesh = chrono_types::make_shared<ChModelFileShape>();
             mobjmesh->SetFilename(GetChronoDataFile("fea/tractor_wheel_rim.obj"));
             wheel->AddVisualShape(mobjmesh);
         }

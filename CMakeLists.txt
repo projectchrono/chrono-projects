@@ -106,11 +106,21 @@ endif()
 add_subdirectory(projects)
 
 # ------------------------------------------------------------------------------
-# Set paths to data directories 
+# Set path to Chrono data directory 
 # ------------------------------------------------------------------------------
 
 SET(CHRONO_DATA_DIR "${CHRONO_DATA_DIR}")
-SET(PROJECTS_DATA_DIR "${CMAKE_SOURCE_DIR}/data/" CACHE INTERNAL "")
+
+#------------------------------------------------------------
+# Copy chrono-projects data directory to BUILD tree 
+#------------------------------------------------------------
+
+if(MSVC OR XCODE_VERSION)
+    file(COPY ${CMAKE_SOURCE_DIR}/data/ DESTINATION ${CMAKE_BINARY_DIR}/bin/data/)
+else()
+    file(COPY ${CMAKE_SOURCE_DIR}/data/ DESTINATION ${CMAKE_BINARY_DIR}/data/)
+endif()
+
 
 #-----------------------------------------------------------------------------
 # Copy DLLs

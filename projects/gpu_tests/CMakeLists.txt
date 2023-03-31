@@ -86,7 +86,6 @@ foreach(PROGRAM ${DEMOS})
   source_group(""  FILES "${PROGRAM}.cpp")
 
   target_compile_definitions(${PROGRAM} PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
-  target_compile_definitions(${PROGRAM} PUBLIC "PROJECTS_DATA_DIR=\"${PROJECTS_DATA_DIR}\"")
   target_compile_options(${PROGRAM} PUBLIC ${CHRONO_CXX_FLAGS})
   target_link_options(${PROGRAM} PUBLIC ${CHRONO_LINKER_FLAGS})
   target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})

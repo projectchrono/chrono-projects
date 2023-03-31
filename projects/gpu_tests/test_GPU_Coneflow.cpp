@@ -19,31 +19,16 @@
 
 #include "chrono/core/ChGlobal.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-
 #include "chrono_gpu/physics/ChSystemGpu.h"
 #include "chrono_gpu/utils/ChGpuJsonParser.h"
-#include "chrono_gpu/ChGpuData.h"
-
 #include "chrono_thirdparty/filesystem/path.h"
+
+#include "../utils.h"
 
 using namespace chrono;
 using namespace chrono::gpu;
 
-// expected number of args for param sweep
-constexpr int num_args_full = 7;
-
-// -----------------------------------------------------------------------------
-// Show command line usage
-// -----------------------------------------------------------------------------
-void ShowUsage(std::string name) {
-    std::cout << "usage: " + name +
-                     " <json_file> [<aperture_diameter> <particle_radius> <grac_acc> "
-                     "<material_density> <output_dir>]"
-              << std::endl;
-    std::cout << "must have either 1 or " << num_args_full - 1 << " arguments" << std::endl;
-}
-
-std::string cyl_filename = gpu::GetDataFile("meshes/Gran_cylinder_transparent.obj");
+std::string cyl_filename = GetProjectsDataFile("gpu/meshes/Gran_cylinder_transparent.obj");
 
 // Take a ChBody and write its
 void writeZCylinderMesh(std::ostringstream& outstream, ChVector<> pos, float rad, float height) {
@@ -106,26 +91,24 @@ void writeZConeMesh(std::ostringstream& outstream, ChVector<> pos, std::string m
 }
 
 int main(int argc, char* argv[]) {
-    gpu::SetDataPath(std::string(PROJECTS_DATA_DIR) + "gpu/");
-
-    // Some of the default values might be overwritten by user via command line
-    ChGpuSimulationParameters params;
-    if (argc < 2 || (argc > 2 && argc != num_args_full) || ParseJSON(gpu::GetDataFile(argv[1]), params) == false) {
-        ShowUsage(argv[0]);
+    std::string inputJson = GetProjectsDataFile("gpu/Coneflow.json");
+    float aperture_diameter = 16.f;
+    if (argc == 2) {
+        inputJson = std::string(argv[1]);
+    } else if (argc == 3) {
+        inputJson = std::string(argv[1]);
+        aperture_diameter = (float)std::atof(argv[2]);
+    } else if (argc > 1) {
+        std::cout << "Usage:\n./test_GPU_Coneflow <json_file> [<aperture_diameter>]" << std::endl;
         return 1;
     }
 
-    float aperture_diameter = 16.f;
-
-    if (argc == num_args_full) {
-        aperture_diameter = std::atof(argv[2]);
-        params.sphere_radius = std::atof(argv[3]);
-        params.grav_Z = -1.f * std::atof(argv[4]);
-        params.sphere_density = std::atof(argv[5]);
-        params.output_dir = std::string(argv[6]);
-        printf("new parameters: D_0 is %f, r is %f, grav is %f, density is %f, output dir %s\n", aperture_diameter,
-               params.sphere_radius, params.grav_Z, params.sphere_density, params.output_dir.c_str());
+    ChGpuSimulationParameters params;
+    if (!ParseJSON(inputJson, params)) {
+        std ::cout << "ERROR: reading input file " << inputJson << std::endl;
+        return 1;
     }
+
     // Setup simulation
     ChSystemGpu gran_sys(params.sphere_radius, params.sphere_density,
                          ChVector<float>(params.box_X, params.box_Y, params.box_Z));
@@ -193,7 +176,7 @@ int main(int argc, char* argv[]) {
     float sphere_mass =
         (4.f / 3.f) * params.sphere_density * params.sphere_radius * params.sphere_radius * params.sphere_radius;
 
-    printf("%d spheres with mass %f \n", body_points.size(), body_points.size() * sphere_mass);
+    printf("%d spheres with mass %f \n", (int)body_points.size(), body_points.size() * sphere_mass);
 
     // set time integrator
     gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
@@ -227,7 +210,7 @@ int main(int argc, char* argv[]) {
         std::ofstream meshfile{params.output_dir + "/" + meshes_file};
         std::ostringstream outstream;
         outstream << "mesh_name,dx,dy,dz,x1,x2,x3,y1,y2,y3,z1,z2,z3\n";
-        writeZConeMesh(outstream, cone_top_pos, gpu::GetDataFile("meshes/gran_zcone.obj"));
+        writeZConeMesh(outstream, cone_top_pos, GetProjectsDataFile("gpu/meshes/gran_zcone.obj"));
         writeZCylinderMesh(outstream, zvec, cyl_rad, params.box_Z);
 
         meshfile << outstream.str();

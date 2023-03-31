@@ -31,7 +31,6 @@
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
 #include "chrono_vehicle/wheeled_vehicle/tire/RigidTire.h"
-#include "chrono_vehicle/wheeled_vehicle/tire/LugreTire.h"
 #include "chrono_vehicle/wheeled_vehicle/tire/FialaTire.h"
 #include "chrono_vehicle/powertrain/SimplePowertrain.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
@@ -77,7 +76,6 @@ std::string out_file("results.out");
 // JSON file names for vehicle model, tire models, (simple) powertrain, and (rigid) terrain
 std::string vehicle_file("generic/vehicle/Vehicle_DoubleWishbones.json");
 std::string rigidtire_file("generic/tire/RigidTire.json");
-std::string lugretire_file("generic/tire/LugreTire.json");
 std::string fialatire_file("generic/tire/FialaTire.json");
 std::string simplepowertrain_file("generic/powertrain/SimplePowertrain.json");
 std::string rigidterrain_file("terrain/RigidPlane.json");
@@ -137,13 +135,6 @@ int main(int argc, char* argv[]) {
             case TireModelType::FIALA: {
                 auto tireL = chrono_types::make_shared<FialaTire>(vehicle::GetDataFile(fialatire_file));
                 auto tireR = chrono_types::make_shared<FialaTire>(vehicle::GetDataFile(fialatire_file));
-                vehicle.InitializeTire(tireL, axle->m_wheels[0], VisualizationType::MESH);
-                vehicle.InitializeTire(tireR, axle->m_wheels[1], VisualizationType::MESH);
-                break;
-            }
-            case TireModelType::LUGRE: {
-                auto tireL = chrono_types::make_shared<LugreTire>(vehicle::GetDataFile(lugretire_file));
-                auto tireR = chrono_types::make_shared<LugreTire>(vehicle::GetDataFile(lugretire_file));
                 vehicle.InitializeTire(tireL, axle->m_wheels[0], VisualizationType::MESH);
                 vehicle.InitializeTire(tireR, axle->m_wheels[1], VisualizationType::MESH);
                 break;
