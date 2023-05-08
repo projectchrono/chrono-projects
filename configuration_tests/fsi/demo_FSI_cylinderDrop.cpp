@@ -16,18 +16,18 @@
 #include <cstdlib>
 #include <ctime>
 
+#include "chrono/assets/ChBoxShape.h"
+#include "chrono/core/ChTransform.h"
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsGeometry.h"
-#include "chrono/assets/ChBoxShape.h"
-#include "chrono/core/ChTransform.h"
 
 #include "chrono_fsi/ChSystemFsi.h"
 
-#include "chrono/assets/ChVisualSystem.h"
+#include "chrono_fsi/visualization/ChFsiVisualization.h"
 #ifdef CHRONO_OPENGL
-    #include "chrono_fsi/visualization/ChFsiVisualizationGL.h"
+#include "chrono_fsi/visualization/ChFsiVisualizationGL.h"
 #endif
 
 #include "chrono_thirdparty/filesystem/path.h"
@@ -58,7 +58,7 @@ double cyl_radius = 0.12;
 double t_end = 2.0;
 
 // Enable/disable run-time visualization
-bool render = false;
+bool render = true;
 float render_fps = 1000;
 
 //------------------------------------------------------------------
@@ -147,13 +147,19 @@ void CreateSolidPhase(ChSystemSMC& sysMBS, ChSystemFsi& sysFSI) {
 
     // Add collision geometry for the container walls
     box->GetCollisionModel()->ClearModel();
-    chrono::utils::AddBoxContainer(box, cmaterial, ChFrame<>(), ChVector<>(bxDim, byDim, bzDim), 0.1,
-                                   ChVector<int>(2, 2, -1), false);
+    chrono::utils::AddBoxContainer(box, cmaterial,                                 //
+                                   ChFrame<>(ChVector<>(0, 0, bzDim / 2), QUNIT),  //
+                                   ChVector<>(bxDim, byDim, bzDim), 0.1,           //
+                                   ChVector<int>(2, 2, -1),                        //
+                                   false);
     box->GetCollisionModel()->BuildModel();
     box->SetCollide(true);
 
     // Add BCE particles attached on the walls into FSI system
-    sysFSI.AddContainerBCE(box, ChFrame<>(), ChVector<>(bxDim, byDim, bzDim), ChVector<int>(2, 2, 2));
+    sysFSI.AddBoxContainerBCE(box,                                            //
+                              ChFrame<>(ChVector<>(0, 0, bzDim / 2), QUNIT),  //
+                              ChVector<>(bxDim, byDim, bzDim),                //
+                              ChVector<int>(2, 2, 2));
 
     // Create a falling cylinder
     auto cylinder = chrono_types::make_shared<ChBody>();
@@ -175,7 +181,8 @@ void CreateSolidPhase(ChSystemSMC& sysMBS, ChSystemFsi& sysFSI) {
     cylinder->SetBodyFixed(false);
     cylinder->GetCollisionModel()->ClearModel();
     cylinder->GetCollisionModel()->SetSafeMargin(initSpace0);
-    chrono::utils::AddCylinderGeometry(cylinder.get(), cmaterial, cyl_radius, cyl_length / 2, VNULL, QUNIT);
+    chrono::utils::AddCylinderGeometry(cylinder.get(), cmaterial, cyl_radius, cyl_length, VNULL,
+                                       Q_from_AngX(CH_C_PI_2));
     cylinder->GetCollisionModel()->BuildModel();
 
     cylinder->GetVisualShape(0)->SetColor(ChColor(0.65f, 0.20f, 0.10f));
@@ -270,11 +277,14 @@ int main(int argc, char* argv[]) {
     mystepper->SetScaling(true);
 
     // Create a run-tme visualizer
+#ifndef CHRONO_OPENGL
+    render = false;
+#endif
+
     std::shared_ptr<ChFsiVisualization> visFSI;
     if (render) {
 #ifdef CHRONO_OPENGL
         visFSI = chrono_types::make_shared<ChFsiVisualizationGL>(&sysFSI);
-#endif
 
         auto origin = sysMBS.Get_bodylist()[1]->GetPos();
 
@@ -284,11 +294,12 @@ int main(int argc, char* argv[]) {
         visFSI->SetCameraMoveScale(0.1f);
         visFSI->EnableBoundaryMarkers(false);
         visFSI->EnableRigidBodyMarkers(true);
-        visFSI->SetRenderMode(ChFsiVisualizationGL::RenderMode::SOLID);
-        visFSI->SetParticleRenderMode(ChFsiVisualizationGL::RenderMode::SOLID);
+        visFSI->SetRenderMode(ChFsiVisualization::RenderMode::SOLID);
+        visFSI->SetParticleRenderMode(ChFsiVisualization::RenderMode::SOLID);
         visFSI->SetSPHColorCallback(chrono_types::make_shared<HeightColorCallback>(0, 1.2));
         visFSI->AttachSystem(&sysMBS);
         visFSI->Initialize();
+#endif
     }
 
     // Start the simulation
@@ -299,7 +310,7 @@ int main(int argc, char* argv[]) {
     double time = 0.0;
     int current_step = 0;
 
-    ChTimer<> timer;
+    ChTimer timer;
     timer.start();
     while (time < t_end) {
         if (output && current_step % output_steps == 0) {

@@ -26,7 +26,7 @@
 
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
-#include "chrono_vehicle/terrain/SCMDeformableTerrain.h"
+#include "chrono_vehicle/terrain/SCMTerrain.h"
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 
 #include "chrono_models/vehicle/hmmwv/HMMWV.h"
@@ -138,7 +138,8 @@ int main(int argc, char* argv[]) {
     hmmwv.SetContactMethod(contact_method);
     hmmwv.SetChassisFixed(false);
     hmmwv.SetInitPosition(ChCoordsys<>(initLoc, initRot));
-    hmmwv.SetPowertrainType(PowertrainModelType::SHAFTS);
+    hmmwv.SetEngineType(EngineModelType::SHAFTS);
+    hmmwv.SetTransmissionType(TransmissionModelType::SHAFTS);
     hmmwv.SetDriveType(DrivelineTypeWV::AWD);
     hmmwv.SetTireType(TireModelType::RIGID);
     hmmwv.Initialize();
@@ -163,7 +164,7 @@ int main(int argc, char* argv[]) {
     // ----------------------
     // Terrain specific setup
     // ----------------------
-    auto terrain = chrono_types::make_shared<SCMDeformableTerrain>(hmmwv.GetSystem());
+    auto terrain = chrono_types::make_shared<SCMTerrain>(hmmwv.GetSystem());
 
     // Configure the SCM terrain
     if (bulldozing) {
@@ -176,7 +177,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Only relevant for Irrlicht visualization, gives some nice colors
-    terrain->SetPlotType(SCMDeformableTerrain::PLOT_SINKAGE, 0, 0.1);
+    terrain->SetPlotType(SCMTerrain::PLOT_SINKAGE, 0, 0.1);
     terrain->SetMeshWireframe(true);
 
     // The physics do not change when you add a moving patch, you just make it much easier for the SCM
@@ -300,7 +301,7 @@ int main(int argc, char* argv[]) {
     int step_number = 0;
 
     ChRealtimeStepTimer realtime_timer;
-    ChTimer<> timer;
+    ChTimer timer;
     timer.start();
 
     while (true) {
