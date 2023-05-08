@@ -23,7 +23,7 @@
 using namespace chrono;
 
 int main(int argc, char* argv[]) {
-    ChTimer<> timer;
+    ChTimer timer;
 
     std::random_device rd;
     std::mt19937 mt(rd());

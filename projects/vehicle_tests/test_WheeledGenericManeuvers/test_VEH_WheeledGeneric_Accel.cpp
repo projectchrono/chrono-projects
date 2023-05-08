@@ -33,11 +33,11 @@
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 
 #include "chrono_models/vehicle/generic/Generic_Vehicle.h"
-#include "chrono_models/vehicle/generic/Generic_SimplePowertrain.h"
-#include "chrono_models/vehicle/generic/Generic_SimpleMapPowertrain.h"
-#include "chrono_models/vehicle/generic/Generic_FialaTire.h"
 #include "chrono_models/vehicle/generic/Generic_FuncDriver.h"
-#include "chrono_models/vehicle/generic/Generic_Driveline2WD.h"
+#include "chrono_models/vehicle/generic/powertrain/Generic_EngineSimpleMap.h"
+#include "chrono_models/vehicle/generic/powertrain/Generic_AutomaticTransmissionSimpleMap.h"
+#include "chrono_models/vehicle/generic/tire/Generic_FialaTire.h"
+#include "chrono_models/vehicle/generic/driveline/Generic_Driveline2WD.h"
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
@@ -142,7 +142,9 @@ int main(int argc, char* argv[]) {
     terrain.Initialize();
 
     // Create and initialize the powertrain system
-    auto powertrain = chrono_types::make_shared<Generic_SimpleMapPowertrain>("Powertrain");
+    auto engine = chrono_types::make_shared<Generic_EngineSimpleMap>("Engine");
+    auto transmission = chrono_types::make_shared<Generic_AutomaticTransmissionSimpleMap>("Transmission");
+    auto powertrain = chrono_types::make_shared<ChPowertrainAssembly>(engine, transmission);
     vehicle.InitializePowertrain(powertrain);
 
     // Create the tires
@@ -332,7 +334,7 @@ int main(int argc, char* argv[]) {
 
                 // Vehicle and Control Values
                 csv << time << driver_inputs.m_steering << driver_inputs.m_throttle << driver_inputs.m_braking;
-                csv << powertrain->GetMotorSpeed() << powertrain->GetMotorTorque();
+                csv << engine->GetMotorSpeed() << engine->GetOutputMotorshaftTorque();
                 // Chassis Position, Velocity, & Acceleration (Unfiltered and Filtered)
                 csv << vehicle.GetChassis()->GetPos().x() << vehicle.GetChassis()->GetPos().y()
                     << vehicle.GetChassis()->GetPos().z();

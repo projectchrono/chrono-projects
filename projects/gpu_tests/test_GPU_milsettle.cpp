@@ -79,7 +79,7 @@ double run_test(float box_size_X, float box_size_Y, float box_size_Z) {
     gpu_system.SetVerbosity(verbose);
 
     gpu_system.SetFixedStepSize(timestep);
-    ChTimer<double> timer;
+    ChTimer timer;
 
     // Run wavetank experiment and time it
     timer.start();

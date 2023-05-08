@@ -39,8 +39,8 @@
 #include "chrono_vehicle/wheeled_vehicle/ChWheeledVehicleVisualSystemIrrlicht.h"
 
 #include "chrono_models/vehicle/hmmwv/HMMWV.h"
-#include "chrono_models/vehicle/hmmwv/HMMWV_ANCFTire.h"
-#include "chrono_models/vehicle/hmmwv/HMMWV_RigidTire.h"
+#include "chrono_models/vehicle/hmmwv/tire/HMMWV_ANCFTire.h"
+#include "chrono_models/vehicle/hmmwv/tire/HMMWV_RigidTire.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -67,8 +67,9 @@ VisualizationType chassis_vis_type = VisualizationType::PRIMITIVES;
 // Type of tire type (ANCF, RIGID, RIGID_MESH)
 TireModelType tire_model = TireModelType::ANCF;
 
-// Type of powertrain model (SHAFTS, SIMPLE)
-PowertrainModelType powertrain_model = PowertrainModelType::SHAFTS;
+// Type of powertrain models (SHAFTS, SIMPLE)
+EngineModelType engine_model = EngineModelType::SHAFTS;
+TransmissionModelType transmission_model = TransmissionModelType::SHAFTS;
 
 // Drive type (FWD, RWD, or AWD)
 DrivelineTypeWV drive_type = DrivelineTypeWV::AWD;
@@ -189,7 +190,8 @@ int main(int argc, char* argv[]) {
     HMMWV_Full my_hmmwv(system);
     my_hmmwv.SetChassisFixed(false);
     my_hmmwv.SetInitPosition(ChCoordsys<>(initLoc, initRot));
-    my_hmmwv.SetPowertrainType(powertrain_model);
+    my_hmmwv.SetEngineType(engine_model);
+    my_hmmwv.SetTransmissionType(transmission_model);
     my_hmmwv.SetDriveType(drive_type);
     my_hmmwv.SetTireType(tire_model);
     my_hmmwv.Initialize();

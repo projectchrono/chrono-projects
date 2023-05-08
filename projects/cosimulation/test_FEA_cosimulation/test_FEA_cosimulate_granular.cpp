@@ -311,8 +311,8 @@ int main(int argc, char* argv[]) {
     }
 
     // Add the terrain, MUST BE ADDED AFTER TIRE GEOMETRY (for index assumptions)
-    chrono::utils::CreateBoxContainer(systemG, -2, triMat, ChVector<>(1, 1, 1), 0.1, ChVector<>(0, -1, 0), QUNIT, true,
-                                      true, true, false);
+    chrono::utils::CreateBoxContainer(systemG, -2, triMat, ChVector<>(2, 2, 2), 0.2, ChVector<>(0, -1, 0), QUNIT, true,
+                                      true, false);
 
     double r = 0.1;  // 0.02;//
     double shapeRatio = 0.4;

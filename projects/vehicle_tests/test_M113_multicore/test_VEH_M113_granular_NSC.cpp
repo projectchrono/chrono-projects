@@ -46,7 +46,8 @@
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 
 // M113 model header files
-#include "chrono_models/vehicle/m113/M113_SimpleCVTPowertrain.h"
+#include "chrono_models/vehicle/m113/powertrain/M113_EngineSimpleMap.h"
+#include "chrono_models/vehicle/m113/powertrain/M113_AutomaticTransmissionSimpleMap.h"
 #include "chrono_models/vehicle/m113/M113_Vehicle.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
@@ -316,7 +317,9 @@ int main(int argc, char* argv[]) {
     // Create and initialize vehicle systems
     auto vehicle = chrono_types::make_shared<M113_Vehicle_SinglePin>(true, DrivelineTypeTV::SIMPLE, BrakeType::SIMPLE,
                                                                      false, false, false, &system);
-    auto powertrain = chrono_types::make_shared<M113_SimpleCVTPowertrain>("Powertrain");
+    auto engine = chrono_types::make_shared<M113_EngineSimpleMap>("Engine");
+    auto transmission = chrono_types::make_shared<M113_AutomaticTransmissionSimpleMap>("Transmission");
+    auto powertrain = chrono_types::make_shared<ChPowertrainAssembly>(engine, transmission);
 
     vehicle->Initialize(ChCoordsys<>(initLoc + ChVector<>(0.0, 0.0, vertical_offset), initRot));
 
@@ -414,8 +417,8 @@ int main(int argc, char* argv[]) {
         csv << time << driver_inputs.m_steering << driver_inputs.m_throttle << driver_inputs.m_braking;
         csv << vehicle->GetTrackAssembly(LEFT)->GetSprocket()->GetAxleSpeed()
             << vehicle->GetTrackAssembly(RIGHT)->GetSprocket()->GetAxleSpeed();
-        csv << powertrain->GetMotorSpeed() << powertrain->GetMotorTorque();
-        csv << powertrain->GetOutputTorque() << vehicle->GetDriveline()->GetDriveshaftSpeed();
+        csv << engine->GetMotorSpeed() << engine->GetOutputMotorshaftTorque();
+        csv << powertrain->GetOutputTorque() << vehicle->GetDriveline()->GetOutputDriveshaftSpeed();
         // Chassis Position & Velocity
         csv << pos_CG.x() << pos_CG.y() << pos_CG.z();
         csv << vel_CG.x() << vel_CG.y() << vel_CG.z();

@@ -11,9 +11,9 @@ endif()
 cmake_dependent_option(ENABLE_PRJ_DEM_VALIDATION 
 	"Enable projects for DEM validation" ON
 	"ENABLE_PROJECTS" OFF)
-cmake_dependent_option(ENABLE_PRJ_CONSTRAINT_FLUID 
-	"Enable projects using constraint fluids, require zlib" OFF
-	"ENABLE_PROJECTS" OFF)
+#cmake_dependent_option(ENABLE_PRJ_CONSTRAINT_FLUID 
+#	"Enable projects using constraint fluids, require zlib" OFF
+#	"ENABLE_PROJECTS" OFF)
 cmake_dependent_option(ENABLE_PRJ_MULTICORE_TESTS 
 	"Enable projects for Chrono::Multicore tests" ON
 	"ENABLE_PROJECTS" OFF)
@@ -71,9 +71,9 @@ if (ENABLE_PRJ_COSIMULATION)
   add_subdirectory(cosimulation)
 endif()
 
-if (ENABLE_PRJ_CONSTRAINT_FLUID)
-  add_subdirectory(constraint_fluids)
-endif()
+#if (ENABLE_PRJ_CONSTRAINT_FLUID)
+#  add_subdirectory(constraint_fluids)
+#endif()
 
 if (ENABLE_PRJ_SYN_HIGHWAY)
   add_subdirectory(synchrono_highway)

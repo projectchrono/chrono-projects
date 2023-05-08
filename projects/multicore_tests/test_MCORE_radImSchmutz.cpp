@@ -205,8 +205,7 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     m_sled->SetBodyFixed(false);
     m_sled->SetCollide(false);
 
-    auto box_sled = chrono_types::make_shared<ChBoxShape>();
-    box_sled->GetBoxGeometry().Size = ChVector<>(e, e / 3, e / 3);
+    auto box_sled = chrono_types::make_shared<ChBoxShape>(2.0 * e, (2.0 / 3) * e, (2.0 / 3) * e);
     box_sled->SetColor(ChColor(0.7f, 0.3f, 0.3f));
     m_sled->AddVisualShape(box_sled);
 
@@ -237,20 +236,18 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     m_wheel->GetCollisionModel()->ClearModel();
     switch (wheel_shape) {
         case ChCollisionShape::Type::CYLINDER:
-            utils::AddCylinderGeometry(m_wheel.get(), mat_w, r_w, w_w / 2, ChVector<>(c, 0, -b), Q_from_AngZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(m_wheel.get(), mat_w, r_w, w_w / 2, ChVector<>(c, 0, -b), Q_from_AngY(CH_C_PI_2));
             break;
         case ChCollisionShape::Type::ROUNDEDCYL:
             utils::AddRoundedCylinderGeometry(m_wheel.get(), mat_w, r_w - s_w, w_w / 2 - s_w, s_w, ChVector<>(c, 0, -b),
-                                              Q_from_AngZ(CH_C_PI_2));
+                                              Q_from_AngY(CH_C_PI_2));
             break;
     }
     m_wheel->GetCollisionModel()->BuildModel();
 
-    auto cap_wheel = chrono_types::make_shared<ChCapsuleShape>();
-    cap_wheel->GetCapsuleGeometry().hlen = (a + c) / 2 - w_w / 4;
-    cap_wheel->GetCapsuleGeometry().rad = w_w / 4;
+    auto cap_wheel = chrono_types::make_shared<ChCapsuleShape>(w_w / 4, a + c - w_w / 2);
     cap_wheel->SetColor(ChColor(0.3f, 0.3f, 0.7f));
-    m_wheel->AddVisualShape(cap_wheel, ChFrame<>(ChVector<>((c - a) / 2, 0, -b), Q_from_AngZ(CH_C_PI_2)));
+    m_wheel->AddVisualShape(cap_wheel, ChFrame<>(ChVector<>((c - a) / 2, 0, -b), Q_from_AngY(CH_C_PI_2)));
 
     system->AddBody(m_wheel);
 
