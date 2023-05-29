@@ -1,17 +1,17 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono pyparser module
+# CMake configuration file for projects requiring the Chrono parsers module
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
 
-message("\n---- PYPARSER configuration test")
+message("\n---- PARSERS configuration test")
 
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
 
 set(DEMOS
-    demo_PY_parser
+    demo_PARSER_Python
 )
 
 #--------------------------------------------------------------
@@ -21,14 +21,14 @@ set(DEMOS
 # Invoke find_package in CONFIG mode
 
 find_package(Chrono QUIET
-             COMPONENTS Python
+             COMPONENTS Parsers
              CONFIG
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
 
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for PYPARSER projects")
+  message("Could not find requirements for PARSERS projects")
   return()
 endif()
 
