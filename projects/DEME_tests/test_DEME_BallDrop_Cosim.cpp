@@ -79,7 +79,7 @@ int main() {
     ball_body->SetInertiaXX(ChVector<>(inertia, inertia, inertia));
     ball_body->SetPos(ball_initial_pos);
     auto sph = chrono_types::make_shared<ChSphereShape>();
-    sph->GetSphereGeometry().rad = ball_radius;
+    sph->GetGeometry().rad = ball_radius;
     ball_body->AddVisualShape(sph);
     sys_ball.AddBody(ball_body);
 
