@@ -345,12 +345,15 @@ int main(int argc, char* argv[]) {
     // If you want to use a large UpdateFreq then you have to expand spheres to ensure safety
     DEMSim.SetCDUpdateFreq(30);
     DEMSim.SetInitBinSize(scales.at(2));
-    DEMSim.SetErrorOutVelocity(20.);
+    DEMSim.SetExpandSafetyAdder(0.05);
+    DEMSim.SetExpandSafetyMultiplier(1.);
+    DEMSim.SetErrorOutVelocity(60.);
 
     DEMSim.Initialize();
     for (const auto& tracker : trackers) {
         std::cout << "A tracker is tracking owner " << tracker->obj->ownerID << std::endl;
     }
+    std::cout << "Time step size is " << step_size << std::endl;
     std::cout << "End initialization" << std::endl;
 
     ///////////////////////////////////////////
@@ -435,17 +438,15 @@ int main(int argc, char* argv[]) {
             frame_accu = 0.;
             std::cout << "Frame: " << currframe << std::endl;
             std::cout << "Num contacts: " << DEMSim.GetNumContacts() << std::endl;
+            std::cout << h_total.count() << " seconds spent on host" << std::endl;
+            std::cout << d_total.count() << " seconds spent on device" << std::endl;
             DEMSim.ShowThreadCollaborationStats();
-            char filename[200], meshfilename[200];
+            char filename[200];
             sprintf(filename, "%s/DEMdemo_output_%04d.csv", out_dir.c_str(), currframe);
-            // sprintf(meshfilename, "%s/DEMdemo_output_mesh_%04d.vtk", out_dir.c_str(), currframe);
             DEMSim.WriteSphereFile(std::string(filename));
-            // DEMSim.WriteMeshFile(std::string(meshfilename));
             SaveParaViewFiles(viper, rover_dir, currframe);
             currframe++;
             DEMSim.ShowTimingStats();
-            // std::cout << h_total.count() << " seconds spent on host" << std::endl;
-            // std::cout << d_total.count() << " seconds spent on device" << std::endl;
 
             // Move the active box
             if (Slope_deg < 19. && t > 0.2) {
@@ -561,6 +562,7 @@ int main(int argc, char* argv[]) {
         //     change_step = 4;
         // }
     }
+    std::cout << "Finishing up..." << std::endl;
     std::cout << h_total.count() << " seconds spent on host" << std::endl;
     std::cout << d_total.count() << " seconds spent on device" << std::endl;
 
