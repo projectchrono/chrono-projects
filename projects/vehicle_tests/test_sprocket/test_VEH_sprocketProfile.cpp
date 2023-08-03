@@ -110,10 +110,7 @@ int main(int argc, char* argv[]) {
     gear_profile_minus->SetColor(ChColor(0, 1, 0));
     gear->AddVisualShape(gear_profile_minus, ChFrame<>(ChVector<>(0, 0, -separation / 2)));
 
-    auto gear_axle = chrono_types::make_shared<ChCylinderShape>();
-    gear_axle->GetCylinderGeometry().p1 = ChVector<>(0, 0, separation / 2);
-    gear_axle->GetCylinderGeometry().p2 = ChVector<>(0, 0, -separation / 2);
-    gear_axle->GetCylinderGeometry().rad = 0.1 * R;
+    auto gear_axle = chrono_types::make_shared<ChCylinderShape>(0.1 * R, separation);
     gear->AddVisualShape(gear_axle);
 
     // Revolute constraint (gear-ground)
@@ -149,10 +146,7 @@ int main(int argc, char* argv[]) {
     pin->GetCollisionModel()->BuildModel();
 
     // Add pin visualization
-    auto pin_cyl = chrono_types::make_shared<ChCylinderShape>();
-    pin_cyl->GetCylinderGeometry().p1 = ChVector<>(0, 0, pin_hlen);
-    pin_cyl->GetCylinderGeometry().p2 = ChVector<>(0, 0, -pin_hlen);
-    pin_cyl->GetCylinderGeometry().rad = pin_radius;
+    auto pin_cyl = chrono_types::make_shared<ChCylinderShape>(pin_radius, 2 * pin_hlen);
     pin_cyl->SetColor(ChColor(0.2f, 0.5f, 0.8f));
     pin->AddVisualShape(pin_cyl);
 

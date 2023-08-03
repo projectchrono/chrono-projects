@@ -570,11 +570,8 @@ int main(int argc, char* argv[]) {
     Bump->SetPos(ChVector<>(BumpLongLoc, -1.0, 0.0));
     my_system.Add(Bump);
 
-    auto cyl_wheel = chrono_types::make_shared<ChCylinderShape>();
-    cyl_wheel->GetCylinderGeometry().p1 = ChVector<>(0, -0.5, 0);
-    cyl_wheel->GetCylinderGeometry().p2 = ChVector<>(0, 0.5, 0);
-    cyl_wheel->GetCylinderGeometry().rad = BumpRadius;
-    Bump->AddVisualShape(cyl_wheel);
+    auto cyl_wheel = chrono_types::make_shared<ChCylinderShape>(BumpRadius, 1.0);
+    Bump->AddVisualShape(cyl_wheel, ChFrame<>(VNULL, Q_from_AngX(CH_C_PI_2)));
 
     // Create joints between chassis and hubs
     auto RevTr_1 = chrono_types::make_shared<ChLinkRevoluteTranslational>();
@@ -630,7 +627,7 @@ int main(int argc, char* argv[]) {
 
     // Initialize total number of iterations and timer.
     int num_iterations = 0;
-    ChTimer<> timer;
+    ChTimer timer;
     timer.start();
 
     // Simulate to final time, while accumulating number of iterations.

@@ -246,24 +246,21 @@ int main(int argc, char* argv[]) {
         constr_C->Initialize(node_Cl, rack, false, node_Cl->Frame(), node_Cl->Frame());
         sys.Add(constr_C);
 
-        auto balance = chrono_types::make_shared<ChBodyEasyCylinder>(Rbalance, Wbalance, 7000, true, false);
+        auto balance = chrono_types::make_shared<ChBodyEasyCylinder>(geometry::ChAxis::Y, Rbalance, Wbalance, 7000, true, false);
         balance->SetPos(vP + ChVector<>(0, 0, -OffPin));
         balance->SetRot(Q_from_AngAxis(CH_C_PI_2, VECT_X));
         for (int i = 0; i < 6; ++i) {
             double phi = CH_C_2PI * (i / 6.0);
-            auto vshape = chrono_types::make_shared<ChCylinderShape>();
-            vshape->GetCylinderGeometry().p1 =
-                ChVector<>(sin(phi) * Rbalance * 0.8, Wbalance, cos(phi) * Rbalance * 0.8);
-            vshape->GetCylinderGeometry().p2 = vshape->GetCylinderGeometry().p1 + ChVector<>(0, 2 * Wbalance, 0);
-            vshape->GetCylinderGeometry().rad = Rbalance * 0.1;
-            balance->AddVisualShape(vshape);
+            auto p1 = ChVector<>(sin(phi) * Rbalance * 0.8, Wbalance, cos(phi) * Rbalance * 0.8);
+            auto p2 = p1 + ChVector<>(0, 2 * Wbalance, 0);
+            geometry::ChLineSegment seg(p1, p2);
+            auto vshape = chrono_types::make_shared<ChCylinderShape>(Rbalance * 0.1, seg.GetLength());
+            balance->AddVisualShape(vshape, seg.GetFrame());
         }
-        auto vshaft = chrono_types::make_shared<ChCylinderShape>();
-        vshaft->GetCylinderGeometry().p1 = vP + ChVector<>(0, -OffPin * 10, 0);
-        vshaft->GetCylinderGeometry().p2 = vP + ChVector<>(0, OffPin * 10, 0);
-        vshaft->GetCylinderGeometry().rad = Rpinion;
+        geometry::ChLineSegment seg(vP + ChVector<>(0, -OffPin * 10, 0), vP + ChVector<>(0, OffPin * 10, 0));
+        auto vshaft = chrono_types::make_shared<ChCylinderShape>(Rpinion, seg.GetLength());
         vshaft->SetColor(ChColor(0.5f, 0.9f, 0.9f));
-        balance->AddVisualShape(vshaft);
+        balance->AddVisualShape(vshaft, seg.GetFrame());
 
         sys.Add(balance);
 

@@ -312,7 +312,7 @@ int main(int argc, char* argv[]) {
 #endif
     } else {
         // Simulation loop
-        ChTimer<> timer;
+        ChTimer timer;
         timer.start();
         for (int istep = 0; istep < num_steps; istep++) {
             sys.DoStepDynamics(step_size);

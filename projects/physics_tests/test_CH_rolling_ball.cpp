@@ -107,8 +107,7 @@ int main(int argc, char* argv[]) {
     ground->GetCollisionModel()->AddBox(material, 4, 2, 1, ChVector<>(0, 0, -1));
     ground->GetCollisionModel()->BuildModel();
 
-    auto box = chrono_types::make_shared<ChBoxShape>();
-    box->GetBoxGeometry().Size = ChVector<>(4, 2, 1);
+    auto box = chrono_types::make_shared<ChBoxShape>(8, 4, 2);
     box->SetColor(ChColor(1, 0, 0));
     ground->AddVisualShape(box, ChFrame<>(ChVector<>(0, 0, -0.5)));
 
@@ -125,8 +124,7 @@ int main(int argc, char* argv[]) {
     ball->GetCollisionModel()->AddSphere(material, 1);
     ball->GetCollisionModel()->BuildModel();
 
-    auto sphere = chrono_types::make_shared<ChSphereShape>();
-    sphere->GetSphereGeometry().rad = 1;
+    auto sphere = chrono_types::make_shared<ChSphereShape>(1);
     ball->AddVisualShape(sphere);
 
     // Functor class for contact reporting
