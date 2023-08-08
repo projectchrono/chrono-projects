@@ -217,8 +217,19 @@ int main(int argc, char* argv[]) {
     // Now we load clump locations from a checkpointed file
     {
         std::cout << "Making terrain..." << std::endl;
-        auto clump_xyz = DEMSim.ReadClumpXyzFromCsv("./GRC_20e6.csv");
-        auto clump_quaternion = DEMSim.ReadClumpQuatFromCsv("./GRC_20e6.csv");
+        std::unordered_map<std::string, std::vector<float3>> clump_xyz;
+        std::unordered_map<std::string, std::vector<float4>> clump_quaternion;
+        try {
+            clump_xyz = DEMSim.ReadClumpXyzFromCsv("./GRC_20e6.csv");
+            clump_quaternion = DEMSim.ReadClumpQuatFromCsv("./GRC_20e6.csv");
+        } catch (...) {
+            std::cout << "You will need to finish the GRCPrep demos first to obtain the checkpoint file GRC_20e6.csv, "
+                         "in order to run this demo. \nThat is a 4m by 2m GRC-1 terrain patch that is around 15cm "
+                         "thick.\nIf you don't have access to it, you can go to the forum "
+                         "(https://groups.google.com/g/projectchrono) to ask the authors for it."
+                      << std::endl;
+            return 1;
+        }
         std::vector<float3> in_xyz;
         std::vector<float4> in_quat;
         std::vector<std::shared_ptr<DEMClumpTemplate>> in_types;

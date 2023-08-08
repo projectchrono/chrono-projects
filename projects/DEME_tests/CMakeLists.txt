@@ -69,6 +69,7 @@ endif()
 
 include_directories(
     ${CHRONO_INCLUDE_DIRS}
+    ${DEME_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
 )
 
@@ -78,6 +79,12 @@ include_directories(
 
 list(APPEND ALL_DLLS "${CHRONO_DLLS}")
 set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
+
+#--------------------------------------------------------------
+# DEME requires C++17 to be linked against
+#--------------------------------------------------------------
+
+list(APPEND CHRONO_CXX_FLAGS "-std=c++17")
 
 #--------------------------------------------------------------
 # Loop over all demo programs and build them
@@ -90,13 +97,15 @@ FOREACH(PROGRAM ${TESTS})
 
     ADD_EXECUTABLE(${PROGRAM}  "${PROGRAM}.cpp")
     SOURCE_GROUP(""  FILES "${PROGRAM}.cpp")
+    set_property(TARGET ${PROGRAM} PROPERTY C_STANDARD 17)
+    set_property(TARGET ${PROGRAM} PROPERTY C_STANDARD_REQUIRED ON)
 
     target_compile_definitions(${PROGRAM} PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
     target_compile_definitions(${PROGRAM} PUBLIC "DEME_DATA_DIR=\"${DEME_DATA_DIRS}\"") 
     target_compile_options(${PROGRAM} PUBLIC ${CHRONO_CXX_FLAGS})
     target_link_options(${PROGRAM} PUBLIC ${CHRONO_LINKER_FLAGS})
     target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
-    target_link_libraries(${PROGRAM}  DEME::simulator_multi_gpu)
+    target_link_libraries(${PROGRAM} DEME::simulator_multi_gpu)
 
 ENDFOREACH()
 
