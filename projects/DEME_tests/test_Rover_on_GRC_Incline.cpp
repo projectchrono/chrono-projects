@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
     ////double body_range = 1.2;
 
     // Create a Chrono::Engine physical system
-    float Slope_deg = 0;
+    float Slope_deg = 5;
     double G_ang = Slope_deg * math_PI / 180.;
     ChSystemSMC sys;
     ChVector<double> G = ChVector<double>(-G_mag * std::sin(G_ang), 0, -G_mag * std::cos(G_ang));
@@ -191,10 +191,10 @@ int main(int argc, char* argv[]) {
     std::vector<double> scales = {0.0014, 0.00075833, 0.00044, 0.0003, 0.0002, 0.00018333, 0.00017};
     std::for_each(scales.begin(), scales.end(), [](double& r) { r *= 10.; });
     // Then load it to system
-    std::shared_ptr<DEMClumpTemplate> my_template2 = DEMSim.LoadClumpType(
-        mass2, MOI2, (GET_DATA_PATH() / "clumps/triangular_flat_6comp.csv").string(), mat_type_terrain);
+    std::shared_ptr<DEMClumpTemplate> my_template2 =
+        DEMSim.LoadClumpType(mass2, MOI2, GetDEMEDataFile("clumps/triangular_flat_6comp.csv"), mat_type_terrain);
     std::shared_ptr<DEMClumpTemplate> my_template1 =
-        DEMSim.LoadClumpType(mass1, MOI1, (GET_DATA_PATH() / "clumps/triangular_flat.csv").string(), mat_type_terrain);
+        DEMSim.LoadClumpType(mass1, MOI1, GetDEMEDataFile("clumps/triangular_flat.csv"), mat_type_terrain);
     std::vector<std::shared_ptr<DEMClumpTemplate>> ground_particle_templates = {my_template2,
                                                                                 DEMSim.Duplicate(my_template2),
                                                                                 my_template1,

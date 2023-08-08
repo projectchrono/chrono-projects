@@ -66,6 +66,8 @@ inline float4 ChQ2Float(const ChQuaternion<>& Q) {
 void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number);
 
 int main(int argc, char* argv[]) {
+    SetChronoDataPath(CHRONO_DATA_DIR);
+    SetDEMEDataPath(DEME_DATA_DIR);
     GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
 
     // Global parameter for moving patch size:
@@ -151,7 +153,7 @@ int main(int argc, char* argv[]) {
     float wheel_IXX = (wheel_mass / 12) * (3 * wheel_rad * wheel_rad + wheel_width * wheel_width);
     float3 wheel_MOI = make_float3(wheel_IXX, wheel_IYY, wheel_IXX);
     auto wheel_template =
-        DEMSim.LoadClumpType(wheel_mass, wheel_MOI, "../data/clumps/ViperWheelSimple.csv", mat_type_wheel);
+        DEMSim.LoadClumpType(wheel_mass, wheel_MOI, GetDEMEDataFile("clumps/ViperWheelSimple.csv"), mat_type_wheel);
     // The file contains no wheel particles size info, so let's manually set them
     wheel_template->radii = std::vector<float>(wheel_template->nComp, 0.01);
     // This wheel template is `lying down', but our reported MOI info is assuming it's in a position to roll
@@ -409,11 +411,6 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
         mmesh->LoadWavefrontMesh(obj_path, false, true);
         mmesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
         mmesh->RepairDuplicateVertexes(1e-9);                              // if meshes are not watertight
-
-        double mmass;
-        ChVector<> mcog;
-        ChMatrix33<> minertia;
-        mmesh->ComputeMassProperties(true, mmass, mcog, minertia);
         mmesh->Transform(body_pos, ChMatrix33<>(body_rot));  // rotate the mesh based on the orientation of body
 
         // filename = rover_dir / ("./body_" + std::string(f_name) + ".obj");
@@ -451,11 +448,6 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
         mmesh->LoadWavefrontMesh(obj_path, false, true);
         mmesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
         mmesh->RepairDuplicateVertexes(1e-9);                              // if meshes are not watertight
-
-        double mmass;
-        ChVector<> mcog;
-        ChMatrix33<> minertia;
-        mmesh->ComputeMassProperties(true, mmass, mcog, minertia);
         mmesh->Transform(body_pos, ChMatrix33<>(body_rot));  // rotate the mesh based on the orientation of body
 
         // filename = rover_dir / ("./wheel_" + std::to_string(i + 1) + "_" + std::string(f_name) + ".obj");
@@ -495,11 +487,6 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
         mmesh->LoadWavefrontMesh(obj_path, false, true);
         mmesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
         mmesh->RepairDuplicateVertexes(1e-9);                              // if meshes are not watertight
-
-        double mmass;
-        ChVector<> mcog;
-        ChMatrix33<> minertia;
-        mmesh->ComputeMassProperties(true, mmass, mcog, minertia);
         mmesh->Transform(body_pos, ChMatrix33<>(body_rot));  // rotate the mesh based on the orientation of body
 
         // filename = rover_dir / ("./steerRod_" + std::to_string(i + 1) + "_" + std::string(f_name) + ".obj");
@@ -539,11 +526,6 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
         mmesh->LoadWavefrontMesh(obj_path, false, true);
         mmesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
         mmesh->RepairDuplicateVertexes(1e-9);                              // if meshes are not watertight
-
-        double mmass;
-        ChVector<> mcog;
-        ChMatrix33<> minertia;
-        mmesh->ComputeMassProperties(true, mmass, mcog, minertia);
         mmesh->Transform(body_pos, ChMatrix33<>(body_rot));  // rotate the mesh based on the orientation of body
 
         // filename = rover_dir / ("./lowerRod_" + std::to_string(i + 1) + "_" + std::string(f_name) + ".obj");
@@ -584,11 +566,6 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
         mmesh->LoadWavefrontMesh(obj_path, false, true);
         mmesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
         mmesh->RepairDuplicateVertexes(1e-9);                              // if meshes are not watertight
-
-        double mmass;
-        ChVector<> mcog;
-        ChMatrix33<> minertia;
-        mmesh->ComputeMassProperties(true, mmass, mcog, minertia);
         mmesh->Transform(body_pos, ChMatrix33<>(body_rot));  // rotate the mesh based on the orientation of body
 
         // filename = rover_dir / ("./upperRod_" + std::to_string(i + 1) + "_" + std::string(f_name) + ".obj");
