@@ -84,7 +84,8 @@ set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 # DEME requires C++17 to be linked against
 #--------------------------------------------------------------
 
-list(APPEND CHRONO_CXX_FLAGS "-std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 #--------------------------------------------------------------
 # Loop over all demo programs and build them

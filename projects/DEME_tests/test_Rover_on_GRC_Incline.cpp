@@ -75,11 +75,11 @@ int main(int argc, char* argv[]) {
 
     // `World'
     float G_mag = 9.81;
-    float step_size = 2e-6;
+    float step_size = 1e-6;  // 2e-6; // 1e-6 for 15 deg and above, perhaps
 
     // Define the wheel geometry
     float wheel_rad = 0.25;
-    float wheel_width = 0.2;
+    float wheel_width = 0.25;
     float wheel_mass = 5.;
     float wheel_IYY = wheel_mass * wheel_rad * wheel_rad / 2;
     float wheel_IXX = (wheel_mass / 12) * (3 * wheel_rad * wheel_rad + wheel_width * wheel_width);
@@ -89,12 +89,8 @@ int main(int argc, char* argv[]) {
     // std::string wheel_obj_path = GetChronoDataFile("robot/viper/obj/viper_wheel.obj");
     // std::string wheel_obj_path = "./Moon_rover_wheel.obj";
 
-    // Global parameter for moving patch size:
-    double wheel_range = 0.5;
-    ////double body_range = 1.2;
-
     // Create a Chrono::Engine physical system
-    float Slope_deg = 5;
+    float Slope_deg = 15;
     double G_ang = Slope_deg * math_PI / 180.;
     ChSystemSMC sys;
     ChVector<double> G = ChVector<double>(-G_mag * std::sin(G_ang), 0, -G_mag * std::cos(G_ang));
@@ -391,6 +387,7 @@ int main(int argc, char* argv[]) {
     // path out_dir = current_path();
     path out_dir = GetChronoOutputPath();
     create_directory(out_dir);
+    // out_dir += "/DEME_FullDomain";
     out_dir += "/DEME";
     create_directory(out_dir);
     out_dir += "/Rover_on_GRC_incline_" + std::to_string(Slope_deg);
