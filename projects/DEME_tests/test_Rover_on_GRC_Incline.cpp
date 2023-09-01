@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
 
     // `World'
     float G_mag = 9.81;
-    float step_size = 1e-6;  // 2e-6; // 1e-6 for 15 deg and above, perhaps
+    float step_size = 2e-6;  // 2e-6; // 1e-6 for 15 deg and above, perhaps
 
     // Define the wheel geometry
     float wheel_rad = 0.25;
@@ -155,13 +155,15 @@ int main(int argc, char* argv[]) {
     float mu = 0.4;
     float mu_wheel = 0.8;
     float mu_wall = 1.;
-    // auto mat_type_wall = DEMSim.LoadMaterial({{"E", 1e9}, {"nu", 0.3}, {"CoR", 0.25}, {"mu", mu_wall}, {"Crr",
-    // 0.00}}); auto mat_type_wheel = DEMSim.LoadMaterial({{"E", 1e9}, {"nu", 0.3}, {"CoR", 0.25}, {"mu", mu_wheel},
-    // {"Crr", 0.00}}); auto mat_type_terrain = DEMSim.LoadMaterial({{"E", 1e9}, {"nu", 0.3}, {"CoR", 0.25}, {"mu", mu},
+    float CoR = 0.25;
+    float E = 1e8;
+    auto mat_type_wall = DEMSim.LoadMaterial({{"E", E}, {"nu", 0.3}, {"CoR", CoR}, {"mu", mu_wall}, {"Crr", 0.00}});
+    auto mat_type_wheel = DEMSim.LoadMaterial({{"E", E}, {"nu", 0.3}, {"CoR", CoR}, {"mu", mu_wheel}, {"Crr", 0.00}});
+    auto mat_type_terrain = DEMSim.LoadMaterial({{"E", E}, {"nu", 0.3}, {"CoR", CoR}, {"mu", mu}, {"Crr", 0.00}});
+    // auto mat_type_wall = DEMSim.LoadMaterial({{"E", 1e9}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", mu_wall}, {"Crr",
+    // 0.00}}); auto mat_type_wheel = DEMSim.LoadMaterial({{"E", 1e9}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", mu_wheel},
+    // {"Crr", 0.00}}); auto mat_type_terrain = DEMSim.LoadMaterial({{"E", 1e9}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", mu},
     // {"Crr", 0.00}});
-    auto mat_type_wall = DEMSim.LoadMaterial({{"E", 1e9}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", mu_wall}, {"Crr", 0.00}});
-    auto mat_type_wheel = DEMSim.LoadMaterial({{"E", 1e9}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", mu_wheel}, {"Crr", 0.00}});
-    auto mat_type_terrain = DEMSim.LoadMaterial({{"E", 1e9}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", mu}, {"Crr", 0.00}});
     DEMSim.SetMaterialPropertyPair("mu", mat_type_wheel, mat_type_terrain, mu_wheel);
     DEMSim.SetMaterialPropertyPair("mu", mat_type_wall, mat_type_terrain, mu_wall);
 
@@ -262,51 +264,58 @@ int main(int argc, char* argv[]) {
 
         DEMSim.AddClumps(base_batch);
 
-        // Maybe we need to make it thicker...
-        float up_dist, remove_pos;
-        up_dist = 0.1;
-        remove_pos = 0.43;
+        // Maybe we need to make the terrain a bit thicker...
+        // I found when I created the initial terrain it wasn't thick enough for the rover simulation at steeper slopes.
+        // I was too lazy to regenerate everything, so I just make and `partial' copy of the existing terrain, add it on
+        // top of the existing terrain, to make it thicker. The following section of the code is doing that. It may have
+        // been done in a more or less confusing way of coding, but it doesn't matter; if it is too arcane for you, just
+        // get the idea and move on to reading the rest of the script.
+        {
+            float up_dist, remove_pos;
+            up_dist = 0.1;
+            remove_pos = 0.43;
 
-        std::vector<float> x_shift_dist = {0};
-        std::vector<float> y_shift_dist = {0};
-        std::vector<float> z_shift_dist = {up_dist};
-        // Add some patches of such graular bed
-        for (float x_shift : x_shift_dist) {
-            for (float y_shift : y_shift_dist) {
-                for (float z_shift : z_shift_dist) {
-                    std::vector<float3> my_xyz = in_xyz;
-                    std::vector<float4> my_quat = in_quat;
-                    std::vector<std::shared_ptr<DEMClumpTemplate>> my_types = in_types;
-                    std::vector<notStupidBool_t> elem_to_remove(in_xyz.size(), 0);
-                    for (size_t i = 0; i < in_xyz.size(); i++) {
-                        if (in_xyz.at(i).z < -remove_pos)
-                            elem_to_remove.at(i) = 1;
+            std::vector<float> x_shift_dist = {0};
+            std::vector<float> y_shift_dist = {0};
+            std::vector<float> z_shift_dist = {up_dist};
+            // Add some patches of such graular bed
+            for (float x_shift : x_shift_dist) {
+                for (float y_shift : y_shift_dist) {
+                    for (float z_shift : z_shift_dist) {
+                        std::vector<float3> my_xyz = in_xyz;
+                        std::vector<float4> my_quat = in_quat;
+                        std::vector<std::shared_ptr<DEMClumpTemplate>> my_types = in_types;
+                        std::vector<notStupidBool_t> elem_to_remove(in_xyz.size(), 0);
+                        for (size_t i = 0; i < in_xyz.size(); i++) {
+                            if (in_xyz.at(i).z < -remove_pos)
+                                elem_to_remove.at(i) = 1;
+                        }
+                        my_xyz.erase(std::remove_if(my_xyz.begin(), my_xyz.end(),
+                                                    [&elem_to_remove, &my_xyz](const float3& i) {
+                                                        return elem_to_remove.at(&i - my_xyz.data());
+                                                    }),
+                                     my_xyz.end());
+                        my_quat.erase(std::remove_if(my_quat.begin(), my_quat.end(),
+                                                     [&elem_to_remove, &my_quat](const float4& i) {
+                                                         return elem_to_remove.at(&i - my_quat.data());
+                                                     }),
+                                      my_quat.end());
+                        my_types.erase(std::remove_if(my_types.begin(), my_types.end(),
+                                                      [&elem_to_remove, &my_types](const auto& i) {
+                                                          return elem_to_remove.at(&i - my_types.data());
+                                                      }),
+                                       my_types.end());
+                        DEMClumpBatch another_batch(my_xyz.size());
+                        std::for_each(my_xyz.begin(), my_xyz.end(), [x_shift, y_shift, z_shift](float3& xyz) {
+                            xyz.x += x_shift;
+                            xyz.y += y_shift;
+                            xyz.z += z_shift;
+                        });
+                        another_batch.SetTypes(my_types);
+                        another_batch.SetPos(my_xyz);
+                        another_batch.SetOriQ(my_quat);
+                        DEMSim.AddClumps(another_batch);
                     }
-                    my_xyz.erase(std::remove_if(my_xyz.begin(), my_xyz.end(),
-                                                [&elem_to_remove, &my_xyz](const float3& i) {
-                                                    return elem_to_remove.at(&i - my_xyz.data());
-                                                }),
-                                 my_xyz.end());
-                    my_quat.erase(std::remove_if(my_quat.begin(), my_quat.end(),
-                                                 [&elem_to_remove, &my_quat](const float4& i) {
-                                                     return elem_to_remove.at(&i - my_quat.data());
-                                                 }),
-                                  my_quat.end());
-                    my_types.erase(std::remove_if(my_types.begin(), my_types.end(),
-                                                  [&elem_to_remove, &my_types](const auto& i) {
-                                                      return elem_to_remove.at(&i - my_types.data());
-                                                  }),
-                                   my_types.end());
-                    DEMClumpBatch another_batch(my_xyz.size());
-                    std::for_each(my_xyz.begin(), my_xyz.end(), [x_shift, y_shift, z_shift](float3& xyz) {
-                        xyz.x += x_shift;
-                        xyz.y += y_shift;
-                        xyz.z += z_shift;
-                    });
-                    another_batch.SetTypes(my_types);
-                    another_batch.SetPos(my_xyz);
-                    another_batch.SetOriQ(my_quat);
-                    DEMSim.AddClumps(another_batch);
                 }
             }
         }
@@ -356,8 +365,8 @@ int main(int argc, char* argv[]) {
     DEMSim.SetGravitationalAcceleration(ChVec2Float(G));
     // If you want to use a large UpdateFreq then you have to expand spheres to ensure safety
     DEMSim.SetCDUpdateFreq(30);
-    // DEMSim.SetInitBinSize(scales.at(0));
-    DEMSim.SetInitBinNumTarget(1e6);
+    // DEMSim.SetInitBinSize(scales.at(1));
+    DEMSim.SetInitBinNumTarget(5e6);
 
     DEMSim.SetExpandSafetyAdder(0.2);
     DEMSim.SetExpandSafetyMultiplier(1.);
