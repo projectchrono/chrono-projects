@@ -11,5 +11,6 @@ add_subdirectory(cascade)
 add_subdirectory(gpu)
 add_subdirectory(synchrono)
 add_subdirectory(vehicle)
+add_subdirectory(vsg)
 
 set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
