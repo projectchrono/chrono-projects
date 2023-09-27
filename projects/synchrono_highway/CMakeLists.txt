@@ -36,6 +36,10 @@ if(NOT CHRONO_FASTDDS_FOUND)
   return()
 endif()
 
+# Use same C++ standard as for building Chrono
+set(CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD ${CHRONO_CXX_STANDARD})
+
 # Get the path to the highway mesh
 set(HIGHWAY_DATA_DIR "" CACHE FILEPATH "Path to directory contain highway assets")
 add_compile_definitions(HIGHWAY_DATA_DIR=${HIGHWAY_DATA_DIR})

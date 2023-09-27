@@ -50,8 +50,6 @@ if("${isSystemDir}" STREQUAL "-1")
 endif()
 
 #-----------------------------------------------------------------------------
-# Force C++11
-#-----------------------------------------------------------------------------
 
 #if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 #    set(CH_LINKERFLAG_EXE  "${CH_LINKERFLAG_EXE} -framework IOKit -framework Cocoa -framework OpenGL")

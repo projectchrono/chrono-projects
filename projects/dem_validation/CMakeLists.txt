@@ -26,7 +26,6 @@ set(DEMOS
 #--------------------------------------------------------------
 
 # Invoke find_package in CONFIG mode.
-
 find_package(Chrono QUIET
              COMPONENTS Multicore
              OPTIONAL_COMPONENTS OpenGL
@@ -34,11 +33,14 @@ find_package(Chrono QUIET
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
-
 if(NOT Chrono_FOUND)
   message("Could not find requirements for DEM VALIDATION projects")
   return()
 endif()
+
+# Use same C++ standard as for building Chrono
+set(CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD ${CHRONO_CXX_STANDARD})
 
 #--------------------------------------------------------------
 # Include paths and libraries

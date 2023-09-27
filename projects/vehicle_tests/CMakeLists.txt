@@ -10,7 +10,6 @@ message("\n---- VEHICLE projects")
 #--------------------------------------------------------------
 
 # Invoke find_package in CONFIG mode
-
 find_package(Chrono QUIET
              COMPONENTS Vehicle 
              OPTIONAL_COMPONENTS Irrlicht PardisoMKL Multicore OpenGL
@@ -18,11 +17,14 @@ find_package(Chrono QUIET
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
-
 if(NOT Chrono_FOUND)
   message("Could not find requirements for VEHICLE projects")
   return()
 endif()
+
+# Use same C++ standard as for building Chrono
+set(CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD ${CHRONO_CXX_STANDARD})
 
 #--------------------------------------------------------------
 # Include paths and libraries
