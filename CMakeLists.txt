@@ -91,9 +91,9 @@ endif()
 # Options for configuring/building individual sets of programs
 option(ENABLE_CONFIG_TESTS "Build the programs for checking Chrono configuration" ON)
 
-
 # Keep track of all DLLs. Each submodule should append to this list.
-list(APPEND ALL_DLLS "")
+list(APPEND ALL_DLL_NAMES "")
+list(APPEND ALL_DEPENDENCY_DLLS "")
 
 # Propagate configuration to submodules.
 if(ENABLE_CONFIG_TESTS)
@@ -128,5 +128,5 @@ endif()
 # (on Windows only).
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   message(STATUS "")
-	add_DLL_copy_command("${ALL_DLLS}")
+	add_DLL_copy_command("${ALL_DLL_NAMES}" "${ALL_DEPENDENCY_DLLS}")
 endif()

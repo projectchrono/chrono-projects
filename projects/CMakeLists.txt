@@ -79,4 +79,5 @@ if (ENABLE_PRJ_SYN_HIGHWAY)
   add_subdirectory(synchrono_highway)
 endif()
 
-set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
+set(ALL_DLL_NAMES       "${ALL_DLL_NAMES}"       PARENT_SCOPE)
+set(ALL_DEPENDENCY_DLLS "${ALL_DEPENDENCY_DLLS}" PARENT_SCOPE)

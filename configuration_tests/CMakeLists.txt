@@ -13,4 +13,5 @@ add_subdirectory(synchrono)
 add_subdirectory(vehicle)
 add_subdirectory(vsg)
 
-set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
+set(ALL_DLL_NAMES       "${ALL_DLL_NAMES}"       PARENT_SCOPE)
+set(ALL_DEPENDENCY_DLLS "${ALL_DEPENDENCY_DLLS}" PARENT_SCOPE)
