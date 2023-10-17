@@ -30,6 +30,12 @@ if(NOT Chrono_FOUND)
   return()
 endif()
 
+# If Chrono::Parsers does not have URDF support, return now.
+if (NOT_CHRONO_PARSER_URDF)
+  message("Found Chrono with requested components, but URDF support not enabled.")
+  return()
+endif()
+
 # Use same C++ standard as for building Chrono
 set(CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD ${CHRONO_CXX_STANDARD})

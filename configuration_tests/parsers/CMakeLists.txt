@@ -7,20 +7,12 @@
 message("\n---- PARSERS configuration test")
 
 #--------------------------------------------------------------
-# List of all executables
-#--------------------------------------------------------------
-
-set(DEMOS
-    demo_PARSER_Python
-)
-
-#--------------------------------------------------------------
 # Find the Chrono package with required components
 #--------------------------------------------------------------
 
 # Invoke find_package in CONFIG mode
 find_package(Chrono QUIET
-             COMPONENTS Parsers
+             COMPONENTS Parsers Irrlicht
              CONFIG
 )
 
@@ -30,9 +22,26 @@ if(NOT Chrono_FOUND)
   return()
 endif()
 
+message(STATUS "Chrono::Parsers found?  ${CHRONO_PARSERS_FOUND}")
+message(STATUS "    with Python? ${CHRONO_PARSERS_PYTHON}")
+message(STATUS "    with URDF?   ${CHRONO_PARSERS_URDF}")
+
 # Use same C++ standard as for building Chrono
 set(CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD ${CHRONO_CXX_STANDARD})
+
+#--------------------------------------------------------------
+# List of all executables
+#--------------------------------------------------------------
+
+set(DEMOS
+    demo_PARSER_Adams
+)
+
+if(CHRONO_PARSERS_PYTHON)
+  set(DEMOS ${DEMOS}
+      demo_PARSER_Python)
+endif()
 
 #--------------------------------------------------------------
 # Include paths and libraries

@@ -31,7 +31,7 @@ if(NOT Chrono_FOUND)
 endif()
 
 # If Synchrono was not built with FastDDS support, return now.
-if(NOT CHRONO_FASTDDS_FOUND)
+if(NOT CHRONO_SYNCHRONO_FASTDDS)
   message("Synchrono built without FastDDS support!")
   return()
 endif()
