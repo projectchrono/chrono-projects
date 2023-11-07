@@ -23,7 +23,6 @@
 #include <irrlicht.h>
 
 using namespace chrono;
-using namespace chrono::collision;
 using namespace chrono::irrlicht;
 
 // Custom contact container -- get access to the contact lists in the base class.

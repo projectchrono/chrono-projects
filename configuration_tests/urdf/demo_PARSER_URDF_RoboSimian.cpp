@@ -32,7 +32,6 @@
 using namespace chrono::vsg3d;
 
 using namespace chrono;
-using namespace chrono::collision;
 using namespace chrono::parsers;
 
 // -----------------------------------------------------------------------------

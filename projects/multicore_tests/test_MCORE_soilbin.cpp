@@ -34,7 +34,6 @@
 #include "chrono_thirdparty/filesystem/path.h"
 
 using namespace chrono;
-using namespace chrono::collision;
 
 using std::cout;
 using std::endl;

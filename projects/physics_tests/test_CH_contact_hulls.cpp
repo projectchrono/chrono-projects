@@ -18,13 +18,11 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/physics/ChSystemSMC.h"
-#include "chrono/collision/ChCollisionUtils.h"
 #include "chrono/collision/bullet/ChCollisionUtilsBullet.h"
 
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 
 using namespace chrono;
-using namespace chrono::collision;
 using namespace chrono::irrlicht;
 
 void AddWallBox(std::shared_ptr<ChBody> body, std::shared_ptr<ChMaterialSurface> mat, const ChVector<>& dim, const ChVector<>& loc) {
@@ -129,7 +127,7 @@ void AddWallHull(std::shared_ptr<ChBody> body,
     body->GetCollisionModel()->AddShape(body_ct_shape);
 
     auto shape = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
-    collision::bt_utils::ChConvexHullLibraryWrapper lh;
+    bt_utils::ChConvexHullLibraryWrapper lh;
     lh.ComputeHull(points, *shape->GetMesh());
     shape->SetColor(ChColor(0.5f, 0.0f, 0.0f));
     body->AddVisualShape(shape);

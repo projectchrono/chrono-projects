@@ -37,7 +37,6 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 using namespace chrono;
-using namespace chrono::collision;
 
 // -----------------------------------------------------------------------------
 // Callback functor for contact reporting

@@ -46,7 +46,6 @@
 using namespace chrono;
 using namespace chrono::fea;
 using namespace chrono::irrlicht;
-using namespace chrono::collision;
 
 // Utility to draw some triangles that are affected by cosimulation.
 // Also plot forces as vectors.

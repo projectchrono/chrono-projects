@@ -43,7 +43,6 @@
 #endif
 
 using namespace chrono;
-using namespace chrono::collision;
 
 const char* out_folder = "../DEMO_SUSPENSION/POVRAY";
 

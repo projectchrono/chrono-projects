@@ -50,7 +50,6 @@
 #include "../utils.h"
 
 using namespace chrono;
-using namespace chrono::collision;
 
 using std::cout;
 using std::flush;
