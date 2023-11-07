@@ -224,13 +224,13 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     // Attach geometry of the containing bin.  Disable contact ground-shearBox
     // and ground-loadPlate.
-    ground->GetCollisionModel()->ClearModel();
+    ground->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, hdimY + hthick, hdimZ));
-    ground->GetCollisionModel()->BuildModel();
+    ground->GetCollisionModel()->Build();
 
     system->AddBody(ground);
 
@@ -252,9 +252,9 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     wheel->SetBodyFixed(true);
 
     // Add geometry of the wheel.
-    wheel->GetCollisionModel()->ClearModel();
+    wheel->GetCollisionModel()->Clear();
     utils::AddCylinderGeometry(wheel.get(), mat_walls, wheelRadius, wheelWidth / 2, ChVector<>(0, 0, 0), QUNIT);
-    wheel->GetCollisionModel()->BuildModel();
+    wheel->GetCollisionModel()->Build();
 
     system->AddBody(wheel);
 
@@ -274,10 +274,10 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     chassis->SetBodyFixed(true);
 
     // Add geometry of the wheel.
-    chassis->GetCollisionModel()->ClearModel();
+    chassis->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(chassis.get(), mat_walls, ChVector<>(.1 * wheelRadius, .1 * wheelRadius, .1 * wheelRadius),
                           ChVector<>(0, 0, 0));
-    chassis->GetCollisionModel()->BuildModel();
+    chassis->GetCollisionModel()->Build();
 
     system->AddBody(chassis);
 
@@ -297,9 +297,9 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     axle->SetBodyFixed(true);
 
     // Add geometry of the wheel.
-    axle->GetCollisionModel()->ClearModel();
+    axle->GetCollisionModel()->Clear();
     utils::AddSphereGeometry(axle.get(), mat_walls, 0.1 * wheelRadius, ChVector<>(0, 0, 0));
-    axle->GetCollisionModel()->BuildModel();
+    axle->GetCollisionModel()->Build();
 
     system->AddBody(axle);
 }
@@ -437,9 +437,9 @@ void CreateBall(ChSystemMulticore* system) {
     ball->SetCollide(true);
     ball->SetBodyFixed(false);
 
-    ball->GetCollisionModel()->ClearModel();
+    ball->GetCollisionModel()->Clear();
     utils::AddSphereGeometry(ball.get(), mat_g, radius_ball);
-    ball->GetCollisionModel()->BuildModel();
+    ball->GetCollisionModel()->Build();
 
     system->AddBody(ball);
 }

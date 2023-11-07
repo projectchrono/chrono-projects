@@ -174,11 +174,9 @@ int main(int argc, char* argv[]) {
     auto integrator = std::static_pointer_cast<ChTimestepperHHT>(system->GetTimestepper());
     integrator->SetAlpha(-0.2);
     integrator->SetMaxiters(50);
-    integrator->SetAbsTolerances(5e-05, 1.8);
-    integrator->SetMode(ChTimestepperHHT::POSITION);
+    integrator->SetAbsTolerances(5e-3, 1.8);
     integrator->SetStepControl(true);
     integrator->SetModifiedNewton(false);
-    integrator->SetScaling(true);
     integrator->SetVerbose(verbose);
     integrator->SetMaxItersSuccess(5);
 

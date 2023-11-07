@@ -22,7 +22,7 @@
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono_cascade/ChCascadeBodyEasy.h"
 #include "chrono_cascade/ChCascadeDoc.h"
-#include "chrono_cascade/ChCascadeVisualShape.h"
+#include "chrono_cascade/ChVisualShapeCascade.h"
 #include "chrono/solver/ChSolverADMM.h"
 
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
@@ -338,8 +338,7 @@ int main(int argc, char* argv[]) {
     motlaw_z_seq->InsertFunct(motlaw_z2, 1, 1, true);  // true = force c0 continuity, traslating fx
     motlaw_z_seq->InsertFunct(motlaw_z3, 1, 1, true);
     motlaw_z_seq->InsertFunct(motlaw_z4, 1, 1, true);
-    std::shared_ptr<ChFunction_Repeat> motlaw_z(new ChFunction_Repeat);
-    motlaw_z->Set_fa(motlaw_z_seq);
+    auto motlaw_z = chrono_types::make_shared<ChFunction_Repeat>(motlaw_z_seq);
     motlaw_z->Set_window_length(4);
 
     std::shared_ptr<ChFunction_Const> motlaw_y1(new ChFunction_Const);
@@ -355,8 +354,7 @@ int main(int argc, char* argv[]) {
     motlaw_y_seq->InsertFunct(motlaw_y2, 1, 1, true);  // true = force c0 continuity, traslating fx
     motlaw_y_seq->InsertFunct(motlaw_y3, 1, 1, true);
     motlaw_y_seq->InsertFunct(motlaw_y4, 1, 1, true);
-    std::shared_ptr<ChFunction_Repeat> motlaw_y(new ChFunction_Repeat);
-    motlaw_y->Set_fa(motlaw_y_seq);
+    auto motlaw_y = chrono_types::make_shared<ChFunction_Repeat>(motlaw_y_seq);
     motlaw_y->Set_window_length(4);
 
     my_marker_move->SetMotion_Z(motlaw_z);

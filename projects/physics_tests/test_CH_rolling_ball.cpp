@@ -29,14 +29,15 @@
 #include <cmath>
 
 #include "chrono/core/ChStream.h"
-#include "chrono/assets/ChBoxShape.h"
-#include "chrono/assets/ChSphereShape.h"
+#include "chrono/assets/ChVisualShapeBox.h"
+#include "chrono/assets/ChVisualShapeSphere.h"
 #include "chrono/physics/ChSystemNSC.h"
 
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 using namespace chrono;
+using namespace chrono::collision;
 
 // -----------------------------------------------------------------------------
 // Callback functor for contact reporting
@@ -101,13 +102,13 @@ int main(int argc, char* argv[]) {
     auto ground = chrono_types::make_shared<ChBody>();
     system.AddBody(ground);
     ground->SetBodyFixed(true);
-
     ground->SetCollide(true);
-    ground->GetCollisionModel()->ClearModel();
-    ground->GetCollisionModel()->AddBox(material, 4, 2, 1, ChVector<>(0, 0, -1));
-    ground->GetCollisionModel()->BuildModel();
 
-    auto box = chrono_types::make_shared<ChBoxShape>(8, 4, 2);
+    auto ground_ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(material, 4, 2, 1);
+    ground->GetCollisionModel()->AddShape(ground_ct_shape, ChFrame<>(ChVector<>(0, 0, -1), QUNIT));
+    ground->GetCollisionModel()->Build();
+
+    auto box = chrono_types::make_shared<ChVisualShapeBox>(8, 4, 2);
     box->SetColor(ChColor(1, 0, 0));
     ground->AddVisualShape(box, ChFrame<>(ChVector<>(0, 0, -0.5)));
 
@@ -118,13 +119,13 @@ int main(int argc, char* argv[]) {
     ball->SetInertiaXX(ChVector<>(0.4, 0.4, 0.4));
     ball->SetPos(ChVector<>(0, 0, 1));
     ball->SetPos_dt(ChVector<>(2, 0, 0));
-
     ball->SetCollide(true);
-    ball->GetCollisionModel()->ClearModel();
-    ball->GetCollisionModel()->AddSphere(material, 1);
-    ball->GetCollisionModel()->BuildModel();
 
-    auto sphere = chrono_types::make_shared<ChSphereShape>(1);
+    auto ball_ct_shape = chrono_types::make_shared<ChCollisionShapeSphere>(material, 1);
+    ball->GetCollisionModel()->AddShape(ball_ct_shape);
+    ball->GetCollisionModel()->Build();
+
+    auto sphere = chrono_types::make_shared<ChVisualShapeSphere>(1);
     ball->AddVisualShape(sphere);
 
     // Functor class for contact reporting

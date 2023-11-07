@@ -32,8 +32,8 @@
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
-#include "chrono/assets/ChSphereShape.h"
-#include "chrono/assets/ChBoxShape.h"
+#include "chrono/assets/ChVisualShapeSphere.h"
+#include "chrono/assets/ChVisualShapeBox.h"
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 #include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
@@ -124,11 +124,16 @@ double visual_out_step = 1e-1;  // time interval between PovRay outputs
 // -----------------------------------------------------------------------------
 // Utility for adding (visible or invisible) walls
 // -----------------------------------------------------------------------------
-void AddWall(std::shared_ptr<ChBody>& body, std::shared_ptr<ChMaterialSurface> mat, const ChVector<>& dim, const ChVector<>& loc, bool visible) {
-    body->GetCollisionModel()->AddBox(mat, dim.x(), dim.y(), dim.z(), loc);
+void AddWall(std::shared_ptr<ChBody>& body,
+             std::shared_ptr<ChMaterialSurface> mat,
+             const ChVector<>& dim,
+             const ChVector<>& loc,
+             bool visible) {
+    auto ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(mat, dim);
+    body->GetCollisionModel()->AddShape(ct_shape, ChFrame<>(loc, QUNIT));
 
     if (visible == true) {
-        auto box = chrono_types::make_shared<ChBoxShape>(2.0 * dim);
+        auto box = chrono_types::make_shared<ChVisualShapeBox>(2.0 * dim);
         box->SetColor(ChColor(1, 0, 0));
         body->AddVisualShape(box, ChFrame<>(loc));
     }
@@ -287,7 +292,7 @@ int main(int argc, char* argv[]) {
     bin->SetBodyFixed(true);
     bin->SetCollide(true);
 
-    bin->GetCollisionModel()->ClearModel();
+    bin->GetCollisionModel()->Clear();
     AddWall(bin, mat_ext, ChVector<>(width / 2, thickness / 2, length / 2), ChVector<>(0, 0, 0), true);
     AddWall(bin, mat_ext, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
             ChVector<>(-width / 2 - thickness / 2, 0, 0), true);
@@ -301,7 +306,7 @@ int main(int argc, char* argv[]) {
     bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
     bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(3);
     bin->GetCollisionModel()->SetFamilyMaskDoCollisionWithFamily(4);
-    bin->GetCollisionModel()->BuildModel();
+    bin->GetCollisionModel()->Build();
 
     sys->AddBody(bin);
 
@@ -315,7 +320,7 @@ int main(int argc, char* argv[]) {
     box->SetBodyFixed(true);
     box->SetCollide(true);
 
-    box->GetCollisionModel()->ClearModel();
+    box->GetCollisionModel()->Clear();
     AddWall(box, mat_ext, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
             ChVector<>(-width / 2 - thickness / 2, 0, 0), true);
     AddWall(box, mat_ext, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
@@ -328,7 +333,7 @@ int main(int argc, char* argv[]) {
     box->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
     box->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(3);
     box->GetCollisionModel()->SetFamilyMaskDoCollisionWithFamily(4);
-    box->GetCollisionModel()->BuildModel();
+    box->GetCollisionModel()->Build();
 
     sys->AddBody(box);
 
@@ -344,13 +349,13 @@ int main(int argc, char* argv[]) {
     plate->SetBodyFixed(true);
     plate->SetCollide(true);
 
-    plate->GetCollisionModel()->ClearModel();
+    plate->GetCollisionModel()->Clear();
     AddWall(plate, mat_ext, ChVector<>(width / 2, thickness / 2, length / 2), ChVector<>(0, 0, 0), true);
     plate->GetCollisionModel()->SetFamily(3);
     plate->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
     plate->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
     plate->GetCollisionModel()->SetFamilyMaskDoCollisionWithFamily(4);
-    plate->GetCollisionModel()->BuildModel();
+    plate->GetCollisionModel()->Build();
 
     sys->AddBody(plate);
 
@@ -376,12 +381,12 @@ int main(int argc, char* argv[]) {
                 ball->SetBodyFixed(false);
                 ball->SetCollide(true);
 
-                ball->GetCollisionModel()->ClearModel();
-                ball->GetCollisionModel()->AddSphere(material, radius);
+                auto ball_ct_shape = chrono_types::make_shared<ChCollisionShapeSphere>(material, radius);
+                ball->GetCollisionModel()->AddShape(ball_ct_shape);
                 ball->GetCollisionModel()->SetFamily(4);
-                ball->GetCollisionModel()->BuildModel();
+                ball->GetCollisionModel()->Build();
 
-                auto sphere = chrono_types::make_shared<ChSphereShape>(radius);
+                auto sphere = chrono_types::make_shared<ChVisualShapeSphere>(radius);
                 sphere->SetColor(ChColor(1, 0, 1));
                 ball->AddVisualShape(sphere);
 

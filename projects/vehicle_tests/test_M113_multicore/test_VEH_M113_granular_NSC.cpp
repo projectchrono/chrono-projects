@@ -275,7 +275,7 @@ int main(int argc, char* argv[]) {
     ground->SetBodyFixed(true);
     ground->SetCollide(true);
 
-    ground->GetCollisionModel()->ClearModel();
+    ground->GetCollisionModel()->Clear();
 
     // Bottom box
     chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick),
@@ -299,7 +299,7 @@ int main(int argc, char* argv[]) {
                                       visible_walls);
     }
 
-    ground->GetCollisionModel()->BuildModel();
+    ground->GetCollisionModel()->Build();
 
     system.AddBody(ground);
 

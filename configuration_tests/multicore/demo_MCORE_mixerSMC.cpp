@@ -70,7 +70,7 @@ std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
     ChVector<> hdim(1, 1, 0.5);
     double hthick = 0.1;
 
-    bin->GetCollisionModel()->ClearModel();
+    bin->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(bin.get(), mat, ChVector<>(hdim.x(), hdim.y(), hthick), ChVector<>(0, 0, -hthick));
     utils::AddBoxGeometry(bin.get(), mat, ChVector<>(hthick, hdim.y(), hdim.z()),
                           ChVector<>(-hdim.x() - hthick, 0, hdim.z()));
@@ -82,7 +82,7 @@ std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
                           ChVector<>(0, hdim.y() + hthick, hdim.z()));
     bin->GetCollisionModel()->SetFamily(1);
     bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
-    bin->GetCollisionModel()->BuildModel();
+    bin->GetCollisionModel()->Build();
 
     sys->AddBody(bin);
 
@@ -97,10 +97,10 @@ std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
 
     ChVector<> hsize(0.8, 0.1, 0.2);
 
-    mixer->GetCollisionModel()->ClearModel();
+    mixer->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(mixer.get(), mat, hsize);
     mixer->GetCollisionModel()->SetFamily(2);
-    mixer->GetCollisionModel()->BuildModel();
+    mixer->GetCollisionModel()->Build();
 
     sys->AddBody(mixer);
 
@@ -142,9 +142,9 @@ void AddFallingBalls(ChSystemMulticoreSMC* sys) {
             ball->SetBodyFixed(false);
             ball->SetCollide(true);
 
-            ball->GetCollisionModel()->ClearModel();
+            ball->GetCollisionModel()->Clear();
             utils::AddSphereGeometry(ball.get(), ballMat, radius);
-            ball->GetCollisionModel()->BuildModel();
+            ball->GetCollisionModel()->Build();
 
             sys->AddBody(ball);
         }

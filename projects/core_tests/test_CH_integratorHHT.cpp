@@ -373,7 +373,6 @@ void RigidPendulums() {
 
     double step = 1e-3;
     int num_steps = 100;
-    auto mode = ChTimestepperHHT::ACCELERATION;
     bool step_control = true;
     bool modified_Newton = true;
 
@@ -423,23 +422,13 @@ void RigidPendulums() {
     // Set integrator and modify parameters.
     system.SetTimestepperType(ChTimestepper::Type::HHT);
     auto integrator = std::static_pointer_cast<ChTimestepperHHT>(system.GetTimestepper());
-    integrator->SetMode(mode);
     integrator->SetStepControl(step_control);
     integrator->SetModifiedNewton(modified_Newton);
     integrator->SetVerbose(true);
     integrator->SetAlpha(-0.2);
     integrator->SetMaxiters(20);
     integrator->SetRelTolerance(1e-4);
-    switch (mode) {
-        case ChTimestepperHHT::ACCELERATION:
-            integrator->SetAbsTolerances(1e-3, 1e-6);
-            printf("ACCELERATION mode\n\n");
-            break;
-        case ChTimestepperHHT::POSITION:
-            integrator->SetAbsTolerances(1e-6, 1e-6);
-            printf("POSITION mode\n\n");
-            break;
-    }
+    integrator->SetAbsTolerances(1e-3, 1e-6);
 
     int num_iterations = 0;
     int num_setup_calls = 0;

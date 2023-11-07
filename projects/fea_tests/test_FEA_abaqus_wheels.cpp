@@ -97,7 +97,7 @@ void MakeWheel(ChSystemSMC& sys,
     mwheel_rim->SetWvel_par(ChVector<>(tire_w0, 0, 0));
     sys.Add(mwheel_rim);
 
-    auto mobjmesh = chrono_types::make_shared<ChTriangleMeshShape>();
+    auto mobjmesh = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     mobjmesh->GetMesh()->LoadWavefrontMesh(GetChronoDataFile("fea/tractor_wheel_rim.obj"));
     mobjmesh->GetMesh()->Transform(VNULL, mscale);
     mwheel_rim->AddVisualShape(mobjmesh);
@@ -199,7 +199,7 @@ int main(int argc, char* argv[]) {
     mtruss->SetInertiaXX(ChVector<>(100, 100, 100));
     sys.Add(mtruss);
 
-    auto mtrussmesh = chrono_types::make_shared<ChTriangleMeshShape>();
+    auto mtrussmesh = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     mtrussmesh->GetMesh()->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_chassis_simple.obj"));
     mtruss->AddVisualShape(mtrussmesh,
                            ChFrame<>(VNULL, Q_from_AngAxis(CH_C_PI_2, VECT_Z) % Q_from_AngAxis(CH_C_PI_2, VECT_Y)));

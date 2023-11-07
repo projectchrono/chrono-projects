@@ -235,7 +235,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     // Attach geometry of the containing bin.  Disable contact ground-shearBox
     // and ground-loadPlate.
-    ground->GetCollisionModel()->ClearModel();
+    ground->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
@@ -244,7 +244,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     ground->GetCollisionModel()->SetFamily(ground_coll_fam);
     ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(box_coll_fam);
     ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(plate_coll_fam);
-    ground->GetCollisionModel()->BuildModel();
+    ground->GetCollisionModel()->Build();
 
     system->AddBody(ground);
 
@@ -263,7 +263,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     box->SetBodyFixed(true);
 
     // Add geometry of the shear box.  Disable contact with the load plate.
-    box->GetCollisionModel()->ClearModel();
+    box->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(box.get(), mat_walls, ChVector<>(hthick, hdimY, h_scaling * hdimZ),
                           ChVector<>(-hdimX - hthick, 0, h_scaling * hdimZ));
     utils::AddBoxGeometry(box.get(), mat_walls, ChVector<>(hthick, hdimY, h_scaling * hdimZ),
@@ -274,7 +274,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
                           ChVector<>(0, hdimY + hthick, h_scaling * hdimZ));
     box->GetCollisionModel()->SetFamily(box_coll_fam);
     box->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(plate_coll_fam);
-    box->GetCollisionModel()->BuildModel();
+    box->GetCollisionModel()->Build();
 
     system->AddBody(box);
 
@@ -302,10 +302,10 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     plate->SetBodyFixed(true);
 
     // Add geometry of the load plate.
-    plate->GetCollisionModel()->ClearModel();
+    plate->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(plate.get(), mat_walls, ChVector<>(hdimX_p, hdimY, hdimZ), ChVector<>(0, 0, hdimZ));
     plate->GetCollisionModel()->SetFamily(plate_coll_fam);
-    plate->GetCollisionModel()->BuildModel();
+    plate->GetCollisionModel()->Build();
 
     system->AddBody(plate);
 }
@@ -435,9 +435,9 @@ void CreateBall(ChSystemMulticore* system) {
     ball->SetCollide(true);
     ball->SetBodyFixed(false);
 
-    ball->GetCollisionModel()->ClearModel();
+    ball->GetCollisionModel()->Clear();
     utils::AddSphereGeometry(ball.get(), mat_g, radius_ball);
-    ball->GetCollisionModel()->BuildModel();
+    ball->GetCollisionModel()->Build();
 
     system->AddBody(ball);
 }

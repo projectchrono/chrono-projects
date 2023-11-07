@@ -23,6 +23,7 @@
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 
 using namespace chrono;
+using namespace chrono::collision;
 using namespace chrono::irrlicht;
 
 // ====================================================================================
@@ -144,12 +145,12 @@ int main(int argc, char* argv[]) {
     auto trimesh = chrono_types::make_shared<geometry::ChTriangleMeshConnected>();
     trimesh->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_tire.obj"), true, false);
 
-    object->GetCollisionModel()->ClearModel();
-    object->GetCollisionModel()->AddTriangleMesh(object_mat, trimesh, false, false, ChVector<>(0), ChMatrix33<>(1),
-                                                 0.01);
-    object->GetCollisionModel()->BuildModel();
+    object->GetCollisionModel()->Clear();
+    auto object_ct_shape = chrono_types::make_shared<ChCollisionShapeTriangleMesh>(object_mat, trimesh, false, false, 0.01);
+    object->GetCollisionModel()->AddShape(object_ct_shape);
+    object->GetCollisionModel()->Build();
 
-    auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+    auto trimesh_shape = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     trimesh_shape->SetMesh(trimesh);
     trimesh_shape->SetColor(ChColor(0.3f, 0.3f, 0.3f));
     object->AddVisualShape(trimesh_shape);
@@ -189,11 +190,11 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    ground->GetCollisionModel()->ClearModel();
-    ground->GetCollisionModel()->AddBox(ground_mat, width, length, thickness, ChVector<>(0, 0, -thickness/2));
-    ground->GetCollisionModel()->BuildModel();
+    auto ground_ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(ground_mat, width, length, thickness);
+    ground->GetCollisionModel()->AddShape(ground_ct_shape, ChFrame<>(ChVector<>(0, 0, -thickness/2), QUNIT));
+    ground->GetCollisionModel()->Build();
 
-    auto box = chrono_types::make_shared<ChBoxShape>(width, length, thickness);
+    auto box = chrono_types::make_shared<ChVisualShapeBox>(width, length, thickness);
     ground->AddVisualShape(box, ChFrame<>(ChVector<>(0, 0, -thickness/2)));
 
     // Create the Irrlicht visualization

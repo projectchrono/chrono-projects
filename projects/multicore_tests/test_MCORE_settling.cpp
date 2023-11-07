@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
     container->SetBodyFixed(true);
     container->SetCollide(true);
 
-    container->GetCollisionModel()->ClearModel();
+    container->GetCollisionModel()->Clear();
     // Bottom box
     utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick),
                           ChQuaternion<>(1, 0, 0, 0), true);
@@ -237,7 +237,7 @@ int main(int argc, char** argv) {
     // Right box
     utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hdimX, hthick, hdimZ + hthick),
                           ChVector<>(0, -hdimY - hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
-    container->GetCollisionModel()->BuildModel();
+    container->GetCollisionModel()->Build();
 
     // ----------------
     // Create particles

@@ -137,14 +137,14 @@ void CreateGround(ChSystemMulticore* system) {
                 double spacing = 1.6;
                 double bigR = 2;
 
-                ground->GetCollisionModel()->ClearModel();
+                ground->GetCollisionModel()->Clear();
                 for (int ix = -2; ix < 3; ix++) {
                     for (int iy = -2; iy < 3; iy++) {
                         ChVector<> pos(ix * spacing, iy * spacing, -bigR);
                         utils::AddSphereGeometry(ground.get(), mat_g, bigR, pos);
                     }
                 }
-                ground->GetCollisionModel()->BuildModel();
+                ground->GetCollisionModel()->Build();
             }
             break;
 
@@ -158,12 +158,12 @@ void CreateGround(ChSystemMulticore* system) {
                 ChQuaternion<> rot(1, 0, 0, 0);
                 rot.Q_from_AngAxis(CH_C_PI / 6, ChVector<>(0, 0, 1));
 
-                ground->GetCollisionModel()->ClearModel();
+                ground->GetCollisionModel()->Clear();
                 for (int ix = -3; ix < 6; ix++) {
                     ChVector<> pos(ix * spacing, 0, -bigR);
                     utils::AddCapsuleGeometry(ground.get(), mat_g, bigR, bigH, pos, rot);
                 }
-                ground->GetCollisionModel()->BuildModel();
+                ground->GetCollisionModel()->Build();
             }
             break;
 
@@ -174,9 +174,9 @@ void CreateGround(ChSystemMulticore* system) {
                 double bigHy = 6;
                 double bigHz = 1;
 
-                ground->GetCollisionModel()->ClearModel();
+                ground->GetCollisionModel()->Clear();
                 utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(bigHx, bigHy, bigHz), ChVector<>(0, 0, -bigHz));
-                ground->GetCollisionModel()->BuildModel();
+                ground->GetCollisionModel()->Build();
             }
             break;
     }
@@ -223,7 +223,7 @@ void CreateObject(ChSystemMulticore* system) {
     double vol;
     ChMatrix33<> J;
 
-    obj->GetCollisionModel()->ClearModel();
+    obj->GetCollisionModel()->Clear();
 
     switch (shape_o) {
         case ChCollisionShape:: Type::SPHERE : {
@@ -275,7 +275,7 @@ void CreateObject(ChSystemMulticore* system) {
         } break;
     }
 
-    obj->GetCollisionModel()->BuildModel();
+    obj->GetCollisionModel()->Build();
 
     // ---------------------
     // Set mass and inertia.

@@ -22,7 +22,7 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
-#include "chrono/assets/ChBoxShape.h"
+#include "chrono/assets/ChVisualShapeBox.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 #include "chrono_opengl/ChVisualSystemOpenGL.h"
@@ -104,9 +104,9 @@ int main(int argc, char* argv[]) {
     ground->SetPos(ChVector<>(0, 0, 0));
     ground->SetBodyFixed(true);
     ground->SetCollide(true);
-    ground->GetCollisionModel()->ClearModel();
+    ground->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(ground.get(), material_g, ChVector<>(1, 1, 0.1), ChVector<>(0, 0, -0.1));
-    ground->GetCollisionModel()->BuildModel();
+    ground->GetCollisionModel()->Build();
     system->AddBody(ground);
 
     // Create ball body
@@ -135,9 +135,9 @@ int main(int argc, char* argv[]) {
     ball->SetPos(ChVector<>(0, 0, 1));
     ball->SetPos_dt(ChVector<>(0, 0, 8));
     ball->SetCollide(true);
-    ball->GetCollisionModel()->ClearModel();
+    ball->GetCollisionModel()->Clear();
     utils::AddSphereGeometry(ball.get(), material_b, 0.2);
-    ball->GetCollisionModel()->BuildModel();
+    ball->GetCollisionModel()->Build();
     system->AddBody(ball);
 
     // Enable deactivation of bodies that exit a specified bounding box
@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
 
     real3 bsize = (bmax - bmin);
     real3 bpos = 0.5 * (bmax + bmin);
-    auto bbox = chrono_types::make_shared<ChBoxShape>(bsize.x, bsize.y, bsize.z);
+    auto bbox = chrono_types::make_shared<ChVisualShapeBox>(bsize.x, bsize.y, bsize.z);
     ground->AddVisualShape(bbox, ChFrame<>(ChVector<>(bpos.x, bpos.y, bpos.z)));
 
     std::cout << "Bmin:  " << bmin.x << " " << bmin.y << " " << bmin.z << std::endl;

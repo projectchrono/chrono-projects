@@ -23,6 +23,7 @@
 #include <irrlicht.h>
 
 using namespace chrono;
+using namespace chrono::collision;
 using namespace chrono::irrlicht;
 
 // Custom contact container -- get access to the contact lists in the base class.
@@ -171,11 +172,11 @@ int main(int argc, char* argv[]) {
     ball->SetCollide(true);
     ball->SetBodyFixed(false);
 
-    ball->GetCollisionModel()->ClearModel();
-    ball->GetCollisionModel()->AddSphere(material, radius);
-    ball->GetCollisionModel()->BuildModel();
+    auto ball_ct_shape = chrono_types::make_shared<ChCollisionShapeSphere>(material, radius);
+    ball->GetCollisionModel()->AddShape(ball_ct_shape);
+    ball->GetCollisionModel()->Build();
 
-    auto sphere = chrono_types::make_shared<ChSphereShape>(radius);
+    auto sphere = chrono_types::make_shared<ChVisualShapeSphere>(radius);
     sphere->SetTexture(GetChronoDataFile("textures/bluewhite.png"));
     ball->AddVisualShape(sphere);
 
@@ -191,11 +192,11 @@ int main(int argc, char* argv[]) {
     ground->SetCollide(true);
     ground->SetBodyFixed(true);
 
-    ground->GetCollisionModel()->ClearModel();
-    ground->GetCollisionModel()->AddBox(material, width, thickness, length, ChVector<>(0, -thickness / 2, 0));
-    ground->GetCollisionModel()->BuildModel();
+    auto ground_ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(material, width, thickness, length);
+    ground->GetCollisionModel()->AddShape(ground_ct_shape, ChFrame<>(ChVector<>(0, -thickness / 2, 0), QUNIT));
+    ground->GetCollisionModel()->Build();
 
-    auto box = chrono_types::make_shared<ChBoxShape>(width, thickness, length);
+    auto box = chrono_types::make_shared<ChVisualShapeBox>(width, thickness, length);
     ground->AddVisualShape(box, ChFrame<>(ChVector<>(0, -thickness / 2, 0)));
 
     system.AddBody(ground);
@@ -268,8 +269,6 @@ int main(int argc, char* argv[]) {
     integrator->SetAlpha(0.0);
     integrator->SetMaxiters(100);
     integrator->SetAbsTolerances(1e-08);
-    ////integrator->SetMode(ChTimestepperHHT::POSITION);
-    integrator->SetScaling(false);
     ////integrator->SetStepControl(false);
     ////integrator->SetVerbose(true);
 

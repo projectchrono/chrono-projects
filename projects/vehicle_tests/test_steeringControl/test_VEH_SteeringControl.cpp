@@ -25,7 +25,7 @@
 #include <fstream>
 
 #include "chrono/geometry/ChLineBezier.h"
-#include "chrono/assets/ChLineShape.h"
+#include "chrono/assets/ChVisualShapeLine.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono_vehicle/ChVehicleModelData.h"

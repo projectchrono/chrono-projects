@@ -22,8 +22,8 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/core/ChStream.h"
-#include "chrono/assets/ChBoxShape.h"
-#include "chrono/assets/ChCapsuleShape.h"
+#include "chrono/assets/ChVisualShapeBox.h"
+#include "chrono/assets/ChVisualShapeCapsule.h"
 #include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
@@ -205,7 +205,7 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     m_sled->SetBodyFixed(false);
     m_sled->SetCollide(false);
 
-    auto box_sled = chrono_types::make_shared<ChBoxShape>(2.0 * e, (2.0 / 3) * e, (2.0 / 3) * e);
+    auto box_sled = chrono_types::make_shared<ChVisualShapeBox>(2.0 * e, (2.0 / 3) * e, (2.0 / 3) * e);
     box_sled->SetColor(ChColor(0.7f, 0.3f, 0.3f));
     m_sled->AddVisualShape(box_sled);
 
@@ -233,7 +233,7 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     m_wheel->SetBodyFixed(false);
     m_wheel->SetCollide(true);
 
-    m_wheel->GetCollisionModel()->ClearModel();
+    m_wheel->GetCollisionModel()->Clear();
     switch (wheel_shape) {
         case ChCollisionShape::Type::CYLINDER:
             utils::AddCylinderGeometry(m_wheel.get(), mat_w, r_w, w_w / 2, ChVector<>(c, 0, -b), Q_from_AngY(CH_C_PI_2));
@@ -243,9 +243,9 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
                                               Q_from_AngY(CH_C_PI_2));
             break;
     }
-    m_wheel->GetCollisionModel()->BuildModel();
+    m_wheel->GetCollisionModel()->Build();
 
-    auto cap_wheel = chrono_types::make_shared<ChCapsuleShape>(w_w / 4, a + c - w_w / 2);
+    auto cap_wheel = chrono_types::make_shared<ChVisualShapeCapsule>(w_w / 4, a + c - w_w / 2);
     cap_wheel->SetColor(ChColor(0.3f, 0.3f, 0.7f));
     m_wheel->AddVisualShape(cap_wheel, ChFrame<>(ChVector<>((c - a) / 2, 0, -b), Q_from_AngY(CH_C_PI_2)));
 

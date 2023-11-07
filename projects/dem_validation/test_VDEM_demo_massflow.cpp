@@ -172,9 +172,9 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     insert->SetCollide(true);
     insert->SetBodyFixed(true);
 
-    insert->GetCollisionModel()->ClearModel();
+    insert->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(insert.get(), mat_b, ChVector<>(thickness * 0.5, width * 0.5, height_insert * 0.5));
-    insert->GetCollisionModel()->BuildModel();
+    insert->GetCollisionModel()->Build();
 
     system->AddBody(insert);
 
@@ -189,9 +189,9 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     slot->SetCollide(true);
     slot->SetBodyFixed(true);
 
-    slot->GetCollisionModel()->ClearModel();
+    slot->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(slot.get(), mat_b, ChVector<>(thickness / 2, width / 2, height / 2), ChVector<>(0, 0, 0));
-    slot->GetCollisionModel()->BuildModel();
+    slot->GetCollisionModel()->Build();
 
     system->AddBody(slot);
 
@@ -206,12 +206,12 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     wall->SetCollide(true);
     wall->SetBodyFixed(true);
 
-    wall->GetCollisionModel()->ClearModel();
+    wall->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(wall.get(), mat_b, ChVector<>(3 * height / 2, thickness / 2, height),
                           ChVector<>(0, width / 2 + thickness / 2, height / 2));
     utils::AddBoxGeometry(wall.get(), mat_b, ChVector<>(3 * height / 2, thickness / 2, height),
                           ChVector<>(0, -width / 2 - thickness / 2, height / 2));
-    wall->GetCollisionModel()->BuildModel();
+    wall->GetCollisionModel()->Build();
 
     system->AddBody(wall);
 

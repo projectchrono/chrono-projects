@@ -225,10 +225,10 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemMulticore* system, double z) {
     wheel->SetCollide(true);
     wheel->SetBodyFixed(false);
 
-    wheel->GetCollisionModel()->ClearModel();
+    wheel->GetCollisionModel()->Clear();
     utils::AddTriangleMeshGeometry(wheel.get(), material_w, obj_mesh_file, mesh_name);
     //utils::AddCylinderGeometry(wheel.get(), material_w, 0.3, 0.1);
-    wheel->GetCollisionModel()->BuildModel();
+    wheel->GetCollisionModel()->Build();
 
     wheel->SetInertiaXX(inertia_w);
 

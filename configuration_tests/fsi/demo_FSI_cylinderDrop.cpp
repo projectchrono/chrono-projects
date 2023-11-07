@@ -16,7 +16,7 @@
 #include <cstdlib>
 #include <ctime>
 
-#include "chrono/assets/ChBoxShape.h"
+#include "chrono/assets/ChVisualShapeBox.h"
 #include "chrono/core/ChTransform.h"
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/utils/ChUtilsCreators.h"
@@ -146,13 +146,13 @@ void CreateSolidPhase(ChSystemSMC& sysMBS, ChSystemFsi& sysFSI) {
     sysMBS.AddBody(box);
 
     // Add collision geometry for the container walls
-    box->GetCollisionModel()->ClearModel();
+    box->GetCollisionModel()->Clear();
     chrono::utils::AddBoxContainer(box, cmaterial,                                 //
                                    ChFrame<>(ChVector<>(0, 0, bzDim / 2), QUNIT),  //
                                    ChVector<>(bxDim, byDim, bzDim), 0.1,           //
                                    ChVector<int>(2, 2, -1),                        //
                                    false);
-    box->GetCollisionModel()->BuildModel();
+    box->GetCollisionModel()->Build();
     box->SetCollide(true);
 
     // Add BCE particles attached on the walls into FSI system
@@ -179,11 +179,11 @@ void CreateSolidPhase(ChSystemSMC& sysMBS, ChSystemFsi& sysFSI) {
     // Set the collision and visualization geometry
     cylinder->SetCollide(true);
     cylinder->SetBodyFixed(false);
-    cylinder->GetCollisionModel()->ClearModel();
+    cylinder->GetCollisionModel()->Clear();
     cylinder->GetCollisionModel()->SetSafeMargin(initSpace0);
     chrono::utils::AddCylinderGeometry(cylinder.get(), cmaterial, cyl_radius, cyl_length, VNULL,
                                        Q_from_AngX(CH_C_PI_2));
-    cylinder->GetCollisionModel()->BuildModel();
+    cylinder->GetCollisionModel()->Build();
 
     cylinder->GetVisualShape(0)->SetColor(ChColor(0.65f, 0.20f, 0.10f));
 
@@ -273,8 +273,6 @@ int main(int argc, char* argv[]) {
     mystepper->SetAlpha(-0.2);
     mystepper->SetMaxiters(1000);
     mystepper->SetAbsTolerances(1e-6);
-    mystepper->SetMode(ChTimestepperHHT::ACCELERATION);
-    mystepper->SetScaling(true);
 
     // Create a run-tme visualizer
 #ifndef CHRONO_OPENGL

@@ -220,13 +220,13 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     ground->SetCollide(true);
 
     // Attach geometry of the containing bin
-    ground->GetCollisionModel()->ClearModel();
+    ground->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, hdimY + hthick, hdimZ));
-    ground->GetCollisionModel()->BuildModel();
+    ground->GetCollisionModel()->Build();
 
     system->AddBody(ground);
 
@@ -359,9 +359,9 @@ void CreateBall(ChSystemMulticore* system) {
     ball->SetCollide(true);
     ball->SetBodyFixed(false);
 
-    ball->GetCollisionModel()->ClearModel();
+    ball->GetCollisionModel()->Clear();
     utils::AddSphereGeometry(ball.get(), mat_g, radius_ball);
-    ball->GetCollisionModel()->BuildModel();
+    ball->GetCollisionModel()->Build();
 
     system->AddBody(ball);
 }
@@ -543,10 +543,10 @@ int main(int argc, char* argv[]) {
             loadPlate->SetPos(ChVector<>(pos.x(), pos.y(), z_new));
 
             // Add collision geometry to plate
-            loadPlate->GetCollisionModel()->ClearModel();
+            loadPlate->GetCollisionModel()->Clear();
             utils::AddBoxGeometry(loadPlate.get(), mat_plate, ChVector<>(hdimX_p, hdimY_p, hdimZ_p),
                                   ChVector<>(0, 0, hdimZ_p));
-            loadPlate->GetCollisionModel()->BuildModel();
+            loadPlate->GetCollisionModel()->Build();
 
             // If using an actuator, connect the load plate and get a handle to the actuator.
             if (use_actuator) {
@@ -584,10 +584,10 @@ int main(int argc, char* argv[]) {
             loadPlate->SetPos(ChVector<>(pos.x(), pos.y(), z_new));
 
             // Add collision geometry to plate
-            loadPlate->GetCollisionModel()->ClearModel();
+            loadPlate->GetCollisionModel()->Clear();
             utils::AddBoxGeometry(loadPlate.get(), mat_plate, ChVector<>(hdimX_p, hdimY_p, hdimZ_p),
                                   ChVector<>(0, 0, hdimZ_p));
-            loadPlate->GetCollisionModel()->BuildModel();
+            loadPlate->GetCollisionModel()->Build();
 
             // If using an actuator, connect the shear box and get a handle to the actuator.
             if (use_actuator) {

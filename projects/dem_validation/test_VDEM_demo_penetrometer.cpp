@@ -256,7 +256,7 @@ void CalculatePenetratorInertia(double & mass, ChVector<> & inertia) {
 // Create collision geometry of the falling object
 // -----------------------------------------------------------------------------
 void CreatePenetratorGeometry(std::shared_ptr<ChBody> obj, std::shared_ptr<ChMaterialSurface> mat) {
-    obj->GetCollisionModel()->ClearModel();
+    obj->GetCollisionModel()->Clear();
     switch (penetGeom) {
         case P_SPHERE:
             utils::AddSphereGeometry(obj.get(), mat, R_b);
@@ -270,7 +270,7 @@ void CreatePenetratorGeometry(std::shared_ptr<ChBody> obj, std::shared_ptr<ChMat
             utils::AddConeGeometry(obj.get(), mat, R_bc2, H_bc2);
             break;
     }
-    obj->GetCollisionModel()->BuildModel();
+    obj->GetCollisionModel()->Build();
 }
 
 // -----------------------------------------------------------------------------

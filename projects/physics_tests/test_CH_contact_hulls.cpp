@@ -19,17 +19,19 @@
 #include "chrono/ChConfig.h"
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/collision/ChCollisionUtils.h"
-#include "chrono/collision/ChCollisionUtilsBullet.h"
+#include "chrono/collision/bullet/ChCollisionUtilsBullet.h"
 
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 
 using namespace chrono;
+using namespace chrono::collision;
 using namespace chrono::irrlicht;
 
 void AddWallBox(std::shared_ptr<ChBody> body, std::shared_ptr<ChMaterialSurface> mat, const ChVector<>& dim, const ChVector<>& loc) {
-    body->GetCollisionModel()->AddBox(mat, dim.x(), dim.y(), dim.z(), loc);
+    auto ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(mat, dim);
+    body->GetCollisionModel()->AddShape(ct_shape, ChFrame<>(loc, QUNIT));
 
-    auto box = chrono_types::make_shared<ChBoxShape>(dim);
+    auto box = chrono_types::make_shared<ChVisualShapeBox>(dim);
     box->SetColor(ChColor(0.5f, 0.5f, 0.0f));
     body->AddVisualShape(box, ChFrame<>(loc));
 }
@@ -98,9 +100,10 @@ void AddWallMesh(std::shared_ptr<ChBody> body,
     for (int i = 0; i < num_faces; i++)
       idx_normals[i] = idx_vertices[i];
 
-    body->GetCollisionModel()->AddTriangleMesh(mat, trimesh, true, true, loc);
+    auto body_ct_shape = chrono_types::make_shared<ChCollisionShapeTriangleMesh>(mat, trimesh, true, true, 0);
+    body->GetCollisionModel()->AddShape(body_ct_shape, ChFrame<>(loc, QUNIT));
 
-    auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+    auto trimesh_shape = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     trimesh_shape->SetMesh(trimesh);
     trimesh_shape->SetColor(ChColor(0.0f, 0.0f, 0.5f));
     body->AddVisualShape(trimesh_shape);
@@ -122,9 +125,10 @@ void AddWallHull(std::shared_ptr<ChBody> body,
     points.push_back(ChVector<>(+hdim.x(), +hdim.y(), +hdim.z()) + loc);
     points.push_back(ChVector<>(+hdim.x(), -hdim.y(), +hdim.z()) + loc);
 
-    body->GetCollisionModel()->AddConvexHull(mat, points);
+    auto body_ct_shape = chrono_types::make_shared<ChCollisionShapeConvexHull>(mat, points);
+    body->GetCollisionModel()->AddShape(body_ct_shape);
 
-    auto shape = chrono_types::make_shared<ChTriangleMeshShape>();
+    auto shape = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     collision::bt_utils::ChConvexHullLibraryWrapper lh;
     lh.ComputeHull(points, *shape->GetMesh());
     shape->SetColor(ChColor(0.5f, 0.0f, 0.0f));
@@ -139,7 +143,7 @@ void BuildContainerBoxes(std::shared_ptr<ChBody> body,
                          double thick) {
   std::cout << "Using boxes for container" << std::endl;
 
-  body->GetCollisionModel()->ClearModel();
+  body->GetCollisionModel()->Clear();
 
   // Bottom box
   AddWallBox(body, mat, ChVector<>(dimX, thick, dimY), ChVector<>(0, 0, 0));
@@ -147,7 +151,7 @@ void BuildContainerBoxes(std::shared_ptr<ChBody> body,
   // Side box
   AddWallBox(body, mat, ChVector<>(thick, dimZ, dimY), ChVector<>(dimX / 2 - thick / 2, dimZ / 2, 0));
 
-  body->GetCollisionModel()->BuildModel();
+  body->GetCollisionModel()->Build();
 }
 
 void BuildContainerMeshes(std::shared_ptr<ChBody> body,
@@ -158,7 +162,7 @@ void BuildContainerMeshes(std::shared_ptr<ChBody> body,
                           double hthick) {
   std::cout << "Using meshes for container" << std::endl;
 
-  body->GetCollisionModel()->ClearModel();
+  body->GetCollisionModel()->Clear();
 
   // Bottom mesh
   AddWallMesh(body, mat, ChVector<>(hdimX, hthick, hdimY), ChVector<>(0, 0, 0));
@@ -166,7 +170,7 @@ void BuildContainerMeshes(std::shared_ptr<ChBody> body,
   // Side mesh
   AddWallMesh(body, mat, ChVector<>(hthick, hdimZ, hdimY), ChVector<>(hdimX - hthick, hdimZ, 0));
 
-  body->GetCollisionModel()->BuildModel();
+  body->GetCollisionModel()->Build();
 }
 
 void BuildContainerHulls(std::shared_ptr<ChBody> body,
@@ -177,7 +181,7 @@ void BuildContainerHulls(std::shared_ptr<ChBody> body,
                          double thick) {
   std::cout << "Using convex hulls for container" << std::endl;
 
-  body->GetCollisionModel()->ClearModel();
+  body->GetCollisionModel()->Clear();
 
   // Bottom hull
   AddWallHull(body, mat, ChVector<>(dimX, thick, dimY), ChVector<>(0, 0, 0));
@@ -185,7 +189,7 @@ void BuildContainerHulls(std::shared_ptr<ChBody> body,
   // Side hull
   AddWallHull(body, mat, ChVector<>(thick, dimZ, dimY), ChVector<>(dimX / 2 - thick / 2, dimZ / 2, 0));
 
-  body->GetCollisionModel()->BuildModel();
+  body->GetCollisionModel()->Build();
 }
 
 
@@ -235,13 +239,13 @@ int main(int argc, char* argv[]) {
     ball->SetPos_dt(init_vel);
     // ball->SetWvel_par(ChVector<>(0,0,3));
     ball->SetBodyFixed(false);
-
     ball->SetCollide(true);
-    ball->GetCollisionModel()->ClearModel();
-    ball->GetCollisionModel()->AddSphere(material, radius);
-    ball->GetCollisionModel()->BuildModel();
 
-    auto sphere = chrono_types::make_shared<ChSphereShape>(radius);
+    auto ball_ct_shape = chrono_types::make_shared<ChCollisionShapeSphere>(material, radius);
+    ball->GetCollisionModel()->AddShape(ball_ct_shape);
+    ball->GetCollisionModel()->Build();
+
+    auto sphere = chrono_types::make_shared<ChVisualShapeSphere>(radius);
     sphere->SetTexture(GetChronoDataFile("textures/bluewhite.png"));
     ball->AddVisualShape(sphere);
 

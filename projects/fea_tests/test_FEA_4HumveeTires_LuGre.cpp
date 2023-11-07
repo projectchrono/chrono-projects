@@ -637,9 +637,7 @@ int main(int argc, char* argv[]) {
     mystepper->SetAlpha(-0.3);  // Important for convergence
     mystepper->SetMaxiters(20);
     mystepper->SetAbsTolerances(6e-03, 2.5);
-    mystepper->SetMode(ChTimestepperHHT::POSITION);
     mystepper->SetModifiedNewton(false);
-    mystepper->SetScaling(true);  //
     mystepper->SetVerbose(true);
     mystepper->SetRequiredSuccessfulSteps(2);
     mystepper->SetMaxItersSuccess(7);

@@ -220,7 +220,7 @@ void CreateObject(ChSystemMulticore* system, double z) {
     double vol;
     ChMatrix33<> J;
 
-    obj->GetCollisionModel()->ClearModel();
+    obj->GetCollisionModel()->Clear();
 
     switch (shape_o) {
         case ChCollisionShape::Type::SPHERE: {
@@ -264,7 +264,7 @@ void CreateObject(ChSystemMulticore* system, double z) {
         } break;
     }
 
-    obj->GetCollisionModel()->BuildModel();
+    obj->GetCollisionModel()->Build();
 
     // ---------------------
     // Set mass and inertia.

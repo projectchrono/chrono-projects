@@ -25,7 +25,7 @@
 #include "chrono/physics/ChSystemNSC.h"
 
 #ifdef CHRONO_COLLISION
-#include "chrono/collision/ChCollisionSystemChrono.h"
+#include "chrono/collision/chrono/ChCollisionSystemChrono.h"
 #endif
 
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"

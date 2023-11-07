@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
     mloadcontainer->Add(mrigidmeshload);
 
     // ==Asset== attach a visualization of the FEM mesh.
-    // This will automatically update a triangle mesh (a ChTriangleMeshShape
+    // This will automatically update a triangle mesh (a ChVisualShapeTriangleMesh
     // asset that is internally managed) by setting  proper
     // coordinates and vertex colours as in the FEM elements.
     auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
     mrigidbody->SetInertiaXX(ChVector<>(20,20,20));
     mrigidbody->SetPos(tire_center);
 
-    auto mrigidmesh = chrono_types::make_shared<ChTriangleMeshShape>();
+    auto mrigidmesh = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     mrigidmesh->GetMesh().LoadWavefrontMesh(GetChronoDataFile("models/tractor_wheel_fine.obj"));
     mrigidmesh->GetMesh().Transform(VNULL, Q_from_AngAxis(CH_C_PI, VECT_Y) );
     mrigidbody->AddAsset(mrigidmesh);
@@ -299,13 +299,13 @@ int main(int argc, char* argv[]) {
         triangle->SetCollide(true);
         triangle->SetBodyFixed(true);
 
-        triangle->GetCollisionModel()->ClearModel();
+        triangle->GetCollisionModel()->Clear();
         std::string name = "tri" + std::to_string(triId);
         chrono::utils::AddTriangleGeometry(triangle.get(), triMat, vert_pos[triangles[i].x()] - pos,
                                            vert_pos[triangles[i].y()] - pos, vert_pos[triangles[i].z()] - pos, name);
         triangle->GetCollisionModel()->SetFamily(1);
         triangle->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-        triangle->GetCollisionModel()->BuildModel();
+        triangle->GetCollisionModel()->Build();
 
         systemG->AddBody(triangle);
     }
@@ -432,15 +432,15 @@ int main(int argc, char* argv[]) {
             //            // Update visual assets TODO: chrono_opengl cannot handle dynamic meshes yet
             //            for (int j = 0; j < triBody->GetAssets().size(); j++) {
             //              std::shared_ptr<ChAsset> asset = triBody->GetAssets()[j];
-            //              if (std::dynamic_pointer_cast<ChTriangleMeshShape>(asset)) {
+            //              if (std::dynamic_pointer_cast<ChVisualShapeTriangleMesh>(asset)) {
             //                //std::cout << j << std::endl;
             //                //std::cout << vert_pos[triangles[i].x()].x() << " " << vert_pos[triangles[i].x()].y() <<
             //                " " << vert_pos[triangles[i].x()].z() << std::endl;
-            //                ((ChTriangleMeshShape*)(asset.get()))->GetMesh().m_vertices[0] =
+            //                ((ChVisualShapeTriangleMesh*)(asset.get()))->GetMesh().m_vertices[0] =
             //                vert_pos[triangles[i].x()];
-            //                ((ChTriangleMeshShape*)(asset.get()))->GetMesh().m_vertices[1] =
+            //                ((ChVisualShapeTriangleMesh*)(asset.get()))->GetMesh().m_vertices[1] =
             //                vert_pos[triangles[i].y()];
-            //                ((ChTriangleMeshShape*)(asset.get()))->GetMesh().m_vertices[2] =
+            //                ((ChVisualShapeTriangleMesh*)(asset.get()))->GetMesh().m_vertices[2] =
             //                ChVector<>(0);//vert_pos[triangles[i].z()];
             //              }
             //            }

@@ -218,11 +218,9 @@ void RunModel(int nthreads,              // number of OpenMP threads
     auto mystepper = std::static_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
     mystepper->SetAlpha(-0.2);
     mystepper->SetMaxiters(100);
-    mystepper->SetAbsTolerances(1e-5);
-    mystepper->SetMode(ChTimestepperHHT::POSITION);
+    mystepper->SetAbsTolerances(1e-3);
     mystepper->SetStepControl(use_adaptiveStep);
     mystepper->SetModifiedNewton(use_modifiedNewton);
-    mystepper->SetScaling(true);
     mystepper->SetVerbose(verbose);
 
     // Initialize the output stream and set precision.

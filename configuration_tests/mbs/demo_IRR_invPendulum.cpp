@@ -27,9 +27,7 @@
 
 #include <cmath>
 
-#include "chrono/assets/ChBoxShape.h"
-#include "chrono/assets/ChCylinderShape.h"
-#include "chrono/assets/ChSphereShape.h"
+#include "chrono/assets/ChVisualShapes.h"
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/physics/ChSystemNSC.h"
 
@@ -195,11 +193,11 @@ int main(int argc, char* argv[]) {
     ground->SetBodyFixed(true);
 
     // Attach visualization assets
-    auto sphere1_g = chrono_types::make_shared<ChSphereShape>(0.02);
+    auto sphere1_g = chrono_types::make_shared<ChVisualShapeSphere>(0.02);
     sphere1_g->SetColor(ChColor(0, 0.8f, 0.8f));
     ground->AddVisualShape(sphere1_g, ChFrame<>(ChVector<>(travel_dist, 0, 0)));
 
-    auto sphere2_g = chrono_types::make_shared<ChSphereShape>(0.03);
+    auto sphere2_g = chrono_types::make_shared<ChVisualShapeSphere>(0.03);
     sphere2_g->SetColor(ChColor(0, 0.8f, 0.8f));
     ground->AddVisualShape(sphere2_g, ChFrame<>(ChVector<>(-travel_dist, 0, 0)));
 
@@ -213,7 +211,7 @@ int main(int argc, char* argv[]) {
     cart->SetPos(ChVector<>(0, 0, 0));
 
     // Attach visualization assets.
-    auto box_c = chrono_types::make_shared<ChBoxShape>(0.2, 0.2, 0.2);
+    auto box_c = chrono_types::make_shared<ChVisualShapeBox>(0.2, 0.2, 0.2);
     box_c->SetColor(ChColor(0, 0.6f, 0.8f));
     cart->AddVisualShape(box_c, ChFrame<>(ChVector<>(0, -0.1, 0)));
 
@@ -227,7 +225,7 @@ int main(int argc, char* argv[]) {
     pend->SetPos(ChVector<>(0, hlen_pend, 0));
 
     // Attach visualization assets.
-    auto cyl_p = chrono_types::make_shared<ChCylinderShape>(r_pend, 2 * hlen_pend);
+    auto cyl_p = chrono_types::make_shared<ChVisualShapeCylinder>(r_pend, 2 * hlen_pend);
     cyl_p->SetColor(ChColor(1.0f, 0.2f, 0));
     pend->AddVisualShape(cyl_p);
 
