@@ -229,22 +229,22 @@ void CalculatePenetratorInertia(double & mass, ChVector<> & inertia) {
     double vol_b;      // components volume
     switch (penetGeom) {
         case P_SPHERE:
-            vol_b = utils::CalcSphereVolume(R_b);
-            gyr_b = utils::CalcSphereGyration(R_b).diagonal();
+            vol_b = geometry::ChSphere::GetVolume(R_b);
+            gyr_b = geometry::ChSphere::GetGyration(R_b).diagonal();
             mass = rho_b * vol_b;
             inertia = mass * gyr_b;
             break;
         case P_CONE1:
             // apex angle = 30 de
-            vol_b = utils::CalcConeVolume(R_bc1, H_bc1);
-            gyr_b = utils::CalcConeGyration(R_bc1, H_bc1).diagonal();
+            vol_b = geometry::ChCone::GetVolume(R_bc1, H_bc1);
+            gyr_b = geometry::ChCone::GetGyration(R_bc1, H_bc1).diagonal();
             mass = rho_b * vol_b;
             inertia = mass * gyr_b;
             break;
         case P_CONE2:
             // apex angle = 60 deg
-            vol_b = utils::CalcConeVolume(R_bc2, H_bc2);
-            gyr_b = utils::CalcConeGyration(R_bc2, H_bc2).diagonal();
+            vol_b = geometry::ChCone::GetVolume(R_bc2, H_bc2);
+            gyr_b = geometry::ChCone::GetGyration(R_bc2, H_bc2).diagonal();
             mass = rho_b * vol_b;
             inertia = mass * gyr_b;
             break;
