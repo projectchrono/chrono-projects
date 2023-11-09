@@ -373,14 +373,14 @@ void run_MESH_STEP() {
     setCommonMeshParameters(gpu_sys);
 
     gpu_sys.AddMesh(GetProjectsDataFile("gpu/meshes/testsuite/step.obj"), ChVector<float>(0),
-                    ChMatrix33<float>(ChVector<float>(box_X / 2, box_Y / 2, step_height)), step_mass);
+                    ChMatrix33<float>(ChVector<float>(box_X / 2, box_Y / 2, (float)step_height)), (float)step_mass);
 
     // Fill domain with particles
     std::vector<ChVector<float>> body_points;
     double epsilon = 0.2 * sphere_radius;
     double spacing = 2 * sphere_radius + epsilon;
 
-    utils::PDSampler<float> sampler(spacing);
+    utils::PDSampler<float> sampler((float)spacing);
     double fill_bottom = -box_Z / 2 + step_height + 2 * spacing;
     fill_top = box_Z / 2 - sphere_radius - epsilon;
     ChVector<> hdims(box_X / 2 - sphere_radius - epsilon, box_Y / 2 - sphere_radius - epsilon, 0);

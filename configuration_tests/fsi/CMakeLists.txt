@@ -65,15 +65,6 @@ set(ALL_DLL_NAMES       "${ALL_DLL_NAMES}"       PARENT_SCOPE)
 set(ALL_DEPENDENCY_DLLS "${ALL_DEPENDENCY_DLLS}" PARENT_SCOPE)
 
 #--------------------------------------------------------------
-# Compilation flags
-#--------------------------------------------------------------
-
-# Disable some warnings triggered by Irrlicht (Windows only)
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    add_compile_options(/wd4251)
-endif()
-
-#--------------------------------------------------------------
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 

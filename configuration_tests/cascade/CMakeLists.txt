@@ -68,11 +68,6 @@ set(ALL_DEPENDENCY_DLLS "${ALL_DEPENDENCY_DLLS}" PARENT_SCOPE)
 # Compilation flags
 #--------------------------------------------------------------
 
-# Disable some warnings triggered by Irrlicht (Windows only)
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    add_compile_options(/wd4251) 
-endif()
-
 # Needed for OpenCASCADE
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")	
     add_definitions("/DWNT")
