@@ -140,15 +140,13 @@ class MySimpleCar {
 
         // --- The car body ---
 
-        truss = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+        truss = chrono_types::make_shared<ChBody>();
         truss->SetIdentifier(-1);
         truss->SetMass(2086.524902);
         truss->SetPos(ChVector<>(0, 0.52349, 0.055765));
         truss->SetRot(ChQuaternion<>(1, 0, 0, 0));
         truss->SetInertiaXX(ChVector<>(3570.20377, 1078.52344, 2955.66050));
-        truss->GetCollisionModel()->Clear();
         utils::AddBoxGeometry(truss.get(), mat, ChVector<>(0.7, 0.5, 3) * 0.5, ChVector<>(0, 0, 0));
-        truss->GetCollisionModel()->Build();
         truss->SetCollide(false);
         truss->SetBodyFixed(false);
         my_system->AddBody(truss);
@@ -156,32 +154,28 @@ class MySimpleCar {
         // --- Right Front suspension ---
 
         // ..the car right-front spindle
-        spindleRF = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+        spindleRF = chrono_types::make_shared<ChBody>();
         spindleRF->SetIdentifier(-2);
         spindleRF->SetMass(14.705);
         spindleRF->SetPos(ChVector<>(0.751, -0.026, 1.648965));
         spindleRF->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleRF->SetInertiaXX(ChVector<>(0.07352, 0.04117, 0.04117));
-        spindleRF->GetCollisionModel()->Clear();
         utils::AddBoxGeometry(spindleRF.get(), mat, ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
-        spindleRF->GetCollisionModel()->Build();
         spindleRF->SetCollide(false);
         my_system->AddBody(spindleRF);
 
         // ..the car right-front wheel
-        wheelRF = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+        wheelRF = chrono_types::make_shared<ChBody>();
         wheelRF->SetIdentifier(-3);
         wheelRF->SetMass(3.0);
         wheelRF->SetPos(ChVector<>(0.91, -0.026, 1.648965));
         wheelRF->SetRot(ChQuaternion<>(1, 0, 0, 0));
         wheelRF->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
-        wheelRF->GetCollisionModel()->Clear();
         if (useSpheres) {
             utils::AddSphereGeometry(wheelRF.get(), mat, 0.45, ChVector<>(0, 0, 0));
         } else {
             utils::AddCylinderGeometry(wheelRF.get(), mat, 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
         }
-        wheelRF->GetCollisionModel()->Build();
         wheelRF->SetCollide(true);
         my_system->AddBody(wheelRF);
 
@@ -230,32 +224,28 @@ class MySimpleCar {
         // --- Left Front suspension ---
 
         // ..the car left-front spindle
-        spindleLF = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+        spindleLF = chrono_types::make_shared<ChBody>();
         spindleLF->SetIdentifier(-4);
         spindleLF->SetMass(14.705);
         spindleLF->SetPos(ChVector<>(-0.751, -0.026, 1.648965));
         spindleLF->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleLF->SetInertiaXX(ChVector<>(0.07352, 0.04117, 0.04117));
-        spindleLF->GetCollisionModel()->Clear();
         utils::AddBoxGeometry(spindleLF.get(), mat, ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
-        spindleLF->GetCollisionModel()->Build();
         spindleLF->SetCollide(false);
         my_system->AddBody(spindleLF);
 
         // ..the car left-front wheel
-        wheelLF = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+        wheelLF = chrono_types::make_shared<ChBody>();
         wheelLF->SetIdentifier(-5);
         wheelLF->SetMass(3.0);
         wheelLF->SetPos(ChVector<>(-0.91, -0.026, 1.648965));
         wheelLF->SetRot(ChQuaternion<>(1, 0, 0, 0));
         wheelLF->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
-        wheelLF->GetCollisionModel()->Clear();
         if (useSpheres) {
             utils::AddSphereGeometry(wheelLF.get(), mat, 0.45, ChVector<>(0, 0, 0));
         } else {
             utils::AddCylinderGeometry(wheelLF.get(), mat, 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
         }
-        wheelLF->GetCollisionModel()->Build();
         wheelLF->SetCollide(true);
         my_system->AddBody(wheelLF);
 
@@ -304,32 +294,28 @@ class MySimpleCar {
         // --- Right Back suspension ---
 
         // ..the car right-back spindle
-        spindleRB = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+        spindleRB = chrono_types::make_shared<ChBody>();
         spindleRB->SetIdentifier(-6);
         spindleRB->SetMass(15.91);
         spindleRB->SetPos(ChVector<>(0.751, -0.026, -1.652965));
         spindleRB->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleRB->SetInertiaXX(ChVector<>(4, 2, 2));
-        spindleRB->GetCollisionModel()->Clear();
         utils::AddBoxGeometry(spindleRB.get(), mat, ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
-        spindleRB->GetCollisionModel()->Build();
         spindleRB->SetCollide(false);
         my_system->AddBody(spindleRB);
 
         // ..the car right-back wheel
-        wheelRB = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+        wheelRB = chrono_types::make_shared<ChBody>();
         wheelRB->SetIdentifier(-7);
         wheelRB->SetMass(3.0);
         wheelRB->SetPos(ChVector<>(0.91, -0.026, -1.652965));
         wheelRB->SetRot(ChQuaternion<>(1, 0, 0, 0));
         wheelRB->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
-        wheelRB->GetCollisionModel()->Clear();
         if (useSpheres) {
             utils::AddSphereGeometry(wheelRB.get(), mat, 0.45, ChVector<>(0, 0, 0));
         } else {
             utils::AddCylinderGeometry(wheelRB.get(), mat, 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
         }
-        wheelRB->GetCollisionModel()->Build();
         wheelRB->SetCollide(true);
         my_system->AddBody(wheelRB);
 
@@ -386,32 +372,28 @@ class MySimpleCar {
         // --- Left Back suspension ---
 
         // ..the car right-back spindle
-        spindleLB = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+        spindleLB = chrono_types::make_shared<ChBody>();
         spindleLB->SetIdentifier(-8);
         spindleLB->SetMass(15.91);
         spindleLB->SetPos(ChVector<>(-0.751, -0.026, -1.652965));
         spindleLB->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleLB->SetInertiaXX(ChVector<>(4, 2, 2));
-        spindleLB->GetCollisionModel()->Clear();
         utils::AddBoxGeometry(spindleLB.get(), mat, ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
-        spindleLB->GetCollisionModel()->Build();
         spindleLB->SetCollide(false);
         my_system->AddBody(spindleLB);
 
         // ..the car left-back wheel
-        wheelLB = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+        wheelLB = chrono_types::make_shared<ChBody>();
         wheelLB->SetIdentifier(-9);
         wheelLB->SetMass(3.0);
         wheelLB->SetPos(ChVector<>(-0.91, -0.026, -1.652965));
         wheelLB->SetRot(ChQuaternion<>(1, 0, 0, 0));
         wheelLB->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
-        wheelLB->GetCollisionModel()->Clear();
         if (useSpheres) {
             utils::AddSphereGeometry(wheelLB.get(), mat, 0.45, ChVector<>(0, 0, 0));
         } else {
             utils::AddCylinderGeometry(wheelLB.get(), mat, 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
         }
-        wheelLB->GetCollisionModel()->Build();
         wheelLB->SetCollide(true);
         my_system->AddBody(wheelLB);
 
@@ -627,7 +609,7 @@ void AddGround(ChSystemMulticoreNSC* sys) {
     double groundWidth = 5;
     double wallHeight = 6;
     double thickness = 0.1;
-    auto ground = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto ground = chrono_types::make_shared<ChBody>();
     ground->SetIdentifier(groundId);
     ground->SetMass(1);
     ground->SetPos(pos);
@@ -635,10 +617,8 @@ void AddGround(ChSystemMulticoreNSC* sys) {
     ground->SetCollide(true);
     ground->SetBodyFixed(true);
 
-    ground->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(ground.get(), mat, ChVector<>(groundWidth / 2, thickness, 10 * pitLocation_z / 2),
                           ChVector<>(0, -thickness, 0));
-    ground->GetCollisionModel()->Build();
 
     sys->AddBody(ground);
 
@@ -674,6 +654,7 @@ int main(int argc, char* argv[]) {
     // -------------
 
     ChSystemMulticoreNSC sys;
+    sys.SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Set gravitational acceleration
     sys.Set_G_acc(ChVector<>(0, -gravity, 0));

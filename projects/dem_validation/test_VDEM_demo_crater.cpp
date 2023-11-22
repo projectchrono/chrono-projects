@@ -235,7 +235,7 @@ void CreateFallingBall(ChSystemMulticore* system, double z, double vz) {
 #endif
 
     // Create the falling ball
-    auto ball = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto ball = chrono_types::make_shared<ChBody>();
 
     ball->SetIdentifier(Id_b);
     ball->SetMass(mass_b);
@@ -246,9 +246,7 @@ void CreateFallingBall(ChSystemMulticore* system, double z, double vz) {
     ball->SetCollide(true);
     ball->SetBodyFixed(false);
 
-    ball->GetCollisionModel()->Clear();
     utils::AddSphereGeometry(ball.get(), mat_b, R_b);
-    ball->GetCollisionModel()->Build();
 
     system->AddBody(ball);
 }
@@ -304,6 +302,8 @@ int main(int argc, char* argv[]) {
     cout << "Create NSC system" << endl;
     ChSystemMulticoreNSC* msystem = new ChSystemMulticoreNSC();
 #endif
+
+    msystem->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Debug log messages.
     ////msystem->SetLoggingLevel(LOG_INFO, true);

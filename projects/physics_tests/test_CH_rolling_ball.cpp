@@ -85,6 +85,7 @@ void Output(double time, std::shared_ptr<ChBody> ball, int ncontacts, const ChVe
 int main(int argc, char* argv[]) {
     // Create the physical system and set gravity along negative Z
     ChSystemNSC system;
+    system.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
     system.Set_G_acc(ChVector<>(0, 0, -9.81));
 
     system.SetSolverType(ChSolver::Type::APGD);
@@ -104,8 +105,7 @@ int main(int argc, char* argv[]) {
     ground->SetCollide(true);
 
     auto ground_ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(material, 4, 2, 1);
-    ground->GetCollisionModel()->AddShape(ground_ct_shape, ChFrame<>(ChVector<>(0, 0, -1), QUNIT));
-    ground->GetCollisionModel()->Build();
+    ground->AddCollisionShape(ground_ct_shape, ChFrame<>(ChVector<>(0, 0, -1), QUNIT));
 
     auto box = chrono_types::make_shared<ChVisualShapeBox>(8, 4, 2);
     box->SetColor(ChColor(1, 0, 0));
@@ -121,8 +121,7 @@ int main(int argc, char* argv[]) {
     ball->SetCollide(true);
 
     auto ball_ct_shape = chrono_types::make_shared<ChCollisionShapeSphere>(material, 1);
-    ball->GetCollisionModel()->AddShape(ball_ct_shape);
-    ball->GetCollisionModel()->Build();
+    ball->AddCollisionShape(ball_ct_shape);
 
     auto sphere = chrono_types::make_shared<ChVisualShapeSphere>(1);
     ball->AddVisualShape(sphere);

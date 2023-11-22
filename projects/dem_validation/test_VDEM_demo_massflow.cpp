@@ -161,7 +161,7 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
 #endif
 
     // Angled insert
-    auto insert = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto insert = chrono_types::make_shared<ChBody>();
 
     insert->SetIdentifier(0);
     insert->SetMass(1);
@@ -171,14 +171,12 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     insert->SetCollide(true);
     insert->SetBodyFixed(true);
 
-    insert->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(insert.get(), mat_b, ChVector<>(thickness * 0.5, width * 0.5, height_insert * 0.5));
-    insert->GetCollisionModel()->Build();
 
     system->AddBody(insert);
 
     // Static slot (back wall)
-    auto slot = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto slot = chrono_types::make_shared<ChBody>();
 
     slot->SetIdentifier(-1);
     slot->SetMass(1);
@@ -188,14 +186,12 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     slot->SetCollide(true);
     slot->SetBodyFixed(true);
 
-    slot->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(slot.get(), mat_b, ChVector<>(thickness / 2, width / 2, height / 2), ChVector<>(0, 0, 0));
-    slot->GetCollisionModel()->Build();
 
     system->AddBody(slot);
 
     // Lateral walls
-    auto wall = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto wall = chrono_types::make_shared<ChBody>();
 
     wall->SetIdentifier(-2);
     wall->SetMass(1);
@@ -205,12 +201,10 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     wall->SetCollide(true);
     wall->SetBodyFixed(true);
 
-    wall->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(wall.get(), mat_b, ChVector<>(3 * height / 2, thickness / 2, height),
                           ChVector<>(0, width / 2 + thickness / 2, height / 2));
     utils::AddBoxGeometry(wall.get(), mat_b, ChVector<>(3 * height / 2, thickness / 2, height),
                           ChVector<>(0, -width / 2 - thickness / 2, height / 2));
-    wall->GetCollisionModel()->Build();
 
     system->AddBody(wall);
 
@@ -330,6 +324,8 @@ int main(int argc, char* argv[]) {
     cout << "Create NSC system" << endl;
     ChSystemMulticoreNSC* sys = new ChSystemMulticoreNSC();
 #endif
+
+    sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();

@@ -117,7 +117,7 @@ void CreateGround(ChSystemMulticore* system) {
     mat_g->SetFriction(0.4f);
 #endif
 
-    auto ground = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto ground = chrono_types::make_shared<ChBody>();
     ground->SetIdentifier(-1);
     ground->SetMass(1);
     ground->SetPos(ChVector<>(0, 0, 0));
@@ -136,14 +136,12 @@ void CreateGround(ChSystemMulticore* system) {
                 double spacing = 1.6;
                 double bigR = 2;
 
-                ground->GetCollisionModel()->Clear();
                 for (int ix = -2; ix < 3; ix++) {
                     for (int iy = -2; iy < 3; iy++) {
                         ChVector<> pos(ix * spacing, iy * spacing, -bigR);
                         utils::AddSphereGeometry(ground.get(), mat_g, bigR, pos);
                     }
                 }
-                ground->GetCollisionModel()->Build();
             }
             break;
 
@@ -157,12 +155,10 @@ void CreateGround(ChSystemMulticore* system) {
                 ChQuaternion<> rot(1, 0, 0, 0);
                 rot.Q_from_AngAxis(CH_C_PI / 6, ChVector<>(0, 0, 1));
 
-                ground->GetCollisionModel()->Clear();
                 for (int ix = -3; ix < 6; ix++) {
                     ChVector<> pos(ix * spacing, 0, -bigR);
                     utils::AddCapsuleGeometry(ground.get(), mat_g, bigR, bigH, pos, rot);
                 }
-                ground->GetCollisionModel()->Build();
             }
             break;
 
@@ -173,9 +169,7 @@ void CreateGround(ChSystemMulticore* system) {
                 double bigHy = 6;
                 double bigHz = 1;
 
-                ground->GetCollisionModel()->Clear();
                 utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(bigHx, bigHy, bigHz), ChVector<>(0, 0, -bigHz));
-                ground->GetCollisionModel()->Build();
             }
             break;
     }
@@ -206,7 +200,7 @@ void CreateObject(ChSystemMulticore* system) {
     mat_o->SetFriction(0.4f);
 #endif
 
-    auto obj = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto obj = chrono_types::make_shared<ChBody>();
 
     obj->SetIdentifier(1);
     obj->SetCollide(true);
@@ -221,8 +215,6 @@ void CreateObject(ChSystemMulticore* system) {
     double rb;
     double vol;
     ChMatrix33<> J;
-
-    obj->GetCollisionModel()->Clear();
 
     switch (shape_o) {
         case ChCollisionShape:: Type::SPHERE : {
@@ -273,8 +265,6 @@ void CreateObject(ChSystemMulticore* system) {
             utils::AddConeGeometry(obj.get(), mat_o, radius, height);
         } break;
     }
-
-    obj->GetCollisionModel()->Build();
 
     // ---------------------
     // Set mass and inertia.
@@ -329,6 +319,8 @@ int main(int argc, char* argv[]) {
     cout << "Create NSC system" << endl;
     ChSystemMulticoreNSC* sys = new ChSystemMulticoreNSC();
 #endif
+
+    sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     sys->Set_G_acc(ChVector<>(0, 0, -9.81));
 

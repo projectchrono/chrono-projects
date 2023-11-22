@@ -202,7 +202,7 @@ void CreateObject(ChSystemMulticore* system, double z) {
     // Create the falling object.
     // --------------------------
 
-    auto obj = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto obj = chrono_types::make_shared<ChBody>();
 
     obj->SetIdentifier(0);
     obj->SetCollide(true);
@@ -218,8 +218,6 @@ void CreateObject(ChSystemMulticore* system, double z) {
     double rb;
     double vol;
     ChMatrix33<> J;
-
-    obj->GetCollisionModel()->Clear();
 
     switch (shape_o) {
         case ChCollisionShape::Type::SPHERE: {
@@ -262,8 +260,6 @@ void CreateObject(ChSystemMulticore* system, double z) {
             utils::AddRoundedCylinderGeometry(obj.get(), mat_o, radius, len, srad);
         } break;
     }
-
-    obj->GetCollisionModel()->Build();
 
     // ---------------------
     // Set mass and inertia.
@@ -339,6 +335,7 @@ int main(int argc, char* argv[]) {
     ChSystemMulticoreNSC* msystem = new ChSystemMulticoreNSC();
 #endif
 
+    msystem->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
     msystem->Set_G_acc(ChVector<>(0, 0, -9.81));
 
     // ----------------------

@@ -39,6 +39,7 @@ int main(int argc, char* argv[]) {
 
     // Create a Chrono system
     ChSystemNSC sys;
+    sys.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
 
     //
     // EXAMPLE 1:
@@ -56,8 +57,7 @@ int main(int argc, char* argv[]) {
 
     // Define a collision shape
     auto floor_shape = chrono_types::make_shared<ChCollisionShapeBox>(floor_mat, 20, 1, 20);
-    floor->GetCollisionModel()->AddShape(floor_shape, ChFrame<>(ChVector<>(0, -1, 0), QUNIT));
-    floor->GetCollisionModel()->Build();
+    floor->AddCollisionShape(floor_shape, ChFrame<>(ChVector<>(0, -1, 0), QUNIT));
     floor->SetCollide(true);
 
     // Add body to system
@@ -195,8 +195,7 @@ int main(int argc, char* argv[]) {
         auto particle_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
         particle_mat->SetFriction(0.9f);
         auto particle_shape = chrono_types::make_shared<ChCollisionShapeSphere>(particle_mat, particle_radius);
-        particles->GetCollisionModel()->AddShape(particle_shape);
-        particles->GetCollisionModel()->Build();
+        particles->AddCollisionShape(particle_shape);
 
         for (int np = 0; np < 60; ++np)
             particles->AddParticle(ChCoordsys<>(ChVector<>(2 * ChRandom() - 2, 1.5, 2 * ChRandom() + 2)));
@@ -219,8 +218,7 @@ int main(int argc, char* argv[]) {
 
         auto particle_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
         auto particle_shape = chrono_types::make_shared<ChCollisionShapeBox>(particle_mat, size_x, size_y, size_z);
-        particles->GetCollisionModel()->AddShape(particle_shape);
-        particles->GetCollisionModel()->Build();
+        particles->AddCollisionShape(particle_shape);
 
         for (int np = 0; np < 30; ++np)
             particles->AddParticle(ChCoordsys<>(ChVector<>(2 * ChRandom() + 4, 1.5, 2 * ChRandom() - 4)));

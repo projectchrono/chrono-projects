@@ -101,10 +101,11 @@ int main(int argc, char* argv[]) {
             break;
     }
 
+    system->SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
     system->Set_G_acc(ChVector<>(0, 0, -gravity));
 
     // Create the falling object
-    auto object = std::shared_ptr<ChBody>(system->NewBody());
+    auto object = chrono_types::make_shared<ChBody>();
     system->AddBody(object);
 
     object->SetIdentifier(objectId);
@@ -144,10 +145,8 @@ int main(int argc, char* argv[]) {
     auto trimesh = chrono_types::make_shared<geometry::ChTriangleMeshConnected>();
     trimesh->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_tire.obj"), true, false);
 
-    object->GetCollisionModel()->Clear();
     auto object_ct_shape = chrono_types::make_shared<ChCollisionShapeTriangleMesh>(object_mat, trimesh, false, false, 0.01);
-    object->GetCollisionModel()->AddShape(object_ct_shape);
-    object->GetCollisionModel()->Build();
+    object->AddCollisionShape(object_ct_shape);
 
     auto trimesh_shape = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     trimesh_shape->SetMesh(trimesh);
@@ -155,7 +154,7 @@ int main(int argc, char* argv[]) {
     object->AddVisualShape(trimesh_shape);
 
     // Create ground body
-    auto ground = std::shared_ptr<ChBody>(system->NewBody());
+    auto ground = chrono_types::make_shared<ChBody>();
     system->AddBody(ground);
 
     ground->SetIdentifier(groundId);
@@ -190,8 +189,7 @@ int main(int argc, char* argv[]) {
     }
 
     auto ground_ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(ground_mat, width, length, thickness);
-    ground->GetCollisionModel()->AddShape(ground_ct_shape, ChFrame<>(ChVector<>(0, 0, -thickness/2), QUNIT));
-    ground->GetCollisionModel()->Build();
+    ground->AddCollisionShape(ground_ct_shape, ChFrame<>(ChVector<>(0, 0, -thickness/2), QUNIT));
 
     auto box = chrono_types::make_shared<ChVisualShapeBox>(width, length, thickness);
     ground->AddVisualShape(box, ChFrame<>(ChVector<>(0, 0, -thickness/2)));

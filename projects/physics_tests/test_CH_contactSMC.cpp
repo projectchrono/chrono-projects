@@ -135,6 +135,7 @@ int main(int argc, char* argv[]) {
     // -----------------
 
     ChSystemSMC system(use_mat_properties);
+    system.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
 
     // Set the SMC contact force model
     system.SetContactForceModel(force_model);
@@ -172,8 +173,7 @@ int main(int argc, char* argv[]) {
     ball->SetBodyFixed(false);
 
     auto ball_ct_shape = chrono_types::make_shared<ChCollisionShapeSphere>(material, radius);
-    ball->GetCollisionModel()->AddShape(ball_ct_shape);
-    ball->GetCollisionModel()->Build();
+    ball->AddCollisionShape(ball_ct_shape);
 
     auto sphere = chrono_types::make_shared<ChVisualShapeSphere>(radius);
     sphere->SetTexture(GetChronoDataFile("textures/bluewhite.png"));
@@ -192,8 +192,7 @@ int main(int argc, char* argv[]) {
     ground->SetBodyFixed(true);
 
     auto ground_ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(material, width, thickness, length);
-    ground->GetCollisionModel()->AddShape(ground_ct_shape, ChFrame<>(ChVector<>(0, -thickness / 2, 0), QUNIT));
-    ground->GetCollisionModel()->Build();
+    ground->AddCollisionShape(ground_ct_shape, ChFrame<>(ChVector<>(0, -thickness / 2, 0), QUNIT));
 
     auto box = chrono_types::make_shared<ChVisualShapeBox>(width, thickness, length);
     ground->AddVisualShape(box, ChFrame<>(ChVector<>(0, -thickness / 2, 0)));

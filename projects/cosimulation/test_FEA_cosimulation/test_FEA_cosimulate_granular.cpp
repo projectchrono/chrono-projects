@@ -100,6 +100,7 @@ int main(int argc, char* argv[]) {
 
     // Create a Chrono::Engine physical system
     ChSystemSMC sys;
+    sys.SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     //
     // CREATE A FINITE ELEMENT MESH
@@ -286,7 +287,7 @@ int main(int argc, char* argv[]) {
 
     int triId = 0;
     for (int i = 0; i < triangles.size(); i++) {
-        auto triangle = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+        auto triangle = chrono_types::make_shared<ChBody>();
         triangle->SetIdentifier(triId++);
         triangle->SetMass(mass);
         triangle->SetInertiaXX(inertia);
@@ -298,13 +299,11 @@ int main(int argc, char* argv[]) {
         triangle->SetCollide(true);
         triangle->SetBodyFixed(true);
 
-        triangle->GetCollisionModel()->Clear();
         std::string name = "tri" + std::to_string(triId);
         chrono::utils::AddTriangleGeometry(triangle.get(), triMat, vert_pos[triangles[i].x()] - pos,
                                            vert_pos[triangles[i].y()] - pos, vert_pos[triangles[i].z()] - pos, name);
         triangle->GetCollisionModel()->SetFamily(1);
         triangle->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-        triangle->GetCollisionModel()->Build();
 
         systemG->AddBody(triangle);
     }

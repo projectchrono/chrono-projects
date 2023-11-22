@@ -58,6 +58,7 @@ int main(int argc, char* argv[]) {
     SetChronoDataPath(CHRONO_DATA_DIR);
 
     ChSystemNSC system;
+    system.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
 
     // Create a shared material (default properties)
     auto mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
@@ -92,12 +93,11 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<ChLinePath> gear_profile = CreateProfile(n_teeth, R_T, R_C, R);
 
     // Add the collision shape to gear
-    gear->GetCollisionModel()->SetSafeMargin(0.02);
     gear->SetCollide(true);
     auto gear_ct_shape = chrono_types::make_shared<ChCollisionShapePath2D>(mat, gear_profile);
-    gear->GetCollisionModel()->AddShape(gear_ct_shape, ChFrame<>(ChVector<>(0, 0, separation / 2), QUNIT));
-    gear->GetCollisionModel()->AddShape(gear_ct_shape, ChFrame<>(ChVector<>(0, 0, -separation / 2), QUNIT));
-    gear->GetCollisionModel()->Build();
+    gear->AddCollisionShape(gear_ct_shape, ChFrame<>(ChVector<>(0, 0, separation / 2), QUNIT));
+    gear->AddCollisionShape(gear_ct_shape, ChFrame<>(ChVector<>(0, 0, -separation / 2), QUNIT));
+    gear->GetCollisionModel()->SetSafeMargin(0.02);
 
     // Add ChVisualShapeLine visualization asset to gear
     auto gear_profile_plus = chrono_types::make_shared<ChVisualShapeLine>();
@@ -137,12 +137,11 @@ int main(int argc, char* argv[]) {
     pin_profile->AddSubLine(pin_circle);
 
     // Add collision shapes to pin
-    pin->GetCollisionModel()->SetSafeMargin(0.02);
     pin->SetCollide(true);
     auto pin_ct_shape = chrono_types::make_shared<ChCollisionShapePath2D>(mat, pin_profile);
-    pin->GetCollisionModel()->AddShape(pin_ct_shape, ChFrame<>(ChVector<>(0, 0, separation / 2), QUNIT));
-    pin->GetCollisionModel()->AddShape(pin_ct_shape, ChFrame<>(ChVector<>(0, 0, -separation / 2), QUNIT));
-    pin->GetCollisionModel()->Build();
+    pin->AddCollisionShape(pin_ct_shape, ChFrame<>(ChVector<>(0, 0, separation / 2), QUNIT));
+    pin->AddCollisionShape(pin_ct_shape, ChFrame<>(ChVector<>(0, 0, -separation / 2), QUNIT));
+    pin->GetCollisionModel()->SetSafeMargin(0.02);
 
     // Add pin visualization
     auto pin_cyl = chrono_types::make_shared<ChVisualShapeCylinder>(pin_radius, 2 * pin_hlen);

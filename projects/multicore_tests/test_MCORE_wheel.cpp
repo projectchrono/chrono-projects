@@ -214,7 +214,7 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemMulticore* system, double z) {
     }
 
     // Create the wheel body
-    auto wheel = std::shared_ptr<ChBody>(system->NewBody());
+    auto wheel = chrono_types::make_shared<ChBody>();
 
     wheel->SetIdentifier(Id_w);
     wheel->SetMass(mass_w);
@@ -224,10 +224,8 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemMulticore* system, double z) {
     wheel->SetCollide(true);
     wheel->SetBodyFixed(false);
 
-    wheel->GetCollisionModel()->Clear();
     utils::AddTriangleMeshGeometry(wheel.get(), material_w, obj_mesh_file, mesh_name);
     //utils::AddCylinderGeometry(wheel.get(), material_w, 0.3, 0.1);
-    wheel->GetCollisionModel()->Build();
 
     wheel->SetInertiaXX(inertia_w);
 
@@ -312,6 +310,8 @@ int main(int argc, char* argv[]) {
             break;
         }
     }
+
+    system->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Set method-independent solver settings
     system->Set_G_acc(ChVector<>(0, 0, -gravity));

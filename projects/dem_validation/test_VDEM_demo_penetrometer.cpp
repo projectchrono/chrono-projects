@@ -255,7 +255,6 @@ void CalculatePenetratorInertia(double & mass, ChVector<> & inertia) {
 // Create collision geometry of the falling object
 // -----------------------------------------------------------------------------
 void CreatePenetratorGeometry(std::shared_ptr<ChBody> obj, std::shared_ptr<ChMaterialSurface> mat) {
-    obj->GetCollisionModel()->Clear();
     switch (penetGeom) {
         case P_SPHERE:
             utils::AddSphereGeometry(obj.get(), mat, R_b);
@@ -269,7 +268,6 @@ void CreatePenetratorGeometry(std::shared_ptr<ChBody> obj, std::shared_ptr<ChMat
             utils::AddConeGeometry(obj.get(), mat, R_bc2, H_bc2);
             break;
     }
-    obj->GetCollisionModel()->Build();
 }
 
 // -----------------------------------------------------------------------------
@@ -339,7 +337,7 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* sys) {
 #endif
 
     // Create the falling object
-    auto obj = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto obj = chrono_types::make_shared<ChBody>();
 
     double mass;
     ChVector<> inertia;
@@ -429,6 +427,8 @@ int main(int argc, char* argv[]) {
     cout << "Create NSC system" << endl;
     ChSystemMulticoreNSC* sys = new ChSystemMulticoreNSC();
 #endif
+
+    sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Debug log messages.
     ////sys->SetLoggingLevel(LOG_INFO, true);

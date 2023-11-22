@@ -63,6 +63,8 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    system->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
+
     // Set method-independent solver settings
     system->Set_G_acc(ChVector<>(0, 0, -9.8));
     system->GetSettings()->solver.use_full_inertia_tensor = false;
@@ -99,13 +101,11 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    auto ground = std::shared_ptr<ChBody>(system->NewBody());
+    auto ground = chrono_types::make_shared<ChBody>();
     ground->SetPos(ChVector<>(0, 0, 0));
     ground->SetBodyFixed(true);
     ground->SetCollide(true);
-    ground->GetCollisionModel()->Clear();
     utils::AddBoxGeometry(ground.get(), material_g, ChVector<>(1, 1, 0.1), ChVector<>(0, 0, -0.1));
-    ground->GetCollisionModel()->Build();
     system->AddBody(ground);
 
     // Create ball body
@@ -130,13 +130,11 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    auto ball = std::shared_ptr<ChBody>(system->NewBody());
+    auto ball = chrono_types::make_shared<ChBody>();
     ball->SetPos(ChVector<>(0, 0, 1));
     ball->SetPos_dt(ChVector<>(0, 0, 8));
     ball->SetCollide(true);
-    ball->GetCollisionModel()->Clear();
     utils::AddSphereGeometry(ball.get(), material_b, 0.2);
-    ball->GetCollisionModel()->Build();
     system->AddBody(ball);
 
     // Enable deactivation of bodies that exit a specified bounding box
