@@ -8,6 +8,7 @@ endif()
 # Invoke CMake in subdirectories
 #-----------------------------------------------------------------------------
 
+
 cmake_dependent_option(ENABLE_PRJ_DEM_VALIDATION 
 	"Enable projects for DEM validation" ON
 	"ENABLE_PROJECTS" OFF)
@@ -21,10 +22,13 @@ cmake_dependent_option(ENABLE_PRJ_VEHICLE_TESTS
 	"Enable projects for Chrono::Vehicle tests" ON
 	"ENABLE_PROJECTS" OFF)
 cmake_dependent_option(ENABLE_PRJ_CORE_TESTS 
-	"Enable projects for Chrono::Engine core tests" ON
+	"Enable projects for Chrono core tests" ON
 	"ENABLE_PROJECTS" OFF)
 cmake_dependent_option(ENABLE_PRJ_PHYSICS_TESTS 
-	"Enable projects for Chrono::Engine physics tests" ON
+	"Enable projects for basic physics tests" ON
+	"ENABLE_PROJECTS" OFF)
+cmake_dependent_option(ENABLE_PRJ_MBS_TESTS
+	"Enable projects for MBS simulation" ON
 	"ENABLE_PROJECTS" OFF)
 cmake_dependent_option(ENABLE_PRJ_FEA_TESTS 
 	"Enable projects for Chrono::FEA tests" ON
@@ -33,10 +37,10 @@ cmake_dependent_option(ENABLE_PRJ_COSIMULATION
 	"Enable projects for Chrono::Vehicle cosimulation" ON
 	"ENABLE_PROJECTS" OFF)
 cmake_dependent_option(ENABLE_PRJ_GPU_TESTS 
-	"Enable projects for Chrono::Gpu tests" ON
+	"Enable projects for Chrono::GPU granular tests" ON
 	"ENABLE_PROJECTS" OFF)
 cmake_dependent_option(ENABLE_PRJ_SYN_HIGHWAY 
-	"Enable projects for SynChrono Highway" OFF
+	"Enable SynChrono Highway test" OFF
 	"ENABLE_PROJECTS" OFF)
 
 if (ENABLE_PRJ_CORE_TESTS)
@@ -45,6 +49,10 @@ endif()
 
 if (ENABLE_PRJ_PHYSICS_TESTS)
   add_subdirectory(physics_tests)
+endif()
+
+if (ENABLE_PRJ_MBS_TESTS)
+  add_subdirectory(mbs)
 endif()
 
 if (ENABLE_PRJ_FEA_TESTS)

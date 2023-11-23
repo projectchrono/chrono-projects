@@ -1,48 +1,33 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono::Gpu module.
+# CMake configuration file for MBS projects
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
 
-message("\n---- GPU projects")
+message("\n---- MBS projects")
 
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
 
-set(DEMOS
-        test_GPU_DamBreak
-        test_GPU_Bucket
-        test_GPU_rover
-        test_GPU_directshear
-        test_GPU_Coneflow
-        test_GPU_commvessels
-        test_GPU_milsettle
-        test_GPU_testsuite
-        test_GPU_normal
-        test_GPU_slide
-        test_GPU_roll
-        test_GPU_incline
-        test_GPU_repose
-        test_GPU_soilBin
-        test_GPU_ballDrop
-        test_GPU_compression
+SET(DEMOS
+    test_MBS_soilbin
+    test_MBS_tire
 )
 
 #--------------------------------------------------------------
-# Find the Chrono package with required and optional components
+# Find the Chrono package with required components
 #--------------------------------------------------------------
 
 # Invoke find_package in CONFIG mode
 find_package(Chrono QUIET
-             COMPONENTS Gpu OpenGL
-             OPTIONAL_COMPONENTS Vehicle
+             COMPONENTS Irrlicht
              CONFIG
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for GPU projects")
+  message("Could not find requirements for PHYSICS projects")
   return()
 endif()
 
@@ -65,7 +50,6 @@ set(CMAKE_CXX_STANDARD ${CHRONO_CXX_STANDARD})
 # (B) Path to the top of the source tree for this project
 # - for access to utility headers
 
-
 include_directories(
     ${CHRONO_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
@@ -84,18 +68,18 @@ set(ALL_DEPENDENCY_DLLS "${ALL_DEPENDENCY_DLLS}" PARENT_SCOPE)
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Projects for Chrono::Gpu...")
+MESSAGE(STATUS "Physics programs...")
 
-foreach(PROGRAM ${DEMOS})
+FOREACH(PROGRAM ${DEMOS})
+    MESSAGE(STATUS "...add ${PROGRAM}")
 
-  message(STATUS "...add ${PROGRAM}")
+    ADD_EXECUTABLE(${PROGRAM}  "${PROGRAM}.cpp")
+    SOURCE_GROUP(""  FILES "${PROGRAM}.cpp")
 
-  add_executable(${PROGRAM}  "${PROGRAM}.cpp")
-  source_group(""  FILES "${PROGRAM}.cpp")
+    target_compile_definitions(${PROGRAM} PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
+    target_compile_options(${PROGRAM} PUBLIC ${CHRONO_CXX_FLAGS})
+    target_link_options(${PROGRAM} PUBLIC ${CHRONO_LINKER_FLAGS})
+    target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
 
-  target_compile_definitions(${PROGRAM} PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
-  target_compile_options(${PROGRAM} PUBLIC ${CHRONO_CXX_FLAGS})
-  target_link_options(${PROGRAM} PUBLIC ${CHRONO_LINKER_FLAGS})
-  target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
+ENDFOREACH()
 
-endforeach()
