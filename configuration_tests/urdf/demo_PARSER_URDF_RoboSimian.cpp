@@ -235,6 +235,7 @@ int main(int argc, char* argv[]) {
             // Create terrain
             auto ground = CreateTerrain(sys, length, width, z, length / 4);
             vis->BindItem(ground);
+            sys.GetCollisionSystem()->BindItem(ground);
 
             // Release robot
             torso->SetBodyFixed(false);
