@@ -31,10 +31,14 @@ if(NOT Chrono_FOUND)
 endif()
 
 # If Synchrono was not built with FastDDS support, return now.
-if(NOT CHRONO_FASTDDS_FOUND)
+if(NOT CHRONO_SYNCHRONO_FASTDDS)
   message("Synchrono built without FastDDS support!")
   return()
 endif()
+
+# Use same C++ standard as for building Chrono
+set(CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD ${CHRONO_CXX_STANDARD})
 
 # Get the path to the highway mesh
 set(HIGHWAY_DATA_DIR "" CACHE FILEPATH "Path to directory contain highway assets")
@@ -59,12 +63,15 @@ include_directories(
     ${CHRONO_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
 )
+
 #--------------------------------------------------------------
-# Append to the parent's list of DLLs
+# Append to the parent's lists of DLLs (and make them visible)
 #--------------------------------------------------------------
 
-list(APPEND ALL_DLLS "${CHRONO_DLLS}")
-set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
+list(APPEND ALL_DLL_NAMES       "${CHRONO_DLL_NAMES}")
+list(APPEND ALL_DEPENDENCY_DLLS "${CHRONO_DEPENDENCY_DLLS}")
+set(ALL_DLL_NAMES       "${ALL_DLL_NAMES}"       PARENT_SCOPE)
+set(ALL_DEPENDENCY_DLLS "${ALL_DEPENDENCY_DLLS}" PARENT_SCOPE)
 
 #--------------------------------------------------------------
 # Compilation flags

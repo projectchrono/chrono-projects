@@ -24,6 +24,9 @@ set(DEMOS
         test_GPU_roll
         test_GPU_incline
         test_GPU_repose
+        test_GPU_soilBin
+        test_GPU_ballDrop
+        test_GPU_compression
 )
 
 #--------------------------------------------------------------
@@ -31,7 +34,6 @@ set(DEMOS
 #--------------------------------------------------------------
 
 # Invoke find_package in CONFIG mode
-
 find_package(Chrono QUIET
              COMPONENTS Gpu OpenGL
              OPTIONAL_COMPONENTS Vehicle
@@ -43,6 +45,10 @@ if(NOT Chrono_FOUND)
   message("Could not find requirements for GPU projects")
   return()
 endif()
+
+# Use same C++ standard as for building Chrono
+set(CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD ${CHRONO_CXX_STANDARD})
 
 #--------------------------------------------------------------
 # Include paths and libraries
@@ -66,11 +72,13 @@ include_directories(
 )
 
 #--------------------------------------------------------------
-# Append to the parent's list of DLLs
+# Append to the parent's lists of DLLs (and make them visible)
 #--------------------------------------------------------------
 
-list(APPEND ALL_DLLS "${CHRONO_DLLS}")
-set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
+list(APPEND ALL_DLL_NAMES       "${CHRONO_DLL_NAMES}")
+list(APPEND ALL_DEPENDENCY_DLLS "${CHRONO_DEPENDENCY_DLLS}")
+set(ALL_DLL_NAMES       "${ALL_DLL_NAMES}"       PARENT_SCOPE)
+set(ALL_DEPENDENCY_DLLS "${ALL_DEPENDENCY_DLLS}" PARENT_SCOPE)
 
 #--------------------------------------------------------------
 # Loop over all demo programs and build them

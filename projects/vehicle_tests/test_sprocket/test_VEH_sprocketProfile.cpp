@@ -58,6 +58,7 @@ int main(int argc, char* argv[]) {
     SetChronoDataPath(CHRONO_DATA_DIR);
 
     ChSystemNSC system;
+    system.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
 
     // Create a shared material (default properties)
     auto mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
@@ -92,25 +93,24 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<ChLinePath> gear_profile = CreateProfile(n_teeth, R_T, R_C, R);
 
     // Add the collision shape to gear
-    gear->GetCollisionModel()->SetSafeMargin(0.02);
     gear->SetCollide(true);
-    gear->GetCollisionModel()->ClearModel();
-    gear->GetCollisionModel()->Add2Dpath(mat, gear_profile, ChVector<>(0, 0, separation / 2));
-    gear->GetCollisionModel()->Add2Dpath(mat, gear_profile, ChVector<>(0, 0, -separation / 2));
-    gear->GetCollisionModel()->BuildModel();
+    auto gear_ct_shape = chrono_types::make_shared<ChCollisionShapePath2D>(mat, gear_profile);
+    gear->AddCollisionShape(gear_ct_shape, ChFrame<>(ChVector<>(0, 0, separation / 2), QUNIT));
+    gear->AddCollisionShape(gear_ct_shape, ChFrame<>(ChVector<>(0, 0, -separation / 2), QUNIT));
+    gear->GetCollisionModel()->SetSafeMargin(0.02);
 
-    // Add ChLineShape visualization asset to gear
-    auto gear_profile_plus = chrono_types::make_shared<ChLineShape>();
+    // Add ChVisualShapeLine visualization asset to gear
+    auto gear_profile_plus = chrono_types::make_shared<ChVisualShapeLine>();
     gear_profile_plus->SetLineGeometry(gear_profile);
     gear_profile_plus->SetColor(ChColor(1, 0, 0));
     gear->AddVisualShape(gear_profile_plus, ChFrame<>(ChVector<>(0, 0, separation / 2)));
 
-    auto gear_profile_minus = chrono_types::make_shared<ChLineShape>();
+    auto gear_profile_minus = chrono_types::make_shared<ChVisualShapeLine>();
     gear_profile_minus->SetLineGeometry(gear_profile);
     gear_profile_minus->SetColor(ChColor(0, 1, 0));
     gear->AddVisualShape(gear_profile_minus, ChFrame<>(ChVector<>(0, 0, -separation / 2)));
 
-    auto gear_axle = chrono_types::make_shared<ChCylinderShape>(0.1 * R, separation);
+    auto gear_axle = chrono_types::make_shared<ChVisualShapeCylinder>(0.1 * R, separation);
     gear->AddVisualShape(gear_axle);
 
     // Revolute constraint (gear-ground)
@@ -137,16 +137,14 @@ int main(int argc, char* argv[]) {
     pin_profile->AddSubLine(pin_circle);
 
     // Add collision shapes to pin
-    pin->GetCollisionModel()->SetSafeMargin(0.02);
     pin->SetCollide(true);
-    pin->GetCollisionModel()->ClearModel();
-    pin->GetCollisionModel()->Add2Dpath(mat, pin_profile, ChVector<>(0, 0, separation / 2));
-    pin->GetCollisionModel()->Add2Dpath(mat, pin_profile, ChVector<>(0, 0, -separation / 2));
-    // pin->GetCollisionModel()->AddCylinder(pin_radius, pin_radius, pin_hlen);
-    pin->GetCollisionModel()->BuildModel();
+    auto pin_ct_shape = chrono_types::make_shared<ChCollisionShapePath2D>(mat, pin_profile);
+    pin->AddCollisionShape(pin_ct_shape, ChFrame<>(ChVector<>(0, 0, separation / 2), QUNIT));
+    pin->AddCollisionShape(pin_ct_shape, ChFrame<>(ChVector<>(0, 0, -separation / 2), QUNIT));
+    pin->GetCollisionModel()->SetSafeMargin(0.02);
 
     // Add pin visualization
-    auto pin_cyl = chrono_types::make_shared<ChCylinderShape>(pin_radius, 2 * pin_hlen);
+    auto pin_cyl = chrono_types::make_shared<ChVisualShapeCylinder>(pin_radius, 2 * pin_hlen);
     pin_cyl->SetColor(ChColor(0.2f, 0.5f, 0.8f));
     pin->AddVisualShape(pin_cyl);
 

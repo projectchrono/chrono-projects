@@ -32,8 +32,8 @@
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
-#include "chrono/assets/ChSphereShape.h"
-#include "chrono/assets/ChBoxShape.h"
+#include "chrono/assets/ChVisualShapeSphere.h"
+#include "chrono/assets/ChVisualShapeBox.h"
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 #include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
@@ -51,7 +51,6 @@
 #include "../utils.h"
 
 using namespace chrono;
-using namespace chrono::collision;
 
 using std::cout;
 using std::flush;
@@ -124,11 +123,16 @@ double visual_out_step = 1e-1;  // time interval between PovRay outputs
 // -----------------------------------------------------------------------------
 // Utility for adding (visible or invisible) walls
 // -----------------------------------------------------------------------------
-void AddWall(std::shared_ptr<ChBody>& body, std::shared_ptr<ChMaterialSurface> mat, const ChVector<>& dim, const ChVector<>& loc, bool visible) {
-    body->GetCollisionModel()->AddBox(mat, dim.x(), dim.y(), dim.z(), loc);
+void AddWall(std::shared_ptr<ChBody>& body,
+             std::shared_ptr<ChMaterialSurface> mat,
+             const ChVector<>& dim,
+             const ChVector<>& loc,
+             bool visible) {
+    auto ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(mat, dim);
+    body->AddCollisionShape(ct_shape, ChFrame<>(loc, QUNIT));
 
     if (visible == true) {
-        auto box = chrono_types::make_shared<ChBoxShape>(2.0 * dim);
+        auto box = chrono_types::make_shared<ChVisualShapeBox>(2.0 * dim);
         box->SetColor(ChColor(1, 0, 0));
         body->AddVisualShape(box, ChFrame<>(loc));
     }
@@ -214,6 +218,8 @@ int main(int argc, char* argv[]) {
     ChSystemMulticoreNSC* sys = new ChSystemMulticoreNSC();
 #endif
 
+    sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
+
     sys->Set_G_acc(ChVector<>(0, -gravity, 0));
 
     // Set number of threads
@@ -279,7 +285,7 @@ int main(int argc, char* argv[]) {
 
     // Create lower bin
 
-    auto bin = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto bin = chrono_types::make_shared<ChBody>();
 
     bin->SetIdentifier(binId);
     bin->SetMass(1);
@@ -287,7 +293,6 @@ int main(int argc, char* argv[]) {
     bin->SetBodyFixed(true);
     bin->SetCollide(true);
 
-    bin->GetCollisionModel()->ClearModel();
     AddWall(bin, mat_ext, ChVector<>(width / 2, thickness / 2, length / 2), ChVector<>(0, 0, 0), true);
     AddWall(bin, mat_ext, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
             ChVector<>(-width / 2 - thickness / 2, 0, 0), true);
@@ -301,13 +306,12 @@ int main(int argc, char* argv[]) {
     bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
     bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(3);
     bin->GetCollisionModel()->SetFamilyMaskDoCollisionWithFamily(4);
-    bin->GetCollisionModel()->BuildModel();
 
     sys->AddBody(bin);
 
     // Create upper shear box
 
-    auto box = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto box = chrono_types::make_shared<ChBody>();
 
     box->SetIdentifier(boxId);
     box->SetMass(1);
@@ -315,7 +319,6 @@ int main(int argc, char* argv[]) {
     box->SetBodyFixed(true);
     box->SetCollide(true);
 
-    box->GetCollisionModel()->ClearModel();
     AddWall(box, mat_ext, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
             ChVector<>(-width / 2 - thickness / 2, 0, 0), true);
     AddWall(box, mat_ext, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
@@ -328,13 +331,12 @@ int main(int argc, char* argv[]) {
     box->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
     box->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(3);
     box->GetCollisionModel()->SetFamilyMaskDoCollisionWithFamily(4);
-    box->GetCollisionModel()->BuildModel();
 
     sys->AddBody(box);
 
     // Create upper load plate
 
-    auto plate = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto plate = chrono_types::make_shared<ChBody>();
 
     shear_Area = width * length;
 
@@ -344,13 +346,11 @@ int main(int argc, char* argv[]) {
     plate->SetBodyFixed(true);
     plate->SetCollide(true);
 
-    plate->GetCollisionModel()->ClearModel();
     AddWall(plate, mat_ext, ChVector<>(width / 2, thickness / 2, length / 2), ChVector<>(0, 0, 0), true);
     plate->GetCollisionModel()->SetFamily(3);
     plate->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
     plate->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
     plate->GetCollisionModel()->SetFamilyMaskDoCollisionWithFamily(4);
-    plate->GetCollisionModel()->BuildModel();
 
     sys->AddBody(plate);
 
@@ -367,7 +367,7 @@ int main(int argc, char* argv[]) {
                 ball_x = 4.0 * radius * (float(j - b / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
                 ball_z = 4.0 * radius * (float(k - c / 2) + 0.5) + 0.99 * radius * (float(rand() % 100) / 50 - 1.0);
 
-                auto ball = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+                auto ball = chrono_types::make_shared<ChBody>();
 
                 ball->SetIdentifier(ballId + 6 * 6 * i + 6 * j + k);
                 ball->SetMass(mass);
@@ -376,12 +376,11 @@ int main(int argc, char* argv[]) {
                 ball->SetBodyFixed(false);
                 ball->SetCollide(true);
 
-                ball->GetCollisionModel()->ClearModel();
-                ball->GetCollisionModel()->AddSphere(material, radius);
+                auto ball_ct_shape = chrono_types::make_shared<ChCollisionShapeSphere>(material, radius);
+                ball->AddCollisionShape(ball_ct_shape);
                 ball->GetCollisionModel()->SetFamily(4);
-                ball->GetCollisionModel()->BuildModel();
 
-                auto sphere = chrono_types::make_shared<ChSphereShape>(radius);
+                auto sphere = chrono_types::make_shared<ChVisualShapeSphere>(radius);
                 sphere->SetColor(ChColor(1, 0, 1));
                 ball->AddVisualShape(sphere);
 

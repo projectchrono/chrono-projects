@@ -128,7 +128,7 @@ void addWheelBody(ChSystemNSC& rover_sys,
                   std::string wheel_filename,
                   const ChVector<>& wheel_initial_pos_relative) {
     ChVector<> wheel_initial_pos = chassis_body->GetPos() + wheel_initial_pos_relative;
-    std::shared_ptr<ChBody> wheel_body(rover_sys.NewBody());
+    auto wheel_body = chrono_types::make_shared<ChBody>();
 
     wheel_body->SetMass(wheel_mass);
     wheel_body->SetBodyFixed(false);
@@ -287,7 +287,7 @@ int main(int argc, char* argv[]) {
     // rover_sys.SetTimestepperType(ChTimestepper::Type::EULER_EXPLICIT);
     rover_sys.Set_G_acc(ChVector<>(Gx, Gy, Gz));
 
-    std::shared_ptr<ChBody> chassis_body(rover_sys.NewBody());
+    auto chassis_body = chrono_types::make_shared<ChBody>();
 
     double height_offset_chassis_to_bottom = std::abs(wheel_offset_z) + 2 * wheel_rad;  // TODO
     double init_offset_x = -params.box_X / 4;

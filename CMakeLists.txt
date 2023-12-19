@@ -11,7 +11,7 @@ project(ChronoProjects)
 #set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # Set location of executable
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 #-----------------------------------------------------------------------------
 # Enable CTest
@@ -50,8 +50,6 @@ if("${isSystemDir}" STREQUAL "-1")
 endif()
 
 #-----------------------------------------------------------------------------
-# Force C++11
-#-----------------------------------------------------------------------------
 
 #if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 #    set(CH_LINKERFLAG_EXE  "${CH_LINKERFLAG_EXE} -framework IOKit -framework Cocoa -framework OpenGL")
@@ -77,7 +75,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
         add_definitions( "-D_SCL_SECURE_NO_DEPRECATE" )  # avoids deprecation warnings
         add_definitions( "-DNOMINMAX" ) # do not use MSVC's min/max macros
         add_definitions( "-MP" ) # perform parallel builds
-        add_compile_options(/wd4251) # class needs to have dll-interface
     endif(MSVC)
 endif()
 
@@ -93,9 +90,9 @@ endif()
 # Options for configuring/building individual sets of programs
 option(ENABLE_CONFIG_TESTS "Build the programs for checking Chrono configuration" ON)
 
-
 # Keep track of all DLLs. Each submodule should append to this list.
-list(APPEND ALL_DLLS "")
+list(APPEND ALL_DLL_NAMES "")
+list(APPEND ALL_DEPENDENCY_DLLS "")
 
 # Propagate configuration to submodules.
 if(ENABLE_CONFIG_TESTS)
@@ -130,5 +127,5 @@ endif()
 # (on Windows only).
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   message(STATUS "")
-	add_DLL_copy_command("${ALL_DLLS}")
+	add_DLL_copy_command("${ALL_DLL_NAMES}" "${ALL_DEPENDENCY_DLLS}")
 endif()

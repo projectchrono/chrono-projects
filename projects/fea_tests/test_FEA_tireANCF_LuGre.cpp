@@ -1542,11 +1542,9 @@ int main(int argc, char* argv[]) {
     auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(sys.GetTimestepper());
     mystepper->SetAlpha(-0.2);
     mystepper->SetMaxiters(20);
-    mystepper->SetAbsTolerances(4e-4, 1e-1);
-    mystepper->SetMode(ChTimestepperHHT::POSITION);
+    mystepper->SetAbsTolerances(4e-2, 1.0);
     mystepper->SetModifiedNewton(false);
     mystepper->SetVerbose(true);
-    mystepper->SetScaling(true);
 
     // Visualization
     // auto mobjmesh = chrono_types::make_shared<ChObjShapeFile>();

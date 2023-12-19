@@ -48,7 +48,6 @@
 #include "../utils.h"
 
 using namespace chrono;
-using namespace chrono::collision;
 
 using std::cout;
 using std::flush;
@@ -230,22 +229,22 @@ void CalculatePenetratorInertia(double & mass, ChVector<> & inertia) {
     double vol_b;      // components volume
     switch (penetGeom) {
         case P_SPHERE:
-            vol_b = utils::CalcSphereVolume(R_b);
-            gyr_b = utils::CalcSphereGyration(R_b).diagonal();
+            vol_b = geometry::ChSphere::GetVolume(R_b);
+            gyr_b = geometry::ChSphere::GetGyration(R_b).diagonal();
             mass = rho_b * vol_b;
             inertia = mass * gyr_b;
             break;
         case P_CONE1:
             // apex angle = 30 de
-            vol_b = utils::CalcConeVolume(R_bc1, H_bc1);
-            gyr_b = utils::CalcConeGyration(R_bc1, H_bc1).diagonal();
+            vol_b = geometry::ChCone::GetVolume(R_bc1, H_bc1);
+            gyr_b = geometry::ChCone::GetGyration(R_bc1, H_bc1).diagonal();
             mass = rho_b * vol_b;
             inertia = mass * gyr_b;
             break;
         case P_CONE2:
             // apex angle = 60 deg
-            vol_b = utils::CalcConeVolume(R_bc2, H_bc2);
-            gyr_b = utils::CalcConeGyration(R_bc2, H_bc2).diagonal();
+            vol_b = geometry::ChCone::GetVolume(R_bc2, H_bc2);
+            gyr_b = geometry::ChCone::GetGyration(R_bc2, H_bc2).diagonal();
             mass = rho_b * vol_b;
             inertia = mass * gyr_b;
             break;
@@ -256,7 +255,6 @@ void CalculatePenetratorInertia(double & mass, ChVector<> & inertia) {
 // Create collision geometry of the falling object
 // -----------------------------------------------------------------------------
 void CreatePenetratorGeometry(std::shared_ptr<ChBody> obj, std::shared_ptr<ChMaterialSurface> mat) {
-    obj->GetCollisionModel()->ClearModel();
     switch (penetGeom) {
         case P_SPHERE:
             utils::AddSphereGeometry(obj.get(), mat, R_b);
@@ -270,7 +268,6 @@ void CreatePenetratorGeometry(std::shared_ptr<ChBody> obj, std::shared_ptr<ChMat
             utils::AddConeGeometry(obj.get(), mat, R_bc2, H_bc2);
             break;
     }
-    obj->GetCollisionModel()->BuildModel();
 }
 
 // -----------------------------------------------------------------------------
@@ -340,7 +337,7 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* sys) {
 #endif
 
     // Create the falling object
-    auto obj = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto obj = chrono_types::make_shared<ChBody>();
 
     double mass;
     ChVector<> inertia;
@@ -430,6 +427,8 @@ int main(int argc, char* argv[]) {
     cout << "Create NSC system" << endl;
     ChSystemMulticoreNSC* sys = new ChSystemMulticoreNSC();
 #endif
+
+    sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Debug log messages.
     ////sys->SetLoggingLevel(LOG_INFO, true);

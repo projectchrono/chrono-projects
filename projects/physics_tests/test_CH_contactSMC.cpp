@@ -135,6 +135,7 @@ int main(int argc, char* argv[]) {
     // -----------------
 
     ChSystemSMC system(use_mat_properties);
+    system.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
 
     // Set the SMC contact force model
     system.SetContactForceModel(force_model);
@@ -171,11 +172,10 @@ int main(int argc, char* argv[]) {
     ball->SetCollide(true);
     ball->SetBodyFixed(false);
 
-    ball->GetCollisionModel()->ClearModel();
-    ball->GetCollisionModel()->AddSphere(material, radius);
-    ball->GetCollisionModel()->BuildModel();
+    auto ball_ct_shape = chrono_types::make_shared<ChCollisionShapeSphere>(material, radius);
+    ball->AddCollisionShape(ball_ct_shape);
 
-    auto sphere = chrono_types::make_shared<ChSphereShape>(radius);
+    auto sphere = chrono_types::make_shared<ChVisualShapeSphere>(radius);
     sphere->SetTexture(GetChronoDataFile("textures/bluewhite.png"));
     ball->AddVisualShape(sphere);
 
@@ -191,11 +191,10 @@ int main(int argc, char* argv[]) {
     ground->SetCollide(true);
     ground->SetBodyFixed(true);
 
-    ground->GetCollisionModel()->ClearModel();
-    ground->GetCollisionModel()->AddBox(material, width, thickness, length, ChVector<>(0, -thickness / 2, 0));
-    ground->GetCollisionModel()->BuildModel();
+    auto ground_ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(material, width, thickness, length);
+    ground->AddCollisionShape(ground_ct_shape, ChFrame<>(ChVector<>(0, -thickness / 2, 0), QUNIT));
 
-    auto box = chrono_types::make_shared<ChBoxShape>(width, thickness, length);
+    auto box = chrono_types::make_shared<ChVisualShapeBox>(width, thickness, length);
     ground->AddVisualShape(box, ChFrame<>(ChVector<>(0, -thickness / 2, 0)));
 
     system.AddBody(ground);
@@ -268,8 +267,6 @@ int main(int argc, char* argv[]) {
     integrator->SetAlpha(0.0);
     integrator->SetMaxiters(100);
     integrator->SetAbsTolerances(1e-08);
-    ////integrator->SetMode(ChTimestepperHHT::POSITION);
-    integrator->SetScaling(false);
     ////integrator->SetStepControl(false);
     ////integrator->SetVerbose(true);
 

@@ -33,7 +33,6 @@ set(TESTS_MATLAB_IRR
 #--------------------------------------------------------------
 
 # Invoke find_package in CONFIG mode
-
 find_package(Chrono QUIET
              COMPONENTS
              OPTIONAL_COMPONENTS Irrlicht Postprocess PardisoMKL MUMPS Matlab
@@ -41,14 +40,12 @@ find_package(Chrono QUIET
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
-
 if(NOT Chrono_FOUND)
   message("Could not find requirements for FEA projects")
   return()
 endif()
 
 # If the Chrono::Irrlicht and Chrono::PardisoMKL are available.
-
 if(CHRONO_IRRLICHT_FOUND AND CHRONO_PARDISOMKL_FOUND)
   list(APPEND TESTS ${TESTS_MKL_IRR})
 endif()
@@ -56,6 +53,10 @@ endif()
 if (CHRONO_IRRLICHT_FOUND AND CHRONO_MATLAB_FOUND)
 	list(APPEND TESTS ${TESTS_MATLAB_IRR})
 endif()
+
+# Use same C++ standard as for building Chrono
+set(CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD ${CHRONO_CXX_STANDARD})
 
 #--------------------------------------------------------------
 # Include paths and libraries
@@ -78,11 +79,13 @@ include_directories(
 )
 
 #--------------------------------------------------------------
-# Append to the parent's list of DLLs (and make it visible up)
+# Append to the parent's lists of DLLs (and make them visible)
 #--------------------------------------------------------------
 
-list(APPEND ALL_DLLS "${CHRONO_DLLS}")
-set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
+list(APPEND ALL_DLL_NAMES       "${CHRONO_DLL_NAMES}")
+list(APPEND ALL_DEPENDENCY_DLLS "${CHRONO_DEPENDENCY_DLLS}")
+set(ALL_DLL_NAMES       "${ALL_DLL_NAMES}"       PARENT_SCOPE)
+set(ALL_DEPENDENCY_DLLS "${ALL_DEPENDENCY_DLLS}" PARENT_SCOPE)
 
 #--------------------------------------------------------------
 # Loop over all demo programs and build them

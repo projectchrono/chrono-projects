@@ -122,11 +122,9 @@ void test_beam(const std::string& name,  /// test name
     auto mystepper = std::static_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
     mystepper->SetAlpha(-0.2);
     mystepper->SetMaxiters(100);
-    mystepper->SetAbsTolerances(1e-5);
-    mystepper->SetMode(ChTimestepperHHT::POSITION);
+    mystepper->SetAbsTolerances(1e-3);
     mystepper->SetStepControl(true);
     mystepper->SetModifiedNewton(true);
-    mystepper->SetScaling(true);
     mystepper->SetVerbose(false);
 #else
     // MINRES solver + Euler

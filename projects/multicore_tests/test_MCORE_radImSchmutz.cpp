@@ -22,8 +22,8 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/core/ChStream.h"
-#include "chrono/assets/ChBoxShape.h"
-#include "chrono/assets/ChCapsuleShape.h"
+#include "chrono/assets/ChVisualShapeBox.h"
+#include "chrono/assets/ChVisualShapeCapsule.h"
 #include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
@@ -43,7 +43,6 @@
 #endif
 
 using namespace chrono;
-using namespace chrono::collision;
 
 using std::cout;
 using std::endl;
@@ -188,7 +187,7 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     ChVector<> loc_prismatic = loc_sled - ChVector<>(0, 0, e / 4);
 
     // Create the ground body
-    m_ground = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    m_ground = chrono_types::make_shared<ChBody>();
     m_ground->SetIdentifier(-1);
     m_ground->SetBodyFixed(true);
     m_ground->SetCollide(false);
@@ -196,7 +195,7 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     system->AddBody(m_ground);
 
     // Create the sled body
-    m_sled = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    m_sled = chrono_types::make_shared<ChBody>();
     m_sled->SetIdentifier(1);
     m_sled->SetMass(mass1);
     m_sled->SetInertiaXX(inertia_sled);
@@ -205,7 +204,7 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     m_sled->SetBodyFixed(false);
     m_sled->SetCollide(false);
 
-    auto box_sled = chrono_types::make_shared<ChBoxShape>(2.0 * e, (2.0 / 3) * e, (2.0 / 3) * e);
+    auto box_sled = chrono_types::make_shared<ChVisualShapeBox>(2.0 * e, (2.0 / 3) * e, (2.0 / 3) * e);
     box_sled->SetColor(ChColor(0.7f, 0.3f, 0.3f));
     m_sled->AddVisualShape(box_sled);
 
@@ -223,7 +222,7 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
 #endif
 
     // Create the wheel body
-    m_wheel = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    m_wheel = chrono_types::make_shared<ChBody>();
     m_wheel->SetIdentifier(2);
     m_wheel->SetMass(mass_wheel);
     m_wheel->SetInertiaXX(inertia_wheel);
@@ -233,7 +232,6 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     m_wheel->SetBodyFixed(false);
     m_wheel->SetCollide(true);
 
-    m_wheel->GetCollisionModel()->ClearModel();
     switch (wheel_shape) {
         case ChCollisionShape::Type::CYLINDER:
             utils::AddCylinderGeometry(m_wheel.get(), mat_w, r_w, w_w / 2, ChVector<>(c, 0, -b), Q_from_AngY(CH_C_PI_2));
@@ -243,9 +241,8 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
                                               Q_from_AngY(CH_C_PI_2));
             break;
     }
-    m_wheel->GetCollisionModel()->BuildModel();
 
-    auto cap_wheel = chrono_types::make_shared<ChCapsuleShape>(w_w / 4, a + c - w_w / 2);
+    auto cap_wheel = chrono_types::make_shared<ChVisualShapeCapsule>(w_w / 4, a + c - w_w / 2);
     cap_wheel->SetColor(ChColor(0.3f, 0.3f, 0.7f));
     m_wheel->AddVisualShape(cap_wheel, ChFrame<>(ChVector<>((c - a) / 2, 0, -b), Q_from_AngY(CH_C_PI_2)));
 
@@ -392,6 +389,8 @@ int main(int argc, char* argv[]) {
     cout << "Create NSC system" << endl;
     ChSystemMulticoreNSC* sys = new ChSystemMulticoreNSC();
 #endif
+
+    sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     sys->Set_G_acc(ChVector<>(0, 0, -9.81));
 

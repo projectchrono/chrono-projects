@@ -40,7 +40,6 @@
 #endif
 
 using namespace chrono;
-using namespace chrono::collision;
 
 // -----------------------------------------------------------------------------
 // Create a bin consisting of five boxes attached to the ground and a mixer
@@ -59,7 +58,7 @@ std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
     mat->SetRestitution(0.1f);
 
     // Create the containing bin (2 x 2 x 1)
-    auto bin = std::shared_ptr<ChBody>(sys->NewBody());
+    auto bin = chrono_types::make_shared<ChBody>();
     bin->SetIdentifier(binId);
     bin->SetMass(1);
     bin->SetPos(ChVector<>(0, 0, 0));
@@ -70,7 +69,6 @@ std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
     ChVector<> hdim(1, 1, 0.5);
     double hthick = 0.1;
 
-    bin->GetCollisionModel()->ClearModel();
     utils::AddBoxGeometry(bin.get(), mat, ChVector<>(hdim.x(), hdim.y(), hthick), ChVector<>(0, 0, -hthick));
     utils::AddBoxGeometry(bin.get(), mat, ChVector<>(hthick, hdim.y(), hdim.z()),
                           ChVector<>(-hdim.x() - hthick, 0, hdim.z()));
@@ -82,12 +80,11 @@ std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
                           ChVector<>(0, hdim.y() + hthick, hdim.z()));
     bin->GetCollisionModel()->SetFamily(1);
     bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
-    bin->GetCollisionModel()->BuildModel();
 
     sys->AddBody(bin);
 
     // The rotating mixer body (1.6 x 0.2 x 0.4)
-    auto mixer = std::shared_ptr<ChBody>(sys->NewBody());
+    auto mixer = chrono_types::make_shared<ChBody>();
     mixer->SetIdentifier(mixerId);
     mixer->SetMass(10.0);
     mixer->SetInertiaXX(ChVector<>(50, 50, 50));
@@ -97,10 +94,8 @@ std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
 
     ChVector<> hsize(0.8, 0.1, 0.2);
 
-    mixer->GetCollisionModel()->ClearModel();
     utils::AddBoxGeometry(mixer.get(), mat, hsize);
     mixer->GetCollisionModel()->SetFamily(2);
-    mixer->GetCollisionModel()->BuildModel();
 
     sys->AddBody(mixer);
 
@@ -133,7 +128,7 @@ void AddFallingBalls(ChSystemMulticoreSMC* sys) {
         for (int iy = -2; iy < 3; iy++) {
             ChVector<> pos(0.4 * ix, 0.4 * iy, 1);
 
-            auto ball = std::shared_ptr<ChBody>(sys->NewBody());
+            auto ball = chrono_types::make_shared<ChBody>();
             ball->SetIdentifier(ballId++);
             ball->SetMass(mass);
             ball->SetInertiaXX(inertia);
@@ -142,9 +137,7 @@ void AddFallingBalls(ChSystemMulticoreSMC* sys) {
             ball->SetBodyFixed(false);
             ball->SetCollide(true);
 
-            ball->GetCollisionModel()->ClearModel();
             utils::AddSphereGeometry(ball.get(), ballMat, radius);
-            ball->GetCollisionModel()->BuildModel();
 
             sys->AddBody(ball);
         }
@@ -173,6 +166,7 @@ int main(int argc, char* argv[]) {
     // -------------
 
     ChSystemMulticoreSMC sys;
+    sys.SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Set number of threads
     sys.SetNumThreads(8);

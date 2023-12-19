@@ -50,7 +50,6 @@
 #include "../utils.h"
 
 using namespace chrono;
-using namespace chrono::collision;
 
 using std::cout;
 using std::flush;
@@ -213,20 +212,18 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     // Create the ground body -- always FIRST body in system
     // ----------------------
 
-    auto ground = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto ground = chrono_types::make_shared<ChBody>();
 
     ground->SetIdentifier(Id_ground);
     ground->SetBodyFixed(true);
     ground->SetCollide(true);
 
     // Attach geometry of the containing bin
-    ground->GetCollisionModel()->ClearModel();
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, hdimY + hthick, hdimZ));
-    ground->GetCollisionModel()->BuildModel();
 
     system->AddBody(ground);
 
@@ -237,7 +234,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     // Initially, the load plate is fixed to ground.
     // It is released after the settling phase.
 
-    auto plate = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto plate = chrono_types::make_shared<ChBody>();
 
     plate->SetIdentifier(Id_plate);
     plate->SetMass(1);
@@ -351,7 +348,7 @@ void CreateBall(ChSystemMulticore* system) {
     // Create the ball
     // ---------------
 
-    auto ball = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto ball = chrono_types::make_shared<ChBody>();
 
     ball->SetIdentifier(Id_ball);
     ball->SetMass(mass_ball);
@@ -359,9 +356,7 @@ void CreateBall(ChSystemMulticore* system) {
     ball->SetCollide(true);
     ball->SetBodyFixed(false);
 
-    ball->GetCollisionModel()->ClearModel();
     utils::AddSphereGeometry(ball.get(), mat_g, radius_ball);
-    ball->GetCollisionModel()->BuildModel();
 
     system->AddBody(ball);
 }
@@ -438,6 +433,8 @@ int main(int argc, char* argv[]) {
     cout << "Create NSC system" << endl;
     ChSystemMulticoreNSC* sys = new ChSystemMulticoreNSC();
 #endif
+
+    sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     sys->Set_G_acc(ChVector<>(0, 0, -gravity));
 
@@ -543,10 +540,8 @@ int main(int argc, char* argv[]) {
             loadPlate->SetPos(ChVector<>(pos.x(), pos.y(), z_new));
 
             // Add collision geometry to plate
-            loadPlate->GetCollisionModel()->ClearModel();
             utils::AddBoxGeometry(loadPlate.get(), mat_plate, ChVector<>(hdimX_p, hdimY_p, hdimZ_p),
                                   ChVector<>(0, 0, hdimZ_p));
-            loadPlate->GetCollisionModel()->BuildModel();
 
             // If using an actuator, connect the load plate and get a handle to the actuator.
             if (use_actuator) {
@@ -584,10 +579,8 @@ int main(int argc, char* argv[]) {
             loadPlate->SetPos(ChVector<>(pos.x(), pos.y(), z_new));
 
             // Add collision geometry to plate
-            loadPlate->GetCollisionModel()->ClearModel();
             utils::AddBoxGeometry(loadPlate.get(), mat_plate, ChVector<>(hdimX_p, hdimY_p, hdimZ_p),
                                   ChVector<>(0, 0, hdimZ_p));
-            loadPlate->GetCollisionModel()->BuildModel();
 
             // If using an actuator, connect the shear box and get a handle to the actuator.
             if (use_actuator) {

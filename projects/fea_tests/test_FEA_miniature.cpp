@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
 
     /*
     // Attach a 'box' shape asset for visualization.
-    auto mboxtruss = chrono_types::make_shared<ChBoxShape>();
+    auto mboxtruss = chrono_types::make_shared<ChVisualShapeBox>();
     mboxtruss->GetBoxGeometry().Pos  = ChVector<>(-0.01, 0,0);
     mboxtruss->GetBoxGeometry().SetLengths( ChVector<>(0.02, 0.2, 0.1) );
     body_truss->AddAsset(mboxtruss);
@@ -207,11 +207,11 @@ int main(int argc, char* argv[]) {
     sys.Add(my_mesh);
 
     // ==Asset== attach a visualization of the FEM mesh.
-    // This will automatically update a triangle mesh (a ChTriangleMeshShape
+    // This will automatically update a triangle mesh (a ChVisualShapeTriangleMesh
     // asset that is internally managed) by setting  proper
     // coordinates and vertex colours as in the FEM elements.
     // Such triangle mesh can be rendered by Irrlicht or POVray or whatever
-    // postprocessor that can handle a coloured ChTriangleMeshShape).
+    // postprocessor that can handle a coloured ChVisualShapeTriangleMesh).
     // Do not forget AddAsset() at the end!
 
     auto mvisualizebeamA = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
@@ -254,11 +254,11 @@ int main(int argc, char* argv[]) {
             auto p1 = ChVector<>(sin(phi) * Rbalance * 0.8, Wbalance, cos(phi) * Rbalance * 0.8);
             auto p2 = p1 + ChVector<>(0, 2 * Wbalance, 0);
             geometry::ChLineSegment seg(p1, p2);
-            auto vshape = chrono_types::make_shared<ChCylinderShape>(Rbalance * 0.1, seg.GetLength());
+            auto vshape = chrono_types::make_shared<ChVisualShapeCylinder>(Rbalance * 0.1, seg.GetLength());
             balance->AddVisualShape(vshape, seg.GetFrame());
         }
         geometry::ChLineSegment seg(vP + ChVector<>(0, -OffPin * 10, 0), vP + ChVector<>(0, OffPin * 10, 0));
-        auto vshaft = chrono_types::make_shared<ChCylinderShape>(Rpinion, seg.GetLength());
+        auto vshaft = chrono_types::make_shared<ChVisualShapeCylinder>(Rpinion, seg.GetLength());
         vshaft->SetColor(ChColor(0.5f, 0.9f, 0.9f));
         balance->AddVisualShape(vshaft, seg.GetFrame());
 

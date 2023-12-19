@@ -50,7 +50,9 @@ int main(int argc, char* argv[]) {
     }
 
     // Insert data in recorder function in random order
-    std::random_shuffle(x.begin(), x.end());
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::shuffle(x.begin(), x.end(), gen);
     for (int i = 0; i < x.size(); i++) {
         fun.AddPoint(x[i], Reference(x[i]));
     }
@@ -84,8 +86,6 @@ int main(int argc, char* argv[]) {
 
     // Evaluate in random order
     std::cout << "Random points\n";
-    std::random_device rd;
-    std::mt19937 gen(rd());
     std::uniform_real_distribution<> dist(0, 1);
     for (int i = 0; i < n; i++) {
         Evaluate(fun, dist(gen));

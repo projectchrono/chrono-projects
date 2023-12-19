@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
     wheel->SetCollide(false);
     wheel->SetBodyFixed(false);
 
-    auto cyl = chrono_types::make_shared<ChCylinderShape>(0.2, 0.1);
+    auto cyl = chrono_types::make_shared<ChVisualShapeCylinder>(0.2, 0.1);
     cyl->SetTexture(GetChronoDataFile("textures/bluewhite.png"));
     wheel->AddVisualShape(cyl);
 

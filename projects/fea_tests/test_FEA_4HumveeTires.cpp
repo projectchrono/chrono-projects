@@ -18,8 +18,8 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/core/ChMathematics.h"
-#include "chrono/assets/ChCylinderShape.h"
-#include "chrono/assets/ChTriangleMeshShape.h"
+#include "chrono/assets/ChVisualShapeCylinder.h"
+#include "chrono/assets/ChVisualShapeTriangleMesh.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChSystemNSC.h"
@@ -573,7 +573,7 @@ int main(int argc, char* argv[]) {
     SimpChassis->SetPos_dt(ChVector<>(ForVelocity, 0, 0));
     SimpChassis->SetBodyFixed(false);
 
-    auto mtrussmesh = chrono_types::make_shared<ChTriangleMeshShape>();
+    auto mtrussmesh = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     mtrussmesh->GetMesh()->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_chassis_simple.obj"));
     ////SimpChassis->AddVisualShape(
     ////    mtrussmesh, ChFrame<>(VNULL, Q_from_AngAxis(CH_C_PI_2, VECT_Z) % Q_from_AngAxis(CH_C_PI_2, VECT_Y)));
@@ -585,7 +585,7 @@ int main(int argc, char* argv[]) {
     Bump->SetPos(ChVector<>(BumpLongLoc, -1.0, 0.0));
     my_system.Add(Bump);
 
-    auto cyl_wheel = chrono_types::make_shared<ChCylinderShape>(BumpRadius, 1.0);
+    auto cyl_wheel = chrono_types::make_shared<ChVisualShapeCylinder>(BumpRadius, 1.0);
     Bump->AddVisualShape(cyl_wheel, ChFrame<>(VNULL, Q_from_AngX(CH_C_PI_2)));
 
     // Create joints between chassis and hubs
@@ -666,9 +666,7 @@ int main(int argc, char* argv[]) {
     mystepper->SetAlpha(-0.2);  // Important for convergence
     mystepper->SetMaxiters(16);
     mystepper->SetAbsTolerances(6e-03, 0.8);
-    mystepper->SetMode(ChTimestepperHHT::POSITION);
     mystepper->SetModifiedNewton(false);
-    mystepper->SetScaling(true);  //
     mystepper->SetVerbose(true);
     mystepper->SetRequiredSuccessfulSteps(2);
     mystepper->SetMaxItersSuccess(7);

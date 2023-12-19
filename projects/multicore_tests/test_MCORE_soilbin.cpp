@@ -34,7 +34,6 @@
 #include "chrono_thirdparty/filesystem/path.h"
 
 using namespace chrono;
-using namespace chrono::collision;
 
 using std::cout;
 using std::endl;
@@ -203,7 +202,7 @@ void CreateObject(ChSystemMulticore* system, double z) {
     // Create the falling object.
     // --------------------------
 
-    auto obj = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto obj = chrono_types::make_shared<ChBody>();
 
     obj->SetIdentifier(0);
     obj->SetCollide(true);
@@ -220,51 +219,47 @@ void CreateObject(ChSystemMulticore* system, double z) {
     double vol;
     ChMatrix33<> J;
 
-    obj->GetCollisionModel()->ClearModel();
-
     switch (shape_o) {
         case ChCollisionShape::Type::SPHERE: {
             double radius = 0.5;
-            rb = utils::CalcSphereBradius(radius);
-            vol = utils::CalcSphereVolume(radius);
-            J = utils::CalcSphereGyration(radius);
+            rb = geometry::ChSphere::GetBoundingSphereRadius(radius);
+            vol = geometry::ChSphere::GetVolume(radius);
+            J = geometry::ChSphere::GetGyration(radius);
             utils::AddSphereGeometry(obj.get(), mat_o, radius);
         } break;
         case ChCollisionShape::Type::BOX: {
-            ChVector<> hdims(0.5, 0.75, 1.0);
-            rb = utils::CalcBoxBradius(hdims);
-            vol = utils::CalcBoxVolume(hdims);
-            J = utils::CalcBoxGyration(hdims);
-            utils::AddBoxGeometry(obj.get(), mat_o, hdims);
+            ChVector<> dims(0.5, 0.75, 1.0);
+            rb = geometry::ChBox::GetBoundingSphereRadius(dims);
+            vol = geometry::ChBox::GetVolume(dims);
+            J = geometry::ChBox::GetGyration(dims);
+            utils::AddBoxGeometry(obj.get(), mat_o, dims);
         } break;
         case ChCollisionShape::Type::CAPSULE: {
             double radius = 0.25;
-            double hlen = 0.5;
-            rb = utils::CalcCapsuleBradius(radius, hlen);
-            vol = utils::CalcCapsuleVolume(radius, hlen);
-            J = utils::CalcCapsuleGyration(radius, hlen);
-            utils::AddCapsuleGeometry(obj.get(), mat_o, radius, hlen);
+            double len = 0.5;
+            rb = geometry::ChCapsule::GetBoundingSphereRadius(radius, len);
+            vol = geometry::ChCapsule::GetVolume(radius, len);
+            J = geometry::ChCapsule::GetGyration(radius, len);
+            utils::AddCapsuleGeometry(obj.get(), mat_o, radius, len);
         } break;
         case ChCollisionShape::Type::CYLINDER: {
             double radius = 0.25;
-            double hlen = 0.5;
-            rb = utils::CalcCylinderBradius(radius, hlen);
-            vol = utils::CalcCylinderVolume(radius, hlen);
-            J = utils::CalcCylinderGyration(radius, hlen);
-            utils::AddCylinderGeometry(obj.get(), mat_o, radius, hlen);
+            double len = 0.5;
+            rb = geometry::ChCylinder::GetBoundingSphereRadius(radius, len);
+            vol = geometry::ChCylinder::GetVolume(radius, len);
+            J = geometry::ChCylinder::GetGyration(radius, len);
+            utils::AddCylinderGeometry(obj.get(), mat_o, radius, len);
         } break;
         case ChCollisionShape::Type::ROUNDEDCYL: {
             double radius = 0.25;
-            double hlen = 0.1;
+            double len = 0.1;
             double srad = 0.1;
-            rb = utils::CalcRoundedCylinderBradius(radius, hlen, srad);
-            vol = utils::CalcRoundedCylinderVolume(radius, hlen, srad);
-            J = utils::CalcRoundedCylinderGyration(radius, hlen, srad);
-            utils::AddRoundedCylinderGeometry(obj.get(), mat_o, radius, hlen, srad);
+            rb = geometry::ChRoundedCylinder::GetBoundingSphereRadius(radius, len, srad);
+            vol = geometry::ChRoundedCylinder::GetVolume(radius, len, srad);
+            J = geometry::ChRoundedCylinder::GetGyration(radius, len, srad);
+            utils::AddRoundedCylinderGeometry(obj.get(), mat_o, radius, len, srad);
         } break;
     }
-
-    obj->GetCollisionModel()->BuildModel();
 
     // ---------------------
     // Set mass and inertia.
@@ -340,6 +335,7 @@ int main(int argc, char* argv[]) {
     ChSystemMulticoreNSC* msystem = new ChSystemMulticoreNSC();
 #endif
 
+    msystem->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
     msystem->Set_G_acc(ChVector<>(0, 0, -9.81));
 
     // ----------------------

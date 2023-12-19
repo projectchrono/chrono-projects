@@ -56,7 +56,6 @@
 #include "../../utils.h"
 
 using namespace chrono;
-using namespace chrono::collision;
 using namespace chrono::vehicle;
 using namespace chrono::vehicle::m113;
 
@@ -231,6 +230,8 @@ int main(int argc, char* argv[]) {
     std::cout << "Create multicore NSC system" << std::endl;
     ChSystemMulticoreNSC system;
 
+    system.SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
+
     system.Set_G_acc(ChVector<>(0, 0, -9.80665));
 
     // Set number of threads
@@ -270,12 +271,10 @@ int main(int argc, char* argv[]) {
     mat_g->SetFriction(mu_g);
 
     // Ground body
-    auto ground = std::shared_ptr<ChBody>(system.NewBody());
+    auto ground = chrono_types::make_shared<ChBody>();
     ground->SetIdentifier(-1);
     ground->SetBodyFixed(true);
     ground->SetCollide(true);
-
-    ground->GetCollisionModel()->ClearModel();
 
     // Bottom box
     chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick),
@@ -298,8 +297,6 @@ int main(int argc, char* argv[]) {
                                       ChVector<>(0, -hdimY - hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
                                       visible_walls);
     }
-
-    ground->GetCollisionModel()->BuildModel();
 
     system.AddBody(ground);
 

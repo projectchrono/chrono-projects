@@ -101,10 +101,11 @@ int main(int argc, char* argv[]) {
             break;
     }
 
+    system->SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
     system->Set_G_acc(ChVector<>(0, 0, -gravity));
 
     // Create the falling object
-    auto object = std::shared_ptr<ChBody>(system->NewBody());
+    auto object = chrono_types::make_shared<ChBody>();
     system->AddBody(object);
 
     object->SetIdentifier(objectId);
@@ -144,18 +145,16 @@ int main(int argc, char* argv[]) {
     auto trimesh = chrono_types::make_shared<geometry::ChTriangleMeshConnected>();
     trimesh->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_tire.obj"), true, false);
 
-    object->GetCollisionModel()->ClearModel();
-    object->GetCollisionModel()->AddTriangleMesh(object_mat, trimesh, false, false, ChVector<>(0), ChMatrix33<>(1),
-                                                 0.01);
-    object->GetCollisionModel()->BuildModel();
+    auto object_ct_shape = chrono_types::make_shared<ChCollisionShapeTriangleMesh>(object_mat, trimesh, false, false, 0.01);
+    object->AddCollisionShape(object_ct_shape);
 
-    auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+    auto trimesh_shape = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     trimesh_shape->SetMesh(trimesh);
     trimesh_shape->SetColor(ChColor(0.3f, 0.3f, 0.3f));
     object->AddVisualShape(trimesh_shape);
 
     // Create ground body
-    auto ground = std::shared_ptr<ChBody>(system->NewBody());
+    auto ground = chrono_types::make_shared<ChBody>();
     system->AddBody(ground);
 
     ground->SetIdentifier(groundId);
@@ -189,11 +188,10 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    ground->GetCollisionModel()->ClearModel();
-    ground->GetCollisionModel()->AddBox(ground_mat, width, length, thickness, ChVector<>(0, 0, -thickness/2));
-    ground->GetCollisionModel()->BuildModel();
+    auto ground_ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(ground_mat, width, length, thickness);
+    ground->AddCollisionShape(ground_ct_shape, ChFrame<>(ChVector<>(0, 0, -thickness/2), QUNIT));
 
-    auto box = chrono_types::make_shared<ChBoxShape>(width, length, thickness);
+    auto box = chrono_types::make_shared<ChVisualShapeBox>(width, length, thickness);
     ground->AddVisualShape(box, ChFrame<>(ChVector<>(0, 0, -thickness/2)));
 
     // Create the Irrlicht visualization

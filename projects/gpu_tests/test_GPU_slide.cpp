@@ -62,9 +62,9 @@ int main(int argc, char* argv[]) {
     params.box_Z = 15;
 
     // Angle gravity
-    params.grav_X = -565.80;
-    params.grav_Y = -565.80;
-    params.grav_Z = -565.80;
+    params.grav_X = -565.80f;
+    params.grav_Y = -565.80f;
+    params.grav_Z = -565.80f;
 
     // Setup simulation
     ChSystemGpu gpu_sys(params.sphere_radius, params.sphere_density,
@@ -175,8 +175,6 @@ int main(int argc, char* argv[]) {
 
     std::cout << "frame step is " << frame_step << std::endl;
     while (curr_time < params.time_end) {
-        float real_dt = gpu_sys.AdvanceSimulation(frame_step);
-
         curr_time += frame_step;
         printf("rendering frame %u\n", currframe);
         sprintf(filename, "%s/step%06d", params.output_dir.c_str(), currframe++);

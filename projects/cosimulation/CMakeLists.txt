@@ -14,7 +14,6 @@ message("\n---- VEHICLE COSIMULATION projects")
 #--------------------------------------------------------------
 
 # Invoke find_package in CONFIG mode
-
 find_package(Chrono QUIET
              COMPONENTS Vehicle Multicore
              OPTIONAL_COMPONENTS PardisoMKL OpenGL Irrlicht
@@ -22,7 +21,6 @@ find_package(Chrono QUIET
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
-
 if(NOT Chrono_FOUND)
   message("Could not find requirements for VEHICLE co-simulation projects")
   return()
@@ -32,6 +30,10 @@ if(NOT CHRONO_MPI_FOUND)
   message("The co-simulation projects require MPI which was not found!")
   return()
 endif()
+
+# Use same C++ standard as for building Chrono
+set(CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD ${CHRONO_CXX_STANDARD})
 
 #--------------------------------------------------------------
 # Include paths and libraries
@@ -54,11 +56,13 @@ include_directories(
 )
 
 #--------------------------------------------------------------
-# Append to the parent's list of DLLs (and make it visible up)
+# Append to the parent's lists of DLLs (and make them visible)
 #--------------------------------------------------------------
 
-list(APPEND ALL_DLLS "${CHRONO_DLLS}")
-set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
+list(APPEND ALL_DLL_NAMES       "${CHRONO_DLL_NAMES}")
+list(APPEND ALL_DEPENDENCY_DLLS "${CHRONO_DEPENDENCY_DLLS}")
+set(ALL_DLL_NAMES       "${ALL_DLL_NAMES}"       PARENT_SCOPE)
+set(ALL_DEPENDENCY_DLLS "${ALL_DEPENDENCY_DLLS}" PARENT_SCOPE)
 
 #--------------------------------------------------------------
 # Include subdirectories

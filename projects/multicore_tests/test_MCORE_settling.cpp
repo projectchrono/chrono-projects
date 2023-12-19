@@ -162,11 +162,12 @@ int main(int argc, char** argv) {
         }
     }
 
+    system->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
     system->Set_G_acc(ChVector<>(0, 0, -9.81));
     system->GetSettings()->solver.use_full_inertia_tensor = false;
     system->GetSettings()->solver.tolerance = 0.1;
     system->GetSettings()->solver.max_iteration_bilateral = 100;
-    system->GetSettings()->collision.narrowphase_algorithm = collision::ChNarrowphase::Algorithm::HYBRID;
+    system->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::HYBRID;
     system->GetSettings()->collision.bins_per_axis = vec3(binsX, binsY, binsZ);
 
     // Set number of threads
@@ -214,14 +215,13 @@ int main(int argc, char** argv) {
     }
 
     // Create container body
-    auto container = std::shared_ptr<ChBody>(system->NewBody());
+    auto container = chrono_types::make_shared<ChBody>();
     system->AddBody(container);
     container->SetIdentifier(-1);
     container->SetMass(1);
     container->SetBodyFixed(true);
     container->SetCollide(true);
 
-    container->GetCollisionModel()->ClearModel();
     // Bottom box
     utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick),
                           ChQuaternion<>(1, 0, 0, 0), true);
@@ -237,7 +237,6 @@ int main(int argc, char** argv) {
     // Right box
     utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hdimX, hthick, hdimZ + hthick),
                           ChVector<>(0, -hdimY - hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
-    container->GetCollisionModel()->BuildModel();
 
     // ----------------
     // Create particles

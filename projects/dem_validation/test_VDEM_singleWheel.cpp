@@ -53,7 +53,6 @@
 #endif
 
 using namespace chrono;
-using namespace chrono::collision;
 
 using std::cout;
 using std::flush;
@@ -216,7 +215,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     // Create the ground body -- always FIRST body in system
     // ----------------------
 
-    auto ground = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto ground = chrono_types::make_shared<ChBody>();
 
     ground->SetIdentifier(Id_ground);
     ground->SetBodyFixed(true);
@@ -224,13 +223,11 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     // Attach geometry of the containing bin.  Disable contact ground-shearBox
     // and ground-loadPlate.
-    ground->GetCollisionModel()->ClearModel();
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, hdimY + hthick, hdimZ));
-    ground->GetCollisionModel()->BuildModel();
 
     system->AddBody(ground);
 
@@ -240,7 +237,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     // Initially, the wheel is fixed to ground.
 
-    auto wheel = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto wheel = chrono_types::make_shared<ChBody>();
 
     // Set wheel starting pos, near back of the containing bin
     double hdimX_w = -hdimX + 1.01 * wheelRadius;
@@ -252,9 +249,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     wheel->SetBodyFixed(true);
 
     // Add geometry of the wheel.
-    wheel->GetCollisionModel()->ClearModel();
     utils::AddCylinderGeometry(wheel.get(), mat_walls, wheelRadius, wheelWidth / 2, ChVector<>(0, 0, 0), QUNIT);
-    wheel->GetCollisionModel()->BuildModel();
 
     system->AddBody(wheel);
 
@@ -265,7 +260,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     // Initially, the chassis is fixed to ground.
     // It is released after the settling phase.
 
-    auto chassis = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto chassis = chrono_types::make_shared<ChBody>();
 
     chassis->SetIdentifier(Id_chassis);
     chassis->SetMass(1.0);
@@ -274,10 +269,8 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     chassis->SetBodyFixed(true);
 
     // Add geometry of the wheel.
-    chassis->GetCollisionModel()->ClearModel();
     utils::AddBoxGeometry(chassis.get(), mat_walls, ChVector<>(.1 * wheelRadius, .1 * wheelRadius, .1 * wheelRadius),
                           ChVector<>(0, 0, 0));
-    chassis->GetCollisionModel()->BuildModel();
 
     system->AddBody(chassis);
 
@@ -288,7 +281,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     // Initially, the axle is fixed to ground.
     // It is released after the settling phase.
 
-    auto axle = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto axle = chrono_types::make_shared<ChBody>();
 
     axle->SetIdentifier(Id_axle);
     axle->SetMass(wheelWeight / gravity);
@@ -297,9 +290,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     axle->SetBodyFixed(true);
 
     // Add geometry of the wheel.
-    axle->GetCollisionModel()->ClearModel();
     utils::AddSphereGeometry(axle.get(), mat_walls, 0.1 * wheelRadius, ChVector<>(0, 0, 0));
-    axle->GetCollisionModel()->BuildModel();
 
     system->AddBody(axle);
 }
@@ -429,7 +420,7 @@ void CreateBall(ChSystemMulticore* system) {
     // Create the ball
     // ---------------
 
-    auto ball = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    auto ball = chrono_types::make_shared<ChBody>();
 
     ball->SetIdentifier(Id_ball);
     ball->SetMass(mass_ball);
@@ -437,9 +428,7 @@ void CreateBall(ChSystemMulticore* system) {
     ball->SetCollide(true);
     ball->SetBodyFixed(false);
 
-    ball->GetCollisionModel()->ClearModel();
     utils::AddSphereGeometry(ball.get(), mat_g, radius_ball);
-    ball->GetCollisionModel()->BuildModel();
 
     system->AddBody(ball);
 }
@@ -513,6 +502,8 @@ int main(int argc, char* argv[]) {
     cout << "Create NSC system" << endl;
     ChSystemMulticoreNSC* sys = new ChSystemMulticoreNSC();
 #endif
+
+    sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     sys->Set_G_acc(ChVector<>(0, 0, -gravity));
 
