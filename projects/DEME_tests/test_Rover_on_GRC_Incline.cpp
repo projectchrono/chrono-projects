@@ -160,10 +160,6 @@ int main(int argc, char* argv[]) {
     auto mat_type_wall = DEMSim.LoadMaterial({{"E", E}, {"nu", 0.3}, {"CoR", CoR}, {"mu", mu_wall}, {"Crr", 0.00}});
     auto mat_type_wheel = DEMSim.LoadMaterial({{"E", E}, {"nu", 0.3}, {"CoR", CoR}, {"mu", mu_wheel}, {"Crr", 0.00}});
     auto mat_type_terrain = DEMSim.LoadMaterial({{"E", E}, {"nu", 0.3}, {"CoR", CoR}, {"mu", mu}, {"Crr", 0.00}});
-    // auto mat_type_wall = DEMSim.LoadMaterial({{"E", 1e9}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", mu_wall}, {"Crr",
-    // 0.00}}); auto mat_type_wheel = DEMSim.LoadMaterial({{"E", 1e9}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", mu_wheel},
-    // {"Crr", 0.00}}); auto mat_type_terrain = DEMSim.LoadMaterial({{"E", 1e9}, {"nu", 0.3}, {"CoR", 0.5}, {"mu", mu},
-    // {"Crr", 0.00}});
     DEMSim.SetMaterialPropertyPair("mu", mat_type_wheel, mat_type_terrain, mu_wheel);
     DEMSim.SetMaterialPropertyPair("mu", mat_type_wall, mat_type_terrain, mu_wall);
 

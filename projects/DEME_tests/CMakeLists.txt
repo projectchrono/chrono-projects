@@ -28,27 +28,28 @@ find_package(Chrono QUIET
 )
 
 find_package(CUDAToolkit REQUIRED)
-find_package(ChPF REQUIRED)
+
+find_package(ChPF QUIET)
+if(NOT ChPF_FOUND)
+  message("Could not find ChPF library: It is fine if DEME is built without it; otherwise, find search DEME install dir for it.")
+endif()
+
 find_package(DEME REQUIRED)
 
-# If Chrono and/or the required component(s) were not found, return now.
 
+# If Chrono and/or the required component(s) were not found, return now.
 if(NOT Chrono_FOUND)
-  message("Could not find Chrono")
+  message("Could not find Chrono, search Chrono installation dir for it.")
   return()
 endif()
 
 if(NOT DEME_FOUND)
-  message("Could not find DEM-Engine library, search DEME install dir for it")
+  message("Could not find DEM-Engine library, search DEME install dir for it.")
   return()
 endif()
 
-if(NOT ChPF_FOUND)
-  message("Could not find ChPF library, search DEME install dir for it")
-  return()
-endif()
-
-if (CHRONO_VEHICLE_FOUND)
+if(CHRONO_VEHICLE_FOUND)
+  message("Found Chrono::Vehicle, more demos are enabled.")
     list(APPEND TESTS ${TESTS_VEH_ROBOT})
 endif()
 
