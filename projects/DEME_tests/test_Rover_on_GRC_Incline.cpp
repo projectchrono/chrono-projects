@@ -323,10 +323,16 @@ int main(int argc, char* argv[]) {
 
     // Instantiate this wheel
     std::cout << "Making wheels..." << std::endl;
+
+    // Later you'll see that we do 10 steps of DEM simulation per Chrono-side update (since the MBD problem requires
+    // much less strict time step size to be viable, so we can save by doing this), so what is the behavior of the
+    // wheels in the DEM-side of the simulation? They keep their angular vel and vel 'as is', remains the same as the
+    // last update they received, until a new update is given by Chrono. This is what the following two lines mean.
     DEMSim.SetFamilyPrescribedAngVel(100);
     DEMSim.SetFamilyPrescribedLinVel(100);
+
+    // Loading wheels and use trackers to retain direct control over them after simulation starts...
     std::vector<std::shared_ptr<DEMTracker>> trackers;
-    // std::vector<std::shared_ptr<DEMClumpBatch>> DEM_Wheels;
     std::vector<std::shared_ptr<DEMMeshConnected>> DEM_Wheels;
     for (int i = 0; i < nW; i++) {
         // DEM_Wheels.push_back(DEMSim.AddClumps(wheel_template, make_float3(wheel_pos[i].x(), wheel_pos[i].y(),
@@ -334,9 +340,9 @@ int main(int argc, char* argv[]) {
         // DEM_Wheels[i]->InformCentroidPrincipal(make_float3(0), make_float4(0.7071, 0, 0, 0.7071));
         DEM_Wheels.push_back(DEMSim.AddWavefrontMeshObject(wheel_obj_path, mat_type_wheel));
         // If this is one of the left wheels, mirror it. It's not a big difference, but we should do...
-        // if (i == 0 || i == 2) {
-        //     DEM_Wheels[i]->Mirror(make_float3(0,0,0), make_float3(0,1,0));
-        // }
+        if (i == 0 || i == 2) {
+            DEM_Wheels[i]->Mirror(make_float3(0, 0, 0), make_float3(0, 1, 0));
+        }
 
         DEM_Wheels[i]->SetFamily(100);
         DEM_Wheels[i]->SetMass(wheel_mass);
