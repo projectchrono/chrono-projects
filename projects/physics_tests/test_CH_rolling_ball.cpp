@@ -28,7 +28,6 @@
 #include <cstdio>
 #include <cmath>
 
-#include "chrono/core/ChStream.h"
 #include "chrono/assets/ChVisualShapeBox.h"
 #include "chrono/assets/ChVisualShapeSphere.h"
 #include "chrono/physics/ChSystemNSC.h"
@@ -43,28 +42,28 @@ using namespace chrono;
 // -----------------------------------------------------------------------------
 class ContactManager : public ChContactContainer::ReportContactCallback {
 public:
-    const ChVector<>& GetForce() const { return m_force; }
+    const ChVector3d& GetForce() const { return m_force; }
 
   private:
-    virtual bool OnReportContact(const ChVector<>& pA,
-                                 const ChVector<>& pB,
+    virtual bool OnReportContact(const ChVector3d& pA,
+                                 const ChVector3d& pB,
                                  const ChMatrix33<>& plane_coord,
                                  const double& distance,
                                  const double& eff_radius,
-                                 const ChVector<>& cforce,
-                                 const ChVector<>& ctorque,
+                                 const ChVector3d& cforce,
+                                 const ChVector3d& ctorque,
                                  ChContactable* modA,
                                  ChContactable* modB) override {
         m_force = cforce;
         return true;
     }
 
-    ChVector<> m_force;
+    ChVector3d m_force;
 };
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-void Output(double time, std::shared_ptr<ChBody> ball, int ncontacts, const ChVector<>& cforce) {
+void Output(double time, std::shared_ptr<ChBody> ball, int ncontacts, const ChVector3d& cforce) {
     auto pos = ball->GetPos();
     auto vel = ball->GetPos_dt();
     auto omg = ball->GetWvel_loc();
@@ -86,7 +85,7 @@ int main(int argc, char* argv[]) {
     // Create the physical system and set gravity along negative Z
     ChSystemNSC system;
     system.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
-    system.Set_G_acc(ChVector<>(0, 0, -9.81));
+    system.Set_G_acc(ChVector3d(0, 0, -9.81));
 
     system.SetSolverType(ChSolver::Type::APGD);
     system.SetSolverMaxIterations(1000);
@@ -94,7 +93,7 @@ int main(int argc, char* argv[]) {
     system.SetMaxPenetrationRecoverySpeed(0);
 
     // Create a material (will be used by both objects)
-    auto material = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto material = chrono_types::make_shared<ChContactMaterialNSC>();
     material->SetRestitution(0);
     material->SetFriction(0.2f);
 
@@ -105,19 +104,19 @@ int main(int argc, char* argv[]) {
     ground->SetCollide(true);
 
     auto ground_ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(material, 4, 2, 1);
-    ground->AddCollisionShape(ground_ct_shape, ChFrame<>(ChVector<>(0, 0, -1), QUNIT));
+    ground->AddCollisionShape(ground_ct_shape, ChFrame<>(ChVector3d(0, 0, -1), QUNIT));
 
     auto box = chrono_types::make_shared<ChVisualShapeBox>(8, 4, 2);
     box->SetColor(ChColor(1, 0, 0));
-    ground->AddVisualShape(box, ChFrame<>(ChVector<>(0, 0, -0.5)));
+    ground->AddVisualShape(box, ChFrame<>(ChVector3d(0, 0, -0.5)));
 
     // Crank
     auto ball = chrono_types::make_shared<ChBody>();
     system.AddBody(ball);
     ball->SetMass(1);
-    ball->SetInertiaXX(ChVector<>(0.4, 0.4, 0.4));
-    ball->SetPos(ChVector<>(0, 0, 1));
-    ball->SetPos_dt(ChVector<>(2, 0, 0));
+    ball->SetInertiaXX(ChVector3d(0.4, 0.4, 0.4));
+    ball->SetPos(ChVector3d(0, 0, 1));
+    ball->SetPos_dt(ChVector3d(2, 0, 0));
     ball->SetCollide(true);
 
     auto ball_ct_shape = chrono_types::make_shared<ChCollisionShapeSphere>(material, 1);
@@ -133,7 +132,7 @@ int main(int argc, char* argv[]) {
     double time = 0;
     double time_step = 1e-3;
 
-    Output(0.0, ball, 0, ChVector<>(0, 0, 0));
+    Output(0.0, ball, 0, ChVector3d(0, 0, 0));
 
     while (time < 0.6) {
         // Advance system state for one step.

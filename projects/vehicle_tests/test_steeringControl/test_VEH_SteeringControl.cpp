@@ -83,7 +83,7 @@ std::string transmission_file("generic/powertrain/AutomaticTransmissionSimpleMap
 std::string rigidterrain_file("terrain/RigidPlane.json");
 
 // Initial vehicle position and orientation
-ChVector<> initLoc(-125, -125, 0.6);
+ChVector3d initLoc(-125, -125, 0.6);
 ChQuaternion<> initRot(1, 0, 0, 0);
 
 // Desired vehicle speed (m/s)
@@ -171,12 +171,12 @@ int main(int argc, char* argv[]) {
 
         // Collect data
         if (!settling) {
-            const ChVector<> sentinel = driver.GetSteeringController().GetSentinelLocation();
-            const ChVector<> target = driver.GetSteeringController().GetTargetLocation();
-            const ChVector<> vehicle_location = vehicle.GetPos();
-            ChVector<> vehicle_target;
+            const ChVector3d sentinel = driver.GetSteeringController().GetSentinelLocation();
+            const ChVector3d target = driver.GetSteeringController().GetTargetLocation();
+            const ChVector3d vehicle_location = vehicle.GetPos();
+            ChVector3d vehicle_target;
             tracker.calcClosestPoint(vehicle_location, vehicle_target);
-            ChVector<> vehicle_err = vehicle_target - vehicle_location;
+            ChVector3d vehicle_err = vehicle_target - vehicle_location;
             double speed_err = target_speed - vehicle.GetSpeed();
 
             csv << vehicle.GetChTime() << vehicle_location << vehicle_target << vehicle_err << speed_err << std::endl;

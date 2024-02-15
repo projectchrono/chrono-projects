@@ -20,7 +20,6 @@
 
 // Chrono::Engine header files
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 // Chrono::Multicore header files
@@ -90,7 +89,7 @@ float mu_g = 0.9f;
 
 double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
-ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
+ChVector3d inertia_g = 0.4 * mass_g * r_g * r_g * ChVector3d(1, 1, 1);
 double coh_force = CH_C_PI * r_g * r_g * coh_pressure;
 
 // -----------------------------------------------------------------------------
@@ -98,7 +97,7 @@ double coh_force = CH_C_PI * r_g * r_g * coh_pressure;
 // -----------------------------------------------------------------------------
 
 // Initial vehicle position and orientation
-ChVector<> initLoc(-hdimX + 4.5, 0, 1.0);
+ChVector3d initLoc(-hdimX + 4.5, 0, 1.0);
 ChQuaternion<> initRot(1, 0, 0, 0);
 
 // -----------------------------------------------------------------------------
@@ -169,7 +168,7 @@ class MyDriver : public ChDriver {
 
 double CreateParticles(ChSystem* system) {
     // Create a material
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(0.0f);
     mat_g->SetYoungModulus(8e5f);
@@ -194,8 +193,8 @@ double CreateParticles(ChSystem* system) {
     gen.setBodyIdentifier(Id_g);
 
     // Create particles in layers until reaching the desired number of particles
-    ChVector<> hdims(hdimX - r, hdimY - r, 0);
-    ChVector<> center(0, 0, 2 * r);
+    ChVector3d hdims(hdimX - r, hdimY - r, 0);
+    ChVector3d center(0, 0, 2 * r);
 
     double layerCount = 0;
     while (layerCount < numLayers) {
@@ -225,7 +224,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Create multicore SMC system" << std::endl;
     ChSystemMulticoreSMC system;
     system.SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
-    system.Set_G_acc(ChVector<>(0, 0, -9.80665));
+    system.Set_G_acc(ChVector3d(0, 0, -9.80665));
 
     // Set number of threads
     system.SetNumThreads(std::min(threads, ChOMP::GetNumProcs()));
@@ -254,7 +253,7 @@ int main(int argc, char* argv[]) {
     // ------------------
 
     // Contact material
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_g->SetYoungModulus(1e8f);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(0.4f);
@@ -266,24 +265,24 @@ int main(int argc, char* argv[]) {
     ground->SetCollide(true);
 
     // Bottom box
-    chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick),
+    chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector3d(hdimX, hdimY, hthick), ChVector3d(0, 0, -hthick),
                                   ChQuaternion<>(1, 0, 0, 0), true);
     if (terrain_type == GRANULAR_TERRAIN) {
         // Front box
-        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hthick, hdimY, hdimZ + hthick),
-                                      ChVector<>(hdimX + hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
+        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector3d(hthick, hdimY, hdimZ + hthick),
+                                      ChVector3d(hdimX + hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
                                       visible_walls);
         // Rear box
-        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hthick, hdimY, hdimZ + hthick),
-                                      ChVector<>(-hdimX - hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
+        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector3d(hthick, hdimY, hdimZ + hthick),
+                                      ChVector3d(-hdimX - hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
                                       visible_walls);
         // Left box
-        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hdimX, hthick, hdimZ + hthick),
-                                      ChVector<>(0, hdimY + hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
+        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector3d(hdimX, hthick, hdimZ + hthick),
+                                      ChVector3d(0, hdimY + hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
                                       visible_walls);
         // Right box
-        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector<>(hdimX, hthick, hdimZ + hthick),
-                                      ChVector<>(0, -hdimY - hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
+        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector3d(hdimX, hthick, hdimZ + hthick),
+                                      ChVector3d(0, -hdimY - hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
                                       visible_walls);
     }
 
@@ -306,7 +305,7 @@ int main(int argc, char* argv[]) {
     auto transmission = chrono_types::make_shared<M113_AutomaticTransmissionSimpleMap>("Transmission");
     auto powertrain = chrono_types::make_shared<ChPowertrainAssembly>(engine, transmission);
 
-    vehicle->Initialize(ChCoordsys<>(initLoc + ChVector<>(0.0, 0.0, vertical_offset), initRot));
+    vehicle->Initialize(ChCoordsys<>(initLoc + ChVector3d(0.0, 0.0, vertical_offset), initRot));
 
     // Set visualization type for subsystems
     vehicle->SetChassisVisualizationType(VisualizationType::PRIMITIVES);
@@ -362,7 +361,7 @@ int main(int argc, char* argv[]) {
     vis.SetWindowSize(1280, 720);
     vis.SetRenderMode(opengl::WIREFRAME);
     vis.Initialize();
-    vis.AddCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0));
+    vis.AddCamera(ChVector3d(0, -10, 0), ChVector3d(0, 0, 0));
     vis.SetCameraVertical(CameraVerticalDir::Z);
 #endif
 
@@ -386,8 +385,8 @@ int main(int argc, char* argv[]) {
         vehicle->GetTrackShoeStates(LEFT, shoe_states_left);
         vehicle->GetTrackShoeStates(RIGHT, shoe_states_right);
 
-        const ChVector<>& pos_CG = vehicle->GetChassis()->GetPos();
-        ChVector<> vel_CG = vehicle->GetChassisBody()->GetPos_dt();
+        const ChVector3d& pos_CG = vehicle->GetChassis()->GetPos();
+        ChVector3d vel_CG = vehicle->GetChassisBody()->GetPos_dt();
         vel_CG = vehicle->GetChassisBody()->GetCoord().TransformDirectionParentToLocal(vel_CG);
 
         // Vehicle and Control Values

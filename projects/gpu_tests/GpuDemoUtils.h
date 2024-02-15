@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-#include "chrono/core/ChVector.h"
+#include "chrono/core/ChVector3.h"
 
 void tokenizeCSVLine(std::ifstream& istream, std::vector<float> data) {
     std::string line;
@@ -19,11 +19,11 @@ void tokenizeCSVLine(std::ifstream& istream, std::vector<float> data) {
 
 // load sphere positions from a checkpoint file
 template <typename T>
-std::vector<chrono::ChVector<T>> loadPositionCheckpoint(std::string infile) {
+std::vector<chrono::ChVector3<T>> loadPositionCheckpoint(std::string infile) {
     // file stream to load in
     std::ifstream ptFile(infile);
 
-    std::vector<chrono::ChVector<T>> sphere_positions;
+    std::vector<chrono::ChVector3<T>> sphere_positions;
     std::string tmp_line;
     std::getline(ptFile, tmp_line);  // skip first header line
     // TODO look ahead and reserve space to avoid push_backs

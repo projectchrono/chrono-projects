@@ -32,7 +32,6 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -212,13 +211,13 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 // -------------------------------
 
 #ifdef USE_SMC
-    auto mat_walls = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_walls = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_walls->SetYoungModulus(Y_walls);
     mat_walls->SetFriction(mu_walls);
     mat_walls->SetRestitution(cr_walls);
     mat_walls->SetPoissonRatio(nu_walls);
 #else
-    auto mat_walls = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_walls = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_walls->SetFriction(mu_walls);
 #endif
 
@@ -234,11 +233,11 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     // Attach geometry of the containing bin.  Disable contact ground-shearBox
     // and ground-loadPlate.
-    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick));
-    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(-hdimX - hthick, 0, hdimZ));
-    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hthick, hdimY, hdimZ), ChVector<>(hdimX + hthick, 0, hdimZ));
-    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, -hdimY - hthick, hdimZ));
-    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector<>(hdimX, hthick, hdimZ), ChVector<>(0, hdimY + hthick, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hdimX, hdimY, hthick), ChVector3d(0, 0, -hthick));
+    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hthick, hdimY, hdimZ), ChVector3d(-hdimX - hthick, 0, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hthick, hdimY, hdimZ), ChVector3d(hdimX + hthick, 0, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hdimX, hthick, hdimZ), ChVector3d(0, -hdimY - hthick, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hdimX, hthick, hdimZ), ChVector3d(0, hdimY + hthick, hdimZ));
     ground->GetCollisionModel()->SetFamily(ground_coll_fam);
     ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(box_coll_fam);
     ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(plate_coll_fam);
@@ -255,19 +254,19 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     auto box = chrono_types::make_shared<ChBody>();
 
     box->SetIdentifier(Id_box);
-    box->SetPos(ChVector<>(0, 0, 2 * hdimZ + r_g));
+    box->SetPos(ChVector3d(0, 0, 2 * hdimZ + r_g));
     box->SetCollide(true);
     box->SetBodyFixed(true);
 
     // Add geometry of the shear box.  Disable contact with the load plate.
-    utils::AddBoxGeometry(box.get(), mat_walls, ChVector<>(hthick, hdimY, h_scaling * hdimZ),
-                          ChVector<>(-hdimX - hthick, 0, h_scaling * hdimZ));
-    utils::AddBoxGeometry(box.get(), mat_walls, ChVector<>(hthick, hdimY, h_scaling * hdimZ),
-                          ChVector<>(hdimX + hthick, 0, h_scaling * hdimZ));
-    utils::AddBoxGeometry(box.get(), mat_walls, ChVector<>(hdimX, hthick, h_scaling * hdimZ),
-                          ChVector<>(0, -hdimY - hthick, h_scaling * hdimZ));
-    utils::AddBoxGeometry(box.get(), mat_walls, ChVector<>(hdimX, hthick, h_scaling * hdimZ),
-                          ChVector<>(0, hdimY + hthick, h_scaling * hdimZ));
+    utils::AddBoxGeometry(box.get(), mat_walls, ChVector3d(hthick, hdimY, h_scaling * hdimZ),
+                          ChVector3d(-hdimX - hthick, 0, h_scaling * hdimZ));
+    utils::AddBoxGeometry(box.get(), mat_walls, ChVector3d(hthick, hdimY, h_scaling * hdimZ),
+                          ChVector3d(hdimX + hthick, 0, h_scaling * hdimZ));
+    utils::AddBoxGeometry(box.get(), mat_walls, ChVector3d(hdimX, hthick, h_scaling * hdimZ),
+                          ChVector3d(0, -hdimY - hthick, h_scaling * hdimZ));
+    utils::AddBoxGeometry(box.get(), mat_walls, ChVector3d(hdimX, hthick, h_scaling * hdimZ),
+                          ChVector3d(0, hdimY + hthick, h_scaling * hdimZ));
     box->GetCollisionModel()->SetFamily(box_coll_fam);
     box->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(plate_coll_fam);
 
@@ -292,12 +291,12 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     plate->SetIdentifier(Id_plate);
     plate->SetMass(mass);
-    plate->SetPos(ChVector<>(0, 0, (1 + 2 * h_scaling) * hdimZ));
+    plate->SetPos(ChVector3d(0, 0, (1 + 2 * h_scaling) * hdimZ));
     plate->SetCollide(true);
     plate->SetBodyFixed(true);
 
     // Add geometry of the load plate.
-    utils::AddBoxGeometry(plate.get(), mat_walls, ChVector<>(hdimX_p, hdimY, hdimZ), ChVector<>(0, 0, hdimZ));
+    utils::AddBoxGeometry(plate.get(), mat_walls, ChVector3d(hdimX_p, hdimY, hdimZ), ChVector3d(0, 0, hdimZ));
     plate->GetCollisionModel()->SetFamily(plate_coll_fam);
 
     system->AddBody(plate);
@@ -310,15 +309,15 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
 void ConnectShearBox(ChSystemMulticore* system, std::shared_ptr<ChBody> ground, std::shared_ptr<ChBody> box) {
     auto prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
-    prismatic->Initialize(ground, box, ChCoordsys<>(ChVector<>(0, 0, 2 * hdimZ), Q_from_AngY(CH_C_PI_2)));
+    prismatic->Initialize(ground, box, ChCoordsys<>(ChVector3d(0, 0, 2 * hdimZ), QuatFromAngleY(CH_C_PI_2)));
     prismatic->SetName("prismatic_box_ground");
     system->AddLink(prismatic);
 
-    auto actuator_fun = chrono_types::make_shared<ChFunction_Ramp>(0.0, desiredVelocity);
+    auto actuator_fun = chrono_types::make_shared<ChFunctionRamp>(0.0, desiredVelocity);
 
     auto actuator = chrono_types::make_shared<ChLinkLinActuator>();
-    ChVector<> pt1(0, 0, 2 * hdimZ);
-    ChVector<> pt2(1, 0, 2 * hdimZ);
+    ChVector3d pt1(0, 0, 2 * hdimZ);
+    ChVector3d pt2(1, 0, 2 * hdimZ);
     actuator->Initialize(ground, box, false, ChCoordsys<>(pt1, QUNIT), ChCoordsys<>(pt2, QUNIT));
     actuator->SetName("actuator");
     actuator->SetDistanceOffset(1);
@@ -333,7 +332,7 @@ void ConnectShearBox(ChSystemMulticore* system, std::shared_ptr<ChBody> ground, 
 
 void ConnectLoadPlate(ChSystemMulticore* system, std::shared_ptr<ChBody> ground, std::shared_ptr<ChBody> plate) {
     auto prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
-    prismatic->Initialize(ground, plate, ChCoordsys<>(ChVector<>(0, 0, 2 * hdimZ), QUNIT));
+    prismatic->Initialize(ground, plate, ChCoordsys<>(ChVector3d(0, 0, 2 * hdimZ), QUNIT));
     prismatic->SetName("prismatic_plate_ground");
     system->AddLink(prismatic);
 }
@@ -353,13 +352,13 @@ int CreateGranularMaterial(ChSystemMulticore* system) {
 // -------------------------------------------
 
 #ifdef USE_SMC
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
     mat_g->SetPoissonRatio(nu_g);
 #else
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -384,8 +383,8 @@ int CreateGranularMaterial(ChSystemMulticore* system) {
     // Generate the particles
     // ----------------------
 
-    ChVector<> hdims(hdimX - r, hdimY - r, 0);
-    ChVector<> center(0, 0, 2 * r);
+    ChVector3d hdims(hdimX - r, hdimY - r, 0);
+    ChVector3d center(0, 0, 2 * r);
 
     while (center.z() < 2 * h_scaling * hdimZ) {
         gen.CreateObjectsBox(sampler, center, hdims);
@@ -406,13 +405,13 @@ void CreateBall(ChSystemMulticore* system) {
 // ------------------------------
 
 #ifdef USE_SMC
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
     mat_g->SetPoissonRatio(nu_g);
 #else
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -424,7 +423,7 @@ void CreateBall(ChSystemMulticore* system) {
 
     ball->SetIdentifier(Id_ball);
     ball->SetMass(mass_ball);
-    ball->SetPos(ChVector<>(0, 0, 1.01 * radius_ball));
+    ball->SetPos(ChVector3d(0, 0, 1.01 * radius_ball));
     ball->SetCollide(true);
     ball->SetBodyFixed(false);
 
@@ -505,7 +504,7 @@ int main(int argc, char* argv[]) {
 
     sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
-    sys->Set_G_acc(ChVector<>(0, 0, -gravity));
+    sys->Set_G_acc(ChVector3d(0, 0, -gravity));
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();
@@ -598,9 +597,9 @@ int main(int argc, char* argv[]) {
             // Move the load plate just above the granular material.
             double highest, lowest;
             FindHeightRange(sys, lowest, highest);
-            ChVector<> pos = loadPlate->GetPos();
+            ChVector3d pos = loadPlate->GetPos();
             double z_new = highest + 2 * r_g;
-            loadPlate->SetPos(ChVector<>(pos.x(), pos.y(), z_new));
+            loadPlate->SetPos(ChVector3d(pos.x(), pos.y(), z_new));
 
             // Connect the load plate to the shear box.
             ConnectLoadPlate(sys, ground, loadPlate);
@@ -677,9 +676,9 @@ int main(int argc, char* argv[]) {
             loadPlate = sys->Get_bodylist().at(2);
 
             // Move the load plate just above the test ball.
-            ChVector<> pos = loadPlate->GetPos();
+            ChVector3d pos = loadPlate->GetPos();
             double z_new = 2.1 * radius_ball;
-            loadPlate->SetPos(ChVector<>(pos.x(), pos.y(), z_new));
+            loadPlate->SetPos(ChVector3d(pos.x(), pos.y(), z_new));
 
             // If using an actuator, connect the shear box and get a handle to the actuator.
             if (use_actuator) {
@@ -731,10 +730,8 @@ int main(int argc, char* argv[]) {
     std::valarray<double> hdata(0.0, buffer_size);
 
     // Create output files
-    ChStreamOutAsciiFile statsStream(stats_file.c_str());
-    ChStreamOutAsciiFile shearStream(shear_file.c_str());
-
-    shearStream.SetNumFormat("%16.4e");
+    std::ofstream statsStream(stats_file.c_str());
+    std::ofstream shearStream(shear_file.c_str());
 
 #ifdef CHRONO_OPENGL
     opengl::ChVisualSystemOpenGL vis;
@@ -743,15 +740,15 @@ int main(int argc, char* argv[]) {
     vis.SetWindowSize(1280, 720);
     vis.SetRenderMode(opengl::WIREFRAME);
     vis.Initialize();
-    vis.AddCamera(ChVector<>(0, -10 * hdimY, hdimZ), ChVector<>(0, 0, hdimZ));
+    vis.AddCamera(ChVector3d(0, -10 * hdimY, hdimZ), ChVector3d(0, 0, hdimZ));
     vis.SetCameraVertical(CameraVerticalDir::Z);
 #endif
 
     // Loop until reaching the end time...
     while (time < time_end) {
         // Current position and velocity of the shear box
-        ChVector<> pos_old = shearBox->GetPos();
-        ChVector<> vel_old = shearBox->GetPos_dt();
+        ChVector3d pos_old = shearBox->GetPos();
+        ChVector3d vel_old = shearBox->GetPos_dt();
 
         // Calculate minimum and maximum particle heights
         double highest, lowest;
@@ -834,7 +831,7 @@ int main(int argc, char* argv[]) {
             statsStream << time << ", " << exec_time << ", " << num_contacts / write_steps << ", " << numIters << ", "
                         << residual << ", " << max_cnstr_viol[0] << ", " << max_cnstr_viol[1] << ", "
                         << max_cnstr_viol[2] << ", \n";
-            statsStream.GetFstream().flush();
+            statsStream.flush();
 
             num_contacts = 0;
             max_cnstr_viol[0] = 0;
@@ -844,14 +841,14 @@ int main(int argc, char* argv[]) {
 
         if (problem == SHEARING || problem == TESTING) {
             // Get the current reaction force or impose shear box position
-            ChVector<> rforcePbg(0, 0, 0);
-            ChVector<> rtorquePbg(0, 0, 0);
+            ChVector3d rforcePbg(0, 0, 0);
+            ChVector3d rtorquePbg(0, 0, 0);
 
-            ChVector<> rforcePpb(0, 0, 0);
-            ChVector<> rtorquePpb(0, 0, 0);
+            ChVector3d rforcePpb(0, 0, 0);
+            ChVector3d rtorquePpb(0, 0, 0);
 
-            ChVector<> rforceA(0, 0, 0);
-            ChVector<> rtorqueA(0, 0, 0);
+            ChVector3d rforceA(0, 0, 0);
+            ChVector3d rtorqueA(0, 0, 0);
 
             if (use_actuator) {
                 rforcePbg = prismatic_box_ground->Get_react_force();
@@ -864,8 +861,8 @@ int main(int argc, char* argv[]) {
                 rtorqueA = actuator->Get_react_torque();
             } else {
                 double xpos_new = pos_old.x() + desiredVelocity * time_step;
-                shearBox->SetPos(ChVector<>(xpos_new, pos_old.y(), pos_old.z()));
-                shearBox->SetPos_dt(ChVector<>(desiredVelocity, 0, 0));
+                shearBox->SetPos(ChVector3d(xpos_new, pos_old.y(), pos_old.z()));
+                shearBox->SetPos_dt(ChVector3d(desiredVelocity, 0, 0));
             }
 
             if (sim_frame % write_steps == 0) {
@@ -873,7 +870,7 @@ int main(int argc, char* argv[]) {
                 shearStream << time << "  " << shearBox->GetPos().x() << "     ";
                 shearStream << rforceA.x() << "  " << rforceA.y() << "  " << rforceA.z() << "     ";
                 shearStream << rtorqueA.x() << "  " << rtorqueA.y() << "  " << rtorqueA.z() << "\n";
-                shearStream.GetFstream().flush();
+                shearStream.flush();
             }
         }
 

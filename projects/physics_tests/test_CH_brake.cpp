@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
     // -------------------------------
     // Parameters for the wheel
     // -------------------------------
-    ChVector<> init_pos(0, 0, 0);
+    ChVector3d init_pos(0, 0, 0);
     // ChQuaternion<> init_rot(1, 0, 0, 0);
     // ChQuaternion<> init_rot(0.866025, 0, 0.5, 0);
     ChQuaternion<> init_rot(0.7071068, 0, 0.7071068, 0);
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
 
     ChSystemNSC system;
 
-    system.Set_G_acc(ChVector<>(0, gravity, 0));
+    system.Set_G_acc(ChVector3d(0, gravity, 0));
 
 
     // Create ground
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     wheel->SetMass(100);
     wheel->SetPos(init_pos);
     wheel->SetRot(init_rot);
-    wheel->SetWvel_loc(ChVector<>(0, 0, 100));
+    wheel->SetWvel_loc(ChVector3d(0, 0, 100));
     wheel->SetCollide(false);
     wheel->SetBodyFixed(false);
 
@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
-    vis->AddCamera(ChVector<>(1, 0.5, -1));
+    vis->AddCamera(ChVector3d(1, 0.5, -1));
     vis->AddTypicalLights();
     vis->AttachSystem(&system);
 
@@ -145,7 +145,7 @@ int main(int argc, char* argv[]) {
         brake->Set_brake_torque(modulation * max_torque);
 
         if (monitor && std::abs(wheel->GetWvel_loc().z()) < 0.1) {
-            GetLog() << "Wheel stopped at t = " << time << "\n";
+            std::cout << "Wheel stopped at t = " << time << "\n";
             monitor = false;
         }
     }

@@ -53,7 +53,7 @@ float cohesion_ratio = 0;
 // -----------------------------------------------------------------------------
 double run_test(float box_size_X, float box_size_Y, float box_size_Z) {
     // Setup simulation
-    ChSystemGpu gpu_system(ballRadius, ballDensity, ChVector<float>(box_size_X, box_size_Y, box_size_Z));
+    ChSystemGpu gpu_system(ballRadius, ballDensity, ChVector3f(box_size_X, box_size_Y, box_size_Z));
     gpu_system.SetKn_SPH2SPH(normStiffness_S2S);
     gpu_system.SetKn_SPH2WALL(normStiffness_S2W);
     gpu_system.SetGn_SPH2SPH(normalDampS2S);
@@ -61,14 +61,14 @@ double run_test(float box_size_X, float box_size_Y, float box_size_Z) {
 
     gpu_system.SetCohesionRatio(cohesion_ratio);
     gpu_system.SetAdhesionRatio_SPH2WALL(adhesion_ratio_s2w);
-    gpu_system.SetGravitationalAcceleration(ChVector<>(0.f, 0.f, grav_acceleration));
+    gpu_system.SetGravitationalAcceleration(ChVector3d(0.f, 0.f, grav_acceleration));
     gpu_system.SetParticleOutputMode(write_mode);
 
     // Fill the bottom half with material
     chrono::utils::HCPSampler<float> sampler(2.4f * ballRadius);  // Add epsilon
-    ChVector<float> center(0, 0, -0.25f * box_size_Z);
-    ChVector<float> hdims(box_size_X / 2 - ballRadius, box_size_X / 2 - ballRadius, box_size_Z / 4 - ballRadius);
-    std::vector<ChVector<float>> body_points = sampler.SampleBox(center, hdims);
+    ChVector3f center(0, 0, -0.25f * box_size_Z);
+    ChVector3f hdims(box_size_X / 2 - ballRadius, box_size_X / 2 - ballRadius, box_size_Z / 4 - ballRadius);
+    std::vector<ChVector3f> body_points = sampler.SampleBox(center, hdims);
     gpu_system.SetParticles(body_points);
 
     filesystem::create_directory(filesystem::path(output_prefix));

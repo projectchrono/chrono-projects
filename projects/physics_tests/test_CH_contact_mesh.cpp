@@ -72,10 +72,10 @@ int main(int argc, char* argv[]) {
 
     int objectId = 100;
     double mass = 1000;
-    ChVector<> pos(0, 0, 1);
+    ChVector3d pos(0, 0, 1);
     ChQuaternion<> rot(1, 0, 0, 0);
-    ChVector<> init_vel(0, 0, 0);
-    ChVector<> init_omg(0, 0, 0);
+    ChVector3d init_vel(0, 0, 0);
+    ChVector3d init_omg(0, 0, 0);
 
     // ---------------------------------
     // Parameters for the containing bin
@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
     }
 
     system->SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
-    system->Set_G_acc(ChVector<>(0, 0, -gravity));
+    system->Set_G_acc(ChVector3d(0, 0, -gravity));
 
     // Create the falling object
     auto object = chrono_types::make_shared<ChBody>();
@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
 
     object->SetIdentifier(objectId);
     object->SetMass(mass);
-    object->SetInertiaXX(400.0 * ChVector<>(1, 1, 1));
+    object->SetInertiaXX(400.0 * ChVector3d(1, 1, 1));
     object->SetPos(pos);
     object->SetRot(rot);
     object->SetPos_dt(init_vel);
@@ -118,17 +118,17 @@ int main(int argc, char* argv[]) {
     object->SetCollide(true);
     object->SetBodyFixed(false);
 
-    std::shared_ptr<ChMaterialSurface> object_mat;
+    std::shared_ptr<ChContactMaterial> object_mat;
     switch (contact_method) {
         case ChContactMethod::NSC: {
-            auto matNSC = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+            auto matNSC = chrono_types::make_shared<ChContactMaterialNSC>();
             matNSC->SetFriction(object_friction);
             matNSC->SetRestitution(object_restitution);
             object_mat = matNSC;
             break;
         }
         case ChContactMethod::SMC: {
-            auto matSMC = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+            auto matSMC = chrono_types::make_shared<ChContactMaterialSMC>();
             matSMC->SetFriction(object_friction);
             matSMC->SetRestitution(object_restitution);
             matSMC->SetYoungModulus(object_young_modulus);
@@ -159,22 +159,22 @@ int main(int argc, char* argv[]) {
 
     ground->SetIdentifier(groundId);
     ground->SetMass(1);
-    ground->SetPos(ChVector<>(0, 0, 0));
+    ground->SetPos(ChVector3d(0, 0, 0));
     ground->SetRot(ChQuaternion<>(1, 0, 0, 0));
     ground->SetCollide(true);
     ground->SetBodyFixed(true);
 
-    std::shared_ptr<ChMaterialSurface> ground_mat;
+    std::shared_ptr<ChContactMaterial> ground_mat;
     switch (contact_method) {
         case ChContactMethod::NSC: {
-            auto matNSC = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+            auto matNSC = chrono_types::make_shared<ChContactMaterialNSC>();
             matNSC->SetFriction(ground_friction);
             matNSC->SetRestitution(ground_restitution);
             ground_mat = matNSC;
             break;
         }
         case ChContactMethod::SMC: {
-            auto matSMC = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+            auto matSMC = chrono_types::make_shared<ChContactMaterialSMC>();
             matSMC->SetFriction(ground_friction);
             matSMC->SetRestitution(ground_restitution);
             matSMC->SetYoungModulus(ground_young_modulus);
@@ -189,10 +189,10 @@ int main(int argc, char* argv[]) {
     }
 
     auto ground_ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(ground_mat, width, length, thickness);
-    ground->AddCollisionShape(ground_ct_shape, ChFrame<>(ChVector<>(0, 0, -thickness/2), QUNIT));
+    ground->AddCollisionShape(ground_ct_shape, ChFrame<>(ChVector3d(0, 0, -thickness/2), QUNIT));
 
     auto box = chrono_types::make_shared<ChVisualShapeBox>(width, length, thickness);
-    ground->AddVisualShape(box, ChFrame<>(ChVector<>(0, 0, -thickness/2)));
+    ground->AddVisualShape(box, ChFrame<>(ChVector3d(0, 0, -thickness/2)));
 
     // Create the Irrlicht visualization
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
@@ -201,7 +201,7 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
-    vis->AddCamera(ChVector<>(0, 4, -0.2));
+    vis->AddCamera(ChVector3d(0, 4, -0.2));
     vis->AddTypicalLights();
     vis->SetSymbolScale(1e-4);
     vis->EnableContactDrawing(ContactsDrawMode::CONTACT_FORCES);

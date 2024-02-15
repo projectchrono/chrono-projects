@@ -60,15 +60,15 @@ int main(int argc, char* argv[]) {
     double Wbalance = scales * 0.00015;
     bool simple_rack = false;
 
-    ChVector<> vAh(-hbarL1 - hbarL2 * 0.5, vbarL, 0);
-    ChVector<> vBh(-hbarL2 * 0.5, vbarL, 0);
-    ChVector<> vCh(hbarL2 * 0.5, vbarL, 0);
-    ChVector<> vDh(hbarL1 + hbarL2 * 0.5, vbarL, 0);
-    ChVector<> vAl(-hbarL1 - hbarL2 * 0.5, 0, 0);
-    ChVector<> vBl(-hbarL2 * 0.5, 0, 0);
-    ChVector<> vCl(hbarL2 * 0.5, 0, 0);
-    ChVector<> vDl(hbarL1 + hbarL2 * 0.5, 0, 0);
-    ChVector<> vP(0, -Rpinion - hbarW * 0.5, 0);
+    ChVector3d vAh(-hbarL1 - hbarL2 * 0.5, vbarL, 0);
+    ChVector3d vBh(-hbarL2 * 0.5, vbarL, 0);
+    ChVector3d vCh(hbarL2 * 0.5, vbarL, 0);
+    ChVector3d vDh(hbarL1 + hbarL2 * 0.5, vbarL, 0);
+    ChVector3d vAl(-hbarL1 - hbarL2 * 0.5, 0, 0);
+    ChVector3d vBl(-hbarL2 * 0.5, 0, 0);
+    ChVector3d vCl(hbarL2 * 0.5, 0, 0);
+    ChVector3d vDl(hbarL1 + hbarL2 * 0.5, 0, 0);
+    ChVector3d vP(0, -Rpinion - hbarW * 0.5, 0);
 
     // Create a truss:
     auto body_truss = chrono_types::make_shared<ChBody>();
@@ -80,8 +80,8 @@ int main(int argc, char* argv[]) {
     /*
     // Attach a 'box' shape asset for visualization.
     auto mboxtruss = chrono_types::make_shared<ChVisualShapeBox>();
-    mboxtruss->GetBoxGeometry().Pos  = ChVector<>(-0.01, 0,0);
-    mboxtruss->GetBoxGeometry().SetLengths( ChVector<>(0.02, 0.2, 0.1) );
+    mboxtruss->GetBoxGeometry().Pos  = ChVector3d(-0.01, 0,0);
+    mboxtruss->GetBoxGeometry().SetLengths( ChVector3d(0.02, 0.2, 0.1) );
     body_truss->AddAsset(mboxtruss);
     */
 
@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
                       2,                     // the number of ChElementBeamEuler to create
                       vAh,                   // the 'Ah' point in space (beginning of beam)
                       vBh,                   // the 'Bh' point in space (end of beam)
-                      ChVector<>(0, 1, 0));  // the 'Y' up direction of the section for the beam
+                      ChVector3d(0, 1, 0));  // the 'Y' up direction of the section for the beam
 
     // After having used BuildBeam(), you can retrieve the nodes used for the beam
     std::shared_ptr<ChNodeFEAxyzrot> node_Ah = builder.GetLastBeamNodes().front();
@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) {
                       2,                     // the number of ChElementBeamEuler to create
                       node_Bh,               // the 'Bh' point in space (beginning of beam)
                       vCh,                   // the 'Ch' point in space (end of beam)
-                      ChVector<>(0, 1, 0));  // the 'Y' up direction of the section for the beam
+                      ChVector3d(0, 1, 0));  // the 'Y' up direction of the section for the beam
 
     // After having used BuildBeam(), you can retrieve the nodes used for the beam
     std::shared_ptr<ChNodeFEAxyzrot> node_Ch = builder.GetLastBeamNodes().back();
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
                       2,                     // the number of ChElementBeamEuler to create
                       node_Ch,               // the 'Ch' point in space (beginning of beam)
                       vDh,                   // the 'Dh' point in space (end of beam)
-                      ChVector<>(0, 1, 0));  // the 'Y' up direction of the section for the beam
+                      ChVector3d(0, 1, 0));  // the 'Y' up direction of the section for the beam
 
     // After having used BuildBeam(), you can retrieve the nodes used for the beam
     std::shared_ptr<ChNodeFEAxyzrot> node_Dh = builder.GetLastBeamNodes().back();
@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
                       6,                     // the number of ChElementBeamEuler to create
                       node_Ah,               // the 'Ah' point in space (beginning of beam)
                       vAl,                   // the 'Al' point in space (end of beam)
-                      ChVector<>(1, 0, 0));  // the 'Y' up direction of the section for the beam
+                      ChVector3d(1, 0, 0));  // the 'Y' up direction of the section for the beam
 
     // After having used BuildBeam(), you can retrieve the nodes used for the beam
     std::shared_ptr<ChNodeFEAxyzrot> node_Al = builder.GetLastBeamNodes().back();
@@ -159,7 +159,7 @@ int main(int argc, char* argv[]) {
                       6,                     // the number of ChElementBeamEuler to create
                       node_Dh,               // the 'Dh' point in space (beginning of beam)
                       vDl,                   // the 'Dl' point in space (end of beam)
-                      ChVector<>(1, 0, 0));  // the 'Y' up direction of the section for the beam
+                      ChVector3d(1, 0, 0));  // the 'Y' up direction of the section for the beam
 
     // After having used BuildBeam(), you can retrieve the nodes used for the beam
     std::shared_ptr<ChNodeFEAxyzrot> node_Dl = builder.GetLastBeamNodes().back();
@@ -173,7 +173,7 @@ int main(int argc, char* argv[]) {
                       6,                     // the number of ChElementBeamEuler to create
                       node_Bh,               // the 'Bh' point in space (beginning of beam)
                       vBl,                   // the 'Bl' point in space (end of beam)
-                      ChVector<>(1, 0, 0));  // the 'Y' up direction of the section for the beam
+                      ChVector3d(1, 0, 0));  // the 'Y' up direction of the section for the beam
 
     // After having used BuildBeam(), you can retrieve the nodes used for the beam
     std::shared_ptr<ChNodeFEAxyzrot> node_Bl = builder.GetLastBeamNodes().back();
@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
                       6,                     // the number of ChElementBeamEuler to create
                       node_Ch,               // the 'Dh' point in space (beginning of beam)
                       vCl,                   // the 'Dl' point in space (end of beam)
-                      ChVector<>(1, 0, 0));  // the 'Y' up direction of the section for the beam
+                      ChVector3d(1, 0, 0));  // the 'Y' up direction of the section for the beam
 
     // After having used BuildBeam(), you can retrieve the nodes used for the beam
     std::shared_ptr<ChNodeFEAxyzrot> node_Cl = builder.GetLastBeamNodes().back();
@@ -196,7 +196,7 @@ int main(int argc, char* argv[]) {
                           1,                     // the number of ChElementBeamEuler to create
                           node_Bl,               // the 'Cl' point in space (beginning of beam)
                           node_Cl,               // the 'Dl' point in space (end of beam)
-                          ChVector<>(0, 1, 0));  // the 'Y' up direction of the section for the beam
+                          ChVector3d(0, 1, 0));  // the 'Y' up direction of the section for the beam
     }
 
     //
@@ -247,17 +247,17 @@ int main(int argc, char* argv[]) {
         sys.Add(constr_C);
 
         auto balance = chrono_types::make_shared<ChBodyEasyCylinder>(geometry::ChAxis::Y, Rbalance, Wbalance, 7000, true, false);
-        balance->SetPos(vP + ChVector<>(0, 0, -OffPin));
-        balance->SetRot(Q_from_AngAxis(CH_C_PI_2, VECT_X));
+        balance->SetPos(vP + ChVector3d(0, 0, -OffPin));
+        balance->SetRot(QuatFromAngleAxis(CH_C_PI_2, VECT_X));
         for (int i = 0; i < 6; ++i) {
             double phi = CH_C_2PI * (i / 6.0);
-            auto p1 = ChVector<>(sin(phi) * Rbalance * 0.8, Wbalance, cos(phi) * Rbalance * 0.8);
-            auto p2 = p1 + ChVector<>(0, 2 * Wbalance, 0);
+            auto p1 = ChVector3d(sin(phi) * Rbalance * 0.8, Wbalance, cos(phi) * Rbalance * 0.8);
+            auto p2 = p1 + ChVector3d(0, 2 * Wbalance, 0);
             geometry::ChLineSegment seg(p1, p2);
             auto vshape = chrono_types::make_shared<ChVisualShapeCylinder>(Rbalance * 0.1, seg.GetLength());
             balance->AddVisualShape(vshape, seg.GetFrame());
         }
-        geometry::ChLineSegment seg(vP + ChVector<>(0, -OffPin * 10, 0), vP + ChVector<>(0, OffPin * 10, 0));
+        geometry::ChLineSegment seg(vP + ChVector3d(0, -OffPin * 10, 0), vP + ChVector3d(0, OffPin * 10, 0));
         auto vshaft = chrono_types::make_shared<ChVisualShapeCylinder>(Rpinion, seg.GetLength());
         vshaft->SetColor(ChColor(0.5f, 0.9f, 0.9f));
         balance->AddVisualShape(vshaft, seg.GetFrame());
@@ -266,7 +266,7 @@ int main(int argc, char* argv[]) {
 
         auto revolute = chrono_types::make_shared<ChLinkLockRevolute>();
         std::shared_ptr<ChBody> mbalance = balance;
-        revolute->Initialize(mbalance, body_truss, ChCoordsys<>(vP + ChVector<>(0, 0, -0.01)));
+        revolute->Initialize(mbalance, body_truss, ChCoordsys<>(vP + ChVector3d(0, 0, -0.01)));
 
         sys.Add(revolute);
 
@@ -274,7 +274,7 @@ int main(int argc, char* argv[]) {
         constr_rack->Initialize(balance, rack, false, ChFrame<>(), ChFrame<>());
 
         ChFrameMoving<> f_pin_abs(vP);
-        ChFrameMoving<> f_rack_abs(vP + ChVector<>(0, 0.1, 0));
+        ChFrameMoving<> f_rack_abs(vP + ChVector3d(0, 0.1, 0));
         ChFrameMoving<> f_pin;
         ChFrameMoving<> f_rack;
         balance->TransformParentToLocal(f_pin_abs, f_pin);
@@ -285,7 +285,7 @@ int main(int argc, char* argv[]) {
 
         sys.Add(constr_rack);
 
-        balance->SetWvel_par(ChVector<>(0, 0, 1.5));
+        balance->SetWvel_par(ChVector3d(0, 0, 1.5));
     }
     
     // Create the Irrlicht visualization system
@@ -295,7 +295,7 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
-    vis->AddCamera(ChVector<>(0, 0.01*scales, 0.01*scales));
+    vis->AddCamera(ChVector3d(0, 0.01*scales, 0.01*scales));
     vis->AddTypicalLights();
     vis->AttachSystem(&sys);
 
@@ -316,17 +316,17 @@ int main(int argc, char* argv[]) {
     auto matlab_solver = chrono_types::make_shared<ChSolverMatlab>(matlab_engine);
     sys.SetSolver(matlab_solver);
 
-    sys.Set_G_acc(ChVector<>(0, 0, 0));
+    sys.Set_G_acc(ChVector3d(0, 0, 0));
 
-    GetLog() << "STATIC linear solve ----\n";
-    node_Cl->SetForce(ChVector<>(50, 0, 0));
+    std::cout << "STATIC linear solve ----\n";
+    node_Cl->SetForce(ChVector3d(50, 0, 0));
     // application.GetSystem()->DoStaticLinear();
-    node_Cl->SetForce(ChVector<>(0, 0, 0));
+    node_Cl->SetForce(ChVector3d(0, 0, 0));
 
     if (simple_rack) {
-        node_Cl->SetForce(ChVector<>(50, 0, 0));
+        node_Cl->SetForce(ChVector3d(50, 0, 0));
         sys.DoStaticNonlinear(12);
-        node_Cl->SetForce(ChVector<>(0, 0, 0));
+        node_Cl->SetForce(ChVector3d(0, 0, 0));
     }
 
     while (vis->Run()) {

@@ -28,7 +28,6 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -124,9 +123,9 @@ double visual_out_step = 1e-1;  // time interval between PovRay outputs
 // Utility for adding (visible or invisible) walls
 // -----------------------------------------------------------------------------
 void AddWall(std::shared_ptr<ChBody>& body,
-             std::shared_ptr<ChMaterialSurface> mat,
-             const ChVector<>& dim,
-             const ChVector<>& loc,
+             std::shared_ptr<ChContactMaterial> mat,
+             const ChVector3d& dim,
+             const ChVector3d& loc,
              bool visible) {
     auto ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(mat, dim);
     body->AddCollisionShape(ct_shape, ChFrame<>(loc, QUNIT));
@@ -192,9 +191,9 @@ int main(int argc, char* argv[]) {
     double shear_Height;
     double shear_Disp;
 
-    ChVector<> pos(0, 0, 0);
+    ChVector3d pos(0, 0, 0);
     ChQuaternion<> rot(1, 0, 0, 0);
-    ChVector<> vel(0, 0, 0);
+    ChVector3d vel(0, 0, 0);
     real3 force(0, 0, 0);
 
     // Define two quaternions representing:
@@ -203,8 +202,8 @@ int main(int argc, char* argv[]) {
 
     ChQuaternion<> z2y;
     ChQuaternion<> z2x;
-    z2y.Q_from_AngAxis(-CH_C_PI / 2, ChVector<>(1, 0, 0));
-    z2x.Q_from_AngAxis(CH_C_PI / 2, ChVector<>(0, 1, 0));
+    z2y.SetFromAngleAxis(-CH_C_PI / 2, ChVector3d(1, 0, 0));
+    z2x.SetFromAngleAxis(CH_C_PI / 2, ChVector3d(0, 1, 0));
 
 // Create the system
 
@@ -220,7 +219,7 @@ int main(int argc, char* argv[]) {
 
     sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
-    sys->Set_G_acc(ChVector<>(0, -gravity, 0));
+    sys->Set_G_acc(ChVector3d(0, -gravity, 0));
 
     // Set number of threads
 
@@ -258,13 +257,13 @@ int main(int argc, char* argv[]) {
 // Create a ball material (will be used by balls only)
 
 #ifdef USE_SMC
-    auto material = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto material = chrono_types::make_shared<ChContactMaterialSMC>();
     material->SetYoungModulus(Y);
     material->SetPoissonRatio(nu);
     material->SetRestitution(COR);
     material->SetFriction(mu);
 #else
-    auto material = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto material = chrono_types::make_shared<ChContactMaterialNSC>();
     material->SetRestitution(COR);
     material->SetFriction(mu);
 #endif
@@ -272,13 +271,13 @@ int main(int argc, char* argv[]) {
 // Create a material for all objects other than balls
 
 #ifdef USE_SMC
-    auto mat_ext = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_ext = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_ext->SetYoungModulus(Y);
     mat_ext->SetPoissonRatio(nu);
     mat_ext->SetRestitution(COR);
     mat_ext->SetFriction(mu_ext);
 #else
-    auto mat_ext = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_ext = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_ext->SetRestitution(COR);
     mat_ext->SetFriction(mu_ext);
 #endif
@@ -289,19 +288,19 @@ int main(int argc, char* argv[]) {
 
     bin->SetIdentifier(binId);
     bin->SetMass(1);
-    bin->SetPos(ChVector<>(0, -height / 2, 0));
+    bin->SetPos(ChVector3d(0, -height / 2, 0));
     bin->SetBodyFixed(true);
     bin->SetCollide(true);
 
-    AddWall(bin, mat_ext, ChVector<>(width / 2, thickness / 2, length / 2), ChVector<>(0, 0, 0), true);
-    AddWall(bin, mat_ext, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
-            ChVector<>(-width / 2 - thickness / 2, 0, 0), true);
-    AddWall(bin, mat_ext, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
-            ChVector<>(width / 2 + thickness / 2, 0, 0), false);
-    AddWall(bin, mat_ext, ChVector<>(width / 2 + thickness, height / 2, thickness / 2),
-            ChVector<>(0, 0, -length / 2 - thickness / 2), true);
-    AddWall(bin, mat_ext, ChVector<>(width / 2 + thickness, height / 2, thickness / 2),
-            ChVector<>(0, 0, length / 2 + thickness / 2), true);
+    AddWall(bin, mat_ext, ChVector3d(width / 2, thickness / 2, length / 2), ChVector3d(0, 0, 0), true);
+    AddWall(bin, mat_ext, ChVector3d(thickness / 2, height / 2, length / 2 + thickness),
+            ChVector3d(-width / 2 - thickness / 2, 0, 0), true);
+    AddWall(bin, mat_ext, ChVector3d(thickness / 2, height / 2, length / 2 + thickness),
+            ChVector3d(width / 2 + thickness / 2, 0, 0), false);
+    AddWall(bin, mat_ext, ChVector3d(width / 2 + thickness, height / 2, thickness / 2),
+            ChVector3d(0, 0, -length / 2 - thickness / 2), true);
+    AddWall(bin, mat_ext, ChVector3d(width / 2 + thickness, height / 2, thickness / 2),
+            ChVector3d(0, 0, length / 2 + thickness / 2), true);
     bin->GetCollisionModel()->SetFamily(1);
     bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
     bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(3);
@@ -315,18 +314,18 @@ int main(int argc, char* argv[]) {
 
     box->SetIdentifier(boxId);
     box->SetMass(1);
-    box->SetPos(ChVector<>(0, height / 2 + radius, 0));
+    box->SetPos(ChVector3d(0, height / 2 + radius, 0));
     box->SetBodyFixed(true);
     box->SetCollide(true);
 
-    AddWall(box, mat_ext, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
-            ChVector<>(-width / 2 - thickness / 2, 0, 0), true);
-    AddWall(box, mat_ext, ChVector<>(thickness / 2, height / 2, length / 2 + thickness),
-            ChVector<>(width / 2 + thickness / 2, 0, 0), false);
-    AddWall(box, mat_ext, ChVector<>(width / 2 + thickness, height / 2, thickness / 2),
-            ChVector<>(0, 0, -length / 2 - thickness / 2), true);
-    AddWall(box, mat_ext, ChVector<>(width / 2 + thickness, height / 2, thickness / 2),
-            ChVector<>(0, 0, length / 2 + thickness / 2), true);
+    AddWall(box, mat_ext, ChVector3d(thickness / 2, height / 2, length / 2 + thickness),
+            ChVector3d(-width / 2 - thickness / 2, 0, 0), true);
+    AddWall(box, mat_ext, ChVector3d(thickness / 2, height / 2, length / 2 + thickness),
+            ChVector3d(width / 2 + thickness / 2, 0, 0), false);
+    AddWall(box, mat_ext, ChVector3d(width / 2 + thickness, height / 2, thickness / 2),
+            ChVector3d(0, 0, -length / 2 - thickness / 2), true);
+    AddWall(box, mat_ext, ChVector3d(width / 2 + thickness, height / 2, thickness / 2),
+            ChVector3d(0, 0, length / 2 + thickness / 2), true);
     box->GetCollisionModel()->SetFamily(2);
     box->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
     box->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(3);
@@ -342,11 +341,11 @@ int main(int argc, char* argv[]) {
 
     plate->SetIdentifier(binId);
     plate->SetMass(normal_pressure * shear_Area / gravity);
-    plate->SetPos(ChVector<>(0, 2.0 * radius * float(a) + thickness, 0));
+    plate->SetPos(ChVector3d(0, 2.0 * radius * float(a) + thickness, 0));
     plate->SetBodyFixed(true);
     plate->SetCollide(true);
 
-    AddWall(plate, mat_ext, ChVector<>(width / 2, thickness / 2, length / 2), ChVector<>(0, 0, 0), true);
+    AddWall(plate, mat_ext, ChVector3d(width / 2, thickness / 2, length / 2), ChVector3d(0, 0, 0), true);
     plate->GetCollisionModel()->SetFamily(3);
     plate->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
     plate->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
@@ -371,8 +370,8 @@ int main(int argc, char* argv[]) {
 
                 ball->SetIdentifier(ballId + 6 * 6 * i + 6 * j + k);
                 ball->SetMass(mass);
-                ball->SetInertiaXX((2.0 / 5.0) * mass * radius * radius * ChVector<>(1, 1, 1));
-                ball->SetPos(ChVector<>(ball_x, ball_y, ball_z));
+                ball->SetInertiaXX((2.0 / 5.0) * mass * radius * radius * ChVector3d(1, 1, 1));
+                ball->SetPos(ChVector3d(ball_x, ball_y, ball_z));
                 ball->SetBodyFixed(false);
                 ball->SetCollide(true);
 
@@ -396,16 +395,14 @@ int main(int argc, char* argv[]) {
 
     auto prismatic_plate_box = chrono_types::make_shared<ChLinkLockPrismatic>();
     prismatic_plate_box->SetName("prismatic_plate_box");
-    prismatic_plate_box->Initialize(plate, box, ChCoordsys<>(ChVector<>(0, 0, 0), z2y));
+    prismatic_plate_box->Initialize(plate, box, ChCoordsys<>(ChVector3d(0, 0, 0), z2y));
     sys->AddLink(prismatic_plate_box);
 
     // Setup output
 
-    ChStreamOutAsciiFile shearStream(shear_file.c_str());
-    ChStreamOutAsciiFile forceStream(force_file.c_str());
-    ChStreamOutAsciiFile statsStream(stats_file.c_str());
-    shearStream.SetNumFormat("%16.4e");
-    forceStream.SetNumFormat("%16.4e");
+    std::ofstream shearStream(shear_file.c_str());
+    std::ofstream forceStream(force_file.c_str());
+    std::ofstream statsStream(stats_file.c_str());
 
 // Create the OpenGL visualization window
 
@@ -416,7 +413,7 @@ int main(int argc, char* argv[]) {
     vis.SetWindowSize(1280, 720);
     vis.SetRenderMode(opengl::WIREFRAME);
     vis.Initialize();
-    vis.AddCamera(ChVector<>(3 * width, 0, 0), ChVector<>(0, 0, 0));
+    vis.AddCamera(ChVector3d(3 * width, 0, 0), ChVector3d(0, 0, 0));
     vis.SetCameraVertical(CameraVerticalDir::Y);
 #endif
 
@@ -432,7 +429,7 @@ int main(int argc, char* argv[]) {
         if (sys->GetChTime() > settling_time && settling == true) {
             if (dense == true)
                 material->SetFriction(0.01f);
-            plate->SetPos(ChVector<>(0, height, 0));
+            plate->SetPos(ChVector3d(0, height, 0));
             plate->SetBodyFixed(false);
             settling = false;
         }
@@ -447,13 +444,13 @@ int main(int argc, char* argv[]) {
 
         if (shearing == true) {
             bin->SetPos(
-                ChVector<>(0, -height / 2, -shear_speed * begin_shear_time + shear_speed * sys->GetChTime()));
+                ChVector3d(0, -height / 2, -shear_speed * begin_shear_time + shear_speed * sys->GetChTime()));
             bin->SetPos_dt(
-                ChVector<>(0, 0, shear_speed));  // This is needed for the tangential contact displacement history model
+                ChVector3d(0, 0, shear_speed));  // This is needed for the tangential contact displacement history model
             bin->SetRot(QUNIT);
         } else {
-            bin->SetPos(ChVector<>(0, -height / 2, 0));
-            bin->SetPos_dt(ChVector<>(0, 0, 0));
+            bin->SetPos(ChVector3d(0, -height / 2, 0));
+            bin->SetPos_dt(ChVector3d(0, 0, 0));
             bin->SetRot(QUNIT);
         }
 

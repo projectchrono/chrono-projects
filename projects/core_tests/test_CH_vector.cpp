@@ -17,7 +17,7 @@
 #include <random>
 #include <vector>
 
-#include "chrono/core/ChVector.h"
+#include "chrono/core/ChVector3.h"
 #include "chrono/core/ChTimer.h"
 
 using namespace chrono;
@@ -30,12 +30,12 @@ int main(int argc, char* argv[]) {
     std::uniform_real_distribution<double> dist(-1.0, 1.0);
 
     size_t nv = 1 << 27;
-    std::vector<ChVector<>> v;
+    std::vector<ChVector3d> v;
     v.reserve(nv);
 
     for (size_t i = 0; i < nv; i++) {
-        v.push_back(ChVector<>(dist(mt), dist(mt), dist(mt)));
-        // v.push_back(ChVector<>(1.0, 2.0, -1.0));
+        v.push_back(ChVector3d(dist(mt), dist(mt), dist(mt)));
+        // v.push_back(ChVector3d(1.0, 2.0, -1.0));
     }
 
     std::cout << "number of vectors: " << v.size() << std::endl << std::endl;

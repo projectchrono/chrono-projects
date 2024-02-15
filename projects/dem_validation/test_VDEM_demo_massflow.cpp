@@ -27,7 +27,6 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -151,12 +150,12 @@ double height_collector = 1.0e-2;  // height of collector walls
 ChBody* CreateMechanism(ChSystemMulticore* system) {
     // Create the common material
 #ifdef USE_SMC
-    auto mat_b = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_b = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_b->SetYoungModulus(Y_c);
     mat_b->SetFriction(mu_c);
     mat_b->SetRestitution(cr_c);
 #else
-    auto mat_b = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_b = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_b->SetFriction(mu_c);
 #endif
 
@@ -165,13 +164,13 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
 
     insert->SetIdentifier(0);
     insert->SetMass(1);
-    insert->SetInertiaXX(ChVector<>(1, 1, 1));
-    insert->SetPos(ChVector<>(-0.5 * height - delta, 0, 0.5 * height - delta));
-    insert->SetRot(chrono::Q_from_AngAxis(-CH_C_PI / 4, VECT_Y));
+    insert->SetInertiaXX(ChVector3d(1, 1, 1));
+    insert->SetPos(ChVector3d(-0.5 * height - delta, 0, 0.5 * height - delta));
+    insert->SetRot(chrono::QuatFromAngleAxis(-CH_C_PI / 4, VECT_Y));
     insert->SetCollide(true);
     insert->SetBodyFixed(true);
 
-    utils::AddBoxGeometry(insert.get(), mat_b, ChVector<>(thickness * 0.5, width * 0.5, height_insert * 0.5));
+    utils::AddBoxGeometry(insert.get(), mat_b, ChVector3d(thickness * 0.5, width * 0.5, height_insert * 0.5));
 
     system->AddBody(insert);
 
@@ -180,13 +179,13 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
 
     slot->SetIdentifier(-1);
     slot->SetMass(1);
-    slot->SetInertiaXX(ChVector<>(1, 1, 1));
-    slot->SetPos(ChVector<>(0.5 * thickness, 0, 0.5 * height));
+    slot->SetInertiaXX(ChVector3d(1, 1, 1));
+    slot->SetPos(ChVector3d(0.5 * thickness, 0, 0.5 * height));
     slot->SetRot(ChQuaternion<>(1, 0, 0, 0));
     slot->SetCollide(true);
     slot->SetBodyFixed(true);
 
-    utils::AddBoxGeometry(slot.get(), mat_b, ChVector<>(thickness / 2, width / 2, height / 2), ChVector<>(0, 0, 0));
+    utils::AddBoxGeometry(slot.get(), mat_b, ChVector3d(thickness / 2, width / 2, height / 2), ChVector3d(0, 0, 0));
 
     system->AddBody(slot);
 
@@ -195,28 +194,28 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
 
     wall->SetIdentifier(-2);
     wall->SetMass(1);
-    wall->SetInertiaXX(ChVector<>(1, 1, 1));
-    wall->SetPos(ChVector<>(0, 0, 0));
+    wall->SetInertiaXX(ChVector3d(1, 1, 1));
+    wall->SetPos(ChVector3d(0, 0, 0));
     wall->SetRot(ChQuaternion<>(1, 0, 0, 0));
     wall->SetCollide(true);
     wall->SetBodyFixed(true);
 
-    utils::AddBoxGeometry(wall.get(), mat_b, ChVector<>(3 * height / 2, thickness / 2, height),
-                          ChVector<>(0, width / 2 + thickness / 2, height / 2));
-    utils::AddBoxGeometry(wall.get(), mat_b, ChVector<>(3 * height / 2, thickness / 2, height),
-                          ChVector<>(0, -width / 2 - thickness / 2, height / 2));
+    utils::AddBoxGeometry(wall.get(), mat_b, ChVector3d(3 * height / 2, thickness / 2, height),
+                          ChVector3d(0, width / 2 + thickness / 2, height / 2));
+    utils::AddBoxGeometry(wall.get(), mat_b, ChVector3d(3 * height / 2, thickness / 2, height),
+                          ChVector3d(0, -width / 2 - thickness / 2, height / 2));
 
     system->AddBody(wall);
 
 // Containing bin
 #ifdef USE_SMC
     utils::CreateBoxContainer(system, -3, mat_b,
-                              ChVector<>(size_collector / 2, size_collector / 2, height_collector / 2), thickness / 2,
-                              ChVector<>(0, 0, -pos_collector));
+                              ChVector3d(size_collector / 2, size_collector / 2, height_collector / 2), thickness / 2,
+                              ChVector3d(0, 0, -pos_collector));
 #else
     utils::CreateBoxContainer(system, -3, mat_b,
-                              ChVector<>(size_collector / 2, size_collector / 2, height_collector / 2), thickness / 2,
-                              ChVector<>(0, 0, -pos_collector));
+                              ChVector3d(size_collector / 2, size_collector / 2, height_collector / 2), thickness / 2,
+                              ChVector3d(0, 0, -pos_collector));
 #endif
 
     // Return the angled insert body
@@ -229,12 +228,12 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
 void CreateParticles(ChSystemMulticore* system) {
 // Create a material for the granular material
 #ifdef USE_SMC
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -250,9 +249,9 @@ void CreateParticles(ChSystemMulticore* system) {
 
     gen.setBodyIdentifier(1);
 
-    ChVector<> hdims(0.3 * height, 0.3 * width, 0);
-    ChVector<> center(-0.4 * height, 0, 0.8 * height);
-    ChVector<> vel(0, 0, 0);
+    ChVector3d hdims(0.3 * height, 0.3 * width, 0);
+    ChVector3d center(-0.4 * height, 0, 0.8 * height);
+    ChVector3d vel(0, 0, 0);
 
     while (gen.getTotalNumBodies() < desired_num_particles) {
         gen.CreateObjectsBox(sampler, center, hdims, vel);
@@ -335,7 +334,7 @@ int main(int argc, char* argv[]) {
     cout << "Using " << threads << " threads" << endl;
 
     // Set gravitational acceleration
-    sys->Set_G_acc(ChVector<>(0, 0, -gravity));
+    sys->Set_G_acc(ChVector3d(0, 0, -gravity));
 
     // Edit system settings
     sys->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
@@ -403,8 +402,8 @@ int main(int argc, char* argv[]) {
     int next_out_frame = 0;
     double exec_time = 0;
     int num_contacts = 0;
-    ChStreamOutAsciiFile sfile(stats_file.c_str());
-    ChStreamOutAsciiFile ffile(flow_file.c_str());
+    std::ofstream sfile(stats_file.c_str());
+    std::ofstream ffile(flow_file.c_str());
 
 #ifdef CHRONO_OPENGL
     opengl::ChVisualSystemOpenGL vis;
@@ -413,7 +412,7 @@ int main(int argc, char* argv[]) {
     vis.SetWindowSize(1280, 720);
     vis.SetRenderMode(opengl::WIREFRAME);
     vis.Initialize();
-    vis.AddCamera(ChVector<>(0, -12 * width, height), ChVector<>(0, 0, height));
+    vis.AddCamera(ChVector3d(0, -12 * width, height), ChVector3d(0, 0, height));
     vis.SetCameraVertical(CameraVerticalDir::Z);
 #endif
 
@@ -437,7 +436,6 @@ int main(int argc, char* argv[]) {
             cout << "             Flow:           " << count << endl;
 
             sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
-            sfile.GetFstream().sync();
 
             switch (problem) {
                 case SETTLING:
@@ -448,7 +446,6 @@ int main(int argc, char* argv[]) {
                 case DROPPING:
                     // Save current gap opening and number of dropped particles.
                     ffile << time << "  " << -opening << "  " << count << "\n";
-                    ffile.GetFstream().sync();
                     break;
             }
 
@@ -484,8 +481,8 @@ int main(int argc, char* argv[]) {
 
         // Open the gate until it reaches the specified gap distance.
         if (problem == DROPPING && time <= time_opening) {
-            insert->SetPos(ChVector<>(-0.5 * height - delta - time * speed, 0, 0.5 * height - delta));
-            insert->SetPos_dt(ChVector<>(-speed, 0, 0));
+            insert->SetPos(ChVector3d(-0.5 * height - delta - time * speed, 0, 0.5 * height - delta));
+            insert->SetPos_dt(ChVector3d(-speed, 0, 0));
         }
 
         time += time_step;

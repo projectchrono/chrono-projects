@@ -27,7 +27,6 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -124,7 +123,7 @@ double r_g = 3e-3 / 2;
 double rho_g = 2500;
 double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
-ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
+ChVector3d inertia_g = 0.4 * mass_g * r_g * r_g * ChVector3d(1, 1, 1);
 
 float Y_g = 1e8f;
 float mu_g = 0.3f;
@@ -175,27 +174,27 @@ double h = 10e-2;
 int CreateObjects(ChSystemMulticore* sys) {
 // Create the containing bin
 #ifdef USE_SMC
-    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_c = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_c->SetYoungModulus(Y_c);
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
 
-    utils::CreateBoxContainer(sys, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(sys, binId, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 #else
-    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_c = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_c->SetFriction(mu_c);
 
-    utils::CreateBoxContainer(sys, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(sys, binId, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 #endif
 
 // Create a material for the granular material
 #ifdef USE_SMC
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -213,8 +212,8 @@ int CreateObjects(ChSystemMulticore* sys) {
 
     for (int i = 0; i < numLayers; i++) {
         double center = r + layerHeight / 2 + i * (2 * r + layerHeight);
-        gen.CreateObjectsBox(sampler, ChVector<>(0, 0, center),
-                             ChVector<>(hDimX - r, hDimY - r, layerHeight / 2));
+        gen.CreateObjectsBox(sampler, ChVector3d(0, 0, center),
+                             ChVector3d(hDimX - r, hDimY - r, layerHeight / 2));
         cout << "Layer " << i << "  total bodies: " << gen.getTotalNumBodies() << endl;
     }
 
@@ -224,8 +223,8 @@ int CreateObjects(ChSystemMulticore* sys) {
 // -----------------------------------------------------------------------------
 // Calculate intertia properties of the falling object
 // -----------------------------------------------------------------------------
-void CalculatePenetratorInertia(double & mass, ChVector<> & inertia) {
-    ChVector<> gyr_b;  // components gyration
+void CalculatePenetratorInertia(double & mass, ChVector3d & inertia) {
+    ChVector3d gyr_b;  // components gyration
     double vol_b;      // components volume
     switch (penetGeom) {
         case P_SPHERE:
@@ -254,7 +253,7 @@ void CalculatePenetratorInertia(double & mass, ChVector<> & inertia) {
 // -----------------------------------------------------------------------------
 // Create collision geometry of the falling object
 // -----------------------------------------------------------------------------
-void CreatePenetratorGeometry(std::shared_ptr<ChBody> obj, std::shared_ptr<ChMaterialSurface> mat) {
+void CreatePenetratorGeometry(std::shared_ptr<ChBody> obj, std::shared_ptr<ChContactMaterial> mat) {
     switch (penetGeom) {
         case P_SPHERE:
             utils::AddSphereGeometry(obj.get(), mat, R_b);
@@ -327,12 +326,12 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* sys) {
 
 // Create a material for the penetrator
 #ifdef USE_SMC
-    auto mat = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat = chrono_types::make_shared<ChContactMaterialSMC>();
     mat->SetYoungModulus(Y_b);
     mat->SetFriction(mu_b);
     mat->SetRestitution(cr_b);
 #else
-    auto mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat = chrono_types::make_shared<ChContactMaterialNSC>();
     mat->SetFriction(mu_b);
 #endif
 
@@ -340,14 +339,14 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* sys) {
     auto obj = chrono_types::make_shared<ChBody>();
 
     double mass;
-    ChVector<> inertia;
+    ChVector3d inertia;
     CalculatePenetratorInertia(mass, inertia);
     obj->SetIdentifier(Id_b);
     obj->SetMass(mass);
     obj->SetInertiaXX(inertia);
-    obj->SetPos(ChVector<>(0, 0, initLoc));
-    obj->SetRot(Q_from_AngAxis(-CH_C_PI / 2, VECT_X));
-    obj->SetPos_dt(ChVector<>(0, 0, -vz));
+    obj->SetPos(ChVector3d(0, 0, initLoc));
+    obj->SetRot(QuatFromAngleAxis(-CH_C_PI / 2, VECT_X));
+    obj->SetPos_dt(ChVector3d(0, 0, -vz));
     obj->SetCollide(true);
     obj->SetBodyFixed(false);
 
@@ -400,7 +399,7 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[]) {
     }
 
     const std::string simSettings = out_dir + "/simSetting.txt";
-    ChStreamOutAsciiFile sFile(simSettings.c_str());
+    std::ofstream sFile(simSettings.c_str());
     sFile << "density: " << rho_b << " penetrometer shape: " << pType << " (0: sphere, 1: cone1, 2: cone2) \n";
 }
 
@@ -442,7 +441,7 @@ int main(int argc, char* argv[]) {
     cout << "Using " << threads << " threads" << endl;
 
     // Set gravitational acceleration
-    sys->Set_G_acc(ChVector<>(0, 0, -gravity));
+    sys->Set_G_acc(ChVector3d(0, 0, -gravity));
 
     // Edit system settings
     sys->GetSettings()->solver.use_full_inertia_tensor = false;
@@ -520,7 +519,7 @@ int main(int argc, char* argv[]) {
     int next_out_frame = 0;
     double exec_time = 0;
     int num_contacts = 0;
-    ChStreamOutAsciiFile sfile(stats_file.c_str());
+    std::ofstream sfile(stats_file.c_str());
     std::ofstream hfile(height_file.c_str());
 
 #ifdef CHRONO_OPENGL
@@ -530,7 +529,7 @@ int main(int argc, char* argv[]) {
     vis.SetWindowSize(1280, 720);
     vis.SetRenderMode(opengl::WIREFRAME);
     vis.Initialize();
-    vis.AddCamera(ChVector<>(0, -10 * hDimY, hDimZ), ChVector<>(0, 0, hDimZ));
+    vis.AddCamera(ChVector3d(0, -10 * hDimY, hDimZ), ChVector3d(0, 0, hDimZ));
     vis.SetCameraVertical(CameraVerticalDir::Z);
 #endif
 

@@ -23,7 +23,6 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -103,10 +102,10 @@ int SpawnParticles() {
     utils::PDSampler<double> sampler(dist);
 
     ////gen->CreateObjectsBox(sampler,
-    ////                      ChVector<>(9, 0, 3),
-    ////                      ChVector<>(0, 1, 0.5),
-    ////                      ChVector<>(-initVel, 0, 0));
-    gen->CreateObjectsCylinderX(sampler, ChVector<>(9, 0, 3), 0.2f, 0, ChVector<>(-initVel, 0, 0));
+    ////                      ChVector3d(9, 0, 3),
+    ////                      ChVector3d(0, 1, 0.5),
+    ////                      ChVector3d(-initVel, 0, 0));
+    gen->CreateObjectsCylinderX(sampler, ChVector3d(9, 0, 3), 0.2f, 0, ChVector3d(-initVel, 0, 0));
     cout << "  total bodies: " << gen->getTotalNumBodies() << endl;
 
     return gen->getTotalNumBodies();
@@ -124,7 +123,7 @@ int main(int argc, char* argv[]) {
     sys->SetNumThreads(threads);
 
     // Set gravitational acceleration
-    sys->Set_G_acc(ChVector<>(0, 0, -gravity));
+    sys->Set_G_acc(ChVector3d(0, 0, -gravity));
 
     // Using constant adhesion model
     sys->GetSettings()->solver.adhesion_force_model = ChSystemSMC::AdhesionForceModel::Constant;
@@ -137,26 +136,26 @@ int main(int argc, char* argv[]) {
     sys->GetSettings()->collision.narrowphase_algorithm = ChNarrowphase::Algorithm::PRIMS;
 
     // Create a material for the granular material
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
     mat_g->SetAdhesion(cohesion_g);
 
     // Create a material for the container
-    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_c = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_c->SetYoungModulus(Y_c);
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
     mat_c->SetAdhesion(cohesion_c);
 
     // Create the containing bin
-    utils::CreateBoxContainer(sys, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(sys, binId, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 
     // Create a mixture entirely made out of spheres
     double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
     double mass_g = rho_g * vol_g;
-    ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
+    ChVector3d inertia_g = 0.4 * mass_g * r_g * r_g * ChVector3d(1, 1, 1);
 
     gen = new utils::Generator(sys);
 
@@ -190,7 +189,7 @@ int main(int argc, char* argv[]) {
     vis.SetWindowSize(1280, 720);
     vis.SetRenderMode(opengl::WIREFRAME);
     vis.Initialize();
-    vis.AddCamera(ChVector<>(4, -5, 4), ChVector<>(9, 0, 3));
+    vis.AddCamera(ChVector3d(4, -5, 4), ChVector3d(9, 0, 3));
     vis.SetCameraVertical(CameraVerticalDir::Z);
 #endif
 
@@ -199,7 +198,7 @@ int main(int argc, char* argv[]) {
     int sim_frame = 0;
     int out_frame = 0;
     double exec_time = 0;
-    ChStreamOutAsciiFile ofile(out_file.c_str());
+    std::ofstream ofile(out_file.c_str());
 
     while (time < time_end) {
         int numParticles = (int)sys->Get_bodylist().size() - 1;

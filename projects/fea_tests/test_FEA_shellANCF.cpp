@@ -94,7 +94,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
     // Create the physical system
     ChSystemNSC my_system;
     my_system.SetNumThreads(nthreads);
-    my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
+    my_system.Set_G_acc(ChVector3d(0, 0, -9.81));
 
     // Create a mesh, that is a container for groups of elements and their referenced nodes.
     auto my_mesh = chrono_types::make_shared<ChMesh>();
@@ -128,7 +128,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
         double dir_z = 1;
 
         // Create the node
-        auto node = chrono_types::make_shared<ChNodeFEAxyzD>(ChVector<>(loc_x, loc_y, loc_z), ChVector<>(dir_x, dir_y, dir_z));
+        auto node = chrono_types::make_shared<ChNodeFEAxyzD>(ChVector3d(loc_x, loc_y, loc_z), ChVector3d(dir_x, dir_y, dir_z));
         node->SetMass(0);
         // Fix all nodes along the axis X=0
         if (i % (numDiv_x + 1) == 0)
@@ -331,7 +331,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
         num_force_calls += my_mesh->GetNumCallsInternalForces();
         num_jacobian_calls += my_mesh->GetNumCallsJacobianLoad();
 
-        const ChVector<>& p = nodetip->GetPos();
+        const ChVector3d& p = nodetip->GetPos();
 
         if (verbose) {
             cout << endl;
@@ -415,7 +415,7 @@ int main(int argc, char* argv[]) {
     // Create output directory (if it does not already exist).
     if (output) {
         if (!filesystem::create_directory(filesystem::path("../TEST_SHELL_ANCF"))) {
-            GetLog() << "Error creating directory ../TEST_SHELL_ANCF\n";
+            std::cout << "Error creating directory ../TEST_SHELL_ANCF\n";
             return 1;
         }
     }
@@ -425,9 +425,9 @@ int main(int argc, char* argv[]) {
     if (argc > 1)
         num_threads = std::stoi(argv[1]);
     num_threads = std::min(num_threads, ChOMP::GetNumProcs());
-    GetLog() << "Using " << num_threads << " thread(s)\n";
+    std::cout << "Using " << num_threads << " thread(s)\n";
 #else
-    GetLog() << "No OpenMP\n";
+    std::cout << "No OpenMP\n";
 #endif
 
     // Run simulations.

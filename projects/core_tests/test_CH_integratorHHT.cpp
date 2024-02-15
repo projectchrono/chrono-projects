@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChLog.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/timestepper/ChTimestepper.h"
 
@@ -53,14 +52,15 @@ class OscillatorProblem : public ChIntegrableIIorder {
     }
 
     /// compute  dy/dt=f(y,t)
-    virtual bool StateSolveA(ChStateDelta& dvdt,        ///< result: computed accel. a=dv/dt
-                             ChVectorDynamic<>& L,      ///< result: computed lagrangian multipliers, if any
-                             const ChState& x,          ///< current state, x
-                             const ChStateDelta& v,     ///< current state, v
-                             const double T,            ///< current time T
-                             const double dt,           ///< timestep (if needed)
-                             bool force_state_scatter,  ///< if false, y and T are not scattered to the system
-                             bool full_update           ///< if true, perform a full update during scatter
+    virtual bool StateSolveA(ChStateDelta& dvdt,                ///< result: computed accel. a=dv/dt
+                             ChVectorDynamic<>& L,              ///< result: computed lagrangian multipliers, if any
+                             const ChState& x,                  ///< current state, x
+                             const ChStateDelta& v,             ///< current state, v
+                             const double T,                    ///< current time T
+                             const double dt,                   ///< timestep (if needed)
+                             bool force_state_scatter,          ///< if false, y and T are not scattered to the system
+                             bool full_update,                  ///< if true, perform a full update during scatter
+                             ChLumpingParms* lumping = nullptr  ///<
                              ) override {
         if (force_state_scatter)
             StateScatter(x, v, T, full_update);
@@ -222,7 +222,7 @@ class PendulumProblem : public ChIntegrableIIorder {
         if (force_state_scatter)
             this->StateScatter(x, v, T, full_update);
 
-        ChVector<> dirpend(-mpx, -mpy, 0);
+        ChVector3d dirpend(-mpx, -mpy, 0);
         dirpend.Normalize();
         ChVectorDynamic<> b(3);
         b(0) = R(0);
@@ -266,7 +266,7 @@ class PendulumProblem : public ChIntegrableIIorder {
                                   const ChVectorDynamic<>& L,  ///< the L vector
                                   const double c               ///< a scaling factor
                                   ) override {
-        ChVector<> dirpend(-mpx, -mpy, 0);
+        ChVector3d dirpend(-mpx, -mpy, 0);
         dirpend.Normalize();
         R(0) += c * dirpend.x() * L(0);
         R(1) += c * dirpend.y() * L(0);
@@ -278,7 +278,7 @@ class PendulumProblem : public ChIntegrableIIorder {
                                   const bool do_clamp = false,  ///< enable optional clamping of Qc
                                   const double mclam = 1e30     ///< clamping value
                                   ) override {
-        ChVector<> distpend(-mpx, -mpy, 0);
+        ChVector3d distpend(-mpx, -mpy, 0);
         Qc(0) += -c * (-distpend.Length() + mlength);
     }
 
@@ -377,7 +377,7 @@ void RigidPendulums() {
     bool modified_Newton = true;
 
     ChSystemNSC system;
-    system.Set_G_acc(ChVector<>(0, -g, 0));
+    system.Set_G_acc(ChVector3d(0, -g, 0));
 
     // Bodies
     auto ground = chrono_types::make_shared<ChBody>();
@@ -388,27 +388,27 @@ void RigidPendulums() {
     auto pend1 = chrono_types::make_shared<ChBody>();
     pend1->SetIdentifier(1);
     pend1->SetMass(m1);
-    pend1->SetInertiaXX(ChVector<>(1, 1, J1));
-    pend1->SetPos(ChVector<>(l1 / 2, 0, 0));
+    pend1->SetInertiaXX(ChVector3d(1, 1, J1));
+    pend1->SetPos(ChVector3d(l1 / 2, 0, 0));
     system.AddBody(pend1);
 
     auto pend2 = chrono_types::make_shared<ChBody>();
     if (double_pend) {
         pend2->SetIdentifier(2);
         pend2->SetMass(m2);
-        pend2->SetInertiaXX(ChVector<>(1, 1, J2));
-        pend2->SetPos(ChVector<>(l1 + l2 / 2, 0, 0));
+        pend2->SetInertiaXX(ChVector3d(1, 1, J2));
+        pend2->SetPos(ChVector3d(l1 + l2 / 2, 0, 0));
         system.AddBody(pend2);
     }
 
     // Joints
     auto revolute1 = chrono_types::make_shared<ChLinkLockRevolute>();
-    revolute1->Initialize(ground, pend1, ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
+    revolute1->Initialize(ground, pend1, ChCoordsys<>(ChVector3d(0, 0, 0), QUNIT));
     system.AddLink(revolute1);
 
     auto revolute2 = chrono_types::make_shared<ChLinkLockRevolute>();
     if (double_pend) {
-        revolute2->Initialize(pend1, pend2, ChCoordsys<>(ChVector<>(l1, 0, 0), QUNIT));
+        revolute2->Initialize(pend1, pend2, ChCoordsys<>(ChVector3d(l1, 0, 0), QUNIT));
         system.AddLink(revolute2);
     }
 

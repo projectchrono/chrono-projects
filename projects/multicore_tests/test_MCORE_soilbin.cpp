@@ -22,7 +22,6 @@
 #include <vector>
 #include <cmath>
 
-#include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
@@ -106,8 +105,8 @@ unsigned int desired_num_particles = 1000;
 ChCollisionShape::Type shape_o = ChCollisionShape::Type::ROUNDEDCYL;
 
 ChQuaternion<> initRot(1.0, 0.0, 0.0, 0.0);
-ChVector<> initLinVel(0.0, 0.0, 0.0);
-ChVector<> initAngVel(0.0, 0.0, 0.0);
+ChVector3d initLinVel(0.0, 0.0, 0.0);
+ChVector3d initAngVel(0.0, 0.0, 0.0);
 
 // -----------------------------------------------------------------------------
 // Half-dimensions of the container bin
@@ -124,17 +123,17 @@ void CreateContainer(ChSystemMulticore* system) {
     double hThickness = 0.1;
 
 #ifdef USE_SMC
-    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_c = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_c->SetYoungModulus(2e6f);
     mat_c->SetFriction(0.4f);
     mat_c->SetRestitution(0.1f);
 
-    utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, id_c, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 #else
-    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_c = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_c->SetFriction(0.4f);
 
-    utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, id_c, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 
 #endif
 }
@@ -145,12 +144,12 @@ void CreateContainer(ChSystemMulticore* system) {
 void CreateParticles(ChSystemMulticore* system) {
 // Create a material for the ball mixture.
 #ifdef USE_SMC
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_g->SetYoungModulus(1e8f);
     mat_g->SetFriction(0.4f);
     mat_g->SetRestitution(0.1f);
 #else
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_g->SetFriction(0.4f);
 #endif
 
@@ -167,8 +166,8 @@ void CreateParticles(ChSystemMulticore* system) {
     // Create particles, one layer at a time, until the desired number is reached.
     gen.setBodyIdentifier(1);
 
-    ChVector<> hdims(hDimX - r, hDimY - r, 0);
-    ChVector<> center(0, 0, 2 * r);
+    ChVector3d hdims(hDimX - r, hDimY - r, 0);
+    ChVector3d center(0, 0, 2 * r);
 
     while (gen.getTotalNumBodies() < desired_num_particles) {
         gen.CreateObjectsBox(sampler, center, hdims);
@@ -189,12 +188,12 @@ void CreateObject(ChSystemMulticore* system, double z) {
 // -----------------------------------------
 
 #ifdef USE_SMC
-    auto mat_o = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_o = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_o->SetYoungModulus(1e8f);
     mat_o->SetFriction(0.4f);
     mat_o->SetRestitution(0.1f);
 #else
-    auto mat_o = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_o = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_o->SetFriction(0.4f);
 #endif
 
@@ -228,7 +227,7 @@ void CreateObject(ChSystemMulticore* system, double z) {
             utils::AddSphereGeometry(obj.get(), mat_o, radius);
         } break;
         case ChCollisionShape::Type::BOX: {
-            ChVector<> dims(0.5, 0.75, 1.0);
+            ChVector3d dims(0.5, 0.75, 1.0);
             rb = geometry::ChBox::GetBoundingSphereRadius(dims);
             vol = geometry::ChBox::GetVolume(dims);
             J = geometry::ChBox::GetGyration(dims);
@@ -273,7 +272,7 @@ void CreateObject(ChSystemMulticore* system, double z) {
     // Set initial state.
     // ------------------
 
-    obj->SetPos(ChVector<>(0, 0, z + rb));
+    obj->SetPos(ChVector3d(0, 0, z + rb));
     obj->SetRot(initRot);
     obj->SetPos_dt(initLinVel);
     obj->SetWvel_loc(initAngVel);
@@ -336,7 +335,7 @@ int main(int argc, char* argv[]) {
 #endif
 
     msystem->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
-    msystem->Set_G_acc(ChVector<>(0, 0, -9.81));
+    msystem->Set_G_acc(ChVector3d(0, 0, -9.81));
 
     // ----------------------
     // Set number of threads.
@@ -415,7 +414,7 @@ int main(int argc, char* argv[]) {
     int next_out_frame = 0;
     double exec_time = 0;
     int num_contacts = 0;
-    ChStreamOutAsciiFile sfile(stats_file.c_str());
+    std::ofstream sfile(stats_file.c_str());
 
     while (time < time_end) {
         if (sim_frame == next_out_frame) {

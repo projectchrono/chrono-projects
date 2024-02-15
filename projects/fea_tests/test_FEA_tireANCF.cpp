@@ -16,7 +16,6 @@
 // =============================================================================
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChMathematics.h"
 #include "chrono/assets/ChVisualShapeCylinder.h"
 #include "chrono/assets/ChVisualShapeTriangleMesh.h"
 #include "chrono/physics/ChBodyEasy.h"
@@ -210,7 +209,7 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
     /// "Virtual" copy constructor (covariant return type).
     virtual MyLoadCustomMultiple* Clone() const override { return new MyLoadCustomMultiple(*this); }
 
-    double GroundLocationBump(double GroundLoc, double BumpLoc, ChVector<> NodeLocation, double Amplitude) {
+    double GroundLocationBump(double GroundLoc, double BumpLoc, ChVector3d NodeLocation, double Amplitude) {
         if (NodeLocation.y() > 0.0 || NodeLocation.x() <= (BumpLoc - BumpRadius) ||
             NodeLocation.x() >= (BumpLoc + BumpRadius))  // There is no bump on that side
         {
@@ -225,10 +224,10 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
                           ) {
         std::vector<std::shared_ptr<ChLoadable>> NodeList;
 
-        ChVector<> Node1_Pos;
-        ChVector<> Node1_Vel;
-        ChVector<> Node1_Grad;
-        ChVector<> Node1_GradVel;
+        ChVector3d Node1_Pos;
+        ChVector3d Node1_Vel;
+        ChVector3d Node1_Grad;
+        ChVector3d Node1_GradVel;
         // this->load_Q.FillElem(0);
         double KGround = 9e5;
         double CGround = KGround;
@@ -240,7 +239,7 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
         for (int iii = 0; iii < loadables.size(); iii++) {
             Node1_Pos = state_x->segment(iii * 6, 3);
             if (Node1_Pos.z() < GroundLocationBump(GroundLoc, BumpLongLoc, Node1_Pos, BumpRadius)) {
-                //  chrono::GetLog() << " \n Node1_Pos.z(): " << Node1_Pos.z() << "\n GroundLoc: " << GroundLoc << "
+                //  std::cout << " \n Node1_Pos.z(): " << Node1_Pos.z() << "\n GroundLoc: " << GroundLoc << "
                 //  Number: " << iii;
                 NoCNodes++;
             }
@@ -249,7 +248,7 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
             KGround = 9e5 / double(NoCNodes);
             CGround = 0.001 * KGround;
         }
-        // chrono::GetLog() << "  \n"
+        // std::cout << "  \n"
         //                  << "Nodes into contact:   " << NoCNodes << " \n";
         if (state_x && state_w) {
             for (int iii = 0; iii < loadables.size(); iii++) {
@@ -260,7 +259,7 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
                 double GroundLocZ = GroundLocationBump(GroundLoc, BumpLongLoc, Node1_Pos, BumpRadius);
                 if (Node1_Pos.z() < GroundLocZ) {
                     double Penet = abs(Node1_Pos.z() - GroundLocZ);
-                    // GetLog() << "Node number:  " << iii << ".  "
+                    // std::cout << "Node number:  " << iii << ".  "
                     //          << "Penetration:  " << Penet << "\n";
                     NormalForceNode = KGround * Penet;  // +CGround * abs(Node1_Vel.y()*Penet);
                     this->load_Q(iii * 6 + 2) =
@@ -290,7 +289,7 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
         } else {
             // explicit integrators might call ComputeQ(0,0), null pointers mean
             // that we assume current state, without passing state_x for efficiency
-            GetLog() << "\n This should never happen \n";
+            std::cout << "\n This should never happen \n";
         }
     }
     virtual bool IsStiff() { return false; }
@@ -298,7 +297,7 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
 
 void MakeANCFHumveeWheel(ChSystem& my_system,
                          std::shared_ptr<ChMesh>& TireMesh,
-                         const ChVector<> rim_center,
+                         const ChVector3d rim_center,
                          std::shared_ptr<ChBody>& Hub_1,
                          double TirePressure,
                          double ForVelocity,
@@ -309,18 +308,18 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
     Hub_1->SetBodyFixed(false);
     Hub_1->SetCollide(false);
     Hub_1->SetMass(10);
-    Hub_1->SetInertiaXX(ChVector<>(0.3, 0.3, 0.3));
+    Hub_1->SetInertiaXX(ChVector3d(0.3, 0.3, 0.3));
     Hub_1->SetPos(rim_center);  // Y = -1m
-    Hub_1->SetPos_dt(ChVector<>(ForVelocity, 0, 0));
-    Hub_1->SetWvel_par(ChVector<>(0, ForVelocity / (HumveeVertPos),
+    Hub_1->SetPos_dt(ChVector3d(ForVelocity, 0, 0));
+    Hub_1->SetWvel_par(ChVector3d(0, ForVelocity / (HumveeVertPos),
                                   0));  // 0.3 to be substituted by an actual measure of the average radius.
 
     //  Fixing constraints, initial coordinates and velocities
     // READ INPUT DATA AND CREATE ARRAYS
 
     // Creating arrays for inputting data
-    GetLog() << "\n-------------------------------------------------\n";
-    GetLog() << "TEST: ANCF Tire (Fixed),  implicit integration \n\n";
+    std::cout << "\n-------------------------------------------------\n";
+    std::cout << "TEST: ANCF Tire (Fixed),  implicit integration \n\n";
 
     // Boolean variables to determine which output files are written
     bool output = true;
@@ -352,7 +351,7 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
     ChVectorN<int, 3> NumLayPerSection;
 
     double ContactZ = 0.0;  // Vertical location of the flat ground
-    ChVector<> NetContact;  // Net contact forces
+    ChVector3d NetContact;  // Net contact forces
 
     // End of declaration of arrays for inputting data
 
@@ -371,31 +370,31 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
     std::vector<std::shared_ptr<ChMaterialShellANCF>> MaterialList(MPROP.rows());
     for (int i = 0; i < MPROP.rows(); i++) {
         double rho = MPROP(i, 0);
-        ChVector<double> E(MPROP(i, 1), MPROP(i, 2), MPROP(i, 3));
-        ChVector<double> nu(MPROP(i, 4), MPROP(i, 5), MPROP(i, 6));
-        ChVector<double> G(MPROP(i, 7), MPROP(i, 8), MPROP(i, 9));
+        ChVector3d E(MPROP(i, 1), MPROP(i, 2), MPROP(i, 3));
+        ChVector3d nu(MPROP(i, 4), MPROP(i, 5), MPROP(i, 6));
+        ChVector3d G(MPROP(i, 7), MPROP(i, 8), MPROP(i, 9));
         MaterialList[i] = chrono_types::make_shared<ChMaterialShellANCF>(rho, E, nu, G);
     }
 
     // Create a set of nodes for the tire based on the input data
     for (int i = 0; i < TotalNumNodes; i++) {
         auto node = chrono_types::make_shared<ChNodeFEAxyzD>(
-            ChVector<>(COORDFlex(i, 0) + rim_center.x(), COORDFlex(i, 1) + rim_center.y(), COORDFlex(i, 2)),
-            ChVector<>(COORDFlex(i, 3), COORDFlex(i, 4), COORDFlex(i, 5)));
-        node->SetPos_dt(ChVector<>(VELCYFlex(i, 0), VELCYFlex(i, 1), VELCYFlex(i, 2)));
-        node->SetD_dt(ChVector<>(VELCYFlex(i, 3), VELCYFlex(i, 4), VELCYFlex(i, 5)));
-        node->SetPos_dtdt(ChVector<>(ACCELFlex(i, 0), ACCELFlex(i, 1), ACCELFlex(i, 2)));
-        node->SetD_dtdt(ChVector<>(ACCELFlex(i, 3), ACCELFlex(i, 4), ACCELFlex(i, 5)));
+            ChVector3d(COORDFlex(i, 0) + rim_center.x(), COORDFlex(i, 1) + rim_center.y(), COORDFlex(i, 2)),
+            ChVector3d(COORDFlex(i, 3), COORDFlex(i, 4), COORDFlex(i, 5)));
+        node->SetPos_dt(ChVector3d(VELCYFlex(i, 0), VELCYFlex(i, 1), VELCYFlex(i, 2)));
+        node->SetD_dt(ChVector3d(VELCYFlex(i, 3), VELCYFlex(i, 4), VELCYFlex(i, 5)));
+        node->SetPos_dtdt(ChVector3d(ACCELFlex(i, 0), ACCELFlex(i, 1), ACCELFlex(i, 2)));
+        node->SetD_dtdt(ChVector3d(ACCELFlex(i, 3), ACCELFlex(i, 4), ACCELFlex(i, 5)));
         node->SetMass(0.0);
 
         TireMesh->AddNode(node);  // Add nodes to the system
     }
     // Check position of the bottom node
-    GetLog() << "TotalNumNodes: " << TotalNumNodes << "\n\n";
+    std::cout << "TotalNumNodes: " << TotalNumNodes << "\n\n";
     auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode((TotalNumElements / 2)));
-    GetLog() << "X : " << nodetip->GetPos().x() << " Y : " << nodetip->GetPos().y() << " Z : " << nodetip->GetPos().z()
+    std::cout << "X : " << nodetip->GetPos().x() << " Y : " << nodetip->GetPos().y() << " Z : " << nodetip->GetPos().z()
              << "\n\n";
-    GetLog() << "dX : " << nodetip->GetD().x() << " dY : " << nodetip->GetD().y() << " dZ : " << nodetip->GetD().z()
+    std::cout << "dX : " << nodetip->GetD().x() << " dY : " << nodetip->GetD().y() << " dZ : " << nodetip->GetD().z()
              << "\n\n";
 
     int LayerHist = 0;  // Number of layers in the previous tire sections
@@ -432,9 +431,9 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
         for (int j = 0; j < NumLayPerSection(SectionID(i) - 1); j++) {
             element->AddLayer(LayPROP(LayerHist + j, 0), LayPROP(LayerHist + j, 1) * CH_C_DEG_TO_RAD,
                               MaterialList[MatID(SectionID(i) - 1, j) - 1]);
-            // GetLog() << "Thickness: " << LayPROP(LayerHist + j, 0) << "  Ply: " << LayPROP(LayerHist + j, 1) << "
+            // std::cout << "Thickness: " << LayPROP(LayerHist + j, 0) << "  Ply: " << LayPROP(LayerHist + j, 1) << "
             // Mat: " << MatID(SectionID(i) - 1, j) << "\n";
-            // GetLog() << "Index: " << LayerHist + j << "   PRev: " << LayerHist << "\n";
+            // std::cout << "Index: " << LayerHist + j << "   PRev: " << LayerHist << "\n";
         }
         element->SetAlphaDamp(0.01);  // 0.005
         TireMesh->AddElement(element);
@@ -465,9 +464,9 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
 
     // Add initial velocity to the nodes (for rolling)
     for (unsigned int i = 0; i < TireMesh->GetNnodes(); ++i) {
-        ChVector<> node_pos = std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(i))->GetPos();
+        ChVector3d node_pos = std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(i))->GetPos();
         double tang_vel = ForVelocity * (node_pos.z()) / (HumveeVertPos);
-        ChVector<> NodeVel(tang_vel, 0, 0.0);
+        ChVector3d NodeVel(tang_vel, 0, 0.0);
         std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(i))->SetPos_dt(NodeVel);
     }
 
@@ -522,7 +521,7 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_OPENMP_ENABLED
     my_system.SetNumThreads(std::min(num_threads, ChOMP::GetNumProcs()));
 #else
-    GetLog() << "No OpenMP\n";
+    std::cout << "No OpenMP\n";
 #endif 
 
     // Body 1: Ground
@@ -532,20 +531,20 @@ int main(int argc, char* argv[]) {
     BGround->SetBodyFixed(true);
     BGround->SetCollide(false);
     BGround->SetMass(1);
-    BGround->SetInertiaXX(ChVector<>(1, 1, 0.2));
-    BGround->SetPos(ChVector<>(-2, 0, 0));  // Y = -1m
-    ChQuaternion<> rot = Q_from_AngX(0.0);
+    BGround->SetInertiaXX(ChVector3d(1, 1, 0.2));
+    BGround->SetPos(ChVector3d(-2, 0, 0));  // Y = -1m
+    ChQuaternion<> rot = QuatFromAngleX(0.0);
     BGround->SetRot(rot);
 
     // Create hubs and tire meshes for 4 wheels
     auto Hub_1 = chrono_types::make_shared<ChBody>();
-    ChVector<> rim_center_1(0.0, 0.0, HumveeVertPos);  //
+    ChVector3d rim_center_1(0.0, 0.0, HumveeVertPos);  //
 
     // Create tire meshes
     auto TireMesh1 = chrono_types::make_shared<ChMesh>();
     MakeANCFHumveeWheel(my_system, TireMesh1, rim_center_1, Hub_1, TirePressure, ForVelocity, 2);
 
-    auto mmaterial = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mmaterial = chrono_types::make_shared<ChContactMaterialNSC>();
     mmaterial->SetFriction(0.4f);
     mmaterial->SetCompliance(0.0000005f);
     mmaterial->SetComplianceT(0.0000005f);
@@ -554,34 +553,34 @@ int main(int argc, char* argv[]) {
     my_system.AddBody(SimpChassis);
     SimpChassis->SetMass(2000.0);
     // optional, attach a texture for better visualization
-    SimpChassis->SetPos(ChVector<>(0, 0, HumveeVertPos));
-    SimpChassis->SetPos_dt(ChVector<>(ForVelocity, 0, 0));
+    SimpChassis->SetPos(ChVector3d(0, 0, HumveeVertPos));
+    SimpChassis->SetPos_dt(ChVector3d(ForVelocity, 0, 0));
     SimpChassis->SetBodyFixed(false);
 
     auto mtrussmesh = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     mtrussmesh->GetMesh()->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_chassis_simple.obj"));
-    // mtrussmesh->GetMesh()->Transform(VNULL, Q_from_AngAxis(CH_C_PI_2, VECT_Z) % Q_from_AngAxis(CH_C_PI_2, VECT_Y));
-    mtrussmesh->GetMesh()->Transform(VNULL, Q_from_AngX(0));
+    // mtrussmesh->GetMesh()->Transform(VNULL, QuatFromAngleAxis(CH_C_PI_2, VECT_Z) % QuatFromAngleAxis(CH_C_PI_2, VECT_Y));
+    mtrussmesh->GetMesh()->Transform(VNULL, QuatFromAngleX(0));
     SimpChassis->AddVisualShape(mtrussmesh);
 
     auto Bump = chrono_types::make_shared<ChBody>();
     Bump->SetMass(10);
     Bump->SetBodyFixed(true);
-    Bump->SetPos(ChVector<>(BumpLongLoc, -1.0, 0.0));
+    Bump->SetPos(ChVector3d(BumpLongLoc, -1.0, 0.0));
     my_system.Add(Bump);
 
     auto cyl_wheel = chrono_types::make_shared<ChVisualShapeCylinder>(BumpRadius, 1.0);
-    Bump->AddVisualShape(cyl_wheel, ChFrame<>(VNULL, Q_from_AngX(CH_C_PI_2)));
+    Bump->AddVisualShape(cyl_wheel, ChFrame<>(VNULL, QuatFromAngleX(CH_C_PI_2)));
 
     // Create joints between chassis and hubs
     auto RevTr_1 = chrono_types::make_shared<ChLinkRevoluteTranslational>();
     my_system.AddLink(RevTr_1);
-    RevTr_1->Initialize(Hub_1, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(0, 1, 0), ChVector<>(0, 0, 0.1),
-                        ChVector<>(0, 0, 1), ChVector<>(1, 0, 0), true);
+    RevTr_1->Initialize(Hub_1, SimpChassis, true, ChVector3d(0, 0, 0), ChVector3d(0, 1, 0), ChVector3d(0, 0, 0.1),
+                        ChVector3d(0, 0, 1), ChVector3d(1, 0, 0), true);
 
     // Spring and damper for secondary suspension: True position vectors are relative
     auto spring1 = chrono_types::make_shared<ChLinkTSDA>();
-    spring1->Initialize(Hub_1, SimpChassis, true, ChVector<>(0, 0, 0), ChVector<>(Lwx, -Lwy, 0));
+    spring1->Initialize(Hub_1, SimpChassis, true, ChVector3d(0, 0, 0), ChVector3d(Lwx, -Lwy, 0));
     spring1->SetSpringCoefficient(spring_coef);
     spring1->SetDampingCoefficient(damping_coef);
     my_system.AddLink(spring1);
@@ -589,18 +588,18 @@ int main(int argc, char* argv[]) {
     // Create a large cube as a floor.
     auto mrigidBody = chrono_types::make_shared<ChBodyEasyBox>(20, 20, 0.00001, 1000, true, false); // no collision
     my_system.Add(mrigidBody);
-    mrigidBody->SetPos(ChVector<>(0, 0, GroundLoc));
+    mrigidBody->SetPos(ChVector3d(0, 0, GroundLoc));
     mrigidBody->SetBodyFixed(true);
-    my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
+    my_system.Set_G_acc(ChVector3d(0, 0, -9.81));
 
 // Set up solver
 #ifdef USE_MKL
-    GetLog() << "Using PardisoMKL solver\n";
+    std::cout << "Using PardisoMKL solver\n";
     auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
     mkl_solver->LockSparsityPattern(true);
     my_system.SetSolver(mkl_solver);
 #else
-    GetLog() << "Using MINRES solver\n";
+    std::cout << "Using MINRES solver\n";
     auto solver = chrono_types::make_shared<ChSolverMINRES>();
     solver->EnableDiagonalPreconditioner(true);
     solver->SetMaxIterations(100);
@@ -636,13 +635,13 @@ int main(int argc, char* argv[]) {
     timer.stop();
 
     // Report run time and total number of iterations.
-    GetLog() << "Number of iterations: " << num_iterations << "\n";
-    GetLog() << "Simulation time:  " << timer() << "\n";
-    GetLog() << "Internal forces (" << TireMesh1->GetNumCallsInternalForces()
+    std::cout << "Number of iterations: " << num_iterations << "\n";
+    std::cout << "Simulation time:  " << timer() << "\n";
+    std::cout << "Internal forces (" << TireMesh1->GetNumCallsInternalForces()
              << "):  " << TireMesh1->GetTimeInternalForces() << "\n";
-    GetLog() << "Jacobian (" << TireMesh1->GetNumCallsJacobianLoad() << "):  " << TireMesh1->GetTimeJacobianLoad()
+    std::cout << "Jacobian (" << TireMesh1->GetNumCallsJacobianLoad() << "):  " << TireMesh1->GetTimeJacobianLoad()
              << "\n";
-    GetLog() << "Extra time:  " << timer() - TireMesh1->GetTimeInternalForces() - TireMesh1->GetTimeJacobianLoad()
+    std::cout << "Extra time:  " << timer() - TireMesh1->GetTimeInternalForces() - TireMesh1->GetTimeJacobianLoad()
              << "\n";
     getchar();
 

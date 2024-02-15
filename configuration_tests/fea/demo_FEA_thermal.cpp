@@ -44,7 +44,7 @@ using namespace chrono::irrlicht;
 using namespace irr;
 
 int main(int argc, char* argv[]) {
-    GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
+    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
 
     // Set path to Chrono data directory
     SetChronoDataPath(CHRONO_DATA_DIR);
@@ -72,14 +72,14 @@ int main(int argc, char* argv[]) {
     try {
         ChMeshFileLoader::FromTetGenFile(my_mesh, GetChronoDataFile("fea/beam.node").c_str(),
                                          GetChronoDataFile("fea/beam.ele").c_str(), mmaterial);
-    } catch (const ChException& myerr) {
-        GetLog() << myerr.what();
+    } catch (const std::exception& myerr) {
+        std::cout << myerr.what();
         return 0;
     }
 
     for (unsigned int inode = 0; inode < my_mesh->GetNnodes(); ++inode) {
         if (auto mnode = std::dynamic_pointer_cast<ChNodeFEAxyzP>(my_mesh->GetNode(inode))) {
-            mnode->SetPos(mnode->GetPos() * ChVector<>(3, 1, 3));
+            mnode->SetPos(mnode->GetPos() * ChVector3d(3, 1, 3));
         }
     }
 
@@ -151,9 +151,9 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
-    vis->AddLight(ChVector<>(+20, 20, +20), 90, ChColor(0.5, 0.5, 0.5));
-    vis->AddLight(ChVector<>(-20, 20, -20), 90, ChColor(0.7f, 0.8f, 0.8f));
-    vis->AddCamera(ChVector<>(0, 0.7, -1), ChVector<>(0, 0.4, 0));
+    vis->AddLight(ChVector3d(+20, 20, +20), 90, ChColor(0.5, 0.5, 0.5));
+    vis->AddLight(ChVector3d(-20, 20, -20), 90, ChColor(0.7f, 0.8f, 0.8f));
+    vis->AddCamera(ChVector3d(0, 0.7, -1), ChVector3d(0, 0.4, 0));
     vis->AttachSystem(&sys);
 
     // SIMULATION LOOP
@@ -192,7 +192,7 @@ int main(int argc, char* argv[]) {
     for (unsigned int inode = 0; inode < my_mesh->GetNnodes(); ++inode) {
         if (auto mnode = std::dynamic_pointer_cast<ChNodeFEAxyzP>(my_mesh->GetNode(inode))) {
             if (mnode->GetPos().x() < 0.01) {
-                GetLog() << "Node at y=" << mnode->GetPos().y() << " has T=" << mnode->GetP() << "\n";
+                std::cout << "Node at y=" << mnode->GetPos().y() << " has T=" << mnode->GetP() << "\n";
             }
         }
     }

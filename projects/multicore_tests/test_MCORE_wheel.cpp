@@ -22,7 +22,6 @@
 #include <vector>
 #include <cmath>
 
-#include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -78,7 +77,7 @@ double r_g = 0.04;
 double rho_g = 2500;
 double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
-ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
+ChVector3d inertia_g = 0.4 * mass_g * r_g * r_g * ChVector3d(1, 1, 1);
 
 float Y_g = 2e8f;
 float mu_g = 0.5f;
@@ -88,7 +87,7 @@ float cohesion_g = 20.0f;
 // Parameters for wheel body
 int Id_w = 0;
 double mass_w = 100;
-ChVector<> inertia_w = ChVector<>(2, 2, 4);
+ChVector3d inertia_w = ChVector3d(2, 2, 4);
 
 float Y_w = 1e8f;
 float mu_w = 1.0f;
@@ -114,12 +113,12 @@ double layerHeight = 0.5;
 
 int CreateObjects(ChSystemMulticore* system) {
     // Create materials for the granular material and the container
-    std::shared_ptr<chrono::ChMaterialSurface> material_g;
-    std::shared_ptr<chrono::ChMaterialSurface> material_c;
+    std::shared_ptr<chrono::ChContactMaterial> material_g;
+    std::shared_ptr<chrono::ChContactMaterial> material_c;
 
     switch (method) {
         case ChContactMethod::SMC: {
-            auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
             mat_g->SetYoungModulus(Y_g);
             mat_g->SetFriction(mu_g);
             mat_g->SetRestitution(cr_g);
@@ -127,7 +126,7 @@ int CreateObjects(ChSystemMulticore* system) {
 
             material_g = mat_g;
 
-            auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_c = chrono_types::make_shared<ChContactMaterialSMC>();
             mat_c->SetYoungModulus(Y_c);
             mat_c->SetFriction(mu_c);
             mat_c->SetRestitution(cr_c);
@@ -138,14 +137,14 @@ int CreateObjects(ChSystemMulticore* system) {
             break;
         }
         case ChContactMethod::NSC: {
-            auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
             mat_g->SetFriction(mu_g);
             mat_g->SetRestitution(cr_g);
             mat_g->SetCohesion(cohesion_g);
 
             material_g = mat_g;
 
-            auto mat_c = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_c = chrono_types::make_shared<ChContactMaterialNSC>();
             mat_c->SetFriction(mu_c);
             mat_c->SetRestitution(cr_c);
             mat_c->SetCohesion(cohesion_c);
@@ -168,12 +167,12 @@ int CreateObjects(ChSystemMulticore* system) {
 
     gen.setBodyIdentifier(Id_g);
 
-    gen.CreateObjectsBox(sampler, ChVector<>(0, 0, r + layerHeight / 2),
-                         ChVector<>(hDimX - r, hDimY - r, layerHeight / 2));
+    gen.CreateObjectsBox(sampler, ChVector3d(0, 0, r + layerHeight / 2),
+                         ChVector3d(hDimX - r, hDimY - r, layerHeight / 2));
     cout << "total granules: " << gen.getTotalNumBodies() << endl;
 
     // Create the containing bin
-    utils::CreateBoxContainer(system, binId, material_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, binId, material_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 
     return gen.getTotalNumBodies();
 }
@@ -187,11 +186,11 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemMulticore* system, double z) {
     std::string mesh_name("wheel");
 
     // Create a material for the wheel
-    std::shared_ptr<chrono::ChMaterialSurface> material_w;
+    std::shared_ptr<chrono::ChContactMaterial> material_w;
 
     switch (method) {
         case ChContactMethod::SMC: {
-            auto mat_w = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_w = chrono_types::make_shared<ChContactMaterialSMC>();
             mat_w->SetYoungModulus(Y_w);
             mat_w->SetFriction(mu_w);
             mat_w->SetRestitution(cr_w);
@@ -202,7 +201,7 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemMulticore* system, double z) {
             break;
         }
         case ChContactMethod::NSC: {
-            auto mat_w = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_w = chrono_types::make_shared<ChContactMaterialNSC>();
             mat_w->SetFriction(mu_w);
             mat_w->SetRestitution(cr_w);
             mat_w->SetCohesion(cohesion_w);
@@ -219,7 +218,7 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemMulticore* system, double z) {
     wheel->SetIdentifier(Id_w);
     wheel->SetMass(mass_w);
     wheel->SetInertiaXX(inertia_w);
-    wheel->SetPos(ChVector<>(0, 0, z));
+    wheel->SetPos(ChVector3d(0, 0, z));
     wheel->SetRot(ChQuaternion<>(1, 0, 0, 0));
     wheel->SetCollide(true);
     wheel->SetBodyFixed(false);
@@ -314,7 +313,7 @@ int main(int argc, char* argv[]) {
     system->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Set method-independent solver settings
-    system->Set_G_acc(ChVector<>(0, 0, -gravity));
+    system->Set_G_acc(ChVector3d(0, 0, -gravity));
     system->GetSettings()->solver.use_full_inertia_tensor = false;
     system->GetSettings()->solver.tolerance = 1e-3;
     system->GetSettings()->collision.bins_per_axis = vec3(50, 50, 50);

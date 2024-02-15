@@ -34,14 +34,14 @@ using namespace chrono::gpu;
 
 void writeMeshFrames(std::ostringstream& outstream,
                      const std::string obj_name,
-                     const ChVector<>& pos,
-                     const ChVector<>& mesh_scaling) {
+                     const ChVector3d& pos,
+                     const ChVector3d& mesh_scaling) {
     outstream << obj_name << ",";
 
     // Get basis vectors
-    ChVector<> vx(1, 0, 0);
-    ChVector<> vy(0, 1, 0);
-    ChVector<> vz(0, 0, 1);
+    ChVector3d vx(1, 0, 0);
+    ChVector3d vy(0, 1, 0);
+    ChVector3d vz(0, 0, 1);
 
     // Output in order
     outstream << pos.x() << ",";
@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
     std::cout << "sphere_radius " << params.sphere_radius << std::endl;
     std::cout << "sphere_density " << params.sphere_density << std::endl;
 
-    ChSystemGpuMesh gran_sys(params.sphere_radius, params.sphere_density, ChVector<float>(Bx, By, Bz));
+    ChSystemGpuMesh gran_sys(params.sphere_radius, params.sphere_density, ChVector3f(Bx, By, Bz));
 
     gran_sys.SetVerbosity(params.verbose);
 
@@ -120,19 +120,19 @@ int main(int argc, char* argv[]) {
     gran_sys.SetFixedStepSize(params.step_size);
 
     gran_sys.SetBDFixed(true);
-    gran_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
+    gran_sys.SetGravitationalAcceleration(ChVector3f(params.grav_X, params.grav_Y, params.grav_Z));
 
     // Fill the entire height
     const float fill_bottom = -Bz / 2.f;
     const float fill_height = Bz;
 
     // Cylinder mesh has interior radius 1 and total radius 1.1
-    ChVector<float> cyl_center(0, 0, 0);
-    ChVector<float> scaling(Bx / 4.f, Bx / 4.f, Bz);
+    ChVector3f cyl_center(0, 0, 0);
+    ChVector3f scaling(Bx / 4.f, Bx / 4.f, Bz);
     std::cout << "Cylinder radius: " << scaling.x() << std::endl;
 
     utils::PDSampler<float> sampler(2.05 * params.sphere_radius);
-    std::vector<ChVector<float>> body_points;
+    std::vector<ChVector3f> body_points;
 
     const float fill_radius = scaling.x() - 2.f * params.sphere_radius;
     const float fill_top = fill_bottom + fill_height;
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Fill bottom " << fill_bottom << std::endl;
     std::cout << "Fill top " << fill_top << std::endl;
 
-    ChVector<float> center(0, 0, fill_bottom);
+    ChVector3f center(0, 0, fill_bottom);
     center.z() += 2 * params.sphere_radius;
     while (center.z() < fill_top - 2 * params.sphere_radius) {
         auto points = sampler.SampleCylinderZ(center, fill_radius, 0);
@@ -154,7 +154,7 @@ int main(int argc, char* argv[]) {
 
     // Add mesh
     std::string mesh_filename(GetProjectsDataFile("gpu/meshes/cylinder_refined.obj"));
-    gran_sys.AddMesh(mesh_filename, ChVector<float>(0), ChMatrix33<float>(scaling), 10.0f);
+    gran_sys.AddMesh(mesh_filename, ChVector3f(0), ChMatrix33<float>(scaling), 10.0f);
 
     gran_sys.Initialize();
     const double time_settling = std::sqrt(-2.0 * (params.box_Z) / params.grav_Z);
@@ -174,10 +174,10 @@ int main(int argc, char* argv[]) {
     double mesh_vz = raising_vel;
 
     // Set initial mesh locations for the settling phase
-    ChVector<float> mesh_pos(0, 0, 0);
+    ChVector3f mesh_pos(0, 0, 0);
     ChQuaternion<float> mesh_rot(1, 0, 0, 0);
-    ChVector<float> mesh_lin_vel(0, 0, 0);
-    ChVector<float> mesh_ang_vel(0, 0, 0);
+    ChVector3f mesh_lin_vel(0, 0, 0);
+    ChVector3f mesh_ang_vel(0, 0, 0);
 
     gran_sys.ApplyMeshMotion(0, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
 
@@ -190,7 +190,7 @@ int main(int argc, char* argv[]) {
     unsigned int step = 0;
     bool settled = false;
     bool raised = false;
-    //    ChVector<> pos_mesh(0, 0, mesh_z);
+    //    ChVector3d pos_mesh(0, 0, mesh_z);
 
     std::cout << "Settling..." << std::endl;
     for (float t = 0; t < time_settling + time_raising + time_sitting; t += iteration_step, step++) {

@@ -26,13 +26,13 @@ std::shared_ptr<geometry::ChLinePath> CreateProfile(int num_teeth, double R_T, d
 
     for (int i = 0; i < num_teeth; ++i) {
         double alpha = -i * beta;
-        ChVector<> p0(0, R_C, 0);
-        ChVector<> p1(-R_T * sbeta, R_T * cbeta, 0);
-        ChVector<> p2(-x, y, 0);
-        ChVector<> p3(x, y, 0);
-        ChVector<> p4(R_T * sbeta, R_T * cbeta, 0);
+        ChVector3d p0(0, R_C, 0);
+        ChVector3d p1(-R_T * sbeta, R_T * cbeta, 0);
+        ChVector3d p2(-x, y, 0);
+        ChVector3d p3(x, y, 0);
+        ChVector3d p4(R_T * sbeta, R_T * cbeta, 0);
         ChQuaternion<> quat;
-        quat.Q_from_AngZ(alpha);
+        quat.SetFromAngleZ(alpha);
         ChMatrix33<> rot(quat);
         p0 = rot * p0;
         p1 = rot * p1;
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
     system.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
 
     // Create a shared material (default properties)
-    auto mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat = chrono_types::make_shared<ChContactMaterialNSC>();
 
     // ----------------------
     // Create the ground body
@@ -76,12 +76,12 @@ int main(int argc, char* argv[]) {
     // Create the rotating gear body
     // -----------------------------
 
-    ChVector<> gear_loc(0, 0, 0);
+    ChVector3d gear_loc(0, 0, 0);
 
     auto gear = chrono_types::make_shared<ChBody>();
     gear->SetIdentifier(0);
     gear->SetPos(gear_loc);
-    // gear->SetWvel_loc(ChVector<>(0, 0, 0.1));
+    // gear->SetWvel_loc(ChVector3d(0, 0, 0.1));
     system.AddBody(gear);
 
     int n_teeth = 10;
@@ -95,20 +95,20 @@ int main(int argc, char* argv[]) {
     // Add the collision shape to gear
     gear->SetCollide(true);
     auto gear_ct_shape = chrono_types::make_shared<ChCollisionShapePath2D>(mat, gear_profile);
-    gear->AddCollisionShape(gear_ct_shape, ChFrame<>(ChVector<>(0, 0, separation / 2), QUNIT));
-    gear->AddCollisionShape(gear_ct_shape, ChFrame<>(ChVector<>(0, 0, -separation / 2), QUNIT));
+    gear->AddCollisionShape(gear_ct_shape, ChFrame<>(ChVector3d(0, 0, separation / 2), QUNIT));
+    gear->AddCollisionShape(gear_ct_shape, ChFrame<>(ChVector3d(0, 0, -separation / 2), QUNIT));
     gear->GetCollisionModel()->SetSafeMargin(0.02);
 
     // Add ChVisualShapeLine visualization asset to gear
     auto gear_profile_plus = chrono_types::make_shared<ChVisualShapeLine>();
     gear_profile_plus->SetLineGeometry(gear_profile);
     gear_profile_plus->SetColor(ChColor(1, 0, 0));
-    gear->AddVisualShape(gear_profile_plus, ChFrame<>(ChVector<>(0, 0, separation / 2)));
+    gear->AddVisualShape(gear_profile_plus, ChFrame<>(ChVector3d(0, 0, separation / 2)));
 
     auto gear_profile_minus = chrono_types::make_shared<ChVisualShapeLine>();
     gear_profile_minus->SetLineGeometry(gear_profile);
     gear_profile_minus->SetColor(ChColor(0, 1, 0));
-    gear->AddVisualShape(gear_profile_minus, ChFrame<>(ChVector<>(0, 0, -separation / 2)));
+    gear->AddVisualShape(gear_profile_minus, ChFrame<>(ChVector3d(0, 0, -separation / 2)));
 
     auto gear_axle = chrono_types::make_shared<ChVisualShapeCylinder>(0.1 * R, separation);
     gear->AddVisualShape(gear_axle);
@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
 
     double pin_hlen = 0.6 * separation;
     double pin_radius = 0.3 * R;
-    ChVector<> pin_loc = gear_loc + ChVector<>(0, R_T, 0);
+    ChVector3d pin_loc = gear_loc + ChVector3d(0, R_T, 0);
 
     auto pin = chrono_types::make_shared<ChBody>();
     pin->SetIdentifier(1);
@@ -139,8 +139,8 @@ int main(int argc, char* argv[]) {
     // Add collision shapes to pin
     pin->SetCollide(true);
     auto pin_ct_shape = chrono_types::make_shared<ChCollisionShapePath2D>(mat, pin_profile);
-    pin->AddCollisionShape(pin_ct_shape, ChFrame<>(ChVector<>(0, 0, separation / 2), QUNIT));
-    pin->AddCollisionShape(pin_ct_shape, ChFrame<>(ChVector<>(0, 0, -separation / 2), QUNIT));
+    pin->AddCollisionShape(pin_ct_shape, ChFrame<>(ChVector3d(0, 0, separation / 2), QUNIT));
+    pin->AddCollisionShape(pin_ct_shape, ChFrame<>(ChVector3d(0, 0, -separation / 2), QUNIT));
     pin->GetCollisionModel()->SetSafeMargin(0.02);
 
     // Add pin visualization
@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
-    vis->AddCamera(ChVector<>(0.5, 0.5, -1));
+    vis->AddCamera(ChVector3d(0.5, 0.5, -1));
     vis->AddTypicalLights();
     vis->SetSymbolScale(1e-4);
     vis->EnableContactDrawing(ContactsDrawMode::CONTACT_FORCES);

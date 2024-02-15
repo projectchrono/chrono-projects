@@ -71,18 +71,18 @@ int main(int argc, char* argv[]) {
     float time_impact = 0.5f;
     float time_end = time_settle + time_impact;
 
-    ChSystemGpu gran_sys(sphere_radius, sphere_density, ChVector<float>(box_X, box_Y, box_Z));
+    ChSystemGpu gran_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
     gran_sys.SetBDFixed(true);
 
     // create cylinder containter
-    ChVector<float> cyl_center(0.0f, 0.0f, 0.0f);
+    ChVector3f cyl_center(0.0f, 0.0f, 0.0f);
     float cyl_rad = std::min(box_X, box_Y) / 2.0f;
     gran_sys.CreateBCCylinderZ(cyl_center, cyl_rad, false, true);
 
     // generate a cloud of particles
-    std::vector<chrono::ChVector<float>> body_points;
+    std::vector<chrono::ChVector3f> body_points;
     utils::PDSampler<float> sampler(2.001 * sphere_radius);
-    ChVector<float> sampler_center(0.0f, 0.0f, 0.0f);
+    ChVector3f sampler_center(0.0f, 0.0f, 0.0f);
     body_points = sampler.SampleCylinderZ(sampler_center, cyl_rad - 4 * sphere_radius, box_Z / 2 - 4 * sphere_radius);
     auto numSpheres = body_points.size();
     std::cout << "Numbers of particles created: " << numSpheres << std::endl;
@@ -94,11 +94,11 @@ int main(int argc, char* argv[]) {
     // set up projectile radius, mass and impact velocity
     float projectile_radius = 5.0f;
     float projectile_mass = 1000;
-    ChVector<float> projectile_pos(0, 0, box_Z / 2.0f - projectile_radius);
-    ChVector<float> projectile_impact_velo(0.0, 0.0, -100.0f);
+    ChVector3f projectile_pos(0, 0, box_Z / 2.0f - projectile_radius);
+    ChVector3f projectile_impact_velo(0.0, 0.0, -100.0f);
     size_t projectile_id = gran_sys.CreateBCSphere(projectile_pos, projectile_radius, true, true, projectile_mass);
 
-    gran_sys.SetGravitationalAcceleration(ChVector<float>(grav_X, grav_Y, grav_Z));
+    gran_sys.SetGravitationalAcceleration(ChVector3f(grav_X, grav_Y, grav_Z));
     gran_sys.SetPsiFactors(32.0f, 16.0f);
     gran_sys.SetFixedStepSize(step_size);
     gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::FORWARD_EULER);
@@ -142,9 +142,9 @@ int main(int argc, char* argv[]) {
     gran_sys.SetBCSpherePosition(projectile_id, projectile_pos);
     gran_sys.SetBCSphereVelocity(projectile_id, projectile_impact_velo);
 
-    ChVector<float> bc_pos(0.0f, 0.0f, 0.0f);
-    ChVector<float> bc_velo(0.0f, 0.0f, 0.0f);
-    ChVector<float> bc_force(0.0f, 0.0f, 0.0f);
+    ChVector3f bc_pos(0.0f, 0.0f, 0.0f);
+    ChVector3f bc_velo(0.0f, 0.0f, 0.0f);
+    ChVector3f bc_force(0.0f, 0.0f, 0.0f);
 
     // impact phase
     while (t < time_end) {

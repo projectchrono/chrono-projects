@@ -9,6 +9,8 @@
 // and at http://projectchrono.org/license-chrono.txt.
 //
 
+#include <iomanip>
+
 #include "chrono/ChConfig.h"
 #include "chrono/physics/ChContactContainerSMC.h"
 #include "chrono/physics/ChSystemSMC.h"
@@ -36,18 +38,18 @@ class MyContactContainer : public ChContactContainerSMC {
         while (iter != contactlist_6_6.end()) {
             ChContactable* objA = (*iter)->GetObjA();
             ChContactable* objB = (*iter)->GetObjB();
-            ChVector<> pA = (*iter)->GetContactP1();
-            ChVector<> pB = (*iter)->GetContactP2();
+            ChVector3d pA = (*iter)->GetContactP1();
+            ChVector3d pB = (*iter)->GetContactP2();
 
-            GetLog().SetNumFormat("%12.3e");
+            std::cout << std::scientific << std::setw(12) << std::setprecision(3);
 
             int iball;
             if (objA == ball.get()) {
                 iball = 0;
-                GetLog() << "pA = " << pA << "\n";
+                std::cout << "pA = " << pA << "\n";
             } else if (objB == ball.get()) {
                 iball = 1;
-                GetLog() << "pB = " << pB << "\n";
+                std::cout << "pB = " << pB << "\n";
             }
 
             const ChKblockGeneric* KRM = (*iter)->GetJacobianKRM();
@@ -55,16 +57,16 @@ class MyContactContainer : public ChContactContainerSMC {
             const ChMatrixDynamic<double>* R = (*iter)->GetJacobianR();
 
             if (KRM) {
-                GetLog() << "K = " << *K << "\n";
-                GetLog() << "R = " << *R << "\n";
+                std::cout << "K = " << *K << "\n";
+                std::cout << "R = " << *R << "\n";
 
                 ChMatrixNM<double, 6, 6> Kball;
                 ChMatrixNM<double, 6, 6> Rball;
                 Kball = K->block(iball * 6, iball * 6, 6, 6);
                 Rball = R->block(iball * 6, iball * 6, 6, 6);
 
-                GetLog() << "Kball = " << Kball << "\n";
-                GetLog() << "Rball = " << Rball << "\n";
+                std::cout << "Kball = " << Kball << "\n";
+                std::cout << "Rball = " << Rball << "\n";
             }
 
             ++iter;
@@ -116,10 +118,10 @@ int main(int argc, char* argv[]) {
     int ballId = 100;
     double radius = 1;
     double mass = 1000;
-    ChVector<> pos(0, 2, 0);
+    ChVector3d pos(0, 2, 0);
     ChQuaternion<> rot(1, 0, 0, 0);
-    ChVector<> init_vel(0, 0, 0);
-    ChVector<> init_omg(0, 0, 0);
+    ChVector3d init_vel(0, 0, 0);
+    ChVector3d init_omg(0, 0, 0);
 
     // ---------------------------------
     // Parameters for the containing bin
@@ -146,10 +148,10 @@ int main(int argc, char* argv[]) {
     // Set contact forces as stiff (to force Jacobian computation) or non-stiff
     system.SetStiffContact(stiff_contact);
 
-    system.Set_G_acc(ChVector<>(0, gravity, 0));
+    system.Set_G_acc(ChVector3d(0, gravity, 0));
 
     // Create a material (will be used by both objects)
-    auto material = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto material = chrono_types::make_shared<ChContactMaterialSMC>();
     material->SetYoungModulus(young_modulus);
     material->SetRestitution(restitution);
     material->SetFriction(friction);
@@ -164,7 +166,7 @@ int main(int argc, char* argv[]) {
 
     ball->SetIdentifier(ballId);
     ball->SetMass(mass);
-    ball->SetInertiaXX(0.4 * mass * radius * radius * ChVector<>(1, 1, 1));
+    ball->SetInertiaXX(0.4 * mass * radius * radius * ChVector3d(1, 1, 1));
     ball->SetPos(pos);
     ball->SetRot(rot);
     ball->SetPos_dt(init_vel);
@@ -186,16 +188,16 @@ int main(int argc, char* argv[]) {
 
     ground->SetIdentifier(binId);
     ground->SetMass(1);
-    ground->SetPos(ChVector<>(0, 0, 0));
+    ground->SetPos(ChVector3d(0, 0, 0));
     ground->SetRot(ChQuaternion<>(1, 0, 0, 0));
     ground->SetCollide(true);
     ground->SetBodyFixed(true);
 
     auto ground_ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(material, width, thickness, length);
-    ground->AddCollisionShape(ground_ct_shape, ChFrame<>(ChVector<>(0, -thickness / 2, 0), QUNIT));
+    ground->AddCollisionShape(ground_ct_shape, ChFrame<>(ChVector3d(0, -thickness / 2, 0), QUNIT));
 
     auto box = chrono_types::make_shared<ChVisualShapeBox>(width, thickness, length);
-    ground->AddVisualShape(box, ChFrame<>(ChVector<>(0, -thickness / 2, 0)));
+    ground->AddVisualShape(box, ChFrame<>(ChVector3d(0, -thickness / 2, 0)));
 
     system.AddBody(ground);
 
@@ -206,7 +208,7 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
-    vis->AddCamera(ChVector<>(0, 3, -6));
+    vis->AddCamera(ChVector3d(0, 3, -6));
     vis->AddTypicalLights();
     vis->SetSymbolScale(1e-4);
     vis->EnableContactDrawing(ContactsDrawMode::CONTACT_FORCES);
@@ -226,14 +228,14 @@ int main(int argc, char* argv[]) {
     // Note that not all solvers support stiffness matrices (that includes the default SolverSMC).
 #ifndef CHRONO_PARDISO_MKL
     if (solver_type == ChSolver::Type::PARDISO_MKL) {
-        GetLog() << "PardisoMKL support not enabled.  Solver reset to default.\n";
+        std::cout << "PardisoMKL support not enabled.  Solver reset to default.\n";
         solver_type = ChSolver::Type::MINRES;
     }
 #endif
 
     switch (solver_type) {
         case ChSolver::Type::MINRES: {
-            GetLog() << "Using MINRES solver.\n";
+            std::cout << "Using MINRES solver.\n";
             auto minres_solver = chrono_types::make_shared<ChSolverMINRES>();
             minres_solver->EnableDiagonalPreconditioner(true);
             minres_solver->SetMaxIterations(100);
@@ -243,7 +245,7 @@ int main(int argc, char* argv[]) {
         }
         case ChSolver::Type::PARDISO_MKL: {
 #ifdef CHRONO_PARDISO_MKL
-            GetLog() << "Using PardisoMKL solver.\n";
+            std::cout << "Using PardisoMKL solver.\n";
             auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
             mkl_solver->LockSparsityPattern(true);
             system.SetSolver(mkl_solver);
@@ -251,7 +253,7 @@ int main(int argc, char* argv[]) {
             break;
         }
         default: {
-            GetLog() << "Using DEFAULT solver.\n";
+            std::cout << "Using DEFAULT solver.\n";
             system.SetSolverMaxIterations(100);
             system.SetSolverForceTolerance(1e-6);
             break;
@@ -281,7 +283,7 @@ int main(int argc, char* argv[]) {
         system.DoStepDynamics(time_step);
         if (ball->GetPos().y() <= radius) {
             container->ScanContacts(ball);
-            GetLog() << "t = " << system.GetChTime() << "  NR iters. = " << integrator->GetNumIterations() << "\n";
+            std::cout << "t = " << system.GetChTime() << "  NR iters. = " << integrator->GetNumIterations() << "\n";
         }
     }
 

@@ -19,19 +19,19 @@
 //
 // =============================================================================
 
-#include "chrono_parsers/ChParserPython.h"
-#include "chrono/physics/ChSystemNSC.h"
-#include "chrono/physics/ChBodyAuxRef.h"
 #include <iostream>
 #include <sstream>
+#include "chrono/physics/ChBodyAuxRef.h"
+#include "chrono/physics/ChSystemNSC.h"
+#include "chrono_parsers/ChParserPython.h"
 
 using namespace chrono;
 using namespace chrono::parsers;
 
 int main(int argc, char* argv[]) {
-    GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
+    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
 
-    GetLog() << " Test the execution of Python statements, formulas, programs.\n No graphical user interface.\n\n";
+    std::cout << " Test the execution of Python statements, formulas, programs.\n No graphical user interface.\n\n";
 
     // Set path to Chrono data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
@@ -43,21 +43,21 @@ int main(int argc, char* argv[]) {
 
     ChPythonEngine my_python;
 
-	//
-	// TEST 1   -   figure out what version of Python is run under the hood
-	//
+    //
+    // TEST 1   -   figure out what version of Python is run under the hood
+    //
 
-	GetLog() << " PyChrono Test 1.\n";
-	my_python.Run("import sys");
-	GetLog() << "Python version run by Chrono:\n";
-	my_python.Run("print (sys.version)");
+    std::cout << " PyChrono Test 1.\n";
+    my_python.Run("import sys");
+    std::cout << "Python version run by Chrono:\n";
+    my_python.Run("print (sys.version)");
 
-	//
-	// TEST 2   -   execute simple instructions
-	//
+    //
+    // TEST 2   -   execute simple instructions
+    //
 
-	GetLog() << "\n\n PyChrono Test 2.\n";
-	my_python.Run("a =8.6");
+    std::cout << "\n\n PyChrono Test 2.\n";
+    my_python.Run("a =8.6");
     my_python.Run("b =4");
     my_python.Run("c ='blabla' ");
     my_python.Run("print('In:Python - A computation:', a/2)");
@@ -66,24 +66,24 @@ int main(int argc, char* argv[]) {
     // TEST 3   -   fetch a value from a python variable (in __main__ namespace)
     //
 
-	GetLog() << "\n\n PyChrono Test 3.\n";
-	double mfval;
+    std::cout << "\n\n PyChrono Test 3.\n";
+    double mfval;
     my_python.GetFloat("a", mfval);
-    GetLog() << "In:C++    - Passed float variable 'a' from Python, a=" << mfval << "\n";
+    std::cout << "In:C++    - Passed float variable 'a' from Python, a=" << mfval << "\n";
     int mival;
     my_python.GetInteger("b", mival);
-    GetLog() << "In:C++    - Passed integer variable 'b' from Python, b=" << mival << "\n";
+    std::cout << "In:C++    - Passed integer variable 'b' from Python, b=" << mival << "\n";
     std::string msval;
     if (!my_python.GetString("c", msval))
-        GetLog() << "Can't fetch string \n";
-    GetLog() << "In:C++    - Passed string variable 'c' from Python, c=" << msval << "\n";
+        std::cout << "Can't fetch string \n";
+    std::cout << "In:C++    - Passed string variable 'c' from Python, c=" << msval << "\n";
 
     //
     // TEST 4   -   set a value into a python variable (in __main__ namespace)
     //
 
-	GetLog() << "\n\n PyChrono Test 4.\n";
-	my_python.SetFloat("d", 123.5);
+    std::cout << "\n\n PyChrono Test 4.\n";
+    my_python.SetFloat("d", 123.5);
     my_python.Run("print('In:Python - Passed variable d from c++, d=', d)");
 
     //
@@ -91,50 +91,49 @@ int main(int argc, char* argv[]) {
     //
 
     // In the previous examples we didn't have any syntax errors.
-    // In general, it is wise to enclose Python commands in a try-catch block 
+    // In general, it is wise to enclose Python commands in a try-catch block
     // because errors are handled with exceptions:
 
-	GetLog() << "\n\n PyChrono Test 5.\n";
-	try {
+    std::cout << "\n\n PyChrono Test 5.\n";
+    try {
         my_python.Run("a= this_itGoInG_TO_giVe_ErroRs!()");
-    } catch (const ChException&) {
-        GetLog() << "Ok, Python parsing error caught as expected.\n";
+    } catch (const std::exception&) {
+        std::cout << "Ok, Python parsing error caught as expected.\n";
     }
 
     //
     // TEST 6   -   load mechanical system, previously saved to disk from SolidWorks add-in
     //
 
-	GetLog() << "\n\n PyChrono Test 6.\n";
-	ChSystemNSC sys;
+    std::cout << "\n\n PyChrono Test 6.\n";
+    ChSystemNSC sys;
 
     try {
         // This is the instruction that loads the .py (as saved from SolidWorks) and
         // fills the system:
 
-        my_python.ImportSolidWorksSystem(GetChronoDataFile("solidworks/swiss_escapement").c_str(), 
+        my_python.ImportSolidWorksSystem(GetChronoDataFile("solidworks/swiss_escapement").c_str(),
                                          sys);  // note, don't type the .py suffic in filename..
 
-        sys.ShowHierarchy(GetLog());
+        sys.ShowHierarchy(std::cout);
 
         // In case you want to fetch an item, remember that they got the
         // names that you see in the CAD interface, for example suppose you know that
         // a ChBodyAuxRef has the name "escape_wheel^escapement-1":
         std::shared_ptr<ChBodyAuxRef> mbody;
         for (auto body : sys.Get_bodylist()) {
-            GetLog() << body->GetNameString().c_str() << "\n";
+            std::cout << body->GetNameString().c_str() << "\n";
             if (body->GetNameString() == "escape_wheel-1")
                 mbody = std::dynamic_pointer_cast<ChBodyAuxRef>(body);
         }
 
-        if (!mbody) 
-            throw ChException("Error. Could not find body from its name in SolidWorks exported file");
+        if (!mbody)
+            throw std::runtime_error("Error. Could not find body from its name in SolidWorks exported file");
         else
-            GetLog() << "Found body  its name in SolidWorks exported file, pos.x()=" << mbody->GetPos().x() << "\n";
+            std::cout << "Found body  its name in SolidWorks exported file, pos.x()=" << mbody->GetPos().x() << "\n";
 
-
-    } catch (const ChException& myerror) {
-        GetLog() << myerror.what();
+    } catch (const std::exception& myerror) {
+        std::cout << myerror.what();
     }
 
     return 0;

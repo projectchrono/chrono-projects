@@ -4,7 +4,6 @@
 #include <iostream>
 #include <iomanip>
 
-#include "core/ChStream.h"
 #include "chrono/physics/ChSystem.h"
 
 // =============================================================================
@@ -42,7 +41,7 @@ static inline void progressbar(unsigned int x, unsigned int n, unsigned int w = 
 // =============================================================================
 // Utility function to print to console a few important step statistics
 
-static inline void TimingOutput(chrono::ChSystem* sys, chrono::ChStreamOutAsciiFile* ofile = NULL) {
+static inline void TimingOutput(chrono::ChSystem* sys, std::ofstream* ofile = NULL) {
     double TIME = sys->GetChTime();
     double STEP = sys->GetTimerStep();
     double BROD = sys->GetTimerCollisionBroad();

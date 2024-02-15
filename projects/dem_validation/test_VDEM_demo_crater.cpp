@@ -27,7 +27,6 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -122,7 +121,7 @@ double r_g = 1e-3 / 2;
 double rho_g = 2500;
 double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
-ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
+ChVector3d inertia_g = 0.4 * mass_g * r_g * r_g * ChVector3d(1, 1, 1);
 
 float Y_g = 1e8f;
 float mu_g = 0.3f;
@@ -134,7 +133,7 @@ double R_b = 2.54e-2 / 2;
 double rho_b = 700;
 double vol_b = (4.0 / 3) * CH_C_PI * R_b * R_b * R_b;
 double mass_b = rho_b * vol_b;
-ChVector<> inertia_b = 0.4 * mass_b * R_b * R_b * ChVector<>(1, 1, 1);
+ChVector3d inertia_b = 0.4 * mass_b * R_b * R_b * ChVector3d(1, 1, 1);
 
 float Y_b = 1e8f;
 float mu_b = 0.3f;
@@ -172,27 +171,27 @@ double h = 10e-2;
 int CreateObjects(ChSystemMulticore* system) {
 // Create the containing bin
 #ifdef USE_SMC
-    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_c = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_c->SetYoungModulus(Y_c);
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
 
-    utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, binId, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 #else
-    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_c = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_c->SetFriction(mu_c);
 
-    utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, binId, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 #endif
 
 // Create a material for the granular material
 #ifdef USE_SMC
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
@@ -210,8 +209,8 @@ int CreateObjects(ChSystemMulticore* system) {
 
     for (int i = 0; i < numLayers; i++) {
         double center = r + layerHeight / 2 + i * (2 * r + layerHeight);
-        gen.CreateObjectsBox(sampler, ChVector<>(0, 0, center),
-                             ChVector<>(hDimX - r, hDimY - r, layerHeight / 2));
+        gen.CreateObjectsBox(sampler, ChVector3d(0, 0, center),
+                             ChVector3d(hDimX - r, hDimY - r, layerHeight / 2));
         cout << "Layer " << i << "  total bodies: " << gen.getTotalNumBodies() << endl;
     }
 
@@ -225,12 +224,12 @@ int CreateObjects(ChSystemMulticore* system) {
 void CreateFallingBall(ChSystemMulticore* system, double z, double vz) {
     // Create a material for the falling ball
 #ifdef USE_SMC
-    auto mat_b = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_b = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_b->SetYoungModulus(1e8f);
     mat_b->SetFriction(0.4f);
     mat_b->SetRestitution(0.1f);
 #else
-    auto mat_b = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_b = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_b->SetFriction(mu_c);
 #endif
 
@@ -240,9 +239,9 @@ void CreateFallingBall(ChSystemMulticore* system, double z, double vz) {
     ball->SetIdentifier(Id_b);
     ball->SetMass(mass_b);
     ball->SetInertiaXX(inertia_b);
-    ball->SetPos(ChVector<>(0, 0, z + r_g + R_b));
+    ball->SetPos(ChVector3d(0, 0, z + r_g + R_b));
     ball->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    ball->SetPos_dt(ChVector<>(0, 0, -vz));
+    ball->SetPos_dt(ChVector3d(0, 0, -vz));
     ball->SetCollide(true);
     ball->SetBodyFixed(false);
 
@@ -317,7 +316,7 @@ int main(int argc, char* argv[]) {
     cout << "Using " << threads << " threads" << endl;
 
     // Set gravitational acceleration
-    msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
+    msystem->Set_G_acc(ChVector3d(0, 0, -gravity));
 
     // Edit system settings
     msystem->GetSettings()->solver.use_full_inertia_tensor = false;
@@ -378,9 +377,9 @@ int main(int argc, char* argv[]) {
         ball = msystem->Get_bodylist().at(0);
         ball->SetMass(mass_b);
         ball->SetInertiaXX(inertia_b);
-        ball->SetPos(ChVector<>(0, 0, z + r_g + R_b));
+        ball->SetPos(ChVector3d(0, 0, z + r_g + R_b));
         ball->SetRot(ChQuaternion<>(1, 0, 0, 0));
-        ball->SetPos_dt(ChVector<>(0, 0, -vz));
+        ball->SetPos_dt(ChVector3d(0, 0, -vz));
         ball->SetBodyFixed(false);
     }
 
@@ -409,13 +408,13 @@ int main(int argc, char* argv[]) {
     int next_out_frame = 0;
     double exec_time = 0;
     int num_contacts = 0;
-    ChStreamOutAsciiFile sfile(stats_file.c_str());
-    ChStreamOutAsciiFile hfile(height_file.c_str());
+    std::ofstream sfile(stats_file.c_str());
+    std::ofstream hfile(height_file.c_str());
 
 #ifdef CHRONO_OPENGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
     gl_window.Initialize(1280, 720, "Crater Test", msystem);
-    gl_window.SetCamera(ChVector<>(0, -10 * hDimY, hDimZ), ChVector<>(0, 0, hDimZ), ChVector<>(0, 0, 1));
+    gl_window.SetCamera(ChVector3d(0, -10 * hDimY, hDimZ), ChVector3d(0, 0, hDimZ), ChVector3d(0, 0, 1));
     gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif
 

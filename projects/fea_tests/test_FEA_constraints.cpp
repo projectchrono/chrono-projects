@@ -19,7 +19,6 @@
 #include <cstdio>
 #include <cmath>
 
-#include "chrono/core/ChMathematics.h"
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/solver/ChIterativeSolverLS.h"
@@ -51,7 +50,7 @@ using namespace chrono::fea;
 // boolean argument 'constrain_dir').
 // The argument 'dir' defines the initial beam configuration.
 void test_beam(const std::string& name,  /// test name
-               const ChVector<>& dir,    /// initial beam orientation
+               const ChVector3d& dir,    /// initial beam orientation
                double alpha,             /// damping coefficient
                bool constrain_dir,       /// if true, include ChLinkFirFrame constraints
                double duration           /// simulation length
@@ -63,7 +62,7 @@ void test_beam(const std::string& name,  /// test name
     // Create the system
     ChSystemNSC my_system;
     double g = 10;
-    my_system.Set_G_acc(ChVector<>(0, 0, -g));
+    my_system.Set_G_acc(ChVector3d(0, 0, -g));
 
     // Create the ground body
     auto ground = chrono_types::make_shared<ChBody>();
@@ -85,7 +84,7 @@ void test_beam(const std::string& name,  /// test name
     msection_cable->SetDensity(rho);
 
     // Create the 2 nodes and 1 beam element
-    auto node1 = chrono_types::make_shared<ChNodeFEAxyzD>(ChVector<>(0, 0, 0), dir);
+    auto node1 = chrono_types::make_shared<ChNodeFEAxyzD>(ChVector3d(0, 0, 0), dir);
     auto node2 = chrono_types::make_shared<ChNodeFEAxyzD>(length * dir, dir);
     mesh->AddNode(node1);
     mesh->AddNode(node2);
@@ -145,13 +144,13 @@ void test_beam(const std::string& name,  /// test name
     double step = 1e-4;
 
     utils::CSV_writer csv("  ");
-    ChVector<> rforce(0);
-    ChVector<> rtorque(0);
+    ChVector3d rforce(0);
+    ChVector3d rtorque(0);
 
     while (my_system.GetChTime() < duration) {
         my_system.DoStepDynamics(step);
 
-        ChVector<> pos = node2->GetPos();
+        ChVector3d pos = node2->GetPos();
 
         {
             ChCoordsys<> csys = point_cnstr->GetLinkAbsoluteCoords();
@@ -168,8 +167,8 @@ void test_beam(const std::string& name,  /// test name
         csv << my_system.GetChTime() << pos << rforce << rtorque << std::endl;
     }
 
-    ChVector<> dir1 = node1->GetD();
-    ChVector<> pos2 = node2->GetPos();
+    ChVector3d dir1 = node1->GetD();
+    ChVector3d pos2 = node2->GetPos();
     std::cout << "\nFinal configuration" << std::endl;
     std::cout << "  base direction: " << dir1.x() << " " << dir1.y() << " " << dir1.z() << std::endl;
     std::cout << "  tip position:   " << pos2.x() << " " << pos2.y() << " " << pos2.z() << std::endl;
@@ -182,7 +181,7 @@ void test_beam(const std::string& name,  /// test name
     int num_points = 51;
     ChVectorDynamic<> displ(beam_elem->GetNdofs());
     beam_elem->GetStateBlock(displ);
-    std::vector<ChVector<>> P(num_points);
+    std::vector<ChVector3d> P(num_points);
     for (int i = 0; i < num_points; i++) {
         double eta = -1.0 + ((2.0 * i) / (num_points - 1));
         ChQuaternion<> R;
@@ -191,11 +190,11 @@ void test_beam(const std::string& name,  /// test name
 
     // Estimate reaction force & torque for an equivalent rigid beam.
     double mass = CH_C_PI_4 * diam * diam * length * rho;
-    rforce = ChVector<>(0, 0, -mass * g);
-    rtorque = ChVector<>(0);
+    rforce = ChVector3d(0, 0, -mass * g);
+    rtorque = ChVector3d(0);
     if (constrain_dir) {
         double seg_mass = mass / num_points;
-        ChVector<> seg_weight(0, 0, -seg_mass * g);
+        ChVector3d seg_weight(0, 0, -seg_mass * g);
         for (int i = 0; i < num_points; i++) {
             rtorque += Vcross(P[i], seg_weight);
         }
@@ -258,11 +257,11 @@ int main(int argc, char* argv[]) {
     // Set path to Chrono data directory
     SetChronoDataPath(CHRONO_DATA_DIR);
 
-    test_beam("hinge", ChVector<>(0, 0, -1), 0.005, false, 0.75);
+    test_beam("hinge", ChVector3d(0, 0, -1), 0.005, false, 0.75);
 
-    test_beam("cantilever1", ChVector<>(1, 0, 0), 0.1, true, 2.5);
+    test_beam("cantilever1", ChVector3d(1, 0, 0), 0.1, true, 2.5);
 
-    ChVector<> dir(1, 0, -1);
+    ChVector3d dir(1, 0, -1);
     dir.Normalize();
     test_beam("cantilever2", dir, 0.15, true, 2.5);
 
