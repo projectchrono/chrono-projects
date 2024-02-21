@@ -798,18 +798,18 @@ class MyEventReceiver : public IEventReceiver {
 
     void drawGrid() {
         // wall 1
-        ChCoordsys<> wall1Csys = this->mtester->wall1->GetCoord();
+        ChCoordsys<> wall1Csys = this->mtester->wall1->GetCsys();
         wall1Csys.rot = chrono::QuatFromAngleAxis(CH_C_PI / 2.0, VECT_Y);
         wall1Csys.pos.x() += .05;
         tools::drawGrid(this->mapp, 0.1, 0.05, 24, 20, wall1Csys, ChColor(0.3f, 0.5f, 0.5f), true);
 
         // wall 3
-        ChCoordsys<> wall3Csys = this->mtester->wall3->GetCoord();
+        ChCoordsys<> wall3Csys = this->mtester->wall3->GetCsys();
         wall3Csys.pos.z() += .05;
         tools::drawGrid(this->mapp, 0.1, 0.05, 10, 20, wall3Csys, ChColor(0.3f, 0.5f, 0.5f), true);
 
         // wall 4
-        ChCoordsys<> wall4Csys = this->mtester->wall4->GetCoord();
+        ChCoordsys<> wall4Csys = this->mtester->wall4->GetCsys();
         wall4Csys.pos.z() -= .05;
         tools::drawGrid(this->mapp, 0.1, 0.05, 10, 20, wall4Csys, ChColor(0.3f, 0.5f, 0.5f), true);
     }

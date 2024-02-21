@@ -407,7 +407,7 @@ int main(int argc, char* argv[]) {
 
         const ChVector3d& pos_CG = vehicle->GetChassis()->GetPos();
         ChVector3d vel_CG = vehicle->GetChassisBody()->GetPos_dt();
-        vel_CG = vehicle->GetChassisBody()->GetCoord().TransformDirectionParentToLocal(vel_CG);
+        vel_CG = vehicle->GetChassisBody()->GetCsys().TransformDirectionParentToLocal(vel_CG);
 
         // Vehicle and Control Values
         csv << time << driver_inputs.m_steering << driver_inputs.m_throttle << driver_inputs.m_braking;

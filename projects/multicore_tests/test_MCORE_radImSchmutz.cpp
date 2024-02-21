@@ -272,7 +272,7 @@ void Mechanism::WriteResults(std::ofstream& f, double time) {
     // Reaction force in revolute joint
     ChVector3d force_jointsys = m_revolute->Get_react_force();
     ChVector3d force_bodysys = revCoordsys.TransformDirectionLocalToParent(force_jointsys);
-    ChVector3d force_abssys = m_sled->GetCoord().TransformDirectionLocalToParent(force_bodysys);
+    ChVector3d force_abssys = m_sled->GetCsys().TransformDirectionLocalToParent(force_bodysys);
 
     f << time << "  " << sled_vel.x() << "  " << sled_vel.y() << "  " << sled_vel.z() << "      " << wheel_vel.x() << "  "
       << wheel_vel.y() << "  " << wheel_vel.z() << "      " << force_abssys.x() << "  " << force_abssys.y() << "  "

@@ -17,7 +17,6 @@
 #include <ctime>
 
 #include "chrono/assets/ChVisualShapeBox.h"
-#include "chrono/core/ChTransform.h"
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"

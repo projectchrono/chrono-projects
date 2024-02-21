@@ -85,8 +85,8 @@ int main(int argc, char* argv[]) {
 
     // Equivalent ways of initializing the brake link
     ////brake->Initialize(ground, wheel, ChCoordsys<>(init_pos, init_rot));
-    ////brake->Initialize(ground, wheel, wheel->GetCoord() * joint->GetMarker2()->GetCoord());
-    brake->Initialize(ground, wheel, true, joint->GetMarker1()->GetCoord(), joint->GetMarker2()->GetCoord());
+    ////brake->Initialize(ground, wheel, wheel->GetCsys() * joint->GetMarker2()->GetCsys());
+    brake->Initialize(ground, wheel, true, joint->GetMarker1()->GetCsys(), joint->GetMarker2()->GetCsys());
 
     // Create the Irrlicht visualization
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
