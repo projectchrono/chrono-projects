@@ -294,7 +294,7 @@ int main(int argc, char* argv[]) {
         pos = (vert_pos[triangles[i].x()] + vert_pos[triangles[i].y()] + vert_pos[triangles[i].z()]) / 3.0;
         vel = (vert_vel[triangles[i].x()] + vert_vel[triangles[i].y()] + vert_vel[triangles[i].z()]) / 3.0;
         triangle->SetPos(pos);
-        triangle->SetPos_dt(vel);
+        triangle->SetLinVel(vel);
         triangle->SetRot(ChQuaternion<>(1, 0, 0, 0));
         triangle->SetCollide(true);
         triangle->SetBodyFixed(true);
@@ -366,7 +366,7 @@ int main(int argc, char* argv[]) {
             chrono::utils::CSV_writer csv(delim);
             csv << triangles.size() << std::endl;
             for (int i = 0; i < triangles.size(); i++) {
-                csv << systemG->Get_bodylist().at(i)->GetPos() << vert_pos[triangles[i].x()]
+                csv << systemG->GetBodies().at(i)->GetPos() << vert_pos[triangles[i].x()]
                     << vert_pos[triangles[i].y()] << vert_pos[triangles[i].z()] << std::endl;
             }
             sprintf(filename, "../POVRAY/triangles_%d.dat", frameIndex);
@@ -421,11 +421,11 @@ int main(int argc, char* argv[]) {
         mrigidmeshload->OutputSimpleMesh(vert_pos, vert_vel, triangles);
 
         for (int i = 0; i < triangles.size(); i++) {
-            std::shared_ptr<ChBody> triBody = systemG->Get_bodylist().at(i);
+            std::shared_ptr<ChBody> triBody = systemG->GetBodies().at(i);
             pos = (vert_pos[triangles[i].x()] + vert_pos[triangles[i].y()] + vert_pos[triangles[i].z()]) / 3.0;
             triBody->SetPos(pos);
             vel = (vert_vel[triangles[i].x()] + vert_vel[triangles[i].y()] + vert_vel[triangles[i].z()]) / 3.0;
-            triBody->SetPos_dt(vel);
+            triBody->SetLinVel(vel);
 
             //            // Update visual assets TODO: chrono_opengl cannot handle dynamic meshes yet
             //            for (int j = 0; j < triBody->GetAssets().size(); j++) {

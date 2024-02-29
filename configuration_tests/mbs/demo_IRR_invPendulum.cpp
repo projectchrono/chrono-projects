@@ -102,11 +102,11 @@ MyController::MyController(std::shared_ptr<ChBody> cart, std::shared_ptr<ChBody>
 
     // Initialize errors
     m_e_cart = 0;
-    m_ed_cart = m_cart->GetPos_dt().x();
+    m_ed_cart = m_cart->GetLinVel().x();
     m_ei_cart = 0;
 
     m_e_pend = 0;
-    m_ed_pend = m_pend->GetWvel_loc().z();
+    m_ed_pend = m_pend->GetAngVelLocal().z();
     m_ei_pend = 0;
 }
 
@@ -145,8 +145,8 @@ void MyController::Advance(double step) {
     double e_pend = GetCurrentPendAngle() - m_a_pend;
 
     // Calculate current error derivatives
-    m_ed_cart = m_cart->GetPos_dt().x();
-    m_ed_pend = m_pend->GetWvel_loc().z();
+    m_ed_cart = m_cart->GetLinVel().x();
+    m_ed_pend = m_pend->GetAngVelLocal().z();
 
     // Calculate current error integrals (trapezoidal rule)
     m_ei_cart += (m_e_cart + e_cart) * step / 2;
@@ -232,13 +232,13 @@ int main(int argc, char* argv[]) {
     // Translational joint ground-cart
     // -------------------------------
     auto prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
-    prismatic->Initialize(ground, cart, ChCoordsys<>(ChVector3d(0, 0, 0), QuatFromAngleY(CH_C_PI_2)));
+    prismatic->Initialize(ground, cart, ChFrame<>(ChVector3d(0, 0, 0), QuatFromAngleY(CH_C_PI_2)));
     system.AddLink(prismatic);
 
     // Revolute joint cart-pendulum
     // ----------------------------
     auto revolute = chrono_types::make_shared<ChLinkLockRevolute>();
-    revolute->Initialize(cart, pend, ChCoordsys<>(ChVector3d(0, 0, 0), QUNIT));
+    revolute->Initialize(cart, pend, ChFrame<>(ChVector3d(0, 0, 0), QUNIT));
     system.AddLink(revolute);
 
     // Create the PID controller

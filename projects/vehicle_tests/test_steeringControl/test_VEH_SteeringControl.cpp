@@ -40,7 +40,6 @@
 
 using namespace chrono;
 using namespace chrono::vehicle;
-using namespace geometry;
 
 // =============================================================================
 // Global definitions

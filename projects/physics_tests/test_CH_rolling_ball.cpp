@@ -65,8 +65,8 @@ public:
 // -----------------------------------------------------------------------------
 void Output(double time, std::shared_ptr<ChBody> ball, int ncontacts, const ChVector3d& cforce) {
     auto pos = ball->GetPos();
-    auto vel = ball->GetPos_dt();
-    auto omg = ball->GetWvel_loc();
+    auto vel = ball->GetLinVel();
+    auto omg = ball->GetAngVelLocal();
 
     std::cout << time << "  ";
     std::cout << ncontacts << "     ";
@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
     ball->SetMass(1);
     ball->SetInertiaXX(ChVector3d(0.4, 0.4, 0.4));
     ball->SetPos(ChVector3d(0, 0, 1));
-    ball->SetPos_dt(ChVector3d(2, 0, 0));
+    ball->SetLinVel(ChVector3d(2, 0, 0));
     ball->SetCollide(true);
 
     auto ball_ct_shape = chrono_types::make_shared<ChCollisionShapeSphere>(material, 1);
@@ -143,7 +143,7 @@ int main(int argc, char* argv[]) {
         system.GetContactContainer()->ReportAllContacts(cmanager);
 
         // Print ball states
-        Output(time, ball, system.GetNcontacts(), cmanager->GetForce());        
+        Output(time, ball, system.GetNumContacts(), cmanager->GetForce());        
     }
 
     return 0;

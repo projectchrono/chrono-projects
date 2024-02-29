@@ -34,7 +34,6 @@
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 
 using namespace chrono;
-using namespace chrono::geometry;
 using namespace chrono::irrlicht;
 
 using namespace irr;
@@ -399,7 +398,7 @@ class TestMech {
 
         // create the revolute joint between the wheel and spindle
         spindle = chrono_types::make_shared<ChLinkLockRevolute>();
-        spindle->Initialize(truss, wheelBody, ChCoordsys<>(trussCM, chrono::QuatFromAngleAxis(CH_C_PI / 2, VECT_Y)));
+        spindle->Initialize(truss, wheelBody, ChFrame<>(trussCM, chrono::QuatFromAngleAxis(CH_C_PI / 2, VECT_Y)));
         system->AddLink(spindle);
 
         // create a torque between the truss and wheel
@@ -421,7 +420,7 @@ class TestMech {
         // create the translational joint between the truss and weight load
         auto translational = chrono_types::make_shared<ChLinkLockPrismatic>();
         translational->Initialize(truss, suspweight,
-                                  ChCoordsys<>(trussCM, chrono::QuatFromAngleAxis(CH_C_PI / 2, VECT_X)));
+                                  ChFrame<>(trussCM, chrono::QuatFromAngleAxis(CH_C_PI / 2, VECT_X)));
         system->AddLink(translational);
 
         // create a spring between spindle truss and weight
@@ -436,7 +435,7 @@ class TestMech {
         // create a prismatic constraint between the weight and the ground
         auto weightLink = chrono_types::make_shared<ChLinkLockOldham>();
         weightLink->Initialize(suspweight, floor,
-                               ChCoordsys<>(weightCM, chrono::QuatFromAngleAxis(CH_C_PI / 2.0, VECT_Y)));
+                               ChFrame<>(weightCM, chrono::QuatFromAngleAxis(CH_C_PI / 2.0, VECT_Y)));
         system->AddLink(weightLink);
     }
 
@@ -450,7 +449,7 @@ class TestMech {
     void applyTorque() {
         // note: negative sign is to get Trelleborg tire to spin in the correct direction
         auto mfun = std::static_pointer_cast<ChFunctionConst>(torqueDriver->GetTorqueFunction());
-        mfun->Set_yconst(-this->currTorque);
+        mfun->SetConstant(-this->currTorque);
     }
 
     ~TestMech() {}
@@ -633,7 +632,7 @@ class MyEventReceiver : public IEventReceiver {
         text_cmPos = mapp->GetGUIEnvironment()->addStaticText(core::stringw(message5).c_str(),
                                                               rect<s32>(10, 30, 280, 45), false, false, gad_tab_wheel);
         // wheel CM vel
-        ChVector3d cmVel = mwheel->wheel->GetPos_dt();
+        ChVector3d cmVel = mwheel->wheel->GetLinVel();
         char messageV[100];
         sprintf(messageV, "CM vel, x: %4.4g, y: %4.4g, z: %4.4g", cmVel.x(), cmVel.y(), cmVel.z());
         text_cmVel = mapp->GetGUIEnvironment()->addStaticText(core::stringw(message5).c_str(),
@@ -821,7 +820,7 @@ class MyEventReceiver : public IEventReceiver {
         sprintf(messageCM, "CM pos, x: %4.4g, y: %4.4g, z: %4.4g", cm.x(), cm.y(), cm.z());
         text_cmPos->setText(core::stringw(messageCM).c_str());
         // wheel CM vel
-        ChVector3d cmVel = mwheel->wheel->GetPos_dt();
+        ChVector3d cmVel = mwheel->wheel->GetLinVel();
         char messageV[100];
         sprintf(messageV, "CM vel, x: %4.4g, y: %4.4g, z: %4.4g", cmVel.x(), cmVel.y(), cmVel.z());
         text_cmVel->setText(core::stringw(messageV).c_str());

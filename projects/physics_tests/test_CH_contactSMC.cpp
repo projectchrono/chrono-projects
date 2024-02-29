@@ -169,8 +169,8 @@ int main(int argc, char* argv[]) {
     ball->SetInertiaXX(0.4 * mass * radius * radius * ChVector3d(1, 1, 1));
     ball->SetPos(pos);
     ball->SetRot(rot);
-    ball->SetPos_dt(init_vel);
-    ball->SetWvel_par(init_omg);
+    ball->SetLinVel(init_vel);
+    ball->SetAngVelParent(init_omg);
     ball->SetCollide(true);
     ball->SetBodyFixed(false);
 

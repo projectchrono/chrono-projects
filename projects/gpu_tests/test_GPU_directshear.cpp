@@ -276,7 +276,7 @@ int main(int argc, char* argv[]) {
     for (; m_time < time_compress; m_time += step_size, step++) {
         // Update Plate
         plate_pos.z() = plate->GetPos().z();
-        plate_lin_velo.z() = plate->GetPos_dt().z();
+        plate_lin_velo.z() = plate->GetLinVel().z();
 
         gran_sys.ApplyMeshMotion(plate_i, plate_pos, plate_quat, plate_lin_velo, plate_ang_velo);
 
@@ -311,7 +311,7 @@ int main(int argc, char* argv[]) {
         plate_pos.x() = pos;
         plate_pos.z() = plate->GetPos().z();
         plate_lin_velo.x() = shear_velocity;
-        plate_lin_velo.z() = plate->GetPos_dt().z();
+        plate_lin_velo.z() = plate->GetLinVel().z();
         gran_sys.ApplyMeshMotion(plate_i, plate_pos, plate_quat, plate_lin_velo, plate_ang_velo);
 
         // Update top bin

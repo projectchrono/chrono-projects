@@ -17,23 +17,20 @@
 //   - make Chrono::Engine objects out of those parts
 // =============================================================================
 
-#include "chrono/core/ChRealtimeStep.h"
 #include "chrono/core/ChRandom.h"
-#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/core/ChRealtimeStep.h"
 #include "chrono/physics/ChBodyEasy.h"
+#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/solver/ChSolverADMM.h"
 #include "chrono_cascade/ChCascadeBodyEasy.h"
 #include "chrono_cascade/ChCascadeDoc.h"
 #include "chrono_cascade/ChVisualShapeCascade.h"
-#include "chrono/solver/ChSolverADMM.h"
 
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 
-// Use the namespace of Chrono
 using namespace chrono;
+using namespace chrono::cascade;
 using namespace chrono::irrlicht;
-
-// Use the namespace with OpenCascade stuff
-using namespace cascade;
 
 int main(int argc, char* argv[]) {
     // Set path to Chrono data directories
@@ -42,6 +39,7 @@ int main(int argc, char* argv[]) {
     // 1- Create a ChronoENGINE physical system: all bodies and constraints
     //    will be handled by this ChSystemNSC object.
     ChSystemNSC sys;
+    sys.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
 
     // Create a surface material to be used for collisions, if any
     auto mysurfmaterial = chrono_types::make_shared<ChContactMaterialNSC>();
@@ -85,10 +83,10 @@ int main(int argc, char* argv[]) {
     // Note, In most CADs the Y axis is horizontal, but we want it vertical.
     // So define a root transformation for rotating all the imported objects.
     ChQuaternion<> rotation1;
-    rotation1.SetFromAngleAxis(-CH_C_PI / 2, VECT_X);  // 1: rotate 90° on X axis
+    rotation1.SetFromAngleX(-CH_C_PI_2);  // 1: rotate 90 deg on X axis
     ChQuaternion<> rotation2;
-    rotation2.SetFromAngleAxis(CH_C_PI, VECT_Y);            // 2: rotate 180° on vertical Y axis
-    ChQuaternion<> tot_rotation = rotation2 % rotation1;  // rotate on 1 then on 2, using quaternion product
+    rotation2.SetFromAngleY(CH_C_PI);                     // 2: rotate 180 deg on vertical Y axis
+    ChQuaternion<> tot_rotation = rotation2 * rotation1;  // rotate on 1 then on 2, using quaternion product
     ChFrameMoving<> root_frame(ChVector3d(0, 0, 0), tot_rotation);
 
     if (load_ok) {
@@ -101,7 +99,7 @@ int main(int argc, char* argv[]) {
             body_base->SetBodyFixed(true);
             body_base->ConcatenatePreTransformation(root_frame);
         } else
-            std::cout << "Warning. Desired object not found in document \n";
+            std::cerr << "WARNING: Desired object not found in document" << std::endl;
 
         TopoDS_Shape shape_turret;
         if (mydoc.GetNamedShape(shape_turret, "Assem10/Assem4")) {
@@ -111,7 +109,7 @@ int main(int argc, char* argv[]) {
             // Move the body as for global displacement/rotation
             body_turret->ConcatenatePreTransformation(root_frame);
         } else
-            std::cout << "Warning. Desired object not found in document \n";
+            std::cerr << "WARNING: Desired object not found in document" << std::endl;
 
         TopoDS_Shape shape_bicep;
         if (mydoc.GetNamedShape(shape_bicep, "Assem10/Assem1")) {
@@ -120,7 +118,7 @@ int main(int argc, char* argv[]) {
             // Move the body as for global displacement/rotation
             body_bicep->ConcatenatePreTransformation(root_frame);
         } else
-            std::cout << "Warning. Desired object not found in document \n";
+            std::cerr << "WARNING: Desired object not found in document" << std::endl;
 
         TopoDS_Shape shape_elbow;
         if (mydoc.GetNamedShape(shape_elbow, "Assem10/Assem5")) {
@@ -129,7 +127,7 @@ int main(int argc, char* argv[]) {
             // Move the body as for global displacement/rotation
             body_elbow->ConcatenatePreTransformation(root_frame);
         } else
-            std::cout << "Warning. Desired object not found in document \n";
+            std::cerr << "WARNING: Desired object not found in document" << std::endl;
 
         TopoDS_Shape shape_forearm;
         if (mydoc.GetNamedShape(shape_forearm, "Assem10/Assem7")) {
@@ -138,7 +136,7 @@ int main(int argc, char* argv[]) {
             // Move the body as for global displacement/rotation
             body_forearm->ConcatenatePreTransformation(root_frame);
         } else
-            std::cout << "Warning. Desired object not found in document \n";
+            std::cerr << "WARNING: Desired object not found in document" << std::endl;
 
         TopoDS_Shape shape_wrist;
         if (mydoc.GetNamedShape(shape_wrist, "Assem10/Assem6")) {
@@ -147,7 +145,7 @@ int main(int argc, char* argv[]) {
             // Move the body as for global displacement/rotation
             body_wrist->ConcatenatePreTransformation(root_frame);
         } else
-            std::cout << "Warning. Desired object not found in document \n";
+            std::cerr << "WARNING: Desired object not found in document" << std::endl;
 
         TopoDS_Shape shape_hand;
         if (mydoc.GetNamedShape(shape_hand, "Assem10/Assem9")) {
@@ -161,11 +159,11 @@ int main(int argc, char* argv[]) {
             mcube->SetCsys(ChCoordsys<>(ChVector3d(0.1, 0, 0)) >> body_hand->GetCsys());
             sys.Add(mcube);
             auto mcubelink = chrono_types::make_shared<ChLinkLockLock>();
-            mcubelink->Initialize(mcube, body_hand, mcube->GetCsys());
+            mcubelink->Initialize(mcube, body_hand, *mcube);
             sys.Add(mcubelink);
 
         } else
-            std::cout << "Warning. Desired object not found in document \n";
+            std::cerr << "WARNING: Desired object not found in document" << std::endl;
 
         TopoDS_Shape shape_cylinder;
         if (mydoc.GetNamedShape(shape_cylinder, "Assem10/Assem3")) {
@@ -174,7 +172,7 @@ int main(int argc, char* argv[]) {
             // Move the body as for global displacement/rotation
             body_cylinder->ConcatenatePreTransformation(root_frame);
         } else
-            std::cout << "Warning. Desired object not found in document \n";
+            std::cerr << "WARNING: Desired object not found in document" << std::endl;
 
         TopoDS_Shape shape_rod;
         if (mydoc.GetNamedShape(shape_rod, "Assem10/Assem2")) {
@@ -183,10 +181,10 @@ int main(int argc, char* argv[]) {
             // Move the body as for global displacement/rotation
             body_rod->ConcatenatePreTransformation(root_frame);
         } else
-            std::cout << "Warning. Desired object not found in document \n";
+            std::cerr << "WARNING: Desired object not found in document" << std::endl;
 
     } else
-        std::cout << "Warning. Desired STEP file could not be opened/parsed \n";
+        std::cerr << "WARNING: Desired STEP file could not be opened/parsed" << std::endl;
 
     if (!body_base || !body_turret || !body_bicep || !body_elbow || !body_forearm || !body_wrist || !body_hand) {
         return 1;
@@ -204,100 +202,100 @@ int main(int argc, char* argv[]) {
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem8/marker#1"))
         ChCascadeDoc::FromCascadeToChrono(shape_marker.Location(), frame_marker_base_turret);
     else
-        std::cout << "Warning. Desired marker not found in document \n";
+        std::cerr << "WARNING: Desired marker not found in document" << std::endl;
     // Transform the abs coordinates of the marker because everything was rotated/moved by 'root_frame' :
     frame_marker_base_turret >>= root_frame;
 
     std::shared_ptr<ChLinkLockRevolute> my_link1(new ChLinkLockRevolute);
-    my_link1->Initialize(body_base, body_turret, frame_marker_base_turret.GetCsys());
+    my_link1->Initialize(body_base, body_turret, frame_marker_base_turret);
     sys.AddLink(my_link1);
 
     ChFrame<> frame_marker_turret_bicep;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem4/marker#2"))
         ChCascadeDoc::FromCascadeToChrono(shape_marker.Location(), frame_marker_turret_bicep);
     else
-        std::cout << "Warning. Desired marker not found in document \n";
+        std::cerr << "WARNING: Desired marker not found in document" << std::endl;
     frame_marker_turret_bicep >>= root_frame;
 
     std::shared_ptr<ChLinkLockRevolute> my_link2(new ChLinkLockRevolute);
-    my_link2->Initialize(body_turret, body_bicep, frame_marker_turret_bicep.GetCsys());
+    my_link2->Initialize(body_turret, body_bicep, frame_marker_turret_bicep);
     sys.AddLink(my_link2);
 
     ChFrame<> frame_marker_bicep_elbow;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem1/marker#2"))
         ChCascadeDoc::FromCascadeToChrono(shape_marker.Location(), frame_marker_bicep_elbow);
     else
-        std::cout << "Warning. Desired marker not found in document \n";
+        std::cerr << "WARNING: Desired marker not found in document" << std::endl;
     frame_marker_bicep_elbow >>= root_frame;
 
     std::shared_ptr<ChLinkLockRevolute> my_link3(new ChLinkLockRevolute);
-    my_link3->Initialize(body_bicep, body_elbow, frame_marker_bicep_elbow.GetCsys());
+    my_link3->Initialize(body_bicep, body_elbow, frame_marker_bicep_elbow);
     sys.AddLink(my_link3);
 
     ChFrame<> frame_marker_elbow_forearm;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem5/marker#2"))
         ChCascadeDoc::FromCascadeToChrono(shape_marker.Location(), frame_marker_elbow_forearm);
     else
-        std::cout << "Warning. Desired marker not found in document \n";
+        std::cerr << "WARNING: Desired marker not found in document" << std::endl;
     frame_marker_elbow_forearm >>= root_frame;
 
     std::shared_ptr<ChLinkLockRevolute> my_link4(new ChLinkLockRevolute);
-    my_link4->Initialize(body_elbow, body_forearm, frame_marker_elbow_forearm.GetCsys());
+    my_link4->Initialize(body_elbow, body_forearm, frame_marker_elbow_forearm);
     sys.AddLink(my_link4);
 
     ChFrame<> frame_marker_forearm_wrist;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem7/marker#2"))
         ChCascadeDoc::FromCascadeToChrono(shape_marker.Location(), frame_marker_forearm_wrist);
     else
-        std::cout << "Warning. Desired marker not found in document \n";
+        std::cerr << "WARNING: Desired marker not found in document" << std::endl;
     frame_marker_forearm_wrist >>= root_frame;
 
     std::shared_ptr<ChLinkLockRevolute> my_link5(new ChLinkLockRevolute);
-    my_link5->Initialize(body_forearm, body_wrist, frame_marker_forearm_wrist.GetCsys());
+    my_link5->Initialize(body_forearm, body_wrist, frame_marker_forearm_wrist);
     sys.AddLink(my_link5);
 
     ChFrame<> frame_marker_wrist_hand;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem6/marker#2"))
         ChCascadeDoc::FromCascadeToChrono(shape_marker.Location(), frame_marker_wrist_hand);
     else
-        std::cout << "Warning. Desired marker not found in document \n";
+        std::cerr << "WARNING: Desired marker not found in document" << std::endl;
     frame_marker_wrist_hand >>= root_frame;
 
     std::shared_ptr<ChLinkLockRevolute> my_link6(new ChLinkLockRevolute);
-    my_link6->Initialize(body_wrist, body_hand, frame_marker_wrist_hand.GetCsys());
+    my_link6->Initialize(body_wrist, body_hand, frame_marker_wrist_hand);
     sys.AddLink(my_link6);
 
     ChFrame<> frame_marker_turret_cylinder;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem4/marker#3"))
         ChCascadeDoc::FromCascadeToChrono(shape_marker.Location(), frame_marker_turret_cylinder);
     else
-        std::cout << "Warning. Desired marker not found in document \n";
+        std::cerr << "WARNING: Desired marker not found in document" << std::endl;
     frame_marker_turret_cylinder >>= root_frame;
 
     std::shared_ptr<ChLinkLockRevolute> my_link7(new ChLinkLockRevolute);
-    my_link7->Initialize(body_turret, body_cylinder, frame_marker_turret_cylinder.GetCsys());
+    my_link7->Initialize(body_turret, body_cylinder, frame_marker_turret_cylinder);
     sys.AddLink(my_link7);
 
     ChFrame<> frame_marker_cylinder_rod;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem3/marker#2"))
         ChCascadeDoc::FromCascadeToChrono(shape_marker.Location(), frame_marker_cylinder_rod);
     else
-        std::cout << "Warning. Desired marker not found in document \n";
+        std::cerr << "WARNING: Desired marker not found in document" << std::endl;
     frame_marker_cylinder_rod >>= root_frame;
 
     std::shared_ptr<ChLinkLockCylindrical> my_link8(new ChLinkLockCylindrical);
-    my_link8->Initialize(body_cylinder, body_rod, frame_marker_cylinder_rod.GetCsys());
+    my_link8->Initialize(body_cylinder, body_rod, frame_marker_cylinder_rod);
     sys.AddLink(my_link8);
 
     ChFrame<> frame_marker_rod_bicep;
     if (mydoc.GetNamedShape(shape_marker, "Assem10/Assem2/marker#2"))
         ChCascadeDoc::FromCascadeToChrono(shape_marker.Location(), frame_marker_rod_bicep);
     else
-        std::cout << "Warning. Desired marker not found in document \n";
+        std::cerr << "WARNING: Desired marker not found in document" << std::endl;
     frame_marker_rod_bicep >>= root_frame;
 
     std::shared_ptr<ChLinkLockCylindrical> my_link9(new ChLinkLockCylindrical);
-    my_link9->Initialize(body_rod, body_bicep, frame_marker_rod_bicep.GetCsys());
+    my_link9->Initialize(body_rod, body_bicep, frame_marker_rod_bicep);
     sys.AddLink(my_link9);
 
     // Add a couple of markers for the 'lock' constraint between the hand and the
@@ -311,11 +309,11 @@ int main(int argc, char* argv[]) {
     body_base->AddMarker(my_marker_move);
 
     ChQuaternion<> rot_on_x;
-    rot_on_x.SetFromAngleAxis(CH_C_PI / 2, VECT_X);
+    rot_on_x.SetFromAngleX(CH_C_PI_2);
     ChFrame<> frame_marker_move = ChFrame<>(VNULL, rot_on_x) >> frame_marker_wrist_hand;
 
-    my_marker_hand->Impose_Abs_Coord(frame_marker_wrist_hand.GetCsys());
-    my_marker_move->Impose_Abs_Coord(frame_marker_move.GetCsys());
+    my_marker_hand->ImposeAbsoluteTransform(frame_marker_wrist_hand);
+    my_marker_move->ImposeAbsoluteTransform(frame_marker_move);
 
     std::shared_ptr<ChLinkLockLock> my_link_teacher(new ChLinkLockLock);
     my_link_teacher->Initialize(my_marker_hand, my_marker_move);
@@ -327,12 +325,12 @@ int main(int argc, char* argv[]) {
     // ChFunctionSequence and we repeat sequence by ChFunctionRepeat
 
     std::shared_ptr<ChFunctionConstAcc> motlaw_z1(new ChFunctionConstAcc);
-    motlaw_z1->Set_h(-0.7);
-    motlaw_z1->Set_end(1);
+    motlaw_z1->SetDisplacement(-0.7);
+    motlaw_z1->SetDuration(1);
     std::shared_ptr<ChFunctionConst> motlaw_z2(new ChFunctionConst);
     std::shared_ptr<ChFunctionConstAcc> motlaw_z3(new ChFunctionConstAcc);
-    motlaw_z3->Set_h(0.7);
-    motlaw_z3->Set_end(1);
+    motlaw_z3->SetDisplacement(0.7);
+    motlaw_z3->SetDuration(1);
     std::shared_ptr<ChFunctionConst> motlaw_z4(new ChFunctionConst);
     std::shared_ptr<ChFunctionSequence> motlaw_z_seq(new ChFunctionSequence);
     motlaw_z_seq->InsertFunct(motlaw_z1, 1, 1, true);
@@ -340,26 +338,26 @@ int main(int argc, char* argv[]) {
     motlaw_z_seq->InsertFunct(motlaw_z3, 1, 1, true);
     motlaw_z_seq->InsertFunct(motlaw_z4, 1, 1, true);
     auto motlaw_z = chrono_types::make_shared<ChFunctionRepeat>(motlaw_z_seq);
-    motlaw_z->Set_window_length(4);
+    motlaw_z->SetSliceWidth(4);
 
     std::shared_ptr<ChFunctionConst> motlaw_y1(new ChFunctionConst);
     std::shared_ptr<ChFunctionConstAcc> motlaw_y2(new ChFunctionConstAcc);
-    motlaw_y2->Set_h(-0.6);
-    motlaw_y2->Set_end(1);
+    motlaw_y2->SetDisplacement(-0.6);
+    motlaw_y2->SetDuration(1);
     std::shared_ptr<ChFunctionConst> motlaw_y3(new ChFunctionConst);
     std::shared_ptr<ChFunctionConstAcc> motlaw_y4(new ChFunctionConstAcc);
-    motlaw_y4->Set_h(0.6);
-    motlaw_y4->Set_end(1);
+    motlaw_y4->SetDisplacement(0.6);
+    motlaw_y4->SetDuration(1);
     std::shared_ptr<ChFunctionSequence> motlaw_y_seq(new ChFunctionSequence);
     motlaw_y_seq->InsertFunct(motlaw_y1, 1, 1, true);
     motlaw_y_seq->InsertFunct(motlaw_y2, 1, 1, true);  // true = force c0 continuity, traslating fx
     motlaw_y_seq->InsertFunct(motlaw_y3, 1, 1, true);
     motlaw_y_seq->InsertFunct(motlaw_y4, 1, 1, true);
     auto motlaw_y = chrono_types::make_shared<ChFunctionRepeat>(motlaw_y_seq);
-    motlaw_y->Set_window_length(4);
+    motlaw_y->SetSliceWidth(4);
 
-    my_marker_move->SetMotion_Z(motlaw_z);
-    my_marker_move->SetMotion_Y(motlaw_y);
+    my_marker_move->SetMotionAxisZ(motlaw_z);
+    my_marker_move->SetMotionAxisY(motlaw_y);
 
     // Create a large cube as a floor.
 
@@ -377,7 +375,7 @@ int main(int argc, char* argv[]) {
                 std::shared_ptr<ChBodyEasyBox> cube(
                     new ChBodyEasyBox(0.4, brick_h, 0.4, 1000, true, true, mysurfmaterial));
                 cube->SetPos(ChVector3d(-1.4, (0.5 * brick_h) + ib * brick_h, -0.4 - 0.5 * ix));
-                cube->SetRot(QuatFromAngleAxis(ib * 0.1, VECT_Y));
+                cube->SetRot(QuatFromAngleY(ib * 0.1));
                 cube->GetVisualShape(0)->SetColor(ChColor(0.5f + float(0.5 * ChRandom::Get()),  //
                                                           0.5f + float(0.5 * ChRandom::Get()),  //
                                                           0.5f + float(0.5 * ChRandom::Get())   //
@@ -386,8 +384,9 @@ int main(int argc, char* argv[]) {
             }
     }
 
-    // Create the Irrlicht visualization system
+    // Create the run-time visualization system
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
+    vis->AttachSystem(&sys);
     vis->SetWindowSize(800, 600);
     vis->SetWindowTitle("Load a robot model from STEP file");
     vis->Initialize();
@@ -395,7 +394,6 @@ int main(int argc, char* argv[]) {
     vis->AddSkyBox();
     vis->AddCamera(ChVector3d(0.2, 1.6, 3.5), ChVector3d(0, 1, 0));
     vis->AddTypicalLights();
-    vis->AttachSystem(&sys);
 
     // Modify the settings of the solver.
     // By default, the solver might not have sufficient precision to keep the
@@ -426,8 +424,8 @@ int main(int argc, char* argv[]) {
     while (vis->Run()) {
         vis->BeginScene();
         vis->Render();
-        tools::drawChFunction(vis.get(), motlaw_z, 0, 10, -0.9, 0.2, 10, 400, 300, 80);
-        tools::drawChFunction(vis.get(), motlaw_y, 0, 10, -0.9, 0.2, 10, 500, 300, 80);
+        ////tools::drawChFunction(vis.get(), motlaw_z, 0, 10, -0.9, 0.2, 10, 400, 300, 80);
+        ////tools::drawChFunction(vis.get(), motlaw_y, 0, 10, -0.9, 0.2, 10, 500, 300, 80);
         vis->EndScene();
 
         sys.DoStepDynamics(time_step);

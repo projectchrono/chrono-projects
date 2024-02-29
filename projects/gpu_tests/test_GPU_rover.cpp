@@ -140,7 +140,7 @@ void addWheelBody(ChSystemNSC& rover_sys,
     rover_sys.AddBody(wheel_body);
 
     auto joint = std::make_shared<ChLinkLockRevolute>();
-    joint->Initialize(chassis_body, wheel_body, ChCoordsys<>(wheel_initial_pos, QuatFromAngleX(CH_C_PI / 2)));
+    joint->Initialize(chassis_body, wheel_body, ChFrame<>(wheel_initial_pos, QuatFromAngleX(CH_C_PI / 2)));
     rover_sys.AddLink(joint);
 
     auto motor = std::make_shared<ChLinkMotorRotationAngle>();
@@ -369,8 +369,8 @@ int main(int argc, char* argv[]) {
         for (unsigned int i = 0; i < wheel_bodies.size(); i++) {
             auto curr_body = wheel_bodies.at(i);
 
-            gpu_sys.ApplyMeshMotion(i, curr_body->GetPos(), curr_body->GetRot(), curr_body->GetPos_dt(),
-                                    curr_body->GetWvel_par());
+            gpu_sys.ApplyMeshMotion(i, curr_body->GetPos(), curr_body->GetRot(), curr_body->GetLinVel(),
+                                    curr_body->GetAngVelParent());
         }
 
         gpu_sys.AdvanceSimulation(iteration_step);

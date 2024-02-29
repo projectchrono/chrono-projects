@@ -49,7 +49,7 @@ std::shared_ptr<ChBodyEasyBox> SimpChassis;    // Chassis body
 std::shared_ptr<ChLinkPointFrame> constraint;  // Create shared pointers for rim-mesh constraints
 std::shared_ptr<ChLinkDirFrame> constraintD;
 std::shared_ptr<ChNodeFEAxyzD> ConstrainedNode;
-std::shared_ptr<ChLinkLockPlanePlane> constraintRim;
+std::shared_ptr<ChLinkLockPlanar> constraintRim;
 
 auto MloadcontainerGround = chrono_types::make_shared<ChLoadContainer>();
 // Some model parameters
@@ -296,9 +296,9 @@ void MakeANCFHumveeWheel(ChSystem& sys,
     Hub_1->SetMass(10);
     Hub_1->SetInertiaXX(ChVector3d(0.3, 0.3, 0.3));
     Hub_1->SetPos(rim_center);  // Y = -1m
-    Hub_1->SetPos_dt(ChVector3d(ForVelocity, 0, 0));
-    Hub_1->SetWvel_par(ChVector3d(0, ForVelocity / (HumveeVertPos),
-                                  0));  // 0.3 to be substituted by an actual measure of the average radius.
+    Hub_1->SetLinVel(ChVector3d(ForVelocity, 0, 0));
+    Hub_1->SetAngVelParent(ChVector3d(0, ForVelocity / (HumveeVertPos),
+                                      0));  // 0.3 to be substituted by an actual measure of the average radius.
 
     // Create tire mesh
     auto TireMesh = chrono_types::make_shared<ChMesh>();
@@ -368,9 +368,9 @@ void MakeANCFHumveeWheel(ChSystem& sys,
         auto node = chrono_types::make_shared<ChNodeFEAxyzD>(
             ChVector3d(COORDFlex(i, 0) + rim_center.x(), COORDFlex(i, 1) + rim_center.y(), COORDFlex(i, 2)),
             ChVector3d(COORDFlex(i, 3), COORDFlex(i, 4), COORDFlex(i, 5)));
-        node->SetPos_dt(ChVector3d(VELCYFlex(i, 0), VELCYFlex(i, 1), VELCYFlex(i, 2)));
+        node->SetPosDer(ChVector3d(VELCYFlex(i, 0), VELCYFlex(i, 1), VELCYFlex(i, 2)));
         node->SetD_dt(ChVector3d(VELCYFlex(i, 3), VELCYFlex(i, 4), VELCYFlex(i, 5)));
-        node->SetPos_dtdt(ChVector3d(ACCELFlex(i, 0), ACCELFlex(i, 1), ACCELFlex(i, 2)));
+        node->SetPosDer2(ChVector3d(ACCELFlex(i, 0), ACCELFlex(i, 1), ACCELFlex(i, 2)));
         node->SetD_dtdt(ChVector3d(ACCELFlex(i, 3), ACCELFlex(i, 4), ACCELFlex(i, 5)));
         node->SetMass(0.0);
 
@@ -454,7 +454,7 @@ void MakeANCFHumveeWheel(ChSystem& sys,
         ChVector3d node_pos = std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(i))->GetPos();
         double tang_vel = ForVelocity * (node_pos.z()) / (HumveeVertPos);
         ChVector3d NodeVel(tang_vel, 0, 0.0);
-        std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(i))->SetPos_dt(NodeVel);
+        std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(i))->SetPosDer(NodeVel);
     }
 
     // Switch off mesh class gravity
@@ -568,7 +568,7 @@ int main(int argc, char* argv[]) {
     SimpChassis->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/cubetexture_bluewhite.png"));
     auto mtexturebox = chrono_types::make_shared<ChTexture>();
     SimpChassis->SetPos(ChVector3d(0, 0, HumveeVertPos));
-    SimpChassis->SetPos_dt(ChVector3d(ForVelocity, 0, 0));
+    SimpChassis->SetPosDer(ChVector3d(ForVelocity, 0, 0));
     SimpChassis->SetBodyFixed(false);
     // */
     // Create joints between chassis and hubs

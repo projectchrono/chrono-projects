@@ -265,7 +265,7 @@ void CreateParticles(ChSystemMulticore* system) {
 // Find and return the body with specified identifier.
 // -----------------------------------------------------------------------------
 ChBody* FindBodyById(ChSystemMulticore* sys, int id) {
-    for (auto body : sys->Get_bodylist()) {
+    for (auto body : sys->GetBodies()) {
         if (body->GetIdentifier() == id)
             return body.get();
     }
@@ -279,7 +279,7 @@ ChBody* FindBodyById(ChSystemMulticore* sys, int id) {
 // -----------------------------------------------------------------------------
 int GetNumParticlesBelowHeight(ChSystemMulticore* sys, double value) {
     int count = 0;
-    for (auto body : sys->Get_bodylist()) {
+    for (auto body : sys->GetBodies()) {
         if (body->GetIdentifier() > 0 && body->GetPos().z() < value)
             count++;
     }
@@ -288,7 +288,7 @@ int GetNumParticlesBelowHeight(ChSystemMulticore* sys, double value) {
 
 int GetNumParticlesAboveHeight(ChSystemMulticore* sys, double value) {
     int count = 0;
-    for (auto body : sys->Get_bodylist()) {
+    for (auto body : sys->GetBodies()) {
         if (body->GetIdentifier() > 0 && body->GetPos().z() > value)
             count++;
     }
@@ -302,9 +302,9 @@ int GetNumParticlesAboveHeight(ChSystemMulticore* sys, double value) {
 bool CheckSettled(ChSystemMulticore* sys, double threshold) {
     double t2 = threshold * threshold;
 
-    for (auto body : sys->Get_bodylist()) {
+    for (auto body : sys->GetBodies()) {
         if (body->GetIdentifier() > 0) {
-            double vel2 = body->GetPos_dt().Length2();
+            double vel2 = body->GetLinVel().Length2();
             if (vel2 > t2)
                 return false;
         }
@@ -441,7 +441,7 @@ int main(int argc, char* argv[]) {
                 case SETTLING:
                     // Create a checkpoint from the current state.
                     utils::WriteCheckpoint(sys, checkpoint_file);
-                    cout << "             Checkpoint:     " << sys->Get_bodylist().size() << " bodies" << endl;
+                    cout << "             Checkpoint:     " << sys->GetBodies().size() << " bodies" << endl;
                     break;
                 case DROPPING:
                     // Save current gap opening and number of dropped particles.
@@ -482,13 +482,13 @@ int main(int argc, char* argv[]) {
         // Open the gate until it reaches the specified gap distance.
         if (problem == DROPPING && time <= time_opening) {
             insert->SetPos(ChVector3d(-0.5 * height - delta - time * speed, 0, 0.5 * height - delta));
-            insert->SetPos_dt(ChVector3d(-speed, 0, 0));
+            insert->SetLinVel(ChVector3d(-speed, 0, 0));
         }
 
         time += time_step;
         sim_frame++;
         exec_time += sys->GetTimerStep();
-        num_contacts += sys->GetNcontacts();
+        num_contacts += sys->GetNumContacts();
 
         // If requested, output detailed timing information for this step
         if (sim_frame == timing_frame)
@@ -499,7 +499,7 @@ int main(int argc, char* argv[]) {
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
         utils::WriteCheckpoint(sys, checkpoint_file);
-        cout << "  done.  Wrote " << sys->Get_bodylist().size() << " bodies." << endl;
+        cout << "  done.  Wrote " << sys->GetBodies().size() << " bodies." << endl;
     }
 
     // Final stats

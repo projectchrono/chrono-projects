@@ -20,7 +20,6 @@
 #include "chrono/physics/ChLinkMate.h"
 #include "chrono/physics/ChLinkLock.h"
 #include "chrono/physics/ChLinkMate.h"
-#include "chrono/physics/ChLinkRackpinion.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/solver/ChIterativeSolverLS.h"
 
@@ -246,18 +245,18 @@ int main(int argc, char* argv[]) {
         constr_C->Initialize(node_Cl, rack, false, node_Cl->Frame(), node_Cl->Frame());
         sys.Add(constr_C);
 
-        auto balance = chrono_types::make_shared<ChBodyEasyCylinder>(geometry::ChAxis::Y, Rbalance, Wbalance, 7000, true, false);
+        auto balance = chrono_types::make_shared<ChBodyEasyCylinder>(ChAxis::Y, Rbalance, Wbalance, 7000, true, false);
         balance->SetPos(vP + ChVector3d(0, 0, -OffPin));
         balance->SetRot(QuatFromAngleAxis(CH_C_PI_2, VECT_X));
         for (int i = 0; i < 6; ++i) {
             double phi = CH_C_2PI * (i / 6.0);
             auto p1 = ChVector3d(sin(phi) * Rbalance * 0.8, Wbalance, cos(phi) * Rbalance * 0.8);
             auto p2 = p1 + ChVector3d(0, 2 * Wbalance, 0);
-            geometry::ChLineSegment seg(p1, p2);
+            ChLineSegment seg(p1, p2);
             auto vshape = chrono_types::make_shared<ChVisualShapeCylinder>(Rbalance * 0.1, seg.GetLength());
             balance->AddVisualShape(vshape, seg.GetFrame());
         }
-        geometry::ChLineSegment seg(vP + ChVector3d(0, -OffPin * 10, 0), vP + ChVector3d(0, OffPin * 10, 0));
+        ChLineSegment seg(vP + ChVector3d(0, -OffPin * 10, 0), vP + ChVector3d(0, OffPin * 10, 0));
         auto vshaft = chrono_types::make_shared<ChVisualShapeCylinder>(Rpinion, seg.GetLength());
         vshaft->SetColor(ChColor(0.5f, 0.9f, 0.9f));
         balance->AddVisualShape(vshaft, seg.GetFrame());
@@ -266,11 +265,11 @@ int main(int argc, char* argv[]) {
 
         auto revolute = chrono_types::make_shared<ChLinkLockRevolute>();
         std::shared_ptr<ChBody> mbalance = balance;
-        revolute->Initialize(mbalance, body_truss, ChCoordsys<>(vP + ChVector3d(0, 0, -0.01)));
+        revolute->Initialize(mbalance, body_truss, ChFrame<>(vP + ChVector3d(0, 0, -0.01)));
 
         sys.Add(revolute);
 
-        auto constr_rack = chrono_types::make_shared<ChLinkRackpinion>();
+        auto constr_rack = chrono_types::make_shared<ChLinkMateRackPinion>();
         constr_rack->Initialize(balance, rack, false, ChFrame<>(), ChFrame<>());
 
         ChFrameMoving<> f_pin_abs(vP);
@@ -285,7 +284,7 @@ int main(int argc, char* argv[]) {
 
         sys.Add(constr_rack);
 
-        balance->SetWvel_par(ChVector3d(0, 0, 1.5));
+        balance->SetAngVelParent(ChVector3d(0, 0, 1.5));
     }
     
     // Create the Irrlicht visualization system

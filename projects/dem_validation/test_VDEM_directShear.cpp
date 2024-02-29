@@ -309,16 +309,16 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
 void ConnectShearBox(ChSystemMulticore* system, std::shared_ptr<ChBody> ground, std::shared_ptr<ChBody> box) {
     auto prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
-    prismatic->Initialize(ground, box, ChCoordsys<>(ChVector3d(0, 0, 2 * hdimZ), QuatFromAngleY(CH_C_PI_2)));
+    prismatic->Initialize(ground, box, ChFrame<>(ChVector3d(0, 0, 2 * hdimZ), QuatFromAngleY(CH_C_PI_2)));
     prismatic->SetName("prismatic_box_ground");
     system->AddLink(prismatic);
 
     auto actuator_fun = chrono_types::make_shared<ChFunctionRamp>(0.0, desiredVelocity);
 
-    auto actuator = chrono_types::make_shared<ChLinkLinActuator>();
+    auto actuator = chrono_types::make_shared<ChLinkLockLinActuator>();
     ChVector3d pt1(0, 0, 2 * hdimZ);
     ChVector3d pt2(1, 0, 2 * hdimZ);
-    actuator->Initialize(ground, box, false, ChCoordsys<>(pt1, QUNIT), ChCoordsys<>(pt2, QUNIT));
+    actuator->Initialize(ground, box, false, ChFrame<>(pt1, QUNIT), ChFrame<>(pt2, QUNIT));
     actuator->SetName("actuator");
     actuator->SetDistanceOffset(1);
     actuator->SetActuatorFunction(actuator_fun);
@@ -332,7 +332,7 @@ void ConnectShearBox(ChSystemMulticore* system, std::shared_ptr<ChBody> ground, 
 
 void ConnectLoadPlate(ChSystemMulticore* system, std::shared_ptr<ChBody> ground, std::shared_ptr<ChBody> plate) {
     auto prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
-    prismatic->Initialize(ground, plate, ChCoordsys<>(ChVector3d(0, 0, 2 * hdimZ), QUNIT));
+    prismatic->Initialize(ground, plate, ChFrame<>(ChVector3d(0, 0, 2 * hdimZ), QUNIT));
     prismatic->SetName("prismatic_plate_ground");
     system->AddLink(prismatic);
 }
@@ -440,7 +440,7 @@ void CreateBall(ChSystemMulticore* system) {
 void FindHeightRange(ChSystemMulticore* sys, double& lowest, double& highest) {
     highest = -1000;
     lowest = 1000;
-    for (auto body : sys->Get_bodylist()) {
+    for (auto body : sys->GetBodies()) {
         if (body->GetIdentifier() <= 0)
             continue;
         double h = body->GetPos().z();
@@ -460,18 +460,18 @@ void FindHeightRange(ChSystemMulticore* sys, double& lowest, double& highest) {
 void setBulkDensity(ChSystem* sys, double bulkDensity) {
     double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
 
-    double normalPlateHeight = sys->Get_bodylist().at(1)->GetPos().z() - hdimZ;
+    double normalPlateHeight = sys->GetBodies().at(1)->GetPos().z() - hdimZ;
     double bottomHeight = 0;
     double boxVolume = hdimX * 2 * hdimX * 2 * (normalPlateHeight - bottomHeight);
-    double granularVolume = (sys->Get_bodylist().size() - 3) * vol_g;
+    double granularVolume = (sys->GetBodies().size() - 3) * vol_g;
     double reqDensity = bulkDensity * boxVolume / granularVolume;
-    for (auto body : sys->Get_bodylist()) {
+    for (auto body : sys->GetBodies()) {
         if (body->GetIdentifier() > 1) {
             body->SetMass(reqDensity * vol_g);
         }
     }
 
-    cout << "N Bodies: " << sys->Get_bodylist().size() << endl;
+    cout << "N Bodies: " << sys->GetBodies().size() << endl;
     cout << "Box Volume: " << boxVolume << endl;
     cout << "Granular Volume: " << granularVolume << endl;
     cout << "Desired bulk density = " << bulkDensity << ", Required Body Density = " << reqDensity << endl;
@@ -556,7 +556,7 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<ChBody> loadPlate;
     std::shared_ptr<ChLinkLockPrismatic> prismatic_box_ground;
     std::shared_ptr<ChLinkLockPrismatic> prismatic_plate_ground;
-    std::shared_ptr<ChLinkLinActuator> actuator;
+    std::shared_ptr<ChLinkLockLinActuator> actuator;
 
     switch (problem) {
         case SETTLING: {
@@ -568,9 +568,9 @@ int main(int argc, char* argv[]) {
             CreateMechanismBodies(sys);
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = sys->Get_bodylist().at(0);
-            shearBox = sys->Get_bodylist().at(1);
-            loadPlate = sys->Get_bodylist().at(2);
+            ground = sys->GetBodies().at(0);
+            shearBox = sys->GetBodies().at(1);
+            loadPlate = sys->GetBodies().at(2);
 
             // Create granular material.
             int num_particles = CreateGranularMaterial(sys);
@@ -587,12 +587,12 @@ int main(int argc, char* argv[]) {
             // Create bodies from checkpoint file.
             cout << "Read checkpoint data from " << settled_ckpnt_file;
             utils::ReadCheckpoint(sys, settled_ckpnt_file);
-            cout << "  done.  Read " << sys->Get_bodylist().size() << " bodies." << endl;
+            cout << "  done.  Read " << sys->GetBodies().size() << " bodies." << endl;
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = sys->Get_bodylist().at(0);
-            shearBox = sys->Get_bodylist().at(1);
-            loadPlate = sys->Get_bodylist().at(2);
+            ground = sys->GetBodies().at(0);
+            shearBox = sys->GetBodies().at(1);
+            loadPlate = sys->GetBodies().at(2);
 
             // Move the load plate just above the granular material.
             double highest, lowest;
@@ -623,18 +623,18 @@ int main(int argc, char* argv[]) {
             // Create bodies from checkpoint file.
             cout << "Read checkpoint data from " << pressed_ckpnt_file;
             utils::ReadCheckpoint(sys, pressed_ckpnt_file);
-            cout << "  done.  Read " << sys->Get_bodylist().size() << " bodies." << endl;
+            cout << "  done.  Read " << sys->GetBodies().size() << " bodies." << endl;
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = sys->Get_bodylist().at(0);
-            shearBox = sys->Get_bodylist().at(1);
-            loadPlate = sys->Get_bodylist().at(2);
+            ground = sys->GetBodies().at(0);
+            shearBox = sys->GetBodies().at(1);
+            loadPlate = sys->GetBodies().at(2);
 
             // If using an actuator, connect the shear box and get a handle to the actuator.
             if (use_actuator) {
                 ConnectShearBox(sys, ground, shearBox);
                 prismatic_box_ground = std::static_pointer_cast<ChLinkLockPrismatic>(sys->SearchLink("prismatic_box_ground"));
-                actuator = std::static_pointer_cast<ChLinkLinActuator>(sys->SearchLink("actuator"));
+                actuator = std::static_pointer_cast<ChLinkLockLinActuator>(sys->SearchLink("actuator"));
             }
 
             // Release the shear box when using an actuator.
@@ -671,9 +671,9 @@ int main(int argc, char* argv[]) {
             CreateBall(sys);
 
             // Grab handles to mechanism bodies (must increase ref counts)
-            ground = sys->Get_bodylist().at(0);
-            shearBox = sys->Get_bodylist().at(1);
-            loadPlate = sys->Get_bodylist().at(2);
+            ground = sys->GetBodies().at(0);
+            shearBox = sys->GetBodies().at(1);
+            loadPlate = sys->GetBodies().at(2);
 
             // Move the load plate just above the test ball.
             ChVector3d pos = loadPlate->GetPos();
@@ -684,7 +684,7 @@ int main(int argc, char* argv[]) {
             if (use_actuator) {
                 ConnectShearBox(sys, ground, shearBox);
                 prismatic_box_ground = std::static_pointer_cast<ChLinkLockPrismatic>(sys->SearchLink("prismatic_box_ground"));
-                actuator = std::static_pointer_cast<ChLinkLinActuator>(sys->SearchLink("actuator"));
+                actuator = std::static_pointer_cast<ChLinkLockLinActuator>(sys->SearchLink("actuator"));
             }
 
             // Release the shear box when using an actuator.
@@ -748,7 +748,7 @@ int main(int argc, char* argv[]) {
     while (time < time_end) {
         // Current position and velocity of the shear box
         ChVector3d pos_old = shearBox->GetPos();
-        ChVector3d vel_old = shearBox->GetPos_dt();
+        ChVector3d vel_old = shearBox->GetLinVel();
 
         // Calculate minimum and maximum particle heights
         double highest, lowest;
@@ -779,7 +779,7 @@ int main(int argc, char* argv[]) {
                     utils::WriteCheckpoint(sys, settled_ckpnt_file);
                 else
                     utils::WriteCheckpoint(sys, pressed_ckpnt_file);
-                cout << sys->Get_bodylist().size() << " bodies" << endl;
+                cout << sys->GetBodies().size() << " bodies" << endl;
             }
 
             // Increment counters
@@ -862,7 +862,7 @@ int main(int argc, char* argv[]) {
             } else {
                 double xpos_new = pos_old.x() + desiredVelocity * time_step;
                 shearBox->SetPos(ChVector3d(xpos_new, pos_old.y(), pos_old.z()));
-                shearBox->SetPos_dt(ChVector3d(desiredVelocity, 0, 0));
+                shearBox->SetLinVel(ChVector3d(desiredVelocity, 0, 0));
             }
 
             if (sim_frame % write_steps == 0) {
@@ -894,7 +894,7 @@ int main(int argc, char* argv[]) {
         time += time_step;
         sim_frame++;
         exec_time += sys->GetTimerStep();
-        num_contacts += sys->GetNcontacts();
+        num_contacts += sys->GetNumContacts();
 
         // If requested, output detailed timing information for this step
         if (sim_frame == timing_frame)
@@ -912,12 +912,12 @@ int main(int argc, char* argv[]) {
             utils::WriteCheckpoint(sys, settled_ckpnt_file);
         else
             utils::WriteCheckpoint(sys, pressed_ckpnt_file);
-        cout << sys->Get_bodylist().size() << " bodies" << endl;
+        cout << sys->GetBodies().size() << " bodies" << endl;
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies:  " << sys->Get_bodylist().size() << endl;
+    cout << "Number of bodies:  " << sys->GetBodies().size() << endl;
     cout << "Simulation time:   " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;
 

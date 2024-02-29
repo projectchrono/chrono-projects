@@ -344,7 +344,7 @@ int main(int argc, char* argv[]) {
 
         // std::cout << vehicle.GetSystem()->GetSolverCallsCount() << std::endl;
         // Extract accelerations to add to the filter
-        ChVector3d acc_CG = vehicle.GetChassisBody()->GetPos_dtdt();
+        ChVector3d acc_CG = vehicle.GetChassisBody()->GetLinAcc();
         acc_CG = vehicle.GetChassisBody()->GetCsys().TransformDirectionParentToLocal(acc_CG);
         ChVector3d acc_driver = vehicle.GetPointAcceleration(driver_pos);
         double fwd_acc_CG = fwd_acc_GC_filter.Add(acc_CG.x());
@@ -388,7 +388,7 @@ int main(int argc, char* argv[]) {
             }
 
             if (state_output) {
-                ChVector3d vel_CG = vehicle.GetChassisBody()->GetPos_dt();
+                ChVector3d vel_CG = vehicle.GetChassisBody()->GetLinVel();
                 vel_CG = vehicle.GetChassisBody()->GetCsys().TransformDirectionParentToLocal(vel_CG);
 
                 ChVector3d vel_driver_abs =

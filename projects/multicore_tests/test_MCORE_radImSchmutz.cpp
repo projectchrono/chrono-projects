@@ -149,8 +149,8 @@ class Mechanism {
   public:
     Mechanism(ChSystemMulticore* system, double h);
 
-    const ChVector3d& GetSledVelocity() const { return m_sled->GetPos_dt(); }
-    const ChVector3d& GetWheelVelocity() const { return m_wheel->GetPos_dt(); }
+    const ChVector3d& GetSledVelocity() const { return m_sled->GetLinVel(); }
+    const ChVector3d& GetWheelVelocity() const { return m_wheel->GetLinVel(); }
 
     void WriteResults(std::ofstream& f, double time);
 
@@ -199,7 +199,7 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     m_sled->SetMass(mass1);
     m_sled->SetInertiaXX(inertia_sled);
     m_sled->SetPos(loc_sled);
-    m_sled->SetPos_dt(ChVector3d(init_vel, 0, 0));
+    m_sled->SetLinVel(ChVector3d(init_vel, 0, 0));
     m_sled->SetBodyFixed(false);
     m_sled->SetCollide(false);
 
@@ -227,7 +227,7 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     m_wheel->SetInertiaXX(inertia_wheel);
     m_wheel->SetPos(loc_wheel);
     m_wheel->SetRot(QuatFromAngleY(init_angle));
-    m_wheel->SetPos_dt(ChVector3d(init_vel, 0, 0));
+    m_wheel->SetLinVel(ChVector3d(init_vel, 0, 0));
     m_wheel->SetBodyFixed(false);
     m_wheel->SetCollide(true);
 
@@ -249,21 +249,21 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
 
     // Create and initialize translational joint ground - sled
     m_prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
-    m_prismatic->Initialize(m_ground, m_sled, ChCoordsys<>(loc_prismatic, QuatFromAngleY(CH_C_PI_2)));
+    m_prismatic->Initialize(m_ground, m_sled, ChFrame<>(loc_prismatic, QuatFromAngleY(CH_C_PI_2)));
     system->AddLink(m_prismatic);
 
     // Create and initialize revolute joint sled - wheel
     m_revolute = chrono_types::make_shared<ChLinkLockRevolute>();
-    m_revolute->Initialize(m_wheel, m_sled, ChCoordsys<>(loc_revolute, QuatFromAngleX(CH_C_PI_2)));
+    m_revolute->Initialize(m_wheel, m_sled, ChFrame<>(loc_revolute, QuatFromAngleX(CH_C_PI_2)));
     system->AddLink(m_revolute);
 }
 
 void Mechanism::WriteResults(std::ofstream& f, double time) {
     // Velocity of sled body (in absolute frame)
-    ChVector3d sled_vel = m_sled->GetPos_dt();
+    ChVector3d sled_vel = m_sled->GetLinVel();
 
     // Velocity of wheel body (in absolute frame)
-    ChVector3d wheel_vel = m_wheel->GetPos_dt();
+    ChVector3d wheel_vel = m_wheel->GetLinVel();
 
     // Coordinate system of the revolute joint (relative to the frame of body2, in
     // this case the sled)
@@ -350,7 +350,7 @@ void CreateParticles(ChSystemMulticore* system) {
 void FindRange(ChSystem* sys, double& lowest, double& highest) {
     highest = -1000;
     lowest = 1000;
-    for (auto body : sys->Get_bodylist()) {
+    for (auto body : sys->GetBodies()) {
         if (body->GetIdentifier() < 100)
             continue;
         double h = body->GetPos().z();
@@ -457,7 +457,7 @@ int main(int argc, char* argv[]) {
             // Create the granular material and the container from the checkpoint file.
             cout << "Read checkpoint data from " << checkpoint_file;
             utils::ReadCheckpoint(sys, checkpoint_file);
-            cout << "  done.  Read " << sys->Get_bodylist().size() << " bodies." << endl;
+            cout << "  done.  Read " << sys->GetBodies().size() << " bodies." << endl;
 
             // Create the mechanism with the wheel just above the granular material.
             double lowest, highest;
@@ -534,7 +534,7 @@ int main(int argc, char* argv[]) {
             if (problem == SETTLING) {
                 cout << "             Write checkpoint data " << flush;
                 utils::WriteCheckpoint(sys, checkpoint_file);
-                cout << sys->Get_bodylist().size() << " bodies" << endl;
+                cout << sys->GetBodies().size() << " bodies" << endl;
             }
 
             out_frame++;
@@ -557,7 +557,7 @@ int main(int argc, char* argv[]) {
         time += time_step;
         sim_frame++;
         exec_time += sys->GetTimerStep();
-        num_contacts += sys->GetNcontacts();
+        num_contacts += sys->GetNumContacts();
 
         // Save results
         if (problem != SETTLING) {
@@ -570,12 +570,12 @@ int main(int argc, char* argv[]) {
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
         utils::WriteCheckpoint(sys, checkpoint_file);
-        cout << "  done.  Wrote " << sys->Get_bodylist().size() << " bodies." << endl;
+        cout << "  done.  Wrote " << sys->GetBodies().size() << " bodies." << endl;
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies:  " << sys->Get_bodylist().size() << endl;
+    cout << "Number of bodies:  " << sys->GetBodies().size() << endl;
     cout << "Simulation time:   " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;
 

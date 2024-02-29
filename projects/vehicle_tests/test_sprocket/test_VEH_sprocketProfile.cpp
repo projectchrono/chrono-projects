@@ -10,12 +10,11 @@
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 
 using namespace chrono;
-using namespace chrono::geometry;
 using namespace chrono::irrlicht;
 
 // -----------------------------------------------------------------------------
-std::shared_ptr<geometry::ChLinePath> CreateProfile(int num_teeth, double R_T, double R_C, double R) {
-    auto profile = chrono_types::make_shared<geometry::ChLinePath>();
+std::shared_ptr<ChLinePath> CreateProfile(int num_teeth, double R_T, double R_C, double R) {
+    auto profile = chrono_types::make_shared<ChLinePath>();
 
     double beta = CH_C_2PI / num_teeth;
     double sbeta = std::sin(beta / 2);
@@ -39,11 +38,11 @@ std::shared_ptr<geometry::ChLinePath> CreateProfile(int num_teeth, double R_T, d
         p2 = rot * p2;
         p3 = rot * p3;
         p4 = rot * p4;
-        geometry::ChLineSegment seg1(p1, p2);
+        ChLineSegment seg1(p1, p2);
         double angle1 = alpha + 1.5 * CH_C_PI - gamma;
         double angle2 = alpha + 1.5 * CH_C_PI + gamma;
-        geometry::ChLineArc arc(ChCoordsys<>(p0), R, angle1, angle2, true);
-        geometry::ChLineSegment seg2(p3, p4);
+        ChLineArc arc(ChCoordsys<>(p0), R, angle1, angle2, true);
+        ChLineSegment seg2(p3, p4);
         profile->AddSubLine(seg1);
         profile->AddSubLine(arc);
         profile->AddSubLine(seg2);
@@ -115,7 +114,7 @@ int main(int argc, char* argv[]) {
 
     // Revolute constraint (gear-ground)
     auto revolute = chrono_types::make_shared<ChLinkLockRevolute>();
-    revolute->Initialize(gear, ground, ChCoordsys<>(gear_loc));
+    revolute->Initialize(gear, ground, ChFrame<>(gear_loc));
     system.Add(revolute);
 
     // ---------------------

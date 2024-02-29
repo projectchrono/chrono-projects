@@ -65,8 +65,8 @@ void TimingOutput(chrono::ChSystem* mSys) {
     double SOLVER = mSys->GetTimerAdvance();
     double UPDT = mSys->GetTimerUpdate();
     int REQ_ITS = 0;
-    int BODS = mSys->GetNbodies();
-    int CNTC = mSys->GetNcontacts();
+    int BODS = mSys->GetNumBodies();
+    int CNTC = mSys->GetNumContacts();
     if (dynamic_cast<chrono::ChSystemMulticore*>(mSys)) {
         REQ_ITS = std::static_pointer_cast<chrono::ChIterativeSolverMulticore>(mSys->GetSolver())->GetIterations();
     }
@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
 
     if (track_granule) {
         int id = Id_g + num_particles / 2;
-        for (auto body : system->Get_bodylist()) {
+        for (auto body : system->GetBodies()) {
             if (body->GetIdentifier() == id) {
                 granule = body;
                 break;
@@ -332,9 +332,9 @@ int main(int argc, char** argv) {
             assert(outf.is_open());
             assert(granule);
             const ChVector3d& pos = granule->GetPos();
-            const ChVector3d& vel = granule->GetPos_dt();
+            const ChVector3d& vel = granule->GetLinVel();
             outf << system->GetChTime() << " ";
-            outf << system->GetNbodies() << " " << system->GetNcontacts() << " ";
+            outf << system->GetNumBodies() << " " << system->GetNumContacts() << " ";
             outf << pos.x() << " " << pos.y() << " " << pos.z() << " ";
             outf << vel.x() << " " << vel.y() << " " << vel.z();
             outf << std::endl << std::flush;

@@ -34,8 +34,11 @@ class OscillatorProblem : public ChIntegrableIIorder {
         mv = 0.6;
     }
 
-    /// the number of coordinates in the state, x position part:
-    virtual int GetNcoords_x() override { return 1; }
+    /// number of coordinates in the state, x position part:
+    virtual int GetNumCoordinatesPos() override { return 1; }
+
+    /// number of coordinates in the state, x position part:
+    virtual int GetNumCoordinatesVel() override { return 1; }
 
     /// system -> state
     virtual void StateGather(ChState& x, ChStateDelta& v, double& T) override {
@@ -174,11 +177,14 @@ class PendulumProblem : public ChIntegrableIIorder {
         mvy = vy;
     }
 
-    /// the number of coordinates in the state, x position part:
-    virtual int GetNcoords_x() override { return 2; }
+    /// number of coordinates in the state, x position part:
+    virtual int GetNumCoordinatesPos() override { return 2; }
 
-    /// Tells the number of lagrangian multipliers (constraints)
-    virtual int GetNconstr() override { return 1; }
+    /// number of coordinates at velocity level
+    virtual int GetNumCoordinatesVel() override { return 2; }
+
+    /// number of lagrangian multipliers (constraints)
+    virtual int GetNumConstraints() override { return 1; }
 
     /// system -> state
     virtual void StateGather(ChState& x, ChStateDelta& v, double& T) override {
@@ -403,12 +409,12 @@ void RigidPendulums() {
 
     // Joints
     auto revolute1 = chrono_types::make_shared<ChLinkLockRevolute>();
-    revolute1->Initialize(ground, pend1, ChCoordsys<>(ChVector3d(0, 0, 0), QUNIT));
+    revolute1->Initialize(ground, pend1, ChFrame<>(ChVector3d(0, 0, 0), QUNIT));
     system.AddLink(revolute1);
 
     auto revolute2 = chrono_types::make_shared<ChLinkLockRevolute>();
     if (double_pend) {
-        revolute2->Initialize(pend1, pend2, ChCoordsys<>(ChVector3d(l1, 0, 0), QUNIT));
+        revolute2->Initialize(pend1, pend2, ChFrame<>(ChVector3d(l1, 0, 0), QUNIT));
         system.AddLink(revolute2);
     }
 
@@ -441,10 +447,10 @@ void RigidPendulums() {
         num_solver_calls += integrator->GetNumSolveCalls();
         printf("    %7.4f  %4d", integrator->GetTime(), integrator->GetNumIterations());
         printf("    %12.8f  %12.8f  %12.8f  %12.8f  %12.8f  %12.8f", pend1->GetPos().x(), pend1->GetPos().y(),
-               pend1->GetPos_dt().x(), pend1->GetPos_dt().y(), pend1->GetPos_dtdt().x(), pend1->GetPos_dtdt().y());
+               pend1->GetLinVel().x(), pend1->GetLinVel().y(), pend1->GetLinAcc().x(), pend1->GetLinAcc().y());
         if (double_pend) {
             printf("    %12.8f  %12.8f  %12.8f  %12.8f  %12.8f  %12.8f\n", pend2->GetPos().x(), pend2->GetPos().y(),
-                   pend2->GetPos_dt().x(), pend2->GetPos_dt().y(), pend2->GetPos_dtdt().x(), pend2->GetPos_dtdt().y());
+                   pend2->GetLinVel().x(), pend2->GetLinVel().y(), pend2->GetLinAcc().x(), pend2->GetLinAcc().y());
         } else {
             printf("\n");
         }

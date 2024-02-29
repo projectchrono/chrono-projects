@@ -41,7 +41,7 @@ void AddWallMesh(std::shared_ptr<ChBody> body,
                  std::shared_ptr<ChContactMaterial> mat,
                  const ChVector3d& dim,
                  const ChVector3d& loc) {
-    auto trimesh = chrono_types::make_shared<geometry::ChTriangleMeshConnected>();
+    auto trimesh = chrono_types::make_shared<ChTriangleMeshConnected>();
 
     std::vector<ChVector3d>& vertices = trimesh->getCoordsVertices();
     std::vector<ChVector3d>& normals = trimesh->getCoordsNormals();
@@ -225,7 +225,7 @@ int main(int argc, char* argv[]) {
     ball->SetInertiaXX(0.4 * mass * radius * radius * ChVector3d(1, 1, 1));
     ball->SetPos(pos);
     ball->SetRot(rot);
-    ball->SetPos_dt(init_vel);
+    ball->SetLinVel(init_vel);
     // ball->SetWvel_par(ChVector3d(0,0,3));
     ball->SetBodyFixed(false);
     ball->SetCollide(true);

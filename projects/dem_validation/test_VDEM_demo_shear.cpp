@@ -395,7 +395,7 @@ int main(int argc, char* argv[]) {
 
     auto prismatic_plate_box = chrono_types::make_shared<ChLinkLockPrismatic>();
     prismatic_plate_box->SetName("prismatic_plate_box");
-    prismatic_plate_box->Initialize(plate, box, ChCoordsys<>(ChVector3d(0, 0, 0), z2y));
+    prismatic_plate_box->Initialize(plate, box, ChFrame<>(ChVector3d(0, 0, 0), z2y));
     sys->AddLink(prismatic_plate_box);
 
     // Setup output
@@ -443,14 +443,12 @@ int main(int argc, char* argv[]) {
         }
 
         if (shearing == true) {
-            bin->SetPos(
-                ChVector3d(0, -height / 2, -shear_speed * begin_shear_time + shear_speed * sys->GetChTime()));
-            bin->SetPos_dt(
-                ChVector3d(0, 0, shear_speed));  // This is needed for the tangential contact displacement history model
+            bin->SetPos(ChVector3d(0, -height / 2, -shear_speed * begin_shear_time + shear_speed * sys->GetChTime()));
+            bin->SetLinVel(ChVector3d(0, 0, shear_speed));  // for tangential contact displacement history model
             bin->SetRot(QUNIT);
         } else {
             bin->SetPos(ChVector3d(0, -height / 2, 0));
-            bin->SetPos_dt(ChVector3d(0, 0, 0));
+            bin->SetLinVel(ChVector3d(0, 0, 0));
             bin->SetRot(QUNIT);
         }
 

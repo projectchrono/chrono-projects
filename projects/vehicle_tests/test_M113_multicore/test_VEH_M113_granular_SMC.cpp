@@ -386,7 +386,7 @@ int main(int argc, char* argv[]) {
         vehicle->GetTrackShoeStates(RIGHT, shoe_states_right);
 
         const ChVector3d& pos_CG = vehicle->GetChassis()->GetPos();
-        ChVector3d vel_CG = vehicle->GetChassisBody()->GetPos_dt();
+        ChVector3d vel_CG = vehicle->GetChassisBody()->GetLinVel();
         vel_CG = vehicle->GetChassisBody()->GetCsys().TransformDirectionParentToLocal(vel_CG);
 
         // Vehicle and Control Values
@@ -457,7 +457,7 @@ int main(int argc, char* argv[]) {
         time += time_step;
         sim_frame++;
         exec_time += system.GetTimerStep();
-        num_contacts += system.GetNcontacts();
+        num_contacts += system.GetNumContacts();
     }
 
     // Final stats

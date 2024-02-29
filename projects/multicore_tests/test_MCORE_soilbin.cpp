@@ -221,41 +221,41 @@ void CreateObject(ChSystemMulticore* system, double z) {
     switch (shape_o) {
         case ChCollisionShape::Type::SPHERE: {
             double radius = 0.5;
-            rb = geometry::ChSphere::GetBoundingSphereRadius(radius);
-            vol = geometry::ChSphere::GetVolume(radius);
-            J = geometry::ChSphere::GetGyration(radius);
+            rb = ChSphere::GetBoundingSphereRadius(radius);
+            vol = ChSphere::GetVolume(radius);
+            J = ChSphere::GetGyration(radius);
             utils::AddSphereGeometry(obj.get(), mat_o, radius);
         } break;
         case ChCollisionShape::Type::BOX: {
             ChVector3d dims(0.5, 0.75, 1.0);
-            rb = geometry::ChBox::GetBoundingSphereRadius(dims);
-            vol = geometry::ChBox::GetVolume(dims);
-            J = geometry::ChBox::GetGyration(dims);
+            rb = ChBox::GetBoundingSphereRadius(dims);
+            vol = ChBox::GetVolume(dims);
+            J = ChBox::GetGyration(dims);
             utils::AddBoxGeometry(obj.get(), mat_o, dims);
         } break;
         case ChCollisionShape::Type::CAPSULE: {
             double radius = 0.25;
             double len = 0.5;
-            rb = geometry::ChCapsule::GetBoundingSphereRadius(radius, len);
-            vol = geometry::ChCapsule::GetVolume(radius, len);
-            J = geometry::ChCapsule::GetGyration(radius, len);
+            rb = ChCapsule::GetBoundingSphereRadius(radius, len);
+            vol = ChCapsule::GetVolume(radius, len);
+            J = ChCapsule::GetGyration(radius, len);
             utils::AddCapsuleGeometry(obj.get(), mat_o, radius, len);
         } break;
         case ChCollisionShape::Type::CYLINDER: {
             double radius = 0.25;
             double len = 0.5;
-            rb = geometry::ChCylinder::GetBoundingSphereRadius(radius, len);
-            vol = geometry::ChCylinder::GetVolume(radius, len);
-            J = geometry::ChCylinder::GetGyration(radius, len);
+            rb = ChCylinder::GetBoundingSphereRadius(radius, len);
+            vol = ChCylinder::GetVolume(radius, len);
+            J = ChCylinder::GetGyration(radius, len);
             utils::AddCylinderGeometry(obj.get(), mat_o, radius, len);
         } break;
         case ChCollisionShape::Type::ROUNDEDCYL: {
             double radius = 0.25;
             double len = 0.1;
             double srad = 0.1;
-            rb = geometry::ChRoundedCylinder::GetBoundingSphereRadius(radius, len, srad);
-            vol = geometry::ChRoundedCylinder::GetVolume(radius, len, srad);
-            J = geometry::ChRoundedCylinder::GetGyration(radius, len, srad);
+            rb = ChRoundedCylinder::GetBoundingSphereRadius(radius, len, srad);
+            vol = ChRoundedCylinder::GetVolume(radius, len, srad);
+            J = ChRoundedCylinder::GetGyration(radius, len, srad);
             utils::AddRoundedCylinderGeometry(obj.get(), mat_o, radius, len, srad);
         } break;
     }
@@ -274,8 +274,8 @@ void CreateObject(ChSystemMulticore* system, double z) {
 
     obj->SetPos(ChVector3d(0, 0, z + rb));
     obj->SetRot(initRot);
-    obj->SetPos_dt(initLinVel);
-    obj->SetWvel_loc(initAngVel);
+    obj->SetLinVel(initLinVel);
+    obj->SetAngVelLocal(initAngVel);
 
     // ---------------------
     // Add object to system.
@@ -290,7 +290,7 @@ void CreateObject(ChSystemMulticore* system, double z) {
 // =============================================================================
 double FindHighest(ChSystem* sys) {
     double highest = 0;
-    for (auto body : sys->Get_bodylist()) {
+    for (auto body : sys->GetBodies()) {
         if (body->GetIdentifier() > 0 && body->GetPos().z() > highest)
             highest = body->GetPos().z();
     }
@@ -299,7 +299,7 @@ double FindHighest(ChSystem* sys) {
 
 double FindLowest(ChSystem* sys) {
     double lowest = 1000;
-    for (auto body : sys->Get_bodylist()) {
+    for (auto body : sys->GetBodies()) {
         if (body->GetIdentifier() > 0 && body->GetPos().z() < lowest)
             lowest = body->GetPos().z();
     }
@@ -393,7 +393,7 @@ int main(int argc, char* argv[]) {
         // Create the granular material and the container from the checkpoint file.
         cout << "Read checkpoint data from " << checkpoint_file;
         utils::ReadCheckpoint(msystem, checkpoint_file);
-        cout << "  done.  Read " << msystem->Get_bodylist().size() << " bodies." << endl;
+        cout << "  done.  Read " << msystem->GetBodies().size() << " bodies." << endl;
 
         // Create the falling object just above the granular material.
         double z = FindHighest(msystem);
@@ -435,7 +435,7 @@ int main(int argc, char* argv[]) {
             if (problem == SETTLING) {
                 cout << "             Write checkpoint data " << flush;
                 utils::WriteCheckpoint(msystem, checkpoint_file);
-                cout << msystem->Get_bodylist().size() << " bodies" << endl;
+                cout << msystem->GetBodies().size() << " bodies" << endl;
             }
 
             out_frame++;
@@ -449,19 +449,19 @@ int main(int argc, char* argv[]) {
         time += time_step;
         sim_frame++;
         exec_time += msystem->GetTimerStep();
-        num_contacts += msystem->GetNcontacts();
+        num_contacts += msystem->GetNumContacts();
     }
 
     // Create a checkpoint from the last state
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
         utils::WriteCheckpoint(msystem, checkpoint_file);
-        cout << "  done.  Wrote " << msystem->Get_bodylist().size() << " bodies." << endl;
+        cout << "  done.  Wrote " << msystem->GetBodies().size() << " bodies." << endl;
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies:  " << msystem->Get_bodylist().size() << endl;
+    cout << "Number of bodies:  " << msystem->GetBodies().size() << endl;
     cout << "Lowest position:   " << FindLowest(msystem) << endl;
     cout << "Simulation time:   " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;

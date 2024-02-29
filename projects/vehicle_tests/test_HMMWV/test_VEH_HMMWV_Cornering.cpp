@@ -31,7 +31,6 @@
 #include "chrono_models/vehicle/hmmwv/HMMWV.h"
 
 using namespace chrono;
-using namespace chrono::geometry;
 using namespace chrono::vehicle;
 using namespace chrono::vehicle::hmmwv;
 
@@ -235,7 +234,7 @@ int main(int argc, char* argv[]) {
     while (vis->Run()) {
         // Extract system state
         double time = my_hmmwv.GetSystem()->GetChTime();
-        ChVector3d acc_CG = my_hmmwv.GetVehicle().GetChassisBody()->GetPos_dtdt();
+        ChVector3d acc_CG = my_hmmwv.GetVehicle().GetChassisBody()->GetLinAcc();
         ChVector3d acc_driver = my_hmmwv.GetVehicle().GetPointAcceleration(driver_pos);
 
         // End simulation

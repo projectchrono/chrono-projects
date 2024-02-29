@@ -82,7 +82,7 @@ void MakeWheel(ChSystemSMC& sys,
         auto node_pos = std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))->GetPos();
         ChVector3d tang_vel = Vcross(ChVector3d(tire_w0, 0, 0), node_pos - tire_center);
         std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))
-            ->SetPos_dt(ChVector3d(0, 0, tire_vel_z0) + tang_vel);
+            ->SetPosDer(ChVector3d(0, 0, tire_vel_z0) + tang_vel);
     }
 
     // Remember to add the mesh to the system!
@@ -94,8 +94,8 @@ void MakeWheel(ChSystemSMC& sys,
     mwheel_rim->SetInertiaXX(ChVector3d(60, 60, 60));
     mwheel_rim->SetPos(tire_center);
     mwheel_rim->SetRot(tire_alignment);
-    mwheel_rim->SetPos_dt(ChVector3d(0, 0, tire_vel_z0));
-    mwheel_rim->SetWvel_par(ChVector3d(tire_w0, 0, 0));
+    mwheel_rim->SetLinVel(ChVector3d(0, 0, tire_vel_z0));
+    mwheel_rim->SetAngVelParent(ChVector3d(tire_w0, 0, 0));
     sys.Add(mwheel_rim);
 
     auto mobjmesh = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
@@ -194,7 +194,7 @@ int main(int argc, char* argv[]) {
     // Create the car truss
     auto mtruss = chrono_types::make_shared<ChBodyAuxRef>();
     mtruss->SetPos(vehicle_center);
-    mtruss->SetPos_dt(ChVector3d(0, 0, tire_vel_z0));
+    mtruss->SetLinVel(ChVector3d(0, 0, tire_vel_z0));
     mtruss->SetBodyFixed(false);
     mtruss->SetMass(100);
     mtruss->SetInertiaXX(ChVector3d(100, 100, 100));
@@ -203,7 +203,7 @@ int main(int argc, char* argv[]) {
     auto mtrussmesh = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     mtrussmesh->GetMesh()->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_chassis_simple.obj"));
     mtruss->AddVisualShape(mtrussmesh,
-                           ChFrame<>(VNULL, QuatFromAngleAxis(CH_C_PI_2, VECT_Z) % QuatFromAngleAxis(CH_C_PI_2, VECT_Y)));
+                           ChFrame<>(VNULL, QuatFromAngleAxis(CH_C_PI_2, VECT_Z) * QuatFromAngleAxis(CH_C_PI_2, VECT_Y)));
 
     // Create a step
     if (true) {
@@ -261,7 +261,7 @@ int main(int argc, char* argv[]) {
 
     auto mrevolute_BL = chrono_types::make_shared<ChLinkLockRevolute>();
     sys.Add(mrevolute_BL);
-    mrevolute_BL->Initialize(mtruss, mrim_BL, ChCoordsys<>(tire_center_BL, QuatFromAngleAxis(CH_C_PI_2, VECT_Y)));
+    mrevolute_BL->Initialize(mtruss, mrim_BL, ChFrame<>(tire_center_BL, QuatFromAngleAxis(CH_C_PI_2, VECT_Y)));
 
     // Make a wheel and connect it to truss:
     std::shared_ptr<ChBody> mrim_FL;
@@ -269,7 +269,7 @@ int main(int argc, char* argv[]) {
               mtirematerial, mrim_FL);
     auto mrevolute_FL = chrono_types::make_shared<ChLinkLockRevolute>();
     sys.Add(mrevolute_FL);
-    mrevolute_FL->Initialize(mtruss, mrim_FL, ChCoordsys<>(tire_center_FL, QuatFromAngleAxis(CH_C_PI_2, VECT_Y)));
+    mrevolute_FL->Initialize(mtruss, mrim_FL, ChFrame<>(tire_center_FL, QuatFromAngleAxis(CH_C_PI_2, VECT_Y)));
 
     // Make a wheel and connect it to truss:
     std::shared_ptr<ChBody> mrim_BR;
@@ -277,7 +277,7 @@ int main(int argc, char* argv[]) {
               mtirematerial, mrim_BR);
     auto mrevolute_BR = chrono_types::make_shared<ChLinkLockRevolute>();
     sys.Add(mrevolute_BR);
-    mrevolute_BR->Initialize(mtruss, mrim_BR, ChCoordsys<>(tire_center_BR, QuatFromAngleAxis(CH_C_PI_2, VECT_Y)));
+    mrevolute_BR->Initialize(mtruss, mrim_BR, ChFrame<>(tire_center_BR, QuatFromAngleAxis(CH_C_PI_2, VECT_Y)));
 
     // Make a wheel and connect it to truss:
     std::shared_ptr<ChBody> mrim_FR;
@@ -286,7 +286,7 @@ int main(int argc, char* argv[]) {
 
     auto mrevolute_FR = chrono_types::make_shared<ChLinkLockRevolute>();
     sys.Add(mrevolute_FR);
-    mrevolute_FR->Initialize(mtruss, mrim_FR, ChCoordsys<>(tire_center_FR, QuatFromAngleAxis(CH_C_PI_2, VECT_Y)));
+    mrevolute_FR->Initialize(mtruss, mrim_FR, ChFrame<>(tire_center_FR, QuatFromAngleAxis(CH_C_PI_2, VECT_Y)));
 
     // Create the Irrlicht visualization system
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();

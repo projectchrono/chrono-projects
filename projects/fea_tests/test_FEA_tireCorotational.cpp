@@ -143,7 +143,7 @@ int main(int argc, char* argv[]) {
         ChVector3d node_pos = std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))->GetPos();
         ChVector3d tang_vel = Vcross(ChVector3d(tire_w0, 0, 0), node_pos - tire_center);
         std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))
-            ->SetPos_dt(ChVector3d(0, 0, tire_vel_z0) + tang_vel);
+            ->SetPosDer(ChVector3d(0, 0, tire_vel_z0) + tang_vel);
     }
 
     // Create the contact surface
@@ -189,8 +189,8 @@ int main(int argc, char* argv[]) {
         wheel->SetInertiaXX(ChVector3d(60, 60, 60));
         wheel->SetPos(tire_center);
         wheel->SetRot(tire_alignment);
-        wheel->SetPos_dt(ChVector3d(0, 0, tire_vel_z0));
-        wheel->SetWvel_par(ChVector3d(tire_w0, 0, 0));
+        wheel->SetLinVel(ChVector3d(0, 0, tire_vel_z0));
+        wheel->SetAngVelParent(ChVector3d(tire_w0, 0, 0));
         sys.Add(wheel);
 
         if (visualization) {

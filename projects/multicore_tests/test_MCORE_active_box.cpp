@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
 
     auto ball = chrono_types::make_shared<ChBody>();
     ball->SetPos(ChVector3d(0, 0, 1));
-    ball->SetPos_dt(ChVector3d(0, 0, 8));
+    ball->SetLinVel(ChVector3d(0, 0, 8));
     ball->SetCollide(true);
     utils::AddSphereGeometry(ball.get(), material_b, 0.2);
     system->AddBody(ball);

@@ -12,24 +12,23 @@
 // Authors: Alessandro Tasora
 // =============================================================================
 //
-// Demo code about
-// - using the unit_PYPARSER for executing some Python program or formula
-// - using the unit_PYPARSER for loading a .py scene description saved from the
-//   SolidWorks add-in
+// Demo code illustrating the use of the Chrono Python parser to execute some
+// Python program or formulas
 //
 // =============================================================================
 
 #include <iostream>
 #include <sstream>
-#include "chrono/physics/ChBodyAuxRef.h"
-#include "chrono/physics/ChSystemNSC.h"
+
 #include "chrono_parsers/ChParserPython.h"
+#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/physics/ChBodyAuxRef.h"
 
 using namespace chrono;
 using namespace chrono::parsers;
 
 int main(int argc, char* argv[]) {
-    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
+    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << std::endl;
 
     std::cout << " Test the execution of Python statements, formulas, programs.\n No graphical user interface.\n\n";
 
@@ -75,7 +74,7 @@ int main(int argc, char* argv[]) {
     std::cout << "In:C++    - Passed integer variable 'b' from Python, b=" << mival << "\n";
     std::string msval;
     if (!my_python.GetString("c", msval))
-        std::cout << "Can't fetch string \n";
+        std::cerr << "Can't fetch string \n";
     std::cout << "In:C++    - Passed string variable 'c' from Python, c=" << msval << "\n";
 
     //
@@ -97,43 +96,8 @@ int main(int argc, char* argv[]) {
     std::cout << "\n\n PyChrono Test 5.\n";
     try {
         my_python.Run("a= this_itGoInG_TO_giVe_ErroRs!()");
-    } catch (const std::exception&) {
+    } catch (std::exception) {
         std::cout << "Ok, Python parsing error caught as expected.\n";
-    }
-
-    //
-    // TEST 6   -   load mechanical system, previously saved to disk from SolidWorks add-in
-    //
-
-    std::cout << "\n\n PyChrono Test 6.\n";
-    ChSystemNSC sys;
-
-    try {
-        // This is the instruction that loads the .py (as saved from SolidWorks) and
-        // fills the system:
-
-        my_python.ImportSolidWorksSystem(GetChronoDataFile("solidworks/swiss_escapement").c_str(),
-                                         sys);  // note, don't type the .py suffic in filename..
-
-        sys.ShowHierarchy(std::cout);
-
-        // In case you want to fetch an item, remember that they got the
-        // names that you see in the CAD interface, for example suppose you know that
-        // a ChBodyAuxRef has the name "escape_wheel^escapement-1":
-        std::shared_ptr<ChBodyAuxRef> mbody;
-        for (auto body : sys.Get_bodylist()) {
-            std::cout << body->GetNameString().c_str() << "\n";
-            if (body->GetNameString() == "escape_wheel-1")
-                mbody = std::dynamic_pointer_cast<ChBodyAuxRef>(body);
-        }
-
-        if (!mbody)
-            throw std::runtime_error("Error. Could not find body from its name in SolidWorks exported file");
-        else
-            std::cout << "Found body  its name in SolidWorks exported file, pos.x()=" << mbody->GetPos().x() << "\n";
-
-    } catch (const std::exception& myerror) {
-        std::cout << myerror.what();
     }
 
     return 0;

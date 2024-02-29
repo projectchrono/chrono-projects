@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     wheel->SetMass(100);
     wheel->SetPos(init_pos);
     wheel->SetRot(init_rot);
-    wheel->SetWvel_loc(ChVector3d(0, 0, 100));
+    wheel->SetAngVelLocal(ChVector3d(0, 0, 100));
     wheel->SetCollide(false);
     wheel->SetBodyFixed(false);
 
@@ -77,16 +77,16 @@ int main(int argc, char* argv[]) {
     // Revolute joint
     auto joint = chrono_types::make_shared<ChLinkLockRevolute>();
     system.AddLink(joint);
-    joint->Initialize(ground, wheel, ChCoordsys<>(init_pos, init_rot));
+    joint->Initialize(ground, wheel, ChFrame<>(init_pos, init_rot));
 
     // Brake
-    auto brake = chrono_types::make_shared<ChLinkBrake>();
+    auto brake = chrono_types::make_shared<ChLinkLockBrake>();
     system.AddLink(brake);
 
     // Equivalent ways of initializing the brake link
     ////brake->Initialize(ground, wheel, ChCoordsys<>(init_pos, init_rot));
     ////brake->Initialize(ground, wheel, wheel->GetCsys() * joint->GetMarker2()->GetCsys());
-    brake->Initialize(ground, wheel, true, joint->GetMarker1()->GetCsys(), joint->GetMarker2()->GetCsys());
+    brake->Initialize(ground, wheel, true, *joint->GetMarker1(), *joint->GetMarker2());
 
     // Create the Irrlicht visualization
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
         tools::drawAllCOGs(vis.get(), 1);
         sprintf(msg, "Time:    %.2f", time);
         font->draw(msg, text_box1, text_col);
-        sprintf(msg, "Omega:   %.2f", wheel->GetWvel_loc().z());
+        sprintf(msg, "Omega:   %.2f", wheel->GetAngVelLocal().z());
         font->draw(msg, text_box2, text_col);
         sprintf(msg, "Braking: %.2f", modulation);
         font->draw(msg, text_box3, text_col);
@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
         }
         brake->Set_brake_torque(modulation * max_torque);
 
-        if (monitor && std::abs(wheel->GetWvel_loc().z()) < 0.1) {
+        if (monitor && std::abs(wheel->GetAngVelLocal().z()) < 0.1) {
             std::cout << "Wheel stopped at t = " << time << "\n";
             monitor = false;
         }

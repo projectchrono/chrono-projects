@@ -218,49 +218,49 @@ void CreateObject(ChSystemMulticore* system) {
     switch (shape_o) {
         case ChCollisionShape:: Type::SPHERE : {
             double radius = 0.3;
-            rb = geometry::ChSphere::GetBoundingSphereRadius(radius);
-            vol = geometry::ChSphere::GetVolume(radius);
-            J = geometry::ChSphere::GetGyration(radius);
+            rb = ChSphere::GetBoundingSphereRadius(radius);
+            vol = ChSphere::GetVolume(radius);
+            J = ChSphere::GetGyration(radius);
             utils::AddSphereGeometry(obj.get(), mat_o, radius);
         } break;
         case ChCollisionShape::Type::BOX: {
             ChVector3d dims(0.1, 0.2, 0.1);
-            rb = geometry::ChBox::GetBoundingSphereRadius(dims);
-            vol = geometry::ChBox::GetVolume(dims);
-            J = geometry::ChBox::GetGyration(dims);
+            rb = ChBox::GetBoundingSphereRadius(dims);
+            vol = ChBox::GetVolume(dims);
+            J = ChBox::GetGyration(dims);
             utils::AddBoxGeometry(obj.get(), mat_o, dims);
         } break;
         case ChCollisionShape::Type::CAPSULE: {
             double radius = 0.1;
             double len = 0.2;
-            rb = geometry::ChCapsule::GetBoundingSphereRadius(radius, len);
-            vol = geometry::ChCapsule::GetVolume(radius, len);
-            J = geometry::ChCapsule::GetGyration(radius, len);
+            rb = ChCapsule::GetBoundingSphereRadius(radius, len);
+            vol = ChCapsule::GetVolume(radius, len);
+            J = ChCapsule::GetGyration(radius, len);
             utils::AddCapsuleGeometry(obj.get(), mat_o, radius, len);
         } break;
         case ChCollisionShape::Type::CYLINDER: {
             double radius = 0.1;
             double len = 0.2;
-            rb = geometry::ChCylinder::GetBoundingSphereRadius(radius, len);
-            vol = geometry::ChCylinder::GetVolume(radius, len);
-            J = geometry::ChCylinder::GetGyration(radius, len);
+            rb = ChCylinder::GetBoundingSphereRadius(radius, len);
+            vol = ChCylinder::GetVolume(radius, len);
+            J = ChCylinder::GetGyration(radius, len);
             utils::AddCylinderGeometry(obj.get(), mat_o, radius, len);
         } break;
         case ChCollisionShape::Type::ROUNDEDCYL: {
             double radius = 0.1;
             double len = 0.2;
             double srad = 0.05;
-            rb = geometry::ChRoundedCylinder::GetBoundingSphereRadius(radius, len, srad);
-            vol = geometry::ChRoundedCylinder::GetVolume(radius, len, srad);
-            J = geometry::ChRoundedCylinder::GetGyration(radius, len, srad);
+            rb = ChRoundedCylinder::GetBoundingSphereRadius(radius, len, srad);
+            vol = ChRoundedCylinder::GetVolume(radius, len, srad);
+            J = ChRoundedCylinder::GetGyration(radius, len, srad);
             utils::AddRoundedCylinderGeometry(obj.get(), mat_o, radius, len, srad);
         } break;
         case ChCollisionShape::Type::CONE: {
             double radius = 0.2;
             double height = 0.4;
-            rb = geometry::ChCone::GetBoundingSphereRadius(radius, height);
-            vol = geometry::ChCone::GetVolume(radius, height);
-            J = geometry::ChCone::GetGyration(radius, height);
+            rb = ChCone::GetBoundingSphereRadius(radius, height);
+            vol = ChCone::GetVolume(radius, height);
+            J = ChCone::GetGyration(radius, height);
             utils::AddConeGeometry(obj.get(), mat_o, radius, height);
         } break;
     }
@@ -280,8 +280,8 @@ void CreateObject(ChSystemMulticore* system) {
 
     obj->SetPos(initPos);
     obj->SetRot(initRot);
-    obj->SetPos_dt(initLinVel);
-    obj->SetWvel_loc(initAngVel);
+    obj->SetLinVel(initLinVel);
+    obj->SetAngVelLocal(initAngVel);
 
     // ---------------------
     // Add object to system.
@@ -419,7 +419,7 @@ int main(int argc, char* argv[]) {
         time += time_step;
         sim_frame++;
         exec_time += sys->GetTimerStep();
-        num_contacts += sys->GetNcontacts();
+        num_contacts += sys->GetNumContacts();
     }
 
     // Final stats

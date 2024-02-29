@@ -228,22 +228,22 @@ void CalculatePenetratorInertia(double & mass, ChVector3d & inertia) {
     double vol_b;      // components volume
     switch (penetGeom) {
         case P_SPHERE:
-            vol_b = geometry::ChSphere::GetVolume(R_b);
-            gyr_b = geometry::ChSphere::GetGyration(R_b).diagonal();
+            vol_b = ChSphere::GetVolume(R_b);
+            gyr_b = ChSphere::GetGyration(R_b).diagonal();
             mass = rho_b * vol_b;
             inertia = mass * gyr_b;
             break;
         case P_CONE1:
             // apex angle = 30 de
-            vol_b = geometry::ChCone::GetVolume(R_bc1, H_bc1);
-            gyr_b = geometry::ChCone::GetGyration(R_bc1, H_bc1).diagonal();
+            vol_b = ChCone::GetVolume(R_bc1, H_bc1);
+            gyr_b = ChCone::GetGyration(R_bc1, H_bc1).diagonal();
             mass = rho_b * vol_b;
             inertia = mass * gyr_b;
             break;
         case P_CONE2:
             // apex angle = 60 deg
-            vol_b = geometry::ChCone::GetVolume(R_bc2, H_bc2);
-            gyr_b = geometry::ChCone::GetGyration(R_bc2, H_bc2).diagonal();
+            vol_b = ChCone::GetVolume(R_bc2, H_bc2);
+            gyr_b = ChCone::GetGyration(R_bc2, H_bc2).diagonal();
             mass = rho_b * vol_b;
             inertia = mass * gyr_b;
             break;
@@ -297,7 +297,7 @@ double RecalcPenetratorLocation(double z) {
 // -----------------------------------------------------------------------------
 double FindHighest(ChSystem* sys) {
     double highest = 0;
-    for (auto body : sys->Get_bodylist()) {
+    for (auto body : sys->GetBodies()) {
         if (body->GetIdentifier() > 0 && body->GetPos().z() > highest)
             highest = body->GetPos().z();
     }
@@ -306,7 +306,7 @@ double FindHighest(ChSystem* sys) {
 
 double FindLowest(ChSystem* sys) {
     double lowest = 1000;
-    for (auto body : sys->Get_bodylist()) {
+    for (auto body : sys->GetBodies()) {
         if (body->GetIdentifier() > 0 && body->GetPos().z() < lowest)
             lowest = body->GetPos().z();
     }
@@ -346,7 +346,7 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* sys) {
     obj->SetInertiaXX(inertia);
     obj->SetPos(ChVector3d(0, 0, initLoc));
     obj->SetRot(QuatFromAngleAxis(-CH_C_PI / 2, VECT_X));
-    obj->SetPos_dt(ChVector3d(0, 0, -vz));
+    obj->SetLinVel(ChVector3d(0, 0, -vz));
     obj->SetCollide(true);
     obj->SetBodyFixed(false);
 
@@ -363,9 +363,9 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* sys) {
 bool CheckSettled(ChSystem* sys, double threshold) {
     double t2 = threshold * threshold;
 
-    for (auto body : sys->Get_bodylist()) {
+    for (auto body : sys->GetBodies()) {
         if (body->GetIdentifier() > 0) {
-            double vel2 = body->GetPos_dt().Length2();
+            double vel2 = body->GetLinVel().Length2();
             if (vel2 > t2)
                 return false;
         }
@@ -490,7 +490,7 @@ int main(int argc, char* argv[]) {
         // Create the granular material and the container from the checkpoint file.
         cout << "Read checkpoint data from " << checkpoint_file;
         utils::ReadCheckpoint(sys, checkpoint_file);
-        cout << "  done.  Read " << sys->Get_bodylist().size() << " bodies." << endl;
+        cout << "  done.  Read " << sys->GetBodies().size() << " bodies." << endl;
         obj = CreatePenetrator(sys);
     }
 
@@ -556,7 +556,7 @@ int main(int argc, char* argv[]) {
             if (problem == SETTLING) {
                 cout << "     Write checkpoint data " << flush;
 //                utils::WriteCheckpoint(sys, checkpoint_file);
-                cout << sys->Get_bodylist().size() << " bodies" << endl;
+                cout << sys->GetBodies().size() << " bodies" << endl;
             }
 
             // Save current penetrator height.
@@ -593,7 +593,7 @@ int main(int argc, char* argv[]) {
         time += time_step;
         sim_frame++;
         exec_time += sys->GetTimerStep();
-        num_contacts += sys->GetNcontacts();
+        num_contacts += sys->GetNumContacts();
 
         // If requested, output detailed timing information for this step
         if (sim_frame == timing_frame)
@@ -604,12 +604,12 @@ int main(int argc, char* argv[]) {
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
         utils::WriteCheckpoint(sys, checkpoint_file);
-        cout << "  done.  Wrote " << sys->Get_bodylist().size() << " bodies." << endl;
+        cout << "  done.  Wrote " << sys->GetBodies().size() << " bodies." << endl;
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies:  " << sys->Get_bodylist().size() << endl;
+    cout << "Number of bodies:  " << sys->GetBodies().size() << endl;
     cout << "Lowest position:   " << FindLowest(sys) << endl;
     cout << "Simulation time:   " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;

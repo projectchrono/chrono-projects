@@ -48,8 +48,8 @@ static inline void TimingOutput(chrono::ChSystem* sys, std::ofstream* ofile = NU
     double NARR = sys->GetTimerCollisionNarrow();
     double SOLVER = sys->GetTimerLSsolve();
     double UPDT = sys->GetTimerUpdate();
-    int BODS = sys->GetNbodies();
-    int CNTC = sys->GetNcontacts();
+    int BODS = sys->GetNumBodies();
+    int CNTC = sys->GetNumContacts();
 
     if (ofile) {
         char buf[200];

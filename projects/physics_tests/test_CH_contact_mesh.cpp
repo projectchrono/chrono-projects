@@ -113,8 +113,8 @@ int main(int argc, char* argv[]) {
     object->SetInertiaXX(400.0 * ChVector3d(1, 1, 1));
     object->SetPos(pos);
     object->SetRot(rot);
-    object->SetPos_dt(init_vel);
-    object->SetWvel_par(init_omg);
+    object->SetLinVel(init_vel);
+    object->SetAngVelParent(init_omg);
     object->SetCollide(true);
     object->SetBodyFixed(false);
 
@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    auto trimesh = chrono_types::make_shared<geometry::ChTriangleMeshConnected>();
+    auto trimesh = chrono_types::make_shared<ChTriangleMeshConnected>();
     trimesh->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_tire.obj"), true, false);
 
     auto object_ct_shape = chrono_types::make_shared<ChCollisionShapeTriangleMesh>(object_mat, trimesh, false, false, 0.01);
