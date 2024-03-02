@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
     msectionH->SetYoungModulus(200.0e9);
     msectionH->SetGwithPoissonRatio(0.32);
     msectionH->SetAsRectangularSection(hbarW, thickZ);
-    msectionH->SetBeamRaleyghDamping(0.00);
+    msectionH->SetBeamRayleighDamping(0.00);
 
     ChBuilderBeamEuler builder;
 
@@ -139,7 +139,7 @@ int main(int argc, char* argv[]) {
     msectionV->SetYoungModulus(200.0e9);
     msectionV->SetGwithPoissonRatio(0.32);
     msectionV->SetAsRectangularSection(vbarW, thickZ);
-    msectionV->SetBeamRaleyghDamping(0.00);
+    msectionV->SetBeamRayleighDamping(0.00);
 
     builder.BuildBeam(my_mesh,               // the mesh where to put the created nodes and elements
                       msectionV,             // the ChBeamSectionAdvanced to use for the ChElementBeamEuler elements
