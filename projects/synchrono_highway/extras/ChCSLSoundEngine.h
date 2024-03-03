@@ -25,42 +25,40 @@
 
 #include "chrono/physics/ChSystem.h"
 #include "chrono/utils/ChUtilsChaseCamera.h"
-#include "chrono_irrlicht/ChIrrApp.h"
 #include "chrono_vehicle/ChApiVehicle.h"
 #include "chrono_vehicle/ChVehicle.h"
-#include "chrono_vehicle/wheeled_vehicle/utils/ChWheeledVehicleIrrApp.h"
+#include "chrono_vehicle/wheeled_vehicle/ChWheeledVehicleVisualSystemIrrlicht.h"
+
 #ifdef CHRONO_IRRKLANG
 #include "irrKlang.h"
 
 using namespace chrono::vehicle;
 
 namespace chrono {
-/// Sound effect tools for the CSL simulator
-///
+
+// Sound effect tools for the CSL simulator
 class ChCSLSoundEngine {
   public:
-
     /// Construct the sound reproduction engine
-    ChCSLSoundEngine(ChVehicle* vehicle);  ///< associated vehicle
-    //);
+    ChCSLSoundEngine(ChVehicle* vehicle);
 
     ~ChCSLSoundEngine();
 
-    /// Updates sound engine 
+    /// Updates sound engine
     void Synchronize(double time);
-    
-  
+
   private:
     ChVehicle* thisvehicle;
-    irrklang::ISound*  car_sound;
-    //irrklang::ISound* motor_sound;
+    irrklang::ISound* car_sound;
+    // irrklang::ISound* motor_sound;
     irrklang::ISoundEngine* sound_engine;
-    //std::vector<std::string> motor_soundfiles;
-    //std::vector<irrklang::ISound*> motor_sounds;
+    // std::vector<std::string> motor_soundfiles;
+    // std::vector<irrklang::ISound*> motor_sounds;
     double last_time_played = 0;
     int last_threshold = 0;
+};
 
-  }; 
-}// end namespace chrono
+}  // end namespace chrono
+
 #endif
 #endif

@@ -51,7 +51,7 @@ void ChCSLSoundEngine::Synchronize(double time){
   //update every 0.01 sec
   if(time-last_time_played>0.5){
       last_time_played = time;
-      double rpm = thisvehicle->GetPowertrain()->GetMotorSpeed() * 60 / CH_C_2PI;
+      double rpm = thisvehicle->GetPowertrainAssembly()->GetEngine()->GetMotorSpeed() * 60 / CH_C_2PI;
       double soundspeed = rpm / (2000.);  // denominator: to guess
       if (soundspeed < 0.1)
           soundspeed = 0.1;
