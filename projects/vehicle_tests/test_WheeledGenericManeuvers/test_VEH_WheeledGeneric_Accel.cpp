@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
     //ChSystem* my_system = vehicle.GetSystem();
     //my_system->SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
     //my_system->SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
-    //my_system->SetSolverMaxIterations(100);
+    //my_system->GetSolver()->AsIterative()->SetMaxIterations(100);
     //my_system->SetSolverTolerance(1e-6);
 
     // Create the ground
@@ -161,7 +161,7 @@ int main(int argc, char* argv[]) {
     // Create the path and the driver system
     // -------------------------------------
 
-    auto path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
+    auto path = ChBezierCurve::Read(vehicle::GetDataFile(path_file));
     ChPathFollowerDriver driver(vehicle, vehicle::GetDataFile(steering_controller_file),
                                 vehicle::GetDataFile(speed_controller_file), path, "my_path", target_speed);
     driver.Initialize();
@@ -173,7 +173,7 @@ int main(int argc, char* argv[]) {
     //// Create the ground body
     //auto ground = chrono_types::make_shared<ChBody>();
     //vehicle.GetSystem()->AddBody(ground);
-    //ground->SetBodyFixed(true);
+    //ground->SetFixed(true);
 
     //auto fixedJoint = chrono_types::make_shared<ChLinkLockLock>();
     //fixedJoint->Initialize(vehicle.GetChassisBody(), ground, ChCoordsys<>(initLoc, initRot));
@@ -225,9 +225,9 @@ int main(int argc, char* argv[]) {
         driver.ExportPathPovray(out_dir);
     }
 
-    utils::CSV_writer csv("\t");
-    csv.stream().setf(std::ios::scientific | std::ios::showpos);
-    csv.stream().precision(6);
+    utils::ChWriterCSV csv("\t");
+    csv.Stream().setf(std::ios::scientific | std::ios::showpos);
+    csv.Stream().precision(6);
 
     utils::ChRunningAverage fwd_acc_GC_filter(filter_window_size);
     utils::ChRunningAverage lat_acc_GC_filter(filter_window_size);
@@ -278,7 +278,7 @@ int main(int argc, char* argv[]) {
         // std::cout << vehicle.GetSystem()->GetSolverCallsCount() << std::endl;
         // Extract accelerations to add to the filter
         ChVector3d acc_CG = vehicle.GetChassisBody()->GetLinAcc();
-        acc_CG = vehicle.GetChassisBody()->GetCsys().TransformDirectionParentToLocal(acc_CG);
+        acc_CG = vehicle.GetChassisBody()->GetCoordsys().TransformDirectionParentToLocal(acc_CG);
         ChVector3d acc_driver = vehicle.GetPointAcceleration(driver_pos);
         double fwd_acc_CG = fwd_acc_GC_filter.Add(acc_CG.x());
         double lat_acc_CG = lat_acc_GC_filter.Add(acc_CG.y());
@@ -322,7 +322,7 @@ int main(int argc, char* argv[]) {
 
             if (state_output) {
                 ChVector3d vel_CG = vehicle.GetChassisBody()->GetLinVel();
-                vel_CG = vehicle.GetChassisBody()->GetCsys().TransformDirectionParentToLocal(vel_CG);
+                vel_CG = vehicle.GetChassisBody()->GetCoordsys().TransformDirectionParentToLocal(vel_CG);
 
                 ChVector3d vel_driver_abs =
                     vehicle.GetChassisBody()->GetFrame_REF_to_abs().PointSpeedLocalToParent(driver_pos);
@@ -402,7 +402,7 @@ int main(int argc, char* argv[]) {
     if (state_output) {
         char filename[100];
         sprintf(filename, "%s/output.dat", out_dir.c_str());
-        csv.write_to_file(filename);
+        csv.WriteToFile(filename);
     }
     return 0;
 }

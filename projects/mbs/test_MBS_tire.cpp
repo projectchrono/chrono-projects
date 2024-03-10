@@ -64,7 +64,7 @@ std::shared_ptr<ChBody> create_wheel(ChVector3d mposition, ChSystem& sys) {
         for (const auto& s : slice_shapes)
             mrigidBody->AddCollisionShape(s, ChFrame<>(VNULL, q));
     }
-    mrigidBody->SetCollide(true);
+    mrigidBody->EnableCollision(true);
 
     return mrigidBody;
 }
@@ -102,7 +102,7 @@ void create_some_falling_items(ChSystemNSC& sys) {
 
     auto mrigidBodyB = chrono_types::make_shared<ChBodyEasyBox>(10, 1, 10, 1000, true, true, ground_mat);
     sys.Add(mrigidBodyB);
-    mrigidBodyB->SetBodyFixed(true);
+    mrigidBodyB->SetFixed(true);
     mrigidBodyB->SetPos(ChVector3d(0, -0.5, 0));
 }
 

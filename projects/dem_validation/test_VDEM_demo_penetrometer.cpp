@@ -347,8 +347,8 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* sys) {
     obj->SetPos(ChVector3d(0, 0, initLoc));
     obj->SetRot(QuatFromAngleAxis(-CH_C_PI / 2, VECT_X));
     obj->SetLinVel(ChVector3d(0, 0, -vz));
-    obj->SetCollide(true);
-    obj->SetBodyFixed(false);
+    obj->EnableCollision(true);
+    obj->SetFixed(false);
 
     CreatePenetratorGeometry(obj, mat);
 
@@ -441,7 +441,7 @@ int main(int argc, char* argv[]) {
     cout << "Using " << threads << " threads" << endl;
 
     // Set gravitational acceleration
-    sys->Set_G_acc(ChVector3d(0, 0, -gravity));
+    sys->SetGravitationalAcceleration(ChVector3d(0, 0, -gravity));
 
     // Edit system settings
     sys->GetSettings()->solver.use_full_inertia_tensor = false;

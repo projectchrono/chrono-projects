@@ -228,8 +228,8 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     auto ground = chrono_types::make_shared<ChBody>();
 
     ground->SetIdentifier(Id_ground);
-    ground->SetBodyFixed(true);
-    ground->SetCollide(true);
+    ground->SetFixed(true);
+    ground->EnableCollision(true);
 
     // Attach geometry of the containing bin.  Disable contact ground-shearBox
     // and ground-loadPlate.
@@ -255,8 +255,8 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     box->SetIdentifier(Id_box);
     box->SetPos(ChVector3d(0, 0, 2 * hdimZ + r_g));
-    box->SetCollide(true);
-    box->SetBodyFixed(true);
+    box->EnableCollision(true);
+    box->SetFixed(true);
 
     // Add geometry of the shear box.  Disable contact with the load plate.
     utils::AddBoxGeometry(box.get(), mat_walls, ChVector3d(hthick, hdimY, h_scaling * hdimZ),
@@ -292,8 +292,8 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     plate->SetIdentifier(Id_plate);
     plate->SetMass(mass);
     plate->SetPos(ChVector3d(0, 0, (1 + 2 * h_scaling) * hdimZ));
-    plate->SetCollide(true);
-    plate->SetBodyFixed(true);
+    plate->EnableCollision(true);
+    plate->SetFixed(true);
 
     // Add geometry of the load plate.
     utils::AddBoxGeometry(plate.get(), mat_walls, ChVector3d(hdimX_p, hdimY, hdimZ), ChVector3d(0, 0, hdimZ));
@@ -424,8 +424,8 @@ void CreateBall(ChSystemMulticore* system) {
     ball->SetIdentifier(Id_ball);
     ball->SetMass(mass_ball);
     ball->SetPos(ChVector3d(0, 0, 1.01 * radius_ball));
-    ball->SetCollide(true);
-    ball->SetBodyFixed(false);
+    ball->EnableCollision(true);
+    ball->SetFixed(false);
 
     utils::AddSphereGeometry(ball.get(), mat_g, radius_ball);
 
@@ -504,7 +504,7 @@ int main(int argc, char* argv[]) {
 
     sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
-    sys->Set_G_acc(ChVector3d(0, 0, -gravity));
+    sys->SetGravitationalAcceleration(ChVector3d(0, 0, -gravity));
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();
@@ -606,7 +606,7 @@ int main(int argc, char* argv[]) {
             prismatic_plate_ground = std::static_pointer_cast<ChLinkLockPrismatic>(sys->SearchLink("prismatic_plate_ground"));
 
             // Release the load plate.
-            loadPlate->SetBodyFixed(false);
+            loadPlate->SetFixed(false);
 
             // Set plate mass from desired applied normal pressure
             double area = 4 * hdimX * hdimY;
@@ -638,14 +638,14 @@ int main(int argc, char* argv[]) {
             }
 
             // Release the shear box when using an actuator.
-            shearBox->SetBodyFixed(!use_actuator);
+            shearBox->SetFixed(!use_actuator);
 
             // Connect the load plate to the shear box.
             ConnectLoadPlate(sys, ground, loadPlate);
             prismatic_plate_ground = std::static_pointer_cast<ChLinkLockPrismatic>(sys->SearchLink("prismatic_plate_ground"));
 
             // Release the load plate.
-            loadPlate->SetBodyFixed(false);
+            loadPlate->SetFixed(false);
 
             // setBulkDensity(sys, desiredBulkDensity);
 
@@ -688,14 +688,14 @@ int main(int argc, char* argv[]) {
             }
 
             // Release the shear box when using an actuator.
-            shearBox->SetBodyFixed(!use_actuator);
+            shearBox->SetFixed(!use_actuator);
 
             // Connect the load plate to the shear box.
             ConnectLoadPlate(sys, ground, loadPlate);
             prismatic_plate_ground = std::static_pointer_cast<ChLinkLockPrismatic>(sys->SearchLink("prismatic_plate_ground"));
 
             // Release the load plate.
-            loadPlate->SetBodyFixed(false);
+            loadPlate->SetFixed(false);
 
             // Set plate mass from desired applied normal pressure
             double area = 4 * hdimX * hdimY;
@@ -851,14 +851,14 @@ int main(int argc, char* argv[]) {
             ChVector3d rtorqueA(0, 0, 0);
 
             if (use_actuator) {
-                rforcePbg = prismatic_box_ground->Get_react_force();
-                rtorquePbg = prismatic_box_ground->Get_react_torque();
+                rforcePbg = prismatic_box_ground->GetReactForce2();
+                rtorquePbg = prismatic_box_ground->GetReactTorque2();
 
-                rforcePpb = prismatic_plate_ground->Get_react_force();
-                rtorquePpb = prismatic_plate_ground->Get_react_torque();
+                rforcePpb = prismatic_plate_ground->GetReactForce2();
+                rtorquePpb = prismatic_plate_ground->GetReactTorque2();
 
-                rforceA = actuator->Get_react_force();
-                rtorqueA = actuator->Get_react_torque();
+                rforceA = actuator->GetReactForce2();
+                rtorqueA = actuator->GetReactTorque2();
             } else {
                 double xpos_new = pos_old.x() + desiredVelocity * time_step;
                 shearBox->SetPos(ChVector3d(xpos_new, pos_old.y(), pos_old.z()));

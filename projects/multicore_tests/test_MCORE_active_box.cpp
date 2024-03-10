@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     system->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Set method-independent solver settings
-    system->Set_G_acc(ChVector3d(0, 0, -9.8));
+    system->SetGravitationalAcceleration(ChVector3d(0, 0, -9.8));
     system->GetSettings()->solver.use_full_inertia_tensor = false;
     system->GetSettings()->solver.tolerance = 1e-3;
     system->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
@@ -103,8 +103,8 @@ int main(int argc, char* argv[]) {
 
     auto ground = chrono_types::make_shared<ChBody>();
     ground->SetPos(ChVector3d(0, 0, 0));
-    ground->SetBodyFixed(true);
-    ground->SetCollide(true);
+    ground->SetFixed(true);
+    ground->EnableCollision(true);
     utils::AddBoxGeometry(ground.get(), material_g, ChVector3d(1, 1, 0.1), ChVector3d(0, 0, -0.1));
     system->AddBody(ground);
 
@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
     auto ball = chrono_types::make_shared<ChBody>();
     ball->SetPos(ChVector3d(0, 0, 1));
     ball->SetLinVel(ChVector3d(0, 0, 8));
-    ball->SetCollide(true);
+    ball->EnableCollision(true);
     utils::AddSphereGeometry(ball.get(), material_b, 0.2);
     system->AddBody(ball);
 

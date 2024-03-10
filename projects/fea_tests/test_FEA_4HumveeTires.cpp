@@ -304,8 +304,8 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
     // Create rim for this mesh
     my_system.AddBody(Hub_1);
     Hub_1->SetIdentifier(Ident);
-    Hub_1->SetBodyFixed(false);
-    Hub_1->SetCollide(false);
+    Hub_1->SetFixed(false);
+    Hub_1->EnableCollision(false);
     Hub_1->SetMass(10);
     Hub_1->SetInertiaXX(ChVector3d(0.3, 0.3, 0.3));
     Hub_1->SetPos(rim_center);  // Y = -1m
@@ -461,7 +461,7 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
     // END OF INPUT DATA AND CREATE ARRAYS
 
     // Add initial velocity to the nodes (for rolling)
-    for (unsigned int i = 0; i < TireMesh->GetNnodes(); ++i) {
+    for (unsigned int i = 0; i < TireMesh->GetNumNodes(); ++i) {
         ChVector3d node_pos = std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(i))->GetPos();
         double tang_vel = ForVelocity * (node_pos.z()) / (HumveeVertPos);
         ChVector3d NodeVel(tang_vel, 0, 0.0);
@@ -514,9 +514,9 @@ int main(int argc, char* argv[]) {
 
     // Definition of the model
     ChSystemNSC my_system;
-    utils::CSV_writer out("\t");
-    out.stream().setf(std::ios::scientific | std::ios::showpos);
-    out.stream().precision(7);
+    utils::ChWriterCSV out("\t");
+    out.Stream().setf(std::ios::scientific | std::ios::showpos);
+    out.Stream().precision(7);
 
     // Set number of threads
 #ifdef CHRONO_OPENMP_ENABLED
@@ -529,8 +529,8 @@ int main(int argc, char* argv[]) {
     BGround = chrono_types::make_shared<ChBody>();
     my_system.AddBody(BGround);
     BGround->SetIdentifier(1);
-    BGround->SetBodyFixed(true);
-    BGround->SetCollide(false);
+    BGround->SetFixed(true);
+    BGround->EnableCollision(false);
     BGround->SetMass(1);
     BGround->SetInertiaXX(ChVector3d(1, 1, 0.2));
     BGround->SetPos(ChVector3d(-2, 0, 0));  // Y = -1m
@@ -570,7 +570,7 @@ int main(int argc, char* argv[]) {
     // optional, attach a texture for better visualization
     SimpChassis->SetPos(ChVector3d(0, 0, HumveeVertPos));
     SimpChassis->SetLinVel(ChVector3d(ForVelocity, 0, 0));
-    SimpChassis->SetBodyFixed(false);
+    SimpChassis->SetFixed(false);
 
     auto mtrussmesh = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     mtrussmesh->GetMesh()->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_chassis_simple.obj"));
@@ -580,7 +580,7 @@ int main(int argc, char* argv[]) {
 
     auto Bump = chrono_types::make_shared<ChBody>();
     Bump->SetMass(10);
-    Bump->SetBodyFixed(true);
+    Bump->SetFixed(true);
     Bump->SetPos(ChVector3d(BumpLongLoc, -1.0, 0.0));
     my_system.Add(Bump);
 
@@ -637,8 +637,8 @@ int main(int argc, char* argv[]) {
     auto mrigidBody = chrono_types::make_shared<ChBodyEasyBox>(20, 20, 0.00001, 1000, true, false);
     my_system.Add(mrigidBody);
     mrigidBody->SetPos(ChVector3d(0, 0, GroundLoc));
-    mrigidBody->SetBodyFixed(true);
-    my_system.Set_G_acc(ChVector3d(0, 0, -9.81));
+    mrigidBody->SetFixed(true);
+    my_system.SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
 
 // Set up solver
 #ifdef USE_MKL
@@ -651,9 +651,9 @@ int main(int argc, char* argv[]) {
     auto solver = chrono_types::make_shared<ChSolverMINRES>();
     solver->EnableDiagonalPreconditioner(true);
     solver->SetMaxIterations(100);
+    solver->SetTolerance(1e-12);
     solver->SetVerbose(false);
     my_system.SetSolver(solver);
-    my_system.SetSolverForceTolerance(1e-10);
 #endif
 
     my_system.Setup();

@@ -123,10 +123,10 @@ int main(int argc, char* argv[]) {
     // Create a material, that must be assigned to each solid element in the mesh,
     // and set its parameters
     auto mmaterial = chrono_types::make_shared<ChContinuumElastic>();
-    mmaterial->Set_E(0.003e9);  // rubber 0.01e9, steel 200e9
-    mmaterial->Set_v(0.4);
-    mmaterial->Set_RayleighDampingK(0.004);
-    mmaterial->Set_density(1000);
+    mmaterial->SetYoungModulus(0.003e9);  // rubber 0.01e9, steel 200e9
+    mmaterial->SetPoissonRatio(0.4);
+    mmaterial->SetRayleighDampingBeta(0.004);
+    mmaterial->SetDensity(1000);
 
     // Load an ABAQUS .INP tetahedron mesh file from disk, defining a tetahedron mesh.
     // Note that not all features of INP files are supported. Also, quadratic tetahedrons are promoted to linear.
@@ -230,8 +230,8 @@ int main(int argc, char* argv[]) {
     auto solver = chrono_types::make_shared<ChSolverMINRES>();
     solver->EnableWarmStart(true);
     solver->SetMaxIterations(40);
+    solver->SetTolerance(1e-12);
     sys.SetSolver(solver);
-    sys.SetSolverForceTolerance(1e-10);
 
     // Change type of integrator:
     sys.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
@@ -240,7 +240,7 @@ int main(int argc, char* argv[]) {
     ChSystemMulticoreNSC* systemG = new ChSystemMulticoreNSC();
 
     // Set gravitational acceleration
-    systemG->Set_G_acc(sys.Get_G_acc());
+    systemG->SetGravitationalAcceleration(sys.GetGravitationalAcceleration());
 
     // Set solver parameters
     systemG->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
@@ -296,8 +296,8 @@ int main(int argc, char* argv[]) {
         triangle->SetPos(pos);
         triangle->SetLinVel(vel);
         triangle->SetRot(ChQuaternion<>(1, 0, 0, 0));
-        triangle->SetCollide(true);
-        triangle->SetBodyFixed(true);
+        triangle->EnableCollision(true);
+        triangle->SetFixed(true);
 
         std::string name = "tri" + std::to_string(triId);
         chrono::utils::AddTriangleGeometry(triangle.get(), triMat, vert_pos[triangles[i].x()] - pos,
@@ -363,14 +363,14 @@ int main(int argc, char* argv[]) {
 
             chrono::utils::WriteVisualizationAssets(systemG, filename, false);
             std::string delim = ",";
-            chrono::utils::CSV_writer csv(delim);
+            chrono::utils::ChWriterCSV csv(delim);
             csv << triangles.size() << std::endl;
             for (int i = 0; i < triangles.size(); i++) {
                 csv << systemG->GetBodies().at(i)->GetPos() << vert_pos[triangles[i].x()]
                     << vert_pos[triangles[i].y()] << vert_pos[triangles[i].z()] << std::endl;
             }
             sprintf(filename, "../POVRAY/triangles_%d.dat", frameIndex);
-            csv.write_to_file(filename);
+            csv.WriteToFile(filename);
         }
 #endif
         // END STEP 1

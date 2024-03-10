@@ -219,7 +219,7 @@ int main(int argc, char* argv[]) {
 
     sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
-    sys->Set_G_acc(ChVector3d(0, -gravity, 0));
+    sys->SetGravitationalAcceleration(ChVector3d(0, -gravity, 0));
 
     // Set number of threads
 
@@ -289,8 +289,8 @@ int main(int argc, char* argv[]) {
     bin->SetIdentifier(binId);
     bin->SetMass(1);
     bin->SetPos(ChVector3d(0, -height / 2, 0));
-    bin->SetBodyFixed(true);
-    bin->SetCollide(true);
+    bin->SetFixed(true);
+    bin->EnableCollision(true);
 
     AddWall(bin, mat_ext, ChVector3d(width / 2, thickness / 2, length / 2), ChVector3d(0, 0, 0), true);
     AddWall(bin, mat_ext, ChVector3d(thickness / 2, height / 2, length / 2 + thickness),
@@ -315,8 +315,8 @@ int main(int argc, char* argv[]) {
     box->SetIdentifier(boxId);
     box->SetMass(1);
     box->SetPos(ChVector3d(0, height / 2 + radius, 0));
-    box->SetBodyFixed(true);
-    box->SetCollide(true);
+    box->SetFixed(true);
+    box->EnableCollision(true);
 
     AddWall(box, mat_ext, ChVector3d(thickness / 2, height / 2, length / 2 + thickness),
             ChVector3d(-width / 2 - thickness / 2, 0, 0), true);
@@ -342,8 +342,8 @@ int main(int argc, char* argv[]) {
     plate->SetIdentifier(binId);
     plate->SetMass(normal_pressure * shear_Area / gravity);
     plate->SetPos(ChVector3d(0, 2.0 * radius * float(a) + thickness, 0));
-    plate->SetBodyFixed(true);
-    plate->SetCollide(true);
+    plate->SetFixed(true);
+    plate->EnableCollision(true);
 
     AddWall(plate, mat_ext, ChVector3d(width / 2, thickness / 2, length / 2), ChVector3d(0, 0, 0), true);
     plate->GetCollisionModel()->SetFamily(3);
@@ -372,8 +372,8 @@ int main(int argc, char* argv[]) {
                 ball->SetMass(mass);
                 ball->SetInertiaXX((2.0 / 5.0) * mass * radius * radius * ChVector3d(1, 1, 1));
                 ball->SetPos(ChVector3d(ball_x, ball_y, ball_z));
-                ball->SetBodyFixed(false);
-                ball->SetCollide(true);
+                ball->SetFixed(false);
+                ball->EnableCollision(true);
 
                 auto ball_ct_shape = chrono_types::make_shared<ChCollisionShapeSphere>(material, radius);
                 ball->AddCollisionShape(ball_ct_shape);
@@ -430,7 +430,7 @@ int main(int argc, char* argv[]) {
             if (dense == true)
                 material->SetFriction(0.01f);
             plate->SetPos(ChVector3d(0, height, 0));
-            plate->SetBodyFixed(false);
+            plate->SetFixed(false);
             settling = false;
         }
 

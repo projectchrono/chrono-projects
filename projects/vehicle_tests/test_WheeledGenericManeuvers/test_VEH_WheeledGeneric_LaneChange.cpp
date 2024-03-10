@@ -161,7 +161,7 @@ int main(int argc, char* argv[]) {
     // Create the path and the driver system
     // -------------------------------------
 
-    auto path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
+    auto path = ChBezierCurve::Read(vehicle::GetDataFile(path_file));
     ChPathFollowerDriver driver(vehicle, vehicle::GetDataFile(steering_controller_file),
                                 vehicle::GetDataFile(speed_controller_file), path, "my_path", target_speed);
     driver.Initialize();
@@ -213,9 +213,9 @@ int main(int argc, char* argv[]) {
         driver.ExportPathPovray(out_dir);
     }
 
-    utils::CSV_writer csv("\t");
-    csv.stream().setf(std::ios::scientific | std::ios::showpos);
-    csv.stream().precision(6);
+    utils::ChWriterCSV csv("\t");
+    csv.Stream().setf(std::ios::scientific | std::ios::showpos);
+    csv.Stream().precision(6);
 
     utils::ChRunningAverage fwd_acc_GC_filter(filter_window_size);
     utils::ChRunningAverage lat_acc_GC_filter(filter_window_size);
@@ -266,7 +266,7 @@ int main(int argc, char* argv[]) {
         // std::cout << vehicle.GetSystem()->GetSolverCallsCount() << std::endl;
         // Extract accelerations to add to the filter
         ChVector3d acc_CG = vehicle.GetChassisBody()->GetLinAcc();
-        acc_CG = vehicle.GetChassisBody()->GetCsys().TransformDirectionParentToLocal(acc_CG);
+        acc_CG = vehicle.GetChassisBody()->GetCoordsys().TransformDirectionParentToLocal(acc_CG);
         ChVector3d acc_driver = vehicle.GetPointAcceleration(driver_pos);
         double fwd_acc_CG = fwd_acc_GC_filter.Add(acc_CG.x());
         double lat_acc_CG = lat_acc_GC_filter.Add(acc_CG.y());
@@ -309,7 +309,7 @@ int main(int argc, char* argv[]) {
 
             if (state_output) {
                 ChVector3d vel_CG = vehicle.GetChassisBody()->GetLinVel();
-                vel_CG = vehicle.GetChassisBody()->GetCsys().TransformDirectionParentToLocal(vel_CG);
+                vel_CG = vehicle.GetChassisBody()->GetCoordsys().TransformDirectionParentToLocal(vel_CG);
 
                 ChVector3d vel_driver_abs =
                     vehicle.GetChassisBody()->GetFrame_REF_to_abs().PointSpeedLocalToParent(driver_pos);
@@ -384,7 +384,7 @@ int main(int argc, char* argv[]) {
     if (state_output) {
         char filename[100];
         sprintf(filename, "%s/output_%dmps_LaneChange.dat", out_dir.c_str(), int(std::round(target_speed)));
-        csv.write_to_file(filename);
+        csv.WriteToFile(filename);
     }
     return 0;
 }

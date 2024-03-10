@@ -136,7 +136,8 @@ int main(int argc, char* argv[]) {
     // Create the system
     // -----------------
 
-    ChSystemSMC system(use_mat_properties);
+    ChSystemSMC system;
+    system.UseMaterialProperties(use_mat_properties);
     system.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
 
     // Set the SMC contact force model
@@ -148,7 +149,7 @@ int main(int argc, char* argv[]) {
     // Set contact forces as stiff (to force Jacobian computation) or non-stiff
     system.SetStiffContact(stiff_contact);
 
-    system.Set_G_acc(ChVector3d(0, gravity, 0));
+    system.SetGravitationalAcceleration(ChVector3d(0, gravity, 0));
 
     // Create a material (will be used by both objects)
     auto material = chrono_types::make_shared<ChContactMaterialSMC>();
@@ -171,8 +172,8 @@ int main(int argc, char* argv[]) {
     ball->SetRot(rot);
     ball->SetLinVel(init_vel);
     ball->SetAngVelParent(init_omg);
-    ball->SetCollide(true);
-    ball->SetBodyFixed(false);
+    ball->EnableCollision(true);
+    ball->SetFixed(false);
 
     auto ball_ct_shape = chrono_types::make_shared<ChCollisionShapeSphere>(material, radius);
     ball->AddCollisionShape(ball_ct_shape);
@@ -190,8 +191,8 @@ int main(int argc, char* argv[]) {
     ground->SetMass(1);
     ground->SetPos(ChVector3d(0, 0, 0));
     ground->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    ground->SetCollide(true);
-    ground->SetBodyFixed(true);
+    ground->EnableCollision(true);
+    ground->SetFixed(true);
 
     auto ground_ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(material, width, thickness, length);
     ground->AddCollisionShape(ground_ct_shape, ChFrame<>(ChVector3d(0, -thickness / 2, 0), QUNIT));
@@ -239,8 +240,8 @@ int main(int argc, char* argv[]) {
             auto minres_solver = chrono_types::make_shared<ChSolverMINRES>();
             minres_solver->EnableDiagonalPreconditioner(true);
             minres_solver->SetMaxIterations(100);
+            minres_solver->SetTolerance(1e-9);
             system.SetSolver(minres_solver);
-            system.SetSolverForceTolerance(1e-6);
             break;
         }
         case ChSolver::Type::PARDISO_MKL: {
@@ -254,8 +255,8 @@ int main(int argc, char* argv[]) {
         }
         default: {
             std::cout << "Using DEFAULT solver.\n";
-            system.SetSolverMaxIterations(100);
-            system.SetSolverForceTolerance(1e-6);
+            system.GetSolver()->AsIterative()->SetMaxIterations(100);
+            system.GetSolver()->AsIterative()->SetTolerance(1e-9);
             break;
         }
     }

@@ -78,7 +78,7 @@ void MakeWheel(ChSystemSMC& sys,
 
     // Apply initial speed and angular speed
     double speed_x0 = 0.5;
-    for (unsigned int i = 0; i < my_mesh->GetNnodes(); ++i) {
+    for (unsigned int i = 0; i < my_mesh->GetNumNodes(); ++i) {
         auto node_pos = std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))->GetPos();
         ChVector3d tang_vel = Vcross(ChVector3d(tire_w0, 0, 0), node_pos - tire_center);
         std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))
@@ -187,7 +187,7 @@ int main(int argc, char* argv[]) {
     // RIGID BODIES
     // Create some rigid bodies, for instance a floor:
     auto mfloor = chrono_types::make_shared<ChBodyEasyBox>(15, 0.2, 15, 2700, true, true, mysurfmaterial);
-    mfloor->SetBodyFixed(true);
+    mfloor->SetFixed(true);
     mfloor->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/concrete.jpg"));
     sys.Add(mfloor);
 
@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
     auto mtruss = chrono_types::make_shared<ChBodyAuxRef>();
     mtruss->SetPos(vehicle_center);
     mtruss->SetLinVel(ChVector3d(0, 0, tire_vel_z0));
-    mtruss->SetBodyFixed(false);
+    mtruss->SetFixed(false);
     mtruss->SetMass(100);
     mtruss->SetInertiaXX(ChVector3d(100, 100, 100));
     sys.Add(mtruss);
@@ -209,7 +209,7 @@ int main(int argc, char* argv[]) {
     if (true) {
         auto mfloor_step = chrono_types::make_shared<ChBodyEasyBox>(3, 0.2, 0.5, 2700, true, true, mysurfmaterial);
         mfloor_step->SetPos(ChVector3d(2, 0.1, -1.8));
-        mfloor_step->SetBodyFixed(true);
+        mfloor_step->SetFixed(true);
         sys.Add(mfloor_step);
     }
 
@@ -224,7 +224,7 @@ int main(int argc, char* argv[]) {
                                 ChVector3d(ChRandom::Get() - 0.5, 0, ChRandom::Get() - 0.5).Normalize());
             mcube->Move(ChCoordsys<>(VNULL, vrot));
             mcube->SetPos(ChVector3d((ChRandom::Get() - 0.5) * 2.8, ChRandom::Get() * 0.1, -ChRandom::Get() * 3.2 - 1.1));
-            mcube->SetBodyFixed(true);
+            mcube->SetFixed(true);
             mcube->GetVisualShape(0)->SetColor(ChColor(0.3f, 0.3f, 0.3f));
             sys.Add(mcube);
         }
@@ -249,10 +249,10 @@ int main(int argc, char* argv[]) {
 
     // Create a material, that must be assigned to rubber of tires
     auto mtirematerial = chrono_types::make_shared<ChContinuumElastic>();
-    mtirematerial->Set_E(0.016e9);  // rubber 0.01e9, steel 200e9
-    mtirematerial->Set_v(0.4);
-    mtirematerial->Set_RayleighDampingK(0.004);
-    mtirematerial->Set_density(1000);
+    mtirematerial->SetYoungModulus(0.016e9);  // rubber 0.01e9, steel 200e9
+    mtirematerial->SetPoissonRatio(0.4);
+    mtirematerial->SetRayleighDampingBeta(0.004);
+    mtirematerial->SetDensity(1000);
 
     // Make a wheel and connect it to truss:
     std::shared_ptr<ChBody> mrim_BL;
@@ -309,8 +309,8 @@ int main(int argc, char* argv[]) {
         solver->EnableWarmStart(true);
         solver->SetMaxIterations(90);
         solver->SetVerbose(false);
+        solver->SetTolerance(1e-12);
         sys.SetSolver(solver);
-        sys.SetSolverForceTolerance(1e-10);
     */
     // Change solver to pluggable PardisoMKL
     auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();

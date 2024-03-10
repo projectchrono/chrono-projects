@@ -224,7 +224,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Create multicore SMC system" << std::endl;
     ChSystemMulticoreSMC system;
     system.SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
-    system.Set_G_acc(ChVector3d(0, 0, -9.80665));
+    system.SetGravitationalAcceleration(ChVector3d(0, 0, -9.80665));
 
     // Set number of threads
     system.SetNumThreads(std::min(threads, ChOMP::GetNumProcs()));
@@ -261,8 +261,8 @@ int main(int argc, char* argv[]) {
     // Ground body
     auto ground = chrono_types::make_shared<ChBody>();
     ground->SetIdentifier(-1);
-    ground->SetBodyFixed(true);
-    ground->SetCollide(true);
+    ground->SetFixed(true);
+    ground->EnableCollision(true);
 
     // Bottom box
     chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector3d(hdimX, hdimY, hthick), ChVector3d(0, 0, -hthick),
@@ -315,9 +315,9 @@ int main(int argc, char* argv[]) {
     vehicle->SetRoadWheelVisualizationType(VisualizationType::MESH);
     vehicle->SetTrackShoeVisualizationType(VisualizationType::MESH);
 
-    ////vehicle->SetCollide(TrackCollide::NONE);
-    ////vehicle->SetCollide(TrackCollide::WHEELS_LEFT | TrackCollide::WHEELS_RIGHT);
-    ////vehicle->SetCollide(TrackCollide::ALL & (~TrackCollide::SPROCKET_LEFT) & (~TrackCollide::SPROCKET_RIGHT));
+    ////vehicle->EnableCollision(TrackCollide::NONE);
+    ////vehicle->EnableCollision(TrackCollide::WHEELS_LEFT | TrackCollide::WHEELS_RIGHT);
+    ////vehicle->EnableCollision(TrackCollide::ALL & (~TrackCollide::SPROCKET_LEFT) & (~TrackCollide::SPROCKET_RIGHT));
 
     // Initialize the powertrain system
     vehicle->InitializePowertrain(powertrain);
@@ -343,9 +343,9 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    chrono::utils::CSV_writer csv("\t");
-    csv.stream().setf(std::ios::scientific | std::ios::showpos);
-    csv.stream().precision(6);
+    chrono::utils::ChWriterCSV csv("\t");
+    csv.Stream().setf(std::ios::scientific | std::ios::showpos);
+    csv.Stream().precision(6);
 
     // ---------------
     // Simulation loop
@@ -387,7 +387,7 @@ int main(int argc, char* argv[]) {
 
         const ChVector3d& pos_CG = vehicle->GetChassis()->GetPos();
         ChVector3d vel_CG = vehicle->GetChassisBody()->GetLinVel();
-        vel_CG = vehicle->GetChassisBody()->GetCsys().TransformDirectionParentToLocal(vel_CG);
+        vel_CG = vehicle->GetChassisBody()->GetCoordsys().TransformDirectionParentToLocal(vel_CG);
 
         // Vehicle and Control Values
         csv << time << driver_inputs.m_steering << driver_inputs.m_throttle << driver_inputs.m_braking;
@@ -422,13 +422,13 @@ int main(int argc, char* argv[]) {
             next_out_frame += out_steps;
             num_contacts = 0;
 
-            csv.write_to_file(out_dir + "/output.dat");
+            csv.WriteToFile(out_dir + "/output.dat");
         }
 
         // Release the vehicle chassis at the end of the hold time.
         if (vehicle->GetChassis()->IsFixed() && time > time_hold) {
             std::cout << std::endl << "Release vehicle t = " << time << std::endl;
-            vehicle->GetChassisBody()->SetBodyFixed(false);
+            vehicle->GetChassisBody()->SetFixed(false);
         }
 
         // Update modules (process inputs from other modules)
@@ -465,7 +465,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Simulation time:   " << exec_time << std::endl;
     std::cout << "Number of threads: " << threads << std::endl;
 
-    csv.write_to_file(out_dir + "/output.dat");
+    csv.WriteToFile(out_dir + "/output.dat");
 
     return 0;
 }

@@ -49,15 +49,15 @@ int main(int argc, char* argv[]) {
 
     ChSystemNSC system;
 
-    system.Set_G_acc(ChVector3d(0, gravity, 0));
+    system.SetGravitationalAcceleration(ChVector3d(0, gravity, 0));
 
 
     // Create ground
     auto ground = chrono_types::make_shared<ChBody>();
     system.AddBody(ground);
     ground->SetIdentifier(0);
-    ground->SetCollide(false);
-    ground->SetBodyFixed(true);
+    ground->EnableCollision(false);
+    ground->SetFixed(true);
 
     // Create wheel
     auto wheel = chrono_types::make_shared<ChBody>();
@@ -67,8 +67,8 @@ int main(int argc, char* argv[]) {
     wheel->SetPos(init_pos);
     wheel->SetRot(init_rot);
     wheel->SetAngVelLocal(ChVector3d(0, 0, 100));
-    wheel->SetCollide(false);
-    wheel->SetBodyFixed(false);
+    wheel->EnableCollision(false);
+    wheel->SetFixed(false);
 
     auto cyl = chrono_types::make_shared<ChVisualShapeCylinder>(0.2, 0.1);
     cyl->SetTexture(GetChronoDataFile("textures/bluewhite.png"));
@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
 
     // Equivalent ways of initializing the brake link
     ////brake->Initialize(ground, wheel, ChCoordsys<>(init_pos, init_rot));
-    ////brake->Initialize(ground, wheel, wheel->GetCsys() * joint->GetMarker2()->GetCsys());
+    ////brake->Initialize(ground, wheel, wheel->GetCoordsys() * joint->GetMarker2()->GetCoordsys());
     brake->Initialize(ground, wheel, true, *joint->GetMarker1(), *joint->GetMarker2());
 
     // Create the Irrlicht visualization
@@ -103,8 +103,8 @@ int main(int argc, char* argv[]) {
     auto minres_solver = chrono_types::make_shared<ChSolverMINRES>();
     minres_solver->EnableDiagonalPreconditioner(true);
     minres_solver->SetMaxIterations(100);
+    minres_solver->SetTolerance(1e-9);
     system.SetSolver(minres_solver);
-    system.SetSolverForceTolerance(1e-6);
 
     // ---------------
     // Simulation loop

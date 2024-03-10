@@ -85,11 +85,11 @@ int main(int argc, char* argv[]) {
     // Create the physical system and set gravity along negative Z
     ChSystemNSC system;
     system.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
-    system.Set_G_acc(ChVector3d(0, 0, -9.81));
+    system.SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
 
     system.SetSolverType(ChSolver::Type::APGD);
-    system.SetSolverMaxIterations(1000);
-    system.SetSolverTolerance(1e-9);
+    system.GetSolver()->AsIterative()->SetMaxIterations(1000);
+    system.GetSolver()->AsIterative()->SetTolerance(1e-12);
     system.SetMaxPenetrationRecoverySpeed(0);
 
     // Create a material (will be used by both objects)
@@ -100,8 +100,8 @@ int main(int argc, char* argv[]) {
     // Ground
     auto ground = chrono_types::make_shared<ChBody>();
     system.AddBody(ground);
-    ground->SetBodyFixed(true);
-    ground->SetCollide(true);
+    ground->SetFixed(true);
+    ground->EnableCollision(true);
 
     auto ground_ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(material, 4, 2, 1);
     ground->AddCollisionShape(ground_ct_shape, ChFrame<>(ChVector3d(0, 0, -1), QUNIT));
@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) {
     ball->SetInertiaXX(ChVector3d(0.4, 0.4, 0.4));
     ball->SetPos(ChVector3d(0, 0, 1));
     ball->SetLinVel(ChVector3d(2, 0, 0));
-    ball->SetCollide(true);
+    ball->EnableCollision(true);
 
     auto ball_ct_shape = chrono_types::make_shared<ChCollisionShapeSphere>(material, 1);
     ball->AddCollisionShape(ball_ct_shape);

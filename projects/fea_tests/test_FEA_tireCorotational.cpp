@@ -112,10 +112,10 @@ int main(int argc, char* argv[]) {
 
     // Mesh material
     auto mesh_material = chrono_types::make_shared<ChContinuumElastic>();
-    mesh_material->Set_E(0.016e9);  // rubber 0.01e9, steel 200e9
-    mesh_material->Set_v(0.4);
-    mesh_material->Set_RayleighDampingK(0.004);
-    mesh_material->Set_density(1000);
+    mesh_material->SetYoungModulus(0.016e9);  // rubber 0.01e9, steel 200e9
+    mesh_material->SetPoissonRatio(0.4);
+    mesh_material->SetRayleighDampingBeta(0.004);
+    mesh_material->SetDensity(1000);
 
     // Create tire mesh from ABAQUS input file
     auto my_mesh = chrono_types::make_shared<ChMesh>();
@@ -139,7 +139,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Apply initial speed and angular speed
-    for (unsigned int i = 0; i < my_mesh->GetNnodes(); ++i) {
+    for (unsigned int i = 0; i < my_mesh->GetNumNodes(); ++i) {
         ChVector3d node_pos = std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))->GetPos();
         ChVector3d tang_vel = Vcross(ChVector3d(tire_w0, 0, 0), node_pos - tire_center);
         std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))
@@ -211,7 +211,7 @@ int main(int argc, char* argv[]) {
 
     // Create ground
     auto mfloor = chrono_types::make_shared<ChBodyEasyBox>(2, 0.2, 6, 2700, true, true, mysurfmaterial);
-    mfloor->SetBodyFixed(true);
+    mfloor->SetFixed(true);
     sys.Add(mfloor);
 
     if (visualization) {
@@ -250,8 +250,8 @@ int main(int argc, char* argv[]) {
             solver->EnableWarmStart(true);
             solver->SetMaxIterations(40);
             solver->SetVerbose(false);
+            solver->SetTolerance(1e-12);
             sys.SetSolver(solver);
-            sys.SetSolverForceTolerance(1e-10);
             break;
         }
         case ChSolver::Type::PARDISO_MKL: {

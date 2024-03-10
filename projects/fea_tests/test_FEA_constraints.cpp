@@ -62,11 +62,11 @@ void test_beam(const std::string& name,  /// test name
     // Create the system
     ChSystemNSC my_system;
     double g = 10;
-    my_system.Set_G_acc(ChVector3d(0, 0, -g));
+    my_system.SetGravitationalAcceleration(ChVector3d(0, 0, -g));
 
     // Create the ground body
     auto ground = chrono_types::make_shared<ChBody>();
-    ground->SetBodyFixed(true);
+    ground->SetFixed(true);
     my_system.AddBody(ground);
 
     // Create the FEA mesh
@@ -132,9 +132,9 @@ void test_beam(const std::string& name,  /// test name
     solver->EnableDiagonalPreconditioner(true);
     solver->EnableWarmStart(true);
     solver->SetMaxIterations(200);
+    solver->SetTolerance(1e-12);
     solver->SetVerbose(false);
     my_system.SetSolver(solver);
-    my_system.SetSolverForceTolerance(1e-10);
 
     // my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
     my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT);
@@ -143,7 +143,7 @@ void test_beam(const std::string& name,  /// test name
     // Simulation loop
     double step = 1e-4;
 
-    utils::CSV_writer csv("  ");
+    utils::ChWriterCSV csv("  ");
     ChVector3d rforce(0);
     ChVector3d rtorque(0);
 
@@ -153,15 +153,15 @@ void test_beam(const std::string& name,  /// test name
         ChVector3d pos = node2->GetPos();
 
         {
-            ChCoordsys<> csys = point_cnstr->GetLinkAbsoluteCoords();
+            auto frame = point_cnstr->GetFrameAbs();
             rforce = point_cnstr->GetReactionOnBody();
-            rforce = csys.TransformDirectionLocalToParent(rforce);
+            rforce = frame.TransformDirectionLocalToParent(rforce);
         }
 
         if (constrain_dir) {
-            ChCoordsys<> csys = dir_cnstr->GetLinkAbsoluteCoords();
+            auto frame = dir_cnstr->GetFrameAbs();
             rtorque = dir_cnstr->GetReactionOnBody();
-            rtorque = csys.TransformDirectionLocalToParent(rtorque);
+            rtorque = frame.TransformDirectionLocalToParent(rtorque);
         }
 
         csv << my_system.GetChTime() << pos << rforce << rtorque << std::endl;
@@ -179,7 +179,7 @@ void test_beam(const std::string& name,  /// test name
 
     // Final beam configuration
     int num_points = 51;
-    ChVectorDynamic<> displ(beam_elem->GetNdofs());
+    ChVectorDynamic<> displ(beam_elem->GetNumCoordsPosLevel());
     beam_elem->GetStateBlock(displ);
     std::vector<ChVector3d> P(num_points);
     for (int i = 0; i < num_points; i++) {
@@ -207,7 +207,7 @@ void test_beam(const std::string& name,  /// test name
 
 #ifdef CHRONO_POSTPROCESS
     std::string out_file = name + ".out";
-    csv.write_to_file(out_file);
+    csv.WriteToFile(out_file);
 
     {
         std::string gpl_file = name + "_forces.gpl";
@@ -234,11 +234,11 @@ void test_beam(const std::string& name,  /// test name
     }
 
     {
-        utils::CSV_writer csv(" ");
+        utils::ChWriterCSV csv(" ");
         for (int i = 0; i < num_points; i++)
             csv << P[i] << std::endl;
         std::string out_file = name + "_beam.out";
-        csv.write_to_file(out_file);
+        csv.WriteToFile(out_file);
 
         std::string gpl_file = name + "_beam.gpl";
         std::string title = name + ": final beam configuration";

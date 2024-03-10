@@ -1219,9 +1219,9 @@ int main(int argc, char* argv[]) {
     // of elements and their referenced nodes.
     auto my_mesh = chrono_types::make_shared<ChMesh>();
 
-    utils::CSV_writer out("\t");
-    out.stream().setf(std::ios::scientific | std::ios::showpos);
-    out.stream().precision(7);
+    utils::ChWriterCSV out("\t");
+    out.Stream().setf(std::ios::scientific | std::ios::showpos);
+    out.Stream().precision(7);
 
     int TotalNumNodes;
     // Matricies to hold the state informatino for the nodes and rigid bodies
@@ -1345,7 +1345,7 @@ int main(int argc, char* argv[]) {
     // Create rim body
     auto Rim = chrono_types::make_shared<ChBody>();
     sys.Add(Rim);
-    Rim->SetBodyFixed(false);
+    Rim->SetFixed(false);
     Rim->SetPos(ChVector3d(0.0, 0.0, 0.4673));
     Rim->SetRot(ChQuaternion<>(1.0, 0.0, 0.0, 0.0));
     Rim->SetPosDer(ChVector3d(0.0, 0.0, 0.0));
@@ -1364,13 +1364,13 @@ int main(int argc, char* argv[]) {
 
     // Create ground body
     auto Ground = chrono_types::make_shared<ChBody>();
-    Ground->SetBodyFixed(true);
+    Ground->SetFixed(true);
     Ground->SetPos(ChVector3d(0.0, 0.0, -0.02));
     Ground->SetRot(ChQuaternion<>(1.0, 0.0, 0.0, 0.0));
     sys.Add(Ground);
 
     // Apply gravitational acceleration
-    sys.Set_G_acc(ChVector3d(0.0, 0.0, 0.0));
+    sys.SetGravitationalAcceleration(ChVector3d(0.0, 0.0, 0.0));
     my_mesh->SetAutomaticGravity(false);
 
     // First: loads must be added to "load containers",
@@ -1572,7 +1572,7 @@ int main(int argc, char* argv[]) {
     auto mrigidBody = chrono_types::make_shared<ChBodyEasyBox>(10, 10, 0.000001, 1000, true, false);  // no collision
     sys.Add(mrigidBody);
     mrigidBody->SetPos(ChVector3d(0, 0, ContactZ));
-    mrigidBody->SetBodyFixed(true);
+    mrigidBody->SetFixed(true);
 
     // Create the Irrlicht visualization system
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
@@ -1676,9 +1676,9 @@ int main(int argc, char* argv[]) {
         int AccuNoIterations = 0;
         double ChTime = 0.0;
 
-        // utils::CSV_writer out("\t");
-        //	out.stream().setf(std::ios::scientific | std::ios::showpos);
-        out.stream().precision(7);
+        // utils::ChWriterCSV out("\t");
+        //	out.Stream().setf(std::ios::scientific | std::ios::showpos);
+        out.Stream().precision(7);
 
         while (vis->Run()) {
             // Apply vertical load to rim body
@@ -1806,7 +1806,7 @@ int main(int argc, char* argv[]) {
             std::cout << "Number of Contact Points: " << NumCont << "\n\n\n";
 
             // out << sys.GetChTime() << Rim->GetPos().x() << Rim->GetPos().y() << Rim->GetPos().z()<< std::endl;
-            // out.write_to_file("../VertPosRim.txt");
+            // out.WriteToFile("../VertPosRim.txt");
         }
     } else {
         ////////////////////////////////////////////////////

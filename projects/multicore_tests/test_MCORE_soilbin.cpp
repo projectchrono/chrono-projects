@@ -204,8 +204,8 @@ void CreateObject(ChSystemMulticore* system, double z) {
     auto obj = chrono_types::make_shared<ChBody>();
 
     obj->SetIdentifier(0);
-    obj->SetCollide(true);
-    obj->SetBodyFixed(false);
+    obj->EnableCollision(true);
+    obj->SetFixed(false);
 
     // ----------------------------------------------------
     // Depending on the shape of the falling object,
@@ -335,7 +335,7 @@ int main(int argc, char* argv[]) {
 #endif
 
     msystem->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
-    msystem->Set_G_acc(ChVector3d(0, 0, -9.81));
+    msystem->SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
 
     // ----------------------
     // Set number of threads.

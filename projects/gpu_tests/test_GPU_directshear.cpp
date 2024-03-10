@@ -217,10 +217,10 @@ int main(int argc, char* argv[]) {
     ChSystemSMC ch_sys;
     double grav_mag = std::sqrt(grav_X * grav_X + grav_Y * grav_Y + grav_Z * grav_Z);
 
-    ch_sys.Set_G_acc(ChVector3d(grav_X, grav_Y, grav_Z));
+    ch_sys.SetGravitationalAcceleration(ChVector3d(grav_X, grav_Y, grav_Z));
 
     auto plate = std::make_shared<ChBody>();
-    plate->SetBodyFixed(true);
+    plate->SetFixed(true);
     plate->SetPos(ChVector3d(0, 0, box_Z / 2.0));  // Initially out of the way
     plate_mass = normal_stresses[normal_stress_id] * box_xy * box_xy / grav_mag;
     plate->SetMass(plate_mass);
@@ -249,7 +249,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Adding plate at "
               << "(0, 0, " << plate_z << ")" << std::endl;
     plate->SetPos(ChVector3d(0, 0, plate_z));
-    plate->SetBodyFixed(false);
+    plate->SetFixed(false);
 
     // float* forces = new float[numMeshes * FAM_ENTRIES_FORCE];
 

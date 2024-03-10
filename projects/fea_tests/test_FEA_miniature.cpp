@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
     // Create a truss:
     auto body_truss = chrono_types::make_shared<ChBody>();
 
-    body_truss->SetBodyFixed(true);
+    body_truss->SetFixed(true);
 
     sys.AddBody(body_truss);
 
@@ -94,9 +94,9 @@ int main(int argc, char* argv[]) {
 
     msectionH->SetDensity(7000);  //***TEST*** must be 7k
     msectionH->SetYoungModulus(200.0e9);
-    msectionH->SetGwithPoissonRatio(0.32);
+    msectionH->SetShearModulusFromPoisson(0.32);
     msectionH->SetAsRectangularSection(hbarW, thickZ);
-    msectionH->SetBeamRayleighDamping(0.00);
+    msectionH->SetRayleighDamping(0.00);
 
     ChBuilderBeamEuler builder;
 
@@ -137,9 +137,9 @@ int main(int argc, char* argv[]) {
 
     msectionV->SetDensity(7000);  //***TEST*** must be 7k
     msectionV->SetYoungModulus(200.0e9);
-    msectionV->SetGwithPoissonRatio(0.32);
+    msectionV->SetShearModulusFromPoisson(0.32);
     msectionV->SetAsRectangularSection(vbarW, thickZ);
-    msectionV->SetBeamRayleighDamping(0.00);
+    msectionV->SetRayleighDamping(0.00);
 
     builder.BuildBeam(my_mesh,               // the mesh where to put the created nodes and elements
                       msectionV,             // the ChBeamSectionAdvanced to use for the ChElementBeamEuler elements
@@ -304,16 +304,16 @@ int main(int argc, char* argv[]) {
     solver->EnableDiagonalPreconditioner(false);
     solver->EnableWarmStart(true);
     solver->SetMaxIterations(400);
+    solver->SetTolerance(1e-12);
     solver->SetVerbose(true);
     sys.SetSolver(solver);
-    sys.SetSolverForceTolerance(1e-12);
 
     //***TEST***
     ChMatlabEngine matlab_engine;
     auto matlab_solver = chrono_types::make_shared<ChSolverMatlab>(matlab_engine);
     sys.SetSolver(matlab_solver);
 
-    sys.Set_G_acc(ChVector3d(0, 0, 0));
+    sys.SetGravitationalAcceleration(ChVector3d(0, 0, 0));
 
     std::cout << "STATIC linear solve ----\n";
     node_Cl->SetForce(ChVector3d(50, 0, 0));

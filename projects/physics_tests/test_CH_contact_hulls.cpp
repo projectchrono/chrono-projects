@@ -43,18 +43,18 @@ void AddWallMesh(std::shared_ptr<ChBody> body,
                  const ChVector3d& loc) {
     auto trimesh = chrono_types::make_shared<ChTriangleMeshConnected>();
 
-    std::vector<ChVector3d>& vertices = trimesh->getCoordsVertices();
-    std::vector<ChVector3d>& normals = trimesh->getCoordsNormals();
-    std::vector<ChVector3i>& idx_vertices = trimesh->getIndicesVertexes();
-    std::vector<ChVector3i>& idx_normals = trimesh->getIndicesNormals();
+    std::vector<ChVector3d>& vertices = trimesh->GetCoordsVertices();
+    std::vector<ChVector3d>& normals = trimesh->GetCoordsNormals();
+    std::vector<ChVector3i>& idx_vertices = trimesh->GetIndicesVertexes();
+    std::vector<ChVector3i>& idx_normals = trimesh->GetIndicesNormals();
 
     int num_vert = 8;
     int num_faces = 12;
 
     vertices.resize(num_vert);
     normals.resize(num_vert);
-    trimesh->getCoordsUV().resize(num_vert);
-    trimesh->getCoordsColors().resize(num_vert);
+    trimesh->GetCoordsUV().resize(num_vert);
+    trimesh->GetCoordsColors().resize(num_vert);
 
     idx_vertices.resize(num_faces);
     idx_normals.resize(num_faces);
@@ -80,7 +80,7 @@ void AddWallMesh(std::shared_ptr<ChBody> body,
     normals[7] = ChVector3d(+1, -1, +1).Normalize();
 
     for (int i = 0; i < num_vert; i++) {
-        trimesh->getCoordsColors()[i] = ChColor(0, 0, 1);
+        trimesh->GetCoordsColors()[i] = ChColor(0, 0, 1);
     }
 
     idx_vertices[0] = ChVector3i(0, 1, 3);
@@ -206,7 +206,7 @@ int main(int argc, char* argv[]) {
     // Create the system (Y up)
     ChSystemSMC sys;
     sys.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
-    sys.Set_G_acc(ChVector3d(0, gravity, 0));
+    sys.SetGravitationalAcceleration(ChVector3d(0, gravity, 0));
 
     sys.SetContactForceModel(ChSystemSMC::ContactForceModel::Hertz);
     sys.SetAdhesionForceModel(ChSystemSMC::AdhesionForceModel::Constant);
@@ -227,8 +227,8 @@ int main(int argc, char* argv[]) {
     ball->SetRot(rot);
     ball->SetLinVel(init_vel);
     // ball->SetWvel_par(ChVector3d(0,0,3));
-    ball->SetBodyFixed(false);
-    ball->SetCollide(true);
+    ball->SetFixed(false);
+    ball->EnableCollision(true);
 
     auto ball_ct_shape = chrono_types::make_shared<ChCollisionShapeSphere>(material, radius);
     ball->AddCollisionShape(ball_ct_shape);
@@ -246,8 +246,8 @@ int main(int argc, char* argv[]) {
     bin->SetMass(1);
     bin->SetPos(ChVector3d(0, 0, 0));
     bin->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    bin->SetCollide(true);
-    bin->SetBodyFixed(true);
+    bin->EnableCollision(true);
+    bin->SetFixed(true);
 
     BuildContainerHulls(bin, material, dimX, dimY, dimZ, thick);
 

@@ -147,8 +147,8 @@ class MySimpleCar {
         truss->SetRot(ChQuaternion<>(1, 0, 0, 0));
         truss->SetInertiaXX(ChVector3d(3570.20377, 1078.52344, 2955.66050));
         utils::AddBoxGeometry(truss.get(), mat, ChVector3d(0.7, 0.5, 3) * 0.5, ChVector3d(0, 0, 0));
-        truss->SetCollide(false);
-        truss->SetBodyFixed(false);
+        truss->EnableCollision(false);
+        truss->SetFixed(false);
         my_system->AddBody(truss);
 
         // --- Right Front suspension ---
@@ -161,7 +161,7 @@ class MySimpleCar {
         spindleRF->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleRF->SetInertiaXX(ChVector3d(0.07352, 0.04117, 0.04117));
         utils::AddBoxGeometry(spindleRF.get(), mat, ChVector3d(0.1, 0.4, 0.4) * 0.5, ChVector3d(0, 0, 0));
-        spindleRF->SetCollide(false);
+        spindleRF->EnableCollision(false);
         my_system->AddBody(spindleRF);
 
         // ..the car right-front wheel
@@ -176,7 +176,7 @@ class MySimpleCar {
         } else {
             utils::AddCylinderGeometry(wheelRF.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_C_PI_2));
         }
-        wheelRF->SetCollide(true);
+        wheelRF->EnableCollision(true);
         my_system->AddBody(wheelRF);
 
         // .. create the revolute joint between the wheel and the spindle
@@ -232,7 +232,7 @@ class MySimpleCar {
         spindleLF->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleLF->SetInertiaXX(ChVector3d(0.07352, 0.04117, 0.04117));
         utils::AddBoxGeometry(spindleLF.get(), mat, ChVector3d(0.1, 0.4, 0.4) * 0.5, ChVector3d(0, 0, 0));
-        spindleLF->SetCollide(false);
+        spindleLF->EnableCollision(false);
         my_system->AddBody(spindleLF);
 
         // ..the car left-front wheel
@@ -247,7 +247,7 @@ class MySimpleCar {
         } else {
             utils::AddCylinderGeometry(wheelLF.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_C_PI_2));
         }
-        wheelLF->SetCollide(true);
+        wheelLF->EnableCollision(true);
         my_system->AddBody(wheelLF);
 
         // .. create the revolute joint between the wheel and the spindle
@@ -303,7 +303,7 @@ class MySimpleCar {
         spindleRB->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleRB->SetInertiaXX(ChVector3d(4, 2, 2));
         utils::AddBoxGeometry(spindleRB.get(), mat, ChVector3d(0.1, 0.4, 0.4) * 0.5, ChVector3d(0, 0, 0));
-        spindleRB->SetCollide(false);
+        spindleRB->EnableCollision(false);
         my_system->AddBody(spindleRB);
 
         // ..the car right-back wheel
@@ -318,7 +318,7 @@ class MySimpleCar {
         } else {
             utils::AddCylinderGeometry(wheelRB.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_C_PI_2));
         }
-        wheelRB->SetCollide(true);
+        wheelRB->EnableCollision(true);
         my_system->AddBody(wheelRB);
 
         // .. create the revolute joint between the wheel and the spindle
@@ -382,7 +382,7 @@ class MySimpleCar {
         spindleLB->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleLB->SetInertiaXX(ChVector3d(4, 2, 2));
         utils::AddBoxGeometry(spindleLB.get(), mat, ChVector3d(0.1, 0.4, 0.4) * 0.5, ChVector3d(0, 0, 0));
-        spindleLB->SetCollide(false);
+        spindleLB->EnableCollision(false);
         my_system->AddBody(spindleLB);
 
         // ..the car left-back wheel
@@ -397,7 +397,7 @@ class MySimpleCar {
         } else {
             utils::AddCylinderGeometry(wheelLB.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_C_PI_2));
         }
-        wheelLB->SetCollide(true);
+        wheelLB->EnableCollision(true);
         my_system->AddBody(wheelLB);
 
         // .. create the revolute joint between the wheel and the spindle
@@ -506,7 +506,7 @@ class MySimpleCar {
         // the speed of the engine transmission shaft is the average of the two wheel speeds,
         // multiplied the conic gear transmission ratio inversed:
         double shaftspeed = (1.0 / this->conic_tau) * 0.5 *
-                            (this->link_engineL->GetMotorRot_dt() + this->link_engineR->GetMotorRot_dt());
+                            (this->link_engineL->GetMotorAngleDer() + this->link_engineR->GetMotorAngleDer());
         // The motorspeed is the shaft speed multiplied by gear ratio inversed:
         double motorspeed = (1.0 / this->gear_tau) * shaftspeed;
         // The torque depends on speed-torque curve of the motor: here we assume a
@@ -618,8 +618,8 @@ void AddGround(ChSystemMulticoreNSC* sys) {
     ground->SetMass(1);
     ground->SetPos(pos);
     ground->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    ground->SetCollide(true);
-    ground->SetBodyFixed(true);
+    ground->EnableCollision(true);
+    ground->SetFixed(true);
 
     utils::AddBoxGeometry(ground.get(), mat, ChVector3d(groundWidth / 2, thickness, 10 * pitLocation_z / 2),
                           ChVector3d(0, -thickness, 0));
@@ -661,7 +661,7 @@ int main(int argc, char* argv[]) {
     sys.SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Set gravitational acceleration
-    sys.Set_G_acc(ChVector3d(0, -gravity, 0));
+    sys.SetGravitationalAcceleration(ChVector3d(0, -gravity, 0));
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();

@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
     }
 
     system->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
-    system->Set_G_acc(ChVector3d(0, 0, -9.81));
+    system->SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
     system->GetSettings()->solver.use_full_inertia_tensor = false;
     system->GetSettings()->solver.tolerance = 0.1;
     system->GetSettings()->solver.max_iteration_bilateral = 100;
@@ -219,8 +219,8 @@ int main(int argc, char** argv) {
     system->AddBody(container);
     container->SetIdentifier(-1);
     container->SetMass(1);
-    container->SetBodyFixed(true);
-    container->SetCollide(true);
+    container->SetFixed(true);
+    container->EnableCollision(true);
 
     // Bottom box
     utils::AddBoxGeometry(container.get(), material_terrain, ChVector3d(hdimX, hdimY, hthick), ChVector3d(0, 0, -hthick),

@@ -188,8 +188,8 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     // Create the ground body
     m_ground = chrono_types::make_shared<ChBody>();
     m_ground->SetIdentifier(-1);
-    m_ground->SetBodyFixed(true);
-    m_ground->SetCollide(false);
+    m_ground->SetFixed(true);
+    m_ground->EnableCollision(false);
 
     system->AddBody(m_ground);
 
@@ -200,8 +200,8 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     m_sled->SetInertiaXX(inertia_sled);
     m_sled->SetPos(loc_sled);
     m_sled->SetLinVel(ChVector3d(init_vel, 0, 0));
-    m_sled->SetBodyFixed(false);
-    m_sled->SetCollide(false);
+    m_sled->SetFixed(false);
+    m_sled->EnableCollision(false);
 
     auto box_sled = chrono_types::make_shared<ChVisualShapeBox>(2.0 * e, (2.0 / 3) * e, (2.0 / 3) * e);
     box_sled->SetColor(ChColor(0.7f, 0.3f, 0.3f));
@@ -228,8 +228,8 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     m_wheel->SetPos(loc_wheel);
     m_wheel->SetRot(QuatFromAngleY(init_angle));
     m_wheel->SetLinVel(ChVector3d(init_vel, 0, 0));
-    m_wheel->SetBodyFixed(false);
-    m_wheel->SetCollide(true);
+    m_wheel->SetFixed(false);
+    m_wheel->EnableCollision(true);
 
     switch (wheel_shape) {
         case ChCollisionShape::Type::CYLINDER:
@@ -267,12 +267,12 @@ void Mechanism::WriteResults(std::ofstream& f, double time) {
 
     // Coordinate system of the revolute joint (relative to the frame of body2, in
     // this case the sled)
-    ChCoordsys<> revCoordsys = m_revolute->GetLinkRelativeCoords();
+    auto revFrame = m_revolute->GetFrame2Rel();
 
     // Reaction force in revolute joint
-    ChVector3d force_jointsys = m_revolute->Get_react_force();
-    ChVector3d force_bodysys = revCoordsys.TransformDirectionLocalToParent(force_jointsys);
-    ChVector3d force_abssys = m_sled->GetCsys().TransformDirectionLocalToParent(force_bodysys);
+    ChVector3d force_jointsys = m_revolute->GetReactForce2();
+    ChVector3d force_bodysys = revFrame.TransformDirectionLocalToParent(force_jointsys);
+    ChVector3d force_abssys = m_sled->GetCoordsys().TransformDirectionLocalToParent(force_bodysys);
 
     f << time << "  " << sled_vel.x() << "  " << sled_vel.y() << "  " << sled_vel.z() << "      " << wheel_vel.x() << "  "
       << wheel_vel.y() << "  " << wheel_vel.z() << "      " << force_abssys.x() << "  " << force_abssys.y() << "  "
@@ -391,7 +391,7 @@ int main(int argc, char* argv[]) {
 
     sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
-    sys->Set_G_acc(ChVector3d(0, 0, -9.81));
+    sys->SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
 
     // ----------------------
     // Set number of threads.

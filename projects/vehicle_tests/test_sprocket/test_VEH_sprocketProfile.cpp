@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
 
     auto ground = chrono_types::make_shared<ChBody>();
     ground->SetIdentifier(-1);
-    ground->SetBodyFixed(true);
+    ground->SetFixed(true);
     system.AddBody(ground);
 
     // -----------------------------
@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<ChLinePath> gear_profile = CreateProfile(n_teeth, R_T, R_C, R);
 
     // Add the collision shape to gear
-    gear->SetCollide(true);
+    gear->EnableCollision(true);
     auto gear_ct_shape = chrono_types::make_shared<ChCollisionShapePath2D>(mat, gear_profile);
     gear->AddCollisionShape(gear_ct_shape, ChFrame<>(ChVector3d(0, 0, separation / 2), QUNIT));
     gear->AddCollisionShape(gear_ct_shape, ChFrame<>(ChVector3d(0, 0, -separation / 2), QUNIT));
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
     auto pin = chrono_types::make_shared<ChBody>();
     pin->SetIdentifier(1);
     pin->SetPos(pin_loc);
-    // pin->SetBodyFixed(true);
+    // pin->SetFixed(true);
     system.AddBody(pin);
 
     auto pin_profile = chrono_types::make_shared<ChLinePath>();
@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
     pin_profile->AddSubLine(pin_circle);
 
     // Add collision shapes to pin
-    pin->SetCollide(true);
+    pin->EnableCollision(true);
     auto pin_ct_shape = chrono_types::make_shared<ChCollisionShapePath2D>(mat, pin_profile);
     pin->AddCollisionShape(pin_ct_shape, ChFrame<>(ChVector3d(0, 0, separation / 2), QUNIT));
     pin->AddCollisionShape(pin_ct_shape, ChFrame<>(ChVector3d(0, 0, -separation / 2), QUNIT));

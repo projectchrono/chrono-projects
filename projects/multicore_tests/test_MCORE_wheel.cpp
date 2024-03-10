@@ -220,8 +220,8 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemMulticore* system, double z) {
     wheel->SetInertiaXX(inertia_w);
     wheel->SetPos(ChVector3d(0, 0, z));
     wheel->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    wheel->SetCollide(true);
-    wheel->SetBodyFixed(false);
+    wheel->EnableCollision(true);
+    wheel->SetFixed(false);
 
     utils::AddTriangleMeshGeometry(wheel.get(), material_w, obj_mesh_file, mesh_name);
     //utils::AddCylinderGeometry(wheel.get(), material_w, 0.3, 0.1);
@@ -313,7 +313,7 @@ int main(int argc, char* argv[]) {
     system->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Set method-independent solver settings
-    system->Set_G_acc(ChVector3d(0, 0, -gravity));
+    system->SetGravitationalAcceleration(ChVector3d(0, 0, -gravity));
     system->GetSettings()->solver.use_full_inertia_tensor = false;
     system->GetSettings()->solver.tolerance = 1e-3;
     system->GetSettings()->collision.bins_per_axis = vec3(50, 50, 50);
@@ -376,7 +376,6 @@ int main(int argc, char* argv[]) {
             time_step = time_step_complementarity;
             break;
     }
-    system->SetStep(time_step);
 
     // Number of steps
     int num_steps = (int)std::ceil(time_end / time_step);

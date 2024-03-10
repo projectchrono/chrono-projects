@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
             sys.Add(body_base);
 
             // The base is fixed to the ground
-            body_base->SetBodyFixed(true);
+            body_base->SetFixed(true);
             body_base->ConcatenatePreTransformation(root_frame);
         } else
             std::cerr << "WARNING: Desired object not found in document" << std::endl;
@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
 
             // also create a collision shape attached to the hand:
             auto mcube = chrono_types::make_shared<ChBodyEasyBox>(0.2, 0.08, 0.08, 1000, true, true, mysurfmaterial);
-            mcube->SetCsys(ChCoordsys<>(ChVector3d(0.1, 0, 0)) >> body_hand->GetCsys());
+            mcube->SetCoordsys(ChCoordsys<>(ChVector3d(0.1, 0, 0)) >> body_hand->GetCoordsys());
             sys.Add(mcube);
             auto mcubelink = chrono_types::make_shared<ChLinkLockLock>();
             mcubelink->Initialize(mcube, body_hand, *mcube);
@@ -362,7 +362,7 @@ int main(int argc, char* argv[]) {
     // Create a large cube as a floor.
 
     std::shared_ptr<ChBodyEasyBox> mfloor(new ChBodyEasyBox(8, 1, 8, 1000, true, true, mysurfmaterial));
-    mfloor->SetBodyFixed(true);
+    mfloor->SetFixed(true);
     mfloor->SetPos(ChVector3d(0, -0.5, 0));
     mfloor->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/blue.png"));
     sys.Add(mfloor);
@@ -405,7 +405,7 @@ int main(int argc, char* argv[]) {
     // So switch to a more precise solver, ex. BARZILAIBORWEIN
 
     sys.SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
-    sys.SetSolverMaxIterations(200);
+    sys.GetSolver()->AsIterative()->SetMaxIterations(200);
 
     /*
     // Alternative: the ADMM solver offers higher precision and it can also support FEA + nonsmooth contacts

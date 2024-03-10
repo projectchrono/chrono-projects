@@ -291,8 +291,8 @@ void MakeANCFHumveeWheel(ChSystem& sys,
     // Create rim for this mesh
     sys.AddBody(Hub_1);
     Hub_1->SetIdentifier(Ident);
-    Hub_1->SetBodyFixed(false);
-    Hub_1->SetCollide(false);
+    Hub_1->SetFixed(false);
+    Hub_1->EnableCollision(false);
     Hub_1->SetMass(10);
     Hub_1->SetInertiaXX(ChVector3d(0.3, 0.3, 0.3));
     Hub_1->SetPos(rim_center);  // Y = -1m
@@ -450,7 +450,7 @@ void MakeANCFHumveeWheel(ChSystem& sys,
     // END OF INPUT DATA AND CREATE ARRAYS
 
     // Add initial velocity to the nodes (for rolling)
-    for (unsigned int i = 0; i < TireMesh->GetNnodes(); ++i) {
+    for (unsigned int i = 0; i < TireMesh->GetNumNodes(); ++i) {
         ChVector3d node_pos = std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(i))->GetPos();
         double tang_vel = ForVelocity * (node_pos.z()) / (HumveeVertPos);
         ChVector3d NodeVel(tang_vel, 0, 0.0);
@@ -520,17 +520,17 @@ int main(int argc, char* argv[]) {
     // Definition of the model
     ChSystemNSC sys;
 
-    utils::CSV_writer out("\t");
-    out.stream().setf(std::ios::scientific | std::ios::showpos);
-    out.stream().precision(7);
+    utils::ChWriterCSV out("\t");
+    out.Stream().setf(std::ios::scientific | std::ios::showpos);
+    out.Stream().precision(7);
     // Main loop for the definition of 4 meshes
 
     // Body 1: Ground
     BGround = chrono_types::make_shared<ChBody>();
     sys.AddBody(BGround);
     BGround->SetIdentifier(1);
-    BGround->SetBodyFixed(true);
-    BGround->SetCollide(false);
+    BGround->SetFixed(true);
+    BGround->EnableCollision(false);
     BGround->SetMass(1);
     BGround->SetInertiaXX(ChVector3d(1, 1, 0.2));
     BGround->SetPos(ChVector3d(-2, 0, 0));  // Y = -1m
@@ -569,7 +569,7 @@ int main(int argc, char* argv[]) {
     auto mtexturebox = chrono_types::make_shared<ChTexture>();
     SimpChassis->SetPos(ChVector3d(0, 0, HumveeVertPos));
     SimpChassis->SetPosDer(ChVector3d(ForVelocity, 0, 0));
-    SimpChassis->SetBodyFixed(false);
+    SimpChassis->SetFixed(false);
     // */
     // Create joints between chassis and hubs
     auto RevTr_1 = chrono_types::make_shared<ChLinkRevoluteTranslational>();
@@ -623,9 +623,9 @@ int main(int argc, char* argv[]) {
     sys.Add(mrigidBody);
     mrigidBody->SetPos(ChVector3d(0, 0, GroundLoc));
     mrigidBody->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/concrete.jpg"));
-    mrigidBody->SetBodyFixed(true);
+    mrigidBody->SetFixed(true);
 
-    sys.Set_G_acc(ChVector3d(0, 0, -9.81));
+    sys.SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
     auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
     sys.SetSolver(mkl_solver);
     mkl_solver->LockSparsityPattern(true);
@@ -697,7 +697,7 @@ int main(int argc, char* argv[]) {
         out << sys.GetChTime() << Hub_1->GetPos().x() << Hub_1->GetPos().y() << Hub_1->GetPos().z()
             << Hub_2->GetPos().x() << Hub_2->GetPos().y() << Hub_2->GetPos().z() << Hub_3->GetPos().x()
             << Hub_3->GetPos().y() << Hub_3->GetPos().z() << std::endl;
-        out.write_to_file("../VertPosRim.txt");
+        out.WriteToFile("../VertPosRim.txt");
     }
 
     double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;

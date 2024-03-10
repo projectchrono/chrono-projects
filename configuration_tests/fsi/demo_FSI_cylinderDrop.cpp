@@ -119,7 +119,7 @@ void WriteCylinderVTK(const std::string& filename, double radius, double length,
 //------------------------------------------------------------------
 void CreateSolidPhase(ChSystemSMC& sysMBS, ChSystemFsi& sysFSI) {
     // Set gravity to the rigid body system in chrono
-    sysMBS.Set_G_acc(sysFSI.Get_G_acc());
+    sysMBS.SetGravitationalAcceleration(sysFSI.GetGravitationalAcceleration());
 
     // Set common material Properties
     auto cmaterial = chrono_types::make_shared<ChContactMaterialSMC>();
@@ -136,7 +136,7 @@ void CreateSolidPhase(ChSystemSMC& sysMBS, ChSystemFsi& sysFSI) {
     box->SetPos(ChVector3d(0.0, 0.0, 0.0));
     box->SetRot(ChQuaternion<>(1, 0, 0, 0));
     box->SetIdentifier(-1);
-    box->SetBodyFixed(true);
+    box->SetFixed(true);
     sysMBS.AddBody(box);
 
     // Add collision geometry for the container walls
@@ -145,7 +145,7 @@ void CreateSolidPhase(ChSystemSMC& sysMBS, ChSystemFsi& sysFSI) {
                                    ChVector3d(bxDim, byDim, bzDim), 0.1,           //
                                    ChVector3i(2, 2, -1),                        //
                                    false);
-    box->SetCollide(true);
+    box->EnableCollision(true);
 
     // Add BCE particles attached on the walls into FSI system
     sysFSI.AddBoxContainerBCE(box,                                            //
@@ -169,8 +169,8 @@ void CreateSolidPhase(ChSystemSMC& sysMBS, ChSystemFsi& sysFSI) {
     cylinder->SetInertiaXX(mass * gyration);
 
     // Set the collision and visualization geometry
-    cylinder->SetCollide(true);
-    cylinder->SetBodyFixed(false);
+    cylinder->EnableCollision(true);
+    cylinder->SetFixed(false);
     chrono::utils::AddCylinderGeometry(cylinder.get(), cmaterial, cyl_radius, cyl_length, VNULL,
                                        QuatFromAngleX(CH_C_PI_2));
     cylinder->GetCollisionModel()->SetSafeMargin(initSpace0);
@@ -246,7 +246,7 @@ int main(int argc, char* argv[]) {
 
     // Add SPH particles from the sampler points to the FSI system
     size_t numPart = (int)points.size();
-    double gz = std::abs(sysFSI.Get_G_acc().z());
+    double gz = std::abs(sysFSI.GetGravitationalAcceleration().z());
     for (int i = 0; i < numPart; i++) {
         double pre_ini = sysFSI.GetDensity() * gz * (-points[i].z() + bzDim);
         double rho_ini = sysFSI.GetDensity() + pre_ini / (sysFSI.GetSoundSpeed() * sysFSI.GetSoundSpeed());

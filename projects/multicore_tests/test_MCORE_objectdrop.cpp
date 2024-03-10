@@ -121,8 +121,8 @@ void CreateGround(ChSystemMulticore* system) {
     ground->SetMass(1);
     ground->SetPos(ChVector3d(0, 0, 0));
     ground->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    ground->SetBodyFixed(true);
-    ground->SetCollide(true);
+    ground->SetFixed(true);
+    ground->EnableCollision(true);
 
     // ---------------------------------------------------------
     // Set fixed contact shapes (depending on specified option).
@@ -202,8 +202,8 @@ void CreateObject(ChSystemMulticore* system) {
     auto obj = chrono_types::make_shared<ChBody>();
 
     obj->SetIdentifier(1);
-    obj->SetCollide(true);
-    obj->SetBodyFixed(false);
+    obj->EnableCollision(true);
+    obj->SetFixed(false);
 
     // ----------------------------------------------------
     // Depending on the shape of the falling object,
@@ -321,7 +321,7 @@ int main(int argc, char* argv[]) {
 
     sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
-    sys->Set_G_acc(ChVector3d(0, 0, -9.81));
+    sys->SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
 
     // ----------------------
     // Set number of threads.

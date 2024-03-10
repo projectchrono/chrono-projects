@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
     sys->SetNumThreads(threads);
 
     // Set gravitational acceleration
-    sys->Set_G_acc(ChVector3d(0, 0, -gravity));
+    sys->SetGravitationalAcceleration(ChVector3d(0, 0, -gravity));
 
     // Using constant adhesion model
     sys->GetSettings()->solver.adhesion_force_model = ChSystemSMC::AdhesionForceModel::Constant;

@@ -131,7 +131,7 @@ void addWheelBody(ChSystemNSC& rover_sys,
     auto wheel_body = chrono_types::make_shared<ChBody>();
 
     wheel_body->SetMass(wheel_mass);
-    wheel_body->SetBodyFixed(false);
+    wheel_body->SetFixed(false);
     // assume it's a cylinder inertially
     wheel_body->SetInertiaXX(ChVector3d(wheel_inertia_x, wheel_inertia_y, wheel_inertia_z));
 
@@ -285,7 +285,7 @@ int main(int argc, char* argv[]) {
 
     // rover_sys.SetContactForceModel(ChSystemNSC::ContactForceModel::Hooke);
     // rover_sys.SetTimestepperType(ChTimestepper::Type::EULER_EXPLICIT);
-    rover_sys.Set_G_acc(ChVector3d(Gx, Gy, Gz));
+    rover_sys.SetGravitationalAcceleration(ChVector3d(Gx, Gy, Gz));
 
     auto chassis_body = chrono_types::make_shared<ChBody>();
 
@@ -304,7 +304,7 @@ int main(int argc, char* argv[]) {
     chassis_body->SetPos(ChVector3d(init_offset_x, 0, 0));
     rover_sys.AddBody(chassis_body);
 
-    chassis_body->SetBodyFixed(true);
+    chassis_body->SetFixed(true);
 
     // NOTE these must happen before the gran system loads meshes!!!
     // two wheels at front
@@ -360,7 +360,7 @@ int main(int argc, char* argv[]) {
         if (chassis_fixed && t >= 0.5) {
             printf("Setting wheel free!\n");
             chassis_fixed = false;
-            chassis_body->SetBodyFixed(false);
+            chassis_body->SetFixed(false);
             double max_terrain_z = gpu_sys.GetMaxParticleZ();
             printf("terrain max is %f\n", max_terrain_z);
             // put terrain just below bottom of wheels

@@ -148,8 +148,9 @@ int main(int argc, char* argv[]) {
     // Create the (sequential) SMC system
     // ----------------------------------
 
-    ChSystemSMC* system = new ChSystemSMC(use_mat_properties);
-    system->Set_G_acc(ChVector3d(0, 0, -9.81));
+    ChSystemSMC* system = new ChSystemSMC();
+    system->UseMaterialProperties(use_mat_properties);
+    system->SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
 
     // Set number threads
     system->SetNumThreads(num_threads);
@@ -163,9 +164,8 @@ int main(int argc, char* argv[]) {
 #else
     // Default solver settings
     system->SetSolverType(ChSolver::Type::PSOR);
-    system->SetSolverMaxIterations(100);
-    system->SetSolverTolerance(1e-10);
-    system->SetSolverForceTolerance(1e-8);
+    system->GetSolver()->AsIterative()->SetMaxIterations(100);
+    system->GetSolver()->AsIterative()->SetTolerance(1e-10);
 #endif
 
     // Integrator settings

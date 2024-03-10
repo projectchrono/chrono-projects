@@ -58,9 +58,9 @@ std::shared_ptr<ChBody> CreateTerrain(ChSystem& sys, double length, double width
     }
 
     auto ground = chrono_types::make_shared<ChBody>();
-    ground->SetBodyFixed(true);
+    ground->SetFixed(true);
     ground->SetPos(ChVector3d(offset, 0, height - 0.1));
-    ground->SetCollide(true);
+    ground->EnableCollision(true);
 
     auto ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(ground_mat, length, width, 0.2);
     ground->AddCollisionShape(ct_shape);
@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
     // Create a Chrono system
     ChSystemSMC sys;
     sys.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
-    sys.Set_G_acc(ChVector3d(0, 0, -9.8));
+    sys.SetGravitationalAcceleration(ChVector3d(0, 0, -9.8));
 
     // Create parser instance
     ChParserURDF robot(GetChronoDataFile("robot/robosimian/rs.urdf"));
@@ -121,11 +121,11 @@ int main(int argc, char* argv[]) {
     auto limb4_wheel = robot.GetChBody("limb4_link8");
 
     // Enable collsion and set contact material for selected bodies of the robot
-    sled->SetCollide(true);
-    limb1_wheel->SetCollide(true);
-    limb2_wheel->SetCollide(true);
-    limb3_wheel->SetCollide(true);
-    limb4_wheel->SetCollide(true);
+    sled->EnableCollision(true);
+    limb1_wheel->EnableCollision(true);
+    limb2_wheel->EnableCollision(true);
+    limb3_wheel->EnableCollision(true);
+    limb4_wheel->EnableCollision(true);
 
     ChContactMaterialData mat;
     mat.mu = 0.8f;
@@ -139,7 +139,7 @@ int main(int argc, char* argv[]) {
     limb4_wheel->GetCollisionModel()->SetAllShapesMaterial(cmat);
 
     // Fix root body
-    robot.GetRootChBody()->SetBodyFixed(true);
+    robot.GetRootChBody()->SetFixed(true);
 
     // Read the list of actuated motors, cache the motor links, and set their actuation function
     int num_motors = 32;
@@ -212,8 +212,8 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
 
     // Solver settings
-    sys.SetSolverMaxIterations(200);
     sys.SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
+    sys.GetSolver()->AsIterative()->SetMaxIterations(200);
 
     // Simulation loop
     double step_size = 5e-4;
@@ -238,7 +238,7 @@ int main(int argc, char* argv[]) {
             sys.GetCollisionSystem()->BindItem(ground);
 
             // Release robot
-            torso->SetBodyFixed(false);
+            torso->SetFixed(false);
 
             terrain_created = true;
         }

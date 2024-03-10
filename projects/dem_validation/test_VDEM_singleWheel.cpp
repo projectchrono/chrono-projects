@@ -217,8 +217,8 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     auto ground = chrono_types::make_shared<ChBody>();
 
     ground->SetIdentifier(Id_ground);
-    ground->SetBodyFixed(true);
-    ground->SetCollide(true);
+    ground->SetFixed(true);
+    ground->EnableCollision(true);
 
     // Attach geometry of the containing bin.  Disable contact ground-shearBox
     // and ground-loadPlate.
@@ -244,8 +244,8 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     wheel->SetIdentifier(Id_wheel);
     wheel->SetPos(ChVector3d(hdimX_w, 0, 2 * hdimZ + wheelRadius));
     wheel->SetMass(1.0);
-    wheel->SetCollide(true);
-    wheel->SetBodyFixed(true);
+    wheel->EnableCollision(true);
+    wheel->SetFixed(true);
 
     // Add geometry of the wheel.
     utils::AddCylinderGeometry(wheel.get(), mat_walls, wheelRadius, wheelWidth / 2, ChVector3d(0, 0, 0), QUNIT);
@@ -264,8 +264,8 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     chassis->SetIdentifier(Id_chassis);
     chassis->SetMass(1.0);
     chassis->SetPos(wheel->GetPos());
-    chassis->SetCollide(false);
-    chassis->SetBodyFixed(true);
+    chassis->EnableCollision(false);
+    chassis->SetFixed(true);
 
     // Add geometry of the wheel.
     utils::AddBoxGeometry(chassis.get(), mat_walls, ChVector3d(.1 * wheelRadius, .1 * wheelRadius, .1 * wheelRadius),
@@ -285,8 +285,8 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     axle->SetIdentifier(Id_axle);
     axle->SetMass(wheelWeight / gravity);
     axle->SetPos(wheel->GetPos());
-    axle->SetCollide(false);
-    axle->SetBodyFixed(true);
+    axle->EnableCollision(false);
+    axle->SetFixed(true);
 
     // Add geometry of the wheel.
     utils::AddSphereGeometry(axle.get(), mat_walls, 0.1 * wheelRadius, ChVector3d(0, 0, 0));
@@ -424,8 +424,8 @@ void CreateBall(ChSystemMulticore* system) {
     ball->SetIdentifier(Id_ball);
     ball->SetMass(mass_ball);
     ball->SetPos(ChVector3d(0, 0, 1.01 * radius_ball));
-    ball->SetCollide(true);
-    ball->SetBodyFixed(false);
+    ball->EnableCollision(true);
+    ball->SetFixed(false);
 
     utils::AddSphereGeometry(ball.get(), mat_g, radius_ball);
 
@@ -504,7 +504,7 @@ int main(int argc, char* argv[]) {
 
     sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
-    sys->Set_G_acc(ChVector3d(0, 0, -gravity));
+    sys->SetGravitationalAcceleration(ChVector3d(0, 0, -gravity));
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();
@@ -609,7 +609,7 @@ int main(int argc, char* argv[]) {
             prismatic_axle_chassis = std::static_pointer_cast<ChLinkLockPrismatic>(sys->SearchLink("prismatic_axle_chassis"));
 
             // Release the axle.
-            axle->SetBodyFixed(false);
+            axle->SetFixed(false);
 
             // Set axle mass from desired applied normal load
             axle->SetMass(wheelWeight / gravity);
@@ -620,7 +620,7 @@ int main(int argc, char* argv[]) {
             engine_wheel_axle = std::static_pointer_cast<ChLinkMotorRotationAngle>(sys->SearchLink("engine_wheel_axle"));
 
             // Release the axle.
-            wheel->SetBodyFixed(false);
+            wheel->SetFixed(false);
 
             break;
         }
@@ -646,14 +646,14 @@ int main(int argc, char* argv[]) {
             actuator = std::static_pointer_cast<ChLinkLockLinActuator>(sys->SearchLink("actuator"));
 
             // Release the load plate.
-            chassis->SetBodyFixed(false);
+            chassis->SetFixed(false);
 
             // Connect the load plate to the shear box.
             ConnectChassisToAxle(sys, chassis, axle);
             prismatic_axle_chassis = std::static_pointer_cast<ChLinkLockPrismatic>(sys->SearchLink("prismatic_axle_chassis"));
 
             // Release the axle.
-            axle->SetBodyFixed(false);
+            axle->SetFixed(false);
 
             // Set axle mass from desired applied normal load
             axle->SetMass(wheelWeight / gravity);
@@ -663,7 +663,7 @@ int main(int argc, char* argv[]) {
             engine_wheel_axle = std::static_pointer_cast<ChLinkMotorRotationAngle>(sys->SearchLink("engine_wheel_axle"));
 
             // Release the axle.
-            wheel->SetBodyFixed(false);
+            wheel->SetFixed(false);
 
             // setBulkDensity(sys, desiredBulkDensity);
 
@@ -698,14 +698,14 @@ int main(int argc, char* argv[]) {
             prismatic_chassis_ground = std::static_pointer_cast<ChLinkLockPrismatic>(sys->SearchLink("prismatic_chassis_ground"));
             actuator = std::static_pointer_cast<ChLinkLockLinActuator>(sys->SearchLink("actuator"));
 
-            chassis->SetBodyFixed(false);
+            chassis->SetFixed(false);
 
             // Connect the axle to the chassis.
             ConnectChassisToAxle(sys, chassis, axle);
             prismatic_axle_chassis = std::static_pointer_cast<ChLinkLockPrismatic>(sys->SearchLink("prismatic_axle_chassis"));
 
             // Release the axle.
-            axle->SetBodyFixed(false);
+            axle->SetFixed(false);
 
             // Set axle mass from desired applied normal load
             axle->SetMass(wheelWeight / gravity);
@@ -715,7 +715,7 @@ int main(int argc, char* argv[]) {
             engine_wheel_axle = std::static_pointer_cast<ChLinkMotorRotationAngle>(sys->SearchLink("engine_wheel_axle"));
 
             // Release the axle.
-            wheel->SetBodyFixed(false);
+            wheel->SetFixed(false);
 
             break;
         }
@@ -858,14 +858,14 @@ int main(int argc, char* argv[]) {
             ChVector3d rforce_wheel(0, 0, 0);
             ChVector3d rtorque_wheel(0, 0, 0);
 
-            rforce_chassis = prismatic_chassis_ground->Get_react_force();
-            rtorque_chassis = prismatic_chassis_ground->Get_react_torque();
+            rforce_chassis = prismatic_chassis_ground->GetReactForce2();
+            rtorque_chassis = prismatic_chassis_ground->GetReactTorque2();
 
-            rforce_actuator = actuator->Get_react_force();
-            rtorque_actuator = actuator->Get_react_torque();
+            rforce_actuator = actuator->GetReactForce2();
+            rtorque_actuator = actuator->GetReactTorque2();
 
-            rforce_wheel = engine_wheel_axle->Get_react_force();
-            rtorque_wheel = engine_wheel_axle->Get_react_torque();
+            rforce_wheel = engine_wheel_axle->GetReactForce2();
+            rtorque_wheel = engine_wheel_axle->GetReactTorque2();
 
             if (sim_frame % write_steps == 0) {
                 ////cout << "X pos: " << xpos_new << " X react: " << cnstr_force << endl;

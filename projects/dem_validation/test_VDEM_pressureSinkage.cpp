@@ -212,8 +212,8 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     auto ground = chrono_types::make_shared<ChBody>();
 
     ground->SetIdentifier(Id_ground);
-    ground->SetBodyFixed(true);
-    ground->SetCollide(true);
+    ground->SetFixed(true);
+    ground->EnableCollision(true);
 
     // Attach geometry of the containing bin
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hdimX, hdimY, hthick), ChVector3d(0, 0, -hthick));
@@ -236,8 +236,8 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     plate->SetIdentifier(Id_plate);
     plate->SetMass(1);
     plate->SetPos(ChVector3d(0, 0, -1 - 2 * hdimZ));
-    plate->SetCollide(true);
-    plate->SetBodyFixed(true);
+    plate->EnableCollision(true);
+    plate->SetFixed(true);
 
     system->AddBody(plate);
 }
@@ -350,8 +350,8 @@ void CreateBall(ChSystemMulticore* system) {
     ball->SetIdentifier(Id_ball);
     ball->SetMass(mass_ball);
     ball->SetPos(ChVector3d(0, 0, 1.01 * radius_ball));
-    ball->SetCollide(true);
-    ball->SetBodyFixed(false);
+    ball->EnableCollision(true);
+    ball->SetFixed(false);
 
     utils::AddSphereGeometry(ball.get(), mat_g, radius_ball);
 
@@ -433,7 +433,7 @@ int main(int argc, char* argv[]) {
 
     sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
-    sys->Set_G_acc(ChVector3d(0, 0, -gravity));
+    sys->SetGravitationalAcceleration(ChVector3d(0, 0, -gravity));
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();
@@ -548,7 +548,7 @@ int main(int argc, char* argv[]) {
             }
 
             // Release the load plate.
-            loadPlate->SetBodyFixed(!use_actuator);
+            loadPlate->SetFixed(!use_actuator);
 
             break;
         }
@@ -586,7 +586,7 @@ int main(int argc, char* argv[]) {
             }
 
             // Release the shear box when using an actuator.
-            loadPlate->SetBodyFixed(!use_actuator);
+            loadPlate->SetFixed(!use_actuator);
 
             break;
         }
@@ -725,7 +725,7 @@ int main(int argc, char* argv[]) {
             // Get the current reaction force or impose load plate position
             double cnstr_force = 0;
             if (use_actuator) {
-                cnstr_force = actuator->Get_react_force().x();
+                cnstr_force = actuator->GetReactForce2().x();
             } else {
                 double zpos_new = pos_old.z() + desiredVelocity * time_step;
                 loadPlate->SetPos(ChVector3d(pos_old.x(), pos_old.y(), zpos_new));

@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
 
     // Create a rigid body and add it to the physical system:
     auto floor = chrono_types::make_shared<ChBody>();
-    floor->SetBodyFixed(true);
+    floor->SetFixed(true);
 
     // Contact material
     auto floor_mat = chrono_types::make_shared<ChContactMaterialNSC>();
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
     // Define a collision shape
     auto floor_shape = chrono_types::make_shared<ChCollisionShapeBox>(floor_mat, 20, 1, 20);
     floor->AddCollisionShape(floor_shape, ChFrame<>(ChVector3d(0, -1, 0), QUNIT));
-    floor->SetCollide(true);
+    floor->EnableCollision(true);
 
     // Add body to system
     sys.Add(floor);
@@ -118,7 +118,7 @@ int main(int argc, char* argv[]) {
 
     // Create the rigid body (this won't move, it is only for visualization tests)
     auto body = chrono_types::make_shared<ChBody>();
-    body->SetBodyFixed(true);
+    body->SetFixed(true);
     sys.Add(body);
 
     // Create a shared visualization material
@@ -144,10 +144,10 @@ int main(int argc, char* argv[]) {
 
     // Attach three instances of the same 'triangle mesh' shape
     auto mesh = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
-    mesh->GetMesh()->getCoordsVertices().push_back(ChVector3d(0, 0, 0));
-    mesh->GetMesh()->getCoordsVertices().push_back(ChVector3d(0, 1, 0));
-    mesh->GetMesh()->getCoordsVertices().push_back(ChVector3d(1, 0, 0));
-    mesh->GetMesh()->getIndicesVertexes().push_back(ChVector3i(0, 1, 2));
+    mesh->GetMesh()->GetCoordsVertices().push_back(ChVector3d(0, 0, 0));
+    mesh->GetMesh()->GetCoordsVertices().push_back(ChVector3d(0, 1, 0));
+    mesh->GetMesh()->GetCoordsVertices().push_back(ChVector3d(1, 0, 0));
+    mesh->GetMesh()->GetIndicesVertexes().push_back(ChVector3i(0, 1, 2));
     mesh->AddMaterial(orange_mat);
 
     body->AddVisualShape(mesh, ChFrame<>(ChVector3d(2, 0, 2), QUNIT));
@@ -185,7 +185,7 @@ int main(int argc, char* argv[]) {
         auto particles = chrono_types::make_shared<ChParticleCloud>();
         particles->SetMass(0.1);
         particles->SetInertiaXX(ChVector3d(0.001, 0.001, 0.001));
-        particles->SetCollide(true);
+        particles->EnableCollision(true);
 
         double particle_radius = 0.3;
         auto particle_vis = chrono_types::make_shared<ChVisualShapeSphere>(particle_radius);
@@ -207,7 +207,7 @@ int main(int argc, char* argv[]) {
         auto particles = chrono_types::make_shared<ChParticleCloud>();
         particles->SetMass(0.1);
         particles->SetInertiaXX(ChVector3d(0.001, 0.001, 0.001));
-        particles->SetCollide(true);
+        particles->EnableCollision(true);
 
         double size_x = 0.3;
         double size_y = 0.2;
@@ -245,7 +245,7 @@ int main(int argc, char* argv[]) {
         particles->SetMass(0.1);
         particles->SetInertiaXX(ChVector3d(0.001, 0.001, 0.001));
         particles->SetFixed(true);
-        particles->SetCollide(false);
+        particles->EnableCollision(false);
 
         auto particle_vis = chrono_types::make_shared<ChVisualShapeCapsule>(0.2, 0.2);
         particle_vis->SetColor(ChColor(0.3f, 0.3f, 0.7f));

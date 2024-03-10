@@ -67,7 +67,7 @@ void test_1() {
     // two 3D nodes:
     auto melementA = chrono_types::make_shared<ChElementSpring>();
     melementA->SetNodes(mnodeA, mnodeB);
-    melementA->SetSpringK(100000);
+    melementA->SetSpringCoefficient(100000);
 
     // Remember to add elements to the mesh!
     my_mesh->AddElement(melementA);
@@ -77,7 +77,7 @@ void test_1() {
 
     // Create also a truss
     auto truss = chrono_types::make_shared<ChBody>();
-    truss->SetBodyFixed(true);
+    truss->SetFixed(true);
     sys.Add(truss);
 
     // Create a constraint between a node and the truss
@@ -89,7 +89,7 @@ void test_1() {
     sys.Add(constraintA);
 
     // Set no gravity
-    // sys.Set_G_acc(VNULL);
+    // sys.SetGravitationalAcceleration(VNULL);
 
     // Perform a linear static analysis
     auto solver = chrono_types::make_shared<ChSolverMINRES>();
@@ -128,8 +128,8 @@ void test_2() {
     // Create a material, that must be assigned to each element,
     // and set its parameters
     auto mmaterial = chrono_types::make_shared<ChContinuumElastic>();
-    mmaterial->Set_E(0.01e9);  // rubber 0.01e9, steel 200e9
-    mmaterial->Set_v(0.3);
+    mmaterial->SetYoungModulus(0.01e9);  // rubber 0.01e9, steel 200e9
+    mmaterial->SetPoissonRatio(0.3);
 
     // Create some nodes. These are the classical point-like
     // nodes with x,y,z degrees of freedom, that can be used
@@ -163,7 +163,7 @@ void test_2() {
 
     // Create also a truss
     auto truss = chrono_types::make_shared<ChBody>();
-    truss->SetBodyFixed(true);
+    truss->SetFixed(true);
     sys.Add(truss);
 
     // Create a constraint between a node and the truss
@@ -185,7 +185,7 @@ void test_2() {
     sys.Add(constraint3);
 
     // Set no gravity
-    // sys.Set_G_acc(VNULL);
+    // sys.SetGravitationalAcceleration(VNULL);
 
     // Perform a linear static analysis
     auto solver = chrono_types::make_shared<ChSolverMINRES>();
@@ -229,8 +229,8 @@ void test_3() {
     // Create a material, that must be assigned to each element,
     // and set its parameters
     auto mmaterial = chrono_types::make_shared<ChContinuumElastic>();
-    mmaterial->Set_E(207e9);
-    mmaterial->Set_v(0.3);
+    mmaterial->SetYoungModulus(207e9);
+    mmaterial->SetPoissonRatio(0.3);
 
     // Create some nodes. These are the classical point-like
     // nodes with x,y,z degrees of freedom, that can be used
@@ -277,7 +277,7 @@ void test_3() {
     // Create also a truss
     auto truss = chrono_types::make_shared<ChBody>();
     sys.Add(truss);
-    truss->SetBodyFixed(true);
+    truss->SetFixed(true);
 
     // Create a constraint between a node and the truss
     auto constraint1 = chrono_types::make_shared<ChLinkPointFrame>();
@@ -298,7 +298,7 @@ void test_3() {
     sys.Add(constraint3);
 
     // Set no gravity
-    // sys.Set_G_acc(VNULL);
+    // sys.SetGravitationalAcceleration(VNULL);
 
     // Perform a linear static analysis
     auto solver = chrono_types::make_shared<ChSolverMINRES>();
@@ -339,8 +339,8 @@ void test_4() {
     // Create a material, that must be assigned to each element,
     // and set its parameters
     auto mmaterial = chrono_types::make_shared<ChContinuumElastic>();
-    mmaterial->Set_E(207e6);
-    mmaterial->Set_v(0.3);
+    mmaterial->SetYoungModulus(207e6);
+    mmaterial->SetPoissonRatio(0.3);
 
     // Create some nodes. These are the classical point-like
     // nodes with x,y,z degrees of freedom, that can be used
@@ -389,7 +389,7 @@ void test_4() {
     // Create also a truss
     auto truss = chrono_types::make_shared<ChBody>();
     sys.Add(truss);
-    truss->SetBodyFixed(true);
+    truss->SetFixed(true);
 
     // Create a constraint between a node and the truss
     auto constraint1 = chrono_types::make_shared<ChLinkPointFrame>();
@@ -415,7 +415,7 @@ void test_4() {
     sys.Add(constraint4);
 
     // Set no gravity
-    // sys.Set_G_acc(VNULL);
+    // sys.SetGravitationalAcceleration(VNULL);
 
     // Perform a linear static analysis
     auto solver = chrono_types::make_shared<ChSolverMINRES>();
@@ -459,8 +459,8 @@ void test_5() {
     // Create a material, that must be assigned to each element,
     // and set its parameters
     auto mmaterial = chrono_types::make_shared<ChContinuumElastic>();
-    mmaterial->Set_E(207e6);
-    mmaterial->Set_v(0.3);
+    mmaterial->SetYoungModulus(207e6);
+    mmaterial->SetPoissonRatio(0.3);
 
     // Create some nodes. These are the classical point-like
     // nodes with x,y,z degrees of freedom, that can be used
@@ -542,7 +542,7 @@ void test_5() {
     // Create also a truss
     auto truss = chrono_types::make_shared<ChBody>();
     sys.Add(truss);
-    truss->SetBodyFixed(true);
+    truss->SetFixed(true);
 
     // Create a constraint between a node and the truss
     auto constraint1 = chrono_types::make_shared<ChLinkPointFrame>();
@@ -568,7 +568,7 @@ void test_5() {
     sys.Add(constraint4);
 
     // Set no gravity
-    // sys.Set_G_acc(VNULL);
+    // sys.SetGravitationalAcceleration(VNULL);
 
     // Perform a linear static analysis
     auto solver = chrono_types::make_shared<ChSolverMINRES>();

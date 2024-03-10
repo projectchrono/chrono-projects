@@ -63,8 +63,8 @@ std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
     bin->SetMass(1);
     bin->SetPos(ChVector3d(0, 0, 0));
     bin->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    bin->SetCollide(true);
-    bin->SetBodyFixed(true);
+    bin->EnableCollision(true);
+    bin->SetFixed(true);
 
     ChVector3d hdim(1, 1, 0.5);
     double hthick = 0.1;
@@ -89,8 +89,8 @@ std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
     mixer->SetMass(10.0);
     mixer->SetInertiaXX(ChVector3d(50, 50, 50));
     mixer->SetPos(ChVector3d(0, 0, 0.205));
-    mixer->SetBodyFixed(false);
-    mixer->SetCollide(true);
+    mixer->SetFixed(false);
+    mixer->EnableCollision(true);
 
     ChVector3d hsize(0.8, 0.1, 0.2);
 
@@ -134,8 +134,8 @@ void AddFallingBalls(ChSystemMulticoreSMC* sys) {
             ball->SetInertiaXX(inertia);
             ball->SetPos(pos);
             ball->SetRot(ChQuaternion<>(1, 0, 0, 0));
-            ball->SetBodyFixed(false);
-            ball->SetCollide(true);
+            ball->SetFixed(false);
+            ball->EnableCollision(true);
 
             utils::AddSphereGeometry(ball.get(), ballMat, radius);
 
@@ -172,7 +172,7 @@ int main(int argc, char* argv[]) {
     sys.SetNumThreads(8);
 
     // Set gravitational acceleration
-    sys.Set_G_acc(ChVector3d(0, 0, -gravity));
+    sys.SetGravitationalAcceleration(ChVector3d(0, 0, -gravity));
 
     // Settings for the broad-phase collision detection
     sys.GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);

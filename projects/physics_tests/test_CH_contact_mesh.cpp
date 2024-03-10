@@ -93,16 +93,20 @@ int main(int argc, char* argv[]) {
     ChSystem* system;
 
     switch (contact_method) {
-        case ChContactMethod::NSC:
+        case ChContactMethod::NSC: {
             system = new ChSystemNSC();
             break;
-        case ChContactMethod::SMC:
-            system = new ChSystemSMC(use_mat_properties);
+        }
+        case ChContactMethod::SMC: {
+            auto sysSMC = new ChSystemSMC();
+            sysSMC->UseMaterialProperties(use_mat_properties);
+            system = sysSMC;
             break;
+        }
     }
 
     system->SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
-    system->Set_G_acc(ChVector3d(0, 0, -gravity));
+    system->SetGravitationalAcceleration(ChVector3d(0, 0, -gravity));
 
     // Create the falling object
     auto object = chrono_types::make_shared<ChBody>();
@@ -115,8 +119,8 @@ int main(int argc, char* argv[]) {
     object->SetRot(rot);
     object->SetLinVel(init_vel);
     object->SetAngVelParent(init_omg);
-    object->SetCollide(true);
-    object->SetBodyFixed(false);
+    object->EnableCollision(true);
+    object->SetFixed(false);
 
     std::shared_ptr<ChContactMaterial> object_mat;
     switch (contact_method) {
@@ -161,8 +165,8 @@ int main(int argc, char* argv[]) {
     ground->SetMass(1);
     ground->SetPos(ChVector3d(0, 0, 0));
     ground->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    ground->SetCollide(true);
-    ground->SetBodyFixed(true);
+    ground->EnableCollision(true);
+    ground->SetFixed(true);
 
     std::shared_ptr<ChContactMaterial> ground_mat;
     switch (contact_method) {

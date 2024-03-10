@@ -152,7 +152,8 @@ int main(int argc, char* argv[]) {
 
     // Solver settings.
     hmmwv.GetSystem()->SetNumThreads(std::min(8, ChOMP::GetNumProcs()));
-    hmmwv.GetSystem()->SetSolverMaxIterations(50);
+    hmmwv.GetSystem()->SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
+    hmmwv.GetSystem()->GetSolver()->AsIterative()->SetMaxIterations(200);
 
     // Add vehicle as an agent
     auto vehicle_agent = chrono_types::make_shared<SynWheeledVehicleAgent>(&hmmwv.GetVehicle());
@@ -248,7 +249,7 @@ int main(int argc, char* argv[]) {
 
         // Give the camera a fixed place to live
         auto origin = chrono_types::make_shared<ChBody>();
-        origin->SetBodyFixed(true);
+        origin->SetFixed(true);
         hmmwv.GetSystem()->AddBody(origin);
 
         // Happens to be a reasonable-looking height

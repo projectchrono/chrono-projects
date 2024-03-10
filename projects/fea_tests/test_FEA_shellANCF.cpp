@@ -94,7 +94,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
     // Create the physical system
     ChSystemNSC my_system;
     my_system.SetNumThreads(nthreads);
-    my_system.Set_G_acc(ChVector3d(0, 0, -9.81));
+    my_system.SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
 
     // Create a mesh, that is a container for groups of elements and their referenced nodes.
     auto my_mesh = chrono_types::make_shared<ChMesh>();
@@ -189,8 +189,8 @@ void RunModel(int nthreads,              // number of OpenMP threads
             solver->EnableDiagonalPreconditioner(true);
             solver->SetMaxIterations(100);
             solver->SetVerbose(true);
+            solver->SetTolerance(1e-12);
             my_system.SetSolver(solver);
-            my_system.SetSolverForceTolerance(1e-10);
         } break;
         case ChSolver::Type::PARDISO_MKL:
 #ifdef CHRONO_PARDISO_MKL
@@ -224,9 +224,9 @@ void RunModel(int nthreads,              // number of OpenMP threads
     mystepper->SetVerbose(verbose);
 
     // Initialize the output stream and set precision.
-    utils::CSV_writer out("\t");
-    out.stream().setf(std::ios::scientific | std::ios::showpos);
-    out.stream().precision(6);
+    utils::ChWriterCSV out("\t");
+    out.Stream().setf(std::ios::scientific | std::ios::showpos);
+    out.Stream().precision(6);
 
     // Get handle to tracked node.
     auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(TotalNumNodes - 1));
@@ -404,7 +404,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
         char name[100];
         std::sprintf(name, "%s/out_%s_%d.txt", out_dir.c_str(), suffix.c_str(), num_threads);
         cout << "Write output to: " << name << endl;
-        out.write_to_file(name);
+        out.WriteToFile(name);
     }
 }
 

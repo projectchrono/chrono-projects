@@ -167,8 +167,8 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     insert->SetInertiaXX(ChVector3d(1, 1, 1));
     insert->SetPos(ChVector3d(-0.5 * height - delta, 0, 0.5 * height - delta));
     insert->SetRot(chrono::QuatFromAngleAxis(-CH_C_PI / 4, VECT_Y));
-    insert->SetCollide(true);
-    insert->SetBodyFixed(true);
+    insert->EnableCollision(true);
+    insert->SetFixed(true);
 
     utils::AddBoxGeometry(insert.get(), mat_b, ChVector3d(thickness * 0.5, width * 0.5, height_insert * 0.5));
 
@@ -182,8 +182,8 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     slot->SetInertiaXX(ChVector3d(1, 1, 1));
     slot->SetPos(ChVector3d(0.5 * thickness, 0, 0.5 * height));
     slot->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    slot->SetCollide(true);
-    slot->SetBodyFixed(true);
+    slot->EnableCollision(true);
+    slot->SetFixed(true);
 
     utils::AddBoxGeometry(slot.get(), mat_b, ChVector3d(thickness / 2, width / 2, height / 2), ChVector3d(0, 0, 0));
 
@@ -197,8 +197,8 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     wall->SetInertiaXX(ChVector3d(1, 1, 1));
     wall->SetPos(ChVector3d(0, 0, 0));
     wall->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    wall->SetCollide(true);
-    wall->SetBodyFixed(true);
+    wall->EnableCollision(true);
+    wall->SetFixed(true);
 
     utils::AddBoxGeometry(wall.get(), mat_b, ChVector3d(3 * height / 2, thickness / 2, height),
                           ChVector3d(0, width / 2 + thickness / 2, height / 2));
@@ -334,7 +334,7 @@ int main(int argc, char* argv[]) {
     cout << "Using " << threads << " threads" << endl;
 
     // Set gravitational acceleration
-    sys->Set_G_acc(ChVector3d(0, 0, -gravity));
+    sys->SetGravitationalAcceleration(ChVector3d(0, 0, -gravity));
 
     // Edit system settings
     sys->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;

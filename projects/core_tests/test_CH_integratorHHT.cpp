@@ -35,10 +35,10 @@ class OscillatorProblem : public ChIntegrableIIorder {
     }
 
     /// number of coordinates in the state, x position part:
-    virtual int GetNumCoordinatesPos() override { return 1; }
+    virtual unsigned int GetNumCoordsPosLevel() override { return 1; }
 
     /// number of coordinates in the state, x position part:
-    virtual int GetNumCoordinatesVel() override { return 1; }
+    virtual unsigned int GetNumCoordsVelLevel() override { return 1; }
 
     /// system -> state
     virtual void StateGather(ChState& x, ChStateDelta& v, double& T) override {
@@ -178,13 +178,13 @@ class PendulumProblem : public ChIntegrableIIorder {
     }
 
     /// number of coordinates in the state, x position part:
-    virtual int GetNumCoordinatesPos() override { return 2; }
+    virtual unsigned int GetNumCoordsPosLevel() override { return 2; }
 
     /// number of coordinates at velocity level
-    virtual int GetNumCoordinatesVel() override { return 2; }
+    virtual unsigned int GetNumCoordsVelLevel() override { return 2; }
 
     /// number of lagrangian multipliers (constraints)
-    virtual int GetNumConstraints() override { return 1; }
+    virtual unsigned int GetNumConstraints() override { return 1; }
 
     /// system -> state
     virtual void StateGather(ChState& x, ChStateDelta& v, double& T) override {
@@ -383,12 +383,12 @@ void RigidPendulums() {
     bool modified_Newton = true;
 
     ChSystemNSC system;
-    system.Set_G_acc(ChVector3d(0, -g, 0));
+    system.SetGravitationalAcceleration(ChVector3d(0, -g, 0));
 
     // Bodies
     auto ground = chrono_types::make_shared<ChBody>();
     ground->SetIdentifier(-1);
-    ground->SetBodyFixed(true);
+    ground->SetFixed(true);
     system.AddBody(ground);
 
     auto pend1 = chrono_types::make_shared<ChBody>();

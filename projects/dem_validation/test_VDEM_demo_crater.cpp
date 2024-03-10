@@ -242,8 +242,8 @@ void CreateFallingBall(ChSystemMulticore* system, double z, double vz) {
     ball->SetPos(ChVector3d(0, 0, z + r_g + R_b));
     ball->SetRot(ChQuaternion<>(1, 0, 0, 0));
     ball->SetLinVel(ChVector3d(0, 0, -vz));
-    ball->SetCollide(true);
-    ball->SetBodyFixed(false);
+    ball->EnableCollision(true);
+    ball->SetFixed(false);
 
     utils::AddSphereGeometry(ball.get(), mat_b, R_b);
 
@@ -316,7 +316,7 @@ int main(int argc, char* argv[]) {
     cout << "Using " << threads << " threads" << endl;
 
     // Set gravitational acceleration
-    msystem->Set_G_acc(ChVector3d(0, 0, -gravity));
+    msystem->SetGravitationalAcceleration(ChVector3d(0, 0, -gravity));
 
     // Edit system settings
     msystem->GetSettings()->solver.use_full_inertia_tensor = false;
@@ -358,7 +358,7 @@ int main(int argc, char* argv[]) {
         // Create the fixed falling ball just below the granular material
         CreateFallingBall(msystem, -3 * R_b, 0);
         ball = msystem->GetBodies().at(0);
-        ball->SetBodyFixed(true);
+        ball->SetFixed(true);
         CreateObjects(msystem);
     } else {
         time_end = time_dropping;
@@ -380,7 +380,7 @@ int main(int argc, char* argv[]) {
         ball->SetPos(ChVector3d(0, 0, z + r_g + R_b));
         ball->SetRot(ChQuaternion<>(1, 0, 0, 0));
         ball->SetLinVel(ChVector3d(0, 0, -vz));
-        ball->SetBodyFixed(false);
+        ball->SetFixed(false);
     }
 
     // Number of steps

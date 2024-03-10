@@ -266,7 +266,7 @@ class SoilbinWheel {
         wheel->SetPos(mposition);
         wheel->SetMass(mass);
         wheel->SetInertiaXX(inertia);
-        wheel->SetCollide(true);
+        wheel->EnableCollision(true);
 
         // Visualization mesh
         auto tireMesh = ChTriangleMeshConnected::CreateFromWavefrontFile(
@@ -352,32 +352,32 @@ class TestMech {
         floor = chrono_types::make_shared<ChBodyEasyBox>(binWidth + wallWidth / 2.0, wallWidth,
                                                          binLength + wallWidth / 2.0, 1.0, true, true, floor_mat);
         floor->SetPos(ChVector3d(0, -0.5 - wallWidth / 2.0, 0));
-        floor->SetBodyFixed(true);
+        floor->SetFixed(true);
         floor->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/concrete.jpg"));
         system->AddBody(floor);
 
         // add some transparent walls to the soilBin, w.r.t. width, length of bin
         wall1 = chrono_types::make_shared<ChBodyEasyBox>(wallWidth, binHeight, binLength, 1.0, false, true, floor_mat);
         wall1->SetPos(ChVector3d(-binWidth / 2.0 - wallWidth / 2.0, 0, 0));
-        wall1->SetBodyFixed(true);
+        wall1->SetFixed(true);
         system->AddBody(wall1);
 
         wall2 = chrono_types::make_shared<ChBodyEasyBox>(wallWidth, binHeight, binLength, 1.0, false, true, floor_mat);
         wall2->SetPos(ChVector3d(binWidth / 2.0 + wallWidth / 2.0, 0, 0));
-        wall2->SetBodyFixed(true);
+        wall2->SetFixed(true);
         system->AddBody(wall2);
 
         wall3 = chrono_types::make_shared<ChBodyEasyBox>(binWidth + wallWidth / 2.0, binHeight, wallWidth, 1.0, false,
                                                          true, floor_mat);
         wall3->SetPos(ChVector3d(0, 0, -binLength / 2.0 - wallWidth / 2.0));
-        wall3->SetBodyFixed(true);
+        wall3->SetFixed(true);
         system->AddBody(wall3);
 
         // wall 4
         wall4 = chrono_types::make_shared<ChBodyEasyBox>(binWidth + wallWidth / 2.0, binHeight, wallWidth, 1.0, false,
                                                          true, floor_mat);
         wall4->SetPos(ChVector3d(0, 0, binLength / 2.0 + wallWidth / 2.0));
-        wall4->SetBodyFixed(true);
+        wall4->SetFixed(true);
         system->AddBody(wall4);
 
         // ******
@@ -525,9 +525,9 @@ class MyEventReceiver : public IEventReceiver {
                                                                    false, false, gad_tab_controls);
         checkbox_wheelLocked->setVisible(true);
         text_wheelLocked->setVisible(true);
-        this->mwheel->wheel->SetBodyFixed(wheelLocked);  // set IC of checkbox
-        this->mtester->truss->SetBodyFixed(wheelLocked);
-        this->mtester->suspweight->SetBodyFixed(wheelLocked);
+        this->mwheel->wheel->SetFixed(wheelLocked);  // set IC of checkbox
+        this->mtester->truss->SetFixed(wheelLocked);
+        this->mtester->suspweight->SetFixed(wheelLocked);
 
         // turn wheel visibility on/off, ie = 2115
         ////checkbox_wheelVisible = app->GetGUIEnvironment()->addCheckBox(wheelVisible, core::rect<s32>(180, 30, 195,
@@ -543,7 +543,7 @@ class MyEventReceiver : public IEventReceiver {
             L"Wheel collide? ", core::rect<s32>(45, 60, 125, 75), false, false, gad_tab_controls);
         checkbox_wheelCollision->setVisible(true);
         text_wheelCollision->setVisible(true);
-        this->mwheel->wheel->SetCollide(wheelCollision);
+        this->mwheel->wheel->EnableCollision(wheelCollision);
 
         // torque slider	(id = 1103)
         scrollbar_torque =
@@ -638,13 +638,13 @@ class MyEventReceiver : public IEventReceiver {
         text_cmVel = mapp->GetGUIEnvironment()->addStaticText(core::stringw(message5).c_str(),
                                                               rect<s32>(10, 60, 280, 75), false, false, gad_tab_wheel);
         // rxn. forces on spindle, in the local coordinate system
-        ChVector3d rxnF = mtester->spindle->Get_react_force();
+        ChVector3d rxnF = mtester->spindle->GetReactForce2();
         char messageF[100];
         sprintf(messageF, "spindle Rxn. F, x: %4.3g, y: %4.3g, z: %4.3g", rxnF.x(), rxnF.y(), rxnF.z());
         text_spindleForces = mapp->GetGUIEnvironment()->addStaticText(
             core::stringw(message5).c_str(), rect<s32>(10, 90, 280, 105), false, false, gad_tab_wheel);
         // rxn. torques on spindle, in local coordinate system
-        ChVector3d rxnT = mtester->spindle->Get_react_torque();
+        ChVector3d rxnT = mtester->spindle->GetReactTorque2();
         char messageT[100];
         sprintf(messageT, "spindle Rxn. T, x: %4.3g, y: %4.3g, z: %4.3g", rxnT.x(), rxnT.y(), rxnT.z());
         text_spindleTorque = mapp->GetGUIEnvironment()->addStaticText(
@@ -736,9 +736,9 @@ class MyEventReceiver : public IEventReceiver {
                         wheelLocked = checkbox_wheelLocked->isChecked();
                         std::cout << checkbox_wheelLocked->isChecked() << "\n";
                         // activate/deactivate motion for the wheel, truss and suspweight
-                        this->mwheel->wheel->SetBodyFixed(wheelLocked);
-                        this->mtester->suspweight->SetBodyFixed(wheelLocked);
-                        this->mtester->truss->SetBodyFixed(wheelLocked);
+                        this->mwheel->wheel->SetFixed(wheelLocked);
+                        this->mtester->suspweight->SetFixed(wheelLocked);
+                        this->mtester->truss->SetFixed(wheelLocked);
                         return true;
                     }
                     if (id == 2111) {
@@ -755,7 +755,7 @@ class MyEventReceiver : public IEventReceiver {
                         wheelCollision = checkbox_wheelCollision->isChecked();
                         std::cout << checkbox_wheelCollision->isChecked() << "\n";
                         // activate/deactivate the wheel collision detection
-                        this->mwheel->wheel->SetCollide(wheelCollision);
+                        this->mwheel->wheel->EnableCollision(wheelCollision);
                         return true;
                     }
                     /*
@@ -797,18 +797,18 @@ class MyEventReceiver : public IEventReceiver {
 
     void drawGrid() {
         // wall 1
-        ChCoordsys<> wall1Csys = this->mtester->wall1->GetCsys();
+        ChCoordsys<> wall1Csys = this->mtester->wall1->GetCoordsys();
         wall1Csys.rot = chrono::QuatFromAngleAxis(CH_C_PI / 2.0, VECT_Y);
         wall1Csys.pos.x() += .05;
         tools::drawGrid(this->mapp, 0.1, 0.05, 24, 20, wall1Csys, ChColor(0.3f, 0.5f, 0.5f), true);
 
         // wall 3
-        ChCoordsys<> wall3Csys = this->mtester->wall3->GetCsys();
+        ChCoordsys<> wall3Csys = this->mtester->wall3->GetCoordsys();
         wall3Csys.pos.z() += .05;
         tools::drawGrid(this->mapp, 0.1, 0.05, 10, 20, wall3Csys, ChColor(0.3f, 0.5f, 0.5f), true);
 
         // wall 4
-        ChCoordsys<> wall4Csys = this->mtester->wall4->GetCsys();
+        ChCoordsys<> wall4Csys = this->mtester->wall4->GetCoordsys();
         wall4Csys.pos.z() -= .05;
         tools::drawGrid(this->mapp, 0.1, 0.05, 10, 20, wall4Csys, ChColor(0.3f, 0.5f, 0.5f), true);
     }
@@ -825,12 +825,12 @@ class MyEventReceiver : public IEventReceiver {
         sprintf(messageV, "CM vel, x: %4.4g, y: %4.4g, z: %4.4g", cmVel.x(), cmVel.y(), cmVel.z());
         text_cmVel->setText(core::stringw(messageV).c_str());
         // rxn. forces on spindle
-        ChVector3d rxnF = mtester->spindle->Get_react_force();
+        ChVector3d rxnF = mtester->spindle->GetReactForce2();
         char messageF[100];
         sprintf(messageF, "spindle Rxn. F, x: %4.3g, y: %4.3g, z: %4.3g", rxnF.x(), rxnF.y(), rxnF.z());
         text_spindleForces->setText(core::stringw(messageF).c_str());
         // rxn. torques on spindle
-        ChVector3d rxnT = mtester->spindle->Get_react_torque();
+        ChVector3d rxnT = mtester->spindle->GetReactTorque2();
         char messageT[100];
         sprintf(messageT, "spindle Rxn. T, x: %4.3g, y: %4.3g, z: %4.3g", rxnT.x(), rxnT.y(), rxnT.z());
         text_spindleTorque->setText(core::stringw(messageT).c_str());
@@ -985,7 +985,7 @@ int main(int argc, char* argv[]) {
     // Set some integrator settings
     // sys.SetSolverType(ChSolver::Type::APGD);
     sys.SetSolverType(ChSolver::Type::PSOR);
-    sys.SetSolverMaxIterations(70);
+    sys.GetSolver()->AsIterative()->SetMaxIterations(70);
 
     double timestep = 0.01;
     ChRealtimeStepTimer realtime_timer;
