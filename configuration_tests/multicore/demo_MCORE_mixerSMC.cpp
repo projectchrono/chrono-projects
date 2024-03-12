@@ -79,7 +79,7 @@ std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
     utils::AddBoxGeometry(bin.get(), mat, ChVector3d(hdim.x(), hthick, hdim.z()),
                           ChVector3d(0, hdim.y() + hthick, hdim.z()));
     bin->GetCollisionModel()->SetFamily(1);
-    bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
+    bin->GetCollisionModel()->DisallowCollisionsWith(2);
 
     sys->AddBody(bin);
 

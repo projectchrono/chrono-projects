@@ -302,9 +302,9 @@ int main(int argc, char* argv[]) {
     AddWall(bin, mat_ext, ChVector3d(width / 2 + thickness, height / 2, thickness / 2),
             ChVector3d(0, 0, length / 2 + thickness / 2), true);
     bin->GetCollisionModel()->SetFamily(1);
-    bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
-    bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(3);
-    bin->GetCollisionModel()->SetFamilyMaskDoCollisionWithFamily(4);
+    bin->GetCollisionModel()->DisallowCollisionsWith(2);
+    bin->GetCollisionModel()->DisallowCollisionsWith(3);
+    bin->GetCollisionModel()->AllowCollisionsWith(4);
 
     sys->AddBody(bin);
 
@@ -327,9 +327,9 @@ int main(int argc, char* argv[]) {
     AddWall(box, mat_ext, ChVector3d(width / 2 + thickness, height / 2, thickness / 2),
             ChVector3d(0, 0, length / 2 + thickness / 2), true);
     box->GetCollisionModel()->SetFamily(2);
-    box->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-    box->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(3);
-    box->GetCollisionModel()->SetFamilyMaskDoCollisionWithFamily(4);
+    box->GetCollisionModel()->DisallowCollisionsWith(1);
+    box->GetCollisionModel()->DisallowCollisionsWith(3);
+    box->GetCollisionModel()->AllowCollisionsWith(4);
 
     sys->AddBody(box);
 
@@ -347,9 +347,9 @@ int main(int argc, char* argv[]) {
 
     AddWall(plate, mat_ext, ChVector3d(width / 2, thickness / 2, length / 2), ChVector3d(0, 0, 0), true);
     plate->GetCollisionModel()->SetFamily(3);
-    plate->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-    plate->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
-    plate->GetCollisionModel()->SetFamilyMaskDoCollisionWithFamily(4);
+    plate->GetCollisionModel()->DisallowCollisionsWith(1);
+    plate->GetCollisionModel()->DisallowCollisionsWith(2);
+    plate->GetCollisionModel()->AllowCollisionsWith(4);
 
     sys->AddBody(plate);
 

@@ -380,9 +380,9 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
             ChVector3d(COORDFlex(i, 0) + rim_center.x(), COORDFlex(i, 1) + rim_center.y(), COORDFlex(i, 2)),
             ChVector3d(COORDFlex(i, 3), COORDFlex(i, 4), COORDFlex(i, 5)));
         node->SetPosDer(ChVector3d(VELCYFlex(i, 0), VELCYFlex(i, 1), VELCYFlex(i, 2)));
-        node->SetD_dt(ChVector3d(VELCYFlex(i, 3), VELCYFlex(i, 4), VELCYFlex(i, 5)));
+        node->SetSlope1Der(ChVector3d(VELCYFlex(i, 3), VELCYFlex(i, 4), VELCYFlex(i, 5)));
         node->SetPosDer2(ChVector3d(ACCELFlex(i, 0), ACCELFlex(i, 1), ACCELFlex(i, 2)));
-        node->SetD_dtdt(ChVector3d(ACCELFlex(i, 3), ACCELFlex(i, 4), ACCELFlex(i, 5)));
+        node->SetSlope1Der2(ChVector3d(ACCELFlex(i, 3), ACCELFlex(i, 4), ACCELFlex(i, 5)));
         node->SetMass(0.0);
 
         TireMesh->AddNode(node);  // Add nodes to the system
@@ -392,7 +392,7 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
     auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode((TotalNumElements / 2)));
     std::cout << "X : " << nodetip->GetPos().x() << " Y : " << nodetip->GetPos().y() << " Z : " << nodetip->GetPos().z()
              << "\n\n";
-    std::cout << "dX : " << nodetip->GetD().x() << " dY : " << nodetip->GetD().y() << " dZ : " << nodetip->GetD().z()
+    std::cout << "dX : " << nodetip->GetSlope1().x() << " dY : " << nodetip->GetSlope1().y() << " dZ : " << nodetip->GetSlope1().z()
              << "\n\n";
 
     int LayerHist = 0;  // Number of layers in the previous tire sections
@@ -452,7 +452,7 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
                 // Add rotation constraints
                 constraintD = chrono_types::make_shared<ChLinkDirFrame>();
                 constraintD->Initialize(ConstrainedNode, Hub_1);
-                constraintD->SetDirectionInAbsoluteCoords(ConstrainedNode->GetD());
+                constraintD->SetDirectionInAbsoluteCoords(ConstrainedNode->GetSlope1());
                 my_system.Add(constraintD);
             }
         }

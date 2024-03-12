@@ -160,7 +160,7 @@ void writeMeshFrames(std::ostringstream& outstream,
     outstream << obj_name << ",";
 
     // Get frame position
-    ChFrame<> body_frame = body->GetFrame_REF_to_abs();
+    ChFrame<> body_frame = body->GetFrameRefToAbs();
     ChQuaternion<> rot = body_frame.GetRot();
     ChVector3d pos = body_frame.GetPos() + ChVector3d(0, 0, terrain_height_offset);
 
@@ -383,9 +383,9 @@ int main(int argc, char* argv[]) {
 
             gpu_sys.CollectMeshContactForces(i, wheel_force, wheel_torque);
 
-            curr_body->Empty_forces_accumulators();
-            curr_body->Accumulate_force(wheel_force, curr_body->GetPos(), false);
-            curr_body->Accumulate_torque(wheel_torque, false);
+            curr_body->EmptyAccumulators();
+            curr_body->AccumulateForce(wheel_force, curr_body->GetPos(), false);
+            curr_body->AccumulateTorque(wheel_torque, false);
         }
 
         if (curr_step % out_steps == 0) {

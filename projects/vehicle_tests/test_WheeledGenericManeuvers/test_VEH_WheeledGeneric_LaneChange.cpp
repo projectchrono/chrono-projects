@@ -312,9 +312,9 @@ int main(int argc, char* argv[]) {
                 vel_CG = vehicle.GetChassisBody()->GetCoordsys().TransformDirectionParentToLocal(vel_CG);
 
                 ChVector3d vel_driver_abs =
-                    vehicle.GetChassisBody()->GetFrame_REF_to_abs().PointSpeedLocalToParent(driver_pos);
+                    vehicle.GetChassisBody()->GetFrameRefToAbs().PointSpeedLocalToParent(driver_pos);
                 ChVector3d vel_driver_local =
-                    vehicle.GetChassisBody()->GetFrame_REF_to_abs().TransformDirectionParentToLocal(vel_driver_abs);
+                    vehicle.GetChassisBody()->GetFrameRefToAbs().TransformDirectionParentToLocal(vel_driver_abs);
 
                 int axle = vehicle.GetDriveline()->GetDrivenAxleIndexes()[0];
 

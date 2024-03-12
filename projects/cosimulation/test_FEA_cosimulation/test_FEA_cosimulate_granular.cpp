@@ -303,7 +303,7 @@ int main(int argc, char* argv[]) {
         chrono::utils::AddTriangleGeometry(triangle.get(), triMat, vert_pos[triangles[i].x()] - pos,
                                            vert_pos[triangles[i].y()] - pos, vert_pos[triangles[i].z()] - pos, name);
         triangle->GetCollisionModel()->SetFamily(1);
-        triangle->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+        triangle->GetCollisionModel()->DisallowCollisionsWith(1);
 
         systemG->AddBody(triangle);
     }

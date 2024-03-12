@@ -239,8 +239,8 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hdimX, hthick, hdimZ), ChVector3d(0, -hdimY - hthick, hdimZ));
     utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hdimX, hthick, hdimZ), ChVector3d(0, hdimY + hthick, hdimZ));
     ground->GetCollisionModel()->SetFamily(ground_coll_fam);
-    ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(box_coll_fam);
-    ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(plate_coll_fam);
+    ground->GetCollisionModel()->DisallowCollisionsWith(box_coll_fam);
+    ground->GetCollisionModel()->DisallowCollisionsWith(plate_coll_fam);
 
     system->AddBody(ground);
 
@@ -268,7 +268,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     utils::AddBoxGeometry(box.get(), mat_walls, ChVector3d(hdimX, hthick, h_scaling * hdimZ),
                           ChVector3d(0, hdimY + hthick, h_scaling * hdimZ));
     box->GetCollisionModel()->SetFamily(box_coll_fam);
-    box->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(plate_coll_fam);
+    box->GetCollisionModel()->DisallowCollisionsWith(plate_coll_fam);
 
     system->AddBody(box);
 

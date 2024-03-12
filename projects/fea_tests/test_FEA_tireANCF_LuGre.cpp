@@ -1283,9 +1283,9 @@ int main(int argc, char* argv[]) {
             chrono_types::make_shared<ChNodeFEAxyzD>(ChVector3d(COORDFlex(i, 0), COORDFlex(i, 1), COORDFlex(i, 2)),
                                                      ChVector3d(COORDFlex(i, 3), COORDFlex(i, 4), COORDFlex(i, 5)));
         node->SetPosDer(ChVector3d(VELCYFlex(i, 0), VELCYFlex(i, 1), VELCYFlex(i, 2)));
-        node->SetD_dt(ChVector3d(VELCYFlex(i, 3), VELCYFlex(i, 4), VELCYFlex(i, 5)));
+        node->SetSlope1Der(ChVector3d(VELCYFlex(i, 3), VELCYFlex(i, 4), VELCYFlex(i, 5)));
         node->SetPosDer2(ChVector3d(ACCELFlex(i, 0), ACCELFlex(i, 1), ACCELFlex(i, 2)));
-        node->SetD_dtdt(ChVector3d(ACCELFlex(i, 3), ACCELFlex(i, 4), ACCELFlex(i, 5)));
+        node->SetSlope1Der2(ChVector3d(ACCELFlex(i, 3), ACCELFlex(i, 4), ACCELFlex(i, 5)));
         node->SetMass(0.0);
         // Determine initial contact
         if (COORDFlex(i, 2) < ContactZ) {
@@ -1298,7 +1298,7 @@ int main(int argc, char* argv[]) {
     auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode((TotalNumElements / 2)));
     std::cout << "X : " << nodetip->GetPos().x() << " Y : " << nodetip->GetPos().y() << " Z : " << nodetip->GetPos().z()
              << "\n\n";
-    std::cout << "dX : " << nodetip->GetD().x() << " dY : " << nodetip->GetD().y() << " dZ : " << nodetip->GetD().z()
+    std::cout << "dX : " << nodetip->GetSlope1().x() << " dY : " << nodetip->GetSlope1().y() << " dZ : " << nodetip->GetSlope1().z()
              << "\n\n";
 
     double timestep = 0.0001;  // Initial time step
@@ -1520,7 +1520,7 @@ int main(int argc, char* argv[]) {
             // Add rotation constraints
             constraintD = chrono_types::make_shared<ChLinkDirFrame>();
             constraintD->Initialize(ConstrainedNode, Rim);
-            constraintD->SetDirectionInAbsoluteCoords(ConstrainedNode->GetD());
+            constraintD->SetDirectionInAbsoluteCoords(ConstrainedNode->GetSlope1());
             sys.Add(constraintD);
         }
     }
@@ -1613,9 +1613,9 @@ int main(int argc, char* argv[]) {
             fprintf(outputfile, "%15.7e  ", nodetip->GetPos().x());
             fprintf(outputfile, "%15.7e  ", nodetip->GetPos().y());
             fprintf(outputfile, "%15.7e  ", nodetip->GetPos().z());
-            fprintf(outputfile, "%15.7e  ", nodetip->GetD().x());
-            fprintf(outputfile, "%15.7e  ", nodetip->GetD().y());
-            fprintf(outputfile, "%15.7e  ", nodetip->GetD().z());
+            fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1().x());
+            fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1().y());
+            fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1().z());
         }
 
         // Nodal velocities for each node
@@ -1624,9 +1624,9 @@ int main(int argc, char* argv[]) {
             fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().x());
             fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().y());
             fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().z());
-            fprintf(outputfile, "%15.7e  ", nodetip->GetD_dt().x());
-            fprintf(outputfile, "%15.7e  ", nodetip->GetD_dt().y());
-            fprintf(outputfile, "%15.7e  ", nodetip->GetD_dt().z());
+            fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().x());
+            fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().y());
+            fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().z());
         }
         fprintf(outputfile, "\n  ");
     }
@@ -1682,8 +1682,8 @@ int main(int argc, char* argv[]) {
 
         while (vis->Run()) {
             // Apply vertical load to rim body
-            Rim->Empty_forces_accumulators();
-            Rim->Accumulate_force(ChVector3d(0.0, 0.0, -5000.0), Rim->GetPos(), 0);
+            Rim->EmptyAccumulators();
+            Rim->AccumulateForce(ChVector3d(0.0, 0.0, -5000.0), Rim->GetPos(), 0);
             vis->BeginScene();
             vis->Render();
             vis->EndScene();
@@ -1724,9 +1724,9 @@ int main(int argc, char* argv[]) {
                     fprintf(outputfile, "%15.7e  ", nodetip->GetPos().x());
                     fprintf(outputfile, "%15.7e  ", nodetip->GetPos().y());
                     fprintf(outputfile, "%15.7e  ", nodetip->GetPos().z());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetD().x());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetD().y());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetD().z());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1().x());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1().y());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1().z());
                 }
 
                 for (int ii = 0; ii < TotalNumNodes; ii++) {
@@ -1734,9 +1734,9 @@ int main(int argc, char* argv[]) {
                     fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().x());
                     fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().y());
                     fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().z());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetD_dt().x());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetD_dt().y());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetD_dt().z());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().x());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().y());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().z());
                 }
                 fprintf(outputfile, "\n  ");
             }
@@ -1812,8 +1812,8 @@ int main(int argc, char* argv[]) {
         ////////////////////////////////////////////////////
         double start = std::clock();
         while (sys.GetChTime() < 0.2) {
-            Rim->Empty_forces_accumulators();
-            Rim->Accumulate_force(ChVector3d(0.0, 0.0, -5000.0), Rim->GetPos(), 0);
+            Rim->EmptyAccumulators();
+            Rim->AccumulateForce(ChVector3d(0.0, 0.0, -5000.0), Rim->GetPos(), 0);
             //==Start analysis==//
             sys.DoStepDynamics(timestep);
 
@@ -1849,9 +1849,9 @@ int main(int argc, char* argv[]) {
                     fprintf(outputfile, "%15.7e  ", nodetip->GetPos().x());
                     fprintf(outputfile, "%15.7e  ", nodetip->GetPos().y());
                     fprintf(outputfile, "%15.7e  ", nodetip->GetPos().z());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetD().x());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetD().y());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetD().z());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1().x());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1().y());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1().z());
                 }
 
                 for (int ii = 0; ii < TotalNumNodes; ii++) {
@@ -1859,9 +1859,9 @@ int main(int argc, char* argv[]) {
                     fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().x());
                     fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().y());
                     fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().z());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetD_dt().x());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetD_dt().y());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetD_dt().z());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().x());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().y());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().z());
                 }
                 fprintf(outputfile, "\n  ");
             }

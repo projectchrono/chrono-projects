@@ -289,8 +289,8 @@ int main(int argc, char* argv[]) {
             switch_time += switch_period;
         }
         // Apply controller force on cart body
-        cart->Empty_forces_accumulators();
-        cart->Accumulate_force(ChVector3d(controller.GetForce(), 0, 0), ChVector3d(0, 0, 0), true);
+        cart->EmptyAccumulators();
+        cart->AccumulateForce(ChVector3d(controller.GetForce(), 0, 0), ChVector3d(0, 0, 0), true);
         // Advance system and controller states
         system.DoStepDynamics(step);
         controller.Advance(step);
