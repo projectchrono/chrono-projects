@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
             else if (time < 4) modulation = 4 - time;
             else modulation = 0;
         }
-        brake->Set_brake_torque(modulation * max_torque);
+        brake->SetBrakeTorque(modulation * max_torque);
 
         if (monitor && std::abs(wheel->GetAngVelLocal().z()) < 0.1) {
             std::cout << "Wheel stopped at t = " << time << "\n";
