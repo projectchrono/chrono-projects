@@ -168,8 +168,8 @@ int main(int argc, char* argv[]) {
         auto mloadcontainer = chrono_types::make_shared<ChLoadContainer>();
         sys.Add(mloadcontainer);
 
-        for (int i = 0; i < mmeshsurf->GetFacesList().size(); ++i) {
-            auto aface = std::shared_ptr<ChLoadableUV>(mmeshsurf->GetFacesList()[i]);
+        for (int i = 0; i < mmeshsurf->GetFaces().size(); ++i) {
+            auto aface = std::shared_ptr<ChLoadableUV>(mmeshsurf->GetFaces()[i]);
             auto faceload = chrono_types::make_shared<ChLoad<ChLoaderPressure>>(aface);
             faceload->loader.SetPressure(10000);  // low pressure... the tire has no ply!
             mloadcontainer->Add(faceload);
@@ -276,7 +276,7 @@ int main(int argc, char* argv[]) {
             sys.SetTimestepperType(ChTimestepper::Type::HHT);
             auto integrator = std::static_pointer_cast<ChTimestepperHHT>(sys.GetTimestepper());
             integrator->SetAlpha(-0.2);
-            integrator->SetMaxiters(10);
+            integrator->SetMaxIters(10);
             integrator->SetAbsTolerances(1e-3, 1e-2);
             integrator->SetVerbose(true);
             break;

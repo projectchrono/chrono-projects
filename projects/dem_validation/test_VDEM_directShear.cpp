@@ -851,14 +851,17 @@ int main(int argc, char* argv[]) {
             ChVector3d rtorqueA(0, 0, 0);
 
             if (use_actuator) {
-                rforcePbg = prismatic_box_ground->GetReactForce2();
-                rtorquePbg = prismatic_box_ground->GetReactTorque2();
+                auto reactionPbg = prismatic_box_ground->GetReaction2();
+                rforcePbg = reactionPbg.force;
+                rtorquePbg = reactionPbg.torque;
 
-                rforcePpb = prismatic_plate_ground->GetReactForce2();
-                rtorquePpb = prismatic_plate_ground->GetReactTorque2();
+                auto reactionPpb = prismatic_plate_ground->GetReaction2();
+                rforcePpb = reactionPpb.force;
+                rtorquePpb = reactionPpb.torque;
 
-                rforceA = actuator->GetReactForce2();
-                rtorqueA = actuator->GetReactTorque2();
+                auto reactionA = actuator->GetReaction2();
+                rforceA = reactionA.force;
+                rtorqueA = reactionA.torque;
             } else {
                 double xpos_new = pos_old.x() + desiredVelocity * time_step;
                 shearBox->SetPos(ChVector3d(xpos_new, pos_old.y(), pos_old.z()));

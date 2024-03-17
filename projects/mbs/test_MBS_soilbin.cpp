@@ -638,13 +638,14 @@ class MyEventReceiver : public IEventReceiver {
         text_cmVel = mapp->GetGUIEnvironment()->addStaticText(core::stringw(message5).c_str(),
                                                               rect<s32>(10, 60, 280, 75), false, false, gad_tab_wheel);
         // rxn. forces on spindle, in the local coordinate system
-        ChVector3d rxnF = mtester->spindle->GetReactForce2();
+        auto rxn = mtester->spindle->GetReaction2();
+        ChVector3d rxnF = rxn.force;
         char messageF[100];
         sprintf(messageF, "spindle Rxn. F, x: %4.3g, y: %4.3g, z: %4.3g", rxnF.x(), rxnF.y(), rxnF.z());
         text_spindleForces = mapp->GetGUIEnvironment()->addStaticText(
             core::stringw(message5).c_str(), rect<s32>(10, 90, 280, 105), false, false, gad_tab_wheel);
         // rxn. torques on spindle, in local coordinate system
-        ChVector3d rxnT = mtester->spindle->GetReactTorque2();
+        ChVector3d rxnT = rxn.torque;
         char messageT[100];
         sprintf(messageT, "spindle Rxn. T, x: %4.3g, y: %4.3g, z: %4.3g", rxnT.x(), rxnT.y(), rxnT.z());
         text_spindleTorque = mapp->GetGUIEnvironment()->addStaticText(
@@ -825,12 +826,13 @@ class MyEventReceiver : public IEventReceiver {
         sprintf(messageV, "CM vel, x: %4.4g, y: %4.4g, z: %4.4g", cmVel.x(), cmVel.y(), cmVel.z());
         text_cmVel->setText(core::stringw(messageV).c_str());
         // rxn. forces on spindle
-        ChVector3d rxnF = mtester->spindle->GetReactForce2();
+        auto rxn = mtester->spindle->GetReaction2();
+        ChVector3d rxnF = rxn.force;
         char messageF[100];
         sprintf(messageF, "spindle Rxn. F, x: %4.3g, y: %4.3g, z: %4.3g", rxnF.x(), rxnF.y(), rxnF.z());
         text_spindleForces->setText(core::stringw(messageF).c_str());
         // rxn. torques on spindle
-        ChVector3d rxnT = mtester->spindle->GetReactTorque2();
+        ChVector3d rxnT = rxn.torque;
         char messageT[100];
         sprintf(messageT, "spindle Rxn. T, x: %4.3g, y: %4.3g, z: %4.3g", rxnT.x(), rxnT.y(), rxnT.z());
         text_spindleTorque->setText(core::stringw(messageT).c_str());

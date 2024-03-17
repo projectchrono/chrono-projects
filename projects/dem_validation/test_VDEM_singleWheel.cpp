@@ -858,14 +858,17 @@ int main(int argc, char* argv[]) {
             ChVector3d rforce_wheel(0, 0, 0);
             ChVector3d rtorque_wheel(0, 0, 0);
 
-            rforce_chassis = prismatic_chassis_ground->GetReactForce2();
-            rtorque_chassis = prismatic_chassis_ground->GetReactTorque2();
+            auto reaction_chassis = prismatic_chassis_ground->GetReaction2();
+            rforce_chassis = reaction_chassis.force;
+            rtorque_chassis = reaction_chassis.torque;
 
-            rforce_actuator = actuator->GetReactForce2();
-            rtorque_actuator = actuator->GetReactTorque2();
+            auto reaction_actuator = actuator->GetReaction2();
+            rforce_actuator = reaction_actuator.force;
+            rtorque_actuator = reaction_actuator.torque;
 
-            rforce_wheel = engine_wheel_axle->GetReactForce2();
-            rtorque_wheel = engine_wheel_axle->GetReactTorque2();
+            auto reaction_wheel = engine_wheel_axle->GetReaction2();
+            rforce_wheel = reaction_wheel.force;
+            rtorque_wheel = reaction_wheel.torque;
 
             if (sim_frame % write_steps == 0) {
                 ////cout << "X pos: " << xpos_new << " X react: " << cnstr_force << endl;

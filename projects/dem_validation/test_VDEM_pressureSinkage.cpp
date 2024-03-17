@@ -725,7 +725,7 @@ int main(int argc, char* argv[]) {
             // Get the current reaction force or impose load plate position
             double cnstr_force = 0;
             if (use_actuator) {
-                cnstr_force = actuator->GetReactForce2().x();
+                cnstr_force = actuator->GetReaction2().force.x();
             } else {
                 double zpos_new = pos_old.z() + desiredVelocity * time_step;
                 loadPlate->SetPos(ChVector3d(pos_old.x(), pos_old.y(), zpos_new));

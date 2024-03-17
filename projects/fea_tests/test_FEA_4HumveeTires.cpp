@@ -663,7 +663,7 @@ int main(int argc, char* argv[]) {
     // my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
     auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
     mystepper->SetAlpha(-0.2);  // Important for convergence
-    mystepper->SetMaxiters(16);
+    mystepper->SetMaxIters(16);
     mystepper->SetAbsTolerances(6e-03, 0.8);
     mystepper->SetModifiedNewton(false);
     mystepper->SetVerbose(true);

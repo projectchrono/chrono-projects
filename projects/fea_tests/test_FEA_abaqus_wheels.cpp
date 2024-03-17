@@ -126,8 +126,8 @@ void MakeWheel(ChSystemSMC& sys,
     auto mloadcontainer = chrono_types::make_shared<ChLoadContainer>();
     sys.Add(mloadcontainer);
 
-    for (int i = 0; i < mmeshsurf->GetFacesList().size(); ++i) {
-        auto aface = std::shared_ptr<ChLoadableUV>(mmeshsurf->GetFacesList()[i]);
+    for (int i = 0; i < mmeshsurf->GetFaces().size(); ++i) {
+        auto aface = std::shared_ptr<ChLoadableUV>(mmeshsurf->GetFaces()[i]);
         auto faceload = chrono_types::make_shared<ChLoad<ChLoaderPressure>>(aface);
         faceload->loader.SetPressure(10000);  // low pressure... the tire has no ply!
         mloadcontainer->Add(faceload);
@@ -325,7 +325,7 @@ int main(int argc, char* argv[]) {
     // if later you want to change integrator settings:
     if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(sys.GetTimestepper())) {
         mystepper->SetAlpha(-0.2);
-        mystepper->SetMaxiters(2);
+        mystepper->SetMaxIters(2);
         mystepper->SetAbsTolerances(1e-6);
     }
 

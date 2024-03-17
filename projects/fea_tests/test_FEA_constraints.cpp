@@ -120,7 +120,7 @@ void test_beam(const std::string& name,  /// test name
     my_system.SetTimestepperType(ChTimestepper::Type::HHT);
     auto mystepper = std::static_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
     mystepper->SetAlpha(-0.2);
-    mystepper->SetMaxiters(100);
+    mystepper->SetMaxIters(100);
     mystepper->SetAbsTolerances(1e-3);
     mystepper->SetStepControl(true);
     mystepper->SetModifiedNewton(true);
@@ -153,14 +153,14 @@ void test_beam(const std::string& name,  /// test name
         ChVector3d pos = node2->GetPos();
 
         {
-            auto frame = point_cnstr->GetFrameAbs();
-            rforce = point_cnstr->GetReactionOnBody();
+            auto frame = point_cnstr->GetFrameNodeAbs();
+            rforce = point_cnstr->GetReactionOnNode();
             rforce = frame.TransformDirectionLocalToParent(rforce);
         }
 
         if (constrain_dir) {
-            auto frame = dir_cnstr->GetFrameAbs();
-            rtorque = dir_cnstr->GetReactionOnBody();
+            auto frame = dir_cnstr->GetFrameNodeAbs();
+            rtorque = dir_cnstr->GetReactionOnNode();
             rtorque = frame.TransformDirectionLocalToParent(rtorque);
         }
 
@@ -173,7 +173,7 @@ void test_beam(const std::string& name,  /// test name
     std::cout << "  base direction: " << dir1.x() << " " << dir1.y() << " " << dir1.z() << std::endl;
     std::cout << "  tip position:   " << pos2.x() << " " << pos2.y() << " " << pos2.z() << std::endl;
 
-    std::cout << "\nReaction force and torque on ground (final)" << std::endl;
+    std::cout << "\nReaction force and torque on node (final)" << std::endl;
     std::cout << "  force:  " << rforce.x() << " " << rforce.y() << " " << rforce.z() << std::endl;
     std::cout << "  torque: " << rtorque.x() << " " << rtorque.y() << " " << rtorque.z() << std::endl;
 

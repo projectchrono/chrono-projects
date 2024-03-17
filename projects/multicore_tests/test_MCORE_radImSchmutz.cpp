@@ -270,7 +270,7 @@ void Mechanism::WriteResults(std::ofstream& f, double time) {
     auto revFrame = m_revolute->GetFrame2Rel();
 
     // Reaction force in revolute joint
-    ChVector3d force_jointsys = m_revolute->GetReactForce2();
+    ChVector3d force_jointsys = m_revolute->GetReaction2().force;
     ChVector3d force_bodysys = revFrame.TransformDirectionLocalToParent(force_jointsys);
     ChVector3d force_abssys = m_sled->GetCoordsys().TransformDirectionLocalToParent(force_bodysys);
 

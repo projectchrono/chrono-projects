@@ -309,7 +309,7 @@ void Oscillator() {
     ChTimestepperHHT mystepper(&mintegrable);
     mystepper.SetAlpha(0);
     mystepper.SetAbsTolerances(1e-10);
-    mystepper.SetMaxiters(6);
+    mystepper.SetMaxIters(6);
     mystepper.SetMaxItersSuccess(3);
     mystepper.SetRequiredSuccessfulSteps(5);
     mystepper.SetStepIncreaseFactor(2);
@@ -342,7 +342,7 @@ void Pendulum() {
     ChTimestepperHHT mystepper(&mintegrable);
     mystepper.SetAlpha(-0.2);
     mystepper.SetAbsTolerances(1e-6);
-    mystepper.SetMaxiters(10);
+    mystepper.SetMaxIters(10);
     mystepper.SetMaxItersSuccess(3);
     mystepper.SetRequiredSuccessfulSteps(5);
     mystepper.SetStepIncreaseFactor(2);
@@ -432,7 +432,7 @@ void RigidPendulums() {
     integrator->SetModifiedNewton(modified_Newton);
     integrator->SetVerbose(true);
     integrator->SetAlpha(-0.2);
-    integrator->SetMaxiters(20);
+    integrator->SetMaxIters(20);
     integrator->SetRelTolerance(1e-4);
     integrator->SetAbsTolerances(1e-3, 1e-6);
 
