@@ -255,7 +255,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "capture step is " << frame_step << std::endl;
 
-    float total_system_mass = 4. / 3. * CH_C_PI * params.sphere_density * params.sphere_radius * params.sphere_radius *
+    float total_system_mass = 4. / 3. * CH_PI * params.sphere_density * params.sphere_radius * params.sphere_radius *
                               params.sphere_radius * body_points.size();
     printf("total system mass is %f kg \n", total_system_mass * M_CGS_TO_SI);
 

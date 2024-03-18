@@ -247,9 +247,9 @@ int main(int argc, char* argv[]) {
 
         auto balance = chrono_types::make_shared<ChBodyEasyCylinder>(ChAxis::Y, Rbalance, Wbalance, 7000, true, false);
         balance->SetPos(vP + ChVector3d(0, 0, -OffPin));
-        balance->SetRot(QuatFromAngleAxis(CH_C_PI_2, VECT_X));
+        balance->SetRot(QuatFromAngleAxis(CH_PI_2, VECT_X));
         for (int i = 0; i < 6; ++i) {
-            double phi = CH_C_2PI * (i / 6.0);
+            double phi = CH_2PI * (i / 6.0);
             auto p1 = ChVector3d(sin(phi) * Rbalance * 0.8, Wbalance, cos(phi) * Rbalance * 0.8);
             auto p2 = p1 + ChVector3d(0, 2 * Wbalance, 0);
             ChLineSegment seg(p1, p2);
@@ -329,7 +329,7 @@ int main(int argc, char* argv[]) {
     while (vis->Run()) {
         vis->BeginScene();
         vis->Render();
-        tools::drawGrid(vis.get(), 0.2, 0.2, 10, 10, ChCoordsys<>(VNULL, CH_C_PI_2, VECT_Z), ChColor(0.4f, 0.5f, 0.5f),
+        tools::drawGrid(vis.get(), 0.2, 0.2, 10, 10, ChCoordsys<>(VNULL, CH_PI_2, VECT_Z), ChColor(0.4f, 0.5f, 0.5f),
                         true);
         vis->EndScene();
         sys.DoStepDynamics(0.01);

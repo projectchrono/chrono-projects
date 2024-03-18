@@ -174,7 +174,7 @@ class MySimpleCar {
         if (useSpheres) {
             utils::AddSphereGeometry(wheelRF.get(), mat, 0.45, ChVector3d(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelRF.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelRF.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
         }
         wheelRF->EnableCollision(true);
         my_system->AddBody(wheelRF);
@@ -183,7 +183,7 @@ class MySimpleCar {
         link_revoluteRF = chrono_types::make_shared<ChLinkLockRevolute>();  // right, front, upper, 1
         link_revoluteRF->Initialize(
             wheelRF, spindleRF,
-            ChFrame<>(ChVector3d(0.91, -0.026, 1.648965), chrono::QuatFromAngleAxis(CH_C_PI / 2, VECT_Y)));
+            ChFrame<>(ChVector3d(0.91, -0.026, 1.648965), chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         my_system->AddLink(link_revoluteRF);
 
         // .. impose distance between two parts (as a massless rod with two spherical joints at the end)
@@ -245,7 +245,7 @@ class MySimpleCar {
         if (useSpheres) {
             utils::AddSphereGeometry(wheelLF.get(), mat, 0.45, ChVector3d(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelLF.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelLF.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
         }
         wheelLF->EnableCollision(true);
         my_system->AddBody(wheelLF);
@@ -254,7 +254,7 @@ class MySimpleCar {
         link_revoluteLF = chrono_types::make_shared<ChLinkLockRevolute>();  // left, front, upper, 1
         link_revoluteLF->Initialize(
             wheelLF, spindleLF,
-            ChFrame<>(ChVector3d(-0.91, -0.026, 1.648965), chrono::QuatFromAngleAxis(CH_C_PI / 2, VECT_Y)));
+            ChFrame<>(ChVector3d(-0.91, -0.026, 1.648965), chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         my_system->AddLink(link_revoluteLF);
 
         // .. impose distance between two parts (as a massless rod with two spherical joints at the end)
@@ -316,7 +316,7 @@ class MySimpleCar {
         if (useSpheres) {
             utils::AddSphereGeometry(wheelRB.get(), mat, 0.45, ChVector3d(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelRB.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelRB.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
         }
         wheelRB->EnableCollision(true);
         my_system->AddBody(wheelRB);
@@ -325,13 +325,13 @@ class MySimpleCar {
         link_revoluteRB = chrono_types::make_shared<ChLinkLockRevolute>();  // right, back, upper, 1
         link_revoluteRB->Initialize(
             wheelRB, spindleRB,
-            ChFrame<>(ChVector3d(0.91, -0.026, -1.652965), chrono::QuatFromAngleAxis(CH_C_PI / 2, VECT_Y)));
+            ChFrame<>(ChVector3d(0.91, -0.026, -1.652965), chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         my_system->AddLink(link_revoluteRB);
 
         // .. create the motor transmission joint between the wheel and the truss (assuming small changes of alignment)
         link_engineR = chrono_types::make_shared<ChLinkMotorRotationAngle>();
         link_engineR->Initialize(wheelRB, truss, ChFrame<>(ChVector3d(0.91, -0.026, -1.652965),
-                                                              chrono::QuatFromAngleAxis(CH_C_PI / 2, VECT_Y)));
+                                                              chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         link_engineR->SetSpindleConstraint(ChLinkMotorRotation::SpindleConstraint::OLDHAM);  // approx as a double Rzeppa joint
         link_engineR->SetAngleFunction(chrono_types::make_shared<ChFunctionRamp>(0, angularSpeed));
         my_system->AddLink(link_engineR);
@@ -395,7 +395,7 @@ class MySimpleCar {
         if (useSpheres) {
             utils::AddSphereGeometry(wheelLB.get(), mat, 0.45, ChVector3d(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelLB.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelLB.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
         }
         wheelLB->EnableCollision(true);
         my_system->AddBody(wheelLB);
@@ -404,13 +404,13 @@ class MySimpleCar {
         link_revoluteLB = chrono_types::make_shared<ChLinkLockRevolute>();  // left, back, upper, 1
         link_revoluteLB->Initialize(
             wheelLB, spindleLB,
-            ChFrame<>(ChVector3d(-0.91, -0.026, -1.652965), chrono::QuatFromAngleAxis(CH_C_PI / 2, VECT_Y)));
+            ChFrame<>(ChVector3d(-0.91, -0.026, -1.652965), chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         my_system->AddLink(link_revoluteLB);
 
         // .. create the motor transmission joint between the wheel and the truss (assuming small changes of alignment)
         link_engineL = chrono_types::make_shared<ChLinkMotorRotationAngle>();
         link_engineL->Initialize(wheelLB, truss, ChFrame<>(ChVector3d(-0.91, -0.026, -1.652965),
-                                                              chrono::QuatFromAngleAxis(CH_C_PI / 2, VECT_Y)));
+                                                              chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         link_engineL->SetSpindleConstraint(ChLinkMotorRotation::SpindleConstraint::OLDHAM);  // approx as a double Rzeppa joint
         link_engineL->SetAngleFunction(chrono_types::make_shared<ChFunctionRamp>(0, angularSpeed));
         my_system->AddLink(link_engineL);

@@ -300,7 +300,7 @@ public:
 
     // create the translational joint between the truss and weight load
     ChSharedPtr<ChLinkLockPrismatic> translationalVert(new ChLinkLockPrismatic);
-    translationalVert->Initialize(cieling, top, ChCoordsys<>(top->GetPos(), chrono::Q_from_AngAxis(CH_C_PI/2,VECT_X)) );
+    translationalVert->Initialize(cieling, top, ChCoordsys<>(top->GetPos(), chrono::Q_from_AngAxis(CH_PI/2,VECT_X)) );
     mphysicalSystem->AddLink(translationalVert);
 
     CreateGranularMaterial(mphysicalSystem, mu_particles, r, particleDensity, 0.5*L, 0.5*(H+HTOP), 0.5*W);
@@ -321,7 +321,7 @@ public:
     while (abody != sys->Get_bodylist()->end()) {
       ChBody* bpointer = (*abody);
 
-      double volume = 4.0*CH_C_PI*particleRadius*particleRadius*particleRadius/3.0;
+      double volume = 4.0*CH_PI*particleRadius*particleRadius*particleRadius/3.0;
       double mass = rho*volume;
       bpointer->SetMass(mass);
       totalMass+=mass;

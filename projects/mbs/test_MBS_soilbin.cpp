@@ -138,7 +138,7 @@ class ParticleGenerator {
 
             for (int bi = 0; bi < nParticles; bi++) {
                 double sphrad = pSize + pDev * ChRandom::Get();
-                double sphmass = (4 / 3) * CH_C_PI * pow(sphrad, 3) * this->sphDens;
+                double sphmass = (4 / 3) * CH_PI * pow(sphrad, 3) * this->sphDens;
                 ChQuaternion<> randrot(ChRandom::Get(), ChRandom::Get(), ChRandom::Get(), ChRandom::Get());
                 randrot.Normalize();
                 // randomize spawning position, take stack height into consideration
@@ -287,7 +287,7 @@ class SoilbinWheel {
         auto knobs_shapes = ChCollisionShapeConvexHull::Read(wheel_mat, knobs_filename);
         auto slice_shapes = ChCollisionShapeConvexHull::Read(wheel_mat, slice_filename);
         for (double mangle = 0; mangle < 360.; mangle += (360. / 15.)) {
-            auto q = QuatFromAngleX(mangle * CH_C_DEG_TO_RAD);
+            auto q = QuatFromAngleX(mangle * CH_DEG_TO_RAD);
             for (const auto& s : knobs_shapes)
                 wheel->AddCollisionShape(s, ChFrame<>(VNULL, q));
             for (const auto& s : slice_shapes)
@@ -336,7 +336,7 @@ class TestMech {
         ChCollisionModel::SetDefaultSuggestedMargin(0.002);
 
         ChQuaternion<> rot;
-        rot.SetFromAngleAxis(ChRandom::Get() * CH_C_2PI, VECT_Y);
+        rot.SetFromAngleAxis(ChRandom::Get() * CH_2PI, VECT_Y);
 
         // *******
         // Create a soil bin with planes. bin width = x-dir, bin length = z-dir
@@ -398,12 +398,12 @@ class TestMech {
 
         // create the revolute joint between the wheel and spindle
         spindle = chrono_types::make_shared<ChLinkLockRevolute>();
-        spindle->Initialize(truss, wheelBody, ChFrame<>(trussCM, chrono::QuatFromAngleAxis(CH_C_PI / 2, VECT_Y)));
+        spindle->Initialize(truss, wheelBody, ChFrame<>(trussCM, chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         system->AddLink(spindle);
 
         // create a torque between the truss and wheel
         torqueDriver = chrono_types::make_shared<ChLinkMotorRotationTorque>();
-        torqueDriver->Initialize(truss, wheelBody, ChFrame<>(trussCM, chrono::QuatFromAngleAxis(CH_C_PI / 2, VECT_Y)));
+        torqueDriver->Initialize(truss, wheelBody, ChFrame<>(trussCM, chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         system->AddLink(torqueDriver);
 
         // ******
@@ -420,7 +420,7 @@ class TestMech {
         // create the translational joint between the truss and weight load
         auto translational = chrono_types::make_shared<ChLinkLockPrismatic>();
         translational->Initialize(truss, suspweight,
-                                  ChFrame<>(trussCM, chrono::QuatFromAngleAxis(CH_C_PI / 2, VECT_X)));
+                                  ChFrame<>(trussCM, chrono::QuatFromAngleAxis(CH_PI / 2, VECT_X)));
         system->AddLink(translational);
 
         // create a spring between spindle truss and weight
@@ -435,7 +435,7 @@ class TestMech {
         // create a prismatic constraint between the weight and the ground
         auto weightLink = chrono_types::make_shared<ChLinkLockOldham>();
         weightLink->Initialize(suspweight, floor,
-                               ChFrame<>(weightCM, chrono::QuatFromAngleAxis(CH_C_PI / 2.0, VECT_Y)));
+                               ChFrame<>(weightCM, chrono::QuatFromAngleAxis(CH_PI / 2.0, VECT_Y)));
         system->AddLink(weightLink);
     }
 
@@ -799,7 +799,7 @@ class MyEventReceiver : public IEventReceiver {
     void drawGrid() {
         // wall 1
         ChCoordsys<> wall1Csys = this->mtester->wall1->GetCoordsys();
-        wall1Csys.rot = chrono::QuatFromAngleAxis(CH_C_PI / 2.0, VECT_Y);
+        wall1Csys.rot = chrono::QuatFromAngleAxis(CH_PI / 2.0, VECT_Y);
         wall1Csys.pos.x() += .05;
         tools::drawGrid(this->mapp, 0.1, 0.05, 24, 20, wall1Csys, ChColor(0.3f, 0.5f, 0.5f), true);
 

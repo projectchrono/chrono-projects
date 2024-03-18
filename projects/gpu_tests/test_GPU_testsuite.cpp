@@ -133,7 +133,7 @@ void run_ROTF() {
     ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
     setCommonParameters(gpu_sys);
 
-    float ramp_angle = (float)CH_C_PI / 4;
+    float ramp_angle = (float)CH_PI / 4;
     // ramp normal is 45 degrees about y
     float nx = std::cos(ramp_angle);
     float nz = std::sin(ramp_angle);
@@ -247,7 +247,7 @@ void run_ROTF_MESH() {
     auto bot_quat = QuatFromAngleY(0);
 
     // this is a quaternion
-    auto rot_quat = QuatFromAngleY(CH_C_PI / 4);
+    auto rot_quat = QuatFromAngleY(CH_PI / 4);
 
     // Run settling experiments
     while (curr_time < timeEnd) {
@@ -280,12 +280,12 @@ void run_PYRAMID() {
     // down the x a little
     ChVector3d base_sphere_2(diam_delta * sphere_radius, 0, 0);
     // top of the triangle
-    ChVector3d base_sphere_3(diam_delta * sphere_radius * std::cos(CH_C_PI / 3),
-                             diam_delta * sphere_radius * std::sin(CH_C_PI / 3), 0);
+    ChVector3d base_sphere_3(diam_delta * sphere_radius * std::cos(CH_PI / 3),
+                             diam_delta * sphere_radius * std::sin(CH_PI / 3), 0);
     // top of pyramid in middle (average x, y)
     ChVector3d top_sphere((base_sphere_1.x() + base_sphere_2.x() + base_sphere_3.x()) / 3.,
                           (base_sphere_1.y() + base_sphere_2.y() + base_sphere_3.y()) / 3.,
-                          2.0 * sphere_radius * std::sin(CH_C_PI / 3));
+                          2.0 * sphere_radius * std::sin(CH_PI / 3));
 
     std::vector<ChVector3f> points;
 
@@ -329,12 +329,12 @@ void run_PYRAMID_MESH() {
     // down the x a little
     ChVector3d base_sphere_2(diam_delta * sphere_radius, 0, 0);
     // top of the triangle
-    ChVector3d base_sphere_3(diam_delta * sphere_radius * std::cos(CH_C_PI / 3),
-                             diam_delta * sphere_radius * std::sin(CH_C_PI / 3), 0);
+    ChVector3d base_sphere_3(diam_delta * sphere_radius * std::cos(CH_PI / 3),
+                             diam_delta * sphere_radius * std::sin(CH_PI / 3), 0);
     // top of pyramid in middle (average x, y)
     ChVector3d top_sphere((base_sphere_1.x() + base_sphere_2.x() + base_sphere_3.x()) / 3.,
                           (base_sphere_1.y() + base_sphere_2.y() + base_sphere_3.y()) / 3.,
-                          2.0 * sphere_radius * std::sin(CH_C_PI / 3));
+                          2.0 * sphere_radius * std::sin(CH_PI / 3));
 
     std::vector<ChVector3f> points;
 
@@ -427,7 +427,7 @@ void run_MESH_FORCE() {
 
     auto n_spheres = pos.size();
     std::cout << "Created " << n_spheres << " spheres" << std::endl;
-    double sphere_mass = sphere_density * 4.0 * CH_C_PI * sphere_radius * sphere_radius * sphere_radius / 3.0;
+    double sphere_mass = sphere_density * 4.0 * CH_PI * sphere_radius * sphere_radius * sphere_radius / 3.0;
 
     double total_mass = sphere_mass * n_spheres;
     double sphere_weight = sphere_mass * std::abs(grav_Z);

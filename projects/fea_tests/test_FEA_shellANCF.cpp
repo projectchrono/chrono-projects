@@ -162,7 +162,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
 
         // Element length is a fixed number in both direction. (uniform distribution of nodes in both directions)
         element->SetDimensions(dx, dy);
-        element->AddLayer(dz, 0 * CH_C_DEG_TO_RAD, mat);  // Single layer; Thickness: dy;  Ply angle: 0.
+        element->AddLayer(dz, 0 * CH_DEG_TO_RAD, mat);  // Single layer; Thickness: dy;  Ply angle: 0.
         element->SetAlphaDamp(0.0);                       // Structural damping for this
         my_mesh->AddElement(element);
     }

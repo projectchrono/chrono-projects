@@ -26,7 +26,7 @@
 using namespace chrono;
 
 double Reference(double x) {
-    return std::cos(x * CH_C_2PI);
+    return std::cos(x * CH_2PI);
 }
 
 void Evaluate(const ChFunctionInterp& fun, double x) {

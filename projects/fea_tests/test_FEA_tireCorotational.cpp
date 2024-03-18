@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
     double tire_rad = 0.8;
     double tire_w0 = tire_vel_z0 / tire_rad;
     ChVector3d tire_center(0, 0.02 + tire_rad, 0.5);
-    ChMatrix33<> tire_alignment(QuatFromAngleAxis(CH_C_PI, VECT_Y));
+    ChMatrix33<> tire_alignment(QuatFromAngleAxis(CH_PI, VECT_Y));
 
     // Contact material
     auto mysurfmaterial = chrono_types::make_shared<ChContactMaterialSMC>();
@@ -223,7 +223,7 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < 150; ++i) {
             auto mcube = chrono_types::make_shared<ChBodyEasyBox>(0.18, 0.04, 0.18, 2700, true, true, mysurfmaterial);
             ChQuaternion<> vrot;
-            vrot.SetFromAngleAxis(ChRandom::Get() * CH_C_2PI, VECT_Y);
+            vrot.SetFromAngleAxis(ChRandom::Get() * CH_2PI, VECT_Y);
             mcube->Move(ChCoordsys<>(VNULL, vrot));
             mcube->SetPos(ChVector3d((ChRandom::Get() - 0.5) * 1.4, ChRandom::Get() * 0.2 + 0.05, -ChRandom::Get() * 2.6 + 0.2));
             sys.Add(mcube);

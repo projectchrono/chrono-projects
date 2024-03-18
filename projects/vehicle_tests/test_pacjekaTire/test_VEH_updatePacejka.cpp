@@ -29,7 +29,7 @@ using namespace chrono::vehicle;
 using std::cout;
 using std::endl;
 
-static const double rad2deg = 180 / CH_C_PI;
+static const double rad2deg = 180 / CH_PI;
 
 const std::string pacParamFile = vehicle::GetDataFile("hmmwv/pactest.tir");
 

@@ -215,7 +215,7 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
             return GroundLoc;
         } else {
             return (GroundLoc +
-                    Amplitude * sin(1 / (2 * BumpRadius) * CH_C_PI * (NodeLocation.x() - (BumpLongLoc - BumpRadius))));
+                    Amplitude * sin(1 / (2 * BumpRadius) * CH_PI * (NodeLocation.x() - (BumpLongLoc - BumpRadius))));
         }
     };
     virtual void ComputeQ(ChState* state_x,      ///< state position to evaluate Q
@@ -271,7 +271,7 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
                             (Node1_Vel.x() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fx (Plane x)
                     } else {
                         this->load_Q(iii * 6 + 0) =
-                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.x()) * CH_C_PI_2 / VelLimit) *
+                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.x()) * CH_PI_2 / VelLimit) *
                             (Node1_Vel.x() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fx (Plane x)
                     }
                     if (abs(Node1_Vel.y()) > VelLimit) {
@@ -280,7 +280,7 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
                             (Node1_Vel.y() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fz (Plane y)
                     } else {
                         this->load_Q(iii * 6 + 1) =
-                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.z()) * CH_C_PI_2 / VelLimit) *
+                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.z()) * CH_PI_2 / VelLimit) *
                             (Node1_Vel.y() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fz (Plane y)
                     }
                 }
@@ -427,7 +427,7 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
 
         // Give material properties to elements as a construction of layers
         for (int j = 0; j < NumLayPerSection(SectionID(i) - 1); j++) {
-            element->AddLayer(LayPROP(LayerHist + j, 0), LayPROP(LayerHist + j, 1) * CH_C_DEG_TO_RAD,
+            element->AddLayer(LayPROP(LayerHist + j, 0), LayPROP(LayerHist + j, 1) * CH_DEG_TO_RAD,
                               MaterialList[MatID(SectionID(i) - 1, j) - 1]);
             // std::cout << "Thickness: " << LayPROP(LayerHist + j, 0) << "  Ply: " << LayPROP(LayerHist + j, 1) << "
             // Mat: " << MatID(SectionID(i) - 1, j) << "\n";
@@ -575,7 +575,7 @@ int main(int argc, char* argv[]) {
     auto mtrussmesh = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     mtrussmesh->GetMesh()->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_chassis_simple.obj"));
     ////SimpChassis->AddVisualShape(
-    ////    mtrussmesh, ChFrame<>(VNULL, QuatFromAngleAxis(CH_C_PI_2, VECT_Z) % QuatFromAngleAxis(CH_C_PI_2, VECT_Y)));
+    ////    mtrussmesh, ChFrame<>(VNULL, QuatFromAngleAxis(CH_PI_2, VECT_Z) % QuatFromAngleAxis(CH_PI_2, VECT_Y)));
     SimpChassis->AddVisualShape(mtrussmesh, ChFrame<>());
 
     auto Bump = chrono_types::make_shared<ChBody>();
@@ -585,7 +585,7 @@ int main(int argc, char* argv[]) {
     my_system.Add(Bump);
 
     auto cyl_wheel = chrono_types::make_shared<ChVisualShapeCylinder>(BumpRadius, 1.0);
-    Bump->AddVisualShape(cyl_wheel, ChFrame<>(VNULL, QuatFromAngleX(CH_C_PI_2)));
+    Bump->AddVisualShape(cyl_wheel, ChFrame<>(VNULL, QuatFromAngleX(CH_PI_2)));
 
     // Create joints between chassis and hubs
     auto RevTr_1 = chrono_types::make_shared<ChLinkRevoluteTranslational>();

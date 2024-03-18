@@ -16,7 +16,7 @@ using namespace chrono::irrlicht;
 std::shared_ptr<ChLinePath> CreateProfile(int num_teeth, double R_T, double R_C, double R) {
     auto profile = chrono_types::make_shared<ChLinePath>();
 
-    double beta = CH_C_2PI / num_teeth;
+    double beta = CH_2PI / num_teeth;
     double sbeta = std::sin(beta / 2);
     double cbeta = std::cos(beta / 2);
     double y = (R_T * R_T + R_C * R_C - R * R) / (2 * R_C);
@@ -39,8 +39,8 @@ std::shared_ptr<ChLinePath> CreateProfile(int num_teeth, double R_T, double R_C,
         p3 = rot * p3;
         p4 = rot * p4;
         ChLineSegment seg1(p1, p2);
-        double angle1 = alpha + 1.5 * CH_C_PI - gamma;
-        double angle2 = alpha + 1.5 * CH_C_PI + gamma;
+        double angle1 = alpha + 1.5 * CH_PI - gamma;
+        double angle2 = alpha + 1.5 * CH_PI + gamma;
         ChLineArc arc(ChCoordsys<>(p0), R, angle1, angle2, true);
         ChLineSegment seg2(p3, p4);
         profile->AddSubLine(seg1);
@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
     system.AddBody(pin);
 
     auto pin_profile = chrono_types::make_shared<ChLinePath>();
-    ChLineArc pin_circle(ChCoordsys<>(), pin_radius, CH_C_2PI, 0, false);
+    ChLineArc pin_circle(ChCoordsys<>(), pin_radius, CH_2PI, 0, false);
     pin_profile->AddSubLine(pin_circle);
 
     // Add collision shapes to pin

@@ -58,7 +58,7 @@ std::shared_ptr<ChBody> create_wheel(ChVector3d mposition, ChSystem& sys) {
     auto knobs_shapes = ChCollisionShapeConvexHull::Read(mat, knobs_filename);
     auto slice_shapes = ChCollisionShapeConvexHull::Read(mat, slice_filename);
     for (double mangle = 0; mangle < 360.; mangle += (360. / 15.)) {
-        auto q = QuatFromAngleX(mangle * CH_C_DEG_TO_RAD);
+        auto q = QuatFromAngleX(mangle * CH_DEG_TO_RAD);
         for (const auto& s : knobs_shapes)
             mrigidBody->AddCollisionShape(s, ChFrame<>(VNULL, q));
         for (const auto& s : slice_shapes)
@@ -74,7 +74,7 @@ void create_some_falling_items(ChSystemNSC& sys) {
     ChCollisionModel::SetDefaultSuggestedMargin(0.002);
 
     ChQuaternion<> rot;
-    rot.SetFromAngleAxis(ChRandom::Get() * CH_C_2PI, VECT_Y);
+    rot.SetFromAngleAxis(ChRandom::Get() * CH_2PI, VECT_Y);
 
     auto pebble_mat = chrono_types::make_shared<ChContactMaterialNSC>();
     pebble_mat->SetFriction(0.4f);

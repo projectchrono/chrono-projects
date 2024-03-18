@@ -67,11 +67,11 @@ int main(int argc, char* argv[]) {
     // ============== PacTire settings go here
     const int num_pts = 801;                   // # of data points in the slip ranges
     const double step_size = 0.01;             // seconds, arbitrary unless calculating transient slip
-    const double alpha_lim = CH_C_PI_4 / 3.0;  // slip angle in range [-lim,lim] or [0,lim]
+    const double alpha_lim = CH_PI_4 / 3.0;  // slip angle in range [-lim,lim] or [0,lim]
     const double kappa_lim = 1;                // slip rate in range [-lim,lim] or [0,lim]
     const double F_z = 8000;                   // vertical force, [N]
     const VehicleSide side = LEFT;
-    const double gamma = 10.0 * CH_C_PI / 180.0;  // gamma, in radians
+    const double gamma = 10.0 * CH_PI / 180.0;  // gamma, in radians
 
     // for the transient model
     const bool use_transient_slip = true;  // use kinematic or transient contact slips?
@@ -224,7 +224,7 @@ int main(int argc, char* argv[]) {
             // kappa is linear
             kappa_t += kappa_incr;
             // lateral angle is a sine wave
-            alpha_t = abs(a_max) * sin(2.0 * chrono::CH_C_PI * time / time_end);
+            alpha_t = abs(a_max) * sin(2.0 * chrono::CH_PI * time / time_end);
         } else {
             kappa_t += kappa_incr;
             alpha_t += alpha_incr;

@@ -75,7 +75,7 @@ ChContactMethod method = ChContactMethod::SMC;
 int Id_g = 100;
 double r_g = 0.04;
 double rho_g = 2500;
-double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
+double vol_g = (4.0 / 3) * CH_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
 ChVector3d inertia_g = 0.4 * mass_g * r_g * r_g * ChVector3d(1, 1, 1);
 

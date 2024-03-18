@@ -140,14 +140,14 @@ void addWheelBody(ChSystemNSC& rover_sys,
     rover_sys.AddBody(wheel_body);
 
     auto joint = std::make_shared<ChLinkLockRevolute>();
-    joint->Initialize(chassis_body, wheel_body, ChFrame<>(wheel_initial_pos, QuatFromAngleX(CH_C_PI / 2)));
+    joint->Initialize(chassis_body, wheel_body, ChFrame<>(wheel_initial_pos, QuatFromAngleX(CH_PI / 2)));
     rover_sys.AddLink(joint);
 
     auto motor = std::make_shared<ChLinkMotorRotationAngle>();
 
-    motor->Initialize(chassis_body, wheel_body, ChFrame<>(wheel_initial_pos, QuatFromAngleX(CH_C_PI / 2)));
+    motor->Initialize(chassis_body, wheel_body, ChFrame<>(wheel_initial_pos, QuatFromAngleX(CH_PI / 2)));
 
-    motor->SetMotorFunction(std::make_shared<ChFunctionRamp>(0, CH_C_PI));
+    motor->SetMotorFunction(std::make_shared<ChFunctionRamp>(0, CH_PI));
     rover_sys.AddLink(motor);
 
     wheel_bodies.push_back(wheel_body);
@@ -219,7 +219,7 @@ int main(int argc, char* argv[]) {
     std::string wheel_filename = GetProjectsDataFile("gpu/meshes/rover/wheel_scaled.obj");
 
     // Rotates gravity about +Y axis
-    double grav_angle = 2.0 * CH_C_PI * input_grav_angle_deg / 360.0;
+    double grav_angle = 2.0 * CH_PI * input_grav_angle_deg / 360.0;
     double Gx = -mars_grav_mag * std::sin(grav_angle);
     double Gy = 0;
     double Gz = -mars_grav_mag * std::cos(grav_angle);

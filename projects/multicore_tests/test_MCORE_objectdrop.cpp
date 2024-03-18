@@ -54,7 +54,7 @@ ChCollisionShape::Type shape_o = ChCollisionShape::Type::CONE;
 
 ChVector3d initPos(1.0, -1.0, 2.0);
 // ChQuaternion<> initRot(1.0, 0.0, 0.0, 0.0);
-ChQuaternion<> initRot = QuatFromAngleAxis(CH_C_PI / 3, ChVector3d(1, 0, 0));
+ChQuaternion<> initRot = QuatFromAngleAxis(CH_PI / 3, ChVector3d(1, 0, 0));
 
 ChVector3d initLinVel(0.0, 0.0, 0.0);
 ChVector3d initAngVel(0.0, 0.0, 0.0);
@@ -152,7 +152,7 @@ void CreateGround(ChSystemMulticore* system) {
                 double bigH = 6;
 
                 ChQuaternion<> rot(1, 0, 0, 0);
-                rot.SetFromAngleAxis(CH_C_PI / 6, ChVector3d(0, 0, 1));
+                rot.SetFromAngleAxis(CH_PI / 6, ChVector3d(0, 0, 1));
 
                 for (int ix = -3; ix < 6; ix++) {
                     ChVector3d pos(ix * spacing, 0, -bigR);

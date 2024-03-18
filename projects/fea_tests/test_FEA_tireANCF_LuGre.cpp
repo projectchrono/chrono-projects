@@ -109,7 +109,7 @@ class ChCoulombFriction : public ChLoadCustomMultiple {
                     // Coulomb Friction
                     double RelVelX = FlexVel(0, ie);
                     double NormVelX = sqrt(RelVelX * RelVelX);
-                    Mu = Mu0 * atan(2.0 * RelVelX) * 2.0 / CH_C_PI;
+                    Mu = Mu0 * atan(2.0 * RelVelX) * 2.0 / CH_PI;
                     ContactForce.x() = -Mu * (ContactForce.z());
                     // std::cout << "RelVelX: " << RelVelX << "\nMu: " << Mu << "\nNormVelX: " << NormVelX << "\nFx: " <<
                     // ContactFRC(0, i) << "\nFz: " << ContactFRC(2, i) << "\natan: " << atan(2.0*RelVelX) << "\n\n";
@@ -119,7 +119,7 @@ class ChCoulombFriction : public ChLoadCustomMultiple {
 
                     double RelVelY = FlexVel(1, ie);
                     double NormVelY = sqrt(RelVelY * RelVelY);
-                    Mu = Mu0 * atan(2.0 * RelVelY) * 2.0 / CH_C_PI;
+                    Mu = Mu0 * atan(2.0 * RelVelY) * 2.0 / CH_PI;
                     ContactForce.y() = -Mu * (ContactForce.z());
                     if (NormVelY == 0.0) {
                         ContactForce.y() = 0.0;
@@ -1334,7 +1334,7 @@ int main(int argc, char* argv[]) {
 
         // Give material properties to elements as a construction of layers
         for (int j = 0; j < NumLayPerSection(SectionID(i) - 1); j++) {
-            element->AddLayer(LayPROP(LayerHist + j, 0), LayPROP(LayerHist + j, 1) * CH_C_DEG_TO_RAD,
+            element->AddLayer(LayPROP(LayerHist + j, 0), LayPROP(LayerHist + j, 1) * CH_DEG_TO_RAD,
                               MaterialList[MatID(SectionID(i) - 1, j) - 1]);
         }
 
@@ -1528,7 +1528,7 @@ int main(int argc, char* argv[]) {
     // Constrain only the lateral displacement of the Rim
     constraintLateral = chrono_types::make_shared<ChLinkLockPointPlane>();
     sys.AddLink(constraintLateral);
-    constraintLateral->Initialize(Rim, Ground, ChFrame<>(Rim->GetPos(), QuatFromAngleX(CH_C_PI_2)));
+    constraintLateral->Initialize(Rim, Ground, ChFrame<>(Rim->GetPos(), QuatFromAngleX(CH_PI_2)));
 
     // Use the PardisoMKL Solver
     auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();

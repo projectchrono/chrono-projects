@@ -125,8 +125,8 @@ void create_falling_items(ChSystemMPI& mySys, double prad, int n_bodies, double 
 
 void add_other_falling_item(ChSystemMPI& mySys, double prad, double box_dim, double rho, int n_curr_bodies) {
     int id_offset = 10;
-    double m_s = (2 / 3) * CH_C_PI * pow(prad, 3) * rho;
-    double m_c = CH_C_PI * pow(prad, 2) * (2 * prad) * rho;
+    double m_s = (2 / 3) * CH_PI * pow(prad, 3) * rho;
+    double m_c = CH_PI * pow(prad, 2) * (2 * prad) * rho;
     double m_cube = prad * prad * prad * rho;
 
     ChVector<> pos1(0, prad, 0);

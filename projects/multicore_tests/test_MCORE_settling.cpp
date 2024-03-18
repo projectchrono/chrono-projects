@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
     double radius_g = 0.006;
     int Id_g = 10000;
     double rho_g = 2500;
-    double vol_g = (4.0 / 3) * CH_C_PI * radius_g * radius_g * radius_g;
+    double vol_g = (4.0 / 3) * CH_PI * radius_g * radius_g * radius_g;
     double mass_g = rho_g * vol_g;
     ChVector3d inertia_g = 0.4 * mass_g * radius_g * radius_g * ChVector3d(1, 1, 1);
     int num_layers = 10;
@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
     float kt_terrain = 2.86e6f;
     float gt_terrain = 1.0e3f;
     float coh_pressure_terrain = 0e3f;
-    float coh_force_terrain = (float)(CH_C_PI * radius_g * radius_g) * coh_pressure_terrain;
+    float coh_force_terrain = (float)(CH_PI * radius_g * radius_g) * coh_pressure_terrain;
 
     // Estimates for number of bins for broad-phase
     int factor = 2;

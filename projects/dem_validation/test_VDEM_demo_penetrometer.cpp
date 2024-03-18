@@ -121,7 +121,7 @@ int timing_frame = -1;  // output detailed step timing at this frame
 int Id_g = 1;
 double r_g = 3e-3 / 2;
 double rho_g = 2500;
-double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
+double vol_g = (4.0 / 3) * CH_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
 ChVector3d inertia_g = 0.4 * mass_g * r_g * r_g * ChVector3d(1, 1, 1);
 
@@ -345,7 +345,7 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* sys) {
     obj->SetMass(mass);
     obj->SetInertiaXX(inertia);
     obj->SetPos(ChVector3d(0, 0, initLoc));
-    obj->SetRot(QuatFromAngleAxis(-CH_C_PI / 2, VECT_X));
+    obj->SetRot(QuatFromAngleAxis(-CH_PI / 2, VECT_X));
     obj->SetLinVel(ChVector3d(0, 0, -vz));
     obj->EnableCollision(true);
     obj->SetFixed(false);

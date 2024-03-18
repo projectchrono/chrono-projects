@@ -86,7 +86,7 @@ bool clamp_bilaterals = false;
 double bilateral_clamp_speed = 0.1;
 
 // Tilt angle (about global Y axis) of the container.
-double tilt_angle = 45.0 * CH_C_PI / 180;
+double tilt_angle = 45.0 * CH_PI / 180;
 
 // Simulation duration
 double end_simulation_time = 10;

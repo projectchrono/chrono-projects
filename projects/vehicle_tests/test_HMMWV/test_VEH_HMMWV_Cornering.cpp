@@ -47,7 +47,7 @@ void CalcControlPoints(double run,
     double z = 0.1;
 
     // Approximate circular path using 4 points
-    double factor = radius * (4.0 / 3.0) * std::tan(CH_C_PI / 8);
+    double factor = radius * (4.0 / 3.0) * std::tan(CH_PI / 8);
 
     ChVector3d P1(radius + offset, -radius, z);
     ChVector3d P1_in = P1 - ChVector3d(factor, 0, 0);

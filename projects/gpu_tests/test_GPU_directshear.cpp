@@ -68,7 +68,7 @@ double grav_Y = 0.0f;
 double grav_Z = -981.0f;
 
 double getVoidRatio(double top_plate_pos, int nb, double sphere_radius) {
-    double vol_sphere = 4.0f / 3.0f * chrono::CH_C_PI * std::pow(sphere_radius, 3) * nb;
+    double vol_sphere = 4.0f / 3.0f * chrono::CH_PI * std::pow(sphere_radius, 3) * nb;
     double vol_box = (top_plate_pos - fill_bottom) * box_xy * box_xy;
 
     double eta = vol_sphere / vol_box;
@@ -77,7 +77,7 @@ double getVoidRatio(double top_plate_pos, int nb, double sphere_radius) {
 }
 
 double CalcKE(ChSystemGpuMesh& gpu_sys, double sphere_radius, double sphere_density, int nb) {
-    double vol_sphere = 4.0f / 3.0f * chrono::CH_C_PI * std::pow(sphere_radius, 3);
+    double vol_sphere = 4.0f / 3.0f * chrono::CH_PI * std::pow(sphere_radius, 3);
     double mass_sphere = vol_sphere * sphere_density;
     double inertia_sphere = 0.4f * mass_sphere * sphere_radius * sphere_radius;
     ChVector3f ang_velo;

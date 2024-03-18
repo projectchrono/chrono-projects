@@ -140,7 +140,7 @@ double H = 2.0;
 double d = L / 2 - 1.2 * w_w;
 
 double init_vel = 5;
-double init_angle = (CH_C_PI / 180) * 4;
+double init_angle = (CH_PI / 180) * 4;
 
 // =============================================================================
 // This class encapsulates the rig's mechanism
@@ -233,28 +233,28 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
 
     switch (wheel_shape) {
         case ChCollisionShape::Type::CYLINDER:
-            utils::AddCylinderGeometry(m_wheel.get(), mat_w, r_w, w_w / 2, ChVector3d(c, 0, -b), QuatFromAngleY(CH_C_PI_2));
+            utils::AddCylinderGeometry(m_wheel.get(), mat_w, r_w, w_w / 2, ChVector3d(c, 0, -b), QuatFromAngleY(CH_PI_2));
             break;
         case ChCollisionShape::Type::ROUNDEDCYL:
             utils::AddRoundedCylinderGeometry(m_wheel.get(), mat_w, r_w - s_w, w_w / 2 - s_w, s_w, ChVector3d(c, 0, -b),
-                                              QuatFromAngleY(CH_C_PI_2));
+                                              QuatFromAngleY(CH_PI_2));
             break;
     }
 
     auto cap_wheel = chrono_types::make_shared<ChVisualShapeCapsule>(w_w / 4, a + c - w_w / 2);
     cap_wheel->SetColor(ChColor(0.3f, 0.3f, 0.7f));
-    m_wheel->AddVisualShape(cap_wheel, ChFrame<>(ChVector3d((c - a) / 2, 0, -b), QuatFromAngleY(CH_C_PI_2)));
+    m_wheel->AddVisualShape(cap_wheel, ChFrame<>(ChVector3d((c - a) / 2, 0, -b), QuatFromAngleY(CH_PI_2)));
 
     system->AddBody(m_wheel);
 
     // Create and initialize translational joint ground - sled
     m_prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
-    m_prismatic->Initialize(m_ground, m_sled, ChFrame<>(loc_prismatic, QuatFromAngleY(CH_C_PI_2)));
+    m_prismatic->Initialize(m_ground, m_sled, ChFrame<>(loc_prismatic, QuatFromAngleY(CH_PI_2)));
     system->AddLink(m_prismatic);
 
     // Create and initialize revolute joint sled - wheel
     m_revolute = chrono_types::make_shared<ChLinkLockRevolute>();
-    m_revolute->Initialize(m_wheel, m_sled, ChFrame<>(loc_revolute, QuatFromAngleX(CH_C_PI_2)));
+    m_revolute->Initialize(m_wheel, m_sled, ChFrame<>(loc_revolute, QuatFromAngleX(CH_PI_2)));
     system->AddLink(m_revolute);
 }
 

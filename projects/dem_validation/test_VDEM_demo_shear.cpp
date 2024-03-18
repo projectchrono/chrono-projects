@@ -168,7 +168,7 @@ int main(int argc, char* argv[]) {
 
     double radius = 0.003;  // m
     double density = 2550;  // kg/m^3
-    double mass = density * (4.0 / 3) * CH_C_PI * radius * radius * radius;
+    double mass = density * (4.0 / 3) * CH_PI * radius * radius * radius;
     float Y = 4.0e7;  // Pa
     float nu = 0.22f;
     float COR = 0.87f;
@@ -202,8 +202,8 @@ int main(int argc, char* argv[]) {
 
     ChQuaternion<> z2y;
     ChQuaternion<> z2x;
-    z2y.SetFromAngleAxis(-CH_C_PI / 2, ChVector3d(1, 0, 0));
-    z2x.SetFromAngleAxis(CH_C_PI / 2, ChVector3d(0, 1, 0));
+    z2y.SetFromAngleAxis(-CH_PI / 2, ChVector3d(1, 0, 0));
+    z2x.SetFromAngleAxis(CH_PI / 2, ChVector3d(0, 1, 0));
 
 // Create the system
 

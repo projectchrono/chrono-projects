@@ -259,7 +259,7 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
                             (Node1_Vel.x() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fx (Plane x)
                     } else {
                         this->load_Q(iii * 6 + 0) =
-                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.x()) * CH_C_PI_2 / VelLimit) *
+                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.x()) * CH_PI_2 / VelLimit) *
                             (Node1_Vel.x() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fx (Plane x)
                     }
                     if (abs(Node1_Vel.y()) > VelLimit) {
@@ -268,7 +268,7 @@ class MyLoadCustomMultiple : public ChLoadCustomMultiple {
                             (Node1_Vel.y() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fz (Plane y)
                     } else {
                         this->load_Q(iii * 6 + 1) =
-                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.z()) * CH_C_PI_2 / VelLimit) *
+                            -NormalForceNode * FrictionCoeff * sin(abs(Node1_Vel.z()) * CH_PI_2 / VelLimit) *
                             (Node1_Vel.y() / sqrt((pow(Node1_Vel.x(), 2) + pow(Node1_Vel.y(), 2))));  // Fz (Plane y)
                     }
                 }
@@ -416,7 +416,7 @@ void MakeANCFHumveeWheel(ChSystem& sys,
 
         // Give material properties to elements as a construction of layers
         for (int j = 0; j < NumLayPerSection(SectionID(i) - 1); j++) {
-            element->AddLayer(LayPROP(LayerHist + j, 0), LayPROP(LayerHist + j, 1) * CH_C_DEG_TO_RAD,
+            element->AddLayer(LayPROP(LayerHist + j, 0), LayPROP(LayerHist + j, 1) * CH_DEG_TO_RAD,
                               MaterialList[MatID(SectionID(i) - 1, j) - 1]);
             // std::cout << "Thickness: " << LayPROP(LayerHist + j, 0) << "  Ply: " << LayPROP(LayerHist + j, 1) << "
             // Mat: " << MatID(SectionID(i) - 1, j) << "\n";

@@ -167,7 +167,7 @@ double hthick = 1.0 / 2;   // [cm] bin half-thickness of the walls
 double wheelRadius = 13;               // [cm] radius of the wheel
 double wheelWidth = 16;                // [cm] width of the wheel
 double wheelSlip = 0.3;                // [-]  ratio of angular and translation velocity of the wheel
-double angVel = 17 * CH_C_PI / 180.0;  // [rad/s] angular velocity of the wheel
+double angVel = 17 * CH_PI / 180.0;  // [rad/s] angular velocity of the wheel
 double wheelWeight = 80;               // * N2cgs;   // Normal load of the wheel
 double velocity = angVel * wheelRadius * (1.0 - wheelSlip);
 
@@ -301,7 +301,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
 void ConnectChassisToGround(ChSystemMulticore* system, std::shared_ptr<ChBody> ground, std::shared_ptr<ChBody> chassis) {
     auto prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
-    prismatic->Initialize(ground, chassis, ChFrame<>(chassis->GetPos(), QuatFromAngleY(CH_C_PI_2)));
+    prismatic->Initialize(ground, chassis, ChFrame<>(chassis->GetPos(), QuatFromAngleY(CH_PI_2)));
     prismatic->SetName("prismatic_chassis_ground");
     system->AddLink(prismatic);
 
@@ -336,7 +336,7 @@ void ConnectChassisToAxle(ChSystemMulticore* system, std::shared_ptr<ChBody> cha
 void ConnectWheelToAxle(ChSystemMulticore* system, std::shared_ptr<ChBody> wheel, std::shared_ptr<ChBody> axle) {
     auto motor = chrono_types::make_shared<ChLinkMotorRotationAngle>();
     motor->SetName("engine_wheel_axle");
-    motor->Initialize(wheel, axle, ChFrame<>(wheel->GetPos(), chrono::QuatFromAngleAxis(CH_C_PI / 2.0, VECT_X)));
+    motor->Initialize(wheel, axle, ChFrame<>(wheel->GetPos(), chrono::QuatFromAngleAxis(CH_PI / 2.0, VECT_X)));
     motor->SetAngleFunction(chrono_types::make_shared<ChFunctionRamp>(0, -angVel));
     system->AddLink(motor);
 }
@@ -458,7 +458,7 @@ void FindHeightRange(ChSystemMulticore* sys, double& lowest, double& highest) {
 // =============================================================================
 
 void setBulkDensity(ChSystem* sys, double bulkDensity) {
-    double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
+    double vol_g = (4.0 / 3) * CH_PI * r_g * r_g * r_g;
 
     double normalPlateHeight = sys->GetBodies().at(1)->GetPos().z() - hdimZ;
     double bottomHeight = 0;
@@ -673,7 +673,7 @@ int main(int argc, char* argv[]) {
         case TESTING: {
             time_end = time_testing;
             out_fps = out_fps_testing;
-            angVel = 10 * CH_C_PI;
+            angVel = 10 * CH_PI;
 
             // Create the mechanism bodies (all fixed).
             CreateMechanismBodies(sys);

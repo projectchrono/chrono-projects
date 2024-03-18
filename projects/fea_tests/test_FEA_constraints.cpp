@@ -80,7 +80,7 @@ void test_beam(const std::string& name,  /// test name
     auto msection_cable = chrono_types::make_shared<ChBeamSectionCable>();
     msection_cable->SetDiameter(diam);
     msection_cable->SetYoungModulus(1e7);
-    msection_cable->SetInertia(CH_C_PI / 4.0 * pow(diam / 2, 4));
+    msection_cable->SetInertia(CH_PI / 4.0 * pow(diam / 2, 4));
     msection_cable->SetDensity(rho);
 
     // Create the 2 nodes and 1 beam element
@@ -189,7 +189,7 @@ void test_beam(const std::string& name,  /// test name
     }
 
     // Estimate reaction force & torque for an equivalent rigid beam.
-    double mass = CH_C_PI_4 * diam * diam * length * rho;
+    double mass = CH_PI_4 * diam * diam * length * rho;
     rforce = ChVector3d(0, 0, -mass * g);
     rtorque = ChVector3d(0);
     if (constrain_dir) {

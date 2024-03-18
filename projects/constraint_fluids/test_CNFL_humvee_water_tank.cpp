@@ -134,7 +134,7 @@ double hthick = 0.1;
 int Id_g = 100;
 double r_g = 0.02;
 double rho_g = 2500;
-double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
+double vol_g = (4.0 / 3) * CH_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
 ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
 
@@ -526,8 +526,8 @@ int main(int argc, char* argv[]) {
     }
 
     for (int j = 0; j < 30; j++) {
-        ChQuaternion<> qq = Q_from_AngAxis(j * 12 * CH_C_DEG_TO_RAD, VECT_Y);
-        ChVector<> ppp = ChVector<>(sin(12 * CH_C_DEG_TO_RAD * j), 0, cos(12 * CH_C_DEG_TO_RAD * j)) * .6;
+        ChQuaternion<> qq = Q_from_AngAxis(j * 12 * CH_DEG_TO_RAD, VECT_Y);
+        ChVector<> ppp = ChVector<>(sin(12 * CH_DEG_TO_RAD * j), 0, cos(12 * CH_DEG_TO_RAD * j)) * .6;
 
         utils::AddBoxGeometry(m_chassis.get(), material, hdim, ppp + ChVector<>(-1.9306 + .24, 0, 1.3011), qq);
     }

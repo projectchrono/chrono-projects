@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
     // ------------------------------------
 
     double run = 10;
-    int nturns = 1 + int(std::ceil(((finalFwdSpd + initFwdSpd)/2*tend) / (cornerRadius * CH_C_2PI)));
+    int nturns = 1 + int(std::ceil(((finalFwdSpd + initFwdSpd)/2*tend) / (cornerRadius * CH_2PI)));
 
     // Initial vehicle location
     ChVector3d initLoc(- run -5, cornerRadius, 0.6);

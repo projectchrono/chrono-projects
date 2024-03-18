@@ -58,8 +58,8 @@ using namespace chrono::synchrono;
 // ChVector3d initLoc(3991.5, 0.0, .75);
 ChVector3d initLoc(4011.5, -345, .75);  // near mile marker
 // ChQuaternion<> initRot(1, 0, 0, 0);
-// ChQuaternion<> initRot = QuatFromAngleZ(-CH_C_PI_2);
-ChQuaternion<> initRot = QuatFromAngleZ(CH_C_PI_2);
+// ChQuaternion<> initRot = QuatFromAngleZ(-CH_PI_2);
+ChQuaternion<> initRot = QuatFromAngleZ(CH_PI_2);
 
 // ChVector3d driver_eye(-.2, .4, .95);
 ChVector3d driver_eye(-.3, .4, .98);
@@ -350,7 +350,7 @@ int main(int argc, char* argv[]) {
         for (int j = 0; j < y_count; j++) {
             auto mesh_body = chrono_types::make_shared<ChBody>();
             mesh_body->SetPos({i * x_step + x_start, j * y_step + y_start + .2 * (i % 3), 0.0});
-            // mesh_body->SetRot(QuatFromAngleZ(CH_C_PI_2));
+            // mesh_body->SetRot(QuatFromAngleZ(CH_PI_2));
             mesh_body->AddVisualShape(trimesh_shape);
             mesh_body->SetBodyFixed(true);
             vehicle.GetSystem()->Add(mesh_body);
@@ -465,10 +465,10 @@ int main(int argc, char* argv[]) {
     auto cam = chrono_types::make_shared<ChCameraSensor>(
         lead_vehicle.GetChassisBody(),                                   // body camera is attached to
         frame_rate,                                                      // update rate in Hz
-        chrono::ChFrame<double>({0, 0, 50}, QuatFromAngleY(CH_C_PI_2)),  // offset pose
+        chrono::ChFrame<double>({0, 0, 50}, QuatFromAngleY(CH_PI_2)),  // offset pose
         1280,                                                            // image width
         720,                                                             // image height
-        CH_C_PI_4,
+        CH_PI_4,
         super_samples);  // fov, lag, exposure
     cam->SetName("Camera Sensor");
     if (sensor_vis)
@@ -573,7 +573,7 @@ int main(int argc, char* argv[]) {
             /*app.GetDevice()->getVideoDriver()->draw2DImage(app.GetDevice()->getVideoDriver()->getTexture((demo_data_path
                + "/miscellaneous/Needle.png").c_str()), irr::core::position2d<irr::s32>(200, 200));*/
             double speed_mph = vehicle.GetSpeed() * 2.23694;
-            double theta = ((270 / 140) * speed_mph) * (CH_C_PI / 180);
+            double theta = ((270 / 140) * speed_mph) * (CH_PI / 180);
             app.GetDevice()->getVideoDriver()->draw2DLine(
                 sm_center + irr::core::position2d<irr::s32>(-sm_needle * sin(theta), sm_needle * cos(theta)), sm_center,
                 irr::video::SColor(255, 255, 0, 0));

@@ -166,7 +166,7 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     insert->SetMass(1);
     insert->SetInertiaXX(ChVector3d(1, 1, 1));
     insert->SetPos(ChVector3d(-0.5 * height - delta, 0, 0.5 * height - delta));
-    insert->SetRot(chrono::QuatFromAngleAxis(-CH_C_PI / 4, VECT_Y));
+    insert->SetRot(chrono::QuatFromAngleAxis(-CH_PI / 4, VECT_Y));
     insert->EnableCollision(true);
     insert->SetFixed(true);
 

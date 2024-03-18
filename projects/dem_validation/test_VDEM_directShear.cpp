@@ -309,7 +309,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
 void ConnectShearBox(ChSystemMulticore* system, std::shared_ptr<ChBody> ground, std::shared_ptr<ChBody> box) {
     auto prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
-    prismatic->Initialize(ground, box, ChFrame<>(ChVector3d(0, 0, 2 * hdimZ), QuatFromAngleY(CH_C_PI_2)));
+    prismatic->Initialize(ground, box, ChFrame<>(ChVector3d(0, 0, 2 * hdimZ), QuatFromAngleY(CH_PI_2)));
     prismatic->SetName("prismatic_box_ground");
     system->AddLink(prismatic);
 
@@ -458,7 +458,7 @@ void FindHeightRange(ChSystemMulticore* sys, double& lowest, double& highest) {
 // =============================================================================
 
 void setBulkDensity(ChSystem* sys, double bulkDensity) {
-    double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
+    double vol_g = (4.0 / 3) * CH_PI * r_g * r_g * r_g;
 
     double normalPlateHeight = sys->GetBodies().at(1)->GetPos().z() - hdimZ;
     double bottomHeight = 0;

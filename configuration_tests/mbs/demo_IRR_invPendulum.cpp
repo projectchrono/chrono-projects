@@ -232,7 +232,7 @@ int main(int argc, char* argv[]) {
     // Translational joint ground-cart
     // -------------------------------
     auto prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
-    prismatic->Initialize(ground, cart, ChFrame<>(ChVector3d(0, 0, 0), QuatFromAngleY(CH_C_PI_2)));
+    prismatic->Initialize(ground, cart, ChFrame<>(ChVector3d(0, 0, 0), QuatFromAngleY(CH_PI_2)));
     system.AddLink(prismatic);
 
     // Revolute joint cart-pendulum

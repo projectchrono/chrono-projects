@@ -387,7 +387,7 @@ void FindHeightRange(ChSystemMulticore* sys, double& lowest, double& highest) {
 // =============================================================================
 
 void setBulkDensity(ChSystem* sys, double bulkDensity) {
-    double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
+    double vol_g = (4.0 / 3) * CH_PI * r_g * r_g * r_g;
 
     double normalPlateHeight = sys->GetBodies().at(1)->GetPos().z() - hdimZ;
     double bottomHeight = 0;

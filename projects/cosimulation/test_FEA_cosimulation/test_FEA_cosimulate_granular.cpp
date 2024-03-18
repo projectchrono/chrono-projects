@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
     double tire_rad = 0.8;
     double tire_vel_z0 = -3;
     ChVector3d tire_center(0, 1 + 0.02 + tire_rad, 0);
-    ChMatrix33<> tire_alignment(QuatFromAngleAxis(CH_C_PI, VECT_Y));  // create rotated 180� on y
+    ChMatrix33<> tire_alignment(QuatFromAngleAxis(CH_PI, VECT_Y));  // create rotated 180� on y
 
     double tire_w0 = tire_vel_z0 / tire_rad;
 
@@ -185,7 +185,7 @@ int main(int argc, char* argv[]) {
 
     auto mrigidmesh = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     mrigidmesh->GetMesh().LoadWavefrontMesh(GetChronoDataFile("models/tractor_wheel_fine.obj"));
-    mrigidmesh->GetMesh().Transform(VNULL, QuatFromAngleAxis(CH_C_PI, VECT_Y) );
+    mrigidmesh->GetMesh().Transform(VNULL, QuatFromAngleAxis(CH_PI, VECT_Y) );
     mrigidbody->AddAsset(mrigidmesh);
 
     auto mcol = chrono_types::make_shared<ChColorAsset>();
@@ -473,7 +473,7 @@ int main(int argc, char* argv[]) {
         // End of cosimulation block
         // -------------------------------------------------------------------------
 
-        tools::drawGrid(vis.get(), 0.1, 0.1, 20, 20, ChCoordsys<>(VNULL, CH_C_PI_2, VECT_X), ChColor(0.4f, 0.4f, 0.4f),
+        tools::drawGrid(vis.get(), 0.1, 0.1, 20, 20, ChCoordsys<>(VNULL, CH_PI_2, VECT_X), ChColor(0.4f, 0.4f, 0.4f),
                         true);
 
         vis->EndScene();
