@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
     // padding at top of fill
     float fill_gap = 1.f;
 
-    chrono::utils::PDSampler<float> sampler(fill_epsilon * params.sphere_radius);
+    chrono::utils::ChPDSampler<float> sampler(fill_epsilon * params.sphere_radius);
 
     ChVector3f center_pt(0, 0, -2 - params.box_Z / 6);
 

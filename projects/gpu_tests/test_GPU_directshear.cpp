@@ -134,7 +134,7 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys) {
 
     std::vector<ChVector3f> body_points;
 
-    utils::PDSampler<float> sampler(spacing);
+    utils::ChPDSampler<float> sampler(spacing);
     fill_top = box_Z / 2 - spacing;  // TODO tune to roughly make a cube of material (6cm tall)
 
     ChVector3d hdims(box_r - sphere_radius, box_r - sphere_radius, 0);

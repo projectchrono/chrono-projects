@@ -131,7 +131,7 @@ int main(int argc, char* argv[]) {
     ChVector3f scaling(Bx / 4.f, Bx / 4.f, Bz);
     std::cout << "Cylinder radius: " << scaling.x() << std::endl;
 
-    utils::PDSampler<float> sampler(2.05 * params.sphere_radius);
+    utils::ChPDSampler<float> sampler(2.05 * params.sphere_radius);
     std::vector<ChVector3f> body_points;
 
     const float fill_radius = scaling.x() - 2.f * params.sphere_radius;

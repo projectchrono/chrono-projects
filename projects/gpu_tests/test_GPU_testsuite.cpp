@@ -380,7 +380,7 @@ void run_MESH_STEP() {
     double epsilon = 0.2 * sphere_radius;
     double spacing = 2 * sphere_radius + epsilon;
 
-    utils::PDSampler<float> sampler((float)spacing);
+    utils::ChPDSampler<float> sampler((float)spacing);
     double fill_bottom = -box_Z / 2 + step_height + 2 * spacing;
     fill_top = box_Z / 2 - sphere_radius - epsilon;
     ChVector3d hdims(box_X / 2 - sphere_radius - epsilon, box_Y / 2 - sphere_radius - epsilon, 0);
@@ -422,7 +422,7 @@ void run_MESH_FORCE() {
     setCommonParameters(gpu_sys);
     setCommonMeshParameters(gpu_sys);
 
-    utils::HCPSampler<float> sampler(2.1f * sphere_radius);
+    utils::ChHCPSampler<float> sampler(2.1f * sphere_radius);
     auto pos = sampler.SampleBox(ChVector3d(0, 0, 26), ChVector3d(38, 38, 10));
 
     auto n_spheres = pos.size();

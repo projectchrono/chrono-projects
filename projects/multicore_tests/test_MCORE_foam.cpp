@@ -89,7 +89,7 @@ float cr_c = 0.1f;
 float cohesion_c = 5.0f;
 
 // Particle generator
-utils::Generator* gen;
+utils::ChGenerator* gen;
 
 double initVel = 5;  // initial particle velocity in negative X direction
 
@@ -99,16 +99,16 @@ int maxNumParticles = 100000;
 
 int SpawnParticles() {
     double dist = 2 * 0.99 * r_g;
-    utils::PDSampler<double> sampler(dist);
+    utils::ChPDSampler<double> sampler(dist);
 
     ////gen->CreateObjectsBox(sampler,
     ////                      ChVector3d(9, 0, 3),
     ////                      ChVector3d(0, 1, 0.5),
     ////                      ChVector3d(-initVel, 0, 0));
     gen->CreateObjectsCylinderX(sampler, ChVector3d(9, 0, 3), 0.2f, 0, ChVector3d(-initVel, 0, 0));
-    cout << "  total bodies: " << gen->getTotalNumBodies() << endl;
+    cout << "  total bodies: " << gen->GetTotalNumBodies() << endl;
 
-    return gen->getTotalNumBodies();
+    return gen->GetTotalNumBodies();
 }
 
 // ========================================================================
@@ -157,14 +157,14 @@ int main(int argc, char* argv[]) {
     double mass_g = rho_g * vol_g;
     ChVector3d inertia_g = 0.4 * mass_g * r_g * r_g * ChVector3d(1, 1, 1);
 
-    gen = new utils::Generator(sys);
+    gen = new utils::ChGenerator(sys);
 
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen->AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
-    m1->setDefaultMaterial(mat_g);
-    m1->setDefaultDensity(rho_g);
-    m1->setDefaultSize(r_g);
+    std::shared_ptr<utils::ChMixtureIngredient> m1 = gen->AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
+    m1->SetDefaultMaterial(mat_g);
+    m1->SetDefaultDensity(rho_g);
+    m1->SetDefaultSize(r_g);
 
-    gen->setBodyIdentifier(Id_g);
+    gen->SetBodyIdentifier(Id_g);
 
     // Number of steps
     int num_steps = (int)std::ceil(time_end / time_step);

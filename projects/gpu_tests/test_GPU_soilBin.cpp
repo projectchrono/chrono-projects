@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
                          params.box_Z / 2.f - 2 * params.sphere_radius);
         ChVector3d center(0, 0, 0);
 
-        utils::HCPSampler<float> sampler(2.2f * params.sphere_radius);
+        utils::ChHCPSampler<float> sampler(2.2f * params.sphere_radius);
 
         body_points = sampler.SampleBox(center, hdims);
     }

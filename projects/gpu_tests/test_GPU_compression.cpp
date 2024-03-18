@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
     gpu_sys.CreateBCCylinderZ(cyl_center, cyl_rad, false, true);
 
     // initialize sampler, set distance between center of spheres as 2.1r
-    utils::HCPSampler<float> sampler(2.1f * params.sphere_radius);
+    utils::ChHCPSampler<float> sampler(2.1f * params.sphere_radius);
     std::vector<ChVector3f> initialPos;
 
     // randomize by layer

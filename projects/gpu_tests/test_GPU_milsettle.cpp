@@ -65,7 +65,7 @@ double run_test(float box_size_X, float box_size_Y, float box_size_Z) {
     gpu_system.SetParticleOutputMode(write_mode);
 
     // Fill the bottom half with material
-    chrono::utils::HCPSampler<float> sampler(2.4f * ballRadius);  // Add epsilon
+    chrono::utils::ChHCPSampler<float> sampler(2.4f * ballRadius);  // Add epsilon
     ChVector3f center(0, 0, -0.25f * box_size_Z);
     ChVector3f hdims(box_size_X / 2 - ballRadius, box_size_X / 2 - ballRadius, box_size_Z / 4 - ballRadius);
     std::vector<ChVector3f> body_points = sampler.SampleBox(center, hdims);

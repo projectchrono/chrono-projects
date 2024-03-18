@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
 
     // generate a cloud of particles
     std::vector<chrono::ChVector3f> body_points;
-    utils::PDSampler<float> sampler(2.001 * sphere_radius);
+    utils::ChPDSampler<float> sampler(2.001 * sphere_radius);
     ChVector3f sampler_center(0.0f, 0.0f, 0.0f);
     body_points = sampler.SampleCylinderZ(sampler_center, cyl_rad - 4 * sphere_radius, box_Z / 2 - 4 * sphere_radius);
     auto numSpheres = body_points.size();

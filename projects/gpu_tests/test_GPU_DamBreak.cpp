@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
 
     // Fill box with bodies
     std::vector<ChVector3f> body_points =
-        utils::PDLayerSampler_BOX<float>(center, hdims, 2. * params.sphere_radius, 1.02);
+        utils::ChPDLayerSamplerBox<float>(center, hdims, 2. * params.sphere_radius, 1.02);
 
     std::vector<ChVector3f> first_points;
 

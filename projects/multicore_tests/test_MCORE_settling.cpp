@@ -244,15 +244,15 @@ int main(int argc, char** argv) {
 
     // Create a particle generator and a mixture entirely made out of spheres
     double r = 1.01 * radius_g;
-    utils::PDSampler<double> sampler(2 * r);
-    utils::Generator gen(system);
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
-    m1->setDefaultMaterial(material_terrain);
-    m1->setDefaultDensity(rho_g);
-    m1->setDefaultSize(radius_g);
+    utils::ChPDSampler<double> sampler(2 * r);
+    utils::ChGenerator gen(system);
+    std::shared_ptr<utils::ChMixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
+    m1->SetDefaultMaterial(material_terrain);
+    m1->SetDefaultDensity(rho_g);
+    m1->SetDefaultSize(radius_g);
 
     // Set starting value for body identifiers
-    gen.setBodyIdentifier(Id_g);
+    gen.SetBodyIdentifier(Id_g);
 
     // Create particles in layers until reaching the desired number of particles
     ChVector3d hdims(hdimX - r, hdimY - r, 0);
@@ -263,7 +263,7 @@ int main(int argc, char** argv) {
         center.z() += 2 * r;
     }
 
-    unsigned int num_particles = gen.getTotalNumBodies();
+    unsigned int num_particles = gen.GetTotalNumBodies();
     std::cout << "Generated particles:  " << num_particles << std::endl;
 
     // If tracking a granule (roughly in the "middle of the pack"),

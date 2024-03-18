@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
         ChVector3d center(0, 0, 0);
 
         // Fill box with bodies
-        body_points = utils::PDLayerSampler_BOX<float>(center, hdims, 2. * params.sphere_radius, 1.02);
+        body_points = utils::ChPDLayerSamplerBox<float>(center, hdims, 2. * params.sphere_radius, 1.02);
     }
 
     gran_sys.SetParticles(body_points);

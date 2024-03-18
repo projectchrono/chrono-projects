@@ -314,14 +314,14 @@ int main(int argc, char* argv[]) {
 
     double r = 0.1;  // 0.02;//
     double shapeRatio = 0.4;
-    chrono::utils::PDSampler<double> sampler(2 * r);
-    chrono::utils::Generator gen(systemG);
+    chrono::utils::ChPDSampler<double> sampler(2 * r);
+    chrono::utils::ChGenerator gen(systemG);
     auto m1 = gen.AddMixtureIngredient(chrono::utils::MixtureType::ELLIPSOID, 1.0);
-    m1->setDefaultMaterial(triMat);
-    m1->setDefaultDensity(2500);
-    m1->setDefaultSize(ChVector3d(r, r * shapeRatio, r));
+    m1->SetDefaultMaterial(triMat);
+    m1->SetDefaultDensity(2500);
+    m1->SetDefaultSize(ChVector3d(r, r * shapeRatio, r));
 
-    gen.setBodyIdentifier(triId);
+    gen.SetBodyIdentifier(triId);
     ChVector3d hdims(1 - r * 1.01, 0.5, 1 - r * 1.01);
     ChVector3d center(0, 0, 0);
     gen.CreateObjectsBox(sampler, center, hdims);

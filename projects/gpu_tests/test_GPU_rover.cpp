@@ -241,7 +241,7 @@ int main(int argc, char* argv[]) {
 
     std::vector<ChVector3f> body_points;
     if (run_mode == RUN_MODE::SETTLING) {
-        body_points = utils::PDLayerSampler_BOX<float>(center, hdims, 2.0f * params.sphere_radius, 1.01f);
+        body_points = utils::ChPDLayerSamplerBox<float>(center, hdims, 2.0f * params.sphere_radius, 1.01f);
     } else if (run_mode == RUN_MODE::TESTING) {
         body_points = loadCheckpointFile(checkpoint_file_base + ".csv");
     }

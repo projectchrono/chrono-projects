@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
     // padding at top of fill
     ////float drop_height = 0.f;
     float spacing = fill_epsilon * params.sphere_radius;
-    chrono::utils::PDSampler<float> sampler(spacing);
+    chrono::utils::ChPDSampler<float> sampler(spacing);
 
     // Fixed points on the bottom for roughness
     float bottom_z = -params.box_Z / 2.f + params.sphere_radius;

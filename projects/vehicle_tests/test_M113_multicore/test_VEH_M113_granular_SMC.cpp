@@ -181,16 +181,16 @@ double CreateParticles(ChSystem* system) {
 
     // Create a particle generator and a mixture entirely made out of spheres
     double r = 1.01 * r_g;
-    chrono::utils::PDSampler<double> sampler(2 * r);
-    chrono::utils::Generator gen(system);
-    std::shared_ptr<chrono::utils::MixtureIngredient> m1 =
+    chrono::utils::ChPDSampler<double> sampler(2 * r);
+    chrono::utils::ChGenerator gen(system);
+    std::shared_ptr<chrono::utils::ChMixtureIngredient> m1 =
         gen.AddMixtureIngredient(chrono::utils::MixtureType::SPHERE, 1.0);
-    m1->setDefaultMaterial(mat_g);
-    m1->setDefaultDensity(rho_g);
-    m1->setDefaultSize(r_g);
+    m1->SetDefaultMaterial(mat_g);
+    m1->SetDefaultDensity(rho_g);
+    m1->SetDefaultSize(r_g);
 
     // Set starting value for body identifiers
-    gen.setBodyIdentifier(Id_g);
+    gen.SetBodyIdentifier(Id_g);
 
     // Create particles in layers until reaching the desired number of particles
     ChVector3d hdims(hdimX - r, hdimY - r, 0);
@@ -203,7 +203,7 @@ double CreateParticles(ChSystem* system) {
         layerCount++;
     }
 
-    std::cout << "Created " << gen.getTotalNumBodies() << " particles." << std::endl;
+    std::cout << "Created " << gen.GetTotalNumBodies() << " particles." << std::endl;
 
     return center.z();
 }
