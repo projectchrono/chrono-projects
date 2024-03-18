@@ -931,13 +931,13 @@ class ChLoaderLuGre : public ChLoadCustomMultiple {
         RigidVel(4, 0) = 0.0;
         RigidVel(5, 0) = 0.0;
         RigidVel(6, 0) = 0.0;
-        RigidVel(0, 1) = mRim->GetPosDer().x();
-        RigidVel(1, 1) = mRim->GetPosDer().y();
-        RigidVel(2, 1) = mRim->GetPosDer().z();
-        RigidVel(3, 1) = mRim->GetRotDer().e0();
-        RigidVel(4, 1) = mRim->GetRotDer().e1();
-        RigidVel(5, 1) = mRim->GetRotDer().e2();
-        RigidVel(6, 1) = mRim->GetRotDer().e3();
+        RigidVel(0, 1) = mRim->GetPosDt().x();
+        RigidVel(1, 1) = mRim->GetPosDt().y();
+        RigidVel(2, 1) = mRim->GetPosDt().z();
+        RigidVel(3, 1) = mRim->GetRotDt().e0();
+        RigidVel(4, 1) = mRim->GetRotDt().e1();
+        RigidVel(5, 1) = mRim->GetRotDt().e2();
+        RigidVel(6, 1) = mRim->GetRotDt().e3();
 
         if (state_x && state_w) {
             for (int ie = 0; ie < loadables.size(); ie++)  // Loop over the nodes in the circumferential direction
@@ -1282,10 +1282,10 @@ int main(int argc, char* argv[]) {
         auto node =
             chrono_types::make_shared<ChNodeFEAxyzD>(ChVector3d(COORDFlex(i, 0), COORDFlex(i, 1), COORDFlex(i, 2)),
                                                      ChVector3d(COORDFlex(i, 3), COORDFlex(i, 4), COORDFlex(i, 5)));
-        node->SetPosDer(ChVector3d(VELCYFlex(i, 0), VELCYFlex(i, 1), VELCYFlex(i, 2)));
-        node->SetSlope1Der(ChVector3d(VELCYFlex(i, 3), VELCYFlex(i, 4), VELCYFlex(i, 5)));
-        node->SetPosDer2(ChVector3d(ACCELFlex(i, 0), ACCELFlex(i, 1), ACCELFlex(i, 2)));
-        node->SetSlope1Der2(ChVector3d(ACCELFlex(i, 3), ACCELFlex(i, 4), ACCELFlex(i, 5)));
+        node->SetPosDt(ChVector3d(VELCYFlex(i, 0), VELCYFlex(i, 1), VELCYFlex(i, 2)));
+        node->SetSlope1Dt(ChVector3d(VELCYFlex(i, 3), VELCYFlex(i, 4), VELCYFlex(i, 5)));
+        node->SetPosDt2(ChVector3d(ACCELFlex(i, 0), ACCELFlex(i, 1), ACCELFlex(i, 2)));
+        node->SetSlope1Dt2(ChVector3d(ACCELFlex(i, 3), ACCELFlex(i, 4), ACCELFlex(i, 5)));
         node->SetMass(0.0);
         // Determine initial contact
         if (COORDFlex(i, 2) < ContactZ) {
@@ -1348,18 +1348,18 @@ int main(int argc, char* argv[]) {
     Rim->SetFixed(false);
     Rim->SetPos(ChVector3d(0.0, 0.0, 0.4673));
     Rim->SetRot(ChQuaternion<>(1.0, 0.0, 0.0, 0.0));
-    Rim->SetPosDer(ChVector3d(0.0, 0.0, 0.0));
-    Rim->SetRotDer(ChQuaternion<>(0.0, 0.0, 0.0, 0.0));
+    Rim->SetPosDt(ChVector3d(0.0, 0.0, 0.0));
+    Rim->SetRotDt(ChQuaternion<>(0.0, 0.0, 0.0, 0.0));
     Rim->SetMass(509.68);  // 509.68
     Rim->SetInertiaXX(ChVector3d(0.1457270, 0.2359220, 0.1457270));
     // Give initial state to the rim (from input file)
     if (Restart) {
         Rim->SetPos(ChVector3d(COORDRigid(1, 0), COORDRigid(1, 1), COORDRigid(1, 2)));
         Rim->SetRot(ChQuaternion<>(COORDRigid(1, 3), COORDRigid(1, 4), COORDRigid(1, 5), COORDRigid(1, 6)));
-        Rim->SetPosDer(ChVector3d(VELCYRigid(1, 0), VELCYRigid(1, 1), VELCYRigid(1, 2)));
-        Rim->SetRotDer(ChQuaternion<>(VELCYRigid(1, 3), VELCYRigid(1, 4), VELCYRigid(1, 5), VELCYRigid(1, 6)));
-        Rim->SetPosDer2(ChVector3d(ACCELRigid(1, 0), ACCELRigid(1, 1), ACCELRigid(1, 2)));
-        Rim->SetRotDer2(ChQuaternion<>(ACCELRigid(1, 3), ACCELRigid(1, 4), ACCELRigid(1, 5), ACCELRigid(1, 6)));
+        Rim->SetPosDt(ChVector3d(VELCYRigid(1, 0), VELCYRigid(1, 1), VELCYRigid(1, 2)));
+        Rim->SetRotDt(ChQuaternion<>(VELCYRigid(1, 3), VELCYRigid(1, 4), VELCYRigid(1, 5), VELCYRigid(1, 6)));
+        Rim->SetPosDt2(ChVector3d(ACCELRigid(1, 0), ACCELRigid(1, 1), ACCELRigid(1, 2)));
+        Rim->SetRotDt2(ChQuaternion<>(ACCELRigid(1, 3), ACCELRigid(1, 4), ACCELRigid(1, 5), ACCELRigid(1, 6)));
     }
 
     // Create ground body
@@ -1621,12 +1621,12 @@ int main(int argc, char* argv[]) {
         // Nodal velocities for each node
         for (int ii = 0; ii < TotalNumNodes; ii++) {
             auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode((ii)));
-            fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().x());
-            fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().y());
-            fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().z());
-            fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().x());
-            fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().y());
-            fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().z());
+            fprintf(outputfile, "%15.7e  ", nodetip->GetPosDt().x());
+            fprintf(outputfile, "%15.7e  ", nodetip->GetPosDt().y());
+            fprintf(outputfile, "%15.7e  ", nodetip->GetPosDt().z());
+            fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Dt().x());
+            fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Dt().y());
+            fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Dt().z());
         }
         fprintf(outputfile, "\n  ");
     }
@@ -1731,12 +1731,12 @@ int main(int argc, char* argv[]) {
 
                 for (int ii = 0; ii < TotalNumNodes; ii++) {
                     auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(ii));
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().x());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().y());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().z());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().x());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().y());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().z());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetPosDt().x());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetPosDt().y());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetPosDt().z());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Dt().x());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Dt().y());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Dt().z());
                 }
                 fprintf(outputfile, "\n  ");
             }
@@ -1856,12 +1856,12 @@ int main(int argc, char* argv[]) {
 
                 for (int ii = 0; ii < TotalNumNodes; ii++) {
                     auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(ii));
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().x());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().y());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetPosDer().z());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().x());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().y());
-                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Der().z());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetPosDt().x());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetPosDt().y());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetPosDt().z());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Dt().x());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Dt().y());
+                    fprintf(outputfile, "%15.7e  ", nodetip->GetSlope1Dt().z());
                 }
                 fprintf(outputfile, "\n  ");
             }
@@ -1929,7 +1929,7 @@ int main(int argc, char* argv[]) {
             std::cout << "Rim X: " << Rim->GetPos().x() << "\n";
             std::cout << "Rim Y: " << Rim->GetPos().y() << "\n";
             std::cout << "Rim Z: " << Rim->GetPos().z() << "\n";
-            std::cout << "Rim Vel X: " << Rim->GetPosDer().x() << "\n";
+            std::cout << "Rim Vel X: " << Rim->GetPosDt().x() << "\n";
             std::cout << "Number of Contact Points: " << NumCont << "\n\n\n";
         }
     }

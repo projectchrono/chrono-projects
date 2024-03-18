@@ -35,7 +35,7 @@ class OscillatorProblem : public ChIntegrableIIorder {
     }
 
     /// number of coordinates in the state, x position part:
-    virtual unsigned int GetNumCoordsPosLevel() const override { return 1; }
+    virtual unsigned int GetNumCoordsPosLevel() override { return 1; }
 
     /// number of coordinates in the state, x position part:
     virtual unsigned int GetNumCoordsVelLevel() override { return 1; }
@@ -178,7 +178,7 @@ class PendulumProblem : public ChIntegrableIIorder {
     }
 
     /// number of coordinates in the state, x position part:
-    virtual unsigned int GetNumCoordsPosLevel() const override { return 2; }
+    virtual unsigned int GetNumCoordsPosLevel() override { return 2; }
 
     /// number of coordinates at velocity level
     virtual unsigned int GetNumCoordsVelLevel() override { return 2; }

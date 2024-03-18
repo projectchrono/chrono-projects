@@ -82,7 +82,7 @@ void MakeWheel(ChSystemSMC& sys,
         auto node_pos = std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))->GetPos();
         ChVector3d tang_vel = Vcross(ChVector3d(tire_w0, 0, 0), node_pos - tire_center);
         std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))
-            ->SetPosDer(ChVector3d(0, 0, tire_vel_z0) + tang_vel);
+            ->SetPosDt(ChVector3d(0, 0, tire_vel_z0) + tang_vel);
     }
 
     // Remember to add the mesh to the system!
