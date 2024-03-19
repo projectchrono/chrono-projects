@@ -26,8 +26,8 @@
 #include "chrono/utils/ChUtilsValidation.h"
 
 #include "chrono/fea/ChElementShellANCF_3423.h"
-#include "chrono/fea/ChLinkDirFrame.h"
-#include "chrono/fea/ChLinkPointFrame.h"
+#include "chrono/fea/ChLinkNodeSlopeFrame.h"
+#include "chrono/fea/ChLinkNodeFrame.h"
 #include "chrono/fea/ChMesh.h"
 
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
@@ -1499,8 +1499,8 @@ int main(int argc, char* argv[]) {
     sys.Add(my_mesh);
 
     // Create constraints for the tire and rim
-    std::shared_ptr<ChLinkPointFrame> constraint;
-    std::shared_ptr<ChLinkDirFrame> constraintD;
+    std::shared_ptr<ChLinkNodeFrame> constraint;
+    std::shared_ptr<ChLinkNodeSlopeFrame> constraintD;
     std::shared_ptr<ChNodeFEAxyzD> ConstrainedNode;
     std::shared_ptr<ChLinkLockPlanar> constraintRim;
     std::shared_ptr<ChLinkLockPointPlane> constraintLateral;
@@ -1513,12 +1513,12 @@ int main(int argc, char* argv[]) {
             ConstrainedNode = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(i));
 
             // Add position constraints
-            constraint = chrono_types::make_shared<ChLinkPointFrame>();
+            constraint = chrono_types::make_shared<ChLinkNodeFrame>();
             constraint->Initialize(ConstrainedNode, Rim);
             sys.Add(constraint);
 
             // Add rotation constraints
-            constraintD = chrono_types::make_shared<ChLinkDirFrame>();
+            constraintD = chrono_types::make_shared<ChLinkNodeSlopeFrame>();
             constraintD->Initialize(ConstrainedNode, Rim);
             constraintD->SetDirectionInAbsoluteCoords(ConstrainedNode->GetSlope1());
             sys.Add(constraintD);

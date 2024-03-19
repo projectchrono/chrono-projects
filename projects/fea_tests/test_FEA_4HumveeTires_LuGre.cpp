@@ -28,8 +28,8 @@
 #include "chrono/utils/ChUtilsValidation.h"
 
 #include "chrono/fea/ChElementShellANCF_3423.h"
-#include "chrono/fea/ChLinkDirFrame.h"
-#include "chrono/fea/ChLinkPointFrame.h"
+#include "chrono/fea/ChLinkNodeSlopeFrame.h"
+#include "chrono/fea/ChLinkNodeFrame.h"
 #include "chrono/fea/ChMesh.h"
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 #include "chrono_pardisomkl/ChSolverPardisoMKL.h"
@@ -46,8 +46,8 @@ bool addSingleLoad = false;
 bool addPressureAlessandro = true;
 std::shared_ptr<ChBody> BGround;
 std::shared_ptr<ChBodyEasyBox> SimpChassis;    // Chassis body
-std::shared_ptr<ChLinkPointFrame> constraint;  // Create shared pointers for rim-mesh constraints
-std::shared_ptr<ChLinkDirFrame> constraintD;
+std::shared_ptr<ChLinkNodeFrame> constraint;  // Create shared pointers for rim-mesh constraints
+std::shared_ptr<ChLinkNodeSlopeFrame> constraintD;
 std::shared_ptr<ChNodeFEAxyzD> ConstrainedNode;
 std::shared_ptr<ChLinkLockPlanar> constraintRim;
 
@@ -434,12 +434,12 @@ void MakeANCFHumveeWheel(ChSystem& sys,
                 i >= TotalNumNodes - NumElements_x) {  // Only constrain the nodes at the ends of the bead section
                 ConstrainedNode = std::dynamic_pointer_cast<ChNodeFEAxyzD>(TireMesh->GetNode(i));
                 // Add position constraints
-                constraint = chrono_types::make_shared<ChLinkPointFrame>();
+                constraint = chrono_types::make_shared<ChLinkNodeFrame>();
                 constraint->Initialize(ConstrainedNode, Hub_1);
                 sys.Add(constraint);
 
                 // Add rotation constraints
-                constraintD = chrono_types::make_shared<ChLinkDirFrame>();
+                constraintD = chrono_types::make_shared<ChLinkNodeSlopeFrame>();
                 constraintD->Initialize(ConstrainedNode, Hub_1);
                 constraintD->SetDirectionInAbsoluteCoords(ConstrainedNode->GetSlope1());
                 sys.Add(constraintD);

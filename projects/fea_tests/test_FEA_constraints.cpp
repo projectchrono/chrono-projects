@@ -26,8 +26,8 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono/fea/ChElementCableANCF.h"
-#include "chrono/fea/ChLinkDirFrame.h"
-#include "chrono/fea/ChLinkPointFrame.h"
+#include "chrono/fea/ChLinkNodeSlopeFrame.h"
+#include "chrono/fea/ChLinkNodeFrame.h"
 #include "chrono/fea/ChLoadsBeam.h"
 #include "chrono/fea/ChMesh.h"
 
@@ -45,8 +45,8 @@ using namespace chrono;
 using namespace chrono::fea;
 
 // Test the reaction force and torque for an ANCF beam element with two nodes.
-// The first node is at the origin and is constrained to ground using a ChLinkPointFrame
-// constraint and, optionally, a ChLinkDirFrame constraint (as specified through the
+// The first node is at the origin and is constrained to ground using a ChLinkNodeFrame
+// constraint and, optionally, a ChLinkNodeSlopeFrame constraint (as specified through the
 // boolean argument 'constrain_dir').
 // The argument 'dir' defines the initial beam configuration.
 void test_beam(const std::string& name,  /// test name
@@ -96,14 +96,14 @@ void test_beam(const std::string& name,  /// test name
     mesh->AddElement(beam_elem);
 
     // Create a hinge constraint
-    auto point_cnstr = chrono_types::make_shared<ChLinkPointFrame>();
+    auto point_cnstr = chrono_types::make_shared<ChLinkNodeFrame>();
     point_cnstr->Initialize(node1, ground);
     my_system.Add(point_cnstr);
 
     // Create a direction constraint
-    std::shared_ptr<ChLinkDirFrame> dir_cnstr;
+    std::shared_ptr<ChLinkNodeSlopeFrame> dir_cnstr;
     if (constrain_dir) {
-        dir_cnstr = chrono_types::make_shared<ChLinkDirFrame>();
+        dir_cnstr = chrono_types::make_shared<ChLinkNodeSlopeFrame>();
         dir_cnstr->Initialize(node1, ground);
         my_system.Add(dir_cnstr);
     }
