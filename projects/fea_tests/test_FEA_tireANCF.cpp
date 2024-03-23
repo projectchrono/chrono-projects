@@ -479,11 +479,12 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
     // Add constant pressure using ChLoaderPressure (preferred for simple, constant pressure)
     if (addPressureAlessandro) {
         for (int NoElmPre = 0; NoElmPre < TotalNumElements; NoElmPre++) {
-            auto faceload = chrono_types::make_shared<ChLoad<ChLoaderPressure>>(
-                std::static_pointer_cast<ChElementShellANCF_3423>(TireMesh->GetElement(NoElmPre)));
-            faceload->loader.SetPressure(-TirePressure);
-            faceload->loader.SetStiff(false);
-            faceload->loader.SetIntegrationPoints(2);
+            auto face = std::static_pointer_cast<ChElementShellANCF_3423>(TireMesh->GetElement(NoElmPre));
+            auto faceloader = chrono_types::make_shared<ChLoaderPressure>(face);
+            faceloader->SetPressure(-TirePressure);
+            faceloader->SetStiff(false);
+            faceloader->SetIntegrationPoints(2);
+            auto faceload = chrono_types::make_shared<ChLoad>(faceloader);
             Mloadcontainer->Add(faceload);
         }
     }

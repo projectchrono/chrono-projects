@@ -123,14 +123,14 @@ void MakeWheel(ChSystemSMC& sys,
     mmeshsurf->AddFacesFromNodeSet(node_sets[nodeset_sel]);
 
     /// Apply load to all surfaces in the mesh surface
-    auto mloadcontainer = chrono_types::make_shared<ChLoadContainer>();
-    sys.Add(mloadcontainer);
+    auto loadcontainer = chrono_types::make_shared<ChLoadContainer>();
+    sys.Add(loadcontainer);
 
-    for (int i = 0; i < mmeshsurf->GetFaces().size(); ++i) {
-        auto aface = std::shared_ptr<ChLoadableUV>(mmeshsurf->GetFaces()[i]);
-        auto faceload = chrono_types::make_shared<ChLoad<ChLoaderPressure>>(aface);
-        faceload->loader.SetPressure(10000);  // low pressure... the tire has no ply!
-        mloadcontainer->Add(faceload);
+    for (const auto& face : mmeshsurf->GetFaces()) {
+        auto faceloader = chrono_types::make_shared<ChLoaderPressure>(face);
+        faceloader->SetPressure(10000);  // low pressure... the tire has no ply!
+        auto faceload = chrono_types::make_shared<ChLoad>(faceloader);
+        loadcontainer->Add(faceload);
     }
     // ==Asset== attach a visualization of the FEM mesh.
     auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);

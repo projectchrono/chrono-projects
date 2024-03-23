@@ -52,7 +52,7 @@ class MyContactContainer : public ChContactContainerSMC {
                 std::cout << "pB = " << pB << "\n";
             }
 
-            const ChKblockGeneric* KRM = (*iter)->GetJacobianKRM();
+            const ChKRMBlock* KRM = (*iter)->GetJacobianKRM();
             const ChMatrixDynamic<double>* K = (*iter)->GetJacobianK();
             const ChMatrixDynamic<double>* R = (*iter)->GetJacobianR();
 

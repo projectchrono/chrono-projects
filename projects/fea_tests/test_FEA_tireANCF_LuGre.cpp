@@ -1489,9 +1489,10 @@ int main(int argc, char* argv[]) {
     // It is created using templates, that is instancing a ChLoad<a_loader_class>()
     // initiate for loop for all the elements
     for (int NoElmPre = 0; NoElmPre < TotalNumElements; NoElmPre++) {
-        auto PressureElement = chrono_types::make_shared<ChLoad<MyPressureLoad>>(
-            std::static_pointer_cast<ChElementShellANCF_3423>(my_mesh->GetElement(NoElmPre)));
-        Mloadcontainer->Add(PressureElement);  // do not forget to add the load to the load container.
+        auto face = std::static_pointer_cast<ChElementShellANCF_3423>(my_mesh->GetElement(NoElmPre));
+        auto loader = chrono_types::make_shared<MyPressureLoad>(face);
+        auto load = chrono_types::make_shared<ChLoad>(loader);
+        Mloadcontainer->Add(load);  // do not forget to add the load to the load container.
     }
 
     sys.Add(Mloadcontainer);

@@ -321,10 +321,10 @@ void Oscillator() {
         mystepper.Advance(timestep);
         printf("    %7.4f | %12.8f  %12.8f | %2d\n",
                mystepper.GetTime(),          // time
-               mystepper.get_X()(0),         // position
-               mystepper.get_V()(0),         // velocity
+               mystepper.GetStatePos()(0),   // position
+               mystepper.GetStateVel()(0),   // velocity
                mystepper.GetNumIterations()  // number of HHT iterations
-               );
+        );
     }
 }
 
@@ -353,12 +353,12 @@ void Pendulum() {
     for (int i = 0; i < num_steps; i++) {
         mystepper.Advance(timestep);
         printf("    %7.4f | %12.8f  %12.8f  %12.8f  %12.8f | %12.8f | %2d\n",
-               mystepper.GetTime(),                         // time
-               mystepper.get_X()(0), mystepper.get_X()(1),  // position
-               mystepper.get_V()(0), mystepper.get_V()(1),  // velocity
-               mystepper.get_L()(0),                        // Lagrange multiplier
-               mystepper.GetNumIterations()                 // number of HHT iterations
-               );
+               mystepper.GetTime(),                                     // time
+               mystepper.GetStatePos()(0), mystepper.GetStatePos()(1),  // position
+               mystepper.GetStateVel()(0), mystepper.GetStateVel()(1),  // velocity
+               mystepper.GetLagrangeMultipliers()(0),                   // Lagrange multiplier
+               mystepper.GetNumIterations()                             // number of HHT iterations
+        );
     }
 }
 
