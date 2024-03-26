@@ -285,10 +285,11 @@ int main(int argc, char* argv[]) {
     double radius = 0.005;
     ChVector3d inertia = (2.0 / 5.0) * mass * radius * radius * ChVector3d(1, 1, 1);
 
-    int triId = 0;
+    int tri_tag = 0;
+    std::vector<std::shared_ptr<ChBody>> tri_bodies;
     for (int i = 0; i < triangles.size(); i++) {
         auto triangle = chrono_types::make_shared<ChBody>();
-        triangle->SetIdentifier(triId++);
+        triangle->SetTag(tri_tag++);
         triangle->SetMass(mass);
         triangle->SetInertiaXX(inertia);
         pos = (vert_pos[triangles[i].x()] + vert_pos[triangles[i].y()] + vert_pos[triangles[i].z()]) / 3.0;
@@ -299,17 +300,18 @@ int main(int argc, char* argv[]) {
         triangle->EnableCollision(true);
         triangle->SetFixed(true);
 
-        std::string name = "tri" + std::to_string(triId);
+        std::string name = "tri" + std::to_string(tri_tag);
         chrono::utils::AddTriangleGeometry(triangle.get(), triMat, vert_pos[triangles[i].x()] - pos,
                                            vert_pos[triangles[i].y()] - pos, vert_pos[triangles[i].z()] - pos, name);
         triangle->GetCollisionModel()->SetFamily(1);
         triangle->GetCollisionModel()->DisallowCollisionsWith(1);
 
+        tri_bodies.push_back(triangle);
         systemG->AddBody(triangle);
     }
 
     // Add the terrain, MUST BE ADDED AFTER TIRE GEOMETRY (for index assumptions)
-    chrono::utils::CreateBoxContainer(systemG, -2, triMat, ChVector3d(2, 2, 2), 0.2, ChVector3d(0, -1, 0), QUNIT, true,
+    chrono::utils::CreateBoxContainer(systemG, triMat, ChVector3d(2, 2, 2), 0.2, ChVector3d(0, -1, 0), QUNIT, true,
                                       true, false);
 
     double r = 0.1;  // 0.02;//
@@ -321,7 +323,6 @@ int main(int argc, char* argv[]) {
     m1->SetDefaultDensity(2500);
     m1->SetDefaultSize(ChVector3d(r, r * shapeRatio, r));
 
-    gen.SetBodyIdentifier(triId);
     ChVector3d hdims(1 - r * 1.01, 0.5, 1 - r * 1.01);
     ChVector3d center(0, 0, 0);
     gen.CreateObjectsBox(sampler, center, hdims);
@@ -386,8 +387,8 @@ int main(int argc, char* argv[]) {
         }
 
         for (int i = 0; i < triangles.size(); i++) {
-            force = systemG->GetBodyContactForce(i);
-            torque = systemG->GetBodyContactTorque(i);
+            force = systemG->GetBodyContactForce(tri_bodies[i]);
+            torque = systemG->GetBodyContactTorque(tri_bodies[i]);
 
             // TODO: Calculate force based on the position in the triangle
             vert_forces[triangles[i].x()] += ChVector3d(force.x, force.y, force.z) / 3;

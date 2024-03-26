@@ -72,7 +72,7 @@ double out_fps = 60;
 ChContactMethod method = ChContactMethod::SMC;
 
 // Parameters for the granular material
-int Id_g = 100;
+int tag_particles = 0;
 double r_g = 0.04;
 double rho_g = 2500;
 double vol_g = (4.0 / 3) * CH_PI * r_g * r_g * r_g;
@@ -85,7 +85,6 @@ float cr_g = 0.1f;
 float cohesion_g = 20.0f;
 
 // Parameters for wheel body
-int Id_w = 0;
 double mass_w = 100;
 ChVector3d inertia_w = ChVector3d(2, 2, 4);
 
@@ -165,14 +164,14 @@ int CreateObjects(ChSystemMulticore* system) {
     m1->SetDefaultDensity(rho_g);
     m1->SetDefaultSize(r_g);
 
-    gen.SetBodyIdentifier(Id_g);
+    gen.SetStartTag(tag_particles);
 
     gen.CreateObjectsBox(sampler, ChVector3d(0, 0, r + layerHeight / 2),
                          ChVector3d(hDimX - r, hDimY - r, layerHeight / 2));
     cout << "total granules: " << gen.GetTotalNumBodies() << endl;
 
     // Create the containing bin
-    utils::CreateBoxContainer(system, binId, material_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, material_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 
     return gen.GetTotalNumBodies();
 }
@@ -215,7 +214,6 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemMulticore* system, double z) {
     // Create the wheel body
     auto wheel = chrono_types::make_shared<ChBody>();
 
-    wheel->SetIdentifier(Id_w);
     wheel->SetMass(mass_w);
     wheel->SetInertiaXX(inertia_w);
     wheel->SetPos(ChVector3d(0, 0, z));
@@ -243,7 +241,7 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemMulticore* system, double z) {
 bool CheckSettled(ChSystem* sys, double threshold) {
     double t2 = threshold * threshold;
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() >= Id_g) {
+        if (body->GetTag() >= tag_particles) {
             double vel2 = body->GetLinVel().Length2();
             if (vel2 > t2)
                 return false;
@@ -256,12 +254,12 @@ bool CheckSettled(ChSystem* sys, double threshold) {
 // ========================================================================
 // These utility functions find the height of the highest or lowest sphere
 // in the granular mix, respectively.  We only look at bodies whith
-// identifiers larger than Id_g.
+// tags larger than tag_particles.
 
 double FindHighest(ChSystem* sys) {
     double highest = 0;
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() >= Id_g && body->GetPos().z() > highest)
+        if (body->GetTag() >= tag_particles && body->GetPos().z() > highest)
             highest = body->GetPos().z();
     }
     return highest;
@@ -270,7 +268,7 @@ double FindHighest(ChSystem* sys) {
 double FindLowest(ChSystem* sys) {
     double lowest = DBL_MAX;
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() >= Id_g && body->GetPos().z() < lowest)
+        if (body->GetTag() >= tag_particles && body->GetPos().z() < lowest)
             lowest = body->GetPos().z();
     }
     return lowest;

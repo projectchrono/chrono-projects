@@ -300,11 +300,9 @@ void MakeANCFHumveeWheel(ChSystem& my_system,
                          const ChVector3d rim_center,
                          std::shared_ptr<ChBody>& Hub_1,
                          double TirePressure,
-                         double ForVelocity,
-                         int Ident) {
+                         double ForVelocity) {
     // Create rim for this mesh
     my_system.AddBody(Hub_1);
-    Hub_1->SetIdentifier(Ident);
     Hub_1->SetFixed(false);
     Hub_1->EnableCollision(false);
     Hub_1->SetMass(10);
@@ -528,7 +526,6 @@ int main(int argc, char* argv[]) {
     // Body 1: Ground
     BGround = chrono_types::make_shared<ChBody>();
     my_system.AddBody(BGround);
-    BGround->SetIdentifier(1);
     BGround->SetFixed(true);
     BGround->EnableCollision(false);
     BGround->SetMass(1);
@@ -543,7 +540,7 @@ int main(int argc, char* argv[]) {
 
     // Create tire meshes
     auto TireMesh1 = chrono_types::make_shared<ChMesh>();
-    MakeANCFHumveeWheel(my_system, TireMesh1, rim_center_1, Hub_1, TirePressure, ForVelocity, 2);
+    MakeANCFHumveeWheel(my_system, TireMesh1, rim_center_1, Hub_1, TirePressure, ForVelocity);
 
     auto mmaterial = chrono_types::make_shared<ChContactMaterialNSC>();
     mmaterial->SetFriction(0.4f);

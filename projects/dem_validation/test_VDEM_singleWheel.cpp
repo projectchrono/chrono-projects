@@ -154,11 +154,6 @@ int timing_frame = -1;
 double gravity = 981;
 
 // Parameters for the mechanism
-int Id_ground = -1;   // body ID for the ground (containing bin)
-int Id_wheel = -2;    // body ID for the wheel
-int Id_axle = -3;     // body ID for the axle
-int Id_chassis = -4;  // body ID for the chassis
-
 double hdimX = 100.0 / 2;  // [cm] bin half-length in x direction
 double hdimY = 60.0 / 2;   // [cm] bin half-depth in y direction
 double hdimZ = 32.0 / 2;   // [cm] bin half-height in z direction
@@ -175,7 +170,7 @@ float Y_walls = (float)(Pa2cgs * 2e6);
 float mu_walls = 0.3f;
 
 // Parameters for the granular material
-int Id_g = 1;          // start body ID for particles
+int tag_particles = 0; // start tag ID for particles
 double r_g = 2.0;      // [cm] radius of granular sphers
 double rho_g = 2.500;  // [g/cm^3] density of granules
 
@@ -216,7 +211,6 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     auto ground = chrono_types::make_shared<ChBody>();
 
-    ground->SetIdentifier(Id_ground);
     ground->SetFixed(true);
     ground->EnableCollision(true);
 
@@ -241,7 +235,6 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     // Set wheel starting pos, near back of the containing bin
     double hdimX_w = -hdimX + 1.01 * wheelRadius;
 
-    wheel->SetIdentifier(Id_wheel);
     wheel->SetPos(ChVector3d(hdimX_w, 0, 2 * hdimZ + wheelRadius));
     wheel->SetMass(1.0);
     wheel->EnableCollision(true);
@@ -261,7 +254,6 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     auto chassis = chrono_types::make_shared<ChBody>();
 
-    chassis->SetIdentifier(Id_chassis);
     chassis->SetMass(1.0);
     chassis->SetPos(wheel->GetPos());
     chassis->EnableCollision(false);
@@ -282,7 +274,6 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     auto axle = chrono_types::make_shared<ChBody>();
 
-    axle->SetIdentifier(Id_axle);
     axle->SetMass(wheelWeight / gravity);
     axle->SetPos(wheel->GetPos());
     axle->EnableCollision(false);
@@ -379,7 +370,7 @@ int CreateGranularMaterial(ChSystemMulticore* system) {
     m1->SetDefaultSize(r_g);
 
     // Ensure that all generated particle bodies will have positive IDs.
-    gen.SetBodyIdentifier(Id_g);
+    gen.SetStartTag(tag_particles);
 
     // ----------------------
     // Generate the particles
@@ -421,7 +412,6 @@ void CreateBall(ChSystemMulticore* system) {
 
     auto ball = chrono_types::make_shared<ChBody>();
 
-    ball->SetIdentifier(Id_ball);
     ball->SetMass(mass_ball);
     ball->SetPos(ChVector3d(0, 0, 1.01 * radius_ball));
     ball->EnableCollision(true);
@@ -441,7 +431,7 @@ void FindHeightRange(ChSystemMulticore* sys, double& lowest, double& highest) {
     highest = -1000;
     lowest = 1000;
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() <= 0)
+        if (body->GetTag() < tag_particles)
             continue;
         double h = body->GetPos().z();
         if (h < lowest)
@@ -466,7 +456,7 @@ void setBulkDensity(ChSystem* sys, double bulkDensity) {
     double granularVolume = (sys->GetBodies().size() - 3) * vol_g;
     double reqDensity = bulkDensity * boxVolume / granularVolume;
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() > 1) {
+        if (body->GetTag() >= tag_particles) {
             body->SetMass(reqDensity * vol_g);
         }
     }

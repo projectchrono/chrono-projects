@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
 
     // Granular material properties
     double radius_g = 0.006;
-    int Id_g = 10000;
+    int tag_particles = 0;
     double rho_g = 2500;
     double vol_g = (4.0 / 3) * CH_PI * radius_g * radius_g * radius_g;
     double mass_g = rho_g * vol_g;
@@ -217,7 +217,6 @@ int main(int argc, char** argv) {
     // Create container body
     auto container = chrono_types::make_shared<ChBody>();
     system->AddBody(container);
-    container->SetIdentifier(-1);
     container->SetMass(1);
     container->SetFixed(true);
     container->EnableCollision(true);
@@ -252,7 +251,7 @@ int main(int argc, char** argv) {
     m1->SetDefaultSize(radius_g);
 
     // Set starting value for body identifiers
-    gen.SetBodyIdentifier(Id_g);
+    gen.SetStartTag(tag_particles);
 
     // Create particles in layers until reaching the desired number of particles
     ChVector3d hdims(hdimX - r, hdimY - r, 0);
@@ -272,9 +271,9 @@ int main(int argc, char** argv) {
     std::ofstream outf;             // output file stream
 
     if (track_granule) {
-        int id = Id_g + num_particles / 2;
+        int id = tag_particles + num_particles / 2;
         for (auto body : system->GetBodies()) {
-            if (body->GetIdentifier() == id) {
+            if (body->GetTag() == id) {
                 granule = body;
                 break;
             }

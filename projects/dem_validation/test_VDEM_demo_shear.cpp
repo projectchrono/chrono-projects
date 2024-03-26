@@ -152,13 +152,9 @@ int main(int argc, char* argv[]) {
     }
 
     // Parameters for the system
-
     double gravity = 9.81;  // m/s^2
 
     // Parameters for the balls
-
-    int ballId = 1;  // first ball id
-
     const int a = 50;
     const int b = 10;
     const int c = 10;
@@ -175,13 +171,9 @@ int main(int argc, char* argv[]) {
     float mu = 0.18f;
 
     // Parameters for containing bin, shear box, and load plate
-
     float mu_ext = 0.13f;
 
     int groundId = 0;
-    int binId = -1;
-    int boxId = -2;
-    int plateId = -3;
     double width = 0.12;
     double length = 0.12;
     double height = 0.06;
@@ -286,7 +278,6 @@ int main(int argc, char* argv[]) {
 
     auto bin = chrono_types::make_shared<ChBody>();
 
-    bin->SetIdentifier(binId);
     bin->SetMass(1);
     bin->SetPos(ChVector3d(0, -height / 2, 0));
     bin->SetFixed(true);
@@ -312,7 +303,6 @@ int main(int argc, char* argv[]) {
 
     auto box = chrono_types::make_shared<ChBody>();
 
-    box->SetIdentifier(boxId);
     box->SetMass(1);
     box->SetPos(ChVector3d(0, height / 2 + radius, 0));
     box->SetFixed(true);
@@ -339,7 +329,6 @@ int main(int argc, char* argv[]) {
 
     shear_Area = width * length;
 
-    plate->SetIdentifier(binId);
     plate->SetMass(normal_pressure * shear_Area / gravity);
     plate->SetPos(ChVector3d(0, 2.0 * radius * float(a) + thickness, 0));
     plate->SetFixed(true);
@@ -368,7 +357,6 @@ int main(int argc, char* argv[]) {
 
                 auto ball = chrono_types::make_shared<ChBody>();
 
-                ball->SetIdentifier(ballId + 6 * 6 * i + 6 * j + k);
                 ball->SetMass(mass);
                 ball->SetInertiaXX((2.0 / 5.0) * mass * radius * radius * ChVector3d(1, 1, 1));
                 ball->SetPos(ChVector3d(ball_x, ball_y, ball_z));

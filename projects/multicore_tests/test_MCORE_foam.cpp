@@ -67,7 +67,7 @@ const std::string out_file = out_dir + "/timing.dat";
 double out_fps = 50;
 
 // Parameters for the granular material
-int Id_g = 1;
+int tag_particles = 0;
 double r_g = 0.01;
 double rho_g = 2000;
 
@@ -77,7 +77,6 @@ float cr_g = 0.1f;
 float cohesion_g = 300.0f;
 
 // Parameters for the containing bin
-int binId = -200;
 double hDimX = 10;        // length in x direction
 double hDimY = 10;        // depth in y direction
 double hDimZ = 1;         // height in z direction
@@ -150,7 +149,7 @@ int main(int argc, char* argv[]) {
     mat_c->SetAdhesion(cohesion_c);
 
     // Create the containing bin
-    utils::CreateBoxContainer(sys, binId, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(sys, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 
     // Create a mixture entirely made out of spheres
     double vol_g = (4.0 / 3) * CH_PI * r_g * r_g * r_g;
@@ -164,7 +163,7 @@ int main(int argc, char* argv[]) {
     m1->SetDefaultDensity(rho_g);
     m1->SetDefaultSize(r_g);
 
-    gen->SetBodyIdentifier(Id_g);
+    gen->SetStartTag(tag_particles);
 
     // Number of steps
     int num_steps = (int)std::ceil(time_end / time_step);

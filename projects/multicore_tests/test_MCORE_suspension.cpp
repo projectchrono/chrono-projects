@@ -141,7 +141,6 @@ class MySimpleCar {
         // --- The car body ---
 
         truss = chrono_types::make_shared<ChBody>();
-        truss->SetIdentifier(-1);
         truss->SetMass(2086.524902);
         truss->SetPos(ChVector3d(0, 0.52349, 0.055765));
         truss->SetRot(ChQuaternion<>(1, 0, 0, 0));
@@ -155,7 +154,6 @@ class MySimpleCar {
 
         // ..the car right-front spindle
         spindleRF = chrono_types::make_shared<ChBody>();
-        spindleRF->SetIdentifier(-2);
         spindleRF->SetMass(14.705);
         spindleRF->SetPos(ChVector3d(0.751, -0.026, 1.648965));
         spindleRF->SetRot(ChQuaternion<>(1, 0, 0, 0));
@@ -166,7 +164,6 @@ class MySimpleCar {
 
         // ..the car right-front wheel
         wheelRF = chrono_types::make_shared<ChBody>();
-        wheelRF->SetIdentifier(-3);
         wheelRF->SetMass(3.0);
         wheelRF->SetPos(ChVector3d(0.91, -0.026, 1.648965));
         wheelRF->SetRot(ChQuaternion<>(1, 0, 0, 0));
@@ -226,7 +223,6 @@ class MySimpleCar {
 
         // ..the car left-front spindle
         spindleLF = chrono_types::make_shared<ChBody>();
-        spindleLF->SetIdentifier(-4);
         spindleLF->SetMass(14.705);
         spindleLF->SetPos(ChVector3d(-0.751, -0.026, 1.648965));
         spindleLF->SetRot(ChQuaternion<>(1, 0, 0, 0));
@@ -237,7 +233,6 @@ class MySimpleCar {
 
         // ..the car left-front wheel
         wheelLF = chrono_types::make_shared<ChBody>();
-        wheelLF->SetIdentifier(-5);
         wheelLF->SetMass(3.0);
         wheelLF->SetPos(ChVector3d(-0.91, -0.026, 1.648965));
         wheelLF->SetRot(ChQuaternion<>(1, 0, 0, 0));
@@ -297,7 +292,6 @@ class MySimpleCar {
 
         // ..the car right-back spindle
         spindleRB = chrono_types::make_shared<ChBody>();
-        spindleRB->SetIdentifier(-6);
         spindleRB->SetMass(15.91);
         spindleRB->SetPos(ChVector3d(0.751, -0.026, -1.652965));
         spindleRB->SetRot(ChQuaternion<>(1, 0, 0, 0));
@@ -308,7 +302,6 @@ class MySimpleCar {
 
         // ..the car right-back wheel
         wheelRB = chrono_types::make_shared<ChBody>();
-        wheelRB->SetIdentifier(-7);
         wheelRB->SetMass(3.0);
         wheelRB->SetPos(ChVector3d(0.91, -0.026, -1.652965));
         wheelRB->SetRot(ChQuaternion<>(1, 0, 0, 0));
@@ -376,7 +369,6 @@ class MySimpleCar {
 
         // ..the car right-back spindle
         spindleLB = chrono_types::make_shared<ChBody>();
-        spindleLB->SetIdentifier(-8);
         spindleLB->SetMass(15.91);
         spindleLB->SetPos(ChVector3d(-0.751, -0.026, -1.652965));
         spindleLB->SetRot(ChQuaternion<>(1, 0, 0, 0));
@@ -387,7 +379,6 @@ class MySimpleCar {
 
         // ..the car left-back wheel
         wheelLB = chrono_types::make_shared<ChBody>();
-        wheelLB->SetIdentifier(-9);
         wheelLB->SetMass(3.0);
         wheelLB->SetPos(ChVector3d(-0.91, -0.026, -1.652965));
         wheelLB->SetRot(ChQuaternion<>(1, 0, 0, 0));
@@ -542,7 +533,7 @@ int CreateGranularMaterial(ChSystemMulticore* system,
                            double pitLength,
                            double groundWidth) {
     // Parameters for the granular material
-    int Id_g = 1;           // start body ID for particles
+    int tag_particles = 0;  // start body ID for particles
     double r_g = .04;       // [cm] radius of granular sphers
     double rho_g = 2500.0;  // [g/cm^3] density of granules
 
@@ -572,7 +563,7 @@ int CreateGranularMaterial(ChSystemMulticore* system,
     m1->SetDefaultSize(r_g);
 
     // Ensure that all generated particle bodies will have positive IDs.
-    gen.SetBodyIdentifier(Id_g);
+    gen.SetStartTag(tag_particles);
 
     // ----------------------
     // Generate the particles
@@ -597,9 +588,6 @@ int CreateGranularMaterial(ChSystemMulticore* system,
 // to rotate at constant angular velocity.
 // =============================================================================
 void AddGround(ChSystemMulticoreNSC* sys) {
-    // IDs for the two bodies
-    int groundId = -200;
-
     // Create a common material
     auto mat = chrono_types::make_shared<ChContactMaterialNSC>();
     mat->SetFriction(1.0f);
@@ -614,7 +602,6 @@ void AddGround(ChSystemMulticoreNSC* sys) {
     double wallHeight = 6;
     double thickness = 0.1;
     auto ground = chrono_types::make_shared<ChBody>();
-    ground->SetIdentifier(groundId);
     ground->SetMass(1);
     ground->SetPos(pos);
     ground->SetRot(ChQuaternion<>(1, 0, 0, 0));

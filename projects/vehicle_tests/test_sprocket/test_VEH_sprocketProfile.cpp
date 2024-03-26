@@ -67,7 +67,6 @@ int main(int argc, char* argv[]) {
     // ----------------------
 
     auto ground = chrono_types::make_shared<ChBody>();
-    ground->SetIdentifier(-1);
     ground->SetFixed(true);
     system.AddBody(ground);
 
@@ -78,7 +77,6 @@ int main(int argc, char* argv[]) {
     ChVector3d gear_loc(0, 0, 0);
 
     auto gear = chrono_types::make_shared<ChBody>();
-    gear->SetIdentifier(0);
     gear->SetPos(gear_loc);
     // gear->SetWvel_loc(ChVector3d(0, 0, 0.1));
     system.AddBody(gear);
@@ -126,7 +124,6 @@ int main(int argc, char* argv[]) {
     ChVector3d pin_loc = gear_loc + ChVector3d(0, R_T, 0);
 
     auto pin = chrono_types::make_shared<ChBody>();
-    pin->SetIdentifier(1);
     pin->SetPos(pin_loc);
     // pin->SetFixed(true);
     system.AddBody(pin);

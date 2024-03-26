@@ -116,7 +116,7 @@ int out_fps_dropping = 1200;
 int timing_frame = -1;  // output detailed step timing at this frame
 
 // Parameters for the granular material
-int Id_g = 1;
+int tag_particles = 0;
 double r_g = 1e-3 / 2;
 double rho_g = 2500;
 double vol_g = (4.0 / 3) * CH_PI * r_g * r_g * r_g;
@@ -128,7 +128,6 @@ float mu_g = 0.3f;
 float cr_g = 0.1f;
 
 // Parameters for the falling ball
-int Id_b = 0;
 double R_b = 2.54e-2 / 2;
 double rho_b = 700;
 double vol_b = (4.0 / 3) * CH_PI * R_b * R_b * R_b;
@@ -140,7 +139,6 @@ float mu_b = 0.3f;
 float cr_b = 0.1f;
 
 // Parameters for the containing bin
-int binId = -200;
 double hDimX = 4e-2;         // length in x direction
 double hDimY = 4e-2;         // depth in y direction
 double hDimZ = 7.5e-2;       // height in z direction
@@ -176,7 +174,7 @@ int CreateObjects(ChSystemMulticore* system) {
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
 
-    utils::CreateBoxContainer(system, binId, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 #else
     auto mat_c = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_c->SetFriction(mu_c);
@@ -205,7 +203,7 @@ int CreateObjects(ChSystemMulticore* system) {
     m1->SetDefaultDensity(rho_g);
     m1->SetDefaultSize(r_g);
 
-    gen.SetBodyIdentifier(Id_g);
+    gen.SetStartTag(tag_particles);
 
     for (int i = 0; i < numLayers; i++) {
         double center = r + layerHeight / 2 + i * (2 * r + layerHeight);
@@ -236,7 +234,6 @@ void CreateFallingBall(ChSystemMulticore* system, double z, double vz) {
     // Create the falling ball
     auto ball = chrono_types::make_shared<ChBody>();
 
-    ball->SetIdentifier(Id_b);
     ball->SetMass(mass_b);
     ball->SetInertiaXX(inertia_b);
     ball->SetPos(ChVector3d(0, 0, z + r_g + R_b));
@@ -258,7 +255,7 @@ void CreateFallingBall(ChSystemMulticore* system, double z, double vz) {
 double FindHighest(ChSystem* sys) {
     double highest = 0;
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z() > highest)
+        if (body->GetTag() >= tag_particles && body->GetPos().z() > highest)
             highest = body->GetPos().z();
     }
     return highest;
@@ -267,7 +264,7 @@ double FindHighest(ChSystem* sys) {
 double FindLowest(ChSystem* sys) {
     double lowest = 1000;
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z() < lowest)
+        if (body->GetTag() >= tag_particles && body->GetPos().z() < lowest)
             lowest = body->GetPos().z();
     }
     return lowest;
@@ -281,7 +278,7 @@ bool CheckSettled(ChSystem* sys, double threshold) {
     double t2 = threshold * threshold;
 
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() > 0) {
+        if (body->GetTag() > tag_particles) {
             double vel2 = body->GetLinVel().Length2();
             if (vel2 > t2)
                 return false;

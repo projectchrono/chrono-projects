@@ -55,14 +55,12 @@ int main(int argc, char* argv[]) {
     // Create ground
     auto ground = chrono_types::make_shared<ChBody>();
     system.AddBody(ground);
-    ground->SetIdentifier(0);
     ground->EnableCollision(false);
     ground->SetFixed(true);
 
     // Create wheel
     auto wheel = chrono_types::make_shared<ChBody>();
     system.AddBody(wheel);
-    wheel->SetIdentifier(1);
     wheel->SetMass(100);
     wheel->SetPos(init_pos);
     wheel->SetRot(init_rot);

@@ -387,12 +387,10 @@ void RigidPendulums() {
 
     // Bodies
     auto ground = chrono_types::make_shared<ChBody>();
-    ground->SetIdentifier(-1);
     ground->SetFixed(true);
     system.AddBody(ground);
 
     auto pend1 = chrono_types::make_shared<ChBody>();
-    pend1->SetIdentifier(1);
     pend1->SetMass(m1);
     pend1->SetInertiaXX(ChVector3d(1, 1, J1));
     pend1->SetPos(ChVector3d(l1 / 2, 0, 0));
@@ -400,7 +398,6 @@ void RigidPendulums() {
 
     auto pend2 = chrono_types::make_shared<ChBody>();
     if (double_pend) {
-        pend2->SetIdentifier(2);
         pend2->SetMass(m2);
         pend2->SetInertiaXX(ChVector3d(1, 1, J2));
         pend2->SetPos(ChVector3d(l1 + l2 / 2, 0, 0));

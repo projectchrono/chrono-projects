@@ -155,10 +155,6 @@ int timing_frame = -1;
 double gravity = 981;
 
 // Parameters for the mechanism
-int Id_ground = -1;  // body ID for the ground (containing bin)
-int Id_box = -2;     // body ID for the shear box
-int Id_plate = -3;   // body ID for the load plate
-
 double hdimX = 12.0 / 2;  // [cm] bin half-length in x direction
 double hdimY = 12.0 / 2;  // [cm] bin half-depth in y direction
 double hdimZ = 3.0 / 2;   // [cm] bin half-height in z direction
@@ -182,7 +178,7 @@ double normalPressure = Pa2cgs * 3.1e3;  // 3.1 kPa // 6.4 kPa // 12.5 kPa // 24
 double desiredVelocity = 0.166;  // 10 cm/min (about 100 times faster than experiment)
 
 // Parameters for the granular material
-int Id_g = 1;          // start body ID for particles
+int tag_particles = 0; // start body tag for particles
 double r_g = 0.3;      // [cm] radius of granular spheres
 double rho_g = 2.550;  // [g/cm^3] density of granules
 
@@ -227,7 +223,6 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     auto ground = chrono_types::make_shared<ChBody>();
 
-    ground->SetIdentifier(Id_ground);
     ground->SetFixed(true);
     ground->EnableCollision(true);
 
@@ -253,7 +248,6 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     auto box = chrono_types::make_shared<ChBody>();
 
-    box->SetIdentifier(Id_box);
     box->SetPos(ChVector3d(0, 0, 2 * hdimZ + r_g));
     box->EnableCollision(true);
     box->SetFixed(true);
@@ -289,7 +283,6 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     auto plate = chrono_types::make_shared<ChBody>();
 
-    plate->SetIdentifier(Id_plate);
     plate->SetMass(mass);
     plate->SetPos(ChVector3d(0, 0, (1 + 2 * h_scaling) * hdimZ));
     plate->EnableCollision(true);
@@ -377,7 +370,7 @@ int CreateGranularMaterial(ChSystemMulticore* system) {
     m1->SetDefaultSize(r_g);
 
     // Ensure that all generated particle bodies will have positive IDs.
-    gen.SetBodyIdentifier(Id_g);
+    gen.SetStartTag(tag_particles);
 
     // ----------------------
     // Generate the particles
@@ -421,7 +414,6 @@ void CreateBall(ChSystemMulticore* system) {
 
     auto ball = chrono_types::make_shared<ChBody>();
 
-    ball->SetIdentifier(Id_ball);
     ball->SetMass(mass_ball);
     ball->SetPos(ChVector3d(0, 0, 1.01 * radius_ball));
     ball->EnableCollision(true);
@@ -441,7 +433,7 @@ void FindHeightRange(ChSystemMulticore* sys, double& lowest, double& highest) {
     highest = -1000;
     lowest = 1000;
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() <= 0)
+        if (body->GetTag() < tag_particles)
             continue;
         double h = body->GetPos().z();
         if (h < lowest)
@@ -466,7 +458,7 @@ void setBulkDensity(ChSystem* sys, double bulkDensity) {
     double granularVolume = (sys->GetBodies().size() - 3) * vol_g;
     double reqDensity = bulkDensity * boxVolume / granularVolume;
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() > 1) {
+        if (body->GetTag() >= tag_particles) {
             body->SetMass(reqDensity * vol_g);
         }
     }

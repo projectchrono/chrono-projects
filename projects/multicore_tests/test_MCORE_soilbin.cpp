@@ -94,6 +94,7 @@ int out_fps_dropping = 60;
 // -----------------------------------------------------------------------------
 // Parameters for the granular material (identical spheres)
 // -----------------------------------------------------------------------------
+int tag_particles = 0;
 double r_g = 0.1;
 double rho_g = 2000;
 unsigned int desired_num_particles = 1000;
@@ -119,7 +120,6 @@ double hDimZ = 2;
 // Create container bin.
 // =============================================================================
 void CreateContainer(ChSystemMulticore* system) {
-    int id_c = -200;
     double hThickness = 0.1;
 
 #ifdef USE_SMC
@@ -128,7 +128,7 @@ void CreateContainer(ChSystemMulticore* system) {
     mat_c->SetFriction(0.4f);
     mat_c->SetRestitution(0.1f);
 
-    utils::CreateBoxContainer(system, id_c, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 #else
     auto mat_c = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_c->SetFriction(0.4f);
@@ -164,7 +164,7 @@ void CreateParticles(ChSystemMulticore* system) {
     m1->SetDefaultSize(r_g);
 
     // Create particles, one layer at a time, until the desired number is reached.
-    gen.SetBodyIdentifier(1);
+    gen.SetStartTag(tag_particles);
 
     ChVector3d hdims(hDimX - r, hDimY - r, 0);
     ChVector3d center(0, 0, 2 * r);
@@ -203,7 +203,6 @@ void CreateObject(ChSystemMulticore* system, double z) {
 
     auto obj = chrono_types::make_shared<ChBody>();
 
-    obj->SetIdentifier(0);
     obj->EnableCollision(true);
     obj->SetFixed(false);
 
@@ -291,7 +290,7 @@ void CreateObject(ChSystemMulticore* system, double z) {
 double FindHighest(ChSystem* sys) {
     double highest = 0;
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z() > highest)
+        if (body->GetTag() >= tag_particles && body->GetPos().z() > highest)
             highest = body->GetPos().z();
     }
     return highest;
@@ -300,7 +299,7 @@ double FindHighest(ChSystem* sys) {
 double FindLowest(ChSystem* sys) {
     double lowest = 1000;
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z() < lowest)
+        if (body->GetTag() >= tag_particles && body->GetPos().z() < lowest)
             lowest = body->GetPos().z();
     }
     return lowest;

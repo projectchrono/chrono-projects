@@ -108,6 +108,8 @@ int out_fps_dropping = 200;
 int timing_frame = -1;  // output detailed step timing at this frame
 
 // Parameters for the granular material
+int tag_particles = 0;
+
 double r_g = 0.25e-3;
 double rho_g = 2500.0;
 
@@ -139,6 +141,8 @@ double gap = 2e-3;      // size of gap
 
 double time_opening = gap / speed;
 
+int tag_insert = -100;
+
 // Dimensions of collector
 double pos_collector = 4.0e-2;     // position below measuring line
 double size_collector = 8.0e-2;    // width and length of collector bin
@@ -162,7 +166,7 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     // Angled insert
     auto insert = chrono_types::make_shared<ChBody>();
 
-    insert->SetIdentifier(0);
+    insert->SetTag(tag_insert);
     insert->SetMass(1);
     insert->SetInertiaXX(ChVector3d(1, 1, 1));
     insert->SetPos(ChVector3d(-0.5 * height - delta, 0, 0.5 * height - delta));
@@ -177,7 +181,6 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     // Static slot (back wall)
     auto slot = chrono_types::make_shared<ChBody>();
 
-    slot->SetIdentifier(-1);
     slot->SetMass(1);
     slot->SetInertiaXX(ChVector3d(1, 1, 1));
     slot->SetPos(ChVector3d(0.5 * thickness, 0, 0.5 * height));
@@ -192,7 +195,6 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     // Lateral walls
     auto wall = chrono_types::make_shared<ChBody>();
 
-    wall->SetIdentifier(-2);
     wall->SetMass(1);
     wall->SetInertiaXX(ChVector3d(1, 1, 1));
     wall->SetPos(ChVector3d(0, 0, 0));
@@ -209,7 +211,7 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
 
 // Containing bin
 #ifdef USE_SMC
-    utils::CreateBoxContainer(system, -3, mat_b,
+    utils::CreateBoxContainer(system, mat_b,
                               ChVector3d(size_collector / 2, size_collector / 2, height_collector / 2), thickness / 2,
                               ChVector3d(0, 0, -pos_collector));
 #else
@@ -247,7 +249,7 @@ void CreateParticles(ChSystemMulticore* system) {
     m1->SetDefaultDensity(rho_g);
     m1->SetDefaultSize(r_g);
 
-    gen.SetBodyIdentifier(1);
+    gen.SetStartTag(tag_particles);
 
     ChVector3d hdims(0.3 * height, 0.3 * width, 0);
     ChVector3d center(-0.4 * height, 0, 0.8 * height);
@@ -264,9 +266,9 @@ void CreateParticles(ChSystemMulticore* system) {
 // -----------------------------------------------------------------------------
 // Find and return the body with specified identifier.
 // -----------------------------------------------------------------------------
-ChBody* FindBodyById(ChSystemMulticore* sys, int id) {
+ChBody* FindBodyByTag(ChSystemMulticore* sys, int tag) {
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() == id)
+        if (body->GetTag() == tag)
             return body.get();
     }
 
@@ -280,7 +282,7 @@ ChBody* FindBodyById(ChSystemMulticore* sys, int id) {
 int GetNumParticlesBelowHeight(ChSystemMulticore* sys, double value) {
     int count = 0;
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z() < value)
+        if (body->GetTag() >= tag_particles && body->GetPos().z() < value)
             count++;
     }
     return count;
@@ -289,7 +291,7 @@ int GetNumParticlesBelowHeight(ChSystemMulticore* sys, double value) {
 int GetNumParticlesAboveHeight(ChSystemMulticore* sys, double value) {
     int count = 0;
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z() > value)
+        if (body->GetTag() >= tag_particles && body->GetPos().z() > value)
             count++;
     }
     return count;
@@ -303,7 +305,7 @@ bool CheckSettled(ChSystemMulticore* sys, double threshold) {
     double t2 = threshold * threshold;
 
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() > 0) {
+        if (body->GetTag() >= tag_particles) {
             double vel2 = body->GetLinVel().Length2();
             if (vel2 > t2)
                 return false;
@@ -374,7 +376,7 @@ int main(int argc, char* argv[]) {
             time_end = time_dropping_max;
             out_fps = out_fps_dropping;
             utils::ReadCheckpoint(sys, checkpoint_file);
-            insert = FindBodyById(sys, 0);
+            insert = FindBodyByTag(sys, tag_insert);
             break;
     }
 

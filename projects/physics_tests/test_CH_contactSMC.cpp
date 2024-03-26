@@ -115,7 +115,6 @@ int main(int argc, char* argv[]) {
     // Parameters for the falling ball
     // -------------------------------
 
-    int ballId = 100;
     double radius = 1;
     double mass = 1000;
     ChVector3d pos(0, 2, 0);
@@ -127,7 +126,6 @@ int main(int argc, char* argv[]) {
     // Parameters for the containing bin
     // ---------------------------------
 
-    int binId = 200;
     double width = 4;
     double length = 4;
     double thickness = 0.2;
@@ -165,7 +163,6 @@ int main(int argc, char* argv[]) {
     // Create the falling ball
     auto ball = chrono_types::make_shared<ChBody>();
 
-    ball->SetIdentifier(ballId);
     ball->SetMass(mass);
     ball->SetInertiaXX(0.4 * mass * radius * radius * ChVector3d(1, 1, 1));
     ball->SetPos(pos);
@@ -187,7 +184,6 @@ int main(int argc, char* argv[]) {
     // Create ground
     auto ground = chrono_types::make_shared<ChBody>();
 
-    ground->SetIdentifier(binId);
     ground->SetMass(1);
     ground->SetPos(ChVector3d(0, 0, 0));
     ground->SetRot(ChQuaternion<>(1, 0, 0, 0));

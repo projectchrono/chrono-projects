@@ -47,10 +47,6 @@ using namespace chrono;
 // to rotate at constant angular velocity.
 // -----------------------------------------------------------------------------
 std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
-    // IDs for the two bodies
-    int binId = -200;
-    int mixerId = -201;
-
     // Create a common material
     auto mat = chrono_types::make_shared<ChContactMaterialSMC>();
     mat->SetYoungModulus(2e5f);
@@ -59,7 +55,6 @@ std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
 
     // Create the containing bin (2 x 2 x 1)
     auto bin = chrono_types::make_shared<ChBody>();
-    bin->SetIdentifier(binId);
     bin->SetMass(1);
     bin->SetPos(ChVector3d(0, 0, 0));
     bin->SetRot(ChQuaternion<>(1, 0, 0, 0));
@@ -85,7 +80,6 @@ std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
 
     // The rotating mixer body (1.6 x 0.2 x 0.4)
     auto mixer = chrono_types::make_shared<ChBody>();
-    mixer->SetIdentifier(mixerId);
     mixer->SetMass(10.0);
     mixer->SetInertiaXX(ChVector3d(50, 50, 50));
     mixer->SetPos(ChVector3d(0, 0, 0.205));
@@ -119,7 +113,6 @@ void AddFallingBalls(ChSystemMulticoreSMC* sys) {
     ballMat->SetRestitution(0.1f);
 
     // Create the falling balls
-    int ballId = 0;
     double mass = 1;
     double radius = 0.1;
     ChVector3d inertia = (2.0 / 5.0) * mass * radius * radius * ChVector3d(1, 1, 1);
@@ -129,7 +122,6 @@ void AddFallingBalls(ChSystemMulticoreSMC* sys) {
             ChVector3d pos(0.4 * ix, 0.4 * iy, 1);
 
             auto ball = chrono_types::make_shared<ChBody>();
-            ball->SetIdentifier(ballId++);
             ball->SetMass(mass);
             ball->SetInertiaXX(inertia);
             ball->SetPos(pos);

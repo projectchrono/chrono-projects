@@ -70,7 +70,6 @@ int main(int argc, char* argv[]) {
     // Parameters for the falling object
     // ---------------------------------
 
-    int objectId = 100;
     double mass = 1000;
     ChVector3d pos(0, 0, 1);
     ChQuaternion<> rot(1, 0, 0, 0);
@@ -81,7 +80,6 @@ int main(int argc, char* argv[]) {
     // Parameters for the containing bin
     // ---------------------------------
 
-    int groundId = 200;
     double width = 4;
     double length = 2;
     double thickness = 0.2;
@@ -112,7 +110,6 @@ int main(int argc, char* argv[]) {
     auto object = chrono_types::make_shared<ChBody>();
     system->AddBody(object);
 
-    object->SetIdentifier(objectId);
     object->SetMass(mass);
     object->SetInertiaXX(400.0 * ChVector3d(1, 1, 1));
     object->SetPos(pos);
@@ -161,7 +158,6 @@ int main(int argc, char* argv[]) {
     auto ground = chrono_types::make_shared<ChBody>();
     system->AddBody(ground);
 
-    ground->SetIdentifier(groundId);
     ground->SetMass(1);
     ground->SetPos(ChVector3d(0, 0, 0));
     ground->SetRot(ChQuaternion<>(1, 0, 0, 0));

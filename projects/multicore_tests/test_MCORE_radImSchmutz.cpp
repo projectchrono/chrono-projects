@@ -107,6 +107,7 @@ int out_fps_pushing = 60;
 // -----------------------------------------------------------------------------
 // Parameters for the granular material (identical spheres)
 // -----------------------------------------------------------------------------
+int tag_particles = 0;
 double r_g = 0.01;
 double rho_g = 2700;
 float Y_g = 5e7;
@@ -187,7 +188,6 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
 
     // Create the ground body
     m_ground = chrono_types::make_shared<ChBody>();
-    m_ground->SetIdentifier(-1);
     m_ground->SetFixed(true);
     m_ground->EnableCollision(false);
 
@@ -195,7 +195,6 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
 
     // Create the sled body
     m_sled = chrono_types::make_shared<ChBody>();
-    m_sled->SetIdentifier(1);
     m_sled->SetMass(mass1);
     m_sled->SetInertiaXX(inertia_sled);
     m_sled->SetPos(loc_sled);
@@ -222,7 +221,6 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
 
     // Create the wheel body
     m_wheel = chrono_types::make_shared<ChBody>();
-    m_wheel->SetIdentifier(2);
     m_wheel->SetMass(mass_wheel);
     m_wheel->SetInertiaXX(inertia_wheel);
     m_wheel->SetPos(loc_wheel);
@@ -283,7 +281,6 @@ void Mechanism::WriteResults(std::ofstream& f, double time) {
 // Create container bin.
 // =============================================================================
 void CreateContainer(ChSystemMulticore* system) {
-    int id_c = -200;
     double thickness = 0.2;
 
 #ifdef USE_SMC
@@ -292,7 +289,7 @@ void CreateContainer(ChSystemMulticore* system) {
     mat_c->SetFriction(0.4f);
     mat_c->SetRestitution(0.1f);
 
-    utils::CreateBoxContainer(system, id_c, mat_c, ChVector3d(L / 2, W / 2, H / 2), thickness / 2);
+    utils::CreateBoxContainer(system, mat_c, ChVector3d(L / 2, W / 2, H / 2), thickness / 2);
 #else
     auto mat_c = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_c->SetFriction(0.4f);
@@ -328,7 +325,7 @@ void CreateParticles(ChSystemMulticore* system) {
     m1->SetDefaultSize(r_g);
 
     // Create particles, one layer at a time, until the desired number is reached.
-    gen.SetBodyIdentifier(100);
+    gen.SetStartTag(tag_particles);
 
     ChVector3d hdims(L / 2 - r, W / 2 - r, 0);
     ChVector3d center(0, 0, 2 * r);
@@ -351,7 +348,7 @@ void FindRange(ChSystem* sys, double& lowest, double& highest) {
     highest = -1000;
     lowest = 1000;
     for (auto body : sys->GetBodies()) {
-        if (body->GetIdentifier() < 100)
+        if (body->GetTag() <= tag_particles)
             continue;
         double h = body->GetPos().z();
         if (h < lowest)
