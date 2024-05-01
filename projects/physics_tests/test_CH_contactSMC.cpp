@@ -145,7 +145,7 @@ int main(int argc, char* argv[]) {
     system.SetTangentialDisplacementModel(tdispl_model);
 
     // Set contact forces as stiff (to force Jacobian computation) or non-stiff
-    system.SetStiffContact(stiff_contact);
+    system.SetContactStiff(stiff_contact);
 
     system.SetGravitationalAcceleration(ChVector3d(0, gravity, 0));
 
