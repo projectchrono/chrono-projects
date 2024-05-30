@@ -12,7 +12,7 @@
 // Authors: Rainer Gericke
 // =============================================================================
 //
-// FEDA wall to wall turning test & calculation of some driver model parameters
+// BMW E90 wall to wall turning test & calculation of some driver model parameters
 //
 // The vehicle reference frame has Z up, X towards the front of the vehicle, and
 // Y pointing to the left.
@@ -27,7 +27,7 @@
 #include "chrono_vehicle/output/ChVehicleOutputASCII.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 
-#include "chrono_models/vehicle/feda/FEDA.h"
+#include "chrono_models/vehicle/bmw/BMW_E90.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -48,7 +48,7 @@ using namespace chrono::vsg3d;
 
 using namespace chrono;
 using namespace chrono::vehicle;
-using namespace chrono::vehicle::feda;
+using namespace chrono::vehicle::bmw;
 
 // =============================================================================
 
@@ -56,7 +56,7 @@ using namespace chrono::vehicle::feda;
 ChVisualSystem::Type vis_type = ChVisualSystem::Type::VSG;
 
 // Initial vehicle location
-ChVector3d initLoc(0, 0, 1.6);
+ChVector3d initLoc(0, 0, 0.5);
 
 // Visualization type for vehicle parts (PRIMITIVES, MESH, or NONE)
 VisualizationType chassis_vis_type = VisualizationType::MESH;
@@ -138,9 +138,9 @@ int main(int argc, char* argv[]) {
     const double ft2m = 0.3048;
     const double in2m = 0.0254;
 
-    // KRC Test Results from document 'Wall to Wall Turning Diameter_180520.ppt'
-    const double leftWall2WallDistanceRef{50.8 * ft2m};
-    const double rightWall2WallDistanceRef{51.1 * ft2m};
+    // from BMW E90 series data sheet June 2005
+    const double leftWall2WallDistanceRef{11.0};
+    const double rightWall2WallDistanceRef{11.0};
 
     ChFunctionInterp steeringGear;
     steeringGear.AddPoint(-1.0, -648.0);
@@ -152,34 +152,31 @@ int main(int argc, char* argv[]) {
     // --------------
 
     // Create the FEDA vehicle, set parameters, and initialize
-    std::string vehicleName = "FEDA";
-    FEDA feda;
-    feda.SetContactMethod(contact_method);
-    feda.SetChassisCollisionType(chassis_collision_type);
-    feda.SetChassisFixed(false);
-    feda.SetInitPosition(ChCoordsys<>(initLoc, QUNIT));
-    feda.SetEngineType(engine_model);
-    feda.SetTransmissionType(transmission_model);
-    feda.SetBrakeType(brake_type);
-    feda.SetTireType(tire_model);
-    feda.SetTireStepSize(tire_step_size);
-    feda.SetRideHeight_OnRoad();
-    feda.Initialize();
+    std::string vehicleName = "BMW_E90";
+    BMW_E90 bmw;
+    bmw.SetContactMethod(contact_method);
+    bmw.SetChassisCollisionType(chassis_collision_type);
+    bmw.SetChassisFixed(false);
+    bmw.SetInitPosition(ChCoordsys<>(initLoc, QUNIT));
+    bmw.SetBrakeType(brake_type);
+    bmw.SetTireType(tire_model);
+    bmw.SetTireStepSize(tire_step_size);
+    bmw.Initialize();
 
     if (tire_model == TireModelType::RIGID_MESH)
         tire_vis_type = VisualizationType::MESH;
 
-    feda.SetChassisVisualizationType(chassis_vis_type);
-    feda.SetSuspensionVisualizationType(suspension_vis_type);
-    feda.SetSteeringVisualizationType(steering_vis_type);
-    feda.SetWheelVisualizationType(wheel_vis_type);
-    feda.SetTireVisualizationType(tire_vis_type);
+    bmw.SetChassisVisualizationType(chassis_vis_type);
+    bmw.SetSuspensionVisualizationType(suspension_vis_type);
+    bmw.SetSteeringVisualizationType(steering_vis_type);
+    bmw.SetWheelVisualizationType(wheel_vis_type);
+    bmw.SetTireVisualizationType(tire_vis_type);
 
     // Associate a collision system
-    feda.GetSystem()->SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
+    bmw.GetSystem()->SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
 
     // Create the terrain
-    RigidTerrain terrain(feda.GetSystem());
+    RigidTerrain terrain(bmw.GetSystem());
 
     ChContactMaterialData minfo;
     minfo.mu = 0.8f;
@@ -193,9 +190,10 @@ int main(int argc, char* argv[]) {
 
     terrain.Initialize();
 
-    double vehicleWith = 90.1 * in2m;  // inch -> m
-    double wheelBase = 130.0 * in2m;   // inch -> m
-    double tireRadius = 0.3665;
+    // from BMW E90 line drawing
+    double vehicleWith = 1.817;
+    double wheelBase = 2.75717;
+    double tireRadius = 0.3186;
 
     // for calculation of the wall to wall distance we need the front corner positions
     // of the car body in the vehicle reference system
@@ -238,16 +236,16 @@ int main(int argc, char* argv[]) {
     utils::ChWriterCSV w2w_right_csv(" ");
 
     // Set up vehicle output
-    feda.GetVehicle().SetChassisOutput(true);
-    feda.GetVehicle().SetSuspensionOutput(0, true);
-    feda.GetVehicle().SetSteeringOutput(0, true);
-    feda.GetVehicle().SetOutput(ChVehicleOutput::ASCII, out_dir, "output", 0.1);
+    bmw.GetVehicle().SetChassisOutput(true);
+    bmw.GetVehicle().SetSuspensionOutput(0, true);
+    bmw.GetVehicle().SetSteeringOutput(0, true);
+    bmw.GetVehicle().SetOutput(ChVehicleOutput::ASCII, out_dir, "output", 0.1);
 
     // Generate JSON information with available output channels
-    feda.GetVehicle().ExportComponentList(out_dir + "/component_list.json");
+    bmw.GetVehicle().ExportComponentList(out_dir + "/component_list.json");
 
-    double setThrottle = 0.15;
-    double tStart = 10.0;  // settle the vehicle
+    double setThrottle = 0.05;
+    double tStart = 20.0;  // settle the vehicle
     double tSteer = 2.0;   // time of changing the steering wheel
     double tHold = 60.0;
     t_end = tStart + 2 * tSteer + 2 * tHold;
@@ -273,7 +271,7 @@ int main(int argc, char* argv[]) {
         vis_type = ChVisualSystem::Type::IRRLICHT;
 #endif
 
-    ChDataDriver driver(feda.GetVehicle(), drSignal);
+    ChDataDriver driver(bmw.GetVehicle(), drSignal);
 
     std::shared_ptr<ChVehicleVisualSystem> vis;
     switch (vis_type) {
@@ -287,7 +285,7 @@ int main(int argc, char* argv[]) {
             vis_irr->AddLightDirectional();
             vis_irr->AddSkyBox();
             vis_irr->AddLogo();
-            vis_irr->AttachVehicle(&feda.GetVehicle());
+            vis_irr->AttachVehicle(&bmw.GetVehicle());
             vis = vis_irr;
 #endif
             break;
@@ -298,7 +296,7 @@ int main(int argc, char* argv[]) {
             // Create the vehicle VSG interface
             auto vis_vsg = chrono_types::make_shared<ChWheeledVehicleVisualSystemVSG>();
             vis_vsg->SetWindowTitle(vehicleName + " Wall To Wall Turning Test");
-            vis_vsg->AttachVehicle(&feda.GetVehicle());
+            vis_vsg->AttachVehicle(&bmw.GetVehicle());
             vis_vsg->SetChaseCamera(ChVector3d(0.0, 0.0, 1.75), 9.0, 0.5);
             vis_vsg->SetWindowSize(ChVector2i(1200, 800));
             vis_vsg->SetWindowPosition(ChVector2i(100, 300));
@@ -323,11 +321,11 @@ int main(int argc, char* argv[]) {
     // Simulation loop
     // ---------------
 
-    feda.GetVehicle().LogSubsystemTypes();
+    bmw.GetVehicle().LogSubsystemTypes();
 
     if (debug_output) {
         std::cout << "\n\n============ System Configuration ============\n";
-        feda.LogHardpointLocations();
+        bmw.LogHardpointLocations();
     }
 
     // Number of simulation steps between miscellaneous events
@@ -338,30 +336,28 @@ int main(int argc, char* argv[]) {
     int step_number = 0;
     int render_frame = 0;
 
-    feda.GetVehicle().EnableRealtime(true);
+    bmw.GetVehicle().EnableRealtime(true);
 
-    double real_speed = feda.GetVehicle().GetChassis()->GetSpeed();
-
+    double real_speed = bmw.GetVehicle().GetChassis()->GetSpeed();
     while (true) {
-        double time = feda.GetSystem()->GetChTime();
-        real_speed = feda.GetVehicle().GetSpeed();
+        double time = bmw.GetSystem()->GetChTime();
+        real_speed = bmw.GetVehicle().GetSpeed();
         double real_throttle = driver.GetThrottle();
-
-        double x = feda.GetVehicle().GetPos().x();
-        double y = feda.GetVehicle().GetPos().y();
+        double x = bmw.GetVehicle().GetPos().x();
+        double y = bmw.GetVehicle().GetPos().y();
         if (time >= tStart + tSteer && time <= tStart + tSteer + tHold) {
             leftTrace.push_back({x, y});
             // at left turn the right front vehicle corner is the outmost position
-            double xl = feda.GetChassis()->GetPointLocation(rightCornerPt).x();
-            double yl = feda.GetChassis()->GetPointLocation(rightCornerPt).y();
+            double xl = bmw.GetChassis()->GetPointLocation(rightCornerPt).x();
+            double yl = bmw.GetChassis()->GetPointLocation(rightCornerPt).y();
             leftCornerTrace.push_back({xl, yl});
             w2w_left_csv << x << y << xl << yl << std::endl;
         }
         if (time >= tStart + 2 * tSteer + tHold && time <= t_end) {
             rightTrace.push_back({x, y});
             // at left turn the right front vehicle corner is the outmost position
-            double xr = feda.GetChassis()->GetPointLocation(leftCornerPt).x();
-            double yr = feda.GetChassis()->GetPointLocation(leftCornerPt).y();
+            double xr = bmw.GetChassis()->GetPointLocation(leftCornerPt).x();
+            double yr = bmw.GetChassis()->GetPointLocation(leftCornerPt).y();
             rightCornerTrace.push_back({xr, yr});
             w2w_right_csv << x << y << xr << yr << std::endl;
         }
@@ -391,10 +387,10 @@ int main(int argc, char* argv[]) {
         if (debug_output && step_number % debug_steps == 0) {
             std::cout << "\n\n============ System Information ============\n";
             std::cout << "Time = " << time << "\n\n";
-            feda.DebugLog(OUT_SPRINGS | OUT_SHOCKS | OUT_CONSTRAINTS);
+            bmw.DebugLog(OUT_SPRINGS | OUT_SHOCKS | OUT_CONSTRAINTS);
 
-            auto marker_driver = feda.GetChassis()->GetMarkers()[0]->GetAbsCoordsys().pos;
-            auto marker_com = feda.GetChassis()->GetMarkers()[1]->GetAbsCoordsys().pos;
+            auto marker_driver = bmw.GetChassis()->GetMarkers()[0]->GetAbsCoordsys().pos;
+            auto marker_com = bmw.GetChassis()->GetMarkers()[1]->GetAbsCoordsys().pos;
             std::cout << "Markers\n";
             std::cout << "  Driver loc:      " << marker_driver.x() << " " << marker_driver.y() << " "
                       << marker_driver.z() << std::endl;
@@ -408,14 +404,14 @@ int main(int argc, char* argv[]) {
         // Update modules (process inputs from other modules)
         driver.Synchronize(time);
         terrain.Synchronize(time);
-        feda.Synchronize(time, driver_inputs, terrain);
+        bmw.Synchronize(time, driver_inputs, terrain);
         if (vis)
             vis->Synchronize(time, driver_inputs);
 
         // Advance simulation for one timestep for all modules
         driver.Advance(step_size);
         terrain.Advance(step_size);
-        feda.Advance(step_size);
+        bmw.Advance(step_size);
         if (vis)
             vis->Advance(step_size);
 

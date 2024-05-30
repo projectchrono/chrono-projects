@@ -27,7 +27,7 @@
 #include "chrono_vehicle/output/ChVehicleOutputASCII.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 
-#include "chrono_models/vehicle/feda/FEDA.h"
+#include "chrono_models/vehicle/jeep/Cherokee.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
@@ -48,7 +48,7 @@ using namespace chrono::vsg3d;
 
 using namespace chrono;
 using namespace chrono::vehicle;
-using namespace chrono::vehicle::feda;
+using namespace chrono::vehicle::jeep;
 
 // =============================================================================
 
@@ -56,7 +56,7 @@ using namespace chrono::vehicle::feda;
 ChVisualSystem::Type vis_type = ChVisualSystem::Type::VSG;
 
 // Initial vehicle location
-ChVector3d initLoc(0, 0, 1.6);
+ChVector3d initLoc(0, 0, 0.6);
 
 // Visualization type for vehicle parts (PRIMITIVES, MESH, or NONE)
 VisualizationType chassis_vis_type = VisualizationType::MESH;
@@ -152,34 +152,31 @@ int main(int argc, char* argv[]) {
     // --------------
 
     // Create the FEDA vehicle, set parameters, and initialize
-    std::string vehicleName = "FEDA";
-    FEDA feda;
-    feda.SetContactMethod(contact_method);
-    feda.SetChassisCollisionType(chassis_collision_type);
-    feda.SetChassisFixed(false);
-    feda.SetInitPosition(ChCoordsys<>(initLoc, QUNIT));
-    feda.SetEngineType(engine_model);
-    feda.SetTransmissionType(transmission_model);
-    feda.SetBrakeType(brake_type);
-    feda.SetTireType(tire_model);
-    feda.SetTireStepSize(tire_step_size);
-    feda.SetRideHeight_OnRoad();
-    feda.Initialize();
+    std::string vehicleName = "Cherokee";
+    Cherokee cherokee;
+    cherokee.SetContactMethod(contact_method);
+    cherokee.SetChassisCollisionType(chassis_collision_type);
+    cherokee.SetChassisFixed(false);
+    cherokee.SetInitPosition(ChCoordsys<>(initLoc, QUNIT));
+    cherokee.SetBrakeType(brake_type);
+    cherokee.SetTireType(tire_model);
+    cherokee.SetTireStepSize(tire_step_size);
+    cherokee.Initialize();
 
     if (tire_model == TireModelType::RIGID_MESH)
         tire_vis_type = VisualizationType::MESH;
 
-    feda.SetChassisVisualizationType(chassis_vis_type);
-    feda.SetSuspensionVisualizationType(suspension_vis_type);
-    feda.SetSteeringVisualizationType(steering_vis_type);
-    feda.SetWheelVisualizationType(wheel_vis_type);
-    feda.SetTireVisualizationType(tire_vis_type);
+    cherokee.SetChassisVisualizationType(chassis_vis_type);
+    cherokee.SetSuspensionVisualizationType(suspension_vis_type);
+    cherokee.SetSteeringVisualizationType(steering_vis_type);
+    cherokee.SetWheelVisualizationType(wheel_vis_type);
+    cherokee.SetTireVisualizationType(tire_vis_type);
 
     // Associate a collision system
-    feda.GetSystem()->SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
+    cherokee.GetSystem()->SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
 
     // Create the terrain
-    RigidTerrain terrain(feda.GetSystem());
+    RigidTerrain terrain(cherokee.GetSystem());
 
     ChContactMaterialData minfo;
     minfo.mu = 0.8f;
@@ -193,8 +190,8 @@ int main(int argc, char* argv[]) {
 
     terrain.Initialize();
 
-    double vehicleWith = 90.1 * in2m;  // inch -> m
-    double wheelBase = 130.0 * in2m;   // inch -> m
+    double vehicleWith = 1.720;
+    double wheelBase = 2.578;
     double tireRadius = 0.3665;
 
     // for calculation of the wall to wall distance we need the front corner positions
@@ -238,22 +235,23 @@ int main(int argc, char* argv[]) {
     utils::ChWriterCSV w2w_right_csv(" ");
 
     // Set up vehicle output
-    feda.GetVehicle().SetChassisOutput(true);
-    feda.GetVehicle().SetSuspensionOutput(0, true);
-    feda.GetVehicle().SetSteeringOutput(0, true);
-    feda.GetVehicle().SetOutput(ChVehicleOutput::ASCII, out_dir, "output", 0.1);
+    cherokee.GetVehicle().SetChassisOutput(true);
+    cherokee.GetVehicle().SetSuspensionOutput(0, true);
+    cherokee.GetVehicle().SetSteeringOutput(0, true);
+    cherokee.GetVehicle().SetOutput(ChVehicleOutput::ASCII, out_dir, "output", 0.1);
 
     // Generate JSON information with available output channels
-    feda.GetVehicle().ExportComponentList(out_dir + "/component_list.json");
+    cherokee.GetVehicle().ExportComponentList(out_dir + "/component_list.json");
 
-    double setThrottle = 0.15;
+    double setThrottle = 0.19;
     double tStart = 10.0;  // settle the vehicle
     double tSteer = 2.0;   // time of changing the steering wheel
-    double tHold = 60.0;
+    double tHold = 100.0;
     t_end = tStart + 2 * tSteer + 2 * tHold;
     std::vector<std::pair<double, double>> leftTrace, leftCornerTrace;
     std::vector<std::pair<double, double>> rightTrace, rightCornerTrace;
-    std::vector<ChDataDriver::Entry> drSignal{{0, 0, 0, 0},
+    std::vector<ChDataDriver::Entry> drSignal{{0, 0, 0, 1},
+                                              {0.2, 0, setThrottle, 0},
                                               {tStart, 0, setThrottle, 0},
                                               {tStart + tSteer, 1, setThrottle, 0},
                                               {tStart + tSteer + tHold, 1, setThrottle, 0},
@@ -273,7 +271,7 @@ int main(int argc, char* argv[]) {
         vis_type = ChVisualSystem::Type::IRRLICHT;
 #endif
 
-    ChDataDriver driver(feda.GetVehicle(), drSignal);
+    ChDataDriver driver(cherokee.GetVehicle(), drSignal);
 
     std::shared_ptr<ChVehicleVisualSystem> vis;
     switch (vis_type) {
@@ -287,7 +285,7 @@ int main(int argc, char* argv[]) {
             vis_irr->AddLightDirectional();
             vis_irr->AddSkyBox();
             vis_irr->AddLogo();
-            vis_irr->AttachVehicle(&feda.GetVehicle());
+            vis_irr->AttachVehicle(&cherokee.GetVehicle());
             vis = vis_irr;
 #endif
             break;
@@ -298,7 +296,7 @@ int main(int argc, char* argv[]) {
             // Create the vehicle VSG interface
             auto vis_vsg = chrono_types::make_shared<ChWheeledVehicleVisualSystemVSG>();
             vis_vsg->SetWindowTitle(vehicleName + " Wall To Wall Turning Test");
-            vis_vsg->AttachVehicle(&feda.GetVehicle());
+            vis_vsg->AttachVehicle(&cherokee.GetVehicle());
             vis_vsg->SetChaseCamera(ChVector3d(0.0, 0.0, 1.75), 9.0, 0.5);
             vis_vsg->SetWindowSize(ChVector2i(1200, 800));
             vis_vsg->SetWindowPosition(ChVector2i(100, 300));
@@ -323,11 +321,11 @@ int main(int argc, char* argv[]) {
     // Simulation loop
     // ---------------
 
-    feda.GetVehicle().LogSubsystemTypes();
+    cherokee.GetVehicle().LogSubsystemTypes();
 
     if (debug_output) {
         std::cout << "\n\n============ System Configuration ============\n";
-        feda.LogHardpointLocations();
+        cherokee.LogHardpointLocations();
     }
 
     // Number of simulation steps between miscellaneous events
@@ -338,30 +336,30 @@ int main(int argc, char* argv[]) {
     int step_number = 0;
     int render_frame = 0;
 
-    feda.GetVehicle().EnableRealtime(true);
+    cherokee.GetVehicle().EnableRealtime(true);
 
-    double real_speed = feda.GetVehicle().GetChassis()->GetSpeed();
+    double real_speed = cherokee.GetVehicle().GetChassis()->GetSpeed();
 
     while (true) {
-        double time = feda.GetSystem()->GetChTime();
-        real_speed = feda.GetVehicle().GetSpeed();
+        double time = cherokee.GetSystem()->GetChTime();
+        real_speed = cherokee.GetVehicle().GetSpeed();
         double real_throttle = driver.GetThrottle();
 
-        double x = feda.GetVehicle().GetPos().x();
-        double y = feda.GetVehicle().GetPos().y();
+        double x = cherokee.GetVehicle().GetPos().x();
+        double y = cherokee.GetVehicle().GetPos().y();
         if (time >= tStart + tSteer && time <= tStart + tSteer + tHold) {
             leftTrace.push_back({x, y});
             // at left turn the right front vehicle corner is the outmost position
-            double xl = feda.GetChassis()->GetPointLocation(rightCornerPt).x();
-            double yl = feda.GetChassis()->GetPointLocation(rightCornerPt).y();
+            double xl = cherokee.GetChassis()->GetPointLocation(rightCornerPt).x();
+            double yl = cherokee.GetChassis()->GetPointLocation(rightCornerPt).y();
             leftCornerTrace.push_back({xl, yl});
             w2w_left_csv << x << y << xl << yl << std::endl;
         }
         if (time >= tStart + 2 * tSteer + tHold && time <= t_end) {
             rightTrace.push_back({x, y});
             // at left turn the right front vehicle corner is the outmost position
-            double xr = feda.GetChassis()->GetPointLocation(leftCornerPt).x();
-            double yr = feda.GetChassis()->GetPointLocation(leftCornerPt).y();
+            double xr = cherokee.GetChassis()->GetPointLocation(leftCornerPt).x();
+            double yr = cherokee.GetChassis()->GetPointLocation(leftCornerPt).y();
             rightCornerTrace.push_back({xr, yr});
             w2w_right_csv << x << y << xr << yr << std::endl;
         }
@@ -391,10 +389,10 @@ int main(int argc, char* argv[]) {
         if (debug_output && step_number % debug_steps == 0) {
             std::cout << "\n\n============ System Information ============\n";
             std::cout << "Time = " << time << "\n\n";
-            feda.DebugLog(OUT_SPRINGS | OUT_SHOCKS | OUT_CONSTRAINTS);
+            cherokee.DebugLog(OUT_SPRINGS | OUT_SHOCKS | OUT_CONSTRAINTS);
 
-            auto marker_driver = feda.GetChassis()->GetMarkers()[0]->GetAbsCoordsys().pos;
-            auto marker_com = feda.GetChassis()->GetMarkers()[1]->GetAbsCoordsys().pos;
+            auto marker_driver = cherokee.GetChassis()->GetMarkers()[0]->GetAbsCoordsys().pos;
+            auto marker_com = cherokee.GetChassis()->GetMarkers()[1]->GetAbsCoordsys().pos;
             std::cout << "Markers\n";
             std::cout << "  Driver loc:      " << marker_driver.x() << " " << marker_driver.y() << " "
                       << marker_driver.z() << std::endl;
@@ -408,14 +406,14 @@ int main(int argc, char* argv[]) {
         // Update modules (process inputs from other modules)
         driver.Synchronize(time);
         terrain.Synchronize(time);
-        feda.Synchronize(time, driver_inputs, terrain);
+        cherokee.Synchronize(time, driver_inputs, terrain);
         if (vis)
             vis->Synchronize(time, driver_inputs);
 
         // Advance simulation for one timestep for all modules
         driver.Advance(step_size);
         terrain.Advance(step_size);
-        feda.Advance(step_size);
+        cherokee.Advance(step_size);
         if (vis)
             vis->Advance(step_size);
 
