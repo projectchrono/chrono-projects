@@ -132,8 +132,8 @@ int main(int   argc,
   // - a rotation of -90 degrees around x (z2y)
   ChQuaternion<> y2x;
   ChQuaternion<> z2y;
-  y2x.Q_from_AngAxis(-CH_C_PI/2, ChVector<>(0, 0, 1));
-  z2y.Q_from_AngAxis(-CH_C_PI/2, ChVector<>(1, 0, 0));
+  y2x.Q_from_AngAxis(-CH_PI/2, ChVector<>(0, 0, 1));
+  z2y.Q_from_AngAxis(-CH_PI/2, ChVector<>(1, 0, 0));
 
   // Ground
   ChSharedBodyPtr  ground(new ChBody);
@@ -191,7 +191,7 @@ int main(int   argc,
   engine_ground_crank->Initialize(ground, crank, ChCoordsys<>(ChVector<>(0, 0, 0), z2y));
   engine_ground_crank->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
   if (ChSharedPtr<ChFunction_Const> mfun = engine_ground_crank->Get_spe_funct().DynamicCastTo<ChFunction_Const>())
-    mfun->Set_yconst(CH_C_PI);
+    mfun->Set_yconst(CH_PI);
   system.AddLink(engine_ground_crank);
 #else
   // Revolute between ground and crank.

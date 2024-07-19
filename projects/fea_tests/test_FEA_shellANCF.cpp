@@ -21,8 +21,8 @@
 #include "chrono/utils/ChOpenMP.h"
 
 #include "chrono/fea/ChElementShellANCF_3423.h"
-#include "chrono/fea/ChLinkDirFrame.h"
-#include "chrono/fea/ChLinkPointFrame.h"
+#include "chrono/fea/ChLinkNodeSlopeFrame.h"
+#include "chrono/fea/ChLinkNodeFrame.h"
 #include "chrono/fea/ChMesh.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
@@ -94,7 +94,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
     // Create the physical system
     ChSystemNSC my_system;
     my_system.SetNumThreads(nthreads);
-    my_system.Set_G_acc(ChVector<>(0, 0, -9.81));
+    my_system.SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
 
     // Create a mesh, that is a container for groups of elements and their referenced nodes.
     auto my_mesh = chrono_types::make_shared<ChMesh>();
@@ -128,7 +128,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
         double dir_z = 1;
 
         // Create the node
-        auto node = chrono_types::make_shared<ChNodeFEAxyzD>(ChVector<>(loc_x, loc_y, loc_z), ChVector<>(dir_x, dir_y, dir_z));
+        auto node = chrono_types::make_shared<ChNodeFEAxyzD>(ChVector3d(loc_x, loc_y, loc_z), ChVector3d(dir_x, dir_y, dir_z));
         node->SetMass(0);
         // Fix all nodes along the axis X=0
         if (i % (numDiv_x + 1) == 0)
@@ -162,7 +162,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
 
         // Element length is a fixed number in both direction. (uniform distribution of nodes in both directions)
         element->SetDimensions(dx, dy);
-        element->AddLayer(dz, 0 * CH_C_DEG_TO_RAD, mat);  // Single layer; Thickness: dy;  Ply angle: 0.
+        element->AddLayer(dz, 0 * CH_DEG_TO_RAD, mat);  // Single layer; Thickness: dy;  Ply angle: 0.
         element->SetAlphaDamp(0.0);                       // Structural damping for this
         my_mesh->AddElement(element);
     }
@@ -189,8 +189,8 @@ void RunModel(int nthreads,              // number of OpenMP threads
             solver->EnableDiagonalPreconditioner(true);
             solver->SetMaxIterations(100);
             solver->SetVerbose(true);
+            solver->SetTolerance(1e-12);
             my_system.SetSolver(solver);
-            my_system.SetSolverForceTolerance(1e-10);
         } break;
         case ChSolver::Type::PARDISO_MKL:
 #ifdef CHRONO_PARDISO_MKL
@@ -217,16 +217,16 @@ void RunModel(int nthreads,              // number of OpenMP threads
     my_system.SetTimestepperType(ChTimestepper::Type::HHT);
     auto mystepper = std::static_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());
     mystepper->SetAlpha(-0.2);
-    mystepper->SetMaxiters(100);
+    mystepper->SetMaxIters(100);
     mystepper->SetAbsTolerances(1e-3);
     mystepper->SetStepControl(use_adaptiveStep);
     mystepper->SetModifiedNewton(use_modifiedNewton);
     mystepper->SetVerbose(verbose);
 
     // Initialize the output stream and set precision.
-    utils::CSV_writer out("\t");
-    out.stream().setf(std::ios::scientific | std::ios::showpos);
-    out.stream().precision(6);
+    utils::ChWriterCSV out("\t");
+    out.Stream().setf(std::ios::scientific | std::ios::showpos);
+    out.Stream().precision(6);
 
     // Get handle to tracked node.
     auto nodetip = std::dynamic_pointer_cast<ChNodeFEAxyzD>(my_mesh->GetNode(TotalNumNodes - 1));
@@ -331,7 +331,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
         num_force_calls += my_mesh->GetNumCallsInternalForces();
         num_jacobian_calls += my_mesh->GetNumCallsJacobianLoad();
 
-        const ChVector<>& p = nodetip->GetPos();
+        const ChVector3d& p = nodetip->GetPos();
 
         if (verbose) {
             cout << endl;
@@ -404,7 +404,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
         char name[100];
         std::sprintf(name, "%s/out_%s_%d.txt", out_dir.c_str(), suffix.c_str(), num_threads);
         cout << "Write output to: " << name << endl;
-        out.write_to_file(name);
+        out.WriteToFile(name);
     }
 }
 
@@ -415,7 +415,7 @@ int main(int argc, char* argv[]) {
     // Create output directory (if it does not already exist).
     if (output) {
         if (!filesystem::create_directory(filesystem::path("../TEST_SHELL_ANCF"))) {
-            GetLog() << "Error creating directory ../TEST_SHELL_ANCF\n";
+            std::cout << "Error creating directory ../TEST_SHELL_ANCF\n";
             return 1;
         }
     }
@@ -425,9 +425,9 @@ int main(int argc, char* argv[]) {
     if (argc > 1)
         num_threads = std::stoi(argv[1]);
     num_threads = std::min(num_threads, ChOMP::GetNumProcs());
-    GetLog() << "Using " << num_threads << " thread(s)\n";
+    std::cout << "Using " << num_threads << " thread(s)\n";
 #else
-    GetLog() << "No OpenMP\n";
+    std::cout << "No OpenMP\n";
 #endif
 
     // Run simulations.

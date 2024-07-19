@@ -96,7 +96,7 @@ void setCommonParameters(ChSystemGpu& gpu_sys) {
 
     gpu_sys.SetCohesionRatio(cohes);
     gpu_sys.SetAdhesionRatio_SPH2WALL(cohes);
-    gpu_sys.SetGravitationalAcceleration(ChVector<>(0, 0, grav_Z));
+    gpu_sys.SetGravitationalAcceleration(ChVector3d(0, 0, grav_Z));
     gpu_sys.SetParticleOutputMode(write_mode);
     gpu_sys.SetStaticFrictionCoeff_SPH2SPH(static_friction_coeff);
     gpu_sys.SetStaticFrictionCoeff_SPH2WALL(static_friction_coeff);
@@ -130,22 +130,22 @@ void advanceGranSim(ChSystemGpu& gpu_sys) {
 }
 
 void run_ROTF() {
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector<float>(box_X, box_Y, box_Z));
+    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
     setCommonParameters(gpu_sys);
 
-    float ramp_angle = (float)CH_C_PI / 4;
+    float ramp_angle = (float)CH_PI / 4;
     // ramp normal is 45 degrees about y
     float nx = std::cos(ramp_angle);
     float nz = std::sin(ramp_angle);
 
-    ChVector<> plane_normal(nx, 0.f, nz);
+    ChVector3d plane_normal(nx, 0.f, nz);
     printf("Plane normal: (%f, %f, %f)\n", plane_normal.x(), plane_normal.y(), plane_normal.z());
     // place so that plane intersects wall near z = 0
-    ChVector<> plane_pos(-box_X / 2.f, 0.f, 0.);
+    ChVector3d plane_pos(-box_X / 2.f, 0.f, 0.);
 
-    std::vector<ChVector<float>> points;
+    std::vector<ChVector3f> points;
     // start at far-x wall, halfway up
-    ChVector<float> sphere_pos(-box_X / 2.f + 2.f * sphere_radius, 0, 2 * sphere_radius);
+    ChVector3f sphere_pos(-box_X / 2.f + 2.f * sphere_radius, 0, 2 * sphere_radius);
     points.push_back(sphere_pos);
     gpu_sys.SetParticles(points);
 
@@ -153,8 +153,8 @@ void run_ROTF() {
 
     size_t slope_plane_id = gpu_sys.CreateBCPlane(plane_pos, plane_normal, true);
     // add bottom plane to capture bottom forces
-    ChVector<> bot_plane_pos(0, 0, -box_Z / 2 + 2 * sphere_radius);
-    ChVector<float> bot_plane_normal(0, 0, 1);
+    ChVector3d bot_plane_pos(0, 0, -box_Z / 2 + 2 * sphere_radius);
+    ChVector3f bot_plane_normal(0, 0, 1);
     size_t bottom_plane_id = gpu_sys.CreateBCPlane(bot_plane_pos, bot_plane_normal, true);
     // Finalize settings and Initialize for runtime
 
@@ -162,7 +162,7 @@ void run_ROTF() {
     gpu_sys.SetRollingMode(CHGPU_ROLLING_MODE::NO_RESISTANCE);
     gpu_sys.Initialize();
 
-    ChVector<float> reaction_forces;
+    ChVector3f reaction_forces;
 
     // total distance traveled parallel to slope
     float total_dist = (1 / std::cos(ramp_angle)) * box_Z / 2;
@@ -193,42 +193,42 @@ void run_ROTF() {
 
 void run_ROTF_MESH() {
     // overwrite olds system
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector<float>(box_X, box_Y, box_Z));
+    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
     setCommonParameters(gpu_sys);
 
     setCommonMeshParameters(gpu_sys);
 
     // place so that plane intersects wall near z = 0
-    ChVector<> plane_pos(-box_X / 2.f, 0.f, 0.);
+    ChVector3d plane_pos(-box_X / 2.f, 0.f, 0.);
 
-    std::vector<ChVector<float>> points;
+    std::vector<ChVector3f> points;
     // start at far-x wall, halfway up
-    ChVector<float> sphere_pos(-box_X / 2.f + 2.f * sphere_radius, 0, 2 * sphere_radius);
+    ChVector3f sphere_pos(-box_X / 2.f + 2.f * sphere_radius, 0, 2 * sphere_radius);
     points.push_back(sphere_pos);
     gpu_sys.SetParticles(points);
 
     printf("Plane pos: (%f, %f, %f)\n", plane_pos.x(), plane_pos.y(), plane_pos.z());
 
     // add bottom plane to capture bottom forces
-    ChVector<> bot_plane_pos(0, 0, -box_Z / 2 + 2 * sphere_radius);
-    ChVector<float> bot_plane_normal(0, 0, 1);
+    ChVector3d bot_plane_pos(0, 0, -box_Z / 2 + 2 * sphere_radius);
+    ChVector3f bot_plane_normal(0, 0, 1);
 
     std::vector<std::string> mesh_filenames;
     std::vector<ChMatrix33<float>> mesh_rotscales;
-    std::vector<ChVector<float>> mesh_translations;
+    std::vector<ChVector3f> mesh_translations;
     std::vector<float> mesh_masses;
 
-    ChMatrix33<float> mesh_scaling(ChVector<float>(100, 100, 100));
+    ChMatrix33<float> mesh_scaling(ChVector3f(100, 100, 100));
 
     // make two plane meshes, one for ramp and one for bottom
     mesh_filenames.push_back(GetProjectsDataFile("gpu/meshes/testsuite/square_plane_fine.obj"));
     mesh_rotscales.push_back(mesh_scaling);
-    mesh_translations.push_back(ChVector<float>(0, 0, 0));
+    mesh_translations.push_back(ChVector3f(0, 0, 0));
     mesh_masses.push_back(10.f);
 
     mesh_filenames.push_back(GetProjectsDataFile("gpu/meshes/testsuite/square_plane_fine.obj"));
     mesh_rotscales.push_back(mesh_scaling);
-    mesh_translations.push_back(ChVector<float>(0, 0, 0));
+    mesh_translations.push_back(ChVector3f(0, 0, 0));
     mesh_masses.push_back(10.f);
 
     gpu_sys.AddMeshes(mesh_filenames, mesh_translations, mesh_rotscales, mesh_masses);
@@ -244,22 +244,22 @@ void run_ROTF_MESH() {
     double* meshSoupLocOri = new double[7 * nSoupFamilies];
 
     // bottom plane faces upwards
-    auto bot_quat = Q_from_AngY(0);
+    auto bot_quat = QuatFromAngleY(0);
 
     // this is a quaternion
-    auto rot_quat = Q_from_AngY(CH_C_PI / 4);
+    auto rot_quat = QuatFromAngleY(CH_PI / 4);
 
     // Run settling experiments
     while (curr_time < timeEnd) {
-        gpu_sys.ApplyMeshMotion(0, bot_plane_pos, bot_quat, ChVector<>(0, 0, 0), ChVector<>(0, 0, 0));
-        gpu_sys.ApplyMeshMotion(1, plane_pos, rot_quat, ChVector<>(0, 0, 0), ChVector<>(0, 0, 0));
+        gpu_sys.ApplyMeshMotion(0, bot_plane_pos, bot_quat, ChVector3d(0, 0, 0), ChVector3d(0, 0, 0));
+        gpu_sys.ApplyMeshMotion(1, plane_pos, rot_quat, ChVector3d(0, 0, 0), ChVector3d(0, 0, 0));
         writeGranFile(gpu_sys);
         advanceGranSim(gpu_sys);
     }
 }
 
 void run_PYRAMID() {
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector<float>(box_X, box_Y, box_Z));
+    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
 
     setCommonParameters(gpu_sys);
 
@@ -267,27 +267,27 @@ void run_PYRAMID() {
     // slightly inflated diameter to ensure no penetration
     float diam_delta = 2.01f;
     // add plane just below origin
-    ChVector<> bot_plane_pos(0, 0, -1.02 * sphere_radius);
-    ChVector<> bot_plane_normal(0, 0, 1);
+    ChVector3d bot_plane_pos(0, 0, -1.02 * sphere_radius);
+    ChVector3d bot_plane_normal(0, 0, 1);
     size_t bottom_plane_id = gpu_sys.CreateBCPlane(bot_plane_pos, bot_plane_normal, true);
 
     gpu_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
     gpu_sys.SetRollingMode(CHGPU_ROLLING_MODE::NO_RESISTANCE);
-    ChVector<> reaction_forces;
+    ChVector3d reaction_forces;
 
     // just above origin
-    ChVector<> base_sphere_1(0, 0, 0);
+    ChVector3d base_sphere_1(0, 0, 0);
     // down the x a little
-    ChVector<> base_sphere_2(diam_delta * sphere_radius, 0, 0);
+    ChVector3d base_sphere_2(diam_delta * sphere_radius, 0, 0);
     // top of the triangle
-    ChVector<> base_sphere_3(diam_delta * sphere_radius * std::cos(CH_C_PI / 3),
-                             diam_delta * sphere_radius * std::sin(CH_C_PI / 3), 0);
+    ChVector3d base_sphere_3(diam_delta * sphere_radius * std::cos(CH_PI / 3),
+                             diam_delta * sphere_radius * std::sin(CH_PI / 3), 0);
     // top of pyramid in middle (average x, y)
-    ChVector<> top_sphere((base_sphere_1.x() + base_sphere_2.x() + base_sphere_3.x()) / 3.,
+    ChVector3d top_sphere((base_sphere_1.x() + base_sphere_2.x() + base_sphere_3.x()) / 3.,
                           (base_sphere_1.y() + base_sphere_2.y() + base_sphere_3.y()) / 3.,
-                          2.0 * sphere_radius * std::sin(CH_C_PI / 3));
+                          2.0 * sphere_radius * std::sin(CH_PI / 3));
 
-    std::vector<ChVector<float>> points;
+    std::vector<ChVector3f> points;
 
     points.push_back(base_sphere_1);
     points.push_back(base_sphere_2);
@@ -304,7 +304,7 @@ void run_PYRAMID() {
 }
 
 void run_PYRAMID_MESH() {
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector<float>(box_X, box_Y, box_Z));
+    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
     setCommonParameters(gpu_sys);
 
     setCommonMeshParameters(gpu_sys);
@@ -313,30 +313,30 @@ void run_PYRAMID_MESH() {
     // slightly inflated diameter to ensure no penetration
     float diam_delta = 2.01f;
     // add plane just below origin
-    ChVector<> bot_plane_pos(0, 0, -1.02 * sphere_radius);
-    ChVector<> bot_plane_normal(0, 0, 1);
+    ChVector3d bot_plane_pos(0, 0, -1.02 * sphere_radius);
+    ChVector3d bot_plane_normal(0, 0, 1);
 
     // Add mesh
-    gpu_sys.AddMesh(GetProjectsDataFile("gpu/meshes/testsuite/tiny_triangle.obj"), ChVector<float>(0),
-                    ChMatrix33<float>(ChVector<float>(1, 1, 1)), 10.0f);
+    gpu_sys.AddMesh(GetProjectsDataFile("gpu/meshes/testsuite/tiny_triangle.obj"), ChVector3f(0),
+                    ChMatrix33<float>(ChVector3f(1, 1, 1)), 10.0f);
 
     gpu_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
     gpu_sys.SetRollingMode(CHGPU_ROLLING_MODE::NO_RESISTANCE);
-    ChVector<> reaction_forces;
+    ChVector3d reaction_forces;
 
     // just above origin
-    ChVector<> base_sphere_1(0, 0, 0);
+    ChVector3d base_sphere_1(0, 0, 0);
     // down the x a little
-    ChVector<> base_sphere_2(diam_delta * sphere_radius, 0, 0);
+    ChVector3d base_sphere_2(diam_delta * sphere_radius, 0, 0);
     // top of the triangle
-    ChVector<> base_sphere_3(diam_delta * sphere_radius * std::cos(CH_C_PI / 3),
-                             diam_delta * sphere_radius * std::sin(CH_C_PI / 3), 0);
+    ChVector3d base_sphere_3(diam_delta * sphere_radius * std::cos(CH_PI / 3),
+                             diam_delta * sphere_radius * std::sin(CH_PI / 3), 0);
     // top of pyramid in middle (average x, y)
-    ChVector<> top_sphere((base_sphere_1.x() + base_sphere_2.x() + base_sphere_3.x()) / 3.,
+    ChVector3d top_sphere((base_sphere_1.x() + base_sphere_2.x() + base_sphere_3.x()) / 3.,
                           (base_sphere_1.y() + base_sphere_2.y() + base_sphere_3.y()) / 3.,
-                          2.0 * sphere_radius * std::sin(CH_C_PI / 3));
+                          2.0 * sphere_radius * std::sin(CH_PI / 3));
 
-    std::vector<ChVector<float>> points;
+    std::vector<ChVector3f> points;
 
     points.push_back(base_sphere_1);
     points.push_back(base_sphere_2);
@@ -352,10 +352,10 @@ void run_PYRAMID_MESH() {
     double* meshSoupLocOri = new double[7 * nSoupFamilies];
 
     // bottom plane faces upwards
-    auto quat = Q_from_AngY(0);
+    auto quat = QuatFromAngleY(0);
 
     while (curr_time < timeEnd) {
-        gpu_sys.ApplyMeshMotion(0, bot_plane_pos, quat, ChVector<>(0, 0, 0), ChVector<>(0, 0, 0));
+        gpu_sys.ApplyMeshMotion(0, bot_plane_pos, quat, ChVector3d(0, 0, 0), ChVector3d(0, 0, 0));
         writeGranFile(gpu_sys);
         char filename[100];
 
@@ -368,24 +368,24 @@ void run_PYRAMID_MESH() {
 }
 
 void run_MESH_STEP() {
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector<float>(box_X, box_Y, box_Z));
+    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
     setCommonParameters(gpu_sys);
     setCommonMeshParameters(gpu_sys);
 
-    gpu_sys.AddMesh(GetProjectsDataFile("gpu/meshes/testsuite/step.obj"), ChVector<float>(0),
-                    ChMatrix33<float>(ChVector<float>(box_X / 2, box_Y / 2, (float)step_height)), (float)step_mass);
+    gpu_sys.AddMesh(GetProjectsDataFile("gpu/meshes/testsuite/step.obj"), ChVector3f(0),
+                    ChMatrix33<float>(ChVector3f(box_X / 2, box_Y / 2, (float)step_height)), (float)step_mass);
 
     // Fill domain with particles
-    std::vector<ChVector<float>> body_points;
+    std::vector<ChVector3f> body_points;
     double epsilon = 0.2 * sphere_radius;
     double spacing = 2 * sphere_radius + epsilon;
 
-    utils::PDSampler<float> sampler((float)spacing);
+    utils::ChPDSampler<float> sampler((float)spacing);
     double fill_bottom = -box_Z / 2 + step_height + 2 * spacing;
     fill_top = box_Z / 2 - sphere_radius - epsilon;
-    ChVector<> hdims(box_X / 2 - sphere_radius - epsilon, box_Y / 2 - sphere_radius - epsilon, 0);
+    ChVector3d hdims(box_X / 2 - sphere_radius - epsilon, box_Y / 2 - sphere_radius - epsilon, 0);
     for (double z = fill_bottom; z < fill_top; z += spacing) {
-        ChVector<> center(0, 0, z);
+        ChVector3d center(0, 0, z);
         auto points = sampler.SampleBox(center, hdims);
         body_points.insert(body_points.end(), points.begin(), points.end());
     }
@@ -397,13 +397,13 @@ void run_MESH_STEP() {
     unsigned int nSoupFamilies = gpu_sys.GetNumMeshes();
     std::cout << nSoupFamilies << " soup families" << std::endl;
 
-    ChVector<> meshSoupLoc(0, 0, -box_Z / 2 + 2 * sphere_radius);
-    auto quat = Q_from_AngY(0);
+    ChVector3d meshSoupLoc(0, 0, -box_Z / 2 + 2 * sphere_radius);
+    auto quat = QuatFromAngleY(0);
 
     gpu_sys.Initialize();
 
     for (float t = 0; t < timeEnd; t += frame_step) {
-        gpu_sys.ApplyMeshMotion(0, meshSoupLoc, quat, ChVector<>(0, 0, 0), ChVector<>(0, 0, 0));
+        gpu_sys.ApplyMeshMotion(0, meshSoupLoc, quat, ChVector3d(0, 0, 0), ChVector3d(0, 0, 0));
         std::cout << "Rendering frame " << currframe << std::endl;
         char filename[100];
         sprintf(filename, "%s/step%06u", output_dir.c_str(), currframe);
@@ -418,16 +418,16 @@ void run_MESH_FORCE() {
     std::cout << "MESH_FORCE not implemented" << std::endl;
     return;
 
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector<float>(box_X, box_Y, box_Z));
+    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
     setCommonParameters(gpu_sys);
     setCommonMeshParameters(gpu_sys);
 
-    utils::HCPSampler<float> sampler(2.1f * sphere_radius);
-    auto pos = sampler.SampleBox(ChVector<>(0, 0, 26), ChVector<>(38, 38, 10));
+    utils::ChHCPSampler<float> sampler(2.1f * sphere_radius);
+    auto pos = sampler.SampleBox(ChVector3d(0, 0, 26), ChVector3d(38, 38, 10));
 
     auto n_spheres = pos.size();
     std::cout << "Created " << n_spheres << " spheres" << std::endl;
-    double sphere_mass = sphere_density * 4.0 * CH_C_PI * sphere_radius * sphere_radius * sphere_radius / 3.0;
+    double sphere_mass = sphere_density * 4.0 * CH_PI * sphere_radius * sphere_radius * sphere_radius / 3.0;
 
     double total_mass = sphere_mass * n_spheres;
     double sphere_weight = sphere_mass * std::abs(grav_Z);
@@ -436,30 +436,30 @@ void run_MESH_FORCE() {
     gpu_sys.SetParticles(pos);
 
     // Add mesh
-    gpu_sys.AddMesh(GetProjectsDataFile("gpu/meshes/testsuite/square_box.obj"), ChVector<float>(0),
-                    ChMatrix33<float>(ChVector<float>(40, 40, 40)), 1.0f);
+    gpu_sys.AddMesh(GetProjectsDataFile("gpu/meshes/testsuite/square_box.obj"), ChVector3f(0),
+                    ChMatrix33<float>(ChVector3f(40, 40, 40)), 1.0f);
 
     unsigned int nSoupFamilies = gpu_sys.GetNumMeshes();
     std::cout << nSoupFamilies << " soup families" << std::endl;
 
     // Triangle remains at the origin
-    ChVector<> meshLoc(0, 0, 0);
-    auto quat = Q_from_AngY(0);
+    ChVector3d meshLoc(0, 0, 0);
+    auto quat = QuatFromAngleY(0);
 
     gpu_sys.Initialize();
 
     // Run a loop that is typical of co-simulation. For instance, the wheeled is moved a bit, which moves the
     // particles. Conversely, the particles impress a force and torque upon the mesh soup
     for (float t = 0; t < timeEnd; t += frame_step) {
-        gpu_sys.ApplyMeshMotion(0, meshLoc, quat, ChVector<>(0, 0, 0), ChVector<>(0, 0, 0));
+        gpu_sys.ApplyMeshMotion(0, meshLoc, quat, ChVector3d(0, 0, 0), ChVector3d(0, 0, 0));
         std::cout << "Rendering frame " << currframe << std::endl;
         char filename[100];
         sprintf(filename, "%s/step%06u", output_dir.c_str(), currframe);
         writeGranFile(gpu_sys);
         gpu_sys.WriteMeshes(std::string(filename));
         // gpu_sys.checkSDCounts(std::string(filename) + "SU", true, false);
-        ChVector<> force;
-        ChVector<> torque;
+        ChVector3d force;
+        ChVector3d torque;
         gpu_sys.CollectMeshContactForces(0, force, torque);
         std::cout << "force_z: " << force.z() << "; total weight: " << total_weight << "; sphere weight "
                   << sphere_weight << std::endl;

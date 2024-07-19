@@ -29,11 +29,11 @@
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLinkMotorRotationTorque.h"
 #include "chrono/physics/ChSystemNSC.h"
+#include "chrono/core/ChRandom.h"
 
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 
 using namespace chrono;
-using namespace chrono::geometry;
 using namespace chrono::irrlicht;
 
 using namespace irr;
@@ -82,11 +82,11 @@ class ParticleGenerator {
 
     void setMu(double newMu) {
         if (newMu < 0.0) {
-            GetLog() << "can't set mu less than 0  \n";
+            std::cout << "can't set mu less than 0  \n";
             return;
         }
         if (newMu > 1.0)
-            GetLog() << "probably shouldn't have mu > 1.0   \n";
+            std::cout << "probably shouldn't have mu > 1.0   \n";
 
         // set mu anyway if >1.0
         this->mu = (float)newMu;
@@ -95,14 +95,14 @@ class ParticleGenerator {
     double getSphDensity() const { return this->sphDens; }
     void setSphDensity(double newDens) {
         if (newDens < 0.0)
-            GetLog() << "can't set density less than 0  \n";
+            std::cout << "can't set density less than 0  \n";
         else
             this->sphDens = newDens;
     }
 
     void setBoxDensity(double newDens) {
         if (newDens < 0.0)
-            GetLog() << "can't set density less than 0  \n";
+            std::cout << "can't set density less than 0  \n";
         else
             this->boxDens = newDens;
     }
@@ -133,18 +133,18 @@ class ParticleGenerator {
             double stackHeight = (this->totalParticles / 2000.0) * pSize - 0.2;
 
             // create the spheres
-            auto sphere_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+            auto sphere_mat = chrono_types::make_shared<ChContactMaterialNSC>();
             sphere_mat->SetFriction(this->mu);
 
             for (int bi = 0; bi < nParticles; bi++) {
-                double sphrad = pSize + pDev * ChRandom();
-                double sphmass = (4 / 3) * CH_C_PI * pow(sphrad, 3) * this->sphDens;
-                ChQuaternion<> randrot(ChRandom(), ChRandom(), ChRandom(), ChRandom());
+                double sphrad = pSize + pDev * ChRandom::Get();
+                double sphmass = (4 / 3) * CH_PI * pow(sphrad, 3) * this->sphDens;
+                ChQuaternion<> randrot(ChRandom::Get(), ChRandom::Get(), ChRandom::Get(), ChRandom::Get());
                 randrot.Normalize();
                 // randomize spawning position, take stack height into consideration
-                ChVector<> currPos = ChVector<>(-0.5 * bedWidth + ChRandom() * bedWidth,
-                                                stackHeight + 2 * pSize * ((double)bi / (20.0 * ChRandom() + 50.0)),
-                                                -0.5 * bedLength + ChRandom() * bedLength);
+                ChVector3d currPos = ChVector3d(-0.5 * bedWidth + ChRandom::Get() * bedWidth,
+                                                stackHeight + 2 * pSize * ((double)bi / (20.0 * ChRandom::Get() + 50.0)),
+                                                -0.5 * bedLength + ChRandom::Get() * bedLength);
                 auto currRigidBody =
                     chrono_types::make_shared<ChBodyEasySphere>(sphrad, this->sphDens, true, true, sphere_mat);
                 currRigidBody->SetPos(currPos);
@@ -164,21 +164,21 @@ class ParticleGenerator {
             }
 
             // create the boxes
-            auto box_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+            auto box_mat = chrono_types::make_shared<ChContactMaterialNSC>();
             box_mat->SetFriction(0.5f);
 
             for (int bi = 0; bi < nBoxes; bi++) {
-                double xscale = 1.5 * ChRandom();  // scale 2 of the 3 dimensions
+                double xscale = 1.5 * ChRandom::Get();  // scale 2 of the 3 dimensions
                 double yscale = 2.0;
-                double zscale = 1.5 * ChRandom();
+                double zscale = 1.5 * ChRandom::Get();
                 double boxmass = (pSize * xscale) * (pSize * yscale) * (pSize * zscale) * this->boxDens;
                 // position found the same way as the spheres
-                ChVector<> currPos = ChVector<>(-0.5 * bedWidth + ChRandom() * bedWidth,
-                                                stackHeight + 2 * pSize * ((double)bi / (20.0 * ChRandom() + 20.0)),
-                                                -0.5 * bedLength + ChRandom() * bedLength);
+                ChVector3d currPos = ChVector3d(-0.5 * bedWidth + ChRandom::Get() * bedWidth,
+                                                stackHeight + 2 * pSize * ((double)bi / (20.0 * ChRandom::Get() + 20.0)),
+                                                -0.5 * bedLength + ChRandom::Get() * bedLength);
 
                 // randomize the initial orientation
-                ChQuaternion<> randrot(ChRandom(), ChRandom(), ChRandom(), ChRandom());
+                ChQuaternion<> randrot(ChRandom::Get(), ChRandom::Get(), ChRandom::Get(), ChRandom::Get());
                 randrot.Normalize();
                 // create the body object
                 auto currRigidBody = chrono_types::make_shared<ChBodyEasyBox>(
@@ -257,7 +257,7 @@ class SoilbinWheel {
     std::shared_ptr<ChBody> wheel;
 
     // Use convex decomposition for collision detection with the Trelleborg tire
-    SoilbinWheel(ChSystemNSC* system, ChVector<> mposition, double mass, ChVector<>& inertia) {
+    SoilbinWheel(ChSystemNSC* system, ChVector3d mposition, double mass, ChVector3d& inertia) {
         ChCollisionModel::SetDefaultSuggestedEnvelope(0.005);
         ChCollisionModel::SetDefaultSuggestedMargin(0.004);
 
@@ -266,7 +266,7 @@ class SoilbinWheel {
         wheel->SetPos(mposition);
         wheel->SetMass(mass);
         wheel->SetInertiaXX(inertia);
-        wheel->SetCollide(true);
+        wheel->EnableCollision(true);
 
         // Visualization mesh
         auto tireMesh = ChTriangleMeshConnected::CreateFromWavefrontFile(
@@ -276,7 +276,7 @@ class SoilbinWheel {
         wheel->AddVisualShape(tireMesh_asset);
 
         // Contact material
-        auto wheel_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+        auto wheel_mat = chrono_types::make_shared<ChContactMaterialNSC>();
         wheel_mat->SetFriction(0.4f);
 
         // Contact mesh
@@ -287,7 +287,7 @@ class SoilbinWheel {
         auto knobs_shapes = ChCollisionShapeConvexHull::Read(wheel_mat, knobs_filename);
         auto slice_shapes = ChCollisionShapeConvexHull::Read(wheel_mat, slice_filename);
         for (double mangle = 0; mangle < 360.; mangle += (360. / 15.)) {
-            auto q = Q_from_AngX(mangle * CH_C_DEG_TO_RAD);
+            auto q = QuatFromAngleX(mangle * CH_DEG_TO_RAD);
             for (const auto& s : knobs_shapes)
                 wheel->AddCollisionShape(s, ChFrame<>(VNULL, q));
             for (const auto& s : slice_shapes)
@@ -336,7 +336,7 @@ class TestMech {
         ChCollisionModel::SetDefaultSuggestedMargin(0.002);
 
         ChQuaternion<> rot;
-        rot.Q_from_AngAxis(ChRandom() * CH_C_2PI, VECT_Y);
+        rot.SetFromAngleAxis(ChRandom::Get() * CH_2PI, VECT_Y);
 
         // *******
         // Create a soil bin with planes. bin width = x-dir, bin length = z-dir
@@ -346,38 +346,38 @@ class TestMech {
         double wallWidth = std::min<double>(binWidth, binLength) / 10.0;  // wall width = 1/10 of min of bin dims
 
         // create the floor
-        auto floor_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+        auto floor_mat = chrono_types::make_shared<ChContactMaterialNSC>();
         floor_mat->SetFriction(0.5f);
 
         floor = chrono_types::make_shared<ChBodyEasyBox>(binWidth + wallWidth / 2.0, wallWidth,
                                                          binLength + wallWidth / 2.0, 1.0, true, true, floor_mat);
-        floor->SetPos(ChVector<>(0, -0.5 - wallWidth / 2.0, 0));
-        floor->SetBodyFixed(true);
+        floor->SetPos(ChVector3d(0, -0.5 - wallWidth / 2.0, 0));
+        floor->SetFixed(true);
         floor->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/concrete.jpg"));
         system->AddBody(floor);
 
         // add some transparent walls to the soilBin, w.r.t. width, length of bin
         wall1 = chrono_types::make_shared<ChBodyEasyBox>(wallWidth, binHeight, binLength, 1.0, false, true, floor_mat);
-        wall1->SetPos(ChVector<>(-binWidth / 2.0 - wallWidth / 2.0, 0, 0));
-        wall1->SetBodyFixed(true);
+        wall1->SetPos(ChVector3d(-binWidth / 2.0 - wallWidth / 2.0, 0, 0));
+        wall1->SetFixed(true);
         system->AddBody(wall1);
 
         wall2 = chrono_types::make_shared<ChBodyEasyBox>(wallWidth, binHeight, binLength, 1.0, false, true, floor_mat);
-        wall2->SetPos(ChVector<>(binWidth / 2.0 + wallWidth / 2.0, 0, 0));
-        wall2->SetBodyFixed(true);
+        wall2->SetPos(ChVector3d(binWidth / 2.0 + wallWidth / 2.0, 0, 0));
+        wall2->SetFixed(true);
         system->AddBody(wall2);
 
         wall3 = chrono_types::make_shared<ChBodyEasyBox>(binWidth + wallWidth / 2.0, binHeight, wallWidth, 1.0, false,
                                                          true, floor_mat);
-        wall3->SetPos(ChVector<>(0, 0, -binLength / 2.0 - wallWidth / 2.0));
-        wall3->SetBodyFixed(true);
+        wall3->SetPos(ChVector3d(0, 0, -binLength / 2.0 - wallWidth / 2.0));
+        wall3->SetFixed(true);
         system->AddBody(wall3);
 
         // wall 4
         wall4 = chrono_types::make_shared<ChBodyEasyBox>(binWidth + wallWidth / 2.0, binHeight, wallWidth, 1.0, false,
                                                          true, floor_mat);
-        wall4->SetPos(ChVector<>(0, 0, binLength / 2.0 + wallWidth / 2.0));
-        wall4->SetBodyFixed(true);
+        wall4->SetPos(ChVector3d(0, 0, binLength / 2.0 + wallWidth / 2.0));
+        wall4->SetFixed(true);
         system->AddBody(wall4);
 
         // ******
@@ -388,7 +388,7 @@ class TestMech {
         auto vis_mat_blue = chrono_types::make_shared<ChVisualMaterial>();
         vis_mat_blue->SetKdTexture(GetChronoDataFile("textures/blue.png"));
 
-        ChVector<> trussCM = wheelBody->GetPos();
+        ChVector3d trussCM = wheelBody->GetPos();
 
         truss = chrono_types::make_shared<ChBodyEasyBox>(0.2, 0.2, 0.4, 300.0, true, false);
         truss->SetPos(trussCM);
@@ -398,17 +398,17 @@ class TestMech {
 
         // create the revolute joint between the wheel and spindle
         spindle = chrono_types::make_shared<ChLinkLockRevolute>();
-        spindle->Initialize(truss, wheelBody, ChCoordsys<>(trussCM, chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
+        spindle->Initialize(truss, wheelBody, ChFrame<>(trussCM, chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         system->AddLink(spindle);
 
         // create a torque between the truss and wheel
         torqueDriver = chrono_types::make_shared<ChLinkMotorRotationTorque>();
-        torqueDriver->Initialize(truss, wheelBody, ChFrame<>(trussCM, chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
+        torqueDriver->Initialize(truss, wheelBody, ChFrame<>(trussCM, chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         system->AddLink(torqueDriver);
 
         // ******
         // create a body that will be used as a vehicle weight
-        ChVector<> weightCM = ChVector<>(trussCM);
+        ChVector3d weightCM = ChVector3d(trussCM);
         weightCM.y() += 1.0;  // note: this will determine the spring free length
 
         suspweight = chrono_types::make_shared<ChBodyEasyBox>(0.2, 0.4, 0.2, 5000.0, true, false);
@@ -420,7 +420,7 @@ class TestMech {
         // create the translational joint between the truss and weight load
         auto translational = chrono_types::make_shared<ChLinkLockPrismatic>();
         translational->Initialize(truss, suspweight,
-                                  ChCoordsys<>(trussCM, chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+                                  ChFrame<>(trussCM, chrono::QuatFromAngleAxis(CH_PI / 2, VECT_X)));
         system->AddLink(translational);
 
         // create a spring between spindle truss and weight
@@ -435,7 +435,7 @@ class TestMech {
         // create a prismatic constraint between the weight and the ground
         auto weightLink = chrono_types::make_shared<ChLinkLockOldham>();
         weightLink->Initialize(suspweight, floor,
-                               ChCoordsys<>(weightCM, chrono::Q_from_AngAxis(CH_C_PI / 2.0, VECT_Y)));
+                               ChFrame<>(weightCM, chrono::QuatFromAngleAxis(CH_PI / 2.0, VECT_Y)));
         system->AddLink(weightLink);
     }
 
@@ -448,8 +448,8 @@ class TestMech {
     // for now, just use the slider value as directly as the torque
     void applyTorque() {
         // note: negative sign is to get Trelleborg tire to spin in the correct direction
-        auto mfun = std::static_pointer_cast<ChFunction_Const>(torqueDriver->GetTorqueFunction());
-        mfun->Set_yconst(-this->currTorque);
+        auto mfun = std::static_pointer_cast<ChFunctionConst>(torqueDriver->GetTorqueFunction());
+        mfun->SetConstant(-this->currTorque);
     }
 
     ~TestMech() {}
@@ -464,7 +464,7 @@ class MyEventReceiver : public IEventReceiver {
     gui::IGUITab* gad_tab_soil;
 
     // @param pSize particle radius
-    // @param pDev multiplier added to ChRandom()
+    // @param pDev multiplier added to ChRandom::Get()
     // @param maxTorque max slider torque applied to wheel
     // @param maxParticles max number of particles to generate each spawning event
     MyEventReceiver(ChVisualSystemIrrlicht* app,
@@ -525,9 +525,9 @@ class MyEventReceiver : public IEventReceiver {
                                                                    false, false, gad_tab_controls);
         checkbox_wheelLocked->setVisible(true);
         text_wheelLocked->setVisible(true);
-        this->mwheel->wheel->SetBodyFixed(wheelLocked);  // set IC of checkbox
-        this->mtester->truss->SetBodyFixed(wheelLocked);
-        this->mtester->suspweight->SetBodyFixed(wheelLocked);
+        this->mwheel->wheel->SetFixed(wheelLocked);  // set IC of checkbox
+        this->mtester->truss->SetFixed(wheelLocked);
+        this->mtester->suspweight->SetFixed(wheelLocked);
 
         // turn wheel visibility on/off, ie = 2115
         ////checkbox_wheelVisible = app->GetGUIEnvironment()->addCheckBox(wheelVisible, core::rect<s32>(180, 30, 195,
@@ -543,7 +543,7 @@ class MyEventReceiver : public IEventReceiver {
             L"Wheel collide? ", core::rect<s32>(45, 60, 125, 75), false, false, gad_tab_controls);
         checkbox_wheelCollision->setVisible(true);
         text_wheelCollision->setVisible(true);
-        this->mwheel->wheel->SetCollide(wheelCollision);
+        this->mwheel->wheel->EnableCollision(wheelCollision);
 
         // torque slider	(id = 1103)
         scrollbar_torque =
@@ -626,25 +626,26 @@ class MyEventReceiver : public IEventReceiver {
 
         // ******* GUI WHEEL STATE
         // wheel CM pos
-        ChVector<> cm = mwheel->wheel->GetPos();
+        ChVector3d cm = mwheel->wheel->GetPos();
         char message5[100];
         sprintf(message5, "CM pos, x: %4.4g, y: %4.4g, z: %4.4g", cm.x(), cm.y(), cm.z());
         text_cmPos = mapp->GetGUIEnvironment()->addStaticText(core::stringw(message5).c_str(),
                                                               rect<s32>(10, 30, 280, 45), false, false, gad_tab_wheel);
         // wheel CM vel
-        ChVector<> cmVel = mwheel->wheel->GetPos_dt();
+        ChVector3d cmVel = mwheel->wheel->GetLinVel();
         char messageV[100];
         sprintf(messageV, "CM vel, x: %4.4g, y: %4.4g, z: %4.4g", cmVel.x(), cmVel.y(), cmVel.z());
         text_cmVel = mapp->GetGUIEnvironment()->addStaticText(core::stringw(message5).c_str(),
                                                               rect<s32>(10, 60, 280, 75), false, false, gad_tab_wheel);
         // rxn. forces on spindle, in the local coordinate system
-        ChVector<> rxnF = mtester->spindle->Get_react_force();
+        auto rxn = mtester->spindle->GetReaction2();
+        ChVector3d rxnF = rxn.force;
         char messageF[100];
         sprintf(messageF, "spindle Rxn. F, x: %4.3g, y: %4.3g, z: %4.3g", rxnF.x(), rxnF.y(), rxnF.z());
         text_spindleForces = mapp->GetGUIEnvironment()->addStaticText(
             core::stringw(message5).c_str(), rect<s32>(10, 90, 280, 105), false, false, gad_tab_wheel);
         // rxn. torques on spindle, in local coordinate system
-        ChVector<> rxnT = mtester->spindle->Get_react_torque();
+        ChVector3d rxnT = rxn.torque;
         char messageT[100];
         sprintf(messageT, "spindle Rxn. T, x: %4.3g, y: %4.3g, z: %4.3g", rxnT.x(), rxnT.y(), rxnT.z());
         text_spindleTorque = mapp->GetGUIEnvironment()->addStaticText(
@@ -734,34 +735,34 @@ class MyEventReceiver : public IEventReceiver {
                 case gui::EGET_CHECKBOX_CHANGED:
                     if (id == 2110) {
                         wheelLocked = checkbox_wheelLocked->isChecked();
-                        GetLog() << checkbox_wheelLocked->isChecked() << "\n";
+                        std::cout << checkbox_wheelLocked->isChecked() << "\n";
                         // activate/deactivate motion for the wheel, truss and suspweight
-                        this->mwheel->wheel->SetBodyFixed(wheelLocked);
-                        this->mtester->suspweight->SetBodyFixed(wheelLocked);
-                        this->mtester->truss->SetBodyFixed(wheelLocked);
+                        this->mwheel->wheel->SetFixed(wheelLocked);
+                        this->mtester->suspweight->SetFixed(wheelLocked);
+                        this->mtester->truss->SetFixed(wheelLocked);
                         return true;
                     }
                     if (id == 2111) {
                         makeParticles = checkbox_createParticles->isChecked();
-                        GetLog() << checkbox_createParticles->isChecked() << "\n";
+                        std::cout << checkbox_createParticles->isChecked() << "\n";
                         // if checked, report the total # of particles
                         char message[50];
                         sprintf(message, "create Particles?: %d", this->mgenerator->nparticles());
                         text_createParticles->setText(core::stringw(message).c_str());
-                        GetLog() << "total particle mass = " << this->mgenerator->particleMass() << "\n";
+                        std::cout << "total particle mass = " << this->mgenerator->particleMass() << "\n";
                         return true;
                     }
                     if (id == 2112) {
                         wheelCollision = checkbox_wheelCollision->isChecked();
-                        GetLog() << checkbox_wheelCollision->isChecked() << "\n";
+                        std::cout << checkbox_wheelCollision->isChecked() << "\n";
                         // activate/deactivate the wheel collision detection
-                        this->mwheel->wheel->SetCollide(wheelCollision);
+                        this->mwheel->wheel->EnableCollision(wheelCollision);
                         return true;
                     }
                     /*
                     if (id == 2114) {
                         pVisible = checkbox_particlesVisible->isChecked();
-                        GetLog() << checkbox_particlesVisible->isChecked() << "\n";
+                        std::cout << checkbox_particlesVisible->isChecked() << "\n";
                         // turn off the particle visibility
                         this->mgenerator->toggleVisibility(pVisible);
                         return true;
@@ -770,7 +771,7 @@ class MyEventReceiver : public IEventReceiver {
                     /*
                     if (id == 2115) {
                         wheelVisible = checkbox_wheelVisible->isChecked();
-                        GetLog() << checkbox_wheelVisible->isChecked() << "\n";
+                        std::cout << checkbox_wheelVisible->isChecked() << "\n";
                         // turn wheel visibility on/off
                         this->mwheel->toggleVisibility(wheelVisible);
                         return true;
@@ -797,40 +798,41 @@ class MyEventReceiver : public IEventReceiver {
 
     void drawGrid() {
         // wall 1
-        ChCoordsys<> wall1Csys = this->mtester->wall1->GetCoord();
-        wall1Csys.rot = chrono::Q_from_AngAxis(CH_C_PI / 2.0, VECT_Y);
+        ChCoordsys<> wall1Csys = this->mtester->wall1->GetCoordsys();
+        wall1Csys.rot = chrono::QuatFromAngleAxis(CH_PI / 2.0, VECT_Y);
         wall1Csys.pos.x() += .05;
         tools::drawGrid(this->mapp, 0.1, 0.05, 24, 20, wall1Csys, ChColor(0.3f, 0.5f, 0.5f), true);
 
         // wall 3
-        ChCoordsys<> wall3Csys = this->mtester->wall3->GetCoord();
+        ChCoordsys<> wall3Csys = this->mtester->wall3->GetCoordsys();
         wall3Csys.pos.z() += .05;
         tools::drawGrid(this->mapp, 0.1, 0.05, 10, 20, wall3Csys, ChColor(0.3f, 0.5f, 0.5f), true);
 
         // wall 4
-        ChCoordsys<> wall4Csys = this->mtester->wall4->GetCoord();
+        ChCoordsys<> wall4Csys = this->mtester->wall4->GetCoordsys();
         wall4Csys.pos.z() -= .05;
         tools::drawGrid(this->mapp, 0.1, 0.05, 10, 20, wall4Csys, ChColor(0.3f, 0.5f, 0.5f), true);
     }
 
     // output any relevant test rig data here
     void drawWheelOutput() {
-        ChVector<> cm = mwheel->wheel->GetPos();
+        ChVector3d cm = mwheel->wheel->GetPos();
         char messageCM[100];
         sprintf(messageCM, "CM pos, x: %4.4g, y: %4.4g, z: %4.4g", cm.x(), cm.y(), cm.z());
         text_cmPos->setText(core::stringw(messageCM).c_str());
         // wheel CM vel
-        ChVector<> cmVel = mwheel->wheel->GetPos_dt();
+        ChVector3d cmVel = mwheel->wheel->GetLinVel();
         char messageV[100];
         sprintf(messageV, "CM vel, x: %4.4g, y: %4.4g, z: %4.4g", cmVel.x(), cmVel.y(), cmVel.z());
         text_cmVel->setText(core::stringw(messageV).c_str());
         // rxn. forces on spindle
-        ChVector<> rxnF = mtester->spindle->Get_react_force();
+        auto rxn = mtester->spindle->GetReaction2();
+        ChVector3d rxnF = rxn.force;
         char messageF[100];
         sprintf(messageF, "spindle Rxn. F, x: %4.3g, y: %4.3g, z: %4.3g", rxnF.x(), rxnF.y(), rxnF.z());
         text_spindleForces->setText(core::stringw(messageF).c_str());
         // rxn. torques on spindle
-        ChVector<> rxnT = mtester->spindle->Get_react_torque();
+        ChVector3d rxnT = rxn.torque;
         char messageT[100];
         sprintf(messageT, "spindle Rxn. T, x: %4.3g, y: %4.3g, z: %4.3g", rxnT.x(), rxnT.y(), rxnT.z());
         text_spindleTorque->setText(core::stringw(messageT).c_str());
@@ -931,7 +933,7 @@ class MyEventReceiver : public IEventReceiver {
 };
 
 int main(int argc, char* argv[]) {
-    GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
+    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
 
     // Set path to Chrono data directory
     SetChronoDataPath(CHRONO_DATA_DIR);
@@ -945,8 +947,8 @@ int main(int argc, char* argv[]) {
 
     // ******* SOIL BIN WHEEL
     // Create the wheel
-    ChVector<> wheelCMpos = ChVector<>(0, 0.5, 0);
-    ChVector<> wheelInertia = ChVector<>(1.0, 1.0, 1.0);
+    ChVector3d wheelCMpos = ChVector3d(0, 0.5, 0);
+    ChVector3d wheelInertia = ChVector3d(1.0, 1.0, 1.0);
     SoilbinWheel* mwheel = new SoilbinWheel(&sys, wheelCMpos, wheelMass, wheelInertia);
 
     // ***** TESTING MECHANISM
@@ -968,9 +970,9 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
-    vis->AddCamera(ChVector<>(3.5, 2.5, -2.4));
-    vis->AddLight(ChVector<>(20, 30, 25), 290, ChColor(0.7f, 0.7f, 0.7f));
-    vis->AddLight(ChVector<>(25, 25, -25), 190, ChColor(0.7f, 0.8f, 0.8f));
+    vis->AddCamera(ChVector3d(3.5, 2.5, -2.4));
+    vis->AddLight(ChVector3d(20, 30, 25), 290, ChColor(0.7f, 0.7f, 0.7f));
+    vis->AddLight(ChVector3d(25, 25, -25), 190, ChColor(0.7f, 0.8f, 0.8f));
 
     // ***** PARTICLE GENERATOR
     // make a particle generator, that the sceneManager can use to easily dump a bunch of dirt in the bin
@@ -985,7 +987,7 @@ int main(int argc, char* argv[]) {
     // Set some integrator settings
     // sys.SetSolverType(ChSolver::Type::APGD);
     sys.SetSolverType(ChSolver::Type::PSOR);
-    sys.SetSolverMaxIterations(70);
+    sys.GetSolver()->AsIterative()->SetMaxIterations(70);
 
     double timestep = 0.01;
     ChRealtimeStepTimer realtime_timer;

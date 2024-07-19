@@ -21,7 +21,6 @@
 
 #include <vector>
 
-#include "chrono/core/ChStream.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/utils/ChFilters.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -30,7 +29,6 @@
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 
-#include "chrono_models/vehicle/generic/Generic_FuncDriver.h"
 #include "chrono_models/vehicle/generic/Generic_Vehicle.h"
 #include "chrono_models/vehicle/generic/driveline/Generic_Driveline2WD.h"
 #include "chrono_models/vehicle/generic/powertrain/Generic_AutomaticTransmissionSimpleMap.h"
@@ -58,7 +56,7 @@ using namespace chrono::vehicle::generic;
 // =============================================================================
 
 // Initial vehicle position
-ChVector<> initLoc(0, 0, 0.5);
+ChVector3d initLoc(0, 0, 0.5);
 
 // Initial vehicle orientation
 ChQuaternion<> initRot(1, 0, 0, 0);
@@ -83,7 +81,7 @@ double render_step_size = 1.0 / 50;  // FPS = 50
 double output_step_size = 1.0 / 1;  // once a second
 
 // Point on chassis tracked by the camera (Irrlicht only)
-ChVector<> trackPoint(0.0, 0.0, 1.75);
+ChVector3d trackPoint(0.0, 0.0, 1.75);
 
 // Output directories
 const std::string out_dir = "../GENERIC_VEHICLE_LANECHANGE";
@@ -123,7 +121,8 @@ int main(int argc, char* argv[]) {
 
     // Create the vehicle: specify if chassis is fixed, the suspension type
     // and the inital forward speed
-    Generic_Vehicle vehicle(false, SuspensionTypeWV::DOUBLE_WISHBONE);
+    Generic_Vehicle vehicle(false, SuspensionTypeWV::DOUBLE_WISHBONE, SuspensionTypeWV::DOUBLE_WISHBONE,
+                            SteeringTypeWV::PITMAN_ARM, DrivelineTypeWV::AWD, BrakeType::SHAFTS);
     vehicle.Initialize(ChCoordsys<>(initLoc), target_speed);
     vehicle.SetChassisVisualizationType(VisualizationType::PRIMITIVES);
     vehicle.SetSuspensionVisualizationType(VisualizationType::PRIMITIVES);
@@ -131,12 +130,12 @@ int main(int argc, char* argv[]) {
     vehicle.SetWheelVisualizationType(VisualizationType::NONE);
 
     // Create the ground
-    auto patch_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto patch_mat = chrono_types::make_shared<ChContactMaterialNSC>();
     patch_mat->SetFriction(0.9f);
     patch_mat->SetRestitution(0.01f);
     RigidTerrain terrain(vehicle.GetSystem());
     auto patch =
-        terrain.AddPatch(patch_mat, ChCoordsys<>(ChVector<>(0, 0, terrainHeight), QUNIT), terrainLength, terrainWidth);
+        terrain.AddPatch(patch_mat, ChCoordsys<>(ChVector3d(0, 0, terrainHeight), QUNIT), terrainLength, terrainWidth);
     patch->SetColor(ChColor(0.5f, 0.8f, 0.5f));
     patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 600, 600);
     terrain.Initialize();
@@ -162,7 +161,7 @@ int main(int argc, char* argv[]) {
     // Create the path and the driver system
     // -------------------------------------
 
-    auto path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
+    auto path = ChBezierCurve::Read(vehicle::GetDataFile(path_file));
     ChPathFollowerDriver driver(vehicle, vehicle::GetDataFile(steering_controller_file),
                                 vehicle::GetDataFile(speed_controller_file), path, "my_path", target_speed);
     driver.Initialize();
@@ -214,9 +213,9 @@ int main(int argc, char* argv[]) {
         driver.ExportPathPovray(out_dir);
     }
 
-    utils::CSV_writer csv("\t");
-    csv.stream().setf(std::ios::scientific | std::ios::showpos);
-    csv.stream().precision(6);
+    utils::ChWriterCSV csv("\t");
+    csv.Stream().setf(std::ios::scientific | std::ios::showpos);
+    csv.Stream().precision(6);
 
     utils::ChRunningAverage fwd_acc_GC_filter(filter_window_size);
     utils::ChRunningAverage lat_acc_GC_filter(filter_window_size);
@@ -227,14 +226,14 @@ int main(int argc, char* argv[]) {
     utils::ChRunningAverage vert_acc_driver_filter(filter_window_size);
 
     // Driver location in vehicle local frame
-    ChVector<> driver_pos = vehicle.GetChassis()->GetLocalDriverCoordsys().pos;
+    ChVector3d driver_pos = vehicle.GetChassis()->GetLocalDriverCoordsys().pos;
 
 // ---------------
 // Simulation loop
 // ---------------
 
 #ifdef DEBUG_LOG
-    GetLog() << "\n\n============ System Configuration ============\n";
+    std::cout << "\n\n============ System Configuration ============\n";
     vehicle.LogHardpointLocations();
 #endif
 
@@ -266,9 +265,9 @@ int main(int argc, char* argv[]) {
 
         // std::cout << vehicle.GetSystem()->GetSolverCallsCount() << std::endl;
         // Extract accelerations to add to the filter
-        ChVector<> acc_CG = vehicle.GetChassisBody()->GetPos_dtdt();
-        acc_CG = vehicle.GetChassisBody()->GetCoord().TransformDirectionParentToLocal(acc_CG);
-        ChVector<> acc_driver = vehicle.GetPointAcceleration(driver_pos);
+        ChVector3d acc_CG = vehicle.GetChassisBody()->GetLinAcc();
+        acc_CG = vehicle.GetChassisBody()->GetCoordsys().TransformDirectionParentToLocal(acc_CG);
+        ChVector3d acc_driver = vehicle.GetPointAcceleration(driver_pos);
         double fwd_acc_CG = fwd_acc_GC_filter.Add(acc_CG.x());
         double lat_acc_CG = lat_acc_GC_filter.Add(acc_CG.y());
         double vert_acc_CG = vert_acc_GC_filter.Add(acc_CG.z());
@@ -279,8 +278,8 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_IRRLICHT
         // Update sentinel and target location markers for the path-follower controller.
         // Note that we do this whether or not we are currently using the path-follower driver.
-        const ChVector<>& pS = driver.GetSteeringController().GetSentinelLocation();
-        const ChVector<>& pT = driver.GetSteeringController().GetTargetLocation();
+        const ChVector3d& pS = driver.GetSteeringController().GetSentinelLocation();
+        const ChVector3d& pT = driver.GetSteeringController().GetTargetLocation();
         ballS->setPosition(irr::core::vector3df((irr::f32)pS.x(), (irr::f32)pS.y(), (irr::f32)pS.z()));
         ballT->setPosition(irr::core::vector3df((irr::f32)pT.x(), (irr::f32)pT.y(), (irr::f32)pT.z()));
 #endif
@@ -296,8 +295,8 @@ int main(int argc, char* argv[]) {
 #endif
 
 #ifdef DEBUG_LOG
-            GetLog() << "\n\n============ System Information ============\n";
-            GetLog() << "Time = " << time << "\n\n";
+            std::cout << "\n\n============ System Information ============\n";
+            std::cout << "Time = " << time << "\n\n";
             // vehicle.DebugLog(DBG_SPRINGS | DBG_SHOCKS | DBG_CONSTRAINTS);
             vehicle.DebugLog(OUT_SPRINGS | OUT_SHOCKS | OUT_CONSTRAINTS);
 #endif
@@ -309,13 +308,13 @@ int main(int argc, char* argv[]) {
             }
 
             if (state_output) {
-                ChVector<> vel_CG = vehicle.GetChassisBody()->GetPos_dt();
-                vel_CG = vehicle.GetChassisBody()->GetCoord().TransformDirectionParentToLocal(vel_CG);
+                ChVector3d vel_CG = vehicle.GetChassisBody()->GetLinVel();
+                vel_CG = vehicle.GetChassisBody()->GetCoordsys().TransformDirectionParentToLocal(vel_CG);
 
-                ChVector<> vel_driver_abs =
-                    vehicle.GetChassisBody()->GetFrame_REF_to_abs().PointSpeedLocalToParent(driver_pos);
-                ChVector<> vel_driver_local =
-                    vehicle.GetChassisBody()->GetFrame_REF_to_abs().TransformDirectionParentToLocal(vel_driver_abs);
+                ChVector3d vel_driver_abs =
+                    vehicle.GetChassisBody()->GetFrameRefToAbs().PointSpeedLocalToParent(driver_pos);
+                ChVector3d vel_driver_local =
+                    vehicle.GetChassisBody()->GetFrameRefToAbs().TransformDirectionParentToLocal(vel_driver_abs);
 
                 int axle = vehicle.GetDriveline()->GetDrivenAxleIndexes()[0];
 
@@ -342,10 +341,14 @@ int main(int argc, char* argv[]) {
                 csv << tire_RL->GetSlipAngle() << tire_RL->GetLongitudinalSlip() << tire_RL->GetCamberAngle();
                 csv << tire_RR->GetSlipAngle() << tire_RR->GetLongitudinalSlip() << tire_RR->GetCamberAngle();
                 // Suspension Lengths
-                csv << vehicle.GetShockLength(0, LEFT);
-                csv << vehicle.GetShockLength(0, RIGHT);
-                csv << vehicle.GetShockLength(1, LEFT);
-                csv << vehicle.GetShockLength(1, RIGHT);
+                for (const auto& susp_force : vehicle.GetSuspension(0)->ReportSuspensionForce(LEFT))
+                    csv << susp_force.length;
+                for (const auto& susp_force : vehicle.GetSuspension(0)->ReportSuspensionForce(RIGHT))
+                    csv << susp_force.length;
+                for (const auto& susp_force : vehicle.GetSuspension(1)->ReportSuspensionForce(LEFT))
+                    csv << susp_force.length;
+                for (const auto& susp_force : vehicle.GetSuspension(1)->ReportSuspensionForce(RIGHT))
+                    csv << susp_force.length;
                 // tire normal forces
                 csv << tire_FL->ReportTireForce(&terrain).force;
                 csv << tire_FR->ReportTireForce(&terrain).force;
@@ -381,7 +384,7 @@ int main(int argc, char* argv[]) {
     if (state_output) {
         char filename[100];
         sprintf(filename, "%s/output_%dmps_LaneChange.dat", out_dir.c_str(), int(std::round(target_speed)));
-        csv.write_to_file(filename);
+        csv.WriteToFile(filename);
     }
     return 0;
 }

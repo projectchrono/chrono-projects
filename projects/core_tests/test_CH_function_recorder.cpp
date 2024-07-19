@@ -11,7 +11,7 @@
 // =============================================================================
 // Authors: Radu Serban
 // =============================================================================
-// Test for ChFunction_Recorder
+// Test for ChFunctionRecorder
 // =============================================================================
 
 #include <algorithm>
@@ -20,18 +20,19 @@
 #include <random>
 #include <vector>
 
-#include "chrono/motion_functions/ChFunction_Recorder.h"
+#include "chrono/utils/ChConstants.h"
+#include "chrono/functions/ChFunctionInterp.h"
 
 using namespace chrono;
 
 double Reference(double x) {
-    return std::cos(x * CH_C_2PI);
+    return std::cos(x * CH_2PI);
 }
 
-void Evaluate(const ChFunction_Recorder& fun, double x) {
-    double y = fun.Get_y(x);
-    double yd = fun.Get_y_dx(x);
-    double ydd = fun.Get_y_dxdx(x);
+void Evaluate(const ChFunctionInterp& fun, double x) {
+    double y = fun.GetVal(x);
+    double yd = fun.GetDer(x);
+    double ydd = fun.GetDer2(x);
 
     double y_ref = Reference(x);
 
@@ -40,7 +41,7 @@ void Evaluate(const ChFunction_Recorder& fun, double x) {
 }
 
 int main(int argc, char* argv[]) {
-    ChFunction_Recorder fun;
+    ChFunctionInterp fun;
 
     std::vector<double> x = {0, 0.1, 0.3, 0.32, 0.45, 0.5, 0.68, 0.7, 0.73, 0.79, 0.88, 1};
 

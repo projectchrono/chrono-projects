@@ -27,7 +27,6 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -117,31 +116,29 @@ int out_fps_dropping = 1200;
 int timing_frame = -1;  // output detailed step timing at this frame
 
 // Parameters for the granular material
-int Id_g = 1;
+int tag_particles = 0;
 double r_g = 1e-3 / 2;
 double rho_g = 2500;
-double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
+double vol_g = (4.0 / 3) * CH_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
-ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
+ChVector3d inertia_g = 0.4 * mass_g * r_g * r_g * ChVector3d(1, 1, 1);
 
 float Y_g = 1e8f;
 float mu_g = 0.3f;
 float cr_g = 0.1f;
 
 // Parameters for the falling ball
-int Id_b = 0;
 double R_b = 2.54e-2 / 2;
 double rho_b = 700;
-double vol_b = (4.0 / 3) * CH_C_PI * R_b * R_b * R_b;
+double vol_b = (4.0 / 3) * CH_PI * R_b * R_b * R_b;
 double mass_b = rho_b * vol_b;
-ChVector<> inertia_b = 0.4 * mass_b * R_b * R_b * ChVector<>(1, 1, 1);
+ChVector3d inertia_b = 0.4 * mass_b * R_b * R_b * ChVector3d(1, 1, 1);
 
 float Y_b = 1e8f;
 float mu_b = 0.3f;
 float cr_b = 0.1f;
 
 // Parameters for the containing bin
-int binId = -200;
 double hDimX = 4e-2;         // length in x direction
 double hDimY = 4e-2;         // depth in y direction
 double hDimZ = 7.5e-2;       // height in z direction
@@ -172,50 +169,50 @@ double h = 10e-2;
 int CreateObjects(ChSystemMulticore* system) {
 // Create the containing bin
 #ifdef USE_SMC
-    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_c = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_c->SetYoungModulus(Y_c);
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
 
-    utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 #else
-    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_c = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_c->SetFriction(mu_c);
 
-    utils::CreateBoxContainer(system, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, binId, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 #endif
 
 // Create a material for the granular material
 #ifdef USE_SMC
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
     // Create a mixture entirely made out of spheres
     double r = 1.01 * r_g;
-    utils::PDSampler<double> sampler(2 * r);
-    utils::Generator gen(system);
+    utils::ChPDSampler<double> sampler(2 * r);
+    utils::ChGenerator gen(system);
 
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
-    m1->setDefaultMaterial(mat_g);
-    m1->setDefaultDensity(rho_g);
-    m1->setDefaultSize(r_g);
+    std::shared_ptr<utils::ChMixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
+    m1->SetDefaultMaterial(mat_g);
+    m1->SetDefaultDensity(rho_g);
+    m1->SetDefaultSize(r_g);
 
-    gen.setBodyIdentifier(Id_g);
+    gen.SetStartTag(tag_particles);
 
     for (int i = 0; i < numLayers; i++) {
         double center = r + layerHeight / 2 + i * (2 * r + layerHeight);
-        gen.CreateObjectsBox(sampler, ChVector<>(0, 0, center),
-                             ChVector<>(hDimX - r, hDimY - r, layerHeight / 2));
-        cout << "Layer " << i << "  total bodies: " << gen.getTotalNumBodies() << endl;
+        gen.CreateObjectsBox(sampler, ChVector3d(0, 0, center),
+                             ChVector3d(hDimX - r, hDimY - r, layerHeight / 2));
+        cout << "Layer " << i << "  total bodies: " << gen.GetTotalNumBodies() << endl;
     }
 
-    return gen.getTotalNumBodies();
+    return gen.GetTotalNumBodies();
 }
 
 // -----------------------------------------------------------------------------
@@ -225,26 +222,25 @@ int CreateObjects(ChSystemMulticore* system) {
 void CreateFallingBall(ChSystemMulticore* system, double z, double vz) {
     // Create a material for the falling ball
 #ifdef USE_SMC
-    auto mat_b = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_b = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_b->SetYoungModulus(1e8f);
     mat_b->SetFriction(0.4f);
     mat_b->SetRestitution(0.1f);
 #else
-    auto mat_b = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_b = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_b->SetFriction(mu_c);
 #endif
 
     // Create the falling ball
     auto ball = chrono_types::make_shared<ChBody>();
 
-    ball->SetIdentifier(Id_b);
     ball->SetMass(mass_b);
     ball->SetInertiaXX(inertia_b);
-    ball->SetPos(ChVector<>(0, 0, z + r_g + R_b));
+    ball->SetPos(ChVector3d(0, 0, z + r_g + R_b));
     ball->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    ball->SetPos_dt(ChVector<>(0, 0, -vz));
-    ball->SetCollide(true);
-    ball->SetBodyFixed(false);
+    ball->SetLinVel(ChVector3d(0, 0, -vz));
+    ball->EnableCollision(true);
+    ball->SetFixed(false);
 
     utils::AddSphereGeometry(ball.get(), mat_b, R_b);
 
@@ -258,8 +254,8 @@ void CreateFallingBall(ChSystemMulticore* system, double z, double vz) {
 // -----------------------------------------------------------------------------
 double FindHighest(ChSystem* sys) {
     double highest = 0;
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z() > highest)
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() >= tag_particles && body->GetPos().z() > highest)
             highest = body->GetPos().z();
     }
     return highest;
@@ -267,8 +263,8 @@ double FindHighest(ChSystem* sys) {
 
 double FindLowest(ChSystem* sys) {
     double lowest = 1000;
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z() < lowest)
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() >= tag_particles && body->GetPos().z() < lowest)
             lowest = body->GetPos().z();
     }
     return lowest;
@@ -281,9 +277,9 @@ double FindLowest(ChSystem* sys) {
 bool CheckSettled(ChSystem* sys, double threshold) {
     double t2 = threshold * threshold;
 
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() > 0) {
-            double vel2 = body->GetPos_dt().Length2();
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() > tag_particles) {
+            double vel2 = body->GetLinVel().Length2();
             if (vel2 > t2)
                 return false;
         }
@@ -317,7 +313,7 @@ int main(int argc, char* argv[]) {
     cout << "Using " << threads << " threads" << endl;
 
     // Set gravitational acceleration
-    msystem->Set_G_acc(ChVector<>(0, 0, -gravity));
+    msystem->SetGravitationalAcceleration(ChVector3d(0, 0, -gravity));
 
     // Edit system settings
     msystem->GetSettings()->solver.use_full_inertia_tensor = false;
@@ -358,8 +354,8 @@ int main(int argc, char* argv[]) {
         cout << "Create granular material" << endl;
         // Create the fixed falling ball just below the granular material
         CreateFallingBall(msystem, -3 * R_b, 0);
-        ball = msystem->Get_bodylist().at(0);
-        ball->SetBodyFixed(true);
+        ball = msystem->GetBodies().at(0);
+        ball->SetFixed(true);
         CreateObjects(msystem);
     } else {
         time_end = time_dropping;
@@ -368,20 +364,20 @@ int main(int argc, char* argv[]) {
         // Create the granular material and the container from the checkpoint file.
         cout << "Read checkpoint data from " << checkpoint_file;
         utils::ReadCheckpoint(msystem, checkpoint_file);
-        cout << "  done.  Read " << msystem->Get_bodylist().size() << " bodies." << endl;
+        cout << "  done.  Read " << msystem->GetBodies().size() << " bodies." << endl;
 
         // Move the falling ball just above the granular material with a velocity
         // given by free fall from the specified height and starting at rest.
         double z = FindHighest(msystem);
         double vz = std::sqrt(2 * gravity * h);
         cout << "Move falling ball with center at " << z + R_b + r_g << " and velocity " << vz << endl;
-        ball = msystem->Get_bodylist().at(0);
+        ball = msystem->GetBodies().at(0);
         ball->SetMass(mass_b);
         ball->SetInertiaXX(inertia_b);
-        ball->SetPos(ChVector<>(0, 0, z + r_g + R_b));
+        ball->SetPos(ChVector3d(0, 0, z + r_g + R_b));
         ball->SetRot(ChQuaternion<>(1, 0, 0, 0));
-        ball->SetPos_dt(ChVector<>(0, 0, -vz));
-        ball->SetBodyFixed(false);
+        ball->SetLinVel(ChVector3d(0, 0, -vz));
+        ball->SetFixed(false);
     }
 
     // Number of steps
@@ -409,13 +405,13 @@ int main(int argc, char* argv[]) {
     int next_out_frame = 0;
     double exec_time = 0;
     int num_contacts = 0;
-    ChStreamOutAsciiFile sfile(stats_file.c_str());
-    ChStreamOutAsciiFile hfile(height_file.c_str());
+    std::ofstream sfile(stats_file.c_str());
+    std::ofstream hfile(height_file.c_str());
 
 #ifdef CHRONO_OPENGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
     gl_window.Initialize(1280, 720, "Crater Test", msystem);
-    gl_window.SetCamera(ChVector<>(0, -10 * hDimY, hDimZ), ChVector<>(0, 0, hDimZ), ChVector<>(0, 0, 1));
+    gl_window.SetCamera(ChVector3d(0, -10 * hDimY, hDimZ), ChVector3d(0, 0, hDimZ), ChVector3d(0, 0, 1));
     gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif
 
@@ -442,7 +438,7 @@ int main(int argc, char* argv[]) {
             if (problem == SETTLING) {
                 cout << "     Write checkpoint data " << flush;
                 utils::WriteCheckpoint(msystem, checkpoint_file);
-                cout << msystem->Get_bodylist().size() << " bodies" << endl;
+                cout << msystem->GetBodies().size() << " bodies" << endl;
             }
 
             // Save current projectile height.
@@ -478,7 +474,7 @@ int main(int argc, char* argv[]) {
         time += time_step;
         sim_frame++;
         exec_time += msystem->GetTimerStep();
-        num_contacts += msystem->GetNcontacts();
+        num_contacts += msystem->GetNumContacts();
 
         // If requested, output detailed timing information for this step
         if (sim_frame == timing_frame)
@@ -489,12 +485,12 @@ int main(int argc, char* argv[]) {
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
         utils::WriteCheckpoint(msystem, checkpoint_file);
-        cout << "  done.  Wrote " << msystem->Get_bodylist().size() << " bodies." << endl;
+        cout << "  done.  Wrote " << msystem->GetBodies().size() << " bodies." << endl;
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies:  " << msystem->Get_bodylist().size() << endl;
+    cout << "Number of bodies:  " << msystem->GetBodies().size() << endl;
     cout << "Lowest position:   " << FindLowest(msystem) << endl;
     cout << "Simulation time:   " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;

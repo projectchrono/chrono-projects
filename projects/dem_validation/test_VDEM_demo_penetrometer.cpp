@@ -27,7 +27,6 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -119,19 +118,18 @@ int out_fps_dropping = 1200;
 int timing_frame = -1;  // output detailed step timing at this frame
 
 // Parameters for the granular material
-int Id_g = 1;
+int tag_particles = 0;
 double r_g = 3e-3 / 2;
 double rho_g = 2500;
-double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
+double vol_g = (4.0 / 3) * CH_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
-ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
+ChVector3d inertia_g = 0.4 * mass_g * r_g * r_g * ChVector3d(1, 1, 1);
 
 float Y_g = 1e8f;
 float mu_g = 0.3f;
 float cr_g = 0.1f;
 
 // Parameters for the penetrator
-int Id_b = 0;
 double R_b = 2.54e-2 / 2;
 double H_bc1 = 34.39e-3; // cone1 height
 double R_bc1 = 9.215e-3; // cone1 radius
@@ -144,7 +142,6 @@ float mu_b = 0.4f;
 float cr_b = 0.1f;
 
 // Parameters for the containing bin
-int binId = -200;
 double hDimX = 4e-2;         // length in x direction
 double hDimY = 4e-2;         // depth in y direction
 double hDimZ = 7.5e-2;       // height in z direction
@@ -175,76 +172,76 @@ double h = 10e-2;
 int CreateObjects(ChSystemMulticore* sys) {
 // Create the containing bin
 #ifdef USE_SMC
-    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_c = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_c->SetYoungModulus(Y_c);
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
 
-    utils::CreateBoxContainer(sys, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(sys, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 #else
-    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_c = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_c->SetFriction(mu_c);
 
-    utils::CreateBoxContainer(sys, binId, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(sys, binId, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 #endif
 
 // Create a material for the granular material
 #ifdef USE_SMC
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
     // Create a mixture entirely made out of spheres
     double r = 1.01 * r_g;
-    utils::PDSampler<double> sampler(2 * r);
-    utils::Generator gen(sys);
+    utils::ChPDSampler<double> sampler(2 * r);
+    utils::ChGenerator gen(sys);
 
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
-    m1->setDefaultMaterial(mat_g);
-    m1->setDefaultDensity(rho_g);
-    m1->setDefaultSize(r_g);
+    std::shared_ptr<utils::ChMixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
+    m1->SetDefaultMaterial(mat_g);
+    m1->SetDefaultDensity(rho_g);
+    m1->SetDefaultSize(r_g);
 
-    gen.setBodyIdentifier(Id_g);
+    gen.SetStartTag(tag_particles);
 
     for (int i = 0; i < numLayers; i++) {
         double center = r + layerHeight / 2 + i * (2 * r + layerHeight);
-        gen.CreateObjectsBox(sampler, ChVector<>(0, 0, center),
-                             ChVector<>(hDimX - r, hDimY - r, layerHeight / 2));
-        cout << "Layer " << i << "  total bodies: " << gen.getTotalNumBodies() << endl;
+        gen.CreateObjectsBox(sampler, ChVector3d(0, 0, center),
+                             ChVector3d(hDimX - r, hDimY - r, layerHeight / 2));
+        cout << "Layer " << i << "  total bodies: " << gen.GetTotalNumBodies() << endl;
     }
 
-    return gen.getTotalNumBodies();
+    return gen.GetTotalNumBodies();
 }
 
 // -----------------------------------------------------------------------------
 // Calculate intertia properties of the falling object
 // -----------------------------------------------------------------------------
-void CalculatePenetratorInertia(double & mass, ChVector<> & inertia) {
-    ChVector<> gyr_b;  // components gyration
+void CalculatePenetratorInertia(double & mass, ChVector3d & inertia) {
+    ChVector3d gyr_b;  // components gyration
     double vol_b;      // components volume
     switch (penetGeom) {
         case P_SPHERE:
-            vol_b = geometry::ChSphere::GetVolume(R_b);
-            gyr_b = geometry::ChSphere::GetGyration(R_b).diagonal();
+            vol_b = ChSphere::GetVolume(R_b);
+            gyr_b = ChSphere::GetGyration(R_b).diagonal();
             mass = rho_b * vol_b;
             inertia = mass * gyr_b;
             break;
         case P_CONE1:
             // apex angle = 30 de
-            vol_b = geometry::ChCone::GetVolume(R_bc1, H_bc1);
-            gyr_b = geometry::ChCone::GetGyration(R_bc1, H_bc1).diagonal();
+            vol_b = ChCone::GetVolume(R_bc1, H_bc1);
+            gyr_b = ChCone::GetGyration(R_bc1, H_bc1).diagonal();
             mass = rho_b * vol_b;
             inertia = mass * gyr_b;
             break;
         case P_CONE2:
             // apex angle = 60 deg
-            vol_b = geometry::ChCone::GetVolume(R_bc2, H_bc2);
-            gyr_b = geometry::ChCone::GetGyration(R_bc2, H_bc2).diagonal();
+            vol_b = ChCone::GetVolume(R_bc2, H_bc2);
+            gyr_b = ChCone::GetGyration(R_bc2, H_bc2).diagonal();
             mass = rho_b * vol_b;
             inertia = mass * gyr_b;
             break;
@@ -254,7 +251,7 @@ void CalculatePenetratorInertia(double & mass, ChVector<> & inertia) {
 // -----------------------------------------------------------------------------
 // Create collision geometry of the falling object
 // -----------------------------------------------------------------------------
-void CreatePenetratorGeometry(std::shared_ptr<ChBody> obj, std::shared_ptr<ChMaterialSurface> mat) {
+void CreatePenetratorGeometry(std::shared_ptr<ChBody> obj, std::shared_ptr<ChContactMaterial> mat) {
     switch (penetGeom) {
         case P_SPHERE:
             utils::AddSphereGeometry(obj.get(), mat, R_b);
@@ -298,8 +295,8 @@ double RecalcPenetratorLocation(double z) {
 // -----------------------------------------------------------------------------
 double FindHighest(ChSystem* sys) {
     double highest = 0;
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z() > highest)
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() >= tag_particles && body->GetPos().z() > highest)
             highest = body->GetPos().z();
     }
     return highest;
@@ -307,8 +304,8 @@ double FindHighest(ChSystem* sys) {
 
 double FindLowest(ChSystem* sys) {
     double lowest = 1000;
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z() < lowest)
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() >= tag_particles && body->GetPos().z() < lowest)
             lowest = body->GetPos().z();
     }
     return lowest;
@@ -327,12 +324,12 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* sys) {
 
 // Create a material for the penetrator
 #ifdef USE_SMC
-    auto mat = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat = chrono_types::make_shared<ChContactMaterialSMC>();
     mat->SetYoungModulus(Y_b);
     mat->SetFriction(mu_b);
     mat->SetRestitution(cr_b);
 #else
-    auto mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat = chrono_types::make_shared<ChContactMaterialNSC>();
     mat->SetFriction(mu_b);
 #endif
 
@@ -340,16 +337,15 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* sys) {
     auto obj = chrono_types::make_shared<ChBody>();
 
     double mass;
-    ChVector<> inertia;
+    ChVector3d inertia;
     CalculatePenetratorInertia(mass, inertia);
-    obj->SetIdentifier(Id_b);
     obj->SetMass(mass);
     obj->SetInertiaXX(inertia);
-    obj->SetPos(ChVector<>(0, 0, initLoc));
-    obj->SetRot(Q_from_AngAxis(-CH_C_PI / 2, VECT_X));
-    obj->SetPos_dt(ChVector<>(0, 0, -vz));
-    obj->SetCollide(true);
-    obj->SetBodyFixed(false);
+    obj->SetPos(ChVector3d(0, 0, initLoc));
+    obj->SetRot(QuatFromAngleAxis(-CH_PI / 2, VECT_X));
+    obj->SetLinVel(ChVector3d(0, 0, -vz));
+    obj->EnableCollision(true);
+    obj->SetFixed(false);
 
     CreatePenetratorGeometry(obj, mat);
 
@@ -364,9 +360,9 @@ std::shared_ptr<ChBody> CreatePenetrator(ChSystemMulticore* sys) {
 bool CheckSettled(ChSystem* sys, double threshold) {
     double t2 = threshold * threshold;
 
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() > 0) {
-            double vel2 = body->GetPos_dt().Length2();
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() >= tag_particles) {
+            double vel2 = body->GetLinVel().Length2();
             if (vel2 > t2)
                 return false;
         }
@@ -400,7 +396,7 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[]) {
     }
 
     const std::string simSettings = out_dir + "/simSetting.txt";
-    ChStreamOutAsciiFile sFile(simSettings.c_str());
+    std::ofstream sFile(simSettings.c_str());
     sFile << "density: " << rho_b << " penetrometer shape: " << pType << " (0: sphere, 1: cone1, 2: cone2) \n";
 }
 
@@ -442,7 +438,7 @@ int main(int argc, char* argv[]) {
     cout << "Using " << threads << " threads" << endl;
 
     // Set gravitational acceleration
-    sys->Set_G_acc(ChVector<>(0, 0, -gravity));
+    sys->SetGravitationalAcceleration(ChVector3d(0, 0, -gravity));
 
     // Edit system settings
     sys->GetSettings()->solver.use_full_inertia_tensor = false;
@@ -491,7 +487,7 @@ int main(int argc, char* argv[]) {
         // Create the granular material and the container from the checkpoint file.
         cout << "Read checkpoint data from " << checkpoint_file;
         utils::ReadCheckpoint(sys, checkpoint_file);
-        cout << "  done.  Read " << sys->Get_bodylist().size() << " bodies." << endl;
+        cout << "  done.  Read " << sys->GetBodies().size() << " bodies." << endl;
         obj = CreatePenetrator(sys);
     }
 
@@ -520,7 +516,7 @@ int main(int argc, char* argv[]) {
     int next_out_frame = 0;
     double exec_time = 0;
     int num_contacts = 0;
-    ChStreamOutAsciiFile sfile(stats_file.c_str());
+    std::ofstream sfile(stats_file.c_str());
     std::ofstream hfile(height_file.c_str());
 
 #ifdef CHRONO_OPENGL
@@ -530,7 +526,7 @@ int main(int argc, char* argv[]) {
     vis.SetWindowSize(1280, 720);
     vis.SetRenderMode(opengl::WIREFRAME);
     vis.Initialize();
-    vis.AddCamera(ChVector<>(0, -10 * hDimY, hDimZ), ChVector<>(0, 0, hDimZ));
+    vis.AddCamera(ChVector3d(0, -10 * hDimY, hDimZ), ChVector3d(0, 0, hDimZ));
     vis.SetCameraVertical(CameraVerticalDir::Z);
 #endif
 
@@ -557,7 +553,7 @@ int main(int argc, char* argv[]) {
             if (problem == SETTLING) {
                 cout << "     Write checkpoint data " << flush;
 //                utils::WriteCheckpoint(sys, checkpoint_file);
-                cout << sys->Get_bodylist().size() << " bodies" << endl;
+                cout << sys->GetBodies().size() << " bodies" << endl;
             }
 
             // Save current penetrator height.
@@ -594,7 +590,7 @@ int main(int argc, char* argv[]) {
         time += time_step;
         sim_frame++;
         exec_time += sys->GetTimerStep();
-        num_contacts += sys->GetNcontacts();
+        num_contacts += sys->GetNumContacts();
 
         // If requested, output detailed timing information for this step
         if (sim_frame == timing_frame)
@@ -605,12 +601,12 @@ int main(int argc, char* argv[]) {
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
         utils::WriteCheckpoint(sys, checkpoint_file);
-        cout << "  done.  Wrote " << sys->Get_bodylist().size() << " bodies." << endl;
+        cout << "  done.  Wrote " << sys->GetBodies().size() << " bodies." << endl;
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies:  " << sys->Get_bodylist().size() << endl;
+    cout << "Number of bodies:  " << sys->GetBodies().size() << endl;
     cout << "Lowest position:   " << FindLowest(sys) << endl;
     cout << "Simulation time:   " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;

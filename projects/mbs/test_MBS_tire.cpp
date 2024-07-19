@@ -20,6 +20,7 @@
 // =============================================================================
 
 #include "chrono/core/ChRealtimeStep.h"
+#include "chrono/core/ChRandom.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/physics/ChBodyEasy.h"
 
@@ -31,7 +32,7 @@
 using namespace chrono;
 using namespace chrono::irrlicht;
 
-std::shared_ptr<ChBody> create_wheel(ChVector<> mposition, ChSystem& sys) {
+std::shared_ptr<ChBody> create_wheel(ChVector3d mposition, ChSystem& sys) {
     ChCollisionModel::SetDefaultSuggestedEnvelope(0.005);
     ChCollisionModel::SetDefaultSuggestedMargin(0.004);
 
@@ -39,7 +40,7 @@ std::shared_ptr<ChBody> create_wheel(ChVector<> mposition, ChSystem& sys) {
     auto mrigidBody = chrono_types::make_shared<ChBody>();
     sys.Add(mrigidBody);
     mrigidBody->SetMass(50);
-    mrigidBody->SetInertiaXX(ChVector<>(10, 10, 10));
+    mrigidBody->SetInertiaXX(ChVector3d(10, 10, 10));
     mrigidBody->SetPos(mposition);
 
     // now attach a visualization shape, as a mesh from disk
@@ -48,7 +49,7 @@ std::shared_ptr<ChBody> create_wheel(ChVector<> mposition, ChSystem& sys) {
     mrigidBody->AddVisualShape(tireMesh);
 
     // contact material shared by all collision shapes of the wheel
-    auto mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat = chrono_types::make_shared<ChContactMaterialNSC>();
     mat->SetFriction(0.5f);
 
     // now attach collision shape, as a compound of convex hulls (for each thread pair):
@@ -57,13 +58,13 @@ std::shared_ptr<ChBody> create_wheel(ChVector<> mposition, ChSystem& sys) {
     auto knobs_shapes = ChCollisionShapeConvexHull::Read(mat, knobs_filename);
     auto slice_shapes = ChCollisionShapeConvexHull::Read(mat, slice_filename);
     for (double mangle = 0; mangle < 360.; mangle += (360. / 15.)) {
-        auto q = Q_from_AngX(mangle * CH_C_DEG_TO_RAD);
+        auto q = QuatFromAngleX(mangle * CH_DEG_TO_RAD);
         for (const auto& s : knobs_shapes)
             mrigidBody->AddCollisionShape(s, ChFrame<>(VNULL, q));
         for (const auto& s : slice_shapes)
             mrigidBody->AddCollisionShape(s, ChFrame<>(VNULL, q));
     }
-    mrigidBody->SetCollide(true);
+    mrigidBody->EnableCollision(true);
 
     return mrigidBody;
 }
@@ -73,9 +74,9 @@ void create_some_falling_items(ChSystemNSC& sys) {
     ChCollisionModel::SetDefaultSuggestedMargin(0.002);
 
     ChQuaternion<> rot;
-    rot.Q_from_AngAxis(ChRandom() * CH_C_2PI, VECT_Y);
+    rot.SetFromAngleAxis(ChRandom::Get() * CH_2PI, VECT_Y);
 
-    auto pebble_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto pebble_mat = chrono_types::make_shared<ChContactMaterialNSC>();
     pebble_mat->SetFriction(0.4f);
 
     double bed_x = 0.6;
@@ -83,30 +84,30 @@ void create_some_falling_items(ChSystemNSC& sys) {
 
     int n_pebbles = 30;
     for (int bi = 0; bi < n_pebbles; bi++) {
-        double sphrad = 0.02 + 0.02 * ChRandom();
+        double sphrad = 0.02 + 0.02 * ChRandom::Get();
         double sphdens = 1;
-        ChQuaternion<> randrot(ChRandom(), ChRandom(), ChRandom(), ChRandom());
+        ChQuaternion<> randrot(ChRandom::Get(), ChRandom::Get(), ChRandom::Get(), ChRandom::Get());
         randrot.Normalize();
 
         auto mrigidBody = chrono_types::make_shared<ChBodyEasySphere>(sphrad, sphdens, true, true, pebble_mat);
         sys.Add(mrigidBody);
         mrigidBody->SetRot(randrot);
-        mrigidBody->SetPos(ChVector<>(-0.5 * bed_x + ChRandom() * bed_x, 0.01 + 0.04 * ((double)bi / (double)n_pebbles),
-                                      -0.5 * bed_z + ChRandom() * bed_z));
+        mrigidBody->SetPos(ChVector3d(-0.5 * bed_x + ChRandom::Get() * bed_x, 0.01 + 0.04 * ((double)bi / (double)n_pebbles),
+                                      -0.5 * bed_z + ChRandom::Get() * bed_z));
     }
 
     // Create the a plane using body of 'box' type:
-    auto ground_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto ground_mat = chrono_types::make_shared<ChContactMaterialNSC>();
     ground_mat->SetFriction(0.5f);
 
     auto mrigidBodyB = chrono_types::make_shared<ChBodyEasyBox>(10, 1, 10, 1000, true, true, ground_mat);
     sys.Add(mrigidBodyB);
-    mrigidBodyB->SetBodyFixed(true);
-    mrigidBodyB->SetPos(ChVector<>(0, -0.5, 0));
+    mrigidBodyB->SetFixed(true);
+    mrigidBodyB->SetPos(ChVector3d(0, -0.5, 0));
 }
 
 int main(int argc, char* argv[]) {
-    GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
+    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
 
     // Set path to Chrono data directory
     SetChronoDataPath(CHRONO_DATA_DIR);
@@ -119,7 +120,7 @@ int main(int argc, char* argv[]) {
     create_some_falling_items(sys);
 
     // Create the wheel
-    std::shared_ptr<ChBody> mwheelBody = create_wheel(ChVector<>(0, 1, 0), sys);
+    std::shared_ptr<ChBody> mwheelBody = create_wheel(ChVector3d(0, 1, 0), sys);
 
     // Create the Irrlicht visualization sys
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
@@ -129,7 +130,7 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
-    vis->AddCamera(ChVector<>(3.5, 2.5, -2.4));
+    vis->AddCamera(ChVector3d(3.5, 2.5, -2.4));
     vis->AddTypicalLights();
 
     // Simulation loop

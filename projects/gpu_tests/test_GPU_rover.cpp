@@ -71,7 +71,7 @@ constexpr double chassis_length_x = 2 * METERS_TO_CM;
 constexpr double chassis_length_y = 2 * METERS_TO_CM;
 constexpr double chassis_length_z = 1.5 * METERS_TO_CM;
 
-const ChMatrix33<float> wheel_scaling(ChVector<float>(wheel_rad * 2, wheel_width, wheel_rad * 2));
+const ChMatrix33<float> wheel_scaling(ChVector3f(wheel_rad * 2, wheel_width, wheel_rad * 2));
 
 constexpr double wheel_inertia_x = (1. / 4.) * wheel_mass * wheel_rad * wheel_rad + (1 / 12.) * wheel_mass;
 constexpr double wheel_inertia_y = (1. / 2.) * wheel_mass * wheel_rad * wheel_rad;
@@ -90,9 +90,9 @@ std::vector<std::shared_ptr<chrono::ChBody>> wheel_bodies;
 // y is height, x and z are radial
 // starts as height=1, diameter = 1
 
-std::vector<ChVector<float>> loadCheckpointFile(std::string checkpoint_file) {
+std::vector<ChVector3f> loadCheckpointFile(std::string checkpoint_file) {
     // Read in checkpoint file
-    std::vector<ChVector<float>> body_points;
+    std::vector<ChVector3f> body_points;
 
     std::string line;
     std::ifstream cp_file(checkpoint_file);
@@ -107,7 +107,7 @@ std::vector<ChVector<float>> loadCheckpointFile(std::string checkpoint_file) {
         size_t pos = line.find(d);
         std::string tok;
         std::string d = ",";
-        ChVector<float> point;
+        ChVector3f point;
         for (size_t i = 0; i < 3; i++) {
             pos = line.find(d);
             tok = line.substr(0, pos);
@@ -126,28 +126,28 @@ std::vector<ChVector<float>> loadCheckpointFile(std::string checkpoint_file) {
 void addWheelBody(ChSystemNSC& rover_sys,
                   std::shared_ptr<ChBody> chassis_body,
                   std::string wheel_filename,
-                  const ChVector<>& wheel_initial_pos_relative) {
-    ChVector<> wheel_initial_pos = chassis_body->GetPos() + wheel_initial_pos_relative;
+                  const ChVector3d& wheel_initial_pos_relative) {
+    ChVector3d wheel_initial_pos = chassis_body->GetPos() + wheel_initial_pos_relative;
     auto wheel_body = chrono_types::make_shared<ChBody>();
 
     wheel_body->SetMass(wheel_mass);
-    wheel_body->SetBodyFixed(false);
+    wheel_body->SetFixed(false);
     // assume it's a cylinder inertially
-    wheel_body->SetInertiaXX(ChVector<>(wheel_inertia_x, wheel_inertia_y, wheel_inertia_z));
+    wheel_body->SetInertiaXX(ChVector3d(wheel_inertia_x, wheel_inertia_y, wheel_inertia_z));
 
     printf("Inertia tensor is %f, %f, %f\n", wheel_inertia_x, wheel_inertia_y, wheel_inertia_z);
     wheel_body->SetPos(wheel_initial_pos);
     rover_sys.AddBody(wheel_body);
 
     auto joint = std::make_shared<ChLinkLockRevolute>();
-    joint->Initialize(chassis_body, wheel_body, ChCoordsys<>(wheel_initial_pos, Q_from_AngX(CH_C_PI / 2)));
+    joint->Initialize(chassis_body, wheel_body, ChFrame<>(wheel_initial_pos, QuatFromAngleX(CH_PI / 2)));
     rover_sys.AddLink(joint);
 
     auto motor = std::make_shared<ChLinkMotorRotationAngle>();
 
-    motor->Initialize(chassis_body, wheel_body, ChFrame<>(wheel_initial_pos, Q_from_AngX(CH_C_PI / 2)));
+    motor->Initialize(chassis_body, wheel_body, ChFrame<>(wheel_initial_pos, QuatFromAngleX(CH_PI / 2)));
 
-    motor->SetMotorFunction(std::make_shared<ChFunction_Ramp>(0, CH_C_PI));
+    motor->SetMotorFunction(std::make_shared<ChFunctionRamp>(0, CH_PI));
     rover_sys.AddLink(motor);
 
     wheel_bodies.push_back(wheel_body);
@@ -160,14 +160,14 @@ void writeMeshFrames(std::ostringstream& outstream,
     outstream << obj_name << ",";
 
     // Get frame position
-    ChFrame<> body_frame = body->GetFrame_REF_to_abs();
+    ChFrame<> body_frame = body->GetFrameRefToAbs();
     ChQuaternion<> rot = body_frame.GetRot();
-    ChVector<> pos = body_frame.GetPos() + ChVector<>(0, 0, terrain_height_offset);
+    ChVector3d pos = body_frame.GetPos() + ChVector3d(0, 0, terrain_height_offset);
 
     // Get basis vectors
-    ChVector<> vx = rot.GetXaxis();
-    ChVector<> vy = rot.GetYaxis();
-    ChVector<> vz = rot.GetZaxis();
+    ChVector3d vx = rot.GetAxisX();
+    ChVector3d vy = rot.GetAxisY();
+    ChVector3d vz = rot.GetAxisZ();
 
     printf("Rot is (%f, %f, %f, %f)\n", rot.e0(), rot.e1(), rot.e2(), rot.e3());
     // normalize basis vectors
@@ -219,7 +219,7 @@ int main(int argc, char* argv[]) {
     std::string wheel_filename = GetProjectsDataFile("gpu/meshes/rover/wheel_scaled.obj");
 
     // Rotates gravity about +Y axis
-    double grav_angle = 2.0 * CH_C_PI * input_grav_angle_deg / 360.0;
+    double grav_angle = 2.0 * CH_PI * input_grav_angle_deg / 360.0;
     double Gx = -mars_grav_mag * std::sin(grav_angle);
     double Gy = 0;
     double Gz = -mars_grav_mag * std::cos(grav_angle);
@@ -230,18 +230,18 @@ int main(int argc, char* argv[]) {
 
     // Setup granular simulation
     ChSystemGpuMesh gpu_sys(params.sphere_radius, params.sphere_density,
-                            ChVector<float>(params.box_X, params.box_Y, params.box_Z));
+                            ChVector3f(params.box_X, params.box_Y, params.box_Z));
 
     double fill_bottom = 0;  // TODO
     double fill_top = params.box_Z / 2.0;
 
     // leave a 4cm margin at edges of sampling
-    ChVector<> hdims(params.box_X / 2 - 2.0, params.box_Y / 2 - 2.0, std::abs((fill_bottom - fill_top) / 2.) - 2.0);
-    ChVector<> center(0, 0, (fill_bottom + fill_top) / 2.);
+    ChVector3d hdims(params.box_X / 2 - 2.0, params.box_Y / 2 - 2.0, std::abs((fill_bottom - fill_top) / 2.) - 2.0);
+    ChVector3d center(0, 0, (fill_bottom + fill_top) / 2.);
 
-    std::vector<ChVector<float>> body_points;
+    std::vector<ChVector3f> body_points;
     if (run_mode == RUN_MODE::SETTLING) {
-        body_points = utils::PDLayerSampler_BOX<float>(center, hdims, 2.0f * params.sphere_radius, 1.01f);
+        body_points = utils::ChPDLayerSamplerBox<float>(center, hdims, 2.0f * params.sphere_radius, 1.01f);
     } else if (run_mode == RUN_MODE::TESTING) {
         body_points = loadCheckpointFile(checkpoint_file_base + ".csv");
     }
@@ -269,7 +269,7 @@ int main(int argc, char* argv[]) {
     gpu_sys.SetCohesionRatio(params.cohesion_ratio);
     gpu_sys.SetAdhesionRatio_SPH2MESH(params.adhesion_ratio_s2m);
     gpu_sys.SetAdhesionRatio_SPH2WALL(params.adhesion_ratio_s2w);
-    gpu_sys.SetGravitationalAcceleration(ChVector<>(Gx, Gy, Gz));
+    gpu_sys.SetGravitationalAcceleration(ChVector3d(Gx, Gy, Gz));
 
     gpu_sys.SetFixedStepSize(params.step_size);
     gpu_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
@@ -285,7 +285,7 @@ int main(int argc, char* argv[]) {
 
     // rover_sys.SetContactForceModel(ChSystemNSC::ContactForceModel::Hooke);
     // rover_sys.SetTimestepperType(ChTimestepper::Type::EULER_EXPLICIT);
-    rover_sys.Set_G_acc(ChVector<>(Gx, Gy, Gz));
+    rover_sys.SetGravitationalAcceleration(ChVector3d(Gx, Gy, Gz));
 
     auto chassis_body = chrono_types::make_shared<ChBody>();
 
@@ -298,35 +298,35 @@ int main(int argc, char* argv[]) {
     chassis_body->SetMass(chassis_mass);
     // assume it's a solid box inertially
     chassis_body->SetInertiaXX(
-        ChVector<>((chassis_length_y * chassis_length_y + chassis_length_z * chassis_length_z) * chassis_mass / 12,
+        ChVector3d((chassis_length_y * chassis_length_y + chassis_length_z * chassis_length_z) * chassis_mass / 12,
                    (chassis_length_x * chassis_length_x + chassis_length_z * chassis_length_z) * chassis_mass / 12,
                    (chassis_length_x * chassis_length_x + chassis_length_y * chassis_length_y) * chassis_mass / 12));
-    chassis_body->SetPos(ChVector<>(init_offset_x, 0, 0));
+    chassis_body->SetPos(ChVector3d(init_offset_x, 0, 0));
     rover_sys.AddBody(chassis_body);
 
-    chassis_body->SetBodyFixed(true);
+    chassis_body->SetFixed(true);
 
     // NOTE these must happen before the gran system loads meshes!!!
     // two wheels at front
     addWheelBody(rover_sys, chassis_body, wheel_filename,
-                 ChVector<>(front_wheel_offset_x, front_wheel_offset_y, wheel_offset_z));
+                 ChVector3d(front_wheel_offset_x, front_wheel_offset_y, wheel_offset_z));
     addWheelBody(rover_sys, chassis_body, wheel_filename,
-                 ChVector<>(front_wheel_offset_x, -front_wheel_offset_y, wheel_offset_z));
+                 ChVector3d(front_wheel_offset_x, -front_wheel_offset_y, wheel_offset_z));
 
     // two wheels at back
     addWheelBody(rover_sys, chassis_body, wheel_filename,
-                 ChVector<>(middle_wheel_offset_x, middle_wheel_offset_y, wheel_offset_z));
+                 ChVector3d(middle_wheel_offset_x, middle_wheel_offset_y, wheel_offset_z));
     addWheelBody(rover_sys, chassis_body, wheel_filename,
-                 ChVector<>(middle_wheel_offset_x, -middle_wheel_offset_y, wheel_offset_z));
+                 ChVector3d(middle_wheel_offset_x, -middle_wheel_offset_y, wheel_offset_z));
 
     // two wheels in middle of chassis
     addWheelBody(rover_sys, chassis_body, wheel_filename,
-                 ChVector<>(rear_wheel_offset_x, rear_wheel_offset_y, wheel_offset_z));
+                 ChVector3d(rear_wheel_offset_x, rear_wheel_offset_y, wheel_offset_z));
     addWheelBody(rover_sys, chassis_body, wheel_filename,
-                 ChVector<>(rear_wheel_offset_x, -rear_wheel_offset_y, wheel_offset_z));
+                 ChVector3d(rear_wheel_offset_x, -rear_wheel_offset_y, wheel_offset_z));
 
     // Add collision mesh to GPU system
-    gpu_sys.AddMesh(wheel_filename, ChVector<float>(0), wheel_scaling, wheel_mass);
+    gpu_sys.AddMesh(wheel_filename, ChVector3f(0), wheel_scaling, wheel_mass);
 
     gpu_sys.SetParticleOutputMode(params.write_mode);
     gpu_sys.SetVerbosity(params.verbose);
@@ -360,7 +360,7 @@ int main(int argc, char* argv[]) {
         if (chassis_fixed && t >= 0.5) {
             printf("Setting wheel free!\n");
             chassis_fixed = false;
-            chassis_body->SetBodyFixed(false);
+            chassis_body->SetFixed(false);
             double max_terrain_z = gpu_sys.GetMaxParticleZ();
             printf("terrain max is %f\n", max_terrain_z);
             // put terrain just below bottom of wheels
@@ -369,23 +369,23 @@ int main(int argc, char* argv[]) {
         for (unsigned int i = 0; i < wheel_bodies.size(); i++) {
             auto curr_body = wheel_bodies.at(i);
 
-            gpu_sys.ApplyMeshMotion(i, curr_body->GetPos(), curr_body->GetRot(), curr_body->GetPos_dt(),
-                                    curr_body->GetWvel_par());
+            gpu_sys.ApplyMeshMotion(i, curr_body->GetPos(), curr_body->GetRot(), curr_body->GetLinVel(),
+                                    curr_body->GetAngVelParent());
         }
 
         gpu_sys.AdvanceSimulation(iteration_step);
         rover_sys.DoStepDynamics(iteration_step);
 
-        ChVector<> wheel_force;
-        ChVector<> wheel_torque;
+        ChVector3d wheel_force;
+        ChVector3d wheel_torque;
         for (unsigned int i = 0; i < wheel_bodies.size(); i++) {
             auto curr_body = wheel_bodies.at(i);
 
             gpu_sys.CollectMeshContactForces(i, wheel_force, wheel_torque);
 
-            curr_body->Empty_forces_accumulators();
-            curr_body->Accumulate_force(wheel_force, curr_body->GetPos(), false);
-            curr_body->Accumulate_torque(wheel_torque, false);
+            curr_body->EmptyAccumulators();
+            curr_body->AccumulateForce(wheel_force, curr_body->GetPos(), false);
+            curr_body->AccumulateTorque(wheel_torque, false);
         }
 
         if (curr_step % out_steps == 0) {

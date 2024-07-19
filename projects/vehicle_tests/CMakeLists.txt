@@ -12,7 +12,7 @@ message("\n---- VEHICLE projects")
 # Invoke find_package in CONFIG mode
 find_package(Chrono QUIET
              COMPONENTS Vehicle 
-             OPTIONAL_COMPONENTS Irrlicht PardisoMKL Multicore OpenGL
+             OPTIONAL_COMPONENTS Irrlicht PardisoMKL Multicore OpenGL VSG
              CONFIG
 )
 
@@ -61,6 +61,7 @@ set(ALL_DEPENDENCY_DLLS "${ALL_DEPENDENCY_DLLS}" PARENT_SCOPE)
 
 message(STATUS "Programs...")
 add_subdirectory(test_steeringControl)
+add_subdirectory(test_FEDA)
 
 if (CHRONO_IRRLICHT_FOUND)
   message(STATUS "Programs using Chrono::Irrlicht...")

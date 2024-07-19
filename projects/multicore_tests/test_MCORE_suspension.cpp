@@ -135,81 +135,79 @@ class MySimpleCar {
         double angularSpeed = 20;
 
         // Create the wheel material
-        auto mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+        auto mat = chrono_types::make_shared<ChContactMaterialNSC>();
         mat->SetFriction(1.0);
 
         // --- The car body ---
 
         truss = chrono_types::make_shared<ChBody>();
-        truss->SetIdentifier(-1);
         truss->SetMass(2086.524902);
-        truss->SetPos(ChVector<>(0, 0.52349, 0.055765));
+        truss->SetPos(ChVector3d(0, 0.52349, 0.055765));
         truss->SetRot(ChQuaternion<>(1, 0, 0, 0));
-        truss->SetInertiaXX(ChVector<>(3570.20377, 1078.52344, 2955.66050));
-        utils::AddBoxGeometry(truss.get(), mat, ChVector<>(0.7, 0.5, 3) * 0.5, ChVector<>(0, 0, 0));
-        truss->SetCollide(false);
-        truss->SetBodyFixed(false);
+        truss->SetInertiaXX(ChVector3d(3570.20377, 1078.52344, 2955.66050));
+        utils::AddBoxGeometry(truss.get(), mat, ChVector3d(0.7, 0.5, 3) * 0.5, ChVector3d(0, 0, 0));
+        truss->EnableCollision(false);
+        truss->SetFixed(false);
         my_system->AddBody(truss);
 
         // --- Right Front suspension ---
 
         // ..the car right-front spindle
         spindleRF = chrono_types::make_shared<ChBody>();
-        spindleRF->SetIdentifier(-2);
         spindleRF->SetMass(14.705);
-        spindleRF->SetPos(ChVector<>(0.751, -0.026, 1.648965));
+        spindleRF->SetPos(ChVector3d(0.751, -0.026, 1.648965));
         spindleRF->SetRot(ChQuaternion<>(1, 0, 0, 0));
-        spindleRF->SetInertiaXX(ChVector<>(0.07352, 0.04117, 0.04117));
-        utils::AddBoxGeometry(spindleRF.get(), mat, ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
-        spindleRF->SetCollide(false);
+        spindleRF->SetInertiaXX(ChVector3d(0.07352, 0.04117, 0.04117));
+        utils::AddBoxGeometry(spindleRF.get(), mat, ChVector3d(0.1, 0.4, 0.4) * 0.5, ChVector3d(0, 0, 0));
+        spindleRF->EnableCollision(false);
         my_system->AddBody(spindleRF);
 
         // ..the car right-front wheel
         wheelRF = chrono_types::make_shared<ChBody>();
-        wheelRF->SetIdentifier(-3);
         wheelRF->SetMass(3.0);
-        wheelRF->SetPos(ChVector<>(0.91, -0.026, 1.648965));
+        wheelRF->SetPos(ChVector3d(0.91, -0.026, 1.648965));
         wheelRF->SetRot(ChQuaternion<>(1, 0, 0, 0));
-        wheelRF->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
+        wheelRF->SetInertiaXX(ChVector3d(0.2, 0.2, 0.2));
         if (useSpheres) {
-            utils::AddSphereGeometry(wheelRF.get(), mat, 0.45, ChVector<>(0, 0, 0));
+            utils::AddSphereGeometry(wheelRF.get(), mat, 0.45, ChVector3d(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelRF.get(), mat, 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelRF.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
         }
-        wheelRF->SetCollide(true);
+        wheelRF->EnableCollision(true);
         my_system->AddBody(wheelRF);
 
         // .. create the revolute joint between the wheel and the spindle
         link_revoluteRF = chrono_types::make_shared<ChLinkLockRevolute>();  // right, front, upper, 1
-        link_revoluteRF->Initialize(wheelRF, spindleRF, ChCoordsys<>(ChVector<>(0.91, -0.026, 1.648965),
-                                                                     chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
+        link_revoluteRF->Initialize(
+            wheelRF, spindleRF,
+            ChFrame<>(ChVector3d(0.91, -0.026, 1.648965), chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         my_system->AddLink(link_revoluteRF);
 
         // .. impose distance between two parts (as a massless rod with two spherical joints at the end)
         link_distRFU1 = chrono_types::make_shared<ChLinkDistance>();  // right, front, upper, 1
-        link_distRFU1->Initialize(truss, spindleRF, false, ChVector<>(0.446, 0.245, 1.640965),
-                                  ChVector<>(0.716, 0.215, 1.635965));
+        link_distRFU1->Initialize(truss, spindleRF, false, ChVector3d(0.446, 0.245, 1.640965),
+                                  ChVector3d(0.716, 0.215, 1.635965));
         my_system->AddLink(link_distRFU1);
 
         link_distRFU2 = chrono_types::make_shared<ChLinkDistance>();  // right, front, upper, 2
-        link_distRFU2->Initialize(truss, spindleRF, false, ChVector<>(0.478, 0.196, 1.420965),
-                                  ChVector<>(0.716, 0.215, 1.635965));
+        link_distRFU2->Initialize(truss, spindleRF, false, ChVector3d(0.478, 0.196, 1.420965),
+                                  ChVector3d(0.716, 0.215, 1.635965));
         my_system->AddLink(link_distRFU2);
 
         link_distRFL1 = chrono_types::make_shared<ChLinkDistance>();  // right, front, lower, 1
-        link_distRFL1->Initialize(truss, spindleRF, false, ChVector<>(0.307, 0, 1.911965),
-                                  ChVector<>(0.787, -0.118, 1.652965));
+        link_distRFL1->Initialize(truss, spindleRF, false, ChVector3d(0.307, 0, 1.911965),
+                                  ChVector3d(0.787, -0.118, 1.652965));
         my_system->AddLink(link_distRFL1);
 
         link_distRFL2 = chrono_types::make_shared<ChLinkDistance>();  // right, front, lower, 2
-        link_distRFL2->Initialize(truss, spindleRF, false, ChVector<>(0.307, 0, 1.465965),
-                                  ChVector<>(0.787, -0.118, 1.652965));
+        link_distRFL2->Initialize(truss, spindleRF, false, ChVector3d(0.307, 0, 1.465965),
+                                  ChVector3d(0.787, -0.118, 1.652965));
         my_system->AddLink(link_distRFL2);
 
         // .. create the spring between the truss and the spindle
         link_springRF = chrono_types::make_shared<ChLinkTSDA>();
-        link_springRF->Initialize(truss, spindleRF, false, ChVector<>(0.498, 0.323, 1.792965),
-                                  ChVector<>(0.543, -0.047, 1.785965));
+        link_springRF->Initialize(truss, spindleRF, false, ChVector3d(0.498, 0.323, 1.792965),
+                                  ChVector3d(0.543, -0.047, 1.785965));
         link_springRF->SetSpringCoefficient(167062.000);
         link_springRF->SetDampingCoefficient(frontDamping);
         link_springRF->SetRestLength(0.339);
@@ -217,69 +215,68 @@ class MySimpleCar {
 
         // .. create the rod for steering the wheel
         link_distRSTEER = chrono_types::make_shared<ChLinkDistance>();  // right steer
-        link_distRSTEER->Initialize(truss, spindleRF, false, ChVector<>(0.448, 0.054, 1.438965),
-                                    ChVector<>(0.821, -0.016, 1.512965));
+        link_distRSTEER->Initialize(truss, spindleRF, false, ChVector3d(0.448, 0.054, 1.438965),
+                                    ChVector3d(0.821, -0.016, 1.512965));
         my_system->AddLink(link_distRSTEER);
 
         // --- Left Front suspension ---
 
         // ..the car left-front spindle
         spindleLF = chrono_types::make_shared<ChBody>();
-        spindleLF->SetIdentifier(-4);
         spindleLF->SetMass(14.705);
-        spindleLF->SetPos(ChVector<>(-0.751, -0.026, 1.648965));
+        spindleLF->SetPos(ChVector3d(-0.751, -0.026, 1.648965));
         spindleLF->SetRot(ChQuaternion<>(1, 0, 0, 0));
-        spindleLF->SetInertiaXX(ChVector<>(0.07352, 0.04117, 0.04117));
-        utils::AddBoxGeometry(spindleLF.get(), mat, ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
-        spindleLF->SetCollide(false);
+        spindleLF->SetInertiaXX(ChVector3d(0.07352, 0.04117, 0.04117));
+        utils::AddBoxGeometry(spindleLF.get(), mat, ChVector3d(0.1, 0.4, 0.4) * 0.5, ChVector3d(0, 0, 0));
+        spindleLF->EnableCollision(false);
         my_system->AddBody(spindleLF);
 
         // ..the car left-front wheel
         wheelLF = chrono_types::make_shared<ChBody>();
-        wheelLF->SetIdentifier(-5);
         wheelLF->SetMass(3.0);
-        wheelLF->SetPos(ChVector<>(-0.91, -0.026, 1.648965));
+        wheelLF->SetPos(ChVector3d(-0.91, -0.026, 1.648965));
         wheelLF->SetRot(ChQuaternion<>(1, 0, 0, 0));
-        wheelLF->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
+        wheelLF->SetInertiaXX(ChVector3d(0.2, 0.2, 0.2));
         if (useSpheres) {
-            utils::AddSphereGeometry(wheelLF.get(), mat, 0.45, ChVector<>(0, 0, 0));
+            utils::AddSphereGeometry(wheelLF.get(), mat, 0.45, ChVector3d(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelLF.get(), mat, 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelLF.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
         }
-        wheelLF->SetCollide(true);
+        wheelLF->EnableCollision(true);
         my_system->AddBody(wheelLF);
 
         // .. create the revolute joint between the wheel and the spindle
         link_revoluteLF = chrono_types::make_shared<ChLinkLockRevolute>();  // left, front, upper, 1
-        link_revoluteLF->Initialize(wheelLF, spindleLF, ChCoordsys<>(ChVector<>(-0.91, -0.026, 1.648965),
-                                                                     chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
+        link_revoluteLF->Initialize(
+            wheelLF, spindleLF,
+            ChFrame<>(ChVector3d(-0.91, -0.026, 1.648965), chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         my_system->AddLink(link_revoluteLF);
 
         // .. impose distance between two parts (as a massless rod with two spherical joints at the end)
         link_distLFU1 = chrono_types::make_shared<ChLinkDistance>();  // left, front, upper, 1
-        link_distLFU1->Initialize(truss, spindleLF, false, ChVector<>(-0.446, 0.245, 1.640965),
-                                  ChVector<>(-0.716, 0.215, 1.635965));
+        link_distLFU1->Initialize(truss, spindleLF, false, ChVector3d(-0.446, 0.245, 1.640965),
+                                  ChVector3d(-0.716, 0.215, 1.635965));
         my_system->AddLink(link_distLFU1);
 
         link_distLFU2 = chrono_types::make_shared<ChLinkDistance>();  // left, front, upper, 2
-        link_distLFU2->Initialize(truss, spindleLF, false, ChVector<>(-0.478, 0.196, 1.420965),
-                                  ChVector<>(-0.716, 0.215, 1.635965));
+        link_distLFU2->Initialize(truss, spindleLF, false, ChVector3d(-0.478, 0.196, 1.420965),
+                                  ChVector3d(-0.716, 0.215, 1.635965));
         my_system->AddLink(link_distLFU2);
 
         link_distLFL1 = chrono_types::make_shared<ChLinkDistance>();  // left, front, lower, 1
-        link_distLFL1->Initialize(truss, spindleLF, false, ChVector<>(-0.307, 0, 1.911965),
-                                  ChVector<>(-0.787, -0.118, 1.652965));
+        link_distLFL1->Initialize(truss, spindleLF, false, ChVector3d(-0.307, 0, 1.911965),
+                                  ChVector3d(-0.787, -0.118, 1.652965));
         my_system->AddLink(link_distLFL1);
 
         link_distLFL2 = chrono_types::make_shared<ChLinkDistance>();  // left, front, lower, 2
-        link_distLFL2->Initialize(truss, spindleLF, false, ChVector<>(-0.307, 0, 1.465965),
-                                  ChVector<>(-0.787, -0.118, 1.652965));
+        link_distLFL2->Initialize(truss, spindleLF, false, ChVector3d(-0.307, 0, 1.465965),
+                                  ChVector3d(-0.787, -0.118, 1.652965));
         my_system->AddLink(link_distLFL2);
 
         // .. create the spring between the truss and the spindle
         link_springLF = chrono_types::make_shared<ChLinkTSDA>();
-        link_springLF->Initialize(truss, spindleLF, false, ChVector<>(-0.498, 0.323, 1.792965),
-                                  ChVector<>(-0.543, -0.047, 1.785965));
+        link_springLF->Initialize(truss, spindleLF, false, ChVector3d(-0.498, 0.323, 1.792965),
+                                  ChVector3d(-0.543, -0.047, 1.785965));
         link_springLF->SetSpringCoefficient(167062.000);
         link_springLF->SetDampingCoefficient(frontDamping);
         link_springLF->SetRestLength(0.339);
@@ -287,77 +284,76 @@ class MySimpleCar {
 
         // .. create the rod for steering the wheel
         link_distLSTEER = chrono_types::make_shared<ChLinkDistance>();  // right steer
-        link_distLSTEER->Initialize(truss, spindleLF, false, ChVector<>(-0.448, 0.054, 1.438965),
-                                    ChVector<>(-0.821, -0.016, 1.512965));
+        link_distLSTEER->Initialize(truss, spindleLF, false, ChVector3d(-0.448, 0.054, 1.438965),
+                                    ChVector3d(-0.821, -0.016, 1.512965));
         my_system->AddLink(link_distLSTEER);
 
         // --- Right Back suspension ---
 
         // ..the car right-back spindle
         spindleRB = chrono_types::make_shared<ChBody>();
-        spindleRB->SetIdentifier(-6);
         spindleRB->SetMass(15.91);
-        spindleRB->SetPos(ChVector<>(0.751, -0.026, -1.652965));
+        spindleRB->SetPos(ChVector3d(0.751, -0.026, -1.652965));
         spindleRB->SetRot(ChQuaternion<>(1, 0, 0, 0));
-        spindleRB->SetInertiaXX(ChVector<>(4, 2, 2));
-        utils::AddBoxGeometry(spindleRB.get(), mat, ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
-        spindleRB->SetCollide(false);
+        spindleRB->SetInertiaXX(ChVector3d(4, 2, 2));
+        utils::AddBoxGeometry(spindleRB.get(), mat, ChVector3d(0.1, 0.4, 0.4) * 0.5, ChVector3d(0, 0, 0));
+        spindleRB->EnableCollision(false);
         my_system->AddBody(spindleRB);
 
         // ..the car right-back wheel
         wheelRB = chrono_types::make_shared<ChBody>();
-        wheelRB->SetIdentifier(-7);
         wheelRB->SetMass(3.0);
-        wheelRB->SetPos(ChVector<>(0.91, -0.026, -1.652965));
+        wheelRB->SetPos(ChVector3d(0.91, -0.026, -1.652965));
         wheelRB->SetRot(ChQuaternion<>(1, 0, 0, 0));
-        wheelRB->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
+        wheelRB->SetInertiaXX(ChVector3d(0.2, 0.2, 0.2));
         if (useSpheres) {
-            utils::AddSphereGeometry(wheelRB.get(), mat, 0.45, ChVector<>(0, 0, 0));
+            utils::AddSphereGeometry(wheelRB.get(), mat, 0.45, ChVector3d(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelRB.get(), mat, 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelRB.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
         }
-        wheelRB->SetCollide(true);
+        wheelRB->EnableCollision(true);
         my_system->AddBody(wheelRB);
 
         // .. create the revolute joint between the wheel and the spindle
         link_revoluteRB = chrono_types::make_shared<ChLinkLockRevolute>();  // right, back, upper, 1
-        link_revoluteRB->Initialize(wheelRB, spindleRB, ChCoordsys<>(ChVector<>(0.91, -0.026, -1.652965),
-                                                                     chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
+        link_revoluteRB->Initialize(
+            wheelRB, spindleRB,
+            ChFrame<>(ChVector3d(0.91, -0.026, -1.652965), chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         my_system->AddLink(link_revoluteRB);
 
         // .. create the motor transmission joint between the wheel and the truss (assuming small changes of alignment)
         link_engineR = chrono_types::make_shared<ChLinkMotorRotationAngle>();
-        link_engineR->Initialize(wheelRB, truss, ChFrame<>(ChVector<>(0.91, -0.026, -1.652965),
-                                                              chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
+        link_engineR->Initialize(wheelRB, truss, ChFrame<>(ChVector3d(0.91, -0.026, -1.652965),
+                                                              chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         link_engineR->SetSpindleConstraint(ChLinkMotorRotation::SpindleConstraint::OLDHAM);  // approx as a double Rzeppa joint
-        link_engineR->SetAngleFunction(chrono_types::make_shared<ChFunction_Ramp>(0, angularSpeed));
+        link_engineR->SetAngleFunction(chrono_types::make_shared<ChFunctionRamp>(0, angularSpeed));
         my_system->AddLink(link_engineR);
 
         // .. impose distance between two parts (as a massless rod with two spherical joints at the end)
         link_distRBU1 = chrono_types::make_shared<ChLinkDistance>();  // right, back, upper, 1
-        link_distRBU1->Initialize(truss, spindleRB, false, ChVector<>(0.462, 0.228, -1.339965),
-                                  ChVector<>(0.716, 0.216, -1.652965));
+        link_distRBU1->Initialize(truss, spindleRB, false, ChVector3d(0.462, 0.228, -1.339965),
+                                  ChVector3d(0.716, 0.216, -1.652965));
         my_system->AddLink(link_distRBU1);
 
         link_distRBU2 = chrono_types::make_shared<ChLinkDistance>();  // right, back, upper, 2
-        link_distRBU2->Initialize(truss, spindleRB, false, ChVector<>(0.462, 0.224, -1.611965),
-                                  ChVector<>(0.716, 0.216, -1.652965));
+        link_distRBU2->Initialize(truss, spindleRB, false, ChVector3d(0.462, 0.224, -1.611965),
+                                  ChVector3d(0.716, 0.216, -1.652965));
         my_system->AddLink(link_distRBU2);
 
         link_distRBL1 = chrono_types::make_shared<ChLinkDistance>();  // right, back, lower, 1
-        link_distRBL1->Initialize(truss, spindleRB, false, ChVector<>(0.307, 0, -1.465965),
-                                  ChVector<>(0.787, -0.118, -1.652965));
+        link_distRBL1->Initialize(truss, spindleRB, false, ChVector3d(0.307, 0, -1.465965),
+                                  ChVector3d(0.787, -0.118, -1.652965));
         my_system->AddLink(link_distRBL1);
 
         link_distRBL2 = chrono_types::make_shared<ChLinkDistance>();  // right, back, lower, 2
-        link_distRBL2->Initialize(truss, spindleRB, false, ChVector<>(0.307, 0, -1.911965),
-                                  ChVector<>(0.787, -0.118, -1.652965));
+        link_distRBL2->Initialize(truss, spindleRB, false, ChVector3d(0.307, 0, -1.911965),
+                                  ChVector3d(0.787, -0.118, -1.652965));
         my_system->AddLink(link_distRBL2);
 
         // .. create the spring between the truss and the spindle
         link_springRB = chrono_types::make_shared<ChLinkTSDA>();
-        link_springRB->Initialize(truss, spindleRB, false, ChVector<>(0.498, 0.323, -1.79297),
-                                  ChVector<>(0.544, -0.038, -1.78597));
+        link_springRB->Initialize(truss, spindleRB, false, ChVector3d(0.498, 0.323, -1.79297),
+                                  ChVector3d(0.544, -0.038, -1.78597));
         link_springRB->SetSpringCoefficient(369149.000);
         link_springRB->SetDampingCoefficient(rearDamping);
         link_springRB->SetRestLength(0.382);
@@ -365,77 +361,76 @@ class MySimpleCar {
 
         // .. create the rod for avoid the steering of the wheel
         link_distRBlat = chrono_types::make_shared<ChLinkDistance>();  // right rod
-        link_distRBlat->Initialize(truss, spindleRB, false, ChVector<>(0.416, 0.059, -1.465965),
-                                   ChVector<>(0.821, -0.009, -1.518965));
+        link_distRBlat->Initialize(truss, spindleRB, false, ChVector3d(0.416, 0.059, -1.465965),
+                                   ChVector3d(0.821, -0.009, -1.518965));
         my_system->AddLink(link_distRBlat);
 
         // --- Left Back suspension ---
 
         // ..the car right-back spindle
         spindleLB = chrono_types::make_shared<ChBody>();
-        spindleLB->SetIdentifier(-8);
         spindleLB->SetMass(15.91);
-        spindleLB->SetPos(ChVector<>(-0.751, -0.026, -1.652965));
+        spindleLB->SetPos(ChVector3d(-0.751, -0.026, -1.652965));
         spindleLB->SetRot(ChQuaternion<>(1, 0, 0, 0));
-        spindleLB->SetInertiaXX(ChVector<>(4, 2, 2));
-        utils::AddBoxGeometry(spindleLB.get(), mat, ChVector<>(0.1, 0.4, 0.4) * 0.5, ChVector<>(0, 0, 0));
-        spindleLB->SetCollide(false);
+        spindleLB->SetInertiaXX(ChVector3d(4, 2, 2));
+        utils::AddBoxGeometry(spindleLB.get(), mat, ChVector3d(0.1, 0.4, 0.4) * 0.5, ChVector3d(0, 0, 0));
+        spindleLB->EnableCollision(false);
         my_system->AddBody(spindleLB);
 
         // ..the car left-back wheel
         wheelLB = chrono_types::make_shared<ChBody>();
-        wheelLB->SetIdentifier(-9);
         wheelLB->SetMass(3.0);
-        wheelLB->SetPos(ChVector<>(-0.91, -0.026, -1.652965));
+        wheelLB->SetPos(ChVector3d(-0.91, -0.026, -1.652965));
         wheelLB->SetRot(ChQuaternion<>(1, 0, 0, 0));
-        wheelLB->SetInertiaXX(ChVector<>(0.2, 0.2, 0.2));
+        wheelLB->SetInertiaXX(ChVector3d(0.2, 0.2, 0.2));
         if (useSpheres) {
-            utils::AddSphereGeometry(wheelLB.get(), mat, 0.45, ChVector<>(0, 0, 0));
+            utils::AddSphereGeometry(wheelLB.get(), mat, 0.45, ChVector3d(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelLB.get(), mat, 0.45, 0.2, ChVector<>(0, 0, 0), Q_from_AngZ(CH_C_PI_2));
+            utils::AddCylinderGeometry(wheelLB.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
         }
-        wheelLB->SetCollide(true);
+        wheelLB->EnableCollision(true);
         my_system->AddBody(wheelLB);
 
         // .. create the revolute joint between the wheel and the spindle
         link_revoluteLB = chrono_types::make_shared<ChLinkLockRevolute>();  // left, back, upper, 1
-        link_revoluteLB->Initialize(wheelLB, spindleLB, ChCoordsys<>(ChVector<>(-0.91, -0.026, -1.652965),
-                                                                     chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
+        link_revoluteLB->Initialize(
+            wheelLB, spindleLB,
+            ChFrame<>(ChVector3d(-0.91, -0.026, -1.652965), chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         my_system->AddLink(link_revoluteLB);
 
         // .. create the motor transmission joint between the wheel and the truss (assuming small changes of alignment)
         link_engineL = chrono_types::make_shared<ChLinkMotorRotationAngle>();
-        link_engineL->Initialize(wheelLB, truss, ChFrame<>(ChVector<>(-0.91, -0.026, -1.652965),
-                                                              chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Y)));
+        link_engineL->Initialize(wheelLB, truss, ChFrame<>(ChVector3d(-0.91, -0.026, -1.652965),
+                                                              chrono::QuatFromAngleAxis(CH_PI / 2, VECT_Y)));
         link_engineL->SetSpindleConstraint(ChLinkMotorRotation::SpindleConstraint::OLDHAM);  // approx as a double Rzeppa joint
-        link_engineL->SetAngleFunction(chrono_types::make_shared<ChFunction_Ramp>(0, angularSpeed));
+        link_engineL->SetAngleFunction(chrono_types::make_shared<ChFunctionRamp>(0, angularSpeed));
         my_system->AddLink(link_engineL);
 
         // .. impose distance between two parts (as a massless rod with two spherical joints at the end)
         link_distLBU1 = chrono_types::make_shared<ChLinkDistance>();  // left, front, upper, 1
-        link_distLBU1->Initialize(truss, spindleLB, false, ChVector<>(-0.462, 0.228, -1.339965),
-                                  ChVector<>(-0.716, 0.216, -1.652965));
+        link_distLBU1->Initialize(truss, spindleLB, false, ChVector3d(-0.462, 0.228, -1.339965),
+                                  ChVector3d(-0.716, 0.216, -1.652965));
         my_system->AddLink(link_distLBU1);
 
         link_distLBU2 = chrono_types::make_shared<ChLinkDistance>();  // left, back, upper, 2
-        link_distLBU2->Initialize(truss, spindleLB, false, ChVector<>(-0.462, 0.224, -1.611965),
-                                  ChVector<>(-0.716, 0.216, -1.652965));
+        link_distLBU2->Initialize(truss, spindleLB, false, ChVector3d(-0.462, 0.224, -1.611965),
+                                  ChVector3d(-0.716, 0.216, -1.652965));
         my_system->AddLink(link_distLBU2);
 
         link_distLBL1 = chrono_types::make_shared<ChLinkDistance>();  // left, back, lower, 1
-        link_distLBL1->Initialize(truss, spindleLB, false, ChVector<>(-0.307, 0, -1.465965),
-                                  ChVector<>(-0.787, -0.118, -1.652965));
+        link_distLBL1->Initialize(truss, spindleLB, false, ChVector3d(-0.307, 0, -1.465965),
+                                  ChVector3d(-0.787, -0.118, -1.652965));
         my_system->AddLink(link_distLBL1);
 
         link_distLBL2 = chrono_types::make_shared<ChLinkDistance>();  // left, back, lower, 2
-        link_distLBL2->Initialize(truss, spindleLB, false, ChVector<>(-0.307, 0, -1.911965),
-                                  ChVector<>(-0.787, -0.118, -1.652965));
+        link_distLBL2->Initialize(truss, spindleLB, false, ChVector3d(-0.307, 0, -1.911965),
+                                  ChVector3d(-0.787, -0.118, -1.652965));
         my_system->AddLink(link_distLBL2);
 
         // .. create the spring between the truss and the spindle
         link_springLB = chrono_types::make_shared<ChLinkTSDA>();
-        link_springLB->Initialize(truss, spindleLB, false, ChVector<>(-0.498, 0.323, -1.79297),
-                                  ChVector<>(-0.544, -0.038, -1.78597));
+        link_springLB->Initialize(truss, spindleLB, false, ChVector3d(-0.498, 0.323, -1.79297),
+                                  ChVector3d(-0.544, -0.038, -1.78597));
         link_springLB->SetSpringCoefficient(369149.000);
         link_springLB->SetDampingCoefficient(rearDamping);
         link_springLB->SetRestLength(0.382);
@@ -443,8 +438,8 @@ class MySimpleCar {
 
         // .. create the rod for avoid the steering of the wheel
         link_distLBlat = chrono_types::make_shared<ChLinkDistance>();  // right
-        link_distLBlat->Initialize(truss, spindleLB, false, ChVector<>(-0.416, 0.059, -1.465965),
-                                   ChVector<>(-0.821, -0.009, -1.518965));
+        link_distLBlat->Initialize(truss, spindleLB, false, ChVector3d(-0.416, 0.059, -1.465965),
+                                   ChVector3d(-0.821, -0.009, -1.518965));
         my_system->AddLink(link_distLBlat);
     }
 
@@ -502,7 +497,7 @@ class MySimpleCar {
         // the speed of the engine transmission shaft is the average of the two wheel speeds,
         // multiplied the conic gear transmission ratio inversed:
         double shaftspeed = (1.0 / this->conic_tau) * 0.5 *
-                            (this->link_engineL->GetMotorRot_dt() + this->link_engineR->GetMotorRot_dt());
+                            (this->link_engineL->GetMotorAngleDt() + this->link_engineR->GetMotorAngleDt());
         // The motorspeed is the shaft speed multiplied by gear ratio inversed:
         double motorspeed = (1.0 / this->gear_tau) * shaftspeed;
         // The torque depends on speed-torque curve of the motor: here we assume a
@@ -516,7 +511,7 @@ class MySimpleCar {
         // it is half of the shaft torque  (multiplied the conic gear transmission ratio)
         double singlewheeltorque = 0.5 * shafttorque * (1.0 / this->conic_tau);
         // debug:print infos on screen:
-        // GetLog() << "motor torque="<< motortorque<< "  speed=" <<
+        // std::cout << "motor torque="<< motortorque<< "  speed=" <<
         // motorspeed << "  wheel torque = " << singlewheeltorque << "\n";
         // If needed, return also the value of wheel torque:
         return singlewheeltorque;
@@ -538,7 +533,7 @@ int CreateGranularMaterial(ChSystemMulticore* system,
                            double pitLength,
                            double groundWidth) {
     // Parameters for the granular material
-    int Id_g = 1;           // start body ID for particles
+    int tag_particles = 0;  // start body ID for particles
     double r_g = .04;       // [cm] radius of granular sphers
     double rho_g = 2500.0;  // [g/cm^3] density of granules
 
@@ -550,7 +545,7 @@ int CreateGranularMaterial(ChSystemMulticore* system,
     // Create a material for the granular material
     // -------------------------------------------
 
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_g->SetFriction(mu_g);
 
     // ---------------------------------------------
@@ -559,23 +554,23 @@ int CreateGranularMaterial(ChSystemMulticore* system,
 
     // Create the particle generator with a mixture of 100% spheres
     double r = 1.01 * r_g;
-    utils::PDSampler<double> sampler(2 * r);
-    utils::Generator gen(system);
+    utils::ChPDSampler<double> sampler(2 * r);
+    utils::ChGenerator gen(system);
 
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
-    m1->setDefaultMaterial(mat_g);
-    m1->setDefaultDensity(rho_g);
-    m1->setDefaultSize(r_g);
+    std::shared_ptr<utils::ChMixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
+    m1->SetDefaultMaterial(mat_g);
+    m1->SetDefaultDensity(rho_g);
+    m1->SetDefaultSize(r_g);
 
     // Ensure that all generated particle bodies will have positive IDs.
-    gen.setBodyIdentifier(Id_g);
+    gen.SetStartTag(tag_particles);
 
     // ----------------------
     // Generate the particles
     // ----------------------
 
-    ChVector<> hdims(groundWidth - 2 * r, 2 * (pitDepth - 2 * r), pitLength - 2 * r);
-    ChVector<> center(0, 0, pitLocation_z + pitLength / 3 - 2 * r);
+    ChVector3d hdims(groundWidth - 2 * r, 2 * (pitDepth - 2 * r), pitLength - 2 * r);
+    ChVector3d center(0, 0, pitLocation_z + pitLength / 3 - 2 * r);
 
     // while (center.z() < pitDepth)
     //{
@@ -584,7 +579,7 @@ int CreateGranularMaterial(ChSystemMulticore* system,
     //}
 
     // Return the number of generated particles.
-    return gen.getTotalNumBodies();
+    return gen.GetTotalNumBodies();
 }
 
 // =============================================================================
@@ -593,15 +588,12 @@ int CreateGranularMaterial(ChSystemMulticore* system,
 // to rotate at constant angular velocity.
 // =============================================================================
 void AddGround(ChSystemMulticoreNSC* sys) {
-    // IDs for the two bodies
-    int groundId = -200;
-
     // Create a common material
-    auto mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat = chrono_types::make_shared<ChContactMaterialNSC>();
     mat->SetFriction(1.0f);
 
     // Create the containing bin (2 x 2 x 1)
-    ChVector<> pos(0, -.6, -2);
+    ChVector3d pos(0, -.6, -2);
     double pitLocation_z = 5;
     double pitDepth = .5;
     double pitLength = 8;
@@ -610,15 +602,14 @@ void AddGround(ChSystemMulticoreNSC* sys) {
     double wallHeight = 6;
     double thickness = 0.1;
     auto ground = chrono_types::make_shared<ChBody>();
-    ground->SetIdentifier(groundId);
     ground->SetMass(1);
     ground->SetPos(pos);
     ground->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    ground->SetCollide(true);
-    ground->SetBodyFixed(true);
+    ground->EnableCollision(true);
+    ground->SetFixed(true);
 
-    utils::AddBoxGeometry(ground.get(), mat, ChVector<>(groundWidth / 2, thickness, 10 * pitLocation_z / 2),
-                          ChVector<>(0, -thickness, 0));
+    utils::AddBoxGeometry(ground.get(), mat, ChVector3d(groundWidth / 2, thickness, 10 * pitLocation_z / 2),
+                          ChVector3d(0, -thickness, 0));
 
     sys->AddBody(ground);
 
@@ -657,7 +648,7 @@ int main(int argc, char* argv[]) {
     sys.SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Set gravitational acceleration
-    sys.Set_G_acc(ChVector<>(0, -gravity, 0));
+    sys.SetGravitationalAcceleration(ChVector3d(0, -gravity, 0));
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();
@@ -699,7 +690,7 @@ int main(int argc, char* argv[]) {
     vis.SetWindowSize(1280, 720);
     vis.SetRenderMode(opengl::WIREFRAME);
     vis.Initialize();
-    vis.AddCamera(ChVector<>(0, 0, -10), ChVector<>(0, 0, 0));
+    vis.AddCamera(ChVector3d(0, 0, -10), ChVector3d(0, 0, 0));
     vis.SetCameraVertical(CameraVerticalDir::Z);
 #endif
 

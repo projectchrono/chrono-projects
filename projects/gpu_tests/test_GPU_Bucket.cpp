@@ -43,13 +43,13 @@ std::string box_filename = GetProjectsDataFile("gpu/meshes/BD_Box.obj");
 
 // Take a ChBody and write its
 void writeBoxMesh(std::ostringstream& outstream) {
-    ChVector<> pos(0, 0, 0);
+    ChVector3d pos(0, 0, 0);
     // Get basis vectors
-    ChVector<> vx(1, 0, 0);
-    ChVector<> vy(0, 1, 0);
-    ChVector<> vz(0, 0, 1);
+    ChVector3d vx(1, 0, 0);
+    ChVector3d vy(0, 1, 0);
+    ChVector3d vz(0, 0, 1);
 
-    ChVector<> scaling(params.box_X / 2, params.box_Y / 2, params.box_Z / 2);
+    ChVector3d scaling(params.box_X / 2, params.box_Y / 2, params.box_Z / 2);
 
     // Write the mesh name to find
     outstream << box_filename << ",";
@@ -90,7 +90,7 @@ void writeForcesFile(ChSystemGpu& gran_sys) {
 
     outstrstream << "plane_id,fx,fy,fz\n";
 
-    ChVector<float> reaction_forces;
+    ChVector3f reaction_forces;
     for (unsigned int i = 0; i < bc_ids.size(); i++) {
         bool success = gran_sys.GetBCReactionForces(bc_ids[i], reaction_forces);
         if (!success) {
@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
 
     // Setup simulation
     ChSystemGpu gran_sys(params.sphere_radius, params.sphere_density,
-                         ChVector<float>(params.box_X, params.box_Y, params.box_Z));
+                         ChVector3f(params.box_X, params.box_Y, params.box_Z));
     gran_sys.SetPsiFactors(params.psi_T, params.psi_L);
 
     // normal force model
@@ -144,29 +144,29 @@ int main(int argc, char* argv[]) {
 
     gran_sys.SetCohesionRatio(0.0);
     gran_sys.SetAdhesionRatio_SPH2WALL(0.0);
-    gran_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
+    gran_sys.SetGravitationalAcceleration(ChVector3f(params.grav_X, params.grav_Y, params.grav_Z));
     gran_sys.SetParticleOutputMode(params.write_mode);
 
-    std::vector<ChVector<float>> body_points;
+    std::vector<ChVector3f> body_points;
 
     {
         // fill box, layer by layer
-        ChVector<> hdims(params.box_X / 2.f - 3, params.box_Y / 2.f - 3, params.box_Z / 2.f - 3);
-        ChVector<> center(0, 0, 0);
+        ChVector3d hdims(params.box_X / 2.f - 3, params.box_Y / 2.f - 3, params.box_Z / 2.f - 3);
+        ChVector3d center(0, 0, 0);
 
         // Fill box with bodies
-        body_points = utils::PDLayerSampler_BOX<float>(center, hdims, 2. * params.sphere_radius, 1.02);
+        body_points = utils::ChPDLayerSamplerBox<float>(center, hdims, 2. * params.sphere_radius, 1.02);
     }
 
     gran_sys.SetParticles(body_points);
 
     // face in upwards
-    ChVector<float> bottom_plane_normal_X(1, 0, 0);
-    ChVector<float> top_plane_normal_X(-1, 0, 0);
-    ChVector<float> bottom_plane_normal_Y(0, 1, 0);
-    ChVector<float> top_plane_normal_Y(0, -1, 0);
-    ChVector<float> bottom_plane_normal_Z(0, 0, 1);
-    ChVector<float> top_plane_normal_Z(0, 0, -1);
+    ChVector3f bottom_plane_normal_X(1, 0, 0);
+    ChVector3f top_plane_normal_X(-1, 0, 0);
+    ChVector3f bottom_plane_normal_Y(0, 1, 0);
+    ChVector3f top_plane_normal_Y(0, -1, 0);
+    ChVector3f bottom_plane_normal_Z(0, 0, 1);
+    ChVector3f top_plane_normal_Z(0, 0, -1);
 
     // where to place confining planes
     float box_dist_X = params.box_X / 2.f - 2.f;
@@ -174,12 +174,12 @@ int main(int argc, char* argv[]) {
     float box_dist_Z = params.box_Z / 2.f - 2.f;
 
     // put a plane on the box walls
-    ChVector<float> box_bottom_X(-box_dist_X, 0, 0);
-    ChVector<float> box_top_X(box_dist_X, 0, 0);
-    ChVector<float> box_bottom_Y(0, -box_dist_Y, 0);
-    ChVector<float> box_top_Y(0, box_dist_Y, 0);
-    ChVector<float> box_bottom_Z(0, 0, -box_dist_Z);
-    ChVector<float> box_top_Z(0, 0, box_dist_Z);
+    ChVector3f box_bottom_X(-box_dist_X, 0, 0);
+    ChVector3f box_top_X(box_dist_X, 0, 0);
+    ChVector3f box_bottom_Y(0, -box_dist_Y, 0);
+    ChVector3f box_top_Y(0, box_dist_Y, 0);
+    ChVector3f box_bottom_Z(0, 0, -box_dist_Z);
+    ChVector3f box_top_Z(0, 0, box_dist_Z);
 
     size_t bottom_plane_bc_id_X = gran_sys.CreateBCPlane(box_bottom_X, bottom_plane_normal_X, true);
     size_t top_plane_bc_id_X = gran_sys.CreateBCPlane(box_top_X, top_plane_normal_X, true);
@@ -255,7 +255,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "capture step is " << frame_step << std::endl;
 
-    float total_system_mass = 4. / 3. * CH_C_PI * params.sphere_density * params.sphere_radius * params.sphere_radius *
+    float total_system_mass = 4. / 3. * CH_PI * params.sphere_density * params.sphere_radius * params.sphere_radius *
                               params.sphere_radius * body_points.size();
     printf("total system mass is %f kg \n", total_system_mass * M_CGS_TO_SI);
 

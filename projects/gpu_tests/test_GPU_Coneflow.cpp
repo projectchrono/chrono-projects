@@ -31,13 +31,13 @@ using namespace chrono::gpu;
 std::string cyl_filename = GetProjectsDataFile("gpu/meshes/Gran_cylinder_transparent.obj");
 
 // Take a ChBody and write its
-void writeZCylinderMesh(std::ostringstream& outstream, ChVector<> pos, float rad, float height) {
+void writeZCylinderMesh(std::ostringstream& outstream, ChVector3d pos, float rad, float height) {
     // Get basis vectors
-    ChVector<> vx(1, 0, 0);
-    ChVector<> vy(0, 1, 0);
-    ChVector<> vz(0, 0, 1);
+    ChVector3d vx(1, 0, 0);
+    ChVector3d vy(0, 1, 0);
+    ChVector3d vz(0, 0, 1);
 
-    ChVector<> scaling(rad, rad, height / 2);
+    ChVector3d scaling(rad, rad, height / 2);
 
     // Write the mesh name to find
     outstream << cyl_filename << ",";
@@ -61,13 +61,13 @@ void writeZCylinderMesh(std::ostringstream& outstream, ChVector<> pos, float rad
 }
 
 // Take a ChBody and write its
-void writeZConeMesh(std::ostringstream& outstream, ChVector<> pos, std::string mesh_filename) {
+void writeZConeMesh(std::ostringstream& outstream, ChVector3d pos, std::string mesh_filename) {
     // Get basis vectors
-    ChVector<> vx(1, 0, 0);
-    ChVector<> vy(0, 1, 0);
-    ChVector<> vz(0, 0, 1);
+    ChVector3d vx(1, 0, 0);
+    ChVector3d vy(0, 1, 0);
+    ChVector3d vz(0, 0, 1);
 
-    ChVector<> scaling(1, 1, 1);
+    ChVector3d scaling(1, 1, 1);
 
     // Write the mesh name to find
     outstream << mesh_filename << ",";
@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
 
     // Setup simulation
     ChSystemGpu gran_sys(params.sphere_radius, params.sphere_density,
-                         ChVector<float>(params.box_X, params.box_Y, params.box_Z));
+                         ChVector3f(params.box_X, params.box_Y, params.box_Z));
     // normal force model
     gran_sys.SetKn_SPH2SPH(params.normalStiffS2S);
     gran_sys.SetKn_SPH2WALL(params.normalStiffS2W);
@@ -129,22 +129,22 @@ int main(int argc, char* argv[]) {
 
     gran_sys.SetCohesionRatio(params.cohesion_ratio);
     gran_sys.SetAdhesionRatio_SPH2WALL(params.adhesion_ratio_s2w);
-    gran_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
+    gran_sys.SetGravitationalAcceleration(ChVector3f(params.grav_X, params.grav_Y, params.grav_Z));
     gran_sys.SetParticleOutputMode(params.write_mode);
 
     gran_sys.SetBDFixed(true);
 
     // Fill box with bodies
-    std::vector<ChVector<float>> body_points;
+    std::vector<ChVector3f> body_points;
 
     // padding in sampler
     float fill_epsilon = 2.02f;
     // padding at top of fill
     float fill_gap = 1.f;
 
-    chrono::utils::PDSampler<float> sampler(fill_epsilon * params.sphere_radius);
+    chrono::utils::ChPDSampler<float> sampler(fill_epsilon * params.sphere_radius);
 
-    ChVector<float> center_pt(0, 0, -2 - params.box_Z / 6);
+    ChVector3f center_pt(0, 0, -2 - params.box_Z / 6);
 
     // width we want to fill to
     float fill_width = params.box_Z / 3.f;
@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
 
     printf("width is %f, bot is %f, top is %f, height is %f\n", fill_width, fill_bottom, fill_top, fill_height);
     // fill box, layer by layer
-    ChVector<> center(0, 0, fill_bottom);
+    ChVector3d center(0, 0, fill_bottom);
     // shift up for bottom of box
     center.z() += fill_gap;
 
@@ -168,7 +168,7 @@ int main(int argc, char* argv[]) {
         center.z() += fill_epsilon * params.sphere_radius;
     }
 
-    std::vector<ChVector<float>> body_points_first;
+    std::vector<ChVector3f> body_points_first;
     body_points_first.push_back(body_points[0]);
 
     gran_sys.SetParticles(body_points);
@@ -197,13 +197,13 @@ int main(int argc, char* argv[]) {
     // Finalize settings and initialize for runtime
     gran_sys.CreateBCConeZ(center_pt, cone_slope, hmax, hmin, false, false);
 
-    ChVector<> cone_top_pos(0, 0, center_pt.z() + fill_width + 8);
+    ChVector3d cone_top_pos(0, 0, center_pt.z() + fill_width + 8);
 
     float cyl_rad = fill_width + 8;
     printf("top of cone is at %f, cone tip is %f, top width is %f, bottom width is hmin %f\n", cone_top_pos.z(),
            fill_width + 8, hmax, cone_offset);
 
-    ChVector<float> zvec(0, 0, 0);
+    ChVector3f zvec(0, 0, 0);
     {
         std::string meshes_file = "coneflow_meshes.csv";
 
@@ -218,15 +218,15 @@ int main(int argc, char* argv[]) {
 
     gran_sys.CreateBCCylinderZ(zvec, cyl_rad, false, false);
 
-    ChVector<float> plane_center(0, 0, center_pt.z() + 2 * cone_slope + cone_slope * cone_offset);
-    ChVector<float> plane_normal(0, 0, 1);
+    ChVector3f plane_center(0, 0, center_pt.z() + 2 * cone_slope + cone_slope * cone_offset);
+    ChVector3f plane_normal(0, 0, 1);
 
     printf("center is %f, %f, %f, plane center is is %f, %f, %f\n", center_pt.x(), center_pt.y(), center_pt.z(),
            plane_center.x(), plane_center.y(), plane_center.z());
     size_t cone_plane_bc_id = gran_sys.CreateBCPlane(plane_center, plane_normal, false);
 
     // put a plane at the bottom of the box to count forces
-    ChVector<float> box_bottom(0, 0, -params.box_Z / 2.f + 2.f);
+    ChVector3f box_bottom(0, 0, -params.box_Z / 2.f + 2.f);
 
     size_t bottom_plane_bc_id = gran_sys.CreateBCPlane(box_bottom, plane_normal, true);
 
@@ -248,11 +248,11 @@ int main(int argc, char* argv[]) {
     float t_remove_plane = .5;
     bool plane_active = false;
 
-    ChVector<float> reaction_forces(0, 0, 0);
+    ChVector3f reaction_forces(0, 0, 0);
 
     constexpr float F_CGS_TO_SI = 1e-5f;
     constexpr float M_CGS_TO_SI = 1e-3f;
-    float total_system_mass = 4.0f / 3.0f * (float)CH_C_PI * params.sphere_density * params.sphere_radius * params.sphere_radius *
+    float total_system_mass = 4.0f / 3.0f * (float)CH_PI * params.sphere_density * params.sphere_radius * params.sphere_radius *
                               params.sphere_radius * body_points.size();
     printf("total system mass is %f kg \n", total_system_mass * M_CGS_TO_SI);
     char filename[100];

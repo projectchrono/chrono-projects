@@ -21,15 +21,15 @@
 
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
-#include "chrono_vehicle/driver/ChIrrGuiDriver.h"
+#include "chrono_vehicle/driver/ChInteractiveDriverIRR.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 #include "chrono_vehicle/utils/ChUtilsJSON.h"
 
-#include "chrono_vehicle/wheeled_vehicle/utils/ChWheeledVehicleIrrApp.h"
+#include "chrono_vehicle/wheeled_vehicle/ChWheeledVehicleVisualSystemIrrlicht.h"
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
 
-#include "chrono_synchrono/SynConfig.h"
 #include "chrono_synchrono/SynChronoManager.h"
+#include "chrono_synchrono/SynConfig.h"
 #include "chrono_synchrono/agent/SynWheeledVehicleAgent.h"
 #ifdef CHRONO_FASTDDS
 #include "chrono_synchrono/communication/dds/SynDDSCommunicator.h"
@@ -42,8 +42,6 @@
 #include "chrono_vehicle/driver/ChPathFollowerACCDriver.h"
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 
-#include "chrono_sensor/sensors/ChCameraSensor.h"
-#include "chrono_sensor/sensors/ChLidarSensor.h"
 #include "chrono_sensor/ChSensorManager.h"
 #include "chrono_sensor/filters/ChFilterAccess.h"
 #include "chrono_sensor/filters/ChFilterLidarNoise.h"
@@ -53,6 +51,8 @@
 #include "chrono_sensor/filters/ChFilterSavePtCloud.h"
 #include "chrono_sensor/filters/ChFilterVisualize.h"
 #include "chrono_sensor/filters/ChFilterVisualizePointCloud.h"
+#include "chrono_sensor/sensors/ChCameraSensor.h"
+#include "chrono_sensor/sensors/ChLidarSensor.h"
 
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
 
@@ -77,7 +77,6 @@ using namespace eprosima::fastrtps::rtps;
 // =============================================================================
 
 using namespace chrono;
-using namespace chrono::geometry;
 using namespace chrono::irrlicht;
 using namespace chrono::synchrono;
 using namespace chrono::vehicle;
@@ -99,7 +98,7 @@ TireModelType tire_model = TireModelType::TMEASY;
 enum VehicleType { SEDAN, AUDI, SUV, VAN, TRUCK, CITYBUS };
 
 // Point on chassis tracked by the camera
-ChVector<> trackPoint(0.0, 0.0, 1.75);
+ChVector3d trackPoint(0.0, 0.0, 1.75);
 
 // Contact method
 ChContactMethod contact_method = ChContactMethod::NSC;
@@ -121,7 +120,7 @@ bool save = false;
 bool use_fullscreen = false;
 bool no_sensing = false;
 
-ChVector<> simulation_center = {826.734, -37.97, -64.8};
+ChVector3d simulation_center = {826.734, -37.97, -64.8};
 
 double loading_radius = 1000;
 bool load_roads_only = false;
@@ -134,7 +133,7 @@ std::string demo_data_path = std::string(STRINGIFY(HIGHWAY_DATA_DIR));
 
 struct PathVehicleSetup {
     VehicleType vehicle_type;
-    ChVector<double> pos;
+    ChVector3d pos;
     ChQuaternion<double> rot;
     std::string path_file;
     double lookahead;
@@ -148,53 +147,53 @@ double audi_pgain = .5;
 
 // starting locations and paths
 std::vector<PathVehicleSetup> demo_config = {
-    // {SUV, {917.234, 60.63, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
-    {AUDI, {925.434, -150.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 8.0, 0.1},  // ego vehicle
-    // {AUDI, {925.434, -164.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 8.0, 0.1},  // ego vehicle
+    // {SUV, {917.234, 60.63, -64.8}, QuatFromAngleZ(-3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {925.434, -150.87, -64.8}, QuatFromAngleZ(3.14 / 2), "/paths/2.txt", 8.0, 0.1},  // ego vehicle
+    // {AUDI, {925.434, -164.87, -64.8}, QuatFromAngleZ(3.14 / 2), "/paths/2.txt", 8.0, 0.1},  // ego vehicle
 
-    // {AUDI, {925.434, -140.87, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},  // ego vehicle
+    // {AUDI, {925.434, -140.87, -64.8}, QuatFromAngleZ(3.14 / 2), "/paths/2.txt", 10.0, 0.1},  // ego vehicle
 
-    {SUV, {925.434, -53.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", suv_lookahead, suv_pgain},
-    {AUDI, {925.434, 0.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
-    {VAN, {925.434, 50.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 8.0, 1.0},
-    {SUV, {925.434, 75.47, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", suv_lookahead, suv_pgain},
-    {AUDI, {903.134, 149.13, -64.8}, Q_from_AngZ(3.14), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
-    {AUDI, {825.134, 149.13, -64.8}, Q_from_AngZ(3.14), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
-    {SUV, {751.234, 148.93, -64.8}, Q_from_AngZ(3.14), "/paths/2.txt", suv_lookahead, suv_pgain},
-    {CITYBUS, {727.834, 124.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", 5.0, 1.0},
-    {SUV, {727.834, 85.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", suv_lookahead, suv_pgain},
-    {AUDI, {727.834, 40.13, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", audi_tight_lookahead,audi_pgain},
-    {SUV, {727.834, -34.27, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", suv_lookahead, suv_pgain},
-    {AUDI, {727.834, -100.27, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
-    {AUDI, {727.834, -212.97, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
-    {VAN, {748.234, -225.07, -64.8}, Q_from_AngZ(0), "/paths/2.txt", 8.0, 1.0},
-    {AUDI, {855.934, -222.77, -64.8}, Q_from_AngZ(0), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
-    {CITYBUS, {925.634, -214.17, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/2.txt", 5.0, 1.0},
+    {SUV, {925.434, -53.47, -64.8}, QuatFromAngleZ(3.14 / 2), "/paths/2.txt", suv_lookahead, suv_pgain},
+    {AUDI, {925.434, 0.47, -64.8}, QuatFromAngleZ(3.14 / 2), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
+    {VAN, {925.434, 50.47, -64.8}, QuatFromAngleZ(3.14 / 2), "/paths/2.txt", 8.0, 1.0},
+    {SUV, {925.434, 75.47, -64.8}, QuatFromAngleZ(3.14 / 2), "/paths/2.txt", suv_lookahead, suv_pgain},
+    {AUDI, {903.134, 149.13, -64.8}, QuatFromAngleZ(3.14), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {825.134, 149.13, -64.8}, QuatFromAngleZ(3.14), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
+    {SUV, {751.234, 148.93, -64.8}, QuatFromAngleZ(3.14), "/paths/2.txt", suv_lookahead, suv_pgain},
+    {CITYBUS, {727.834, 124.13, -64.8}, QuatFromAngleZ(-3.14 / 2), "/paths/2.txt", 5.0, 1.0},
+    {SUV, {727.834, 85.13, -64.8}, QuatFromAngleZ(-3.14 / 2), "/paths/2.txt", suv_lookahead, suv_pgain},
+    {AUDI, {727.834, 40.13, -64.8}, QuatFromAngleZ(-3.14 / 2), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
+    {SUV, {727.834, -34.27, -64.8}, QuatFromAngleZ(-3.14 / 2), "/paths/2.txt", suv_lookahead, suv_pgain},
+    {AUDI, {727.834, -100.27, -64.8}, QuatFromAngleZ(-3.14 / 2), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {727.834, -212.97, -64.8}, QuatFromAngleZ(-3.14 / 2), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
+    {VAN, {748.234, -225.07, -64.8}, QuatFromAngleZ(0), "/paths/2.txt", 8.0, 1.0},
+    {AUDI, {855.934, -222.77, -64.8}, QuatFromAngleZ(0), "/paths/2.txt", audi_tight_lookahead, audi_pgain},
+    {CITYBUS, {925.634, -214.17, -64.8}, QuatFromAngleZ(3.14 / 2), "/paths/2.txt", 5.0, 1.0},
 
-    {AUDI, {867.634, 140.83, -64.8}, Q_from_AngZ(0), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
-    {AUDI, {847.634, 140.83, -64.8}, Q_from_AngZ(0), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
-    {AUDI, {917.234, 116.63, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
-    {SUV, {917.234, 60.63, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", suv_lookahead, suv_pgain},
-    {SUV, {917.234, -10.63, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", suv_lookahead, suv_pgain},
-    {AUDI, {917.334, -95.67, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
-    {SUV, {892.334, -120.17, -64.8}, Q_from_AngZ(3.14), "/paths/3.txt", suv_lookahead, suv_pgain},
-    {SUV, {850.334, -120.17, -64.8}, Q_from_AngZ(3.14), "/paths/3.txt", suv_lookahead, suv_pgain},
-    {AUDI, {752.934, -119.47, -64.8}, Q_from_AngZ(3.14), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
-    {SUV, {735.734, -102.97, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", suv_lookahead, suv_pgain},
-    {AUDI, {735.734, -75.97, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
-    {AUDI, {735.734, 1.43, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
-    {AUDI, {735.734, 123.63, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
-    {SUV, {755.634, 140.93, -64.8}, Q_from_AngZ(0), "/paths/3.txt", suv_lookahead, suv_pgain},
-    {SUV, {785.634, 140.93, -64.8}, Q_from_AngZ(0), "/paths/3.txt", suv_lookahead, suv_pgain},
+    {AUDI, {867.634, 140.83, -64.8}, QuatFromAngleZ(0), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {847.634, 140.83, -64.8}, QuatFromAngleZ(0), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {917.234, 116.63, -64.8}, QuatFromAngleZ(-3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {SUV, {917.234, 60.63, -64.8}, QuatFromAngleZ(-3.14 / 2), "/paths/3.txt", suv_lookahead, suv_pgain},
+    {SUV, {917.234, -10.63, -64.8}, QuatFromAngleZ(-3.14 / 2), "/paths/3.txt", suv_lookahead, suv_pgain},
+    {AUDI, {917.334, -95.67, -64.8}, QuatFromAngleZ(-3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {SUV, {892.334, -120.17, -64.8}, QuatFromAngleZ(3.14), "/paths/3.txt", suv_lookahead, suv_pgain},
+    {SUV, {850.334, -120.17, -64.8}, QuatFromAngleZ(3.14), "/paths/3.txt", suv_lookahead, suv_pgain},
+    {AUDI, {752.934, -119.47, -64.8}, QuatFromAngleZ(3.14), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {SUV, {735.734, -102.97, -64.8}, QuatFromAngleZ(3.14 / 2), "/paths/3.txt", suv_lookahead, suv_pgain},
+    {AUDI, {735.734, -75.97, -64.8}, QuatFromAngleZ(3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {735.734, 1.43, -64.8}, QuatFromAngleZ(3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {735.734, 123.63, -64.8}, QuatFromAngleZ(3.14 / 2), "/paths/3.txt", audi_tight_lookahead, audi_pgain},
+    {SUV, {755.634, 140.93, -64.8}, QuatFromAngleZ(0), "/paths/3.txt", suv_lookahead, suv_pgain},
+    {SUV, {785.634, 140.93, -64.8}, QuatFromAngleZ(0), "/paths/3.txt", suv_lookahead, suv_pgain},
 
-    {AUDI, {845.534, -131.97, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", audi_tight_lookahead, audi_pgain},
-    {VAN, {763.334, -131.37, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", 8.0, 1.0},
-    {SUV, {727.834, -158.07, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/4.txt", suv_lookahead, suv_pgain},
-    {SUV, {727.834, -203.57, -64.8}, Q_from_AngZ(-3.14 / 2), "/paths/4.txt", suv_lookahead, suv_pgain},
-    {AUDI, {759.734, -225.07, -64.8}, Q_from_AngZ(0), "/paths/4.txt", audi_tight_lookahead, audi_pgain},
-    {SUV, {897.934, -223.27, -64.8}, Q_from_AngZ(0), "/paths/4.txt", suv_lookahead, suv_pgain},
-    {AUDI, {925.434, -199.77, -64.8}, Q_from_AngZ(3.14 / 2), "/paths/4.txt", audi_tight_lookahead, audi_pgain},
-    {AUDI, {897.434, -132.07, -64.8}, Q_from_AngZ(3.14), "/paths/4.txt", audi_tight_lookahead, audi_pgain}
+    {AUDI, {845.534, -131.97, -64.8}, QuatFromAngleZ(3.14), "/paths/4.txt", audi_tight_lookahead, audi_pgain},
+    {VAN, {763.334, -131.37, -64.8}, QuatFromAngleZ(3.14), "/paths/4.txt", 8.0, 1.0},
+    {SUV, {727.834, -158.07, -64.8}, QuatFromAngleZ(-3.14 / 2), "/paths/4.txt", suv_lookahead, suv_pgain},
+    {SUV, {727.834, -203.57, -64.8}, QuatFromAngleZ(-3.14 / 2), "/paths/4.txt", suv_lookahead, suv_pgain},
+    {AUDI, {759.734, -225.07, -64.8}, QuatFromAngleZ(0), "/paths/4.txt", audi_tight_lookahead, audi_pgain},
+    {SUV, {897.934, -223.27, -64.8}, QuatFromAngleZ(0), "/paths/4.txt", suv_lookahead, suv_pgain},
+    {AUDI, {925.434, -199.77, -64.8}, QuatFromAngleZ(3.14 / 2), "/paths/4.txt", audi_tight_lookahead, audi_pgain},
+    {AUDI, {897.434, -132.07, -64.8}, QuatFromAngleZ(3.14), "/paths/4.txt", audi_tight_lookahead, audi_pgain}
 
 };
 
@@ -205,10 +204,11 @@ void LogCopyright(bool show);
 void AddCommandLineOptions(ChCLI& cli);
 void GetVehicleModelFiles(VehicleType type,
                           std::string& vehicle,
-                          std::string& powertrain,
+                          std::string& engine,
+                          std::string& transmission,
                           std::string& tire,
                           std::string& zombie,
-                          ChVector<>& lidar_pos,
+                          ChVector3d& lidar_pos,
                           double& cam_distance);
 
 void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain);
@@ -220,30 +220,30 @@ void VehicleProcessMessageCallback(std::shared_ptr<SynMessage> message,
 
 class IrrAppWrapper {
   public:
-    IrrAppWrapper(std::shared_ptr<ChWheeledVehicleIrrApp> app = nullptr) : app(app) {}
+    IrrAppWrapper(std::shared_ptr<ChWheeledVehicleVisualSystemIrrlicht> app = nullptr) : m_app(app) {}
 
-    void Synchronize(const std::string& msg, const ChDriver::Inputs& driver_inputs) {
-        if (app)
-            app->Synchronize(msg, driver_inputs);
+    void Synchronize(double time, const DriverInputs& driver_inputs) {
+        if (m_app)
+            m_app->Synchronize(time, driver_inputs);
     }
 
     void Advance(double step) {
-        if (app)
-            app->Advance(step);
+        if (m_app)
+            m_app->Advance(step);
     }
 
     void Render() {
-        if (app) {
-            app->BeginScene(true, true, irr::video::SColor(255, 140, 161, 192));
-            app->DrawAll();
-            app->EndScene();
+        if (m_app) {
+            m_app->BeginScene();
+            m_app->Render();
+            m_app->EndScene();
         }
     }
 
-    void Set(std::shared_ptr<ChWheeledVehicleIrrApp> app) { this->app = app; }
-    bool IsOk() { return app ? app->GetDevice()->run() : true; }
+    void Set(std::shared_ptr<ChWheeledVehicleVisualSystemIrrlicht> app) { m_app = app; }
+    bool IsOk() { return m_app ? m_app->GetDevice()->run() : true; }
 
-    std::shared_ptr<ChWheeledVehicleIrrApp> app;
+    std::shared_ptr<ChWheeledVehicleVisualSystemIrrlicht> m_app;
 };
 
 // =============================================================================
@@ -342,15 +342,15 @@ int main(int argc, char* argv[]) {
 
     // Get the vehicle JSON filenames
     double cam_distance;
-    std::string vehicle_filename, powertrain_filename, tire_filename, zombie_filename;
-    ChVector<> lidar_pos;
+    std::string vehicle_filename, engine_filename, transmission_filename, tire_filename, zombie_filename;
+    ChVector3d lidar_pos;
 
     if (node_id == leader) {
-        GetVehicleModelFiles(rank0_vehicle, vehicle_filename, powertrain_filename, tire_filename, zombie_filename,
-                             lidar_pos, cam_distance);
-    } else {
-        GetVehicleModelFiles(demo_config[node_id].vehicle_type, vehicle_filename, powertrain_filename, tire_filename,
+        GetVehicleModelFiles(rank0_vehicle, vehicle_filename, engine_filename, transmission_filename, tire_filename,
                              zombie_filename, lidar_pos, cam_distance);
+    } else {
+        GetVehicleModelFiles(demo_config[node_id].vehicle_type, vehicle_filename, engine_filename,
+                             transmission_filename, tire_filename, zombie_filename, lidar_pos, cam_distance);
     }
 
     // Create the vehicle, set parameters, and initialize
@@ -367,9 +367,11 @@ int main(int argc, char* argv[]) {
     vehicle.SetSteeringVisualizationType(steering_vis_type);
     vehicle.SetWheelVisualizationType(wheel_vis_type);
 
-    // Create and initialize the powertrain system
-    auto powertrain = ReadPowertrainJSON(powertrain_filename);
+    auto engine = ReadEngineJSON(engine_filename);
+    auto transmission = ReadTransmissionJSON(transmission_filename);
+    auto powertrain = chrono_types::make_shared<ChPowertrainAssembly>(engine, transmission);
     vehicle.InitializePowertrain(powertrain);
+
 
     // Create and initialize the tires
     for (auto& axle : vehicle.GetAxles()) {
@@ -387,18 +389,18 @@ int main(int argc, char* argv[]) {
     RigidTerrain terrain(vehicle.GetSystem());
     AddSceneMeshes(vehicle.GetSystem(), &terrain);
 
-    MaterialInfo minfo;  // values from RigidPlane.json
-    minfo.mu = 0.9;      // coefficient of friction
-    minfo.cr = 0.01;     // coefficient of restitution
-    minfo.Y = 2e7;       // Young's modulus
-    minfo.nu = 0.3;      // Poisson ratio
-    minfo.kn = 2e5;      // normal stiffness
-    minfo.gn = 40.0;     // normal viscous damping
-    minfo.kt = 2e5;      // tangential stiffness
-    minfo.gt = 20.0;     // tangential viscous damping
+    ChContactMaterialData minfo;  // values from RigidPlane.json
+    minfo.mu = 0.9;               // coefficient of friction
+    minfo.cr = 0.01;              // coefficient of restitution
+    minfo.Y = 2e7;                // Young's modulus
+    minfo.nu = 0.3;               // Poisson ratio
+    minfo.kn = 2e5;               // normal stiffness
+    minfo.gn = 40.0;              // normal viscous damping
+    minfo.kt = 2e5;               // tangential stiffness
+    minfo.gt = 20.0;              // tangential viscous damping
     auto patch_mat = minfo.CreateMaterial(contact_method);
-    auto patch = terrain.AddPatch(patch_mat, ChVector<>({0, 0, -65.554}), ChVector<>({0, 0, 1}), 10000.0, 10000.0, 2,
-                                  false, 1, false);
+    auto patch =
+        terrain.AddPatch(patch_mat, ChCoordsys<>(ChVector3d(0, 0, -65.554)), 10000.0, 10000.0, 2, false, 1, false);
     terrain.Initialize();
 
     std::shared_ptr<ChLidarSensor> lidar;
@@ -422,12 +424,12 @@ int main(int argc, char* argv[]) {
         if (node_id == leader) {
             // camera at driver's eye location for Audi
             auto driver_cam = chrono_types::make_shared<ChCameraSensor>(
-                vehicle.GetChassisBody(),  // body camera is attached to
-                30.f,                      // update rate in Hz
-                chrono::ChFrame<double>({0.54, .381, 1.04}, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
-                image_width,                                                                // image width
-                image_height,                                                               // image height
-                3.14 / 1.5,                                                                 // fov
+                vehicle.GetChassisBody(),                                // body camera is attached to
+                30.f,                                                    // update rate in Hz
+                ChFrame<double>({0.54, .381, 1.04}, QuatFromAngleY(0)),  // offset pose
+                image_width,                                             // image width
+                image_height,                                            // image height
+                3.14 / 1.5,                                              // fov
                 1);
 
             driver_cam->PushFilter(chrono_types::make_shared<ChFilterVisualize>(
@@ -440,11 +442,10 @@ int main(int argc, char* argv[]) {
             camera = chrono_types::make_shared<ChCameraSensor>(
                 vehicle.GetChassisBody(),  // body camera is attached to
                 30.f,                      // update rate in Hz
-                chrono::ChFrame<double>({-2.0*cam_distance, 0, .45 * cam_distance},
-                                        Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
-                1280,                                                   // image width
-                720,                                                    // image height
-                3.14 / 4,                                               // fov
+                ChFrame<double>({-2.0 * cam_distance, 0, .45 * cam_distance}, QuatFromAngleY(0)),  // offset pose
+                1280,                                                                              // image width
+                720,                                                                               // image height
+                3.14 / 4,                                                                          // fov
                 1);
 
             camera->PushFilter(
@@ -456,7 +457,7 @@ int main(int argc, char* argv[]) {
             // auto camera2 = chrono_types::make_shared<ChCameraSensor>(
             //     patch->GetGroundBody(),  // body camera is attached to
             //     30.f,                    // update rate in Hz
-            //     chrono::ChFrame<double>({925, -120.87, 200.0}, Q_from_AngAxis(3.14 / 2, {0, 1, 0})), 1080,  //
+            //     ChFrame<double>({925, -120.87, 200.0}, QuatFromAngleY(3.14 / 2)), 1080,  //
             //     1080,  // image height
             //     3.14 / 2, 1);
 
@@ -468,7 +469,7 @@ int main(int argc, char* argv[]) {
             // auto camer5 = chrono_types::make_shared<ChCameraSensor>(
             //     patch->GetGroundBody(),  // body camera is attached to
             //     30.f,                    // update rate in Hz
-            //     chrono::ChFrame<double>({725, -120.87, 200.0}, Q_from_AngAxis(3.14 / 2, {0, 1, 0})), 1080,  //
+            //     ChFrame<double>({725, -120.87, 200.0}, QuatFromAngleY(3.14 / 2)), 1080,  //
             //     1080,  // image height
             //     3.14 / 2, 1);
 
@@ -480,7 +481,7 @@ int main(int argc, char* argv[]) {
             // auto camera3 = chrono_types::make_shared<ChCameraSensor>(
             //     patch->GetGroundBody(),  // body camera is attached to
             //     30.f,                    // update rate in Hz
-            //     chrono::ChFrame<double>({925, 145.0, 200.0}, Q_from_AngAxis(3.14 / 2, {0, 1, 0})), 1080,  //
+            //     ChFrame<double>({925, 145.0, 200.0}, QuatFromAngleY(3.14 / 2)), 1080,  //
             //     1080,  // image height
             //     3.14 / 2, 1);
 
@@ -492,7 +493,7 @@ int main(int argc, char* argv[]) {
             // auto camera4 = chrono_types::make_shared<ChCameraSensor>(
             //     patch->GetGroundBody(),  // body camera is attached to
             //     30.f,                    // update rate in Hz
-            //     chrono::ChFrame<double>({725, -220.87, 200.0}, Q_from_AngAxis(3.14 / 2, {0, 1, 0})), 1080,  //
+            //     ChFrame<double>({725, -220.87, 200.0}, QuatFromAngleY(3.14 / 2)), 1080,  //
             //     1080,  // image height
             //     3.14 / 2, 1);
 
@@ -502,22 +503,22 @@ int main(int argc, char* argv[]) {
             // manager->AddSensor(camera4);
         }
         if (!no_sensing) {
-            lidar = chrono_types::make_shared<ChLidarSensor>(
-                vehicle.GetChassisBody(),                                          // body lidar is attached to
-                20.f,                                                              // scanning rate in Hz
-                chrono::ChFrame<double>(lidar_pos, Q_from_AngAxis(0, {0, 1, 0})),  // offset pose
-                900,                                                               // number of horizontal samples
-                16,                                                                // number of vertical channels
-                6.28318530718,                                                     // horizontal field of view
-                0.261799,
-                -0.261799,                         // vertical field of view
-                100.f,                             // max distance
-                LidarBeamShape::RECTANGULAR,       // beam shape
-                2,                                 // sample radius
-                0.003,                             // vertical divergence angle
-                0.003,                             // horizontal divergence angle
-                LidarReturnMode::STRONGEST_RETURN  // return mode for the lidar
-            );
+            lidar =
+                chrono_types::make_shared<ChLidarSensor>(vehicle.GetChassisBody(),  // body lidar is attached to
+                                                         20.f,                      // scanning rate in Hz
+                                                         ChFrame<double>(lidar_pos, QuatFromAngleY(0)),  // offset pose
+                                                         900,                          // number of horizontal samples
+                                                         16,                           // number of vertical channels
+                                                         6.28318530718,                // horizontal field of view
+                                                         0.261799,                     //
+                                                         -0.261799,                    // vertical field of view
+                                                         100.f,                        // max distance
+                                                         LidarBeamShape::RECTANGULAR,  // beam shape
+                                                         2,                            // sample radius
+                                                         0.003,                        // vertical divergence angle
+                                                         0.003,                        // horizontal divergence angle
+                                                         LidarReturnMode::STRONGEST_RETURN  // return mode for the lidar
+                );
             lidar->SetName("Lidar Sensor 1");
             lidar->SetLag(0.01);
             lidar->SetCollectionWindow(.05);
@@ -542,19 +543,19 @@ int main(int argc, char* argv[]) {
         data_driver->Initialize();
         driver = data_driver;
     } else if (node_id == leader && cli.GetAsType<bool>("irr")) {
-        auto temp_app = chrono_types::make_shared<ChWheeledVehicleIrrApp>(&vehicle, L"SynChrono Wheeled Vehicle Demo");
+        auto temp_app = chrono_types::make_shared<ChWheeledVehicleVisualSystemIrrlicht>();
+        temp_app->SetWindowTitle("SynChrono Wheeled Vehicle Demo");
+        temp_app->AttachVehicle(&vehicle);
         temp_app->AddTypicalLights();
         temp_app->SetChaseCamera(trackPoint, cam_distance, 0.5);
-        temp_app->SetTimestep(step_size);
-        temp_app->AssetBindAll();
-        temp_app->AssetUpdateAll();
+        temp_app->Initialize();
 
         // Create the interactive driver system
-        auto irr_driver = chrono_types::make_shared<ChIrrGuiDriver>(*temp_app);
+        auto irr_driver = chrono_types::make_shared<ChInteractiveDriverIRR>(*temp_app);
 
         // optionally force the gui driver to use keyboard rather than joystick
         if (cli.GetAsType<bool>("keyboard"))
-            irr_driver->SetInputMode(ChIrrGuiDriver::KEYBOARD);
+            irr_driver->SetInputMode(ChInteractiveDriverIRR::InputMode::KEYBOARD);
 
         // Set the time response for steering and throttle keyboard inputs.
         double steering_time = 1.0;  // time to go from 0 to +1 (or from 0 to -1)
@@ -567,10 +568,10 @@ int main(int argc, char* argv[]) {
 
         app.Set(temp_app);
         driver = irr_driver;
-    // } else if (node_id == leader && cli.GetAsType<bool>("console")) {
-    //     // Use custom CSL driver instead of irr driver
-    //     auto csl_driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
-    //     driver = csl_driver;
+        // } else if (node_id == leader && cli.GetAsType<bool>("console")) {
+        //     // Use custom CSL driver instead of irr driver
+        //     auto csl_driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
+        //     driver = csl_driver;
     } else {
         auto path = ChBezierCurve::read(GetChronoDataFile(demo_config[node_id].path_file));
         double target_speed = 11.2;
@@ -619,7 +620,7 @@ int main(int argc, char* argv[]) {
         //     app.Render();
 
         // Get driver inputs
-        ChDriver::Inputs driver_inputs = driver->GetInputs();
+        DriverInputs driver_inputs = driver->GetInputs();
 
         if (node_id == leader && record_inputs) {
             driver_csv << time << driver_inputs.m_steering << driver_inputs.m_throttle << driver_inputs.m_braking
@@ -631,7 +632,7 @@ int main(int argc, char* argv[]) {
         driver->Synchronize(time);
         vehicle.Synchronize(time, driver_inputs, terrain);
         terrain.Synchronize(time);
-        app.Synchronize("", driver_inputs);
+        app.Synchronize(time, driver_inputs);
 
         // Advance simulation for one timestep for all modules
         driver->Advance(step_size);
@@ -720,15 +721,17 @@ void AddCommandLineOptions(ChCLI& cli) {
 
 void GetVehicleModelFiles(VehicleType type,
                           std::string& vehicle,
-                          std::string& powertrain,
+                          std::string& engine,
+                          std::string& transmission,
                           std::string& tire,
                           std::string& zombie,
-                          ChVector<>& lidar_pos,
+                          ChVector3d& lidar_pos,
                           double& cam_distance) {
     switch (type) {
         case VehicleType::SEDAN:
             vehicle = vehicle::GetDataFile("sedan/vehicle/Sedan_Vehicle.json");
-            powertrain = vehicle::GetDataFile("sedan/powertrain/Sedan_SimpleMapPowertrain.json");
+            engine = vehicle::GetDataFile("sedan/powertrain/Sedan_EngineSimpleMap.json");
+            transmission = vehicle::GetDataFile("sedan/powertrain/Sedan_AutomaticTransmissionSimpleMap.json");
             tire = vehicle::GetDataFile("sedan/tire/Sedan_TMeasyTire.json");
             zombie = vehicle::GetDataFile("sedan/Sedan.json");
             lidar_pos = {1.0, 0, 0.25};
@@ -736,7 +739,8 @@ void GetVehicleModelFiles(VehicleType type,
             break;
         case VehicleType::AUDI:
             vehicle = vehicle::GetDataFile("audi/json/audi_Vehicle.json");
-            powertrain = vehicle::GetDataFile("audi/json/audi_SimpleMapPowertrain.json");
+            engine = vehicle::GetDataFile("audi/json/audi_EngineSimpleMap.json");
+            transmission = vehicle::GetDataFile("audi/json/audi_AutomaticTransmissionSimpleMap.json");
             tire = vehicle::GetDataFile("audi/json/audi_TMeasyTire.json");
             zombie = vehicle::GetDataFile("audi/json/audi.json");
             lidar_pos = {2.3, 0, .4};
@@ -744,31 +748,35 @@ void GetVehicleModelFiles(VehicleType type,
             break;
         case VehicleType::TRUCK:
             vehicle = vehicle::GetDataFile("truck/json/truck_Vehicle.json");
-            powertrain = vehicle::GetDataFile("truck/json/truck_SimpleCVTPowertrain.json");
+            engine = vehicle::GetDataFile("truck/json/truck_EngineSimple.json");
+            transmission = vehicle::GetDataFile("truck/json/truck_AutomaticTransmissionSimpleMap.json");
             tire = vehicle::GetDataFile("truck/json/truck_TMeasyTire.json");
             zombie = vehicle::GetDataFile("truck/json/truck.json");
             lidar_pos = {1.92, 0, 0.88};
             cam_distance = 14.0;
             break;
         case VehicleType::VAN:
-            vehicle = vehicle::GetDataFile("van/json/van_Vehicle.json");
-            powertrain = vehicle::GetDataFile("van/json/van_SimpleMapPowertrain.json");
-            tire = vehicle::GetDataFile("van/json/van_TMeasyTire.json");
-            zombie = vehicle::GetDataFile("van/json/van.json");
+            vehicle = vehicle::GetDataFile("VW_microbus/json/van_Vehicle.json");
+            engine = vehicle::GetDataFile("VW_microbus/json/van_EngineSimpleMap.json");
+            transmission = vehicle::GetDataFile("VW_microbus/json/van_AutomaticTransmissionSimpleMap.json");
+            tire = vehicle::GetDataFile("VW_microbus/json/van_Pac02Tire_extTIR.json");
+            zombie = vehicle::GetDataFile("VW_microbus/json/van.json");
             lidar_pos = {1.1, 0, 0.5};
             cam_distance = 5.0;
             break;
         case VehicleType::SUV:
-            vehicle = vehicle::GetDataFile("suv/json/suv_Vehicle.json");
-            powertrain = vehicle::GetDataFile("suv/json/suv_ShaftsPowertrain.json");
-            tire = vehicle::GetDataFile("suv/json/suv_TMeasyTire.json");
-            zombie = vehicle::GetDataFile("suv/json/suv.json");
+            vehicle = vehicle::GetDataFile("Nissan_Patrol/json/suv_Vehicle.json");
+            engine = vehicle::GetDataFile("Nissan_Patrol/json/suv_EngineShafts.json");
+            transmission = vehicle::GetDataFile("Nissan_Patrol/json/suv_AutomaticTransmissionShafts.json");
+            tire = vehicle::GetDataFile("Nissan_Patrol/json/suv_TMeasyTire.json");
+            zombie = vehicle::GetDataFile("Nissan_Patrol/json/suv.json");
             lidar_pos = {.95, 0, 0.45};
             cam_distance = 6.0;
             break;
         case VehicleType::CITYBUS:
             vehicle = vehicle::GetDataFile("citybus/vehicle/CityBus_Vehicle.json");
-            powertrain = vehicle::GetDataFile("citybus/powertrain/CityBus_SimpleMapPowertrain.json");
+            engine = vehicle::GetDataFile("citybus/powertrain/CityBus_EngineSimpleMap.json");
+            transmission = vehicle::GetDataFile("citybus/powertrain/CityBus_AutomaticTransmissionSimpleMap.json");
             tire = vehicle::GetDataFile("citybus/tire/CityBus_TMeasyTire.json");
             zombie = vehicle::GetDataFile("citybus/CityBus.json");
             lidar_pos = {2.32, 0, 0.5};
@@ -822,7 +830,7 @@ void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
                                                                           // emission on
 
                     if (!load_roads_only || mesh_name.find("Road") != std::string::npos) {
-                        ChVector<double> pos = {std::stod(result[2]), std::stod(result[3]), std::stod(result[4])};
+                        ChVector3d pos = {std::stod(result[2]), std::stod(result[3]), std::stod(result[4])};
 
                         if ((pos - simulation_center).Length() < loading_radius) {
                             // check if mesh is in map
@@ -839,19 +847,15 @@ void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
 
                             ChQuaternion<double> rot = {std::stod(result[5]), std::stod(result[6]),
                                                         std::stod(result[7]), std::stod(result[8])};
-                            ChVector<double> scale = {std::stod(result[9]), std::stod(result[10]),
-                                                      std::stod(result[11])};
+                            ChVector3d scale = {std::stod(result[9]), std::stod(result[10]), std::stod(result[11])};
 
                             // if not road, only add visualization with new pos,rot,scale
-                            auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
-                            trimesh_shape->SetMesh(mmesh);
+                            auto trimesh_shape = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
+                            trimesh_shape->SetMesh(mmesh, true);
                             trimesh_shape->SetName(mesh_name);
-                            trimesh_shape->SetStatic(true);
+                            trimesh_shape->SetMutable(false);
                             trimesh_shape->SetScale(scale);
-                            trimesh_shape->Pos = pos;
-                            trimesh_shape->Rot = ChMatrix33<>(rot);
-
-                            mesh_body->AddAsset(trimesh_shape);
+                            mesh_body->AddVisualShape(trimesh_shape, ChFrame<>(pos, rot));
 
                             meshes_added++;
                         }
@@ -882,12 +886,12 @@ void VehicleProcessMessageCallback(std::shared_ptr<SynMessage> message,
         double max_angle = vehicle.GetMaxSteeringAngle();
         double curr_steering = driver->GetSteering();
 
-        ChQuaternion<> q = Q_from_AngZ(max_angle * curr_steering);
+        ChQuaternion<> q = QuatFromAngleZ(max_angle * curr_steering);
 
         // Get the zombies position relative to this vehicle
-        auto zombie_pos = vehicle_message->chassis.GetFrame().GetPos() - vehicle.GetVehicleCOMPos();
-        zombie_pos = q.RotateBack(vehicle.GetVehicleRot().RotateBack(zombie_pos));
-        // zombie_pos = vehicle.GetVehicleRot().RotateBack(zombie_pos);
+        auto zombie_pos = vehicle_message->chassis.GetFrame().GetPos() - vehicle.GetCOMFrame().GetPos();
+        zombie_pos = q.RotateBack(vehicle.GetRot().RotateBack(zombie_pos));
+        // zombie_pos = vehicle.GetRot().RotateBack(zombie_pos);
 
         // std::cout<<"Zombie loc: "<<zombie_pos.x()<<", "<<zombie_pos.y()<<", "<<zombie_pos.z()<<std::endl;
 

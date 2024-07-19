@@ -445,7 +445,7 @@ int main(int argc, char* argv[]) {
         force = -calculateContactForceOnBody(msystem, 0);
       }
       double actualWeight =
-          (msystem->Get_bodylist()->size() - 1) * (4.0 / 3.0) * CH_C_PI * pow(r_g, 3.0) * rho_g * gravity;
+          (msystem->Get_bodylist()->size() - 1) * (4.0 / 3.0) * CH_PI * pow(r_g, 3.0) * rho_g * gravity;
 
       // get maximum body velocity
       double maxVelocity = 0;

@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
 
     // Setup simulation
     ChSystemGpu gpu_sys(params.sphere_radius, params.sphere_density,
-                        ChVector<float>(params.box_X, params.box_Y, params.box_Z));
+                        ChVector3f(params.box_X, params.box_Y, params.box_Z));
     gpu_sys.DisableMinLength();
 
     gpu_sys.SetPsiFactors(params.psi_T, params.psi_L);
@@ -73,16 +73,16 @@ int main(int argc, char* argv[]) {
         params.grav_Y = -565.80;
         params.grav_Z = -565.80;
 
-        ChVector<> plane_pos((float)(-2 * params.sphere_radius / std::sqrt(3)),
+        ChVector3d plane_pos((float)(-2 * params.sphere_radius / std::sqrt(3)),
                              (float)(-2 * params.sphere_radius / std::sqrt(3)),
                              (float)(-2 * params.sphere_radius / std::sqrt(3)));
 
-        ChVector<> plane_normal(1, 1, 1);
+        ChVector3d plane_normal(1, 1, 1);
         bool track_forces = false;
         gpu_sys.CreateBCPlane(plane_pos, plane_normal, track_forces);
     }
 
-    gpu_sys.SetGravitationalAcceleration(ChVector<>(params.grav_X, params.grav_Y, params.grav_Z));
+    gpu_sys.SetGravitationalAcceleration(ChVector3d(params.grav_X, params.grav_Y, params.grav_Z));
     gpu_sys.SetParticleOutputMode(params.write_mode);
     gpu_sys.SetParticleOutputFlags(
         CHGPU_OUTPUT_FLAGS::VEL_COMPONENTS | CHGPU_OUTPUT_FLAGS::FIXITY |
@@ -91,12 +91,12 @@ int main(int argc, char* argv[]) {
     gpu_sys.SetFrictionMode(CHGPU_FRICTION_MODE::FRICTIONLESS);
     gpu_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
 
-    std::vector<ChVector<float>> body_points;
-    body_points.push_back(ChVector<float>(0, 0, 0));
+    std::vector<ChVector3f> body_points;
+    body_points.push_back(ChVector3f(0, 0, 0));
 
     if (run_mode == SPHERE_SPHERE) {
         std::vector<bool> body_points_fixed;
-        body_points.push_back(ChVector<float>(0, 0, -3 * params.sphere_radius));
+        body_points.push_back(ChVector3f(0, 0, -3 * params.sphere_radius));
         body_points_fixed.push_back(false);
         body_points_fixed.push_back(true);
         gpu_sys.SetParticleFixed(body_points_fixed);

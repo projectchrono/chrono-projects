@@ -640,7 +640,7 @@ void ChMatterMeshless::VariablesQbIncrementPosition(double dt_step) {
     }
 }
 
-void ChMatterMeshless::SetNoSpeedNoAcceleration() {
+void ChMatterMeshless::SetZeroSpeedZeroAcceleration() {
     for (unsigned int j = 0; j < nodes.size(); j++) {
         nodes[j]->SetPos_dt(VNULL);
         nodes[j]->SetPos_dtdt(VNULL);

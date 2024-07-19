@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
   // Rotation of -90 degrees around z
   ChVector<> zero(0, 0, 0);
   ChQuaternion<> y2x(1, 0, 0, 0);
-  y2x.Q_from_AngAxis(-CH_C_PI / 2, ChVector<>(0, 0, 1));
+  y2x.Q_from_AngAxis(-CH_PI / 2, ChVector<>(0, 0, 1));
 
   // ground
   ChSharedPtr<ChBody> ground(new ChBody(new ChCollisionModelParallel, ChBody::DEM));
@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) {
   ////engine_ground_crank->Initialize(ground_, crank_, ChCoordsys<>(ChVector<>(0,0,0)));
   ////engine_ground_crank->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
   ////if (ChFunction_Const* mfun = dynamic_cast<ChFunction_Const*>(engine_ground_crank->Get_spe_funct()))
-  ////	mfun->Set_yconst(CH_C_PI); // speed w=3.145 rad/sec
+  ////	mfun->Set_yconst(CH_PI); // speed w=3.145 rad/sec
   ////msystem->AddLink(engine_ground_crank);
 
   // Revolute between ground and crank

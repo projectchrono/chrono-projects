@@ -358,7 +358,7 @@ class ChApi ChMatterSPH : public ChIndexedNodes {
     // Other functions
 
     /// Set no speed and no accelerations (but does not change the position)
-    void SetNoSpeedNoAcceleration() override;
+    void SetZeroSpeedZeroAcceleration() override;
 
     /// Synchronize coll.models coordinates and bounding boxes to the positions of the particles.
     virtual void SyncCollisionModels() override;

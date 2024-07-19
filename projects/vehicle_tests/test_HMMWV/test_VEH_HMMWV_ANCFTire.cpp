@@ -22,7 +22,6 @@
 ////#include <float.h>
 ////unsigned int fp_control_state = _controlfp(_EM_INEXACT, _MCW_EM);
 
-#include "chrono/core/ChStream.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/utils/ChOpenMP.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -54,7 +53,7 @@ using namespace chrono::vehicle::hmmwv;
 int num_threads = 4;
 
 // Initial vehicle location and orientation
-ChVector<> initLoc(0, 0, 1.2);
+ChVector3d initLoc(0, 0, 1.2);
 ChQuaternion<> initRot(1, 0, 0, 0);
 ////ChQuaternion<> initRot(0.866025, 0, 0, 0.5);
 ////ChQuaternion<> initRot(0.7071068, 0, 0, 0.7071068);
@@ -69,7 +68,7 @@ TireModelType tire_model = TireModelType::ANCF;
 
 // Type of powertrain models (SHAFTS, SIMPLE)
 EngineModelType engine_model = EngineModelType::SHAFTS;
-TransmissionModelType transmission_model = TransmissionModelType::SHAFTS;
+TransmissionModelType transmission_model = TransmissionModelType::AUTOMATIC_SHAFTS;
 
 // Drive type (FWD, RWD, or AWD)
 DrivelineTypeWV drive_type = DrivelineTypeWV::AWD;
@@ -86,7 +85,7 @@ double terrainLength = 100.0;  // size in X direction
 double terrainWidth = 100.0;   // size in Y direction
 
 // Point on chassis tracked by the camera (for Irrlicht visualization)
-ChVector<> trackPoint(0.0, 0.0, 1.75);
+ChVector3d trackPoint(0.0, 0.0, 1.75);
 
 // Simulation step sizes
 double step_size = 1e-4;
@@ -149,8 +148,9 @@ int main(int argc, char* argv[]) {
     // Create the (sequential) SMC system
     // ----------------------------------
 
-    ChSystemSMC* system = new ChSystemSMC(use_mat_properties);
-    system->Set_G_acc(ChVector<>(0, 0, -9.81));
+    ChSystemSMC* system = new ChSystemSMC();
+    system->UseMaterialProperties(use_mat_properties);
+    system->SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
 
     // Set number threads
     system->SetNumThreads(num_threads);
@@ -164,16 +164,15 @@ int main(int argc, char* argv[]) {
 #else
     // Default solver settings
     system->SetSolverType(ChSolver::Type::PSOR);
-    system->SetSolverMaxIterations(100);
-    system->SetSolverTolerance(1e-10);
-    system->SetSolverForceTolerance(1e-8);
+    system->GetSolver()->AsIterative()->SetMaxIterations(100);
+    system->GetSolver()->AsIterative()->SetTolerance(1e-10);
 #endif
 
     // Integrator settings
     system->SetTimestepperType(ChTimestepper::Type::HHT);
     auto integrator = std::static_pointer_cast<ChTimestepperHHT>(system->GetTimestepper());
     integrator->SetAlpha(-0.2);
-    integrator->SetMaxiters(50);
+    integrator->SetMaxIters(50);
     integrator->SetAbsTolerances(5e-3, 1.8);
     integrator->SetStepControl(true);
     integrator->SetModifiedNewton(false);
@@ -218,7 +217,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Create the terrain
-    auto patch_mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto patch_mat = chrono_types::make_shared<ChContactMaterialNSC>();
     patch_mat->SetFriction(0.9f);
     patch_mat->SetRestitution(0.01f);
 
@@ -226,7 +225,7 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<RigidTerrain::Patch> patch;
     switch (terrain_model) {
         case RigidTerrain::PatchType::BOX:
-            patch = terrain.AddPatch(patch_mat, ChCoordsys<>(ChVector<>(0, 0, terrainHeight), QUNIT), terrainLength,
+            patch = terrain.AddPatch(patch_mat, ChCoordsys<>(ChVector3d(0, 0, terrainHeight), QUNIT), terrainLength,
                                      terrainWidth);
             patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 200);
             break;
@@ -281,7 +280,7 @@ int main(int argc, char* argv[]) {
     // ---------------
 
     if (debug_output) {
-        GetLog() << "\n\n============ System Configuration ============\n";
+        std::cout << "\n\n============ System Configuration ============\n";
         my_hmmwv.LogHardpointLocations();
     }
 
@@ -315,8 +314,8 @@ int main(int argc, char* argv[]) {
 
         // Debug logging
         if (debug_output && step_number % debug_steps == 0) {
-            GetLog() << "\n\n============ System Information ============\n";
-            GetLog() << "Time = " << time << "\n\n";
+            std::cout << "\n\n============ System Information ============\n";
+            std::cout << "Time = " << time << "\n\n";
             my_hmmwv.DebugLog(OUT_SPRINGS | OUT_SHOCKS | OUT_CONSTRAINTS);
         }
 

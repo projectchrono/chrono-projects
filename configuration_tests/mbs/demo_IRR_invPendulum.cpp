@@ -102,11 +102,11 @@ MyController::MyController(std::shared_ptr<ChBody> cart, std::shared_ptr<ChBody>
 
     // Initialize errors
     m_e_cart = 0;
-    m_ed_cart = m_cart->GetPos_dt().x();
+    m_ed_cart = m_cart->GetLinVel().x();
     m_ei_cart = 0;
 
     m_e_pend = 0;
-    m_ed_pend = m_pend->GetWvel_loc().z();
+    m_ed_pend = m_pend->GetAngVelLocal().z();
     m_ei_pend = 0;
 }
 
@@ -135,7 +135,7 @@ double MyController::GetCurrentCartLocation() {
 }
 
 double MyController::GetCurrentPendAngle() {
-    ChVector<> dir = m_pend->TransformDirectionLocalToParent(ChVector<>(0, 1, 0));
+    ChVector3d dir = m_pend->TransformDirectionLocalToParent(ChVector3d(0, 1, 0));
     return atan2(-dir.x(), dir.y());
 }
 
@@ -145,8 +145,8 @@ void MyController::Advance(double step) {
     double e_pend = GetCurrentPendAngle() - m_a_pend;
 
     // Calculate current error derivatives
-    m_ed_cart = m_cart->GetPos_dt().x();
-    m_ed_pend = m_pend->GetWvel_loc().z();
+    m_ed_cart = m_cart->GetLinVel().x();
+    m_ed_pend = m_pend->GetAngVelLocal().z();
 
     // Calculate current error integrals (trapezoidal rule)
     m_ei_cart += (m_e_cart + e_cart) * step / 2;
@@ -189,40 +189,37 @@ int main(int argc, char* argv[]) {
     // ----------------------
     auto ground = chrono_types::make_shared<ChBody>();
     system.AddBody(ground);
-    ground->SetIdentifier(-1);
-    ground->SetBodyFixed(true);
+    ground->SetFixed(true);
 
     // Attach visualization assets
     auto sphere1_g = chrono_types::make_shared<ChVisualShapeSphere>(0.02);
     sphere1_g->SetColor(ChColor(0, 0.8f, 0.8f));
-    ground->AddVisualShape(sphere1_g, ChFrame<>(ChVector<>(travel_dist, 0, 0)));
+    ground->AddVisualShape(sphere1_g, ChFrame<>(ChVector3d(travel_dist, 0, 0)));
 
     auto sphere2_g = chrono_types::make_shared<ChVisualShapeSphere>(0.03);
     sphere2_g->SetColor(ChColor(0, 0.8f, 0.8f));
-    ground->AddVisualShape(sphere2_g, ChFrame<>(ChVector<>(-travel_dist, 0, 0)));
+    ground->AddVisualShape(sphere2_g, ChFrame<>(ChVector3d(-travel_dist, 0, 0)));
 
     // Create the cart body
     // --------------------
     auto cart = chrono_types::make_shared<ChBody>();
     system.AddBody(cart);
-    cart->SetIdentifier(1);
     cart->SetMass(mass_cart);
-    cart->SetInertiaXX(ChVector<>(1, 1, 1));
-    cart->SetPos(ChVector<>(0, 0, 0));
+    cart->SetInertiaXX(ChVector3d(1, 1, 1));
+    cart->SetPos(ChVector3d(0, 0, 0));
 
     // Attach visualization assets.
     auto box_c = chrono_types::make_shared<ChVisualShapeBox>(0.2, 0.2, 0.2);
     box_c->SetColor(ChColor(0, 0.6f, 0.8f));
-    cart->AddVisualShape(box_c, ChFrame<>(ChVector<>(0, -0.1, 0)));
+    cart->AddVisualShape(box_c, ChFrame<>(ChVector3d(0, -0.1, 0)));
 
     // Create the pendulum body
     // ------------------------
     auto pend = chrono_types::make_shared<ChBody>();
     system.AddBody(pend);
-    pend->SetIdentifier(2);
     pend->SetMass(mass_pend);
-    pend->SetInertiaXX(ChVector<>(1, 1, J_pend));
-    pend->SetPos(ChVector<>(0, hlen_pend, 0));
+    pend->SetInertiaXX(ChVector3d(1, 1, J_pend));
+    pend->SetPos(ChVector3d(0, hlen_pend, 0));
 
     // Attach visualization assets.
     auto cyl_p = chrono_types::make_shared<ChVisualShapeCylinder>(r_pend, 2 * hlen_pend);
@@ -232,13 +229,13 @@ int main(int argc, char* argv[]) {
     // Translational joint ground-cart
     // -------------------------------
     auto prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
-    prismatic->Initialize(ground, cart, ChCoordsys<>(ChVector<>(0, 0, 0), Q_from_AngY(CH_C_PI_2)));
+    prismatic->Initialize(ground, cart, ChFrame<>(ChVector3d(0, 0, 0), QuatFromAngleY(CH_PI_2)));
     system.AddLink(prismatic);
 
     // Revolute joint cart-pendulum
     // ----------------------------
     auto revolute = chrono_types::make_shared<ChLinkLockRevolute>();
-    revolute->Initialize(cart, pend, ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
+    revolute->Initialize(cart, pend, ChFrame<>(ChVector3d(0, 0, 0), QUNIT));
     system.AddLink(revolute);
 
     // Create the PID controller
@@ -255,7 +252,7 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
-    vis->AddCamera(ChVector<>(2.8f, 0, 1.8f), ChVector<>(1.2f, 0, -0.3f));
+    vis->AddCamera(ChVector3d(2.8f, 0, 1.8f), ChVector3d(1.2f, 0, -0.3f));
     vis->AddTypicalLights();
     vis->AttachSystem(&system);
 
@@ -289,8 +286,8 @@ int main(int argc, char* argv[]) {
             switch_time += switch_period;
         }
         // Apply controller force on cart body
-        cart->Empty_forces_accumulators();
-        cart->Accumulate_force(ChVector<>(controller.GetForce(), 0, 0), ChVector<>(0, 0, 0), true);
+        cart->EmptyAccumulators();
+        cart->AccumulateForce(ChVector3d(controller.GetForce(), 0, 0), ChVector3d(0, 0, 0), true);
         // Advance system and controller states
         system.DoStepDynamics(step);
         controller.Advance(step);

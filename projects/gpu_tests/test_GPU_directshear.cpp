@@ -68,7 +68,7 @@ double grav_Y = 0.0f;
 double grav_Z = -981.0f;
 
 double getVoidRatio(double top_plate_pos, int nb, double sphere_radius) {
-    double vol_sphere = 4.0f / 3.0f * chrono::CH_C_PI * std::pow(sphere_radius, 3) * nb;
+    double vol_sphere = 4.0f / 3.0f * chrono::CH_PI * std::pow(sphere_radius, 3) * nb;
     double vol_box = (top_plate_pos - fill_bottom) * box_xy * box_xy;
 
     double eta = vol_sphere / vol_box;
@@ -77,11 +77,11 @@ double getVoidRatio(double top_plate_pos, int nb, double sphere_radius) {
 }
 
 double CalcKE(ChSystemGpuMesh& gpu_sys, double sphere_radius, double sphere_density, int nb) {
-    double vol_sphere = 4.0f / 3.0f * chrono::CH_C_PI * std::pow(sphere_radius, 3);
+    double vol_sphere = 4.0f / 3.0f * chrono::CH_PI * std::pow(sphere_radius, 3);
     double mass_sphere = vol_sphere * sphere_density;
     double inertia_sphere = 0.4f * mass_sphere * sphere_radius * sphere_radius;
-    ChVector<float> ang_velo;
-    ChVector<float> lin_velo;
+    ChVector3f ang_velo;
+    ChVector3f lin_velo;
     double KE = 0;
     for (int i = 0; i < nb; i++) {
         lin_velo = gpu_sys.GetParticleVelocity(i);
@@ -112,7 +112,7 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys) {
     gpu_sys.SetPoissonRatio_SPH(poisson_ratio);
     gpu_sys.SetPoissonRatio_WALL(poisson_ratio);
     gpu_sys.SetPoissonRatio_MESH(poisson_ratio);
-    gpu_sys.SetGravitationalAcceleration(ChVector<float>(grav_X, grav_Y, grav_Z));
+    gpu_sys.SetGravitationalAcceleration(ChVector3f(grav_X, grav_Y, grav_Z));
 
     gpu_sys.SetFrictionMode(chrono::gpu::CHGPU_FRICTION_MODE::MULTI_STEP);
     gpu_sys.SetStaticFrictionCoeff_SPH2SPH(mu_s2s);
@@ -125,22 +125,22 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys) {
     gpu_sys.SetBDFixed(true);
 
     // start outside BD by 10 cm
-    ChVector<float> plane_pos(0.0f, 0.0f, fill_bottom);
-    ChVector<float> plane_normal(0, 0, 1.0f);
+    ChVector3f plane_pos(0.0f, 0.0f, fill_bottom);
+    ChVector3f plane_normal(0, 0, 1.0f);
 
     size_t plane_bc_id = gpu_sys.CreateBCPlane(plane_pos, plane_normal, false);
 
     double spacing = 2.001 * sphere_radius;
 
-    std::vector<ChVector<float>> body_points;
+    std::vector<ChVector3f> body_points;
 
-    utils::PDSampler<float> sampler(spacing);
+    utils::ChPDSampler<float> sampler(spacing);
     fill_top = box_Z / 2 - spacing;  // TODO tune to roughly make a cube of material (6cm tall)
 
-    ChVector<> hdims(box_r - sphere_radius, box_r - sphere_radius, 0);
+    ChVector3d hdims(box_r - sphere_radius, box_r - sphere_radius, 0);
     int counter = 0;
     for (double z = fill_bottom + spacing; z < fill_top; z += spacing) {
-        ChVector<> center(0, 0, z);
+        ChVector3d center(0, 0, z);
         auto points = sampler.SampleBox(center, hdims);
         body_points.insert(body_points.end(), points.begin(), points.end());
         counter = counter + points.size();
@@ -160,10 +160,10 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys) {
     mesh_filenames.push_back(std::string(GetProjectsDataFile("gpu/meshes/directshear/shear_top.obj")));
     mesh_filenames.push_back(std::string(GetProjectsDataFile("gpu/meshes/directshear/downward_square.obj")));
 
-    ChMatrix33<float> scale(ChVector<float>(box_r, box_r, box_r));
+    ChMatrix33<float> scale(ChVector3f(box_r, box_r, box_r));
     std::vector<ChMatrix33<float>> mesh_rotscales = {scale, scale, scale};
-    std::vector<ChVector<float>> mesh_translations = {ChVector<float>(0, 0, 0), ChVector<float>(0, 0, 0),
-                                                      ChVector<float>(0, 0, 0)};
+    std::vector<ChVector3f> mesh_translations = {ChVector3f(0, 0, 0), ChVector3f(0, 0, 0),
+                                                      ChVector3f(0, 0, 0)};
     std::vector<float> mesh_masses = {1000, 1000, (float)plate_mass};
 
     gpu_sys.AddMeshes(mesh_filenames, mesh_translations, mesh_rotscales, mesh_masses);
@@ -171,10 +171,10 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys) {
 
 void SetInitialMeshes(ChSystemGpuMesh& gpu_sys, const std::shared_ptr<ChBody> plate) {
     // initial positions and velocity
-    ChVector<float> mesh_pos(0, 0, 0);
+    ChVector3f mesh_pos(0, 0, 0);
     ChQuaternion<float> mesh_rot(1, 0, 0, 0);
-    ChVector<float> mesh_lin_vel(0, 0, 0);
-    ChVector<float> mesh_ang_vel(0, 0, 0);
+    ChVector3f mesh_lin_vel(0, 0, 0);
+    ChVector3f mesh_ang_vel(0, 0, 0);
 
     // Bottom bin
     gpu_sys.ApplyMeshMotion(bottom_i, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
@@ -183,7 +183,7 @@ void SetInitialMeshes(ChSystemGpuMesh& gpu_sys, const std::shared_ptr<ChBody> pl
     gpu_sys.ApplyMeshMotion(top_i, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
 
     // Plate
-    ChVector<float> plate_pos(0, 0, box_Z / 2.0f);
+    ChVector3f plate_pos(0, 0, box_Z / 2.0f);
     gpu_sys.ApplyMeshMotion(plate_i, plate_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
 }
 
@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
 
     int normal_stress_id = std::atoi(argv[1]);
 
-    ChSystemGpuMesh gran_sys(sphere_radius, sphere_density, ChVector<float>(box_X, box_Y, box_Z));
+    ChSystemGpuMesh gran_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
 
     std::string out_dir = GetChronoOutputPath() + "shear/";
     filesystem::create_directory(filesystem::path(out_dir));
@@ -217,11 +217,11 @@ int main(int argc, char* argv[]) {
     ChSystemSMC ch_sys;
     double grav_mag = std::sqrt(grav_X * grav_X + grav_Y * grav_Y + grav_Z * grav_Z);
 
-    ch_sys.Set_G_acc(ChVector<>(grav_X, grav_Y, grav_Z));
+    ch_sys.SetGravitationalAcceleration(ChVector3d(grav_X, grav_Y, grav_Z));
 
     auto plate = std::make_shared<ChBody>();
-    plate->SetBodyFixed(true);
-    plate->SetPos(ChVector<>(0, 0, box_Z / 2.0));  // Initially out of the way
+    plate->SetFixed(true);
+    plate->SetPos(ChVector3d(0, 0, box_Z / 2.0));  // Initially out of the way
     plate_mass = normal_stresses[normal_stress_id] * box_xy * box_xy / grav_mag;
     plate->SetMass(plate_mass);
     ch_sys.AddBody(plate);
@@ -248,35 +248,35 @@ int main(int argc, char* argv[]) {
     double plate_z = gran_sys.GetMaxParticleZ() + 2 * sphere_radius;
     std::cout << "Adding plate at "
               << "(0, 0, " << plate_z << ")" << std::endl;
-    plate->SetPos(ChVector<>(0, 0, plate_z));
-    plate->SetBodyFixed(false);
+    plate->SetPos(ChVector3d(0, 0, plate_z));
+    plate->SetFixed(false);
 
     // float* forces = new float[numMeshes * FAM_ENTRIES_FORCE];
 
     // Compress the material under the weight of the plate
     std::cout << "Running compression..." << std::endl;
     m_time = 0;
-    ChVector<float> plate_pos(0, 0, 0);
+    ChVector3f plate_pos(0, 0, 0);
     ChQuaternion<float> plate_quat(1, 0, 0, 0);
-    ChVector<float> plate_lin_velo(0, 0, 0);
-    ChVector<float> plate_ang_velo(0, 0, 0);
-    ChVector<> plate_force;
-    ChVector<> plate_torque;
+    ChVector3f plate_lin_velo(0, 0, 0);
+    ChVector3f plate_ang_velo(0, 0, 0);
+    ChVector3d plate_force;
+    ChVector3d plate_torque;
 
-    ChVector<float> top_pos(0, 0, 0);
+    ChVector3f top_pos(0, 0, 0);
     ChQuaternion<float> top_quat(1, 0, 0, 0);
-    ChVector<float> top_lin_velo(0, 0, 0);
-    ChVector<float> top_rot_velo(0, 0, 0);
+    ChVector3f top_lin_velo(0, 0, 0);
+    ChVector3f top_rot_velo(0, 0, 0);
 
-    ChVector<float> bottom_pos(0, 0, 0);
+    ChVector3f bottom_pos(0, 0, 0);
     ChQuaternion<float> bottom_quat(1, 0, 0, 0);
-    ChVector<float> bottom_lin_velo(0, 0, 0);
-    ChVector<float> bottom_rot_velo(0, 0, 0);
+    ChVector3f bottom_lin_velo(0, 0, 0);
+    ChVector3f bottom_rot_velo(0, 0, 0);
 
     for (; m_time < time_compress; m_time += step_size, step++) {
         // Update Plate
         plate_pos.z() = plate->GetPos().z();
-        plate_lin_velo.z() = plate->GetPos_dt().z();
+        plate_lin_velo.z() = plate->GetLinVel().z();
 
         gran_sys.ApplyMeshMotion(plate_i, plate_pos, plate_quat, plate_lin_velo, plate_ang_velo);
 
@@ -294,11 +294,11 @@ int main(int argc, char* argv[]) {
         gran_sys.AdvanceSimulation(step_size);
 
         gran_sys.CollectMeshContactForces(plate_i, plate_force, plate_torque);
-        plate->Empty_forces_accumulators();
+        plate->EmptyAccumulators();
         // set force in x and y direction to zero
         plate_force.x() = 0;
         plate_force.y() = 0;
-        plate->Accumulate_force(plate_force, plate->GetPos(), false);
+        plate->AccumulateForce(plate_force, plate->GetPos(), false);
     }
 
     std::cout << std::endl << "Running shear test..." << std::endl;
@@ -311,7 +311,7 @@ int main(int argc, char* argv[]) {
         plate_pos.x() = pos;
         plate_pos.z() = plate->GetPos().z();
         plate_lin_velo.x() = shear_velocity;
-        plate_lin_velo.z() = plate->GetPos_dt().z();
+        plate_lin_velo.z() = plate->GetLinVel().z();
         gran_sys.ApplyMeshMotion(plate_i, plate_pos, plate_quat, plate_lin_velo, plate_ang_velo);
 
         // Update top bin
@@ -323,13 +323,13 @@ int main(int argc, char* argv[]) {
         ch_sys.DoStepDynamics(step_size);
 
         gran_sys.CollectMeshContactForces(plate_i, plate_force, plate_torque);
-        ChVector<> top_bin_force;
-        ChVector<> top_bin_torque;
+        ChVector3d top_bin_force;
+        ChVector3d top_bin_torque;
         gran_sys.CollectMeshContactForces(top_i, top_bin_force, top_bin_torque);
         double shear_force = plate_force.x() + top_bin_force.x();
 
-        plate->Empty_forces_accumulators();
-        plate->Accumulate_force(ChVector<>(0, 0, plate_force.z()), plate->GetPos(), false);
+        plate->EmptyAccumulators();
+        plate->AccumulateForce(ChVector3d(0, 0, plate_force.z()), plate->GetPos(), false);
 
         // shear_force = fm_lowpass5.Filter(shear_force);
 

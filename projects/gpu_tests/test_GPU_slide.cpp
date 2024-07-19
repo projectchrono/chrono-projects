@@ -34,8 +34,8 @@ float mu_small = 1e-5f;
 float mu_large = 0.5;
 
 bool axis_aligned = false;
-ChVector<float> sphere_pos(0, 0, 0);
-ChVector<float> v_init(10, -10, 0);
+ChVector3f sphere_pos(0, 0, 0);
+ChVector3f v_init(10, -10, 0);
 
 int main(int argc, char* argv[]) {
     std::string inputJson = GetProjectsDataFile("gpu/Slide.json");
@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
 
     // Setup simulation
     ChSystemGpu gpu_sys(params.sphere_radius, params.sphere_density,
-                        ChVector<float>(params.box_X, params.box_Y, params.box_Z));
+                        ChVector3f(params.box_X, params.box_Y, params.box_Z));
     gpu_sys.DisableMinLength();
     switch (run_mode) {
         case RUN_MODE::FRICTIONLESS: {
@@ -133,26 +133,26 @@ int main(int argc, char* argv[]) {
     gpu_sys.SetAdhesionRatio_SPH2WALL(params.adhesion_ratio_s2w);
 
     // Plane normal
-    ChVector<float> n(1, 1, 1);
+    ChVector3f n(1, 1, 1);
     n.Normalize();
 
-    ChVector<> plane_pos(sphere_pos.x() - params.sphere_radius * n.x(), sphere_pos.y() - params.sphere_radius * n.y(),
+    ChVector3d plane_pos(sphere_pos.x() - params.sphere_radius * n.x(), sphere_pos.y() - params.sphere_radius * n.y(),
                          sphere_pos.z() - params.sphere_radius * n.z());
-    ChVector<> plane_normal(n.x(), n.y(), n.z());
+    ChVector3d plane_normal(n.x(), n.y(), n.z());
     bool track_forces = false;
     if (!axis_aligned) {
         gpu_sys.CreateBCPlane(plane_pos, plane_normal, track_forces);
     }
-    gpu_sys.SetGravitationalAcceleration(ChVector<>(params.grav_X, params.grav_Y, params.grav_Z));
+    gpu_sys.SetGravitationalAcceleration(ChVector3d(params.grav_X, params.grav_Y, params.grav_Z));
     gpu_sys.SetParticleOutputMode(params.write_mode);
     gpu_sys.SetParticleOutputFlags(CHGPU_OUTPUT_FLAGS::VEL_COMPONENTS | CHGPU_OUTPUT_FLAGS::ANG_VEL_COMPONENTS);
 
     gpu_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
 
-    std::vector<ChVector<float>> body_points;
+    std::vector<ChVector3f> body_points;
     body_points.push_back(sphere_pos);
 
-    gpu_sys.SetParticles(body_points, std::vector<ChVector<float>>(1, v_init));
+    gpu_sys.SetParticles(body_points, std::vector<ChVector3f>(1, v_init));
 
     gpu_sys.SetFixedStepSize(params.step_size);
 

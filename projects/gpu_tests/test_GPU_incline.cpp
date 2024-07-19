@@ -29,7 +29,7 @@
 using namespace chrono;
 using namespace chrono::gpu;
 
-ChVector<float> sphere_pos(0, 0, 0);
+ChVector3f sphere_pos(0, 0, 0);
 
 enum ROLL_MODE { NONE = 0, SCHWARTZ = 1 };
 
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
 
     // Setup simulation
     ChSystemGpu gran_sys(params.sphere_radius, params.sphere_density,
-                         ChVector<float>(params.box_X, params.box_Y, params.box_Z));
+                         ChVector3f(params.box_X, params.box_Y, params.box_Z));
     gran_sys.DisableMinLength();
 
     switch (roll_mode) {
@@ -108,27 +108,27 @@ int main(int argc, char* argv[]) {
     double az = 1.0 / std::sqrt(2.0 * x * x + 1.0);
 
     // Plane normal
-    ChVector<float> n((float)(-az / (2.0 * ax)), (float)(-az / (2.0 * ax)), 1.f);
+    ChVector3f n((float)(-az / (2.0 * ax)), (float)(-az / (2.0 * ax)), 1.f);
     n.Normalize();
 
-    ChVector<float> v_init(ax, ax, az);
+    ChVector3f v_init(ax, ax, az);
     v_init = (-v_init_mag / v_init.Length()) * v_init;
 
-    ChVector<float> plane_pos(-params.sphere_radius * n.x(), -params.sphere_radius * n.y(),
+    ChVector3f plane_pos(-params.sphere_radius * n.x(), -params.sphere_radius * n.y(),
                               -params.sphere_radius * n.z());
-    ChVector<float> plane_normal(n.x(), n.y(), n.z());
+    ChVector3f plane_normal(n.x(), n.y(), n.z());
     bool track_forces = false;
     gran_sys.CreateBCPlane(plane_pos, plane_normal, track_forces);
 
-    gran_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
+    gran_sys.SetGravitationalAcceleration(ChVector3f(params.grav_X, params.grav_Y, params.grav_Z));
     gran_sys.SetParticleOutputMode(params.write_mode);
     gran_sys.SetParticleOutputFlags(CHGPU_OUTPUT_FLAGS::VEL_COMPONENTS | CHGPU_OUTPUT_FLAGS::ANG_VEL_COMPONENTS);
 
     gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
 
-    std::vector<ChVector<float>> body_points;
+    std::vector<ChVector3f> body_points;
     body_points.push_back(sphere_pos);
-    std::vector<ChVector<float>> body_vels(1, v_init);
+    std::vector<ChVector3f> body_vels(1, v_init);
 
     gran_sys.SetParticles(body_points, body_vels);
 

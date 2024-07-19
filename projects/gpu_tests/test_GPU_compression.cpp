@@ -20,8 +20,7 @@
 #include <cmath>
 
 #include "chrono/core/ChGlobal.h"
-#include "chrono/core/ChStream.h"
-#include "chrono/core/ChVector.h"
+#include "chrono/core/ChVector3.h"
 #include "chrono/utils/ChUtilsSamplers.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
@@ -56,23 +55,23 @@ int main(int argc, char* argv[]) {
 
     // Setup simulation, big domain: 10 by 10 by 20
     ChSystemGpu gpu_sys(params.sphere_radius, params.sphere_density,
-                        ChVector<float>(params.box_X, params.box_Y, params.box_Z));
+                        ChVector3f(params.box_X, params.box_Y, params.box_Z));
 
     // One thing we can do is to move the Big Box Domain by (X/2, Y/2, Z/2) using SetBDCenter, so the
     // coordinate range we are now working with is (0,0,0) to (X,Y,Z), instead of (-X/2,-Y/2,-Z/2) to (X/2, Y/2, Z/2).
-    gpu_sys.SetBDCenter(ChVector<float>(params.box_X / 2, params.box_Y / 2, params.box_Z / 2));
+    gpu_sys.SetBDCenter(ChVector3f(params.box_X / 2, params.box_Y / 2, params.box_Z / 2));
 
     // creat cylinder boundary of Radius 5 at the center of the box domain
-    ChVector<float> cyl_center(params.box_X / 2, params.box_Y / 2, params.box_Z / 2);
+    ChVector3f cyl_center(params.box_X / 2, params.box_Y / 2, params.box_Z / 2);
     float cyl_rad = std::min(params.box_X, params.box_Y) / 2.0f;
     gpu_sys.CreateBCCylinderZ(cyl_center, cyl_rad, false, true);
 
     // initialize sampler, set distance between center of spheres as 2.1r
-    utils::HCPSampler<float> sampler(2.1f * params.sphere_radius);
-    std::vector<ChVector<float>> initialPos;
+    utils::ChHCPSampler<float> sampler(2.1f * params.sphere_radius);
+    std::vector<ChVector3f> initialPos;
 
     // randomize by layer
-    ChVector<float> center(params.box_X / 2, params.box_Y / 2, params.sphere_radius);
+    ChVector3f center(params.box_X / 2, params.box_Y / 2, params.sphere_radius);
     // fill up each layer
     while (center.z() + params.sphere_radius < params.box_Z) {
         auto points = sampler.SampleCylinderZ(center, cyl_rad - params.sphere_radius, 0);
@@ -83,9 +82,9 @@ int main(int argc, char* argv[]) {
     size_t numSpheres = initialPos.size();
 
     // create initial velocity vector
-    std::vector<ChVector<float>> initialVelo;
+    std::vector<ChVector3f> initialVelo;
     for (size_t i = 0; i < numSpheres; i++) {
-        ChVector<float> velo(-initialPos.at(i).x() / cyl_rad, -initialPos.at(i).x() / cyl_rad, 0.0f);
+        ChVector3f velo(-initialPos.at(i).x() / cyl_rad, -initialPos.at(i).x() / cyl_rad, 0.0f);
         initialVelo.push_back(velo);
     }
 
@@ -113,7 +112,7 @@ int main(int argc, char* argv[]) {
     gpu_sys.SetCohesionRatio(params.cohesion_ratio);
     gpu_sys.SetAdhesionRatio_SPH2WALL(params.adhesion_ratio_s2w);
 
-    gpu_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
+    gpu_sys.SetGravitationalAcceleration(ChVector3f(params.grav_X, params.grav_Y, params.grav_Z));
     gpu_sys.SetParticleOutputMode(params.write_mode);
 
     std::string out_dir = GetChronoOutputPath() + "GPU/";
@@ -129,8 +128,8 @@ int main(int argc, char* argv[]) {
     gpu_sys.SetVerbosity(params.verbose);
 
     // create top plane boundary condition with its position and normal
-    ChVector<float> topWallPos(params.box_X / 2, params.box_Y / 2, params.box_Z);
-    ChVector<float> topWallNrm(0.0f, 0.0f, -1.0f);
+    ChVector3f topWallPos(params.box_X / 2, params.box_Y / 2, params.box_Z);
+    ChVector3f topWallNrm(0.0f, 0.0f, -1.0f);
     size_t topWall = gpu_sys.CreateBCPlane(topWallPos, topWallNrm, true);
 
     float topWall_vel;       // top plane moving velocity
@@ -155,8 +154,8 @@ int main(int argc, char* argv[]) {
     int curr_frame = 0;
     unsigned int total_frames = (unsigned int)(((float)params.time_end - 0.5f) * fps) - 1;
     // initialize values that I want to keep track of
-    ChVector<float> plane_reaction_force;
-    ChVector<float> platePos;
+    ChVector3f plane_reaction_force;
+    ChVector3f platePos;
     int nc;
 
     // let system run for 0.5 second so the particles can settle

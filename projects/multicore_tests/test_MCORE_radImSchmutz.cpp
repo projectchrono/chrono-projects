@@ -21,7 +21,6 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChStream.h"
 #include "chrono/assets/ChVisualShapeBox.h"
 #include "chrono/assets/ChVisualShapeCapsule.h"
 #include "chrono/utils/ChUtilsGeometry.h"
@@ -108,6 +107,7 @@ int out_fps_pushing = 60;
 // -----------------------------------------------------------------------------
 // Parameters for the granular material (identical spheres)
 // -----------------------------------------------------------------------------
+int tag_particles = 0;
 double r_g = 0.01;
 double rho_g = 2700;
 float Y_g = 5e7;
@@ -121,8 +121,8 @@ unsigned int desired_num_particles = 10000;
 double mass1 = 550;
 double mass_wheel = 351;
 
-ChVector<> inertia_sled(100, 100, 100);
-ChVector<> inertia_wheel(50, 138, 138);
+ChVector3d inertia_sled(100, 100, 100);
+ChVector3d inertia_wheel(50, 138, 138);
 
 double a = 0.951;
 double b = 0.169;
@@ -141,7 +141,7 @@ double H = 2.0;
 double d = L / 2 - 1.2 * w_w;
 
 double init_vel = 5;
-double init_angle = (CH_C_PI / 180) * 4;
+double init_angle = (CH_PI / 180) * 4;
 
 // =============================================================================
 // This class encapsulates the rig's mechanism
@@ -150,24 +150,24 @@ class Mechanism {
   public:
     Mechanism(ChSystemMulticore* system, double h);
 
-    const ChVector<>& GetSledVelocity() const { return m_sled->GetPos_dt(); }
-    const ChVector<>& GetWheelVelocity() const { return m_wheel->GetPos_dt(); }
+    const ChVector3d& GetSledVelocity() const { return m_sled->GetLinVel(); }
+    const ChVector3d& GetWheelVelocity() const { return m_wheel->GetLinVel(); }
 
-    void WriteResults(ChStreamOutAsciiFile& f, double time);
+    void WriteResults(std::ofstream& f, double time);
 
   private:
-    ChVector<> calcLocationWheel(double h) {
+    ChVector3d calcLocationWheel(double h) {
         double ca = std::cos(init_angle);
         double sa = std::sin(init_angle);
 
-        return ChVector<>(-d - ca * (c + w_w / 2) + sa * (b + r_w), 0, h + sa * (c + w_w / 2) + ca * (b + r_w));
+        return ChVector3d(-d - ca * (c + w_w / 2) + sa * (b + r_w), 0, h + sa * (c + w_w / 2) + ca * (b + r_w));
     }
 
-    ChVector<> calcLocationRevolute(double h) {
+    ChVector3d calcLocationRevolute(double h) {
         double ca = std::cos(init_angle);
         double sa = std::sin(init_angle);
 
-        return ChVector<>(-d - ca * (a + c + w_w / 2) + sa * r_w, 0, h + sa * (a + c + w_w / 2) + ca * r_w);
+        return ChVector3d(-d - ca * (a + c + w_w / 2) + sa * r_w, 0, h + sa * (a + c + w_w / 2) + ca * r_w);
     }
 
     std::shared_ptr<ChBody> m_ground;
@@ -181,28 +181,26 @@ class Mechanism {
 Mechanism::Mechanism(ChSystemMulticore* system, double h) {
     // Calculate hardpoint locations at initial configuration (expressed in the
     // global frame)
-    ChVector<> loc_revolute = calcLocationRevolute(h);
-    ChVector<> loc_wheel = calcLocationWheel(h);
-    ChVector<> loc_sled = loc_revolute - ChVector<>(e, 0, 0);
-    ChVector<> loc_prismatic = loc_sled - ChVector<>(0, 0, e / 4);
+    ChVector3d loc_revolute = calcLocationRevolute(h);
+    ChVector3d loc_wheel = calcLocationWheel(h);
+    ChVector3d loc_sled = loc_revolute - ChVector3d(e, 0, 0);
+    ChVector3d loc_prismatic = loc_sled - ChVector3d(0, 0, e / 4);
 
     // Create the ground body
     m_ground = chrono_types::make_shared<ChBody>();
-    m_ground->SetIdentifier(-1);
-    m_ground->SetBodyFixed(true);
-    m_ground->SetCollide(false);
+    m_ground->SetFixed(true);
+    m_ground->EnableCollision(false);
 
     system->AddBody(m_ground);
 
     // Create the sled body
     m_sled = chrono_types::make_shared<ChBody>();
-    m_sled->SetIdentifier(1);
     m_sled->SetMass(mass1);
     m_sled->SetInertiaXX(inertia_sled);
     m_sled->SetPos(loc_sled);
-    m_sled->SetPos_dt(ChVector<>(init_vel, 0, 0));
-    m_sled->SetBodyFixed(false);
-    m_sled->SetCollide(false);
+    m_sled->SetLinVel(ChVector3d(init_vel, 0, 0));
+    m_sled->SetFixed(false);
+    m_sled->EnableCollision(false);
 
     auto box_sled = chrono_types::make_shared<ChVisualShapeBox>(2.0 * e, (2.0 / 3) * e, (2.0 / 3) * e);
     box_sled->SetColor(ChColor(0.7f, 0.3f, 0.3f));
@@ -212,68 +210,67 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
 
     // Create a material for the wheel body
 #ifdef USE_SMC
-    auto mat_w = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_w = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_w->SetYoungModulus(2e6f);
     mat_w->SetFriction(0.4f);
     mat_w->SetRestitution(0.1f);
 #else
-    auto mat_w = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_w = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_w->SetFriction(0.4f);
 #endif
 
     // Create the wheel body
     m_wheel = chrono_types::make_shared<ChBody>();
-    m_wheel->SetIdentifier(2);
     m_wheel->SetMass(mass_wheel);
     m_wheel->SetInertiaXX(inertia_wheel);
     m_wheel->SetPos(loc_wheel);
-    m_wheel->SetRot(Q_from_AngY(init_angle));
-    m_wheel->SetPos_dt(ChVector<>(init_vel, 0, 0));
-    m_wheel->SetBodyFixed(false);
-    m_wheel->SetCollide(true);
+    m_wheel->SetRot(QuatFromAngleY(init_angle));
+    m_wheel->SetLinVel(ChVector3d(init_vel, 0, 0));
+    m_wheel->SetFixed(false);
+    m_wheel->EnableCollision(true);
 
     switch (wheel_shape) {
         case ChCollisionShape::Type::CYLINDER:
-            utils::AddCylinderGeometry(m_wheel.get(), mat_w, r_w, w_w / 2, ChVector<>(c, 0, -b), Q_from_AngY(CH_C_PI_2));
+            utils::AddCylinderGeometry(m_wheel.get(), mat_w, r_w, w_w / 2, ChVector3d(c, 0, -b), QuatFromAngleY(CH_PI_2));
             break;
         case ChCollisionShape::Type::ROUNDEDCYL:
-            utils::AddRoundedCylinderGeometry(m_wheel.get(), mat_w, r_w - s_w, w_w / 2 - s_w, s_w, ChVector<>(c, 0, -b),
-                                              Q_from_AngY(CH_C_PI_2));
+            utils::AddRoundedCylinderGeometry(m_wheel.get(), mat_w, r_w - s_w, w_w / 2 - s_w, s_w, ChVector3d(c, 0, -b),
+                                              QuatFromAngleY(CH_PI_2));
             break;
     }
 
     auto cap_wheel = chrono_types::make_shared<ChVisualShapeCapsule>(w_w / 4, a + c - w_w / 2);
     cap_wheel->SetColor(ChColor(0.3f, 0.3f, 0.7f));
-    m_wheel->AddVisualShape(cap_wheel, ChFrame<>(ChVector<>((c - a) / 2, 0, -b), Q_from_AngY(CH_C_PI_2)));
+    m_wheel->AddVisualShape(cap_wheel, ChFrame<>(ChVector3d((c - a) / 2, 0, -b), QuatFromAngleY(CH_PI_2)));
 
     system->AddBody(m_wheel);
 
     // Create and initialize translational joint ground - sled
     m_prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
-    m_prismatic->Initialize(m_ground, m_sled, ChCoordsys<>(loc_prismatic, Q_from_AngY(CH_C_PI_2)));
+    m_prismatic->Initialize(m_ground, m_sled, ChFrame<>(loc_prismatic, QuatFromAngleY(CH_PI_2)));
     system->AddLink(m_prismatic);
 
     // Create and initialize revolute joint sled - wheel
     m_revolute = chrono_types::make_shared<ChLinkLockRevolute>();
-    m_revolute->Initialize(m_wheel, m_sled, ChCoordsys<>(loc_revolute, Q_from_AngX(CH_C_PI_2)));
+    m_revolute->Initialize(m_wheel, m_sled, ChFrame<>(loc_revolute, QuatFromAngleX(CH_PI_2)));
     system->AddLink(m_revolute);
 }
 
-void Mechanism::WriteResults(ChStreamOutAsciiFile& f, double time) {
+void Mechanism::WriteResults(std::ofstream& f, double time) {
     // Velocity of sled body (in absolute frame)
-    ChVector<> sled_vel = m_sled->GetPos_dt();
+    ChVector3d sled_vel = m_sled->GetLinVel();
 
     // Velocity of wheel body (in absolute frame)
-    ChVector<> wheel_vel = m_wheel->GetPos_dt();
+    ChVector3d wheel_vel = m_wheel->GetLinVel();
 
     // Coordinate system of the revolute joint (relative to the frame of body2, in
     // this case the sled)
-    ChCoordsys<> revCoordsys = m_revolute->GetLinkRelativeCoords();
+    auto revFrame = m_revolute->GetFrame2Rel();
 
     // Reaction force in revolute joint
-    ChVector<> force_jointsys = m_revolute->Get_react_force();
-    ChVector<> force_bodysys = revCoordsys.TransformDirectionLocalToParent(force_jointsys);
-    ChVector<> force_abssys = m_sled->GetCoord().TransformDirectionLocalToParent(force_bodysys);
+    ChVector3d force_jointsys = m_revolute->GetReaction2().force;
+    ChVector3d force_bodysys = revFrame.TransformDirectionLocalToParent(force_jointsys);
+    ChVector3d force_abssys = m_sled->GetCoordsys().TransformDirectionLocalToParent(force_bodysys);
 
     f << time << "  " << sled_vel.x() << "  " << sled_vel.y() << "  " << sled_vel.z() << "      " << wheel_vel.x() << "  "
       << wheel_vel.y() << "  " << wheel_vel.z() << "      " << force_abssys.x() << "  " << force_abssys.y() << "  "
@@ -284,21 +281,20 @@ void Mechanism::WriteResults(ChStreamOutAsciiFile& f, double time) {
 // Create container bin.
 // =============================================================================
 void CreateContainer(ChSystemMulticore* system) {
-    int id_c = -200;
     double thickness = 0.2;
 
 #ifdef USE_SMC
-    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_c = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_c->SetYoungModulus(2e6f);
     mat_c->SetFriction(0.4f);
     mat_c->SetRestitution(0.1f);
 
-    utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(L / 2, W / 2, H / 2), thickness / 2);
+    utils::CreateBoxContainer(system, mat_c, ChVector3d(L / 2, W / 2, H / 2), thickness / 2);
 #else
-    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_c = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_c->SetFriction(0.4f);
 
-    utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(L / 2, W / 2, H / 2), thickness / 2);
+    utils::CreateBoxContainer(system, id_c, mat_c, ChVector3d(L / 2, W / 2, H / 2), thickness / 2);
 
 #endif
 }
@@ -309,35 +305,35 @@ void CreateContainer(ChSystemMulticore* system) {
 void CreateParticles(ChSystemMulticore* system) {
 // Create a material for the ball mixture.
 #ifdef USE_SMC
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
     // Create a mixture entirely made out of spheres.
     double r = 1.01 * r_g;
-    utils::PDSampler<double> sampler(2 * r);
-    utils::Generator gen(system);
+    utils::ChPDSampler<double> sampler(2 * r);
+    utils::ChGenerator gen(system);
 
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
-    m1->setDefaultMaterial(mat_g);
-    m1->setDefaultDensity(rho_g);
-    m1->setDefaultSize(r_g);
+    std::shared_ptr<utils::ChMixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
+    m1->SetDefaultMaterial(mat_g);
+    m1->SetDefaultDensity(rho_g);
+    m1->SetDefaultSize(r_g);
 
     // Create particles, one layer at a time, until the desired number is reached.
-    gen.setBodyIdentifier(100);
+    gen.SetStartTag(tag_particles);
 
-    ChVector<> hdims(L / 2 - r, W / 2 - r, 0);
-    ChVector<> center(0, 0, 2 * r);
+    ChVector3d hdims(L / 2 - r, W / 2 - r, 0);
+    ChVector3d center(0, 0, 2 * r);
 
     int layer = 1;
-    while (gen.getTotalNumBodies() < desired_num_particles) {
+    while (gen.GetTotalNumBodies() < desired_num_particles) {
         gen.CreateObjectsBox(sampler, center, hdims);
-        cout << "layer " << layer << "    total particles: " << gen.getTotalNumBodies() << endl;
+        cout << "layer " << layer << "    total particles: " << gen.GetTotalNumBodies() << endl;
         center.z() += 2 * r;
         layer++;
     }
@@ -351,8 +347,8 @@ void CreateParticles(ChSystemMulticore* system) {
 void FindRange(ChSystem* sys, double& lowest, double& highest) {
     highest = -1000;
     lowest = 1000;
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() < 100)
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() <= tag_particles)
             continue;
         double h = body->GetPos().z();
         if (h < lowest)
@@ -392,7 +388,7 @@ int main(int argc, char* argv[]) {
 
     sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
-    sys->Set_G_acc(ChVector<>(0, 0, -9.81));
+    sys->SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
 
     // ----------------------
     // Set number of threads.
@@ -458,7 +454,7 @@ int main(int argc, char* argv[]) {
             // Create the granular material and the container from the checkpoint file.
             cout << "Read checkpoint data from " << checkpoint_file;
             utils::ReadCheckpoint(sys, checkpoint_file);
-            cout << "  done.  Read " << sys->Get_bodylist().size() << " bodies." << endl;
+            cout << "  done.  Read " << sys->GetBodies().size() << " bodies." << endl;
 
             // Create the mechanism with the wheel just above the granular material.
             double lowest, highest;
@@ -491,12 +487,12 @@ int main(int argc, char* argv[]) {
     int next_out_frame = 0;
     double exec_time = 0;
     int num_contacts = 0;
-    ChStreamOutAsciiFile sfile(stats_file.c_str());
-    ChStreamOutAsciiFile rfile(results_file.c_str());
+    std::ofstream sfile(stats_file.c_str());
+    std::ofstream rfile(results_file.c_str());
 
     // Disable buffering on output file streams.
-    sfile.GetFstream().rdbuf()->pubsetbuf(0, 0);
-    rfile.GetFstream().rdbuf()->pubsetbuf(0, 0);
+    sfile.rdbuf()->pubsetbuf(0, 0);
+    rfile.rdbuf()->pubsetbuf(0, 0);
 
 #ifdef CHRONO_OPENGL
     opengl::ChVisualSystemOpenGL vis;
@@ -505,7 +501,7 @@ int main(int argc, char* argv[]) {
     vis.SetWindowSize(1280, 720);
     vis.SetRenderMode(opengl::WIREFRAME);
     vis.Initialize();
-    vis.AddCamera(ChVector<>(0, -8, 0), ChVector<>(0, 0, 0));
+    vis.AddCamera(ChVector3d(0, -8, 0), ChVector3d(0, 0, 0));
     vis.SetCameraVertical(CameraVerticalDir::Z);
 #endif
 
@@ -529,13 +525,13 @@ int main(int argc, char* argv[]) {
             cout << "             Execution time: " << exec_time << endl;
 
             sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
-            sfile.GetFstream().flush();
+            sfile.flush();
 
             // Create a checkpoint from the current state.
             if (problem == SETTLING) {
                 cout << "             Write checkpoint data " << flush;
                 utils::WriteCheckpoint(sys, checkpoint_file);
-                cout << sys->Get_bodylist().size() << " bodies" << endl;
+                cout << sys->GetBodies().size() << " bodies" << endl;
             }
 
             out_frame++;
@@ -558,12 +554,12 @@ int main(int argc, char* argv[]) {
         time += time_step;
         sim_frame++;
         exec_time += sys->GetTimerStep();
-        num_contacts += sys->GetNcontacts();
+        num_contacts += sys->GetNumContacts();
 
         // Save results
         if (problem != SETTLING) {
             mech->WriteResults(rfile, time);
-            rfile.GetFstream().flush();
+            rfile.flush();
         }
     }
 
@@ -571,12 +567,12 @@ int main(int argc, char* argv[]) {
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
         utils::WriteCheckpoint(sys, checkpoint_file);
-        cout << "  done.  Wrote " << sys->Get_bodylist().size() << " bodies." << endl;
+        cout << "  done.  Wrote " << sys->GetBodies().size() << " bodies." << endl;
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies:  " << sys->Get_bodylist().size() << endl;
+    cout << "Number of bodies:  " << sys->GetBodies().size() << endl;
     cout << "Simulation time:   " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;
 

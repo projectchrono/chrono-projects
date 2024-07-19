@@ -65,8 +65,8 @@ void TimingOutput(chrono::ChSystem* mSys) {
     double SOLVER = mSys->GetTimerAdvance();
     double UPDT = mSys->GetTimerUpdate();
     int REQ_ITS = 0;
-    int BODS = mSys->GetNbodies();
-    int CNTC = mSys->GetNcontacts();
+    int BODS = mSys->GetNumBodies();
+    int CNTC = mSys->GetNumContacts();
     if (dynamic_cast<chrono::ChSystemMulticore*>(mSys)) {
         REQ_ITS = std::static_pointer_cast<chrono::ChIterativeSolverMulticore>(mSys->GetSolver())->GetIterations();
     }
@@ -103,11 +103,11 @@ int main(int argc, char** argv) {
 
     // Granular material properties
     double radius_g = 0.006;
-    int Id_g = 10000;
+    int tag_particles = 0;
     double rho_g = 2500;
-    double vol_g = (4.0 / 3) * CH_C_PI * radius_g * radius_g * radius_g;
+    double vol_g = (4.0 / 3) * CH_PI * radius_g * radius_g * radius_g;
     double mass_g = rho_g * vol_g;
-    ChVector<> inertia_g = 0.4 * mass_g * radius_g * radius_g * ChVector<>(1, 1, 1);
+    ChVector3d inertia_g = 0.4 * mass_g * radius_g * radius_g * ChVector3d(1, 1, 1);
     int num_layers = 10;
 
     // Terrain contact properties
@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
     float kt_terrain = 2.86e6f;
     float gt_terrain = 1.0e3f;
     float coh_pressure_terrain = 0e3f;
-    float coh_force_terrain = (float)(CH_C_PI * radius_g * radius_g) * coh_pressure_terrain;
+    float coh_force_terrain = (float)(CH_PI * radius_g * radius_g) * coh_pressure_terrain;
 
     // Estimates for number of bins for broad-phase
     int factor = 2;
@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
     }
 
     system->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
-    system->Set_G_acc(ChVector<>(0, 0, -9.81));
+    system->SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
     system->GetSettings()->solver.use_full_inertia_tensor = false;
     system->GetSettings()->solver.tolerance = 0.1;
     system->GetSettings()->solver.max_iteration_bilateral = 100;
@@ -183,11 +183,11 @@ int main(int argc, char** argv) {
     // ---------------------
 
     // Create contact material for terrain
-    std::shared_ptr<ChMaterialSurface> material_terrain;
+    std::shared_ptr<ChContactMaterial> material_terrain;
 
     switch (method) {
         case ChContactMethod::SMC: {
-            auto mat_ter = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_ter = chrono_types::make_shared<ChContactMaterialSMC>();
             mat_ter->SetFriction(friction_terrain);
             mat_ter->SetRestitution(restitution_terrain);
             mat_ter->SetYoungModulus(Y_terrain);
@@ -203,7 +203,7 @@ int main(int argc, char** argv) {
             break;
         }
         case ChContactMethod::NSC: {
-            auto mat_ter = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_ter = chrono_types::make_shared<ChContactMaterialNSC>();
             mat_ter->SetFriction(friction_terrain);
             mat_ter->SetRestitution(restitution_terrain);
             mat_ter->SetCohesion(coh_force_terrain);
@@ -217,26 +217,25 @@ int main(int argc, char** argv) {
     // Create container body
     auto container = chrono_types::make_shared<ChBody>();
     system->AddBody(container);
-    container->SetIdentifier(-1);
     container->SetMass(1);
-    container->SetBodyFixed(true);
-    container->SetCollide(true);
+    container->SetFixed(true);
+    container->EnableCollision(true);
 
     // Bottom box
-    utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hdimX, hdimY, hthick), ChVector<>(0, 0, -hthick),
+    utils::AddBoxGeometry(container.get(), material_terrain, ChVector3d(hdimX, hdimY, hthick), ChVector3d(0, 0, -hthick),
                           ChQuaternion<>(1, 0, 0, 0), true);
     // Front box
-    utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hthick, hdimY, hdimZ + hthick),
-                          ChVector<>(hdimX + hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
+    utils::AddBoxGeometry(container.get(), material_terrain, ChVector3d(hthick, hdimY, hdimZ + hthick),
+                          ChVector3d(hdimX + hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
     // Rear box
-    utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hthick, hdimY, hdimZ + hthick),
-                          ChVector<>(-hdimX - hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
+    utils::AddBoxGeometry(container.get(), material_terrain, ChVector3d(hthick, hdimY, hdimZ + hthick),
+                          ChVector3d(-hdimX - hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
     // Left box
-    utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hdimX, hthick, hdimZ + hthick),
-                          ChVector<>(0, hdimY + hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
+    utils::AddBoxGeometry(container.get(), material_terrain, ChVector3d(hdimX, hthick, hdimZ + hthick),
+                          ChVector3d(0, hdimY + hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
     // Right box
-    utils::AddBoxGeometry(container.get(), material_terrain, ChVector<>(hdimX, hthick, hdimZ + hthick),
-                          ChVector<>(0, -hdimY - hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
+    utils::AddBoxGeometry(container.get(), material_terrain, ChVector3d(hdimX, hthick, hdimZ + hthick),
+                          ChVector3d(0, -hdimY - hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
 
     // ----------------
     // Create particles
@@ -244,26 +243,26 @@ int main(int argc, char** argv) {
 
     // Create a particle generator and a mixture entirely made out of spheres
     double r = 1.01 * radius_g;
-    utils::PDSampler<double> sampler(2 * r);
-    utils::Generator gen(system);
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
-    m1->setDefaultMaterial(material_terrain);
-    m1->setDefaultDensity(rho_g);
-    m1->setDefaultSize(radius_g);
+    utils::ChPDSampler<double> sampler(2 * r);
+    utils::ChGenerator gen(system);
+    std::shared_ptr<utils::ChMixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
+    m1->SetDefaultMaterial(material_terrain);
+    m1->SetDefaultDensity(rho_g);
+    m1->SetDefaultSize(radius_g);
 
     // Set starting value for body identifiers
-    gen.setBodyIdentifier(Id_g);
+    gen.SetStartTag(tag_particles);
 
     // Create particles in layers until reaching the desired number of particles
-    ChVector<> hdims(hdimX - r, hdimY - r, 0);
-    ChVector<> center(0, 0, 2 * r);
+    ChVector3d hdims(hdimX - r, hdimY - r, 0);
+    ChVector3d center(0, 0, 2 * r);
 
     for (int il = 0; il < num_layers; il++) {
         gen.CreateObjectsBox(sampler, center, hdims);
         center.z() += 2 * r;
     }
 
-    unsigned int num_particles = gen.getTotalNumBodies();
+    unsigned int num_particles = gen.GetTotalNumBodies();
     std::cout << "Generated particles:  " << num_particles << std::endl;
 
     // If tracking a granule (roughly in the "middle of the pack"),
@@ -272,9 +271,9 @@ int main(int argc, char** argv) {
     std::ofstream outf;             // output file stream
 
     if (track_granule) {
-        int id = Id_g + num_particles / 2;
-        for (auto body : system->Get_bodylist()) {
-            if (body->GetIdentifier() == id) {
+        int id = tag_particles + num_particles / 2;
+        for (auto body : system->GetBodies()) {
+            if (body->GetTag() == id) {
                 granule = body;
                 break;
             }
@@ -297,7 +296,7 @@ int main(int argc, char** argv) {
         vis.SetWindowSize(1280, 720);
         vis.SetRenderMode(opengl::WIREFRAME);
         vis.Initialize();
-        vis.AddCamera(ChVector<>(0, -1, 0), ChVector<>(0, 0, 0));
+        vis.AddCamera(ChVector3d(0, -1, 0), ChVector3d(0, 0, 0));
         vis.SetCameraVertical(CameraVerticalDir::Z);
     }
 #endif
@@ -331,10 +330,10 @@ int main(int argc, char** argv) {
         if (track_granule) {
             assert(outf.is_open());
             assert(granule);
-            const ChVector<>& pos = granule->GetPos();
-            const ChVector<>& vel = granule->GetPos_dt();
+            const ChVector3d& pos = granule->GetPos();
+            const ChVector3d& vel = granule->GetLinVel();
             outf << system->GetChTime() << " ";
-            outf << system->GetNbodies() << " " << system->GetNcontacts() << " ";
+            outf << system->GetNumBodies() << " " << system->GetNumContacts() << " ";
             outf << pos.x() << " " << pos.y() << " " << pos.z() << " ";
             outf << vel.x() << " " << vel.y() << " " << vel.z();
             outf << std::endl << std::flush;

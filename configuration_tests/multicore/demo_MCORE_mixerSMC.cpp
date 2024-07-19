@@ -47,52 +47,46 @@ using namespace chrono;
 // to rotate at constant angular velocity.
 // -----------------------------------------------------------------------------
 std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
-    // IDs for the two bodies
-    int binId = -200;
-    int mixerId = -201;
-
     // Create a common material
-    auto mat = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat = chrono_types::make_shared<ChContactMaterialSMC>();
     mat->SetYoungModulus(2e5f);
     mat->SetFriction(0.4f);
     mat->SetRestitution(0.1f);
 
     // Create the containing bin (2 x 2 x 1)
     auto bin = chrono_types::make_shared<ChBody>();
-    bin->SetIdentifier(binId);
     bin->SetMass(1);
-    bin->SetPos(ChVector<>(0, 0, 0));
+    bin->SetPos(ChVector3d(0, 0, 0));
     bin->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    bin->SetCollide(true);
-    bin->SetBodyFixed(true);
+    bin->EnableCollision(true);
+    bin->SetFixed(true);
 
-    ChVector<> hdim(1, 1, 0.5);
+    ChVector3d hdim(1, 1, 0.5);
     double hthick = 0.1;
 
-    utils::AddBoxGeometry(bin.get(), mat, ChVector<>(hdim.x(), hdim.y(), hthick), ChVector<>(0, 0, -hthick));
-    utils::AddBoxGeometry(bin.get(), mat, ChVector<>(hthick, hdim.y(), hdim.z()),
-                          ChVector<>(-hdim.x() - hthick, 0, hdim.z()));
-    utils::AddBoxGeometry(bin.get(), mat, ChVector<>(hthick, hdim.y(), hdim.z()),
-                          ChVector<>(hdim.x() + hthick, 0, hdim.z()));
-    utils::AddBoxGeometry(bin.get(), mat, ChVector<>(hdim.x(), hthick, hdim.z()),
-                          ChVector<>(0, -hdim.y() - hthick, hdim.z()));
-    utils::AddBoxGeometry(bin.get(), mat, ChVector<>(hdim.x(), hthick, hdim.z()),
-                          ChVector<>(0, hdim.y() + hthick, hdim.z()));
+    utils::AddBoxGeometry(bin.get(), mat, ChVector3d(hdim.x(), hdim.y(), hthick), ChVector3d(0, 0, -hthick));
+    utils::AddBoxGeometry(bin.get(), mat, ChVector3d(hthick, hdim.y(), hdim.z()),
+                          ChVector3d(-hdim.x() - hthick, 0, hdim.z()));
+    utils::AddBoxGeometry(bin.get(), mat, ChVector3d(hthick, hdim.y(), hdim.z()),
+                          ChVector3d(hdim.x() + hthick, 0, hdim.z()));
+    utils::AddBoxGeometry(bin.get(), mat, ChVector3d(hdim.x(), hthick, hdim.z()),
+                          ChVector3d(0, -hdim.y() - hthick, hdim.z()));
+    utils::AddBoxGeometry(bin.get(), mat, ChVector3d(hdim.x(), hthick, hdim.z()),
+                          ChVector3d(0, hdim.y() + hthick, hdim.z()));
     bin->GetCollisionModel()->SetFamily(1);
-    bin->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
+    bin->GetCollisionModel()->DisallowCollisionsWith(2);
 
     sys->AddBody(bin);
 
     // The rotating mixer body (1.6 x 0.2 x 0.4)
     auto mixer = chrono_types::make_shared<ChBody>();
-    mixer->SetIdentifier(mixerId);
     mixer->SetMass(10.0);
-    mixer->SetInertiaXX(ChVector<>(50, 50, 50));
-    mixer->SetPos(ChVector<>(0, 0, 0.205));
-    mixer->SetBodyFixed(false);
-    mixer->SetCollide(true);
+    mixer->SetInertiaXX(ChVector3d(50, 50, 50));
+    mixer->SetPos(ChVector3d(0, 0, 0.205));
+    mixer->SetFixed(false);
+    mixer->EnableCollision(true);
 
-    ChVector<> hsize(0.8, 0.1, 0.2);
+    ChVector3d hsize(0.8, 0.1, 0.2);
 
     utils::AddBoxGeometry(mixer.get(), mat, hsize);
     mixer->GetCollisionModel()->SetFamily(2);
@@ -101,8 +95,8 @@ std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
 
     // Create a motor between the two bodies, constrained to rotate at 90 deg/s
     auto motor = chrono_types::make_shared<ChLinkMotorRotationAngle>();
-    motor->Initialize(mixer, bin, ChFrame<>(ChVector<>(0, 0, 0), ChQuaternion<>(1, 0, 0, 0)));
-    motor->SetAngleFunction(chrono_types::make_shared<ChFunction_Ramp>(0, CH_C_PI / 2));
+    motor->Initialize(mixer, bin, ChFrame<>(ChVector3d(0, 0, 0), ChQuaternion<>(1, 0, 0, 0)));
+    motor->SetAngleFunction(chrono_types::make_shared<ChFunctionRamp>(0, CH_PI / 2));
     sys->AddLink(motor);
 
     return mixer;
@@ -113,29 +107,27 @@ std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
 // -----------------------------------------------------------------------------
 void AddFallingBalls(ChSystemMulticoreSMC* sys) {
     // Common material
-    auto ballMat = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto ballMat = chrono_types::make_shared<ChContactMaterialSMC>();
     ballMat->SetYoungModulus(2e5f);
     ballMat->SetFriction(0.4f);
     ballMat->SetRestitution(0.1f);
 
     // Create the falling balls
-    int ballId = 0;
     double mass = 1;
     double radius = 0.1;
-    ChVector<> inertia = (2.0 / 5.0) * mass * radius * radius * ChVector<>(1, 1, 1);
+    ChVector3d inertia = (2.0 / 5.0) * mass * radius * radius * ChVector3d(1, 1, 1);
 
     for (int ix = -2; ix < 3; ix++) {
         for (int iy = -2; iy < 3; iy++) {
-            ChVector<> pos(0.4 * ix, 0.4 * iy, 1);
+            ChVector3d pos(0.4 * ix, 0.4 * iy, 1);
 
             auto ball = chrono_types::make_shared<ChBody>();
-            ball->SetIdentifier(ballId++);
             ball->SetMass(mass);
             ball->SetInertiaXX(inertia);
             ball->SetPos(pos);
             ball->SetRot(ChQuaternion<>(1, 0, 0, 0));
-            ball->SetBodyFixed(false);
-            ball->SetCollide(true);
+            ball->SetFixed(false);
+            ball->EnableCollision(true);
 
             utils::AddSphereGeometry(ball.get(), ballMat, radius);
 
@@ -148,7 +140,7 @@ void AddFallingBalls(ChSystemMulticoreSMC* sys) {
 // Create the system, specify simulation parameters, and run simulation loop.
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
-    GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
+    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
 
     // Set path to Chrono data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
@@ -172,7 +164,7 @@ int main(int argc, char* argv[]) {
     sys.SetNumThreads(8);
 
     // Set gravitational acceleration
-    sys.Set_G_acc(ChVector<>(0, 0, -gravity));
+    sys.SetGravitationalAcceleration(ChVector3d(0, 0, -gravity));
 
     // Settings for the broad-phase collision detection
     sys.GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
@@ -200,7 +192,7 @@ int main(int argc, char* argv[]) {
     vis.SetWindowSize(1280, 720);
     vis.SetRenderMode(opengl::WIREFRAME);
     vis.Initialize();
-    vis.AddCamera(ChVector<>(0, -3, 2), ChVector<>(0, 0, 0));
+    vis.AddCamera(ChVector3d(0, -3, 2), ChVector3d(0, 0, 0));
     vis.SetCameraVertical(CameraVerticalDir::Y);
 
     while (vis.Run()) {

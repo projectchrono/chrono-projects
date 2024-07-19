@@ -19,14 +19,16 @@
 //
 // =============================================================================
 
-#include "ChLidarWaypointDriver.h"
-#include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
-
 #include <algorithm>
 #include <climits>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+
+#include "chrono/utils/ChUtils.h"
+#include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
+
+#include "ChLidarWaypointDriver.h"
 
 namespace chrono {
 namespace synchrono {
@@ -46,7 +48,7 @@ ChLidarWaypointDriver::ChLidarWaypointDriver(ChVehicle& vehicle,
     : ChDriver(vehicle), m_lidar(lidar), m_target_speed(target_speed), m_path(path), m_current_distance(100.0) {
     m_acc_driver = chrono_types::make_shared<ChPathFollowerACCDriver>(vehicle, path, path_name, target_speed,
                                                                       target_following_time, target_min_distance,
-                                                                      current_distance, isClosedPath);
+                                                                      current_distance);
     m_acc_driver->GetSpeedController().SetGains(0.5, 0, 0);
     m_acc_driver->GetSteeringController().SetGains(0.5, 0, 0);
     m_acc_driver->GetSteeringController().SetLookAheadDistance(8.0);
@@ -97,7 +99,7 @@ void ChLidarWaypointDriver::MinDistFromLidar() {
     auto wheeled_vehicle = dynamic_cast<WheeledVehicle*>(&m_vehicle);
     double max_angle = wheeled_vehicle->GetMaxSteeringAngle();
     double curr_steering = m_steering;
-    ChQuaternion<> q = Q_from_AngZ(max_angle * curr_steering);
+    ChQuaternion<> q = QuatFromAngleZ(max_angle * curr_steering);
 
     UserXYZIBufferPtr xyzi_buffer = m_lidar->GetMostRecentBuffer<UserXYZIBufferPtr>();
     if (xyzi_buffer->TimeStamp > m_last_lidar_time + update_period) {
@@ -105,7 +107,7 @@ void ChLidarWaypointDriver::MinDistFromLidar() {
         for (int i = 0; i < xyzi_buffer->Height; i++) {
             for (int j = 0; j < xyzi_buffer->Width; j++) {
                 PixelXYZI xyzi = xyzi_buffer->Buffer[i * xyzi_buffer->Width + j];
-                ChVector<> pt = {xyzi.x, xyzi.y, xyzi.z};
+                ChVector3d pt = {xyzi.x, xyzi.y, xyzi.z};
                 pt = q.RotateBack(pt);
                 // intensity threshold
                 if (xyzi.intensity > 0) {
@@ -135,16 +137,16 @@ void ChLidarWaypointDriver::Advance(double step) {
     // calculate a new current speed using the path curvature
     double curve_location_const = 4.0;
 
-    ChVector<double> curvature_location =
-        m_vehicle.GetVehiclePos() +
-        curve_location_const * (m_acc_driver->GetSteeringController().GetTargetLocation() - m_vehicle.GetVehiclePos());
+    ChVector3d curvature_location =
+        m_vehicle.GetPos() +
+        curve_location_const * (m_acc_driver->GetSteeringController().GetTargetLocation() - m_vehicle.GetPos());
 
     double t;
     double t_actual;
     double min_dist = 1e6;
     int segment = 0;
     for (int i = 0; i < m_path->getNumPoints()-1; i++) {
-        ChVector<> loc = m_path->calcClosestPoint(curvature_location, i, t);
+        ChVector3d loc = m_path->calcClosestPoint(curvature_location, i, t);
         double tmp_min_dist = (loc - curvature_location).Length();
         if (tmp_min_dist < min_dist) {
             min_dist = tmp_min_dist;
@@ -153,9 +155,9 @@ void ChLidarWaypointDriver::Advance(double step) {
         }
     }
 
-    ChVector<> d = m_path->evalD(segment, t_actual);
+    ChVector3d d = m_path->evalD(segment, t_actual);
     d.Normalize();
-    ChVector<> heading = m_vehicle.GetVehicleRot().Rotate({1, 0, 0});
+    ChVector3d heading = m_vehicle.GetRot().Rotate({1, 0, 0});
     double dotangle = d.Dot(heading);
 
     m_acc_driver->SetDesiredSpeed(m_target_speed * std::max(0.3, dotangle * 1.5 - .5));

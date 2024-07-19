@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChLog.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/timestepper/ChTimestepper.h"
 
@@ -35,8 +34,11 @@ class OscillatorProblem : public ChIntegrableIIorder {
         mv = 0.6;
     }
 
-    /// the number of coordinates in the state, x position part:
-    virtual int GetNcoords_x() override { return 1; }
+    /// number of coordinates in the state, x position part:
+    virtual unsigned int GetNumCoordsPosLevel() override { return 1; }
+
+    /// number of coordinates in the state, x position part:
+    virtual unsigned int GetNumCoordsVelLevel() override { return 1; }
 
     /// system -> state
     virtual void StateGather(ChState& x, ChStateDelta& v, double& T) override {
@@ -53,14 +55,15 @@ class OscillatorProblem : public ChIntegrableIIorder {
     }
 
     /// compute  dy/dt=f(y,t)
-    virtual bool StateSolveA(ChStateDelta& dvdt,        ///< result: computed accel. a=dv/dt
-                             ChVectorDynamic<>& L,      ///< result: computed lagrangian multipliers, if any
-                             const ChState& x,          ///< current state, x
-                             const ChStateDelta& v,     ///< current state, v
-                             const double T,            ///< current time T
-                             const double dt,           ///< timestep (if needed)
-                             bool force_state_scatter,  ///< if false, y and T are not scattered to the system
-                             bool full_update           ///< if true, perform a full update during scatter
+    virtual bool StateSolveA(ChStateDelta& dvdt,                ///< result: computed accel. a=dv/dt
+                             ChVectorDynamic<>& L,              ///< result: computed lagrangian multipliers, if any
+                             const ChState& x,                  ///< current state, x
+                             const ChStateDelta& v,             ///< current state, v
+                             const double T,                    ///< current time T
+                             const double dt,                   ///< timestep (if needed)
+                             bool force_state_scatter,          ///< if false, y and T are not scattered to the system
+                             bool full_update,                  ///< if true, perform a full update during scatter
+                             ChLumpingParms* lumping = nullptr  ///<
                              ) override {
         if (force_state_scatter)
             StateScatter(x, v, T, full_update);
@@ -174,11 +177,14 @@ class PendulumProblem : public ChIntegrableIIorder {
         mvy = vy;
     }
 
-    /// the number of coordinates in the state, x position part:
-    virtual int GetNcoords_x() override { return 2; }
+    /// number of coordinates in the state, x position part:
+    virtual unsigned int GetNumCoordsPosLevel() override { return 2; }
 
-    /// Tells the number of lagrangian multipliers (constraints)
-    virtual int GetNconstr() override { return 1; }
+    /// number of coordinates at velocity level
+    virtual unsigned int GetNumCoordsVelLevel() override { return 2; }
+
+    /// number of lagrangian multipliers (constraints)
+    virtual unsigned int GetNumConstraints() override { return 1; }
 
     /// system -> state
     virtual void StateGather(ChState& x, ChStateDelta& v, double& T) override {
@@ -222,7 +228,7 @@ class PendulumProblem : public ChIntegrableIIorder {
         if (force_state_scatter)
             this->StateScatter(x, v, T, full_update);
 
-        ChVector<> dirpend(-mpx, -mpy, 0);
+        ChVector3d dirpend(-mpx, -mpy, 0);
         dirpend.Normalize();
         ChVectorDynamic<> b(3);
         b(0) = R(0);
@@ -266,7 +272,7 @@ class PendulumProblem : public ChIntegrableIIorder {
                                   const ChVectorDynamic<>& L,  ///< the L vector
                                   const double c               ///< a scaling factor
                                   ) override {
-        ChVector<> dirpend(-mpx, -mpy, 0);
+        ChVector3d dirpend(-mpx, -mpy, 0);
         dirpend.Normalize();
         R(0) += c * dirpend.x() * L(0);
         R(1) += c * dirpend.y() * L(0);
@@ -278,7 +284,7 @@ class PendulumProblem : public ChIntegrableIIorder {
                                   const bool do_clamp = false,  ///< enable optional clamping of Qc
                                   const double mclam = 1e30     ///< clamping value
                                   ) override {
-        ChVector<> distpend(-mpx, -mpy, 0);
+        ChVector3d distpend(-mpx, -mpy, 0);
         Qc(0) += -c * (-distpend.Length() + mlength);
     }
 
@@ -303,7 +309,7 @@ void Oscillator() {
     ChTimestepperHHT mystepper(&mintegrable);
     mystepper.SetAlpha(0);
     mystepper.SetAbsTolerances(1e-10);
-    mystepper.SetMaxiters(6);
+    mystepper.SetMaxIters(6);
     mystepper.SetMaxItersSuccess(3);
     mystepper.SetRequiredSuccessfulSteps(5);
     mystepper.SetStepIncreaseFactor(2);
@@ -315,10 +321,10 @@ void Oscillator() {
         mystepper.Advance(timestep);
         printf("    %7.4f | %12.8f  %12.8f | %2d\n",
                mystepper.GetTime(),          // time
-               mystepper.get_X()(0),         // position
-               mystepper.get_V()(0),         // velocity
+               mystepper.GetStatePos()(0),   // position
+               mystepper.GetStateVel()(0),   // velocity
                mystepper.GetNumIterations()  // number of HHT iterations
-               );
+        );
     }
 }
 
@@ -336,7 +342,7 @@ void Pendulum() {
     ChTimestepperHHT mystepper(&mintegrable);
     mystepper.SetAlpha(-0.2);
     mystepper.SetAbsTolerances(1e-6);
-    mystepper.SetMaxiters(10);
+    mystepper.SetMaxIters(10);
     mystepper.SetMaxItersSuccess(3);
     mystepper.SetRequiredSuccessfulSteps(5);
     mystepper.SetStepIncreaseFactor(2);
@@ -347,12 +353,12 @@ void Pendulum() {
     for (int i = 0; i < num_steps; i++) {
         mystepper.Advance(timestep);
         printf("    %7.4f | %12.8f  %12.8f  %12.8f  %12.8f | %12.8f | %2d\n",
-               mystepper.GetTime(),                         // time
-               mystepper.get_X()(0), mystepper.get_X()(1),  // position
-               mystepper.get_V()(0), mystepper.get_V()(1),  // velocity
-               mystepper.get_L()(0),                        // Lagrange multiplier
-               mystepper.GetNumIterations()                 // number of HHT iterations
-               );
+               mystepper.GetTime(),                                     // time
+               mystepper.GetStatePos()(0), mystepper.GetStatePos()(1),  // position
+               mystepper.GetStateVel()(0), mystepper.GetStateVel()(1),  // velocity
+               mystepper.GetLagrangeMultipliers()(0),                   // Lagrange multiplier
+               mystepper.GetNumIterations()                             // number of HHT iterations
+        );
     }
 }
 
@@ -377,38 +383,35 @@ void RigidPendulums() {
     bool modified_Newton = true;
 
     ChSystemNSC system;
-    system.Set_G_acc(ChVector<>(0, -g, 0));
+    system.SetGravitationalAcceleration(ChVector3d(0, -g, 0));
 
     // Bodies
     auto ground = chrono_types::make_shared<ChBody>();
-    ground->SetIdentifier(-1);
-    ground->SetBodyFixed(true);
+    ground->SetFixed(true);
     system.AddBody(ground);
 
     auto pend1 = chrono_types::make_shared<ChBody>();
-    pend1->SetIdentifier(1);
     pend1->SetMass(m1);
-    pend1->SetInertiaXX(ChVector<>(1, 1, J1));
-    pend1->SetPos(ChVector<>(l1 / 2, 0, 0));
+    pend1->SetInertiaXX(ChVector3d(1, 1, J1));
+    pend1->SetPos(ChVector3d(l1 / 2, 0, 0));
     system.AddBody(pend1);
 
     auto pend2 = chrono_types::make_shared<ChBody>();
     if (double_pend) {
-        pend2->SetIdentifier(2);
         pend2->SetMass(m2);
-        pend2->SetInertiaXX(ChVector<>(1, 1, J2));
-        pend2->SetPos(ChVector<>(l1 + l2 / 2, 0, 0));
+        pend2->SetInertiaXX(ChVector3d(1, 1, J2));
+        pend2->SetPos(ChVector3d(l1 + l2 / 2, 0, 0));
         system.AddBody(pend2);
     }
 
     // Joints
     auto revolute1 = chrono_types::make_shared<ChLinkLockRevolute>();
-    revolute1->Initialize(ground, pend1, ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
+    revolute1->Initialize(ground, pend1, ChFrame<>(ChVector3d(0, 0, 0), QUNIT));
     system.AddLink(revolute1);
 
     auto revolute2 = chrono_types::make_shared<ChLinkLockRevolute>();
     if (double_pend) {
-        revolute2->Initialize(pend1, pend2, ChCoordsys<>(ChVector<>(l1, 0, 0), QUNIT));
+        revolute2->Initialize(pend1, pend2, ChFrame<>(ChVector3d(l1, 0, 0), QUNIT));
         system.AddLink(revolute2);
     }
 
@@ -426,7 +429,7 @@ void RigidPendulums() {
     integrator->SetModifiedNewton(modified_Newton);
     integrator->SetVerbose(true);
     integrator->SetAlpha(-0.2);
-    integrator->SetMaxiters(20);
+    integrator->SetMaxIters(20);
     integrator->SetRelTolerance(1e-4);
     integrator->SetAbsTolerances(1e-3, 1e-6);
 
@@ -441,10 +444,10 @@ void RigidPendulums() {
         num_solver_calls += integrator->GetNumSolveCalls();
         printf("    %7.4f  %4d", integrator->GetTime(), integrator->GetNumIterations());
         printf("    %12.8f  %12.8f  %12.8f  %12.8f  %12.8f  %12.8f", pend1->GetPos().x(), pend1->GetPos().y(),
-               pend1->GetPos_dt().x(), pend1->GetPos_dt().y(), pend1->GetPos_dtdt().x(), pend1->GetPos_dtdt().y());
+               pend1->GetLinVel().x(), pend1->GetLinVel().y(), pend1->GetLinAcc().x(), pend1->GetLinAcc().y());
         if (double_pend) {
             printf("    %12.8f  %12.8f  %12.8f  %12.8f  %12.8f  %12.8f\n", pend2->GetPos().x(), pend2->GetPos().y(),
-                   pend2->GetPos_dt().x(), pend2->GetPos_dt().y(), pend2->GetPos_dtdt().x(), pend2->GetPos_dtdt().y());
+                   pend2->GetLinVel().x(), pend2->GetLinVel().y(), pend2->GetLinAcc().x(), pend2->GetLinAcc().y());
         } else {
             printf("\n");
         }

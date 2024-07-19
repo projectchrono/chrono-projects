@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
     // -------------------------------
     // Parameters for the wheel
     // -------------------------------
-    ChVector<> init_pos(0, 0, 0);
+    ChVector3d init_pos(0, 0, 0);
     // ChQuaternion<> init_rot(1, 0, 0, 0);
     // ChQuaternion<> init_rot(0.866025, 0, 0.5, 0);
     ChQuaternion<> init_rot(0.7071068, 0, 0.7071068, 0);
@@ -49,26 +49,24 @@ int main(int argc, char* argv[]) {
 
     ChSystemNSC system;
 
-    system.Set_G_acc(ChVector<>(0, gravity, 0));
+    system.SetGravitationalAcceleration(ChVector3d(0, gravity, 0));
 
 
     // Create ground
     auto ground = chrono_types::make_shared<ChBody>();
     system.AddBody(ground);
-    ground->SetIdentifier(0);
-    ground->SetCollide(false);
-    ground->SetBodyFixed(true);
+    ground->EnableCollision(false);
+    ground->SetFixed(true);
 
     // Create wheel
     auto wheel = chrono_types::make_shared<ChBody>();
     system.AddBody(wheel);
-    wheel->SetIdentifier(1);
     wheel->SetMass(100);
     wheel->SetPos(init_pos);
     wheel->SetRot(init_rot);
-    wheel->SetWvel_loc(ChVector<>(0, 0, 100));
-    wheel->SetCollide(false);
-    wheel->SetBodyFixed(false);
+    wheel->SetAngVelLocal(ChVector3d(0, 0, 100));
+    wheel->EnableCollision(false);
+    wheel->SetFixed(false);
 
     auto cyl = chrono_types::make_shared<ChVisualShapeCylinder>(0.2, 0.1);
     cyl->SetTexture(GetChronoDataFile("textures/bluewhite.png"));
@@ -77,16 +75,16 @@ int main(int argc, char* argv[]) {
     // Revolute joint
     auto joint = chrono_types::make_shared<ChLinkLockRevolute>();
     system.AddLink(joint);
-    joint->Initialize(ground, wheel, ChCoordsys<>(init_pos, init_rot));
+    joint->Initialize(ground, wheel, ChFrame<>(init_pos, init_rot));
 
     // Brake
-    auto brake = chrono_types::make_shared<ChLinkBrake>();
+    auto brake = chrono_types::make_shared<ChLinkLockBrake>();
     system.AddLink(brake);
 
     // Equivalent ways of initializing the brake link
     ////brake->Initialize(ground, wheel, ChCoordsys<>(init_pos, init_rot));
-    ////brake->Initialize(ground, wheel, wheel->GetCoord() * joint->GetMarker2()->GetCoord());
-    brake->Initialize(ground, wheel, true, joint->GetMarker1()->GetCoord(), joint->GetMarker2()->GetCoord());
+    ////brake->Initialize(ground, wheel, wheel->GetCoordsys() * joint->GetMarker2()->GetCoordsys());
+    brake->Initialize(ground, wheel, true, *joint->GetMarker1(), *joint->GetMarker2());
 
     // Create the Irrlicht visualization
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
@@ -95,7 +93,7 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
-    vis->AddCamera(ChVector<>(1, 0.5, -1));
+    vis->AddCamera(ChVector3d(1, 0.5, -1));
     vis->AddTypicalLights();
     vis->AttachSystem(&system);
 
@@ -103,8 +101,8 @@ int main(int argc, char* argv[]) {
     auto minres_solver = chrono_types::make_shared<ChSolverMINRES>();
     minres_solver->EnableDiagonalPreconditioner(true);
     minres_solver->SetMaxIterations(100);
+    minres_solver->SetTolerance(1e-9);
     system.SetSolver(minres_solver);
-    system.SetSolverForceTolerance(1e-6);
 
     // ---------------
     // Simulation loop
@@ -129,7 +127,7 @@ int main(int argc, char* argv[]) {
         tools::drawAllCOGs(vis.get(), 1);
         sprintf(msg, "Time:    %.2f", time);
         font->draw(msg, text_box1, text_col);
-        sprintf(msg, "Omega:   %.2f", wheel->GetWvel_loc().z());
+        sprintf(msg, "Omega:   %.2f", wheel->GetAngVelLocal().z());
         font->draw(msg, text_box2, text_col);
         sprintf(msg, "Braking: %.2f", modulation);
         font->draw(msg, text_box3, text_col);
@@ -142,10 +140,10 @@ int main(int argc, char* argv[]) {
             else if (time < 4) modulation = 4 - time;
             else modulation = 0;
         }
-        brake->Set_brake_torque(modulation * max_torque);
+        brake->SetBrakeTorque(modulation * max_torque);
 
-        if (monitor && std::abs(wheel->GetWvel_loc().z()) < 0.1) {
-            GetLog() << "Wheel stopped at t = " << time << "\n";
+        if (monitor && std::abs(wheel->GetAngVelLocal().z()) < 0.1) {
+            std::cout << "Wheel stopped at t = " << time << "\n";
             monitor = false;
         }
     }

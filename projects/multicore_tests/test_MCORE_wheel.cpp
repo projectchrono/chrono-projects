@@ -22,7 +22,6 @@
 #include <vector>
 #include <cmath>
 
-#include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -73,12 +72,12 @@ double out_fps = 60;
 ChContactMethod method = ChContactMethod::SMC;
 
 // Parameters for the granular material
-int Id_g = 100;
+int tag_particles = 0;
 double r_g = 0.04;
 double rho_g = 2500;
-double vol_g = (4.0 / 3) * CH_C_PI * r_g * r_g * r_g;
+double vol_g = (4.0 / 3) * CH_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
-ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
+ChVector3d inertia_g = 0.4 * mass_g * r_g * r_g * ChVector3d(1, 1, 1);
 
 float Y_g = 2e8f;
 float mu_g = 0.5f;
@@ -86,9 +85,8 @@ float cr_g = 0.1f;
 float cohesion_g = 20.0f;
 
 // Parameters for wheel body
-int Id_w = 0;
 double mass_w = 100;
-ChVector<> inertia_w = ChVector<>(2, 2, 4);
+ChVector3d inertia_w = ChVector3d(2, 2, 4);
 
 float Y_w = 1e8f;
 float mu_w = 1.0f;
@@ -114,12 +112,12 @@ double layerHeight = 0.5;
 
 int CreateObjects(ChSystemMulticore* system) {
     // Create materials for the granular material and the container
-    std::shared_ptr<chrono::ChMaterialSurface> material_g;
-    std::shared_ptr<chrono::ChMaterialSurface> material_c;
+    std::shared_ptr<chrono::ChContactMaterial> material_g;
+    std::shared_ptr<chrono::ChContactMaterial> material_c;
 
     switch (method) {
         case ChContactMethod::SMC: {
-            auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
             mat_g->SetYoungModulus(Y_g);
             mat_g->SetFriction(mu_g);
             mat_g->SetRestitution(cr_g);
@@ -127,7 +125,7 @@ int CreateObjects(ChSystemMulticore* system) {
 
             material_g = mat_g;
 
-            auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_c = chrono_types::make_shared<ChContactMaterialSMC>();
             mat_c->SetYoungModulus(Y_c);
             mat_c->SetFriction(mu_c);
             mat_c->SetRestitution(cr_c);
@@ -138,14 +136,14 @@ int CreateObjects(ChSystemMulticore* system) {
             break;
         }
         case ChContactMethod::NSC: {
-            auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
             mat_g->SetFriction(mu_g);
             mat_g->SetRestitution(cr_g);
             mat_g->SetCohesion(cohesion_g);
 
             material_g = mat_g;
 
-            auto mat_c = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_c = chrono_types::make_shared<ChContactMaterialNSC>();
             mat_c->SetFriction(mu_c);
             mat_c->SetRestitution(cr_c);
             mat_c->SetCohesion(cohesion_c);
@@ -158,24 +156,24 @@ int CreateObjects(ChSystemMulticore* system) {
 
     // Create a mixture entirely made out of spheres
     double r = 1.01 * r_g;
-    utils::PDSampler<double> sampler(2 * r);
-    utils::Generator gen(system);
+    utils::ChPDSampler<double> sampler(2 * r);
+    utils::ChGenerator gen(system);
 
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
-    m1->setDefaultMaterial(material_g);
-    m1->setDefaultDensity(rho_g);
-    m1->setDefaultSize(r_g);
+    std::shared_ptr<utils::ChMixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
+    m1->SetDefaultMaterial(material_g);
+    m1->SetDefaultDensity(rho_g);
+    m1->SetDefaultSize(r_g);
 
-    gen.setBodyIdentifier(Id_g);
+    gen.SetStartTag(tag_particles);
 
-    gen.CreateObjectsBox(sampler, ChVector<>(0, 0, r + layerHeight / 2),
-                         ChVector<>(hDimX - r, hDimY - r, layerHeight / 2));
-    cout << "total granules: " << gen.getTotalNumBodies() << endl;
+    gen.CreateObjectsBox(sampler, ChVector3d(0, 0, r + layerHeight / 2),
+                         ChVector3d(hDimX - r, hDimY - r, layerHeight / 2));
+    cout << "total granules: " << gen.GetTotalNumBodies() << endl;
 
     // Create the containing bin
-    utils::CreateBoxContainer(system, binId, material_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, material_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 
-    return gen.getTotalNumBodies();
+    return gen.GetTotalNumBodies();
 }
 
 // =======================================================================
@@ -187,11 +185,11 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemMulticore* system, double z) {
     std::string mesh_name("wheel");
 
     // Create a material for the wheel
-    std::shared_ptr<chrono::ChMaterialSurface> material_w;
+    std::shared_ptr<chrono::ChContactMaterial> material_w;
 
     switch (method) {
         case ChContactMethod::SMC: {
-            auto mat_w = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_w = chrono_types::make_shared<ChContactMaterialSMC>();
             mat_w->SetYoungModulus(Y_w);
             mat_w->SetFriction(mu_w);
             mat_w->SetRestitution(cr_w);
@@ -202,7 +200,7 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemMulticore* system, double z) {
             break;
         }
         case ChContactMethod::NSC: {
-            auto mat_w = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_w = chrono_types::make_shared<ChContactMaterialNSC>();
             mat_w->SetFriction(mu_w);
             mat_w->SetRestitution(cr_w);
             mat_w->SetCohesion(cohesion_w);
@@ -216,13 +214,12 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemMulticore* system, double z) {
     // Create the wheel body
     auto wheel = chrono_types::make_shared<ChBody>();
 
-    wheel->SetIdentifier(Id_w);
     wheel->SetMass(mass_w);
     wheel->SetInertiaXX(inertia_w);
-    wheel->SetPos(ChVector<>(0, 0, z));
+    wheel->SetPos(ChVector3d(0, 0, z));
     wheel->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    wheel->SetCollide(true);
-    wheel->SetBodyFixed(false);
+    wheel->EnableCollision(true);
+    wheel->SetFixed(false);
 
     utils::AddTriangleMeshGeometry(wheel.get(), material_w, obj_mesh_file, mesh_name);
     //utils::AddCylinderGeometry(wheel.get(), material_w, 0.3, 0.1);
@@ -243,9 +240,9 @@ std::shared_ptr<ChBody> CreateWheel(ChSystemMulticore* system, double z) {
 
 bool CheckSettled(ChSystem* sys, double threshold) {
     double t2 = threshold * threshold;
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() >= Id_g) {
-            double vel2 = body->GetPos_dt().Length2();
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() >= tag_particles) {
+            double vel2 = body->GetLinVel().Length2();
             if (vel2 > t2)
                 return false;
         }
@@ -257,12 +254,12 @@ bool CheckSettled(ChSystem* sys, double threshold) {
 // ========================================================================
 // These utility functions find the height of the highest or lowest sphere
 // in the granular mix, respectively.  We only look at bodies whith
-// identifiers larger than Id_g.
+// tags larger than tag_particles.
 
 double FindHighest(ChSystem* sys) {
     double highest = 0;
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() >= Id_g && body->GetPos().z() > highest)
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() >= tag_particles && body->GetPos().z() > highest)
             highest = body->GetPos().z();
     }
     return highest;
@@ -270,8 +267,8 @@ double FindHighest(ChSystem* sys) {
 
 double FindLowest(ChSystem* sys) {
     double lowest = DBL_MAX;
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() >= Id_g && body->GetPos().z() < lowest)
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() >= tag_particles && body->GetPos().z() < lowest)
             lowest = body->GetPos().z();
     }
     return lowest;
@@ -314,7 +311,7 @@ int main(int argc, char* argv[]) {
     system->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Set method-independent solver settings
-    system->Set_G_acc(ChVector<>(0, 0, -gravity));
+    system->SetGravitationalAcceleration(ChVector3d(0, 0, -gravity));
     system->GetSettings()->solver.use_full_inertia_tensor = false;
     system->GetSettings()->solver.tolerance = 1e-3;
     system->GetSettings()->collision.bins_per_axis = vec3(50, 50, 50);
@@ -358,7 +355,7 @@ int main(int argc, char* argv[]) {
             // Create the granular material bodies and the container from the checkpoint file.
             cout << "Read checkpoint data from " << checkpoint_file;
             utils::ReadCheckpoint(system, checkpoint_file);
-            cout << "  done.  Read " << system->Get_bodylist().size() << " bodies." << endl;
+            cout << "  done.  Read " << system->GetBodies().size() << " bodies." << endl;
 
             // Create the wheel.
             double z = FindHighest(system);
@@ -377,7 +374,6 @@ int main(int argc, char* argv[]) {
             time_step = time_step_complementarity;
             break;
     }
-    system->SetStep(time_step);
 
     // Number of steps
     int num_steps = (int)std::ceil(time_end / time_step);
@@ -434,7 +430,7 @@ int main(int argc, char* argv[]) {
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies: " << system->Get_bodylist().size() << endl;
+    cout << "Number of bodies: " << system->GetBodies().size() << endl;
     cout << "Simulation time: " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;
 

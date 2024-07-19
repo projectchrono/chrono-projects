@@ -18,11 +18,12 @@
 #include "chrono/physics/ChSystem.h"
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/solver/ChIterativeSolverLS.h"
+#include "chrono/core/ChRandom.h"
 #include "chrono/utils/ChOpenMP.h"
 
 #include "chrono/fea/ChContactSurfaceMesh.h"
 #include "chrono/fea/ChContactSurfaceNodeCloud.h"
-#include "chrono/fea/ChLinkPointFrame.h"
+#include "chrono/fea/ChLinkNodeFrame.h"
 #include "chrono/fea/ChMesh.h"
 #include "chrono/fea/ChMeshFileLoader.h"
 
@@ -89,17 +90,17 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_OPENMP_ENABLED
     sys.SetNumThreads(std::min(num_threads, ChOMP::GetNumProcs()));
 #else
-    GetLog() << "No OpenMP\n";
+    std::cout << "No OpenMP\n";
 #endif
 
     // Global parameter for tire
     double tire_rad = 0.8;
     double tire_w0 = tire_vel_z0 / tire_rad;
-    ChVector<> tire_center(0, 0.02 + tire_rad, 0.5);
-    ChMatrix33<> tire_alignment(Q_from_AngAxis(CH_C_PI, VECT_Y));
+    ChVector3d tire_center(0, 0.02 + tire_rad, 0.5);
+    ChMatrix33<> tire_alignment(QuatFromAngleAxis(CH_PI, VECT_Y));
 
     // Contact material
-    auto mysurfmaterial = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mysurfmaterial = chrono_types::make_shared<ChContactMaterialSMC>();
     mysurfmaterial->SetYoungModulus(30e4);
     mysurfmaterial->SetFriction(0.3f);
     mysurfmaterial->SetRestitution(0.2f);
@@ -111,10 +112,10 @@ int main(int argc, char* argv[]) {
 
     // Mesh material
     auto mesh_material = chrono_types::make_shared<ChContinuumElastic>();
-    mesh_material->Set_E(0.016e9);  // rubber 0.01e9, steel 200e9
-    mesh_material->Set_v(0.4);
-    mesh_material->Set_RayleighDampingK(0.004);
-    mesh_material->Set_density(1000);
+    mesh_material->SetYoungModulus(0.016e9);  // rubber 0.01e9, steel 200e9
+    mesh_material->SetPoissonRatio(0.4);
+    mesh_material->SetRayleighDampingBeta(0.004);
+    mesh_material->SetDensity(1000);
 
     // Create tire mesh from ABAQUS input file
     auto my_mesh = chrono_types::make_shared<ChMesh>();
@@ -123,8 +124,8 @@ int main(int argc, char* argv[]) {
     try {
         ChMeshFileLoader::FromAbaqusFile(my_mesh, GetChronoDataFile("fea/tractor_wheel_coarse.INP").c_str(),
                                          mesh_material, node_sets, tire_center, tire_alignment);
-    } catch (ChException myerr) {
-        GetLog() << myerr.what();
+    } catch (std::exception& myerr) {
+        std::cout << myerr.what();
         return 0;
     }
 
@@ -138,11 +139,11 @@ int main(int argc, char* argv[]) {
     }
 
     // Apply initial speed and angular speed
-    for (unsigned int i = 0; i < my_mesh->GetNnodes(); ++i) {
-        ChVector<> node_pos = std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))->GetPos();
-        ChVector<> tang_vel = Vcross(ChVector<>(tire_w0, 0, 0), node_pos - tire_center);
+    for (unsigned int i = 0; i < my_mesh->GetNumNodes(); ++i) {
+        ChVector3d node_pos = std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))->GetPos();
+        ChVector3d tang_vel = Vcross(ChVector3d(tire_w0, 0, 0), node_pos - tire_center);
         std::dynamic_pointer_cast<ChNodeFEAxyz>(my_mesh->GetNode(i))
-            ->SetPos_dt(ChVector<>(0, 0, tire_vel_z0) + tang_vel);
+            ->SetPosDt(ChVector3d(0, 0, tire_vel_z0) + tang_vel);
     }
 
     // Create the contact surface
@@ -167,10 +168,10 @@ int main(int argc, char* argv[]) {
         auto mloadcontainer = chrono_types::make_shared<ChLoadContainer>();
         sys.Add(mloadcontainer);
 
-        for (int i = 0; i < mmeshsurf->GetFacesList().size(); ++i) {
-            auto aface = std::shared_ptr<ChLoadableUV>(mmeshsurf->GetFacesList()[i]);
-            auto faceload = chrono_types::make_shared<ChLoad<ChLoaderPressure>>(aface);
-            faceload->loader.SetPressure(10000);  // low pressure... the tire has no ply!
+        for (const auto& face : mmeshsurf->GetFaces()) {
+            auto faceloader = chrono_types::make_shared<ChLoaderPressure>(face);
+            faceloader->SetPressure(10000);  // low pressure... the tire has no ply!
+            auto faceload = chrono_types::make_shared<ChLoad>(faceloader);
             mloadcontainer->Add(faceload);
         }
     }
@@ -185,11 +186,11 @@ int main(int argc, char* argv[]) {
     if (include_wheel_body) {
         auto wheel = chrono_types::make_shared<ChBody>();
         wheel->SetMass(80);
-        wheel->SetInertiaXX(ChVector<>(60, 60, 60));
+        wheel->SetInertiaXX(ChVector3d(60, 60, 60));
         wheel->SetPos(tire_center);
         wheel->SetRot(tire_alignment);
-        wheel->SetPos_dt(ChVector<>(0, 0, tire_vel_z0));
-        wheel->SetWvel_par(ChVector<>(tire_w0, 0, 0));
+        wheel->SetLinVel(ChVector3d(0, 0, tire_vel_z0));
+        wheel->SetAngVelParent(ChVector3d(tire_w0, 0, 0));
         sys.Add(wheel);
 
         if (visualization) {
@@ -202,7 +203,7 @@ int main(int argc, char* argv[]) {
         // the BC_RIMTIRE nodeset, in the Abaqus INP file, lists the nodes involved
         auto nodeset_sel = "BC_RIMTIRE";
         for (auto i = 0; i < node_sets.at(nodeset_sel).size(); ++i) {
-            auto mlink = chrono_types::make_shared<ChLinkPointFrame>();
+            auto mlink = chrono_types::make_shared<ChLinkNodeFrame>();
             mlink->Initialize(std::dynamic_pointer_cast<ChNodeFEAxyz>(node_sets[nodeset_sel][i]), wheel);
             sys.Add(mlink);
         }
@@ -210,7 +211,7 @@ int main(int argc, char* argv[]) {
 
     // Create ground
     auto mfloor = chrono_types::make_shared<ChBodyEasyBox>(2, 0.2, 6, 2700, true, true, mysurfmaterial);
-    mfloor->SetBodyFixed(true);
+    mfloor->SetFixed(true);
     sys.Add(mfloor);
 
     if (visualization) {
@@ -222,9 +223,9 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < 150; ++i) {
             auto mcube = chrono_types::make_shared<ChBodyEasyBox>(0.18, 0.04, 0.18, 2700, true, true, mysurfmaterial);
             ChQuaternion<> vrot;
-            vrot.Q_from_AngAxis(ChRandom() * CH_C_2PI, VECT_Y);
+            vrot.SetFromAngleAxis(ChRandom::Get() * CH_2PI, VECT_Y);
             mcube->Move(ChCoordsys<>(VNULL, vrot));
-            mcube->SetPos(ChVector<>((ChRandom() - 0.5) * 1.4, ChRandom() * 0.2 + 0.05, -ChRandom() * 2.6 + 0.2));
+            mcube->SetPos(ChVector3d((ChRandom::Get() - 0.5) * 1.4, ChRandom::Get() * 0.2 + 0.05, -ChRandom::Get() * 2.6 + 0.2));
             sys.Add(mcube);
 
             if (visualization) {
@@ -244,18 +245,18 @@ int main(int argc, char* argv[]) {
 
     switch (solver_type) {
         case ChSolver::Type::MINRES: {
-            GetLog() << "Using MINRES solver\n";
+            std::cout << "Using MINRES solver\n";
             auto solver = chrono_types::make_shared<ChSolverMINRES>();
             solver->EnableWarmStart(true);
             solver->SetMaxIterations(40);
             solver->SetVerbose(false);
+            solver->SetTolerance(1e-12);
             sys.SetSolver(solver);
-            sys.SetSolverForceTolerance(1e-10);
             break;
         }
         case ChSolver::Type::PARDISO_MKL: {
 #ifdef CHRONO_PARDISO_MKL
-            GetLog() << "Using PardisoMKL solver\n";
+            std::cout << "Using PardisoMKL solver\n";
             auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
             mkl_solver->LockSparsityPattern(true);
             sys.SetSolver(mkl_solver);
@@ -267,15 +268,15 @@ int main(int argc, char* argv[]) {
     // Set up integrator
     switch (integrator_type) {
         case EULER:
-            GetLog() << "Using EULER_IMPLICIT_LINEARIZED integrator\n";
+            std::cout << "Using EULER_IMPLICIT_LINEARIZED integrator\n";
             sys.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
             break;
         case HHT: {
-            GetLog() << "Using HHT integrator\n";
+            std::cout << "Using HHT integrator\n";
             sys.SetTimestepperType(ChTimestepper::Type::HHT);
             auto integrator = std::static_pointer_cast<ChTimestepperHHT>(sys.GetTimestepper());
             integrator->SetAlpha(-0.2);
-            integrator->SetMaxiters(10);
+            integrator->SetMaxIters(10);
             integrator->SetAbsTolerances(1e-3, 1e-2);
             integrator->SetVerbose(true);
             break;
@@ -298,7 +299,7 @@ int main(int argc, char* argv[]) {
         vis->Initialize();
         vis->AddLogo();
         vis->AddSkyBox();
-        vis->AddCamera(ChVector<>(1, 1.4, -1.2), ChVector<>(0, tire_rad, 0));
+        vis->AddCamera(ChVector3d(1, 1.4, -1.2), ChVector3d(0, tire_rad, 0));
         vis->AddTypicalLights();
         vis->AttachSystem(&sys);
 
@@ -320,12 +321,12 @@ int main(int argc, char* argv[]) {
         timer.stop();
 
         // Report run time.
-        GetLog() << "Simulation time:  " << timer() << "\n";
-        GetLog() << "Internal forces (" << my_mesh->GetNumCallsInternalForces()
+        std::cout << "Simulation time:  " << timer() << "\n";
+        std::cout << "Internal forces (" << my_mesh->GetNumCallsInternalForces()
                  << "):  " << my_mesh->GetTimeInternalForces() << "\n";
-        GetLog() << "Jacobian (" << my_mesh->GetNumCallsJacobianLoad() << "):  " << my_mesh->GetTimeJacobianLoad()
+        std::cout << "Jacobian (" << my_mesh->GetNumCallsJacobianLoad() << "):  " << my_mesh->GetTimeJacobianLoad()
                  << "\n";
-        GetLog() << "Extra time:  " << timer() - my_mesh->GetTimeInternalForces() - my_mesh->GetTimeJacobianLoad()
+        std::cout << "Extra time:  " << timer() - my_mesh->GetTimeInternalForces() - my_mesh->GetTimeJacobianLoad()
                  << "\n";
     }
 

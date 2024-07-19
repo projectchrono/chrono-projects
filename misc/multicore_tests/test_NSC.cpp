@@ -76,7 +76,7 @@ int max_iteration_sliding = 10000;
 
 double radius = 0.0025 * UNIT_SCALE;
 double density = 2500 / (UNIT_SCALE * UNIT_SCALE * UNIT_SCALE);
-double mass = density * (4.0 / 3) * CH_C_PI * radius * radius * radius;
+double mass = density * (4.0 / 3) * CH_PI * radius * radius * radius;
 float COR = 0.9f;
 float mu = 0.5f;
 
@@ -290,7 +290,7 @@ int main(int argc, char* argv[]) {
   // align it with the Y axis of the global reference frame.
 
   ChQuaternion<> z2y;
-  z2y.Q_from_AngX(-CH_C_PI / 2);
+  z2y.Q_from_AngX(-CH_PI / 2);
 
   ChSharedPtr<ChLinkLockPrismatic> prismatic(new ChLinkLockPrismatic);
   prismatic->Initialize(plate, ground, ChCoordsys<>(ChVector<>(0, 0, 0), z2y));

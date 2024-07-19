@@ -22,7 +22,6 @@
 #include <vector>
 #include <cmath>
 
-#include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
@@ -95,6 +94,7 @@ int out_fps_dropping = 60;
 // -----------------------------------------------------------------------------
 // Parameters for the granular material (identical spheres)
 // -----------------------------------------------------------------------------
+int tag_particles = 0;
 double r_g = 0.1;
 double rho_g = 2000;
 unsigned int desired_num_particles = 1000;
@@ -106,8 +106,8 @@ unsigned int desired_num_particles = 1000;
 ChCollisionShape::Type shape_o = ChCollisionShape::Type::ROUNDEDCYL;
 
 ChQuaternion<> initRot(1.0, 0.0, 0.0, 0.0);
-ChVector<> initLinVel(0.0, 0.0, 0.0);
-ChVector<> initAngVel(0.0, 0.0, 0.0);
+ChVector3d initLinVel(0.0, 0.0, 0.0);
+ChVector3d initAngVel(0.0, 0.0, 0.0);
 
 // -----------------------------------------------------------------------------
 // Half-dimensions of the container bin
@@ -120,21 +120,20 @@ double hDimZ = 2;
 // Create container bin.
 // =============================================================================
 void CreateContainer(ChSystemMulticore* system) {
-    int id_c = -200;
     double hThickness = 0.1;
 
 #ifdef USE_SMC
-    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_c = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_c->SetYoungModulus(2e6f);
     mat_c->SetFriction(0.4f);
     mat_c->SetRestitution(0.1f);
 
-    utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 #else
-    auto mat_c = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_c = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_c->SetFriction(0.4f);
 
-    utils::CreateBoxContainer(system, id_c, mat_c, ChVector<>(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, id_c, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
 
 #endif
 }
@@ -145,37 +144,37 @@ void CreateContainer(ChSystemMulticore* system) {
 void CreateParticles(ChSystemMulticore* system) {
 // Create a material for the ball mixture.
 #ifdef USE_SMC
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_g->SetYoungModulus(1e8f);
     mat_g->SetFriction(0.4f);
     mat_g->SetRestitution(0.1f);
 #else
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_g->SetFriction(0.4f);
 #endif
 
     // Create a mixture entirely made out of spheres.
     double r = 1.01 * r_g;
-    utils::PDSampler<double> sampler(2 * r);
-    utils::Generator gen(system);
+    utils::ChPDSampler<double> sampler(2 * r);
+    utils::ChGenerator gen(system);
 
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
-    m1->setDefaultMaterial(mat_g);
-    m1->setDefaultDensity(rho_g);
-    m1->setDefaultSize(r_g);
+    std::shared_ptr<utils::ChMixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
+    m1->SetDefaultMaterial(mat_g);
+    m1->SetDefaultDensity(rho_g);
+    m1->SetDefaultSize(r_g);
 
     // Create particles, one layer at a time, until the desired number is reached.
-    gen.setBodyIdentifier(1);
+    gen.SetStartTag(tag_particles);
 
-    ChVector<> hdims(hDimX - r, hDimY - r, 0);
-    ChVector<> center(0, 0, 2 * r);
+    ChVector3d hdims(hDimX - r, hDimY - r, 0);
+    ChVector3d center(0, 0, 2 * r);
 
-    while (gen.getTotalNumBodies() < desired_num_particles) {
+    while (gen.GetTotalNumBodies() < desired_num_particles) {
         gen.CreateObjectsBox(sampler, center, hdims);
         center.z() += 2 * r;
     }
 
-    cout << "Number of particles: " << gen.getTotalNumBodies() << endl;
+    cout << "Number of particles: " << gen.GetTotalNumBodies() << endl;
 }
 
 // =============================================================================
@@ -189,12 +188,12 @@ void CreateObject(ChSystemMulticore* system, double z) {
 // -----------------------------------------
 
 #ifdef USE_SMC
-    auto mat_o = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_o = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_o->SetYoungModulus(1e8f);
     mat_o->SetFriction(0.4f);
     mat_o->SetRestitution(0.1f);
 #else
-    auto mat_o = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_o = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_o->SetFriction(0.4f);
 #endif
 
@@ -204,9 +203,8 @@ void CreateObject(ChSystemMulticore* system, double z) {
 
     auto obj = chrono_types::make_shared<ChBody>();
 
-    obj->SetIdentifier(0);
-    obj->SetCollide(true);
-    obj->SetBodyFixed(false);
+    obj->EnableCollision(true);
+    obj->SetFixed(false);
 
     // ----------------------------------------------------
     // Depending on the shape of the falling object,
@@ -222,41 +220,41 @@ void CreateObject(ChSystemMulticore* system, double z) {
     switch (shape_o) {
         case ChCollisionShape::Type::SPHERE: {
             double radius = 0.5;
-            rb = geometry::ChSphere::GetBoundingSphereRadius(radius);
-            vol = geometry::ChSphere::GetVolume(radius);
-            J = geometry::ChSphere::GetGyration(radius);
+            rb = ChSphere::GetBoundingSphereRadius(radius);
+            vol = ChSphere::GetVolume(radius);
+            J = ChSphere::GetGyration(radius);
             utils::AddSphereGeometry(obj.get(), mat_o, radius);
         } break;
         case ChCollisionShape::Type::BOX: {
-            ChVector<> dims(0.5, 0.75, 1.0);
-            rb = geometry::ChBox::GetBoundingSphereRadius(dims);
-            vol = geometry::ChBox::GetVolume(dims);
-            J = geometry::ChBox::GetGyration(dims);
+            ChVector3d dims(0.5, 0.75, 1.0);
+            rb = ChBox::GetBoundingSphereRadius(dims);
+            vol = ChBox::GetVolume(dims);
+            J = ChBox::GetGyration(dims);
             utils::AddBoxGeometry(obj.get(), mat_o, dims);
         } break;
         case ChCollisionShape::Type::CAPSULE: {
             double radius = 0.25;
             double len = 0.5;
-            rb = geometry::ChCapsule::GetBoundingSphereRadius(radius, len);
-            vol = geometry::ChCapsule::GetVolume(radius, len);
-            J = geometry::ChCapsule::GetGyration(radius, len);
+            rb = ChCapsule::GetBoundingSphereRadius(radius, len);
+            vol = ChCapsule::GetVolume(radius, len);
+            J = ChCapsule::GetGyration(radius, len);
             utils::AddCapsuleGeometry(obj.get(), mat_o, radius, len);
         } break;
         case ChCollisionShape::Type::CYLINDER: {
             double radius = 0.25;
             double len = 0.5;
-            rb = geometry::ChCylinder::GetBoundingSphereRadius(radius, len);
-            vol = geometry::ChCylinder::GetVolume(radius, len);
-            J = geometry::ChCylinder::GetGyration(radius, len);
+            rb = ChCylinder::GetBoundingSphereRadius(radius, len);
+            vol = ChCylinder::GetVolume(radius, len);
+            J = ChCylinder::GetGyration(radius, len);
             utils::AddCylinderGeometry(obj.get(), mat_o, radius, len);
         } break;
         case ChCollisionShape::Type::ROUNDEDCYL: {
             double radius = 0.25;
             double len = 0.1;
             double srad = 0.1;
-            rb = geometry::ChRoundedCylinder::GetBoundingSphereRadius(radius, len, srad);
-            vol = geometry::ChRoundedCylinder::GetVolume(radius, len, srad);
-            J = geometry::ChRoundedCylinder::GetGyration(radius, len, srad);
+            rb = ChRoundedCylinder::GetBoundingSphereRadius(radius, len, srad);
+            vol = ChRoundedCylinder::GetVolume(radius, len, srad);
+            J = ChRoundedCylinder::GetGyration(radius, len, srad);
             utils::AddRoundedCylinderGeometry(obj.get(), mat_o, radius, len, srad);
         } break;
     }
@@ -273,10 +271,10 @@ void CreateObject(ChSystemMulticore* system, double z) {
     // Set initial state.
     // ------------------
 
-    obj->SetPos(ChVector<>(0, 0, z + rb));
+    obj->SetPos(ChVector3d(0, 0, z + rb));
     obj->SetRot(initRot);
-    obj->SetPos_dt(initLinVel);
-    obj->SetWvel_loc(initAngVel);
+    obj->SetLinVel(initLinVel);
+    obj->SetAngVelLocal(initAngVel);
 
     // ---------------------
     // Add object to system.
@@ -291,8 +289,8 @@ void CreateObject(ChSystemMulticore* system, double z) {
 // =============================================================================
 double FindHighest(ChSystem* sys) {
     double highest = 0;
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z() > highest)
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() >= tag_particles && body->GetPos().z() > highest)
             highest = body->GetPos().z();
     }
     return highest;
@@ -300,8 +298,8 @@ double FindHighest(ChSystem* sys) {
 
 double FindLowest(ChSystem* sys) {
     double lowest = 1000;
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z() < lowest)
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() >= tag_particles && body->GetPos().z() < lowest)
             lowest = body->GetPos().z();
     }
     return lowest;
@@ -336,7 +334,7 @@ int main(int argc, char* argv[]) {
 #endif
 
     msystem->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
-    msystem->Set_G_acc(ChVector<>(0, 0, -9.81));
+    msystem->SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
 
     // ----------------------
     // Set number of threads.
@@ -394,7 +392,7 @@ int main(int argc, char* argv[]) {
         // Create the granular material and the container from the checkpoint file.
         cout << "Read checkpoint data from " << checkpoint_file;
         utils::ReadCheckpoint(msystem, checkpoint_file);
-        cout << "  done.  Read " << msystem->Get_bodylist().size() << " bodies." << endl;
+        cout << "  done.  Read " << msystem->GetBodies().size() << " bodies." << endl;
 
         // Create the falling object just above the granular material.
         double z = FindHighest(msystem);
@@ -415,7 +413,7 @@ int main(int argc, char* argv[]) {
     int next_out_frame = 0;
     double exec_time = 0;
     int num_contacts = 0;
-    ChStreamOutAsciiFile sfile(stats_file.c_str());
+    std::ofstream sfile(stats_file.c_str());
 
     while (time < time_end) {
         if (sim_frame == next_out_frame) {
@@ -436,7 +434,7 @@ int main(int argc, char* argv[]) {
             if (problem == SETTLING) {
                 cout << "             Write checkpoint data " << flush;
                 utils::WriteCheckpoint(msystem, checkpoint_file);
-                cout << msystem->Get_bodylist().size() << " bodies" << endl;
+                cout << msystem->GetBodies().size() << " bodies" << endl;
             }
 
             out_frame++;
@@ -450,19 +448,19 @@ int main(int argc, char* argv[]) {
         time += time_step;
         sim_frame++;
         exec_time += msystem->GetTimerStep();
-        num_contacts += msystem->GetNcontacts();
+        num_contacts += msystem->GetNumContacts();
     }
 
     // Create a checkpoint from the last state
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
         utils::WriteCheckpoint(msystem, checkpoint_file);
-        cout << "  done.  Wrote " << msystem->Get_bodylist().size() << " bodies." << endl;
+        cout << "  done.  Wrote " << msystem->GetBodies().size() << " bodies." << endl;
     }
 
     // Final stats
     cout << "==================================" << endl;
-    cout << "Number of bodies:  " << msystem->Get_bodylist().size() << endl;
+    cout << "Number of bodies:  " << msystem->GetBodies().size() << endl;
     cout << "Lowest position:   " << FindLowest(msystem) << endl;
     cout << "Simulation time:   " << exec_time << endl;
     cout << "Number of threads: " << threads << endl;

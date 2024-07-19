@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     system->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Set method-independent solver settings
-    system->Set_G_acc(ChVector<>(0, 0, -9.8));
+    system->SetGravitationalAcceleration(ChVector3d(0, 0, -9.8));
     system->GetSettings()->solver.use_full_inertia_tensor = false;
     system->GetSettings()->solver.tolerance = 1e-3;
     system->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
@@ -80,10 +80,10 @@ int main(int argc, char* argv[]) {
     omp_set_num_threads(threads);
 
     // Create ground body
-    std::shared_ptr<chrono::ChMaterialSurface> material_g;
+    std::shared_ptr<chrono::ChContactMaterial> material_g;
     switch (method) {
         case ChContactMethod::SMC: {
-            auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
             mat_g->SetYoungModulus(1e7f);
             mat_g->SetFriction(0.7f);
             mat_g->SetRestitution(0.5f);
@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
             break;
         }
         case ChContactMethod::NSC: {
-            auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
             mat_g->SetFriction(0.7f);
             mat_g->SetRestitution(0.5f);
             mat_g->SetCohesion(0.0f);
@@ -102,17 +102,17 @@ int main(int argc, char* argv[]) {
     }
 
     auto ground = chrono_types::make_shared<ChBody>();
-    ground->SetPos(ChVector<>(0, 0, 0));
-    ground->SetBodyFixed(true);
-    ground->SetCollide(true);
-    utils::AddBoxGeometry(ground.get(), material_g, ChVector<>(1, 1, 0.1), ChVector<>(0, 0, -0.1));
+    ground->SetPos(ChVector3d(0, 0, 0));
+    ground->SetFixed(true);
+    ground->EnableCollision(true);
+    utils::AddBoxGeometry(ground.get(), material_g, ChVector3d(1, 1, 0.1), ChVector3d(0, 0, -0.1));
     system->AddBody(ground);
 
     // Create ball body
-    std::shared_ptr<chrono::ChMaterialSurface> material_b;
+    std::shared_ptr<chrono::ChContactMaterial> material_b;
     switch (method) {
         case ChContactMethod::SMC: {
-            auto mat_b = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+            auto mat_b = chrono_types::make_shared<ChContactMaterialSMC>();
             mat_b->SetYoungModulus(1e7f);
             mat_b->SetFriction(0.7f);
             mat_b->SetRestitution(0.5f);
@@ -121,7 +121,7 @@ int main(int argc, char* argv[]) {
             break;
         }
         case ChContactMethod::NSC: {
-            auto mat_b = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+            auto mat_b = chrono_types::make_shared<ChContactMaterialNSC>();
             mat_b->SetFriction(0.7f);
             mat_b->SetRestitution(0.5f);
             mat_b->SetCohesion(0.0f);
@@ -131,9 +131,9 @@ int main(int argc, char* argv[]) {
     }
 
     auto ball = chrono_types::make_shared<ChBody>();
-    ball->SetPos(ChVector<>(0, 0, 1));
-    ball->SetPos_dt(ChVector<>(0, 0, 8));
-    ball->SetCollide(true);
+    ball->SetPos(ChVector3d(0, 0, 1));
+    ball->SetLinVel(ChVector3d(0, 0, 8));
+    ball->EnableCollision(true);
     utils::AddSphereGeometry(ball.get(), material_b, 0.2);
     system->AddBody(ball);
 
@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
     real3 bsize = (bmax - bmin);
     real3 bpos = 0.5 * (bmax + bmin);
     auto bbox = chrono_types::make_shared<ChVisualShapeBox>(bsize.x, bsize.y, bsize.z);
-    ground->AddVisualShape(bbox, ChFrame<>(ChVector<>(bpos.x, bpos.y, bpos.z)));
+    ground->AddVisualShape(bbox, ChFrame<>(ChVector3d(bpos.x, bpos.y, bpos.z)));
 
     std::cout << "Bmin:  " << bmin.x << " " << bmin.y << " " << bmin.z << std::endl;
     std::cout << "Bmax:  " << bmax.x << " " << bmax.y << " " << bmax.z << std::endl;
@@ -161,7 +161,7 @@ int main(int argc, char* argv[]) {
     vis.SetWindowSize(1280, 720);
     vis.SetRenderMode(opengl::WIREFRAME);
     vis.Initialize();
-    vis.AddCamera(ChVector<>(0, -10, 0), ChVector<>(0, 0, 0));
+    vis.AddCamera(ChVector3d(0, -10, 0), ChVector3d(0, 0, 0));
     vis.SetCameraVertical(CameraVerticalDir::Z);
 
     // Run simulation loop

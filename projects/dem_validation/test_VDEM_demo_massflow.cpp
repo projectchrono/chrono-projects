@@ -27,7 +27,6 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
-#include "chrono/core/ChStream.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
@@ -109,6 +108,8 @@ int out_fps_dropping = 200;
 int timing_frame = -1;  // output detailed step timing at this frame
 
 // Parameters for the granular material
+int tag_particles = 0;
+
 double r_g = 0.25e-3;
 double rho_g = 2500.0;
 
@@ -140,6 +141,8 @@ double gap = 2e-3;      // size of gap
 
 double time_opening = gap / speed;
 
+int tag_insert = -100;
+
 // Dimensions of collector
 double pos_collector = 4.0e-2;     // position below measuring line
 double size_collector = 8.0e-2;    // width and length of collector bin
@@ -151,72 +154,70 @@ double height_collector = 1.0e-2;  // height of collector walls
 ChBody* CreateMechanism(ChSystemMulticore* system) {
     // Create the common material
 #ifdef USE_SMC
-    auto mat_b = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_b = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_b->SetYoungModulus(Y_c);
     mat_b->SetFriction(mu_c);
     mat_b->SetRestitution(cr_c);
 #else
-    auto mat_b = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_b = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_b->SetFriction(mu_c);
 #endif
 
     // Angled insert
     auto insert = chrono_types::make_shared<ChBody>();
 
-    insert->SetIdentifier(0);
+    insert->SetTag(tag_insert);
     insert->SetMass(1);
-    insert->SetInertiaXX(ChVector<>(1, 1, 1));
-    insert->SetPos(ChVector<>(-0.5 * height - delta, 0, 0.5 * height - delta));
-    insert->SetRot(chrono::Q_from_AngAxis(-CH_C_PI / 4, VECT_Y));
-    insert->SetCollide(true);
-    insert->SetBodyFixed(true);
+    insert->SetInertiaXX(ChVector3d(1, 1, 1));
+    insert->SetPos(ChVector3d(-0.5 * height - delta, 0, 0.5 * height - delta));
+    insert->SetRot(chrono::QuatFromAngleAxis(-CH_PI / 4, VECT_Y));
+    insert->EnableCollision(true);
+    insert->SetFixed(true);
 
-    utils::AddBoxGeometry(insert.get(), mat_b, ChVector<>(thickness * 0.5, width * 0.5, height_insert * 0.5));
+    utils::AddBoxGeometry(insert.get(), mat_b, ChVector3d(thickness * 0.5, width * 0.5, height_insert * 0.5));
 
     system->AddBody(insert);
 
     // Static slot (back wall)
     auto slot = chrono_types::make_shared<ChBody>();
 
-    slot->SetIdentifier(-1);
     slot->SetMass(1);
-    slot->SetInertiaXX(ChVector<>(1, 1, 1));
-    slot->SetPos(ChVector<>(0.5 * thickness, 0, 0.5 * height));
+    slot->SetInertiaXX(ChVector3d(1, 1, 1));
+    slot->SetPos(ChVector3d(0.5 * thickness, 0, 0.5 * height));
     slot->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    slot->SetCollide(true);
-    slot->SetBodyFixed(true);
+    slot->EnableCollision(true);
+    slot->SetFixed(true);
 
-    utils::AddBoxGeometry(slot.get(), mat_b, ChVector<>(thickness / 2, width / 2, height / 2), ChVector<>(0, 0, 0));
+    utils::AddBoxGeometry(slot.get(), mat_b, ChVector3d(thickness / 2, width / 2, height / 2), ChVector3d(0, 0, 0));
 
     system->AddBody(slot);
 
     // Lateral walls
     auto wall = chrono_types::make_shared<ChBody>();
 
-    wall->SetIdentifier(-2);
     wall->SetMass(1);
-    wall->SetInertiaXX(ChVector<>(1, 1, 1));
-    wall->SetPos(ChVector<>(0, 0, 0));
+    wall->SetInertiaXX(ChVector3d(1, 1, 1));
+    wall->SetPos(ChVector3d(0, 0, 0));
     wall->SetRot(ChQuaternion<>(1, 0, 0, 0));
-    wall->SetCollide(true);
-    wall->SetBodyFixed(true);
+    wall->EnableCollision(true);
+    wall->SetFixed(true);
 
-    utils::AddBoxGeometry(wall.get(), mat_b, ChVector<>(3 * height / 2, thickness / 2, height),
-                          ChVector<>(0, width / 2 + thickness / 2, height / 2));
-    utils::AddBoxGeometry(wall.get(), mat_b, ChVector<>(3 * height / 2, thickness / 2, height),
-                          ChVector<>(0, -width / 2 - thickness / 2, height / 2));
+    utils::AddBoxGeometry(wall.get(), mat_b, ChVector3d(3 * height / 2, thickness / 2, height),
+                          ChVector3d(0, width / 2 + thickness / 2, height / 2));
+    utils::AddBoxGeometry(wall.get(), mat_b, ChVector3d(3 * height / 2, thickness / 2, height),
+                          ChVector3d(0, -width / 2 - thickness / 2, height / 2));
 
     system->AddBody(wall);
 
 // Containing bin
 #ifdef USE_SMC
-    utils::CreateBoxContainer(system, -3, mat_b,
-                              ChVector<>(size_collector / 2, size_collector / 2, height_collector / 2), thickness / 2,
-                              ChVector<>(0, 0, -pos_collector));
+    utils::CreateBoxContainer(system, mat_b,
+                              ChVector3d(size_collector / 2, size_collector / 2, height_collector / 2), thickness / 2,
+                              ChVector3d(0, 0, -pos_collector));
 #else
     utils::CreateBoxContainer(system, -3, mat_b,
-                              ChVector<>(size_collector / 2, size_collector / 2, height_collector / 2), thickness / 2,
-                              ChVector<>(0, 0, -pos_collector));
+                              ChVector3d(size_collector / 2, size_collector / 2, height_collector / 2), thickness / 2,
+                              ChVector3d(0, 0, -pos_collector));
 #endif
 
     // Return the angled insert body
@@ -229,45 +230,45 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
 void CreateParticles(ChSystemMulticore* system) {
 // Create a material for the granular material
 #ifdef USE_SMC
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialSMC>();
     mat_g->SetYoungModulus(Y_g);
     mat_g->SetFriction(mu_g);
     mat_g->SetRestitution(cr_g);
 #else
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_g->SetFriction(mu_g);
 #endif
 
     // Create a mixture entirely made out of spheres
     double r = 1.01 * r_g;
-    utils::PDSampler<double> sampler(2 * r);
-    utils::Generator gen(system);
+    utils::ChPDSampler<double> sampler(2 * r);
+    utils::ChGenerator gen(system);
 
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
-    m1->setDefaultMaterial(mat_g);
-    m1->setDefaultDensity(rho_g);
-    m1->setDefaultSize(r_g);
+    std::shared_ptr<utils::ChMixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
+    m1->SetDefaultMaterial(mat_g);
+    m1->SetDefaultDensity(rho_g);
+    m1->SetDefaultSize(r_g);
 
-    gen.setBodyIdentifier(1);
+    gen.SetStartTag(tag_particles);
 
-    ChVector<> hdims(0.3 * height, 0.3 * width, 0);
-    ChVector<> center(-0.4 * height, 0, 0.8 * height);
-    ChVector<> vel(0, 0, 0);
+    ChVector3d hdims(0.3 * height, 0.3 * width, 0);
+    ChVector3d center(-0.4 * height, 0, 0.8 * height);
+    ChVector3d vel(0, 0, 0);
 
-    while (gen.getTotalNumBodies() < desired_num_particles) {
+    while (gen.GetTotalNumBodies() < desired_num_particles) {
         gen.CreateObjectsBox(sampler, center, hdims, vel);
         center.z() += 2 * r;
     }
 
-    std::cout << "Number of particles: " << gen.getTotalNumBodies() << std::endl;
+    std::cout << "Number of particles: " << gen.GetTotalNumBodies() << std::endl;
 }
 
 // -----------------------------------------------------------------------------
 // Find and return the body with specified identifier.
 // -----------------------------------------------------------------------------
-ChBody* FindBodyById(ChSystemMulticore* sys, int id) {
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() == id)
+ChBody* FindBodyByTag(ChSystemMulticore* sys, int tag) {
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() == tag)
             return body.get();
     }
 
@@ -280,8 +281,8 @@ ChBody* FindBodyById(ChSystemMulticore* sys, int id) {
 // -----------------------------------------------------------------------------
 int GetNumParticlesBelowHeight(ChSystemMulticore* sys, double value) {
     int count = 0;
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z() < value)
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() >= tag_particles && body->GetPos().z() < value)
             count++;
     }
     return count;
@@ -289,8 +290,8 @@ int GetNumParticlesBelowHeight(ChSystemMulticore* sys, double value) {
 
 int GetNumParticlesAboveHeight(ChSystemMulticore* sys, double value) {
     int count = 0;
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() > 0 && body->GetPos().z() > value)
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() >= tag_particles && body->GetPos().z() > value)
             count++;
     }
     return count;
@@ -303,9 +304,9 @@ int GetNumParticlesAboveHeight(ChSystemMulticore* sys, double value) {
 bool CheckSettled(ChSystemMulticore* sys, double threshold) {
     double t2 = threshold * threshold;
 
-    for (auto body : sys->Get_bodylist()) {
-        if (body->GetIdentifier() > 0) {
-            double vel2 = body->GetPos_dt().Length2();
+    for (auto body : sys->GetBodies()) {
+        if (body->GetTag() >= tag_particles) {
+            double vel2 = body->GetLinVel().Length2();
             if (vel2 > t2)
                 return false;
         }
@@ -335,7 +336,7 @@ int main(int argc, char* argv[]) {
     cout << "Using " << threads << " threads" << endl;
 
     // Set gravitational acceleration
-    sys->Set_G_acc(ChVector<>(0, 0, -gravity));
+    sys->SetGravitationalAcceleration(ChVector3d(0, 0, -gravity));
 
     // Edit system settings
     sys->GetSettings()->solver.max_iteration_bilateral = max_iteration_bilateral;
@@ -375,7 +376,7 @@ int main(int argc, char* argv[]) {
             time_end = time_dropping_max;
             out_fps = out_fps_dropping;
             utils::ReadCheckpoint(sys, checkpoint_file);
-            insert = FindBodyById(sys, 0);
+            insert = FindBodyByTag(sys, tag_insert);
             break;
     }
 
@@ -403,8 +404,8 @@ int main(int argc, char* argv[]) {
     int next_out_frame = 0;
     double exec_time = 0;
     int num_contacts = 0;
-    ChStreamOutAsciiFile sfile(stats_file.c_str());
-    ChStreamOutAsciiFile ffile(flow_file.c_str());
+    std::ofstream sfile(stats_file.c_str());
+    std::ofstream ffile(flow_file.c_str());
 
 #ifdef CHRONO_OPENGL
     opengl::ChVisualSystemOpenGL vis;
@@ -413,7 +414,7 @@ int main(int argc, char* argv[]) {
     vis.SetWindowSize(1280, 720);
     vis.SetRenderMode(opengl::WIREFRAME);
     vis.Initialize();
-    vis.AddCamera(ChVector<>(0, -12 * width, height), ChVector<>(0, 0, height));
+    vis.AddCamera(ChVector3d(0, -12 * width, height), ChVector3d(0, 0, height));
     vis.SetCameraVertical(CameraVerticalDir::Z);
 #endif
 
@@ -437,18 +438,16 @@ int main(int argc, char* argv[]) {
             cout << "             Flow:           " << count << endl;
 
             sfile << time << "  " << exec_time << "  " << num_contacts / out_steps << "\n";
-            sfile.GetFstream().sync();
 
             switch (problem) {
                 case SETTLING:
                     // Create a checkpoint from the current state.
                     utils::WriteCheckpoint(sys, checkpoint_file);
-                    cout << "             Checkpoint:     " << sys->Get_bodylist().size() << " bodies" << endl;
+                    cout << "             Checkpoint:     " << sys->GetBodies().size() << " bodies" << endl;
                     break;
                 case DROPPING:
                     // Save current gap opening and number of dropped particles.
                     ffile << time << "  " << -opening << "  " << count << "\n";
-                    ffile.GetFstream().sync();
                     break;
             }
 
@@ -484,14 +483,14 @@ int main(int argc, char* argv[]) {
 
         // Open the gate until it reaches the specified gap distance.
         if (problem == DROPPING && time <= time_opening) {
-            insert->SetPos(ChVector<>(-0.5 * height - delta - time * speed, 0, 0.5 * height - delta));
-            insert->SetPos_dt(ChVector<>(-speed, 0, 0));
+            insert->SetPos(ChVector3d(-0.5 * height - delta - time * speed, 0, 0.5 * height - delta));
+            insert->SetLinVel(ChVector3d(-speed, 0, 0));
         }
 
         time += time_step;
         sim_frame++;
         exec_time += sys->GetTimerStep();
-        num_contacts += sys->GetNcontacts();
+        num_contacts += sys->GetNumContacts();
 
         // If requested, output detailed timing information for this step
         if (sim_frame == timing_frame)
@@ -502,7 +501,7 @@ int main(int argc, char* argv[]) {
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
         utils::WriteCheckpoint(sys, checkpoint_file);
-        cout << "  done.  Wrote " << sys->Get_bodylist().size() << " bodies." << endl;
+        cout << "  done.  Wrote " << sys->GetBodies().size() << " bodies." << endl;
     }
 
     // Final stats

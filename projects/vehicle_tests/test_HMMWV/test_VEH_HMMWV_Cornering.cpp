@@ -31,7 +31,6 @@
 #include "chrono_models/vehicle/hmmwv/HMMWV.h"
 
 using namespace chrono;
-using namespace chrono::geometry;
 using namespace chrono::vehicle;
 using namespace chrono::vehicle::hmmwv;
 
@@ -41,35 +40,35 @@ void CalcControlPoints(double run,
                        double radius,
                        double offset,
                        int nturns,
-                       std::vector<ChVector<>>& points,
-                       std::vector<ChVector<>>& inCV,
-                       std::vector<ChVector<>>& outCV) {
+                       std::vector<ChVector3d>& points,
+                       std::vector<ChVector3d>& inCV,
+                       std::vector<ChVector3d>& outCV) {
     // Height of path
     double z = 0.1;
 
     // Approximate circular path using 4 points
-    double factor = radius * (4.0 / 3.0) * std::tan(CH_C_PI / 8);
+    double factor = radius * (4.0 / 3.0) * std::tan(CH_PI / 8);
 
-    ChVector<> P1(radius + offset, -radius, z);
-    ChVector<> P1_in = P1 - ChVector<>(factor, 0, 0);
-    ChVector<> P1_out = P1 + ChVector<>(factor, 0, 0);
+    ChVector3d P1(radius + offset, -radius, z);
+    ChVector3d P1_in = P1 - ChVector3d(factor, 0, 0);
+    ChVector3d P1_out = P1 + ChVector3d(factor, 0, 0);
 
-    ChVector<> P2(2 * radius + offset, 0, z);
-    ChVector<> P2_in = P2 - ChVector<>(0, factor, 0);
-    ChVector<> P2_out = P2 + ChVector<>(0, factor, 0);
+    ChVector3d P2(2 * radius + offset, 0, z);
+    ChVector3d P2_in = P2 - ChVector3d(0, factor, 0);
+    ChVector3d P2_out = P2 + ChVector3d(0, factor, 0);
 
-    ChVector<> P3(radius + offset, radius, z);
-    ChVector<> P3_in = P3 + ChVector<>(factor, 0, 0);
-    ChVector<> P3_out = P3 - ChVector<>(factor, 0, 0);
+    ChVector3d P3(radius + offset, radius, z);
+    ChVector3d P3_in = P3 + ChVector3d(factor, 0, 0);
+    ChVector3d P3_out = P3 - ChVector3d(factor, 0, 0);
 
-    ChVector<> P4(offset, 0, z);
-    ChVector<> P4_in = P4 + ChVector<>(0, factor, 0);
-    ChVector<> P4_out = P4 - ChVector<>(0, factor, 0);
+    ChVector3d P4(offset, 0, z);
+    ChVector3d P4_in = P4 + ChVector3d(0, factor, 0);
+    ChVector3d P4_out = P4 - ChVector3d(0, factor, 0);
 
     // Start point
-    ChVector<> P0(-run, -radius, z);
-    ChVector<> P0_in = P0;
-    ChVector<> P0_out = P0 + ChVector<>(factor, 0, 0);
+    ChVector3d P0(-run, -radius, z);
+    ChVector3d P0_in = P0;
+    ChVector3d P0_out = P0 + ChVector3d(factor, 0, 0);
 
     points.push_back(P0);
     inCV.push_back(P0_in);
@@ -116,7 +115,7 @@ int main(int argc, char* argv[]) {
     double terrainWidth = 20 + 2 * radius;
 
     // Initial vehicle location
-    ChVector<> initLoc(-run, -radius, 0.5);
+    ChVector3d initLoc(-run, -radius, 0.5);
 
     // ---------------------------------------------
     // Parameters for steering and speed controllers
@@ -156,7 +155,7 @@ int main(int argc, char* argv[]) {
     my_hmmwv.SetInitPosition(ChCoordsys<>(initLoc));
     my_hmmwv.SetInitFwdVel(1.5 * target_speed);
     my_hmmwv.SetEngineType(EngineModelType::SHAFTS);
-    my_hmmwv.SetTransmissionType(TransmissionModelType::SHAFTS);
+    my_hmmwv.SetTransmissionType(TransmissionModelType::AUTOMATIC_SHAFTS);
     my_hmmwv.SetDriveType(DrivelineTypeWV::RWD);
     my_hmmwv.SetTireType(TireModelType::RIGID);
     my_hmmwv.SetTireStepSize(step_size);
@@ -169,14 +168,14 @@ int main(int argc, char* argv[]) {
     my_hmmwv.SetTireVisualizationType(VisualizationType::PRIMITIVES);
 
     // Create the terrain
-    auto patch_mat = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto patch_mat = chrono_types::make_shared<ChContactMaterialSMC>();
     patch_mat->SetFriction(0.9f);
     patch_mat->SetRestitution(0.01f);
     patch_mat->SetYoungModulus(2e7f);
     patch_mat->SetPoissonRatio(0.3f);
     RigidTerrain terrain(my_hmmwv.GetSystem());
     auto patch =
-        terrain.AddPatch(patch_mat, ChCoordsys<>(ChVector<>(0, 0, terrainHeight), QUNIT), terrainLength, terrainWidth);
+        terrain.AddPatch(patch_mat, ChCoordsys<>(ChVector3d(0, 0, terrainHeight), QUNIT), terrainLength, terrainWidth);
     patch->SetColor(ChColor(1, 1, 1));
     patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 100, 50);
     terrain.Initialize();
@@ -185,9 +184,9 @@ int main(int argc, char* argv[]) {
     // Create the Bezier path and the path-follower driver system
     // ----------------------------------------------------------
 
-    std::vector<ChVector<>> points;
-    std::vector<ChVector<>> inCV;
-    std::vector<ChVector<>> outCV;
+    std::vector<ChVector3d> points;
+    std::vector<ChVector3d> inCV;
+    std::vector<ChVector3d> outCV;
     CalcControlPoints(run, radius, offset, nturns, points, inCV, outCV);
     auto path = chrono_types::make_shared<ChBezierCurve>(points, inCV, outCV);
 
@@ -204,7 +203,7 @@ int main(int argc, char* argv[]) {
 
     auto vis = chrono_types::make_shared<ChWheeledVehicleVisualSystemIrrlicht>();
     vis->SetWindowTitle("Constant radius turn test");
-    vis->SetChaseCamera(ChVector<>(0.0, 0.0, 1.75), 6.0, 0.5);
+    vis->SetChaseCamera(ChVector3d(0.0, 0.0, 1.75), 6.0, 0.5);
     vis->Initialize();
     vis->AddTypicalLights();
     vis->AddSkyBox();
@@ -222,7 +221,7 @@ int main(int argc, char* argv[]) {
     // ---------------
 
     // Driver location in vehicle local frame
-    ChVector<> driver_pos = my_hmmwv.GetChassis()->GetLocalDriverCoordsys().pos;
+    ChVector3d driver_pos = my_hmmwv.GetChassis()->GetLocalDriverCoordsys().pos;
 
     // Number of simulation steps between miscellaneous events
     double render_step_size = 1 / fps;
@@ -235,8 +234,8 @@ int main(int argc, char* argv[]) {
     while (vis->Run()) {
         // Extract system state
         double time = my_hmmwv.GetSystem()->GetChTime();
-        ChVector<> acc_CG = my_hmmwv.GetVehicle().GetChassisBody()->GetPos_dtdt();
-        ChVector<> acc_driver = my_hmmwv.GetVehicle().GetPointAcceleration(driver_pos);
+        ChVector3d acc_CG = my_hmmwv.GetVehicle().GetChassisBody()->GetLinAcc();
+        ChVector3d acc_driver = my_hmmwv.GetVehicle().GetPointAcceleration(driver_pos);
 
         // End simulation
         if (time >= t_end)
@@ -247,8 +246,8 @@ int main(int argc, char* argv[]) {
 
         // Update sentinel and target location markers for the path-follower controller.
         // Note that we do this whether or not we are currently using the path-follower driver.
-        const ChVector<>& pS = driver.GetSteeringController().GetSentinelLocation();
-        const ChVector<>& pT = driver.GetSteeringController().GetTargetLocation();
+        const ChVector3d& pS = driver.GetSteeringController().GetSentinelLocation();
+        const ChVector3d& pT = driver.GetSteeringController().GetTargetLocation();
         ballS->setPosition(irr::core::vector3df((irr::f32)pS.x(), (irr::f32)pS.y(), (irr::f32)pS.z()));
         ballT->setPosition(irr::core::vector3df((irr::f32)pT.x(), (irr::f32)pT.y(), (irr::f32)pT.z()));
 

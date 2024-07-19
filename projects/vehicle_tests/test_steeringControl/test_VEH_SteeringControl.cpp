@@ -40,7 +40,6 @@
 
 using namespace chrono;
 using namespace chrono::vehicle;
-using namespace geometry;
 
 // =============================================================================
 // Global definitions
@@ -83,7 +82,7 @@ std::string transmission_file("generic/powertrain/AutomaticTransmissionSimpleMap
 std::string rigidterrain_file("terrain/RigidPlane.json");
 
 // Initial vehicle position and orientation
-ChVector<> initLoc(-125, -125, 0.6);
+ChVector3d initLoc(-125, -125, 0.6);
 ChQuaternion<> initRot(1, 0, 0, 0);
 
 // Desired vehicle speed (m/s)
@@ -102,7 +101,7 @@ int num_steps = 5000;           // number of steps for data colection
 // =============================================================================
 // Forward declarations
 
-void processData(const utils::CSV_writer& csv, const Data& data);
+void processData(const utils::ChWriterCSV& csv, const Data& data);
 
 // =============================================================================
 // Main driver program
@@ -147,7 +146,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Create the driver system
-    auto path = ChBezierCurve::read(vehicle::GetDataFile(path_file));
+    auto path = ChBezierCurve::Read(vehicle::GetDataFile(path_file));
     ChPathFollowerDriver driver(vehicle, vehicle::GetDataFile(steering_controller_file),
                                 vehicle::GetDataFile(speed_controller_file), path, "my_path", target_speed);
 
@@ -159,9 +158,9 @@ int main(int argc, char* argv[]) {
     // ---------------
 
     // Initialize data collectors
-    utils::CSV_writer csv("\t");
-    csv.stream().setf(std::ios::scientific | std::ios::showpos);
-    csv.stream().precision(6);
+    utils::ChWriterCSV csv("\t");
+    csv.Stream().setf(std::ios::scientific | std::ios::showpos);
+    csv.Stream().precision(6);
 
     Data data(num_steps);
 
@@ -171,12 +170,12 @@ int main(int argc, char* argv[]) {
 
         // Collect data
         if (!settling) {
-            const ChVector<> sentinel = driver.GetSteeringController().GetSentinelLocation();
-            const ChVector<> target = driver.GetSteeringController().GetTargetLocation();
-            const ChVector<> vehicle_location = vehicle.GetPos();
-            ChVector<> vehicle_target;
-            tracker.calcClosestPoint(vehicle_location, vehicle_target);
-            ChVector<> vehicle_err = vehicle_target - vehicle_location;
+            const ChVector3d sentinel = driver.GetSteeringController().GetSentinelLocation();
+            const ChVector3d target = driver.GetSteeringController().GetTargetLocation();
+            const ChVector3d vehicle_location = vehicle.GetPos();
+            ChVector3d vehicle_target;
+            tracker.CalcClosestPoint(vehicle_location, vehicle_target);
+            ChVector3d vehicle_err = vehicle_target - vehicle_location;
             double speed_err = target_speed - vehicle.GetSpeed();
 
             csv << vehicle.GetChTime() << vehicle_location << vehicle_target << vehicle_err << speed_err << std::endl;
@@ -219,9 +218,9 @@ int main(int argc, char* argv[]) {
 // =============================================================================
 // Simulation data post-processing
 
-void processData(const utils::CSV_writer& csv, const Data& data) {
+void processData(const utils::ChWriterCSV& csv, const Data& data) {
     // Optionally, write simulation results to file for external post-processing
-    csv.write_to_file(out_file);
+    csv.WriteToFile(out_file);
 
     // Alternatively, post-process simulation results here and write out results
     DataArray loc_err_norm2 = data.err_x * data.err_x + data.err_y * data.err_y + data.err_z * data.err_z;

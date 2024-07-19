@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
 
     // Setup simulation
     ChSystemGpu gpu_sys(params.sphere_radius, params.sphere_density,
-                        ChVector<float>(params.box_X, params.box_Y, params.box_Z));
+                        ChVector3f(params.box_X, params.box_Y, params.box_Z));
 
     gpu_sys.SetPsiFactors(params.psi_T, params.psi_L);
 
@@ -70,20 +70,20 @@ int main(int argc, char* argv[]) {
     gpu_sys.SetCohesionRatio(params.cohesion_ratio);
     gpu_sys.SetAdhesionRatio_SPH2WALL(params.adhesion_ratio_s2w);
 
-    gpu_sys.SetGravitationalAcceleration(ChVector<float>(params.grav_X, params.grav_Y, params.grav_Z));
+    gpu_sys.SetGravitationalAcceleration(ChVector3f(params.grav_X, params.grav_Y, params.grav_Z));
     gpu_sys.SetParticleOutputMode(params.write_mode);
 
     gpu_sys.SetRollingMode(CHGPU_ROLLING_MODE::NO_RESISTANCE);
 
-    std::vector<ChVector<float>> body_points;
+    std::vector<ChVector3f> body_points;
 
     {
         // fill box, layer by layer
-        ChVector<> hdims(params.box_X / 2.f - 2 * params.sphere_radius, params.box_Y / 2.f - 2 * params.sphere_radius,
+        ChVector3d hdims(params.box_X / 2.f - 2 * params.sphere_radius, params.box_Y / 2.f - 2 * params.sphere_radius,
                          params.box_Z / 2.f - 2 * params.sphere_radius);
-        ChVector<> center(0, 0, 0);
+        ChVector3d center(0, 0, 0);
 
-        utils::HCPSampler<float> sampler(2.2f * params.sphere_radius);
+        utils::ChHCPSampler<float> sampler(2.2f * params.sphere_radius);
 
         body_points = sampler.SampleBox(center, hdims);
     }

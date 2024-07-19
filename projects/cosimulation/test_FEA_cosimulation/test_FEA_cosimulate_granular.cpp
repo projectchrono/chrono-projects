@@ -51,10 +51,10 @@ using namespace chrono::irrlicht;
 // Also plot forces as vectors.
 // Mostly for debugging.
 void draw_affected_triangles(ChVisualSystemIrrlicht& vis,
-                             std::vector<ChVector<>>& vert_pos,
-                             std::vector<ChVector<int>>& triangles,
+                             std::vector<ChVector3d>& vert_pos,
+                             std::vector<ChVector3i>& triangles,
                              std::vector<int>& vert_indexes,
-                             std::vector<ChVector<>>& vert_forces,
+                             std::vector<ChVector3d>& vert_forces,
                              double forcescale = 0.01) {
     for (int it = 0; it < triangles.size(); ++it) {
         bool vert_hit = false;
@@ -64,14 +64,14 @@ void draw_affected_triangles(ChVisualSystemIrrlicht& vis,
                 vert_hit = true;
         }
         if (vert_hit == true) {
-            std::vector<chrono::ChVector<>> fourpoints = {vert_pos[triangles[it].x()], vert_pos[triangles[it].y()],
+            std::vector<chrono::ChVector3d> fourpoints = {vert_pos[triangles[it].x()], vert_pos[triangles[it].y()],
                                                           vert_pos[triangles[it].z()], vert_pos[triangles[it].x()]};
             tools::drawPolyline(&vis, fourpoints, ChColor(0.9f, 0.7f, 0), true);
         }
     }
     if (forcescale > 0)
         for (int io = 0; io < vert_indexes.size(); ++io) {
-            std::vector<chrono::ChVector<>> forceline = {vert_pos[vert_indexes[io]],
+            std::vector<chrono::ChVector3d> forceline = {vert_pos[vert_indexes[io]],
                                                          vert_pos[vert_indexes[io]] + vert_forces[io] * forcescale};
             tools::drawPolyline(&vis, forceline, ChColor(0.9f, 0, 0), true);
         }
@@ -93,8 +93,8 @@ int main(int argc, char* argv[]) {
     // Global parameter for tire:
     double tire_rad = 0.8;
     double tire_vel_z0 = -3;
-    ChVector<> tire_center(0, 1 + 0.02 + tire_rad, 0);
-    ChMatrix33<> tire_alignment(Q_from_AngAxis(CH_C_PI, VECT_Y));  // create rotated 180� on y
+    ChVector3d tire_center(0, 1 + 0.02 + tire_rad, 0);
+    ChMatrix33<> tire_alignment(QuatFromAngleAxis(CH_PI, VECT_Y));  // create rotated 180� on y
 
     double tire_w0 = tire_vel_z0 / tire_rad;
 
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
     // Create the surface material, containing information
     // about friction etc.
 
-    auto mysurfmaterial = chrono_types::make_shared<ChMaterialSurfaceSMC>();
+    auto mysurfmaterial = chrono_types::make_shared<ChContactMaterialSMC>();
     mysurfmaterial->SetYoungModulus(10e4);
     mysurfmaterial->SetFriction(0.3f);
     mysurfmaterial->SetRestitution(0.2f);
@@ -123,10 +123,10 @@ int main(int argc, char* argv[]) {
     // Create a material, that must be assigned to each solid element in the mesh,
     // and set its parameters
     auto mmaterial = chrono_types::make_shared<ChContinuumElastic>();
-    mmaterial->Set_E(0.003e9);  // rubber 0.01e9, steel 200e9
-    mmaterial->Set_v(0.4);
-    mmaterial->Set_RayleighDampingK(0.004);
-    mmaterial->Set_density(1000);
+    mmaterial->SetYoungModulus(0.003e9);  // rubber 0.01e9, steel 200e9
+    mmaterial->SetPoissonRatio(0.4);
+    mmaterial->SetRayleighDampingBeta(0.004);
+    mmaterial->SetDensity(1000);
 
     // Load an ABAQUS .INP tetahedron mesh file from disk, defining a tetahedron mesh.
     // Note that not all features of INP files are supported. Also, quadratic tetahedrons are promoted to linear.
@@ -136,8 +136,8 @@ int main(int argc, char* argv[]) {
     try {
         ChMeshFileLoader::FromAbaqusFile(my_mesh, GetChronoDataFile("fea/tractor_wheel_coarse.INP").c_str(), mmaterial,
                                          node_sets, tire_center, tire_alignment);
-    } catch (ChException myerr) {
-        GetLog() << myerr.what();
+    } catch (std::exception& myerr) {
+        std::cout << myerr.what();
         return 0;
     }
 
@@ -180,12 +180,12 @@ int main(int argc, char* argv[]) {
     auto mrigidbody = chrono_types::make_shared<ChBody>();
     sys.Add(mrigidbody);
     mrigidbody->SetMass(200);
-    mrigidbody->SetInertiaXX(ChVector<>(20,20,20));
+    mrigidbody->SetInertiaXX(ChVector3d(20,20,20));
     mrigidbody->SetPos(tire_center);
 
     auto mrigidmesh = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     mrigidmesh->GetMesh().LoadWavefrontMesh(GetChronoDataFile("models/tractor_wheel_fine.obj"));
-    mrigidmesh->GetMesh().Transform(VNULL, Q_from_AngAxis(CH_C_PI, VECT_Y) );
+    mrigidmesh->GetMesh().Transform(VNULL, QuatFromAngleAxis(CH_PI, VECT_Y) );
     mrigidbody->AddAsset(mrigidmesh);
 
     auto mcol = chrono_types::make_shared<ChColorAsset>();
@@ -215,7 +215,7 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
-    vis->AddCamera(ChVector<>(3, 1.4, -3.2));
+    vis->AddCamera(ChVector3d(3, 1.4, -3.2));
     vis->AddTypicalLights();
     vis->AttachSystem(&sys);
 #endif
@@ -230,8 +230,8 @@ int main(int argc, char* argv[]) {
     auto solver = chrono_types::make_shared<ChSolverMINRES>();
     solver->EnableWarmStart(true);
     solver->SetMaxIterations(40);
+    solver->SetTolerance(1e-12);
     sys.SetSolver(solver);
-    sys.SetSolverForceTolerance(1e-10);
 
     // Change type of integrator:
     sys.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
@@ -240,7 +240,7 @@ int main(int argc, char* argv[]) {
     ChSystemMulticoreNSC* systemG = new ChSystemMulticoreNSC();
 
     // Set gravitational acceleration
-    systemG->Set_G_acc(sys.Get_G_acc());
+    systemG->SetGravitationalAcceleration(sys.GetGravitationalAcceleration());
 
     // Set solver parameters
     systemG->GetSettings()->solver.solver_mode = SolverMode::SLIDING;
@@ -257,80 +257,81 @@ int main(int argc, char* argv[]) {
     systemG->GetSettings()->collision.collision_envelope = 0.01;
     systemG->GetSettings()->collision.bins_per_axis = vec3(10, 10, 10);
 
-    auto triMat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto triMat = chrono_types::make_shared<ChContactMaterialNSC>();
     triMat->SetFriction(0.4f);
 
     // Create the triangles for the tire geometry
-    ChVector<> pos(0, 0, 0);
-    ChVector<> vel(0, 0, 0);
+    ChVector3d pos(0, 0, 0);
+    ChVector3d vel(0, 0, 0);
 
-    std::vector<ChVector<>> vert_pos;
-    std::vector<ChVector<>> vert_vel;
-    std::vector<ChVector<int>> triangles;
-    std::vector<ChVector<>> vert_forces;
+    std::vector<ChVector3d> vert_pos;
+    std::vector<ChVector3d> vert_vel;
+    std::vector<ChVector3i> triangles;
+    std::vector<ChVector3d> vert_forces;
     std::vector<int> vert_indexes;
     vert_forces.clear();
     vert_indexes.clear();
-    std::vector<ChVector<>> vert_forcesVisualization;
+    std::vector<ChVector3d> vert_forcesVisualization;
     std::vector<int> vert_indexesVisualization;
     vert_forcesVisualization.clear();
     vert_indexesVisualization.clear();
     mrigidmeshload->OutputSimpleMesh(vert_pos, vert_vel, triangles);
     for (int i = 0; i < vert_pos.size(); i++) {
-        vert_forces.push_back(ChVector<>(0, 0, 0));
+        vert_forces.push_back(ChVector3d(0, 0, 0));
         vert_indexes.push_back(i);
     }
 
     double mass = 2;  // mrigidbody->GetMass()/((double) triangles.size());
     double radius = 0.005;
-    ChVector<> inertia = (2.0 / 5.0) * mass * radius * radius * ChVector<>(1, 1, 1);
+    ChVector3d inertia = (2.0 / 5.0) * mass * radius * radius * ChVector3d(1, 1, 1);
 
-    int triId = 0;
+    int tri_tag = 0;
+    std::vector<std::shared_ptr<ChBody>> tri_bodies;
     for (int i = 0; i < triangles.size(); i++) {
         auto triangle = chrono_types::make_shared<ChBody>();
-        triangle->SetIdentifier(triId++);
+        triangle->SetTag(tri_tag++);
         triangle->SetMass(mass);
         triangle->SetInertiaXX(inertia);
         pos = (vert_pos[triangles[i].x()] + vert_pos[triangles[i].y()] + vert_pos[triangles[i].z()]) / 3.0;
         vel = (vert_vel[triangles[i].x()] + vert_vel[triangles[i].y()] + vert_vel[triangles[i].z()]) / 3.0;
         triangle->SetPos(pos);
-        triangle->SetPos_dt(vel);
+        triangle->SetLinVel(vel);
         triangle->SetRot(ChQuaternion<>(1, 0, 0, 0));
-        triangle->SetCollide(true);
-        triangle->SetBodyFixed(true);
+        triangle->EnableCollision(true);
+        triangle->SetFixed(true);
 
-        std::string name = "tri" + std::to_string(triId);
+        std::string name = "tri" + std::to_string(tri_tag);
         chrono::utils::AddTriangleGeometry(triangle.get(), triMat, vert_pos[triangles[i].x()] - pos,
                                            vert_pos[triangles[i].y()] - pos, vert_pos[triangles[i].z()] - pos, name);
         triangle->GetCollisionModel()->SetFamily(1);
-        triangle->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+        triangle->GetCollisionModel()->DisallowCollisionsWith(1);
 
+        tri_bodies.push_back(triangle);
         systemG->AddBody(triangle);
     }
 
     // Add the terrain, MUST BE ADDED AFTER TIRE GEOMETRY (for index assumptions)
-    chrono::utils::CreateBoxContainer(systemG, -2, triMat, ChVector<>(2, 2, 2), 0.2, ChVector<>(0, -1, 0), QUNIT, true,
+    chrono::utils::CreateBoxContainer(systemG, triMat, ChVector3d(2, 2, 2), 0.2, ChVector3d(0, -1, 0), QUNIT, true,
                                       true, false);
 
     double r = 0.1;  // 0.02;//
     double shapeRatio = 0.4;
-    chrono::utils::PDSampler<double> sampler(2 * r);
-    chrono::utils::Generator gen(systemG);
+    chrono::utils::ChPDSampler<double> sampler(2 * r);
+    chrono::utils::ChGenerator gen(systemG);
     auto m1 = gen.AddMixtureIngredient(chrono::utils::MixtureType::ELLIPSOID, 1.0);
-    m1->setDefaultMaterial(triMat);
-    m1->setDefaultDensity(2500);
-    m1->setDefaultSize(ChVector<>(r, r * shapeRatio, r));
+    m1->SetDefaultMaterial(triMat);
+    m1->SetDefaultDensity(2500);
+    m1->SetDefaultSize(ChVector3d(r, r * shapeRatio, r));
 
-    gen.setBodyIdentifier(triId);
-    ChVector<> hdims(1 - r * 1.01, 0.5, 1 - r * 1.01);
-    ChVector<> center(0, 0, 0);
+    ChVector3d hdims(1 - r * 1.01, 0.5, 1 - r * 1.01);
+    ChVector3d center(0, 0, 0);
     gen.CreateObjectsBox(sampler, center, hdims);
 
 #ifdef CHRONO_OPENGL
     // Initialize OpenGL
     opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
     gl_window.Initialize(1280, 720, "DEMO TTI", systemG);
-    gl_window.SetCamera(ChVector<>(1, 1.4, -1.2), ChVector<>(0, tire_rad, 0), ChVector<>(0, 1, 0));
+    gl_window.SetCamera(ChVector3d(1, 1.4, -1.2), ChVector3d(0, tire_rad, 0), ChVector3d(0, 1, 0));
     gl_window.SetRenderMode(opengl::WIREFRAME);
 #endif
     // END MULTICORE SYSTEM INITIALIZATION
@@ -363,14 +364,14 @@ int main(int argc, char* argv[]) {
 
             chrono::utils::WriteVisualizationAssets(systemG, filename, false);
             std::string delim = ",";
-            chrono::utils::CSV_writer csv(delim);
+            chrono::utils::ChWriterCSV csv(delim);
             csv << triangles.size() << std::endl;
             for (int i = 0; i < triangles.size(); i++) {
-                csv << systemG->Get_bodylist().at(i)->GetPos() << vert_pos[triangles[i].x()]
+                csv << systemG->GetBodies().at(i)->GetPos() << vert_pos[triangles[i].x()]
                     << vert_pos[triangles[i].y()] << vert_pos[triangles[i].z()] << std::endl;
             }
             sprintf(filename, "../POVRAY/triangles_%d.dat", frameIndex);
-            csv.write_to_file(filename);
+            csv.WriteToFile(filename);
         }
 #endif
         // END STEP 1
@@ -382,17 +383,17 @@ int main(int argc, char* argv[]) {
 
         vert_forces.clear();
         for (int i = 0; i < vert_pos.size(); i++) {
-            vert_forces.push_back(ChVector<>(0, 0, 0));
+            vert_forces.push_back(ChVector3d(0, 0, 0));
         }
 
         for (int i = 0; i < triangles.size(); i++) {
-            force = systemG->GetBodyContactForce(i);
-            torque = systemG->GetBodyContactTorque(i);
+            force = systemG->GetBodyContactForce(tri_bodies[i]);
+            torque = systemG->GetBodyContactTorque(tri_bodies[i]);
 
             // TODO: Calculate force based on the position in the triangle
-            vert_forces[triangles[i].x()] += ChVector<>(force.x, force.y, force.z) / 3;
-            vert_forces[triangles[i].y()] += ChVector<>(force.x, force.y, force.z) / 3;
-            vert_forces[triangles[i].z()] += ChVector<>(force.x, force.y, force.z) / 3;
+            vert_forces[triangles[i].x()] += ChVector3d(force.x, force.y, force.z) / 3;
+            vert_forces[triangles[i].y()] += ChVector3d(force.x, force.y, force.z) / 3;
+            vert_forces[triangles[i].z()] += ChVector3d(force.x, force.y, force.z) / 3;
         }
         mrigidmeshload->InputSimpleForces(vert_forces, vert_indexes);
 // END STEP 2
@@ -421,11 +422,11 @@ int main(int argc, char* argv[]) {
         mrigidmeshload->OutputSimpleMesh(vert_pos, vert_vel, triangles);
 
         for (int i = 0; i < triangles.size(); i++) {
-            std::shared_ptr<ChBody> triBody = systemG->Get_bodylist().at(i);
+            std::shared_ptr<ChBody> triBody = systemG->GetBodies().at(i);
             pos = (vert_pos[triangles[i].x()] + vert_pos[triangles[i].y()] + vert_pos[triangles[i].z()]) / 3.0;
             triBody->SetPos(pos);
             vel = (vert_vel[triangles[i].x()] + vert_vel[triangles[i].y()] + vert_vel[triangles[i].z()]) / 3.0;
-            triBody->SetPos_dt(vel);
+            triBody->SetLinVel(vel);
 
             //            // Update visual assets TODO: chrono_opengl cannot handle dynamic meshes yet
             //            for (int j = 0; j < triBody->GetAssets().size(); j++) {
@@ -439,7 +440,7 @@ int main(int argc, char* argv[]) {
             //                ((ChVisualShapeTriangleMesh*)(asset.get()))->GetMesh().m_vertices[1] =
             //                vert_pos[triangles[i].y()];
             //                ((ChVisualShapeTriangleMesh*)(asset.get()))->GetMesh().m_vertices[2] =
-            //                ChVector<>(0);//vert_pos[triangles[i].z()];
+            //                ChVector3d(0);//vert_pos[triangles[i].z()];
             //              }
             //            }
 
@@ -473,7 +474,7 @@ int main(int argc, char* argv[]) {
         // End of cosimulation block
         // -------------------------------------------------------------------------
 
-        tools::drawGrid(vis.get(), 0.1, 0.1, 20, 20, ChCoordsys<>(VNULL, CH_C_PI_2, VECT_X), ChColor(0.4f, 0.4f, 0.4f),
+        tools::drawGrid(vis.get(), 0.1, 0.1, 20, 20, ChCoordsys<>(VNULL, CH_PI_2, VECT_X), ChColor(0.4f, 0.4f, 0.4f),
                         true);
 
         vis->EndScene();
