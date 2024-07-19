@@ -40,18 +40,17 @@ using namespace deme;
 using namespace std::filesystem;
 
 using namespace chrono;
-using namespace chrono::geometry;
 using namespace chrono::viper;
 
 // Define Viper rover wheel type
 ViperWheelType wheel_type = ViperWheelType::RealWheel;
 
-// ChVector to/from float3
-inline float3 ChVec2Float(const ChVector<>& vec) {
+// ChVector3 to/from float3
+inline float3 ChVec2Float(const ChVector3<>& vec) {
     return make_float3(vec.x(), vec.y(), vec.z());
 }
-inline ChVector<> Float2ChVec(float3 f3) {
-    return ChVector<>(f3.x, f3.y, f3.z);
+inline ChVector3<> Float2ChVec(float3 f3) {
+    return ChVector3<>(f3.x, f3.y, f3.z);
 }
 
 inline float4 ChQ2Float(const ChQuaternion<>& Q) {
@@ -68,7 +67,7 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
 int main(int argc, char* argv[]) {
     SetChronoDataPath(CHRONO_DATA_DIR);
     SetDEMEDataPath(DEME_DATA_DIR);
-    GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
+    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
 
     // Global parameter for moving patch size:
     double wheel_range = 0.5;
@@ -76,8 +75,8 @@ int main(int argc, char* argv[]) {
 
     // Create a Chrono::Engine physical system
     ChSystemSMC sys;
-    ChVector<double> G = ChVector<double>(0, 0, -9.81);
-    sys.Set_G_acc(G);
+    ChVector3<double> G = ChVector3<double>(0, 0, -9.81);
+    sys.SetGravitationalAcceleration(G);
 
     const int nW = 4;  // 4 wheels
 
@@ -96,11 +95,11 @@ int main(int argc, char* argv[]) {
     // driver->SetMotorStallTorque(50.0, ViperWheelID::V_LB);
     // driver->SetMotorStallTorque(50.0, ViperWheelID::V_RB);
 
-    viper.Initialize(ChFrame<>(ChVector<>(-0.5, -0.0, 0.0), QUNIT));
+    viper.Initialize(ChFrame<>(ChVector3<>(-0.5, -0.0, 0.0), QUNIT));
 
     // Get wheels and bodies to set up SCM patches
     std::vector<std::shared_ptr<ChBodyAuxRef>> Wheels;
-    std::vector<ChVector<>> wheel_pos;
+    std::vector<ChVector3<>> wheel_pos;
     Wheels.push_back(viper.GetWheel(ViperWheelID::V_LF)->GetBody());
     Wheels.push_back(viper.GetWheel(ViperWheelID::V_RF)->GetBody());
     Wheels.push_back(viper.GetWheel(ViperWheelID::V_LB)->GetBody());
@@ -111,7 +110,7 @@ int main(int argc, char* argv[]) {
     double wheel_mass = viper.GetWheelMass();
 
     for (int i = 0; i < nW; i++) {
-        wheel_pos.push_back(Wheels[i]->GetFrame_REF_to_abs().GetPos());
+        wheel_pos.push_back(Wheels[i]->GetFrameRefToAbs().GetPos());
     }
 
     //////////////////////////////////////////////
@@ -242,7 +241,7 @@ int main(int argc, char* argv[]) {
     {
         // Figure out the exact size of wheels
         float max_z = max_z_finder->GetValue();
-        float wheel_center_z = ChVec2Float(Wheels[0]->GetFrame_REF_to_abs().GetPos()).z;
+        float wheel_center_z = ChVec2Float(Wheels[0]->GetFrameRefToAbs().GetPos()).z;
         std::cout << "Exact wheel radius is " << max_z - wheel_center_z << std::endl;
     }
 
@@ -308,9 +307,9 @@ int main(int argc, char* argv[]) {
     float frame_accu = frame_accu_thres;
     for (float t = 0; t < time_end; t += step_size, curr_step++) {
         for (int i = 0; i < nW; i++) {
-            wheel_pos[i] = Wheels[i]->GetFrame_REF_to_abs().GetPos();
+            wheel_pos[i] = Wheels[i]->GetFrameRefToAbs().GetPos();
             trackers[i]->SetPos(ChVec2Float(wheel_pos[i]));
-            wheel_rot[i] = Wheels[i]->GetFrame_REF_to_abs().GetRot();
+            wheel_rot[i] = Wheels[i]->GetFrameRefToAbs().GetRot();
             trackers[i]->SetOriQ(ChQ2Float(wheel_rot[i]));
 
             if (curr_step % report_steps == 0) {
@@ -345,9 +344,9 @@ int main(int argc, char* argv[]) {
             F *= wheel_mass;
             float3 tor = trackers[i]->ContactAngAccLocal();
             tor = wheel_MOI * tor;
-            Wheels[i]->Empty_forces_accumulators();
-            Wheels[i]->Accumulate_force(Float2ChVec(F), wheel_pos[i], false);
-            Wheels[i]->Accumulate_torque(Float2ChVec(tor), true);  // torque in DEME is local
+            Wheels[i]->EmptyAccumulators();
+            Wheels[i]->AccumulateForce(Float2ChVec(F), wheel_pos[i], false);
+            Wheels[i]->AccumulateTorque(Float2ChVec(tor), true);  // torque in DEME is local
         }
         h_start = std::chrono::high_resolution_clock::now();
         sys.DoStepDynamics(step_size);
@@ -358,8 +357,8 @@ int main(int argc, char* argv[]) {
         frame_accu += step_size;
 
         if (curr_step % report_steps == 0) {
-            float3 body_pos = ChVec2Float(Body_1->GetFrame_REF_to_abs().GetPos());
-            // float rover_vel = Body_1->GetFrame_REF_to_abs().GetPos_dt().x();
+            float3 body_pos = ChVec2Float(Body_1->GetFrameRefToAbs().GetPos());
+            // float rover_vel = Body_1->GetFrameRefToAbs().GetPosDt().x();
             // float slip = 1.0 - rover_vel / (w_r * wheel_rad);
             std::cout << "Rover body is at " << body_pos.x << ", " << body_pos.y << ", " << body_pos.z << std::endl;
             std::cout << "Time is " << t << std::endl;
@@ -389,26 +388,26 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
     sprintf(f_name, "%04d", frame_number);
     filename = rover_dir / ("./viper_" + std::string(f_name) + ".obj");
 
-    std::vector<geometry::ChTriangleMeshConnected> meshes;
+    std::vector<ChTriangleMeshConnected> meshes;
 
     // save the VIPER body to obj/vtk files
     for (int i = 0; i < 1; i++) {
         auto body = rover.GetChassis()->GetBody();
-        ChFrame<> body_ref_frame = body->GetFrame_REF_to_abs();
-        ChVector<> body_pos = body_ref_frame.GetPos();      // body->GetPos();
+        ChFrame<> body_ref_frame = body->GetFrameRefToAbs();
+        ChVector3<> body_pos = body_ref_frame.GetPos();      // body->GetPos();
         ChQuaternion<> body_rot = body_ref_frame.GetRot();  // body->GetRot();
 
         auto mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
         std::string obj_path = (GetChronoDataFile("robot/viper/obj/viper_chassis.obj"));
         double scale_ratio = 1.0;
         mmesh->LoadWavefrontMesh(obj_path, false, true);
-        mmesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
+        mmesh->Transform(ChVector3<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
         mmesh->RepairDuplicateVertexes(1e-9);                              // if meshes are not watertight
         mmesh->Transform(body_pos, ChMatrix33<>(body_rot));  // rotate the mesh based on the orientation of body
 
         // filename = rover_dir / ("./body_" + std::string(f_name) + ".obj");
-        // std::vector<geometry::ChTriangleMeshConnected> meshes = {*mmesh};
-        // geometry::ChTriangleMeshConnected::WriteWavefront(filename.string(), meshes);
+        // std::vector<ChTriangleMeshConnected> meshes = {*mmesh};
+        // ChTriangleMeshConnected::WriteWavefront(filename.string(), meshes);
         meshes.push_back(*mmesh);
     }
 
@@ -428,24 +427,24 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
             body = rover.GetWheel(ViperWheelID::V_RB)->GetBody();
         }
 
-        ChFrame<> body_ref_frame = body->GetFrame_REF_to_abs();
-        ChVector<> body_pos = body_ref_frame.GetPos();      // body->GetPos();
+        ChFrame<> body_ref_frame = body->GetFrameRefToAbs();
+        ChVector3<> body_pos = body_ref_frame.GetPos();      // body->GetPos();
         ChQuaternion<> body_rot = body_ref_frame.GetRot();  // body->GetRot();
         if (i == 0 || i == 2) {
-            body_rot.Cross(body_rot, Q_from_AngZ(CH_C_PI));
+            body_rot.Cross(body_rot, QuatFromAngleZ(CH_PI));
         }
 
         auto mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
         std::string obj_path = GetChronoDataFile("robot/viper/obj/viper_wheel.obj");
         double scale_ratio = 1.0;
         mmesh->LoadWavefrontMesh(obj_path, false, true);
-        mmesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
+        mmesh->Transform(ChVector3<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
         mmesh->RepairDuplicateVertexes(1e-9);                              // if meshes are not watertight
         mmesh->Transform(body_pos, ChMatrix33<>(body_rot));  // rotate the mesh based on the orientation of body
 
         // filename = rover_dir / ("./wheel_" + std::to_string(i + 1) + "_" + std::string(f_name) + ".obj");
-        // std::vector<geometry::ChTriangleMeshConnected> meshes = {*mmesh};
-        // geometry::ChTriangleMeshConnected::WriteWavefront(filename.string(), meshes);
+        // std::vector<ChTriangleMeshConnected> meshes = {*mmesh};
+        // ChTriangleMeshConnected::WriteWavefront(filename.string(), meshes);
         meshes.push_back(*mmesh);
     }
 
@@ -464,8 +463,8 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
         if (i == 3) {
             body = rover.GetUpright(ViperWheelID::V_RB)->GetBody();
         }
-        ChFrame<> body_ref_frame = body->GetFrame_REF_to_abs();
-        ChVector<> body_pos = body_ref_frame.GetPos();      // body->GetPos();
+        ChFrame<> body_ref_frame = body->GetFrameRefToAbs();
+        ChVector3<> body_pos = body_ref_frame.GetPos();      // body->GetPos();
         ChQuaternion<> body_rot = body_ref_frame.GetRot();  // body->GetRot();
 
         auto mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
@@ -478,13 +477,13 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
         }
         double scale_ratio = 1.0;
         mmesh->LoadWavefrontMesh(obj_path, false, true);
-        mmesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
+        mmesh->Transform(ChVector3<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
         mmesh->RepairDuplicateVertexes(1e-9);                              // if meshes are not watertight
         mmesh->Transform(body_pos, ChMatrix33<>(body_rot));  // rotate the mesh based on the orientation of body
 
         // filename = rover_dir / ("./steerRod_" + std::to_string(i + 1) + "_" + std::string(f_name) + ".obj");
-        // std::vector<geometry::ChTriangleMeshConnected> meshes = {*mmesh};
-        // geometry::ChTriangleMeshConnected::WriteWavefront(filename.string(), meshes);
+        // std::vector<ChTriangleMeshConnected> meshes = {*mmesh};
+        // ChTriangleMeshConnected::WriteWavefront(filename.string(), meshes);
         meshes.push_back(*mmesh);
     }
 
@@ -503,8 +502,8 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
         if (i == 3) {
             body = rover.GetLowerArm(ViperWheelID::V_RB)->GetBody();
         }
-        ChFrame<> body_ref_frame = body->GetFrame_REF_to_abs();
-        ChVector<> body_pos = body_ref_frame.GetPos();      // body->GetPos();
+        ChFrame<> body_ref_frame = body->GetFrameRefToAbs();
+        ChVector3<> body_pos = body_ref_frame.GetPos();      // body->GetPos();
         ChQuaternion<> body_rot = body_ref_frame.GetRot();  // body->GetRot();
 
         auto mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
@@ -517,13 +516,13 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
         }
         double scale_ratio = 1.0;
         mmesh->LoadWavefrontMesh(obj_path, false, true);
-        mmesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
+        mmesh->Transform(ChVector3<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
         mmesh->RepairDuplicateVertexes(1e-9);                              // if meshes are not watertight
         mmesh->Transform(body_pos, ChMatrix33<>(body_rot));  // rotate the mesh based on the orientation of body
 
         // filename = rover_dir / ("./lowerRod_" + std::to_string(i + 1) + "_" + std::string(f_name) + ".obj");
-        // std::vector<geometry::ChTriangleMeshConnected> meshes = {*mmesh};
-        // geometry::ChTriangleMeshConnected::WriteWavefront(filename.string(), meshes);
+        // std::vector<ChTriangleMeshConnected> meshes = {*mmesh};
+        // ChTriangleMeshConnected::WriteWavefront(filename.string(), meshes);
         meshes.push_back(*mmesh);
     }
 
@@ -542,8 +541,8 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
         if (i == 3) {
             body = rover.GetUpperArm(ViperWheelID::V_RB)->GetBody();
         }
-        ChFrame<> body_ref_frame = body->GetFrame_REF_to_abs();
-        ChVector<> body_pos = body_ref_frame.GetPos();      // body->GetPos();
+        ChFrame<> body_ref_frame = body->GetFrameRefToAbs();
+        ChVector3<> body_pos = body_ref_frame.GetPos();      // body->GetPos();
         ChQuaternion<> body_rot = body_ref_frame.GetRot();  // body->GetRot();
 
         auto mmesh = chrono_types::make_shared<ChTriangleMeshConnected>();
@@ -557,15 +556,15 @@ void SaveParaViewFiles(Viper& rover, path& rover_dir, unsigned int frame_number)
 
         double scale_ratio = 1.0;
         mmesh->LoadWavefrontMesh(obj_path, false, true);
-        mmesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
+        mmesh->Transform(ChVector3<>(0, 0, 0), ChMatrix33<>(scale_ratio));  // scale to a different size
         mmesh->RepairDuplicateVertexes(1e-9);                              // if meshes are not watertight
         mmesh->Transform(body_pos, ChMatrix33<>(body_rot));  // rotate the mesh based on the orientation of body
 
         // filename = rover_dir / ("./upperRod_" + std::to_string(i + 1) + "_" + std::string(f_name) + ".obj");
-        // std::vector<geometry::ChTriangleMeshConnected> meshes = {*mmesh};
-        // geometry::ChTriangleMeshConnected::WriteWavefront(filename.string(), meshes);
+        // std::vector<ChTriangleMeshConnected> meshes = {*mmesh};
+        // ChTriangleMeshConnected::WriteWavefront(filename.string(), meshes);
         meshes.push_back(*mmesh);
     }
 
-    geometry::ChTriangleMeshConnected::WriteWavefront(filename.string(), meshes);
+    ChTriangleMeshConnected::WriteWavefront(filename.string(), meshes);
 }

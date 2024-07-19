@@ -16,7 +16,7 @@
 //
 // =============================================================================
 
-#include "chrono/assets/ChSphereShape.h"
+#include "chrono/assets/ChVisualShapeSphere.h"
 #include "chrono/core/ChGlobal.h"
 #include "chrono/physics/ChBody.h"
 #include "chrono/physics/ChForce.h"
@@ -39,12 +39,12 @@ using namespace deme;
 using namespace chrono;
 using namespace std::filesystem;
 
-// ChVector to/from float3
-inline float3 ChVec2Float(const ChVector<>& vec) {
+// ChVector3 to/from float3
+inline float3 ChVec2Float(const ChVector3<>& vec) {
     return make_float3(vec.x(), vec.y(), vec.z());
 }
-inline ChVector<> Float2ChVec(float3 f3) {
-    return ChVector<>(f3.x, f3.y, f3.z);
+inline ChVector3<> Float2ChVec(float3 f3) {
+    return ChVector3<>(f3.x, f3.y, f3.z);
 }
 
 inline float4 ChQ2Float(const ChQuaternion<>& Q) {
@@ -69,16 +69,16 @@ int main() {
     ChSystemSMC sys_ball;
     sys_ball.SetContactForceModel(ChSystemSMC::ContactForceModel::Hooke);
     sys_ball.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT);
-    sys_ball.Set_G_acc(ChVector<>(0, 0, -9.81));
+    sys_ball.SetGravitationalAcceleration(ChVector3<>(0, 0, -9.81));
 
     double inertia = ball_mass * 2 / 5;
-    ChVector<> ball_initial_pos(world_size / 2., world_size / 2., world_size / 3. * 2.);
+    ChVector3<> ball_initial_pos(world_size / 2., world_size / 2., world_size / 3. * 2.);
 
-    std::shared_ptr<ChBody> ball_body(sys_ball.NewBody());
+    auto ball_body = chrono_types::make_shared<ChBody>();
     ball_body->SetMass(ball_mass);
-    ball_body->SetInertiaXX(ChVector<>(inertia, inertia, inertia));
+    ball_body->SetInertiaXX(ChVector3<>(inertia, inertia, inertia));
     ball_body->SetPos(ball_initial_pos);
-    auto sph = chrono_types::make_shared<ChSphereShape>();
+    auto sph = chrono_types::make_shared<ChVisualShapeSphere>();
     sph->GetGeometry().rad = ball_radius;
     ball_body->AddVisualShape(sph);
     sys_ball.AddBody(ball_body);
@@ -181,12 +181,12 @@ int main() {
         }
         proj_tracker->SetPos(ChVec2Float(ball_body->GetPos()));
         proj_tracker->SetOriQ(ChQ2Float(ball_body->GetRot()));
-        proj_tracker->SetVel(ChVec2Float(ball_body->GetPos_dt()));
-        proj_tracker->SetAngVel(ChVec2Float(ball_body->GetWvel_par()));
+        proj_tracker->SetVel(ChVec2Float(ball_body->GetPosDt()));
+        proj_tracker->SetAngVel(ChVec2Float(ball_body->GetAngVelParent()));
 
         {
-            ChVector<> ball_force;
-            ChVector<> ball_torque;
+            ChVector3<> ball_force;
+            ChVector3<> ball_torque;
             float3 F = proj_tracker->ContactAcc();
             F *= ball_mass;
             float3 tor = proj_tracker->ContactAngAccLocal();
@@ -194,9 +194,9 @@ int main() {
             ball_force = Float2ChVec(F);
             ball_torque = Float2ChVec(tor);
 
-            ball_body->Empty_forces_accumulators();
-            ball_body->Accumulate_force(ball_force, ball_body->GetPos(), false);
-            ball_body->Accumulate_torque(ball_torque, true);  // torque in DEME is local
+            ball_body->EmptyAccumulators();
+            ball_body->AccumulateForce(ball_force, ball_body->GetPos(), false);
+            ball_body->AccumulateTorque(ball_torque, true);  // torque in DEME is local
         }
 
         sys_ball.DoStepDynamics(step_size);
