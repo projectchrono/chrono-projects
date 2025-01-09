@@ -286,8 +286,7 @@ int main(int argc, char* argv[]) {
     DEMSim.DoDynamicsThenSync(0);
     DEMSim.DisableContactBetweenFamilies(90, 0);
     step_size = 1e-5;
-    DEMSim.SetInitTimeStep(step_size);
-    DEMSim.UpdateStepSize();
+    DEMSim.UpdateStepSize(step_size);
 
     std::cout << "Compression ends..." << std::endl;
 
