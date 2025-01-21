@@ -19,15 +19,21 @@ Classes for meshless methods (SPH and FEA meshless).
 
 ### Optimization 
 
-Classes for optimization (gradient-based and gradient-free)
+Classes for optimization (gradient-based and gradient-free).
 
 - Retired on 5 February 2024
 - Last commit: [b7decf9de](https://github.com/projectchrono/chrono/commit/b7decf9de3cabc8cd43994c3ab0706bacd138d58)
 
 #### Pardiso-project
 
-Direct sparse linear solver Pardiso (based on the library from Panua Technologies)
+Direct sparse linear solver Pardiso (based on the library from Panua Technologies).
 
 - Retired on 30 March 2024
 - Last commit: [2a9fc31](https://github.com/projectchrono/chrono/commit/2a9fc319a723ca48576698cc6c84d2b6702f272b)
 
+### MPM CUDA implementation
+
+Support for GPU (CUDA) implementation of MPM in the Chrono::Multicore module.
+
+- Retired on 21 January 2025
+- Last commit: [75fb683](https://github.com/projectchrono/chrono/commit/75fb6835587d33fa1e2956f5ae40d50d5688b965)
