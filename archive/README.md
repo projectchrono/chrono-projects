@@ -24,7 +24,7 @@ Classes for optimization (gradient-based and gradient-free).
 - Retired on 5 February 2024
 - Last commit: [b7decf9de](https://github.com/projectchrono/chrono/commit/b7decf9de3cabc8cd43994c3ab0706bacd138d58)
 
-#### Pardiso-project
+### Pardiso-project
 
 Direct sparse linear solver Pardiso (based on the library from Panua Technologies).
 
@@ -37,3 +37,9 @@ Support for GPU (CUDA) implementation of MPM in the Chrono::Multicore module.
 
 - Retired on 21 January 2025
 - Last commit: [75fb683](https://github.com/projectchrono/chrono/commit/75fb6835587d33fa1e2956f5ae40d50d5688b965)
+
+### FSI linear solvers
+
+Implementation of BiCGStab and GMRES for ISPH
+
+- Retired on 29 January 2025
