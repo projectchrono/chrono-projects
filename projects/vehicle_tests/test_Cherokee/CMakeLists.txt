@@ -3,9 +3,7 @@
 #--------------------------------------------------------------
 
 SET(DEMOS
-    test_VEH_FEDA_SSC
-    test_VEH_FEDA_RideTool
-    test_VEH_FEDA_wall2wall
+    test_VEH_Cherokee_wall2wall
 )
 
 #--------------------------------------------------------------

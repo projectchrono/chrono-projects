@@ -62,6 +62,8 @@ set(ALL_DEPENDENCY_DLLS "${ALL_DEPENDENCY_DLLS}" PARENT_SCOPE)
 message(STATUS "Programs...")
 add_subdirectory(test_steeringControl)
 add_subdirectory(test_FEDA)
+add_subdirectory(test_BMW_E90)
+add_subdirectory(test_Cherokee)
 
 if (CHRONO_IRRLICHT_FOUND)
   message(STATUS "Programs using Chrono::Irrlicht...")

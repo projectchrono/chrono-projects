@@ -21,7 +21,7 @@ set(DEMOS
 # Invoke find_package in CONFIG mode
 find_package(Chrono QUIET
              COMPONENTS FSI Multicore
-             OPTIONAL_COMPONENTS OpenGL
+             OPTIONAL_COMPONENTS OpenGL VSG
              CONFIG
 )
 

@@ -43,3 +43,5 @@ Support for GPU (CUDA) implementation of MPM in the Chrono::Multicore module.
 Implementation of BiCGStab and GMRES for ISPH
 
 - Retired on 29 January 2025
+
+
