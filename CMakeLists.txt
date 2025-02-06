@@ -88,19 +88,12 @@ if(NOT Chrono_DIR)
   return()
 endif()
 
-# Options for configuring/building individual sets of programs
-option(ENABLE_CONFIG_TESTS "Build the programs for checking Chrono configuration" ON)
-
 # Keep track of all DLLs. Each submodule should append to this list.
 list(APPEND ALL_DLL_NAMES "")
 list(APPEND ALL_DEPENDENCY_DLLS "")
 
 # Propagate configuration to submodules.
-if(ENABLE_CONFIG_TESTS)
-  message(STATUS "\n==== Chrono configuration programs ====")
-  add_subdirectory(configuration_tests)
-endif()
-
+add_subdirectory(configuration_tests)
 add_subdirectory(projects)
 
 # ------------------------------------------------------------------------------

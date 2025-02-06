@@ -1,3 +1,11 @@
+option(ENABLE_CONFIG_TESTS "Build the programs for checking Chrono configuration" ON)
+
+if(ENABLE_CONFIG_TESTS)
+  message(STATUS "\n==== Chrono configuration programs ====")
+else()
+  return()
+endif()
+
 #-----------------------------------------------------------------------------
 # Invoke CMake in subdirectories
 #-----------------------------------------------------------------------------

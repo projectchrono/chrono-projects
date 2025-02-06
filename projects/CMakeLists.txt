@@ -2,12 +2,13 @@ option(ENABLE_PROJECTS "Build the project programs" OFF)
 
 if(ENABLE_PROJECTS)
   message(STATUS "\n==== Chrono projects ====")
+else()
+  return()
 endif()
 
 #-----------------------------------------------------------------------------
 # Invoke CMake in subdirectories
 #-----------------------------------------------------------------------------
-
 
 cmake_dependent_option(ENABLE_PRJ_DEM_VALIDATION 
 	"Enable projects for DEM validation" ON
