@@ -24,7 +24,6 @@
 #include "chrono/utils/ChUtilsSamplers.h"
 #include "chrono_gpu/physics/ChSystemGpu.h"
 #include "chrono_gpu/utils/ChGpuJsonParser.h"
-#include "chrono_gpu/utils/ChGpuVisualization.h"
 #include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"

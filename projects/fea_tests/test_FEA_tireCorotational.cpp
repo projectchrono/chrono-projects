@@ -131,7 +131,7 @@ int main(int argc, char* argv[]) {
 
     // Mesh visualization
     if (visualization) {
-        auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
+        auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>();
         mvisualizemesh->SetFEMdataType(ChVisualShapeFEA::DataType::NODE_SPEED_NORM);
         mvisualizemesh->SetColorscaleMinMax(0.0, 10);
         mvisualizemesh->SetSmoothFaces(true);
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
         // In this case it is a ChContactSurfaceNodeCloud, so just pass  all nodes to it.
         auto mcontactsurf = chrono_types::make_shared<ChContactSurfaceNodeCloud>(mysurfmaterial);
         my_mesh->AddContactSurface(mcontactsurf);
-        mcontactsurf->AddAllNodes();
+        mcontactsurf->AddAllNodes(*my_mesh);
     }
 
     // Create tire pressure load

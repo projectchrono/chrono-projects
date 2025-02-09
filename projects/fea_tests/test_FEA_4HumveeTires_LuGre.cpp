@@ -492,18 +492,18 @@ void MakeANCFHumveeWheel(ChSystem& sys,
     sys.Add(mloadcontainerGround);
 
     if (showVisual) {
-        auto mvisualizemeshC = chrono_types::make_shared<ChVisualShapeFEA>(TireMesh);
+        auto mvisualizemeshC = chrono_types::make_shared<ChVisualShapeFEA>();
         mvisualizemeshC->SetFEMglyphType(ChVisualShapeFEA::GlyphType::NODE_DOT_POS);
         mvisualizemeshC->SetFEMdataType(ChVisualShapeFEA::DataType::NONE);
         mvisualizemeshC->SetSymbolsThickness(0.005);
         TireMesh->AddVisualShapeFEA(mvisualizemeshC);
 
-        auto mvisualizemeshwire = chrono_types::make_shared<ChVisualShapeFEA>(TireMesh);
+        auto mvisualizemeshwire = chrono_types::make_shared<ChVisualShapeFEA>();
         mvisualizemeshwire->SetFEMdataType(ChVisualShapeFEA::DataType::NONE);
         mvisualizemeshwire->SetWireframe(true);
         TireMesh->AddVisualShapeFEA(mvisualizemeshwire);
 
-        auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>(TireMesh);
+        auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>();
         // mvisualizemesh->SetFEMdataType(ChVisualShapeFEA::DataType::NODE_SPEED_NORM);
         mvisualizemesh->SetFEMdataType(ChVisualShapeFEA::DataType::ELEM_STRAIN_VONMISES);
         mvisualizemesh->SetColorscaleMinMax(-0.05, 0.05);

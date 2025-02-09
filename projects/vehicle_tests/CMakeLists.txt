@@ -3,7 +3,7 @@
 # various other modules
 #=============================================================================
 
-message("\n---- VEHICLE projects")
+message(STATUS "\n---- VEHICLE projects\n")
 
 #--------------------------------------------------------------
 # Find the Chrono package with required components
@@ -21,30 +21,6 @@ if(NOT Chrono_FOUND)
   message("Could not find requirements for VEHICLE projects")
   return()
 endif()
-
-# Use same C++ standard as for building Chrono
-set(CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_STANDARD ${CHRONO_CXX_STANDARD})
-
-#--------------------------------------------------------------
-# Include paths and libraries
-#--------------------------------------------------------------
-
-# (A) Path to the Chrono include headers
-# - If using an installed version of Chrono, this will be the path 
-#   to the installed headers (the configuration headers are also
-#   available there)
-# - If using a build version of Chrono, this will contain both the
-#   path to the Chrono sources and the path to the chrono BUILD tree
-#   (the latter for the configuration headers)
-# 
-# (B) Path to the top of the source tree for this project
-# - for access to utility headers
-
-include_directories(
-    ${CHRONO_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}
-)
 
 #--------------------------------------------------------------
 # Append to the parent's lists of DLLs (and make them visible)

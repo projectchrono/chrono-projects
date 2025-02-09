@@ -2,7 +2,7 @@
 # List of all executables
 #--------------------------------------------------------------
 
-SET(DEMOS
+set(TESTS
     test_VEH_FEDA_SSC
     test_VEH_FEDA_RideTool
     test_VEH_FEDA_wall2wall
@@ -12,16 +12,14 @@ SET(DEMOS
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-FOREACH(PROGRAM ${DEMOS})
-    MESSAGE(STATUS "...add ${PROGRAM}")
+foreach(PROGRAM ${TESTS})
+  message(STATUS "...add ${PROGRAM}")
 
-    ADD_EXECUTABLE(${PROGRAM}  "${PROGRAM}.cpp")
-    SOURCE_GROUP(""  FILES "${PROGRAM}.cpp")
+  add_executable(${PROGRAM}  "${PROGRAM}.cpp")
+  source_group(""  FILES "${PROGRAM}.cpp")
 
-    target_compile_definitions(${PROGRAM} PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
-    target_compile_definitions(${PROGRAM} PUBLIC "CHRONO_VEHICLE_DATA_DIR=\"${CHRONO_VEHICLE_DATA_DIR}\"") 
-    target_compile_options(${PROGRAM} PUBLIC ${CHRONO_CXX_FLAGS})
-    target_link_options(${PROGRAM} PUBLIC ${CHRONO_LINKER_FLAGS})
-    target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
+  set_property(TARGET ${PROGRAM} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${PROGRAM}>")
 
-ENDFOREACH()
+  target_compile_definitions(${PROGRAM} PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
+  target_link_libraries(${PROGRAM} PRIVATE ${CHRONO_TARGETS})
+endforeach()

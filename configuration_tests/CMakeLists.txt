@@ -1,4 +1,4 @@
-option(ENABLE_CONFIG_TESTS "Build the programs for checking Chrono configuration" ON)
+option(ENABLE_CONFIG_TESTS "Build the programs for checking Chrono configuration" OFF)
 
 if(ENABLE_CONFIG_TESTS)
   message(STATUS "\n==== Chrono configuration programs ====")

@@ -213,14 +213,14 @@ int main(int argc, char* argv[]) {
     // postprocessor that can handle a coloured ChVisualShapeTriangleMesh).
     // Do not forget AddAsset() at the end!
 
-    auto mvisualizebeamA = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
+    auto mvisualizebeamA = chrono_types::make_shared<ChVisualShapeFEA>();
     mvisualizebeamA->SetFEMdataType(ChVisualShapeFEA::DataType::NODE_SPEED_NORM);
     mvisualizebeamA->SetColorscaleMinMax(-30, 30);
     mvisualizebeamA->SetSmoothFaces(true);
     mvisualizebeamA->SetWireframe(false);
     my_mesh->AddVisualShapeFEA(mvisualizebeamA);
 
-    auto mvisualizebeamC = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
+    auto mvisualizebeamC = chrono_types::make_shared<ChVisualShapeFEA>();
     mvisualizebeamC->SetFEMglyphType(ChVisualShapeFEA::GlyphType::NODE_CSYS);
     mvisualizebeamC->SetFEMdataType(ChVisualShapeFEA::DataType::NONE);
     mvisualizebeamC->SetSymbolsThickness(0.001);

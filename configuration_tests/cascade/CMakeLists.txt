@@ -47,7 +47,7 @@ set(ALL_DEPENDENCY_DLLS "${ALL_DEPENDENCY_DLLS}" PARENT_SCOPE)
 # Needed for OpenCASCADE
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")	
     add_definitions("/DWNT")
-endif()	
+endif()
 
 #--------------------------------------------------------------
 # Loop over all demo programs and build them

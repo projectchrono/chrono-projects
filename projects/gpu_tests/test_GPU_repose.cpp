@@ -21,7 +21,7 @@
 #include "chrono/utils/ChUtilsSamplers.h"
 #include "chrono_gpu/physics/ChSystemGpu.h"
 #include "chrono_gpu/utils/ChGpuJsonParser.h"
-#include "chrono_gpu/utils/ChGpuVisualization.h"
+#include "chrono_gpu/visualization/ChGpuVisualizationGL.h"
 #include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
 
     gpu_sys.Initialize();
 
-    ChGpuVisualization gpu_vis(&gpu_sys);
+    ChGpuVisualizationGL gpu_vis(&gpu_sys);
     if (render) {
         gpu_vis.SetTitle("Chrono::Gpu repose demo");
         gpu_vis.UpdateCamera(ChVector3d(0, -30, -10), ChVector3d(0, 0, -20));

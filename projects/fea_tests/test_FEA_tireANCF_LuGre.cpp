@@ -1552,18 +1552,18 @@ int main(int argc, char* argv[]) {
     // Rim->AddAsset(mobjmesh);
 
     double start = std::clock();
-    auto mvisualizemeshC = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
+    auto mvisualizemeshC = chrono_types::make_shared<ChVisualShapeFEA>();
     mvisualizemeshC->SetFEMglyphType(ChVisualShapeFEA::GlyphType::NODE_DOT_POS);
     mvisualizemeshC->SetFEMdataType(ChVisualShapeFEA::DataType::NONE);
     mvisualizemeshC->SetSymbolsThickness(0.003);
     my_mesh->AddVisualShapeFEA(mvisualizemeshC);
 
-    auto mvisualizemeshwire = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
+    auto mvisualizemeshwire = chrono_types::make_shared<ChVisualShapeFEA>();
     mvisualizemeshwire->SetFEMdataType(ChVisualShapeFEA::DataType::NONE);
     mvisualizemeshwire->SetWireframe(true);
     my_mesh->AddVisualShapeFEA(mvisualizemeshwire);
 
-    auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
+    auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>();
     mvisualizemesh->SetFEMdataType(ChVisualShapeFEA::DataType::NODE_SPEED_NORM);
     mvisualizemesh->SetColorscaleMinMax(0.0, 30);
     mvisualizemesh->SetSmoothFaces(true);

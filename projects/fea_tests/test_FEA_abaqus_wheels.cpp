@@ -74,7 +74,7 @@ void MakeWheel(ChSystemSMC& sys,
     auto mcontactsurf = chrono_types::make_shared<ChContactSurfaceNodeCloud>(mysurfmaterial);
     my_mesh->AddContactSurface(mcontactsurf);
 
-    mcontactsurf->AddAllNodes();
+    mcontactsurf->AddAllNodes(*my_mesh);
 
     // Apply initial speed and angular speed
     double speed_x0 = 0.5;
@@ -133,7 +133,7 @@ void MakeWheel(ChSystemSMC& sys,
         loadcontainer->Add(faceload);
     }
     // ==Asset== attach a visualization of the FEM mesh.
-    auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
+    auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>();
     mvisualizemesh->SetFEMdataType(ChVisualShapeFEA::DataType::NODE_SPEED_NORM);
     mvisualizemesh->SetColorscaleMinMax(0.0, 10);
     mvisualizemesh->SetSmoothFaces(true);
