@@ -19,12 +19,12 @@ set(TEST_PROGRAMS
 foreach(PROGRAM ${TEST_PROGRAMS})
   message(STATUS "...add ${PROGRAM}")
 
-  add_executable(${PROGRAM} ${PROGRAM}.cpp)
-  source_group(""  FILES  "${PROGRAM}.cpp")
+  add_executable(${PROGRAM}  "${PROGRAM}.cpp")
+  source_group(""  FILES "${PROGRAM}.cpp")
+
+  set_property(TARGET ${PROGRAM} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${PROGRAM}>")
 
   target_compile_definitions(${PROGRAM} PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
-  target_compile_options(${PROGRAM} PUBLIC ${CHRONO_CXX_FLAGS})
-  target_link_options(${PROGRAM} PUBLIC ${CHRONO_LINKER_FLAGS})
-  target_link_libraries(${PROGRAM} ${CHRONO_LIBRARIES})
-
+    target_compile_definitions(${PROGRAM} PUBLIC "CHRONO_VEHICLE_DATA_DIR=\"${CHRONO_VEHICLE_DATA_DIR}\"") 
+  target_link_libraries(${PROGRAM} PRIVATE ${CHRONO_TARGETS})
 endforeach()

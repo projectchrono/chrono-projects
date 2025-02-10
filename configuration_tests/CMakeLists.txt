@@ -1,5 +1,3 @@
-option(ENABLE_CONFIG_TESTS "Build the programs for checking Chrono configuration" OFF)
-
 if(ENABLE_CONFIG_TESTS)
   message(STATUS "\n==== Chrono configuration programs ====")
 else()
@@ -22,5 +20,6 @@ add_subdirectory(synchrono)
 add_subdirectory(vehicle)
 add_subdirectory(vsg)
 
-set(ALL_DLL_NAMES       "${ALL_DLL_NAMES}"       PARENT_SCOPE)
-set(ALL_DEPENDENCY_DLLS "${ALL_DEPENDENCY_DLLS}" PARENT_SCOPE)
+set(ALL_DLL_NAMES             "${ALL_DLL_NAMES}"           PARENT_SCOPE)
+set(ALL_DEPENDENCY_DLLS       "${ALL_DEPENDENCY_DLLS}"     PARENT_SCOPE)
+set(CHRONO_PACKAGE_PREFIX_DIR ${CHRONO_PACKAGE_PREFIX_DIR} PARENT_SCOPE)

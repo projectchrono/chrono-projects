@@ -1,5 +1,3 @@
-option(ENABLE_PROJECTS "Build the project programs" OFF)
-
 if(ENABLE_PROJECTS)
   message(STATUS "\n==== Chrono projects ====")
 else()
@@ -88,5 +86,6 @@ if (ENABLE_PRJ_SYN_HIGHWAY)
   add_subdirectory(synchrono_highway)
 endif()
 
-set(ALL_DLL_NAMES       "${ALL_DLL_NAMES}"       PARENT_SCOPE)
-set(ALL_DEPENDENCY_DLLS "${ALL_DEPENDENCY_DLLS}" PARENT_SCOPE)
+set(ALL_DLL_NAMES             "${ALL_DLL_NAMES}"           PARENT_SCOPE)
+set(ALL_DEPENDENCY_DLLS       "${ALL_DEPENDENCY_DLLS}"     PARENT_SCOPE)
+set(CHRONO_PACKAGE_PREFIX_DIR ${CHRONO_PACKAGE_PREFIX_DIR} PARENT_SCOPE)

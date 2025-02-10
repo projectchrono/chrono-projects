@@ -93,8 +93,15 @@ list(APPEND ALL_DLL_NAMES "")
 list(APPEND ALL_DEPENDENCY_DLLS "")
 
 # Propagate configuration to submodules.
+option(ENABLE_CONFIG_TESTS "Build the programs for checking Chrono configuration" OFF)
+option(ENABLE_PROJECTS "Build the project programs" OFF)
+
 add_subdirectory(configuration_tests)
 add_subdirectory(projects)
+
+if(NOT ENABLE_CONFIG_TESTS AND NOT ENABLE_PROJECTS)
+  return()
+endif()  
 
 # ------------------------------------------------------------------------------
 # Set path to Chrono data directory 
@@ -118,8 +125,5 @@ endif()
 #-----------------------------------------------------------------------------
 
 # Add custom command for copying DLLs to the appropriate binary output folder
-# (on Windows only).
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-  message(STATUS "")
-	add_DLL_copy_command("${ALL_DLL_NAMES}" "${ALL_DEPENDENCY_DLLS}")
-endif()
+# (no-op if not Windows)
+add_DLL_copy_command("${ALL_DLL_NAMES}" "${ALL_DEPENDENCY_DLLS}")

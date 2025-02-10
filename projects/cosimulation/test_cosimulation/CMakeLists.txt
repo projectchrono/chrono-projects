@@ -15,12 +15,6 @@ SET(TEST_PROGRAMS
 )
 
 #--------------------------------------------------------------
-# Additional include directories
-
-include_directories(${CH_MULTICORE_INCLUDES})
-include_directories(${MPI_CXX_INCLUDE_PATH})
-
-#--------------------------------------------------------------
 # List of all required libraries
 
 SET(LIBRARIES
@@ -34,16 +28,15 @@ SET(LIBRARIES
 #--------------------------------------------------------------
 # Create the executables
 
-FOREACH(PROGRAM ${TEST_PROGRAMS})
-  MESSAGE(STATUS "...add ${PROGRAM}")
+foreach(PROGRAM ${TEST_PROGRAMS})
+  message(STATUS "...add ${PROGRAM}")
 
-  ADD_EXECUTABLE(${PROGRAM} ${PROGRAM}.cpp)
-  SOURCE_GROUP(""  FILES  "${PROGRAM}.cpp")
+  add_executable(${PROGRAM}  "${PROGRAM}.cpp")
+  source_group(""  FILES "${PROGRAM}.cpp")
+
+  set_property(TARGET ${PROGRAM} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${PROGRAM}>")
 
   target_compile_definitions(${PROGRAM} PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
-  target_compile_options(${PROGRAM} PUBLIC ${CHRONO_CXX_FLAGS})
-  target_link_options(${PROGRAM} PUBLIC ${CHRONO_LINKER_FLAGS})
-                      
-  target_link_libraries(${PROGRAM} ${LIBRARIES})
-
-ENDFOREACH()
+    target_compile_definitions(${PROGRAM} PUBLIC "CHRONO_VEHICLE_DATA_DIR=\"${CHRONO_VEHICLE_DATA_DIR}\"") 
+  target_link_libraries(${PROGRAM} PRIVATE ${CHRONO_TARGETS})
+endforeach()
