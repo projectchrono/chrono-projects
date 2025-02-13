@@ -31,6 +31,7 @@
 #include "chrono_pardisomkl/ChSolverPardisoMKL.h"
 #endif
 
+#undef CHRONO_MUMPS
 #ifdef CHRONO_MUMPS
 #include "chrono_mumps/ChSolverMumps.h"
 #endif

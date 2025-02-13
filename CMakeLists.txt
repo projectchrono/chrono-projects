@@ -90,7 +90,6 @@ endif()
 
 # Keep track of all DLLs. Each submodule should append to this list.
 list(APPEND ALL_DLL_NAMES "")
-list(APPEND ALL_DEPENDENCY_DLLS "")
 
 # Propagate configuration to submodules.
 option(ENABLE_CONFIG_TESTS "Build the programs for checking Chrono configuration" OFF)
@@ -126,4 +125,4 @@ endif()
 
 # Add custom command for copying DLLs to the appropriate binary output folder
 # (no-op if not Windows)
-add_DLL_copy_command("${ALL_DLL_NAMES}" "${ALL_DEPENDENCY_DLLS}")
+add_DLL_copy_command("${ALL_DLL_NAMES}")
