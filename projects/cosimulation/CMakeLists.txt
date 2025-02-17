@@ -7,7 +7,7 @@
 #    Chrono::PardisoMKL and Chrono::OpenGL
 #=============================================================================
 
-message("\n---- VEHICLE COSIMULATION projects")
+message(STATUS "\n---- VEHICLE COSIMULATION projects\n")
 
 #--------------------------------------------------------------
 # Find the Chrono package with required components

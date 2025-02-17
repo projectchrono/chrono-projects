@@ -145,7 +145,7 @@ int main(int argc, char* argv[]) {
     // Use the AddFacesFromBoundary() to select automatically the outer skin of the tetrahedron mesh:
     auto mcontactsurf = chrono_types::make_shared<ChContactSurfaceMesh>(mysurfmaterial);
     my_mesh->AddContactSurface(mcontactsurf);
-    mcontactsurf->AddFacesFromBoundary();
+    mcontactsurf->AddFacesFromBoundary(*my_mesh);
 
     /// Create a mesh load for cosimulation, acting on the contact surface above
     /// (forces on nodes will be computed by an external procedure)
@@ -158,7 +158,7 @@ int main(int argc, char* argv[]) {
     // This will automatically update a triangle mesh (a ChVisualShapeTriangleMesh
     // asset that is internally managed) by setting  proper
     // coordinates and vertex colours as in the FEM elements.
-    auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>(my_mesh);
+    auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>();
     mvisualizemesh->SetFEMdataType(ChVisualShapeFEA::DataType::NODE_SPEED_NORM);
     mvisualizemesh->SetColorscaleMinMax(0.0, 10);
     mvisualizemesh->SetSmoothFaces(true);
