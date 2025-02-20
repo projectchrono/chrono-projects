@@ -26,7 +26,7 @@ if(NOT Chrono_FOUND)
   return()
 endif()
 
-if(NOT CHRONO_MPI_FOUND)
+if(NOT CHRONO_MPI_CXX_FOUND)
   message("The co-simulation projects require MPI which was not found!")
   return()
 endif()
