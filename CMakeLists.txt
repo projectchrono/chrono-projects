@@ -92,15 +92,15 @@ endif()
 list(APPEND ALL_DLL_NAMES "")
 
 # Propagate configuration to submodules.
-option(ENABLE_CONFIG_TESTS "Build the programs for checking Chrono configuration" OFF)
+option(ENABLE_CONFIG "Build the programs for checking Chrono configuration" OFF)
 option(ENABLE_PROJECTS "Build the project programs" OFF)
 
 add_subdirectory(configuration_tests)
 add_subdirectory(projects)
 
-if(NOT ENABLE_CONFIG_TESTS AND NOT ENABLE_PROJECTS)
+if(NOT ENABLE_CONFIG AND NOT ENABLE_PROJECTS)
   return()
-endif()  
+endif()
 
 # ------------------------------------------------------------------------------
 # Set path to Chrono data directory 
