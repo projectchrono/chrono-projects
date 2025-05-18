@@ -4,7 +4,7 @@
 #    MPI
 #    Chrono::Vehicle and Chrono::Multicore modules
 # Optional modules:
-#    Chrono::PardisoMKL and Chrono::OpenGL
+#    Chrono::PardisoMKL
 #=============================================================================
 
 message(STATUS "\n---- VEHICLE COSIMULATION projects\n")
@@ -16,7 +16,7 @@ message(STATUS "\n---- VEHICLE COSIMULATION projects\n")
 # Invoke find_package in CONFIG mode
 find_package(Chrono QUIET
              COMPONENTS Vehicle Multicore
-             OPTIONAL_COMPONENTS PardisoMKL OpenGL Irrlicht
+             OPTIONAL_COMPONENTS PardisoMKL Irrlicht
              CONFIG
 )
 

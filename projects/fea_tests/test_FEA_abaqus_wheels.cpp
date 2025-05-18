@@ -135,7 +135,7 @@ void MakeWheel(ChSystemSMC& sys,
     // ==Asset== attach a visualization of the FEM mesh.
     auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>();
     mvisualizemesh->SetFEMdataType(ChVisualShapeFEA::DataType::NODE_SPEED_NORM);
-    mvisualizemesh->SetColorscaleMinMax(0.0, 10);
+    mvisualizemesh->SetColormapRange(0.0, 10);
     mvisualizemesh->SetSmoothFaces(true);
     my_mesh->AddVisualShapeFEA(mvisualizemesh);
 }
@@ -316,7 +316,6 @@ int main(int argc, char* argv[]) {
     auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
     sys.SetSolver(mkl_solver);
     mkl_solver->LockSparsityPattern(true);
-    sys.Update();
 
     // Change type of integrator:
     sys.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise

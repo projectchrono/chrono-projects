@@ -23,7 +23,7 @@ set(TESTS
         test_GPU_slide
         test_GPU_roll
         test_GPU_incline
-        test_GPU_repose
+        #test_GPU_repose
         test_GPU_soilBin
         test_GPU_ballDrop
         test_GPU_compression
@@ -35,7 +35,7 @@ set(TESTS
 
 # Invoke find_package in CONFIG mode
 find_package(Chrono QUIET
-             COMPONENTS Gpu OpenGL
+             COMPONENTS Gpu
              OPTIONAL_COMPONENTS Vehicle
              CONFIG
 )

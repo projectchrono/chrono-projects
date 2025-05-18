@@ -369,6 +369,8 @@ int main(int argc, char* argv[]) {
         for (unsigned int i = 0; i < wheel_bodies.size(); i++) {
             auto curr_body = wheel_bodies.at(i);
 
+            curr_body->AddAccumulator();
+
             gpu_sys.ApplyMeshMotion(i, curr_body->GetPos(), curr_body->GetRot(), curr_body->GetLinVel(),
                                     curr_body->GetAngVelParent());
         }
@@ -383,9 +385,9 @@ int main(int argc, char* argv[]) {
 
             gpu_sys.CollectMeshContactForces(i, wheel_force, wheel_torque);
 
-            curr_body->EmptyAccumulators();
-            curr_body->AccumulateForce(wheel_force, curr_body->GetPos(), false);
-            curr_body->AccumulateTorque(wheel_torque, false);
+            curr_body->EmptyAccumulator(0);
+            curr_body->AccumulateForce(0, wheel_force, curr_body->GetPos(), false);
+            curr_body->AccumulateTorque(0, wheel_torque, false);
         }
 
         if (curr_step % out_steps == 0) {

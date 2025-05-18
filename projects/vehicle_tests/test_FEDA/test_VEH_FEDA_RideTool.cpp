@@ -34,13 +34,11 @@
 #include "chrono_thirdparty/filesystem/path.h"
 
 #ifdef CHRONO_IRRLICHT
-    #include "chrono_vehicle/driver/ChInteractiveDriverIRR.h"
     #include "chrono_vehicle/wheeled_vehicle/ChWheeledVehicleVisualSystemIrrlicht.h"
 using namespace chrono::irrlicht;
 #endif
 
 #ifdef CHRONO_VSG
-    #include "chrono_vehicle/driver/ChInteractiveDriverVSG.h"
     #include "chrono_vehicle/wheeled_vehicle/ChWheeledVehicleVisualSystemVSG.h"
 using namespace chrono::vsg3d;
 #endif
@@ -267,7 +265,7 @@ void RunTest(double speed,
             vis_vsg->SetChaseCamera(ChVector3d(0.0, 0.0, 1.75), 12.0, 0.5);
             vis_vsg->SetWindowSize(1200, 800);
             vis_vsg->SetLightDirection(1.5 * CH_PI_2, CH_PI_4);
-            vis_vsg->SetShadows(true);
+            vis_vsg->EnableShadows(true);
 
             vis = vis_vsg;
 #endif

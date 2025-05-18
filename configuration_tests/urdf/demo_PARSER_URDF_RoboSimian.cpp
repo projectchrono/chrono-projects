@@ -203,12 +203,11 @@ int main(int argc, char* argv[]) {
     vis->AddCamera(camera_loc, camera_lookat);
     vis->SetWindowSize(ChVector2<int>(1200, 800));
     vis->SetWindowPosition(ChVector2<int>(400, 100));
-    vis->SetClearColor(ChColor(0.455f, 0.525f, 0.640f));
-    vis->SetUseSkyBox(false);
+    vis->SetBackgroundColor(ChColor(0.455f, 0.525f, 0.640f));
+    vis->EnableSkyBox(false);
     vis->SetCameraAngleDeg(40.0);
     vis->SetLightIntensity(1.0f);
     vis->SetLightDirection(1.5 * CH_PI_2, CH_PI_4);
-    vis->SetWireFrameMode(false);
     vis->Initialize();
 
     // Solver settings

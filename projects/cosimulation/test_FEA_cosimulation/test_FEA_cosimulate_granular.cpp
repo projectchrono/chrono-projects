@@ -36,9 +36,6 @@
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-// comment the following line out to see opengl view
-#undef CHRONO_OPENGL
-
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChVisualSystemOpenGL.h"
 #endif
@@ -160,7 +157,7 @@ int main(int argc, char* argv[]) {
     // coordinates and vertex colours as in the FEM elements.
     auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>();
     mvisualizemesh->SetFEMdataType(ChVisualShapeFEA::DataType::NODE_SPEED_NORM);
-    mvisualizemesh->SetColorscaleMinMax(0.0, 10);
+    mvisualizemesh->SetColormapRange(0.0, 10);
     mvisualizemesh->SetSmoothFaces(true);
     my_mesh->AddVisualShapeFEA(mvisualizemesh);
 

@@ -1362,6 +1362,8 @@ int main(int argc, char* argv[]) {
         Rim->SetRotDt2(ChQuaternion<>(ACCELRigid(1, 3), ACCELRigid(1, 4), ACCELRigid(1, 5), ACCELRigid(1, 6)));
     }
 
+    Rim->AddAccumulator();
+
     // Create ground body
     auto Ground = chrono_types::make_shared<ChBody>();
     Ground->SetFixed(true);
@@ -1535,7 +1537,6 @@ int main(int argc, char* argv[]) {
     auto mkl_solver = chrono_types::make_shared<ChSolverPardisoMKL>();
     mkl_solver->LockSparsityPattern(true);
     sys.SetSolver(mkl_solver);
-    sys.Update();
 
     // Set the time integrator parameters
     sys.SetTimestepperType(ChTimestepper::Type::HHT);
@@ -1565,7 +1566,7 @@ int main(int argc, char* argv[]) {
 
     auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>();
     mvisualizemesh->SetFEMdataType(ChVisualShapeFEA::DataType::NODE_SPEED_NORM);
-    mvisualizemesh->SetColorscaleMinMax(0.0, 30);
+    mvisualizemesh->SetColormapRange(0.0, 30);
     mvisualizemesh->SetSmoothFaces(true);
     my_mesh->AddVisualShapeFEA(mvisualizemesh);
 
@@ -1585,9 +1586,6 @@ int main(int argc, char* argv[]) {
     vis->AddCamera(ChVector3d(0.5, 0.5, 1.15), ChVector3d(-1.15, 0.0, 0.0));
     vis->AddTypicalLights();
     vis->AttachSystem(&sys);
-
-    sys.Setup();
-    sys.Update();
 
     // Create output files
     outputfile = fopen("OutPutBody1.txt", "w");          // Time history of nodal coordinates
@@ -1683,8 +1681,8 @@ int main(int argc, char* argv[]) {
 
         while (vis->Run()) {
             // Apply vertical load to rim body
-            Rim->EmptyAccumulators();
-            Rim->AccumulateForce(ChVector3d(0.0, 0.0, -5000.0), Rim->GetPos(), 0);
+            Rim->EmptyAccumulator(0);
+            Rim->AccumulateForce(0, ChVector3d(0.0, 0.0, -5000.0), Rim->GetPos(), 0);
             vis->BeginScene();
             vis->Render();
             vis->EndScene();
@@ -1813,8 +1811,8 @@ int main(int argc, char* argv[]) {
         ////////////////////////////////////////////////////
         double start = std::clock();
         while (sys.GetChTime() < 0.2) {
-            Rim->EmptyAccumulators();
-            Rim->AccumulateForce(ChVector3d(0.0, 0.0, -5000.0), Rim->GetPos(), 0);
+            Rim->EmptyAccumulator(0);
+            Rim->AccumulateForce(0, ChVector3d(0.0, 0.0, -5000.0), Rim->GetPos(), 0);
             //==Start analysis==//
             sys.DoStepDynamics(timestep);
 

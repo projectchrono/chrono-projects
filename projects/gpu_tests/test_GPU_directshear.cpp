@@ -226,6 +226,8 @@ int main(int argc, char* argv[]) {
     plate->SetMass(plate_mass);
     ch_sys.AddBody(plate);
 
+    plate->AddAccumulator();
+
     SetInitialMeshes(gran_sys, plate);
 
     int nb = gran_sys.GetNumParticles();
@@ -294,11 +296,11 @@ int main(int argc, char* argv[]) {
         gran_sys.AdvanceSimulation(step_size);
 
         gran_sys.CollectMeshContactForces(plate_i, plate_force, plate_torque);
-        plate->EmptyAccumulators();
+        plate->EmptyAccumulator(0);
         // set force in x and y direction to zero
         plate_force.x() = 0;
         plate_force.y() = 0;
-        plate->AccumulateForce(plate_force, plate->GetPos(), false);
+        plate->AccumulateForce(0, plate_force, plate->GetPos(), false);
     }
 
     std::cout << std::endl << "Running shear test..." << std::endl;
@@ -328,8 +330,8 @@ int main(int argc, char* argv[]) {
         gran_sys.CollectMeshContactForces(top_i, top_bin_force, top_bin_torque);
         double shear_force = plate_force.x() + top_bin_force.x();
 
-        plate->EmptyAccumulators();
-        plate->AccumulateForce(ChVector3d(0, 0, plate_force.z()), plate->GetPos(), false);
+        plate->EmptyAccumulator(0);
+        plate->AccumulateForce(0, ChVector3d(0, 0, plate_force.z()), plate->GetPos(), false);
 
         // shear_force = fm_lowpass5.Filter(shear_force);
 

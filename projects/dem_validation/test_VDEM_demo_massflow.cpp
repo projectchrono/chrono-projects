@@ -36,10 +36,6 @@
 
 #include "chrono_thirdparty/filesystem/path.h"
 
-// Control use of OpenGL run-time rendering
-// Note: CHRONO_OPENGL is defined in ChConfig.h
-////#undef CHRONO_OPENGL
-
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChVisualSystemOpenGL.h"
 #endif

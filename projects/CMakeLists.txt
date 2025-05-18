@@ -36,9 +36,9 @@ cmake_dependent_option(ENABLE_PROJECTS_DEM_VALIDATION
 #cmake_dependent_option(ENABLE_PROJECTS_CONSTRAINT_FLUID 
 #	"Enable projects using constraint fluids, require zlib" OFF
 #	"ENABLE_PROJECTS" OFF)
-cmake_dependent_option(ENABLE_PROJECTS_MULTICORE_TESTS 
-	"Enable projects for Chrono::Multicore tests" ON
-	"ENABLE_PROJECTS" OFF)
+#cmake_dependent_option(ENABLE_PROJECTS_MULTICORE_TESTS 
+#	"Enable projects for Chrono::Multicore tests" ON
+#	"ENABLE_PROJECTS" OFF)
 cmake_dependent_option(ENABLE_PROJECTS_VEHICLE_TESTS 
 	"Enable projects for Chrono::Vehicle tests" ON
 	"ENABLE_PROJECTS" OFF)
@@ -84,9 +84,9 @@ if (ENABLE_PROJECTS_DEM_VALIDATION)
   add_subdirectory(dem_validation)
 endif()
 
-if (ENABLE_PROJECTS_MULTICORE_TESTS)
-  add_subdirectory(multicore_tests)
-endif()
+#if (ENABLE_PROJECTS_MULTICORE_TESTS)
+#  add_subdirectory(multicore_tests)
+#endif()
 
 if (ENABLE_PROJECTS_VEHICLE_TESTS)
   add_subdirectory(vehicle_tests)

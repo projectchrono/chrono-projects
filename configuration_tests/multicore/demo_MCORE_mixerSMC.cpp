@@ -18,10 +18,6 @@
 // onto a mixer blade attached through a revolute joint to the ground.
 //
 // The global reference frame has Z up.
-//
-// If available, OpenGL is used for run-time rendering. Otherwise, the
-// simulation is carried out for a pre-defined duration and output files are
-// generated for post-processing with POV-Ray.
 // =============================================================================
 
 #include <cstdio>
@@ -35,8 +31,10 @@
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-#ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChVisualSystemOpenGL.h"
+#include "chrono/assets/ChVisualSystem.h"
+#ifdef CHRONO_VSG
+    #include "chrono_vsg/ChVisualSystemVSG.h"
+using namespace chrono::vsg3d;
 #endif
 
 using namespace chrono;
@@ -61,18 +59,10 @@ std::shared_ptr<ChBody> AddContainer(ChSystemMulticoreSMC* sys) {
     bin->EnableCollision(true);
     bin->SetFixed(true);
 
-    ChVector3d hdim(1, 1, 0.5);
-    double hthick = 0.1;
-
-    utils::AddBoxGeometry(bin.get(), mat, ChVector3d(hdim.x(), hdim.y(), hthick), ChVector3d(0, 0, -hthick));
-    utils::AddBoxGeometry(bin.get(), mat, ChVector3d(hthick, hdim.y(), hdim.z()),
-                          ChVector3d(-hdim.x() - hthick, 0, hdim.z()));
-    utils::AddBoxGeometry(bin.get(), mat, ChVector3d(hthick, hdim.y(), hdim.z()),
-                          ChVector3d(hdim.x() + hthick, 0, hdim.z()));
-    utils::AddBoxGeometry(bin.get(), mat, ChVector3d(hdim.x(), hthick, hdim.z()),
-                          ChVector3d(0, -hdim.y() - hthick, hdim.z()));
-    utils::AddBoxGeometry(bin.get(), mat, ChVector3d(hdim.x(), hthick, hdim.z()),
-                          ChVector3d(0, hdim.y() + hthick, hdim.z()));
+    utils::AddBoxContainer(bin, mat,                                 //
+                           ChFrame<>(ChVector3d(0, 0, 0.5), QUNIT),  //
+                           ChVector3d(2, 2, 1), 0.2,                 //
+                           ChVector3i(2, 2, -1));
     bin->GetCollisionModel()->SetFamily(1);
     bin->GetCollisionModel()->DisallowCollisionsWith(2);
 
@@ -140,7 +130,7 @@ void AddFallingBalls(ChSystemMulticoreSMC* sys) {
 // Create the system, specify simulation parameters, and run simulation loop.
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
-    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
+    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << std::endl;
 
     // Set path to Chrono data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
@@ -158,6 +148,8 @@ int main(int argc, char* argv[]) {
     // -------------
 
     ChSystemMulticoreSMC sys;
+
+    // Set associated collision detection system
     sys.SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Set number of threads
@@ -185,19 +177,24 @@ int main(int argc, char* argv[]) {
     // Perform the simulation
     // ----------------------
 
-#ifdef CHRONO_OPENGL
-    opengl::ChVisualSystemOpenGL vis;
-    vis.AttachSystem(&sys);
-    vis.SetWindowTitle("Mixer SMC");
-    vis.SetWindowSize(1280, 720);
-    vis.SetRenderMode(opengl::WIREFRAME);
-    vis.Initialize();
-    vis.AddCamera(ChVector3d(0, -3, 2), ChVector3d(0, 0, 0));
-    vis.SetCameraVertical(CameraVerticalDir::Y);
+#ifdef CHRONO_VSG
+    auto vis = chrono_types::make_shared<ChVisualSystemVSG>();
+    vis->AttachSystem(&sys);
+    vis->SetWindowTitle("Mixer SMC");
+    vis->SetCameraVertical(CameraVerticalDir::Y);
+    vis->AddCamera(ChVector3d(0.6, -2, 3), ChVector3d(0, 0, 0));
+    vis->SetWindowSize(1280, 720);
+    vis->SetBackgroundColor(ChColor(0.8f, 0.85f, 0.9f));
+    vis->EnableSkyBox();
+    vis->SetCameraAngleDeg(40.0);
+    vis->SetLightIntensity(0.75f);
+    vis->SetLightDirection(1.5 * CH_PI_2, CH_PI / 6);
+    vis->EnableShadows();
+    vis->Initialize();
 
-    while (vis.Run()) {
+    while (vis->Run()) {
         sys.DoStepDynamics(time_step);
-        vis.Render();
+        vis->Render();
 
         ////auto frc = mixer->GetAppliedForce();
         ////auto trq = mixer->GetAppliedTorque();

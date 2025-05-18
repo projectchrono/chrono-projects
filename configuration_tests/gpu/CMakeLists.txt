@@ -20,7 +20,7 @@ set(DEMOS
 
 # Invoke find_package in CONFIG mode
 find_package(Chrono
-             COMPONENTS Gpu OpenGL
+             COMPONENTS Gpu
              CONFIG
 )
 

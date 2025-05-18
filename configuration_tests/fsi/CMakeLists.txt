@@ -11,7 +11,7 @@ message(STATUS "\n---- FSI configuration test\n")
 #--------------------------------------------------------------
 
 set(DEMOS
-    demo_FSI_cylinderDrop
+    demo_FSI_ObjectDrop
 )
 
 #--------------------------------------------------------------
@@ -20,9 +20,8 @@ set(DEMOS
 
 # Invoke find_package in CONFIG mode
 find_package(Chrono
-#             COMPONENTS FSI Multicore
              COMPONENTS FSI 
-             OPTIONAL_COMPONENTS OpenGL VSG
+             OPTIONAL_COMPONENTS VSG
              CONFIG
 )
 

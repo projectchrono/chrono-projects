@@ -654,9 +654,6 @@ int main(int argc, char* argv[]) {
     my_system.SetSolver(solver);
 #endif
 
-    my_system.Setup();
-    my_system.Update();
-
     my_system.SetTimestepperType(ChTimestepper::Type::HHT);
     // my_system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);  // fast, less precise
     auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(my_system.GetTimestepper());

@@ -19,24 +19,24 @@
 // =============================================================================
 
 #include <iostream>
-#include <string>
 #include <vector>
+#include <string>
 
-#include "chrono/assets/ChVisualShapeSphere.h"
 #include "chrono/core/ChGlobal.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/physics/ChBody.h"
 #include "chrono/physics/ChForce.h"
-#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/timestepper/ChTimestepper.h"
-#include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsSamplers.h"
+#include "chrono/utils/ChUtilsCreators.h"
+#include "chrono/assets/ChVisualShapeSphere.h"
 
 #include "chrono_gpu/physics/ChSystemGpu.h"
 #include "chrono_gpu/utils/ChGpuJsonParser.h"
 
 #include "chrono_gpu/visualization/ChGpuVisualization.h"
 #ifdef CHRONO_OPENGL
-#include "chrono_gpu/visualization/ChGpuVisualizationGL.h"
+    #include "chrono_gpu/visualization/ChGpuVisualizationGL.h"
 #endif
 
 #include "chrono_thirdparty/filesystem/path.h"
@@ -110,6 +110,9 @@ void runBallDrop(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params) {
     int render_frame = 0;
     int out_frame = 0;
 
+    // Add force accumulator to the ball body
+    auto accumulator_index = ball_body->AddAccumulator();
+
     clock_t start = std::clock();
     for (double t = 0; t < (double)params.time_end; t += iteration_step) {
         gpu_sys.ApplyMeshMotion(0, ball_body->GetPos(), ball_body->GetRot(), ball_body->GetPosDt(),
@@ -119,9 +122,9 @@ void runBallDrop(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params) {
         ChVector3d ball_torque;
         gpu_sys.CollectMeshContactForces(0, ball_force, ball_torque);
 
-        ball_body->EmptyAccumulators();
-        ball_body->AccumulateForce(ball_force, ball_body->GetPos(), false);
-        ball_body->AccumulateTorque(ball_torque, false);
+        ball_body->EmptyAccumulator(accumulator_index);
+        ball_body->AccumulateForce(accumulator_index, ball_force, ball_body->GetPos(), false);
+        ball_body->AccumulateTorque(accumulator_index, ball_torque, false);
 
         if (t >= out_frame / out_fps) {
             std::cout << "Output frame " << sim_frame + 1 << std::endl;
@@ -156,7 +159,7 @@ void runBallDrop(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params) {
 int main(int argc, char* argv[]) {
     // Set path to Chrono data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
-
+        
     std::string inputJson = GetChronoDataFile("gpu/ballCosim.json");
     if (argc == 2) {
         inputJson = std::string(argv[1]);

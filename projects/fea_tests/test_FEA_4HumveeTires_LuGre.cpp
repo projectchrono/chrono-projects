@@ -506,7 +506,7 @@ void MakeANCFHumveeWheel(ChSystem& sys,
         auto mvisualizemesh = chrono_types::make_shared<ChVisualShapeFEA>();
         // mvisualizemesh->SetFEMdataType(ChVisualShapeFEA::DataType::NODE_SPEED_NORM);
         mvisualizemesh->SetFEMdataType(ChVisualShapeFEA::DataType::ELEM_STRAIN_VONMISES);
-        mvisualizemesh->SetColorscaleMinMax(-0.05, 0.05);
+        mvisualizemesh->SetColormapRange(-0.05, 0.05);
         mvisualizemesh->SetSmoothFaces(true);
         TireMesh->AddVisualShapeFEA(mvisualizemesh);
     }
@@ -661,9 +661,6 @@ int main(int argc, char* argv[]) {
     vis->AddCamera(ChVector3d(0.5, 0.5, 1.15), ChVector3d(0.65, 0, 0));
     vis->AddTypicalLights();
     vis->AttachSystem(&sys);
-
-    sys.Setup();
-    sys.Update();
 
     std::cout << "\n\nREADME\n\n"
               << " - Press SPACE to start dynamic simulation \n - Press F10 for nonlinear statics - Press F11 for "

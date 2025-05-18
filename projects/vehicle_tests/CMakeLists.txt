@@ -12,7 +12,7 @@ message(STATUS "\n---- VEHICLE projects\n")
 # Invoke find_package in CONFIG mode
 find_package(Chrono QUIET
              COMPONENTS Vehicle 
-             OPTIONAL_COMPONENTS Irrlicht PardisoMKL Multicore OpenGL VSG
+             OPTIONAL_COMPONENTS Irrlicht PardisoMKL Multicore VSG
              CONFIG
 )
 

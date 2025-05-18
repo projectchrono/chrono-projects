@@ -293,7 +293,7 @@ int main(int argc, char* argv[]) {
     vis->SetWindowSize(ChVector2<int>(1200, 800));
     vis->SetWindowPosition(ChVector2<int>(100, 300));
     vis->SetWindowTitle("Chrono VSG Assets");
-    vis->SetUseSkyBox(true);
+    vis->EnableSkyBox(true);
     vis->AddCamera(ChVector3d(-8, 8, -16));
     vis->SetCameraAngleDeg(40);
     vis->SetLightIntensity(1.0f);

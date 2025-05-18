@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
 
     // The physics do not change when you add a moving patch, you just make it much easier for the SCM
     // implementation to do its job by restricting where it has to look for contacts
-    terrain->AddMovingPatch(hmmwv.GetVehicle().GetChassisBody(), ChVector3d(0, 0, 0), ChVector3d(5, 3, 1));
+    terrain->AddActiveDomain(hmmwv.GetVehicle().GetChassisBody(), ChVector3d(0, 0, 0), ChVector3d(5, 3, 1));
 
     if (flat_patch) {
         terrain->Initialize(size_x, size_y, 1 / dpu);

@@ -208,6 +208,8 @@ int main(int argc, char* argv[]) {
     cart->SetInertiaXX(ChVector3d(1, 1, 1));
     cart->SetPos(ChVector3d(0, 0, 0));
 
+    cart->AddAccumulator();
+
     // Attach visualization assets.
     auto box_c = chrono_types::make_shared<ChVisualShapeBox>(0.2, 0.2, 0.2);
     box_c->SetColor(ChColor(0, 0.6f, 0.8f));
@@ -286,8 +288,8 @@ int main(int argc, char* argv[]) {
             switch_time += switch_period;
         }
         // Apply controller force on cart body
-        cart->EmptyAccumulators();
-        cart->AccumulateForce(ChVector3d(controller.GetForce(), 0, 0), ChVector3d(0, 0, 0), true);
+        cart->EmptyAccumulator(0);
+        cart->AccumulateForce(0, ChVector3d(controller.GetForce(), 0, 0), ChVector3d(0, 0, 0), true);
         // Advance system and controller states
         system.DoStepDynamics(step);
         controller.Advance(step);

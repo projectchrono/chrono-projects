@@ -28,7 +28,6 @@ set(TESTS
 # Invoke find_package in CONFIG mode.
 find_package(Chrono QUIET
              COMPONENTS Multicore
-             OPTIONAL_COMPONENTS OpenGL
              CONFIG
 )
 
