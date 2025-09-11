@@ -118,11 +118,11 @@ else()
     file(COPY ${CMAKE_SOURCE_DIR}/data/ DESTINATION ${CMAKE_BINARY_DIR}/data/)
 endif()
 
-
 #-----------------------------------------------------------------------------
 # Copy DLLs
 #-----------------------------------------------------------------------------
 
-# Add custom command for copying DLLs to the appropriate binary output folder
+# Add custom command to copy all Chrono DLLs to the appropriate binary output folder
 # (no-op if not Windows)
-add_DLL_copy_command("${ALL_DLL_NAMES}")
+
+add_CHRONO_DLLS_copy_command("${ALL_DLL_NAMES}")

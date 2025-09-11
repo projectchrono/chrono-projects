@@ -13,6 +13,7 @@ message(STATUS "\n---- PARSERS configuration test\n")
 # Invoke find_package in CONFIG mode
 find_package(Chrono
              COMPONENTS Parsers Irrlicht
+             OPTIONAL_COMPONENTS VSG
              CONFIG
 )
 
@@ -37,6 +38,11 @@ set(DEMOS
 if(CHRONO_PARSERS_PYTHON)
   set(DEMOS ${DEMOS}
       demo_PARSER_Python)
+endif()
+
+if(CHRONO_VSG_FOUND)
+  set(DEMOS ${DEMOS}
+      demo_PARSER_YAML)
 endif()
 
 #--------------------------------------------------------------
