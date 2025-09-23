@@ -7,7 +7,7 @@ if(ENABLE_CONFIG)
   mark_as_advanced(CLEAR ENABLE_CONFIG_PARSERS)
   mark_as_advanced(CLEAR ENABLE_CONFIG_URDF)
   mark_as_advanced(CLEAR ENABLE_CONFIG_CASCADE)
-  mark_as_advanced(CLEAR ENABLE_CONFIG_GPU)
+  mark_as_advanced(CLEAR ENABLE_CONFIG_DEM)
   mark_as_advanced(CLEAR ENABLE_CONFIG_SYNCHRONO)
   mark_as_advanced(CLEAR ENABLE_CONFIG_VEHICLE)
   mark_as_advanced(CLEAR ENABLE_CONFIG_VSG)
@@ -19,7 +19,7 @@ else()
   mark_as_advanced(FORCE ENABLE_CONFIG_PARSERS)
   mark_as_advanced(FORCE ENABLE_CONFIG_URDF)
   mark_as_advanced(FORCE ENABLE_CONFIG_CASCADE)
-  mark_as_advanced(FORCE ENABLE_CONFIG_GPU)
+  mark_as_advanced(FORCE ENABLE_CONFIG_DEM)
   mark_as_advanced(FORCE ENABLE_CONFIG_SYNCHRONO)
   mark_as_advanced(FORCE ENABLE_CONFIG_VEHICLE)
   mark_as_advanced(FORCE ENABLE_CONFIG_VSG)
@@ -51,8 +51,8 @@ cmake_dependent_option(ENABLE_CONFIG_URDF
 cmake_dependent_option(ENABLE_CONFIG_CASCADE
 	"Enable configuration tests for CASCADE module" ON
 	"ENABLE_CONFIG" OFF)
-cmake_dependent_option(ENABLE_CONFIG_GPU
-	"Enable configuration tests for GPU module" ON
+cmake_dependent_option(ENABLE_CONFIG_DEM
+	"Enable configuration tests for DEM module" ON
 	"ENABLE_CONFIG" OFF)
 cmake_dependent_option(ENABLE_CONFIG_SYNCHRONO
 	"Enable configuration tests for SYNCHRONO module" ON
@@ -85,8 +85,8 @@ endif()
 if (ENABLE_CONFIG_CASCADE)
   add_subdirectory(cascade)
 endif()
-if (ENABLE_CONFIG_GPU)
-  add_subdirectory(gpu)
+if (ENABLE_CONFIG_DEM)
+  add_subdirectory(dem)
 endif()
 if (ENABLE_CONFIG_SYNCHRONO)
   add_subdirectory(synchrono)

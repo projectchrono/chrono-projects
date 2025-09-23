@@ -11,9 +11,9 @@
 // =============================================================================
 // Authors: Nic Olsen, Ruochun Zhang
 // =============================================================================
-// Chrono::Gpu demo using SMC method. A body whose geometry is described by an
+// Chrono::Dem demo using SMC method. A body whose geometry is described by an
 // OBJ file is time-integrated in Chrono and interacts with a granular wave tank
-// in Chrono::Gpu via the co-simulation framework. The entire simulation consists
+// in Chrono::Dem via the co-simulation framework. The entire simulation consists
 // of 2 runs: the settling phase (which outputs a checkpoint file), and a restarted
 // phase (which load the checkpoint file and then drop the ball, literally).
 // =============================================================================
@@ -31,18 +31,17 @@
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/assets/ChVisualShapeSphere.h"
 
-#include "chrono_gpu/physics/ChSystemGpu.h"
-#include "chrono_gpu/utils/ChGpuJsonParser.h"
+#include "chrono_dem/physics/ChSystemDem.h"
+#include "chrono_dem/utils/ChDemJsonParser.h"
 
-#include "chrono_gpu/visualization/ChGpuVisualization.h"
-#ifdef CHRONO_OPENGL
-    #include "chrono_gpu/visualization/ChGpuVisualizationGL.h"
+#ifdef CHRONO_VSG
+#include "chrono_dem/visualization/ChDemVisualizationVSG.h"
 #endif
 
 #include "chrono_thirdparty/filesystem/path.h"
 
 using namespace chrono;
-using namespace chrono::gpu;
+using namespace chrono::dem;
 
 // Output frequency
 float out_fps = 50;
@@ -51,19 +50,19 @@ float out_fps = 50;
 bool render = true;
 float render_fps = 2000;
 
-void runBallDrop(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params) {
-    // Add a ball mesh to the GPU system
+void runBallDrop(ChSystemDemMesh& dem_sys, ChDemSimulationParameters& params) {
+    // Add a ball mesh to the DEM system
     float ball_radius = 20.f;
     float ball_density = params.sphere_density;
     float ball_mass = 4.0f * (float)CH_PI * ball_radius * ball_radius * ball_radius * ball_density / 3.f;
-    gpu_sys.AddMesh(GetChronoDataFile("models/sphere.obj"), ChVector3f(0), ChMatrix33<float>(ball_radius), ball_mass);
+    dem_sys.AddMesh(GetChronoDataFile("models/sphere.obj"), ChVector3f(0), ChMatrix33<float>(ball_radius), ball_mass);
 
     // One more thing: we need to manually enable mesh in this run, because we disabled it in the settling phase,
     // let's overload that option.
-    gpu_sys.EnableMeshCollision(true);
+    dem_sys.EnableMeshCollision(true);
 
-    gpu_sys.Initialize();
-    std::cout << gpu_sys.GetNumMeshes() << " meshes" << std::endl;
+    dem_sys.Initialize();
+    std::cout << dem_sys.GetNumMeshes() << " meshes" << std::endl;
 
     // Create rigid ball_body simulation
     ChSystemSMC sys_ball;
@@ -82,22 +81,30 @@ void runBallDrop(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params) {
     ball_body->AddVisualShape(sph);
     sys_ball.AddBody(ball_body);
 
-#if !defined(CHRONO_OPENGL)
+    // Create a run-time visualizer
+    std::shared_ptr<ChVisualSystem> vis;
+
+#ifdef CHRONO_VSG
+    // DEM plugin
+    auto visDEM = chrono_types::make_shared<ChDemVisualizationVSG>(&dem_sys);
+
+    // VSG visual system (attach visDEM as plugin)
+    auto visVSG = chrono_types::make_shared<vsg3d::ChVisualSystemVSG>();
+    visVSG->AttachPlugin(visDEM);
+    visVSG->SetWindowTitle("Chrono::Dem ball cosim demo");
+    visVSG->SetWindowSize(1280, 800);
+    visVSG->SetWindowPosition(100, 100);
+    visVSG->AddCamera(ChVector3d(0, -200, 100), ChVector3d(0, 0, 0));
+    visVSG->SetLightIntensity(0.9f);
+    visVSG->SetLightDirection(CH_PI_2, CH_PI / 6);
+
+    visVSG->Initialize();
+    vis = visVSG;
+#else
     render = false;
 #endif
 
-    std::shared_ptr<ChGpuVisualization> visGPU;
-    if (render) {
-#ifdef CHRONO_OPENGL
-        visGPU = chrono_types::make_shared<ChGpuVisualizationGL>(&gpu_sys);
-        visGPU->SetTitle("Chrono::Gpu ball cosim demo");
-        visGPU->AddCamera(ChVector3d(0, -200, 100), ChVector3d(0, 0, 0));
-        visGPU->SetCameraMoveScale(1.0f);
-        visGPU->Initialize();
-#endif
-    }
-
-    std::string out_dir = GetChronoOutputPath() + "GPU/";
+    std::string out_dir = GetChronoOutputPath() + "DEM/";
     filesystem::create_directory(filesystem::path(out_dir));
     out_dir = out_dir + params.output_dir;
     filesystem::create_directory(filesystem::path(out_dir));
@@ -115,12 +122,12 @@ void runBallDrop(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params) {
 
     clock_t start = std::clock();
     for (double t = 0; t < (double)params.time_end; t += iteration_step) {
-        gpu_sys.ApplyMeshMotion(0, ball_body->GetPos(), ball_body->GetRot(), ball_body->GetPosDt(),
+        dem_sys.ApplyMeshMotion(0, ball_body->GetPos(), ball_body->GetRot(), ball_body->GetPosDt(),
                                 ball_body->GetAngVelParent());
 
         ChVector3d ball_force;
         ChVector3d ball_torque;
-        gpu_sys.CollectMeshContactForces(0, ball_force, ball_torque);
+        dem_sys.CollectMeshContactForces(0, ball_force, ball_torque);
 
         ball_body->EmptyAccumulator(accumulator_index);
         ball_body->AccumulateForce(accumulator_index, ball_force, ball_body->GetPos(), false);
@@ -132,19 +139,20 @@ void runBallDrop(ChSystemGpuMesh& gpu_sys, ChGpuSimulationParameters& params) {
             char mesh_filename[100];
             sprintf(filename, "%s/step%06d.csv", out_dir.c_str(), sim_frame);
             sprintf(mesh_filename, "%s/step%06d_mesh", out_dir.c_str(), sim_frame);
-            gpu_sys.WriteParticleFile(std::string(filename));
-            gpu_sys.WriteMeshes(std::string(mesh_filename));
+            dem_sys.WriteParticleFile(std::string(filename));
+            dem_sys.WriteMeshes(std::string(mesh_filename));
 
             out_frame++;
         }
 
         if (render && t >= render_frame / render_fps) {
-            if (!visGPU->Render())
+            if (!vis->Run())
                 break;
+            vis->Render();
             render_frame++;
         }
 
-        gpu_sys.AdvanceSimulation(iteration_step);
+        dem_sys.AdvanceSimulation(iteration_step);
         sys_ball.DoStepDynamics(iteration_step);
 
         sim_frame++;
@@ -160,50 +168,50 @@ int main(int argc, char* argv[]) {
     // Set path to Chrono data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
         
-    std::string inputJson = GetChronoDataFile("gpu/ballCosim.json");
+    std::string inputJson = GetChronoDataFile("dem/ballCosim.json");
     if (argc == 2) {
         inputJson = std::string(argv[1]);
     } else if (argc > 2) {
-        std::cout << "Usage:\n./demo_GPU_ballCosim <json_file>" << std::endl;
+        std::cout << "Usage:\n./demo_DEM_ballCosim <json_file>" << std::endl;
         return 1;
     }
 
-    ChGpuSimulationParameters params;
+    ChDemSimulationParameters params;
     if (!ParseJSON(inputJson, params)) {
         std ::cout << "ERROR: reading input file " << inputJson << std::endl;
         return 1;
     }
 
-    if (params.run_mode != CHGPU_RUN_MODE::FRICTIONLESS && params.run_mode != CHGPU_RUN_MODE::ONE_STEP) {
+    if (params.run_mode != CHDEM_RUN_MODE::FRICTIONLESS && params.run_mode != CHDEM_RUN_MODE::ONE_STEP) {
         std::cout << "ERROR: unknown run_mode specified" << std::endl;
         return 1;
     }
 
     // Output directory
-    std::string out_dir = GetChronoOutputPath() + "GPU/";
+    std::string out_dir = GetChronoOutputPath() + "DEM/";
     filesystem::create_directory(filesystem::path(out_dir));
     out_dir = out_dir + params.output_dir;
     filesystem::create_directory(filesystem::path(out_dir));
 
     std::string checkpoint_file = out_dir + "/checkpoint.dat";
 
-    if (params.run_mode == CHGPU_RUN_MODE::ONE_STEP) {
+    if (params.run_mode == CHDEM_RUN_MODE::ONE_STEP) {
         // This is a restarted run
 
         // Load checkpoint file.
         // Note that with current version, user defined meshes and boundaries are not stored in the checkpoint file,
         // so they must be manually set later. This behavior will be improved in later patches.
         // Simulation parameters and particle states are all in with this file loaded.
-        ChSystemGpuMesh gpu_sys(checkpoint_file);
+        ChSystemDemMesh dem_sys(checkpoint_file);
 
         // Add a ball through a mesh, whose dynamics are managed by Chrono Core, and run this co-simulation.
-        runBallDrop(gpu_sys, params);
+        runBallDrop(dem_sys, params);
 
         return 0;
     }
 
-    // run_mode = CHGPU_RUN_MODE::FRICTIONLESS, this is a newly started run. We have to set all simulation params.
-    ChSystemGpuMesh gpu_sys(params.sphere_radius, params.sphere_density,
+    // run_mode = CHDEM_RUN_MODE::FRICTIONLESS, this is a newly started run. We have to set all simulation params.
+    ChSystemDemMesh dem_sys(params.sphere_radius, params.sphere_density,
                             ChVector3f(params.box_X, params.box_Y, params.box_Z));
 
     printf(
@@ -236,48 +244,48 @@ int main(int argc, char* argv[]) {
     }
     std::cout << body_points.size() << " particles sampled!" << std::endl;
 
-    gpu_sys.SetParticles(body_points);
+    dem_sys.SetParticles(body_points);
 
-    gpu_sys.SetKn_SPH2SPH(params.normalStiffS2S);
-    gpu_sys.SetKn_SPH2WALL(params.normalStiffS2W);
-    gpu_sys.SetKn_SPH2MESH(params.normalStiffS2M);
+    dem_sys.SetKn_SPH2SPH(params.normalStiffS2S);
+    dem_sys.SetKn_SPH2WALL(params.normalStiffS2W);
+    dem_sys.SetKn_SPH2MESH(params.normalStiffS2M);
 
-    gpu_sys.SetGn_SPH2SPH(params.normalDampS2S);
-    gpu_sys.SetGn_SPH2WALL(params.normalDampS2W);
-    gpu_sys.SetGn_SPH2MESH(params.normalDampS2M);
+    dem_sys.SetGn_SPH2SPH(params.normalDampS2S);
+    dem_sys.SetGn_SPH2WALL(params.normalDampS2W);
+    dem_sys.SetGn_SPH2MESH(params.normalDampS2M);
 
-    gpu_sys.SetKt_SPH2SPH(params.tangentStiffS2S);
-    gpu_sys.SetKt_SPH2WALL(params.tangentStiffS2W);
-    gpu_sys.SetKt_SPH2MESH(params.tangentStiffS2M);
+    dem_sys.SetKt_SPH2SPH(params.tangentStiffS2S);
+    dem_sys.SetKt_SPH2WALL(params.tangentStiffS2W);
+    dem_sys.SetKt_SPH2MESH(params.tangentStiffS2M);
 
-    gpu_sys.SetGt_SPH2SPH(params.tangentDampS2S);
-    gpu_sys.SetGt_SPH2WALL(params.tangentDampS2W);
-    gpu_sys.SetGt_SPH2MESH(params.tangentDampS2M);
+    dem_sys.SetGt_SPH2SPH(params.tangentDampS2S);
+    dem_sys.SetGt_SPH2WALL(params.tangentDampS2W);
+    dem_sys.SetGt_SPH2MESH(params.tangentDampS2M);
 
-    gpu_sys.SetCohesionRatio(params.cohesion_ratio);
-    gpu_sys.SetAdhesionRatio_SPH2MESH(params.adhesion_ratio_s2m);
-    gpu_sys.SetAdhesionRatio_SPH2WALL(params.adhesion_ratio_s2w);
+    dem_sys.SetCohesionRatio(params.cohesion_ratio);
+    dem_sys.SetAdhesionRatio_SPH2MESH(params.adhesion_ratio_s2m);
+    dem_sys.SetAdhesionRatio_SPH2WALL(params.adhesion_ratio_s2w);
 
-    gpu_sys.SetGravitationalAcceleration(ChVector3f(params.grav_X, params.grav_Y, params.grav_Z));
+    dem_sys.SetGravitationalAcceleration(ChVector3f(params.grav_X, params.grav_Y, params.grav_Z));
 
-    gpu_sys.SetFixedStepSize(params.step_size);
-    gpu_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
-    gpu_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
+    dem_sys.SetFixedStepSize(params.step_size);
+    dem_sys.SetFrictionMode(CHDEM_FRICTION_MODE::MULTI_STEP);
+    dem_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
 
-    gpu_sys.SetStaticFrictionCoeff_SPH2SPH(params.static_friction_coeffS2S);
-    gpu_sys.SetStaticFrictionCoeff_SPH2WALL(params.static_friction_coeffS2W);
-    gpu_sys.SetStaticFrictionCoeff_SPH2MESH(params.static_friction_coeffS2M);
+    dem_sys.SetStaticFrictionCoeff_SPH2SPH(params.static_friction_coeffS2S);
+    dem_sys.SetStaticFrictionCoeff_SPH2WALL(params.static_friction_coeffS2W);
+    dem_sys.SetStaticFrictionCoeff_SPH2MESH(params.static_friction_coeffS2M);
 
-    // gpu_sys.SetRollingCoeff_SPH2SPH(params.rolling_friction_coeffS2S);
-    // gpu_sys.SetRollingCoeff_SPH2WALL(params.rolling_friction_coeffS2W);
-    // gpu_sys.SetRollingCoeff_SPH2MESH(params.rolling_friction_coeffS2M);
+    // dem_sys.SetRollingCoeff_SPH2SPH(params.rolling_friction_coeffS2S);
+    // dem_sys.SetRollingCoeff_SPH2WALL(params.rolling_friction_coeffS2W);
+    // dem_sys.SetRollingCoeff_SPH2MESH(params.rolling_friction_coeffS2M);
 
-    gpu_sys.SetParticleOutputMode(params.write_mode);
-    gpu_sys.SetVerbosity(params.verbose);
-    gpu_sys.SetBDFixed(true);
+    dem_sys.SetParticleOutputMode(params.write_mode);
+    dem_sys.SetVerbosity(params.verbose);
+    dem_sys.SetBDFixed(true);
 
     // In the settling run we disable the mesh.
-    gpu_sys.EnableMeshCollision(false);
+    dem_sys.EnableMeshCollision(false);
 
     /*
     // We could prescribe the motion of the big box domain. But here in this demo we will not do that.
@@ -293,10 +301,10 @@ int main(int argc, char* argv[]) {
         return pos;
     };
 
-    gpu_sys.setBDWallsMotionFunction(pos_func_wave);
+    dem_sys.setBDWallsMotionFunction(pos_func_wave);
     */
 
-    gpu_sys.Initialize();
+    dem_sys.Initialize();
 
     int sim_frame = 0;
     int out_frame = 0;
@@ -306,18 +314,18 @@ int main(int argc, char* argv[]) {
             std::cout << "Output frame " << sim_frame + 1 << std::endl;
             char filename[100];
             sprintf(filename, "%s/step%06d.csv", out_dir.c_str(), sim_frame);
-            gpu_sys.WriteParticleFile(std::string(filename));
+            dem_sys.WriteParticleFile(std::string(filename));
 
             out_frame++;
         }
 
-        gpu_sys.AdvanceSimulation(iteration_step);
+        dem_sys.AdvanceSimulation(iteration_step);
 
         sim_frame++;
     }
 
     // This is settling phase, so output a checkpoint file
-    gpu_sys.WriteCheckpointFile(checkpoint_file);
+    dem_sys.WriteCheckpointFile(checkpoint_file);
 
     return 0;
 }

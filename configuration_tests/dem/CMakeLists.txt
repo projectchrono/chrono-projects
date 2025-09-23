@@ -1,17 +1,17 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono::Gpu module.
+# CMake configuration file for projects requiring the Chrono::Dem module.
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
 
-message(STATUS "\n---- GPU configuration test\n")
+message(STATUS "\n---- DEM configuration test\n")
 
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
 
 set(DEMOS
-    demo_GPU_ballcosim
+    demo_DEM_ballcosim
 )
 
 #--------------------------------------------------------------
@@ -20,13 +20,13 @@ set(DEMOS
 
 # Invoke find_package in CONFIG mode
 find_package(Chrono
-             COMPONENTS Gpu
+             COMPONENTS DEM VSG
              CONFIG
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for GPU projects")
+  message("Could not find requirements for DEM projects")
   return()
 endif()
 
@@ -44,7 +44,7 @@ set(CHRONO_PACKAGE_PREFIX_DIR ${CHRONO_PACKAGE_PREFIX_DIR} PARENT_SCOPE)
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Configuration tests for Chrono::GPU...")
+message(STATUS "Configuration tests for Chrono::DEM...")
 
 foreach(PROGRAM ${DEMOS})
   message(STATUS "...add ${PROGRAM}")
