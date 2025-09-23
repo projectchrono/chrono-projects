@@ -11,7 +11,7 @@
 // =============================================================================
 // Authors: Nic Olsen, Conlain Kelly, Ruochun Zhang
 // =============================================================================
-// Set of simple tests for validating low-level behavior of a Chrono::GPU
+// Set of simple tests for validating low-level behavior of a Chrono::DEM
 // system.
 // =============================================================================
 
@@ -21,14 +21,14 @@
 
 #include "chrono/core/ChGlobal.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_gpu/physics/ChSystemGpu.h"
-#include "chrono_gpu/utils/ChGpuJsonParser.h"
+#include "chrono_dem/physics/ChSystemDem.h"
+#include "chrono_dem/utils/ChDemJsonParser.h"
 #include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
 using namespace chrono;
-using namespace chrono::gpu;
+using namespace chrono::dem;
 
 std::string output_dir = "../test_results";
 std::string delim = "--------------------------------";
@@ -72,7 +72,7 @@ double step_height = -1;
 constexpr int fps = 100;
 constexpr float frame_step = 1.f / fps;
 
-CHGPU_OUTPUT_MODE write_mode = CHGPU_OUTPUT_MODE::CSV;
+CHDEM_OUTPUT_MODE write_mode = CHDEM_OUTPUT_MODE::CSV;
 
 // assume we run for at least one frame
 float curr_time = 0;
@@ -82,56 +82,56 @@ int currframe = 0;
 enum TEST_TYPE { ROTF = 0, PYRAMID = 1, ROTF_MESH = 2, PYRAMID_MESH = 3, MESH_STEP = 4, MESH_FORCE = 5 };
 
 // Set common set of parameters for all tests
-void setCommonParameters(ChSystemGpu& gpu_sys) {
-    gpu_sys.SetPsiFactors(psi_T, psi_L);
-    gpu_sys.SetKn_SPH2SPH(normalStiffness_S2S);
-    gpu_sys.SetKn_SPH2WALL(normalStiffness_S2W);
-    gpu_sys.SetGn_SPH2SPH(normalDampS2S);
-    gpu_sys.SetGn_SPH2WALL(normalDampS2W);
+void setCommonParameters(ChSystemDem& dem_sys) {
+    dem_sys.SetPsiFactors(psi_T, psi_L);
+    dem_sys.SetKn_SPH2SPH(normalStiffness_S2S);
+    dem_sys.SetKn_SPH2WALL(normalStiffness_S2W);
+    dem_sys.SetGn_SPH2SPH(normalDampS2S);
+    dem_sys.SetGn_SPH2WALL(normalDampS2W);
 
-    gpu_sys.SetKt_SPH2SPH(tangentStiffness_S2S);
-    gpu_sys.SetKt_SPH2WALL(tangentStiffness_S2W);
-    gpu_sys.SetGt_SPH2SPH(tangentDampS2S);
-    gpu_sys.SetGt_SPH2WALL(tangentDampS2W);
+    dem_sys.SetKt_SPH2SPH(tangentStiffness_S2S);
+    dem_sys.SetKt_SPH2WALL(tangentStiffness_S2W);
+    dem_sys.SetGt_SPH2SPH(tangentDampS2S);
+    dem_sys.SetGt_SPH2WALL(tangentDampS2W);
 
-    gpu_sys.SetCohesionRatio(cohes);
-    gpu_sys.SetAdhesionRatio_SPH2WALL(cohes);
-    gpu_sys.SetGravitationalAcceleration(ChVector3d(0, 0, grav_Z));
-    gpu_sys.SetParticleOutputMode(write_mode);
-    gpu_sys.SetStaticFrictionCoeff_SPH2SPH(static_friction_coeff);
-    gpu_sys.SetStaticFrictionCoeff_SPH2WALL(static_friction_coeff);
+    dem_sys.SetCohesionRatio(cohes);
+    dem_sys.SetAdhesionRatio_SPH2WALL(cohes);
+    dem_sys.SetGravitationalAcceleration(ChVector3d(0, 0, grav_Z));
+    dem_sys.SetParticleOutputMode(write_mode);
+    dem_sys.SetStaticFrictionCoeff_SPH2SPH(static_friction_coeff);
+    dem_sys.SetStaticFrictionCoeff_SPH2WALL(static_friction_coeff);
 
-    gpu_sys.SetRollingCoeff_SPH2SPH(static_friction_coeff / 2.);
-    gpu_sys.SetRollingCoeff_SPH2WALL(static_friction_coeff / 2.);
+    dem_sys.SetRollingCoeff_SPH2SPH(static_friction_coeff / 2.);
+    dem_sys.SetRollingCoeff_SPH2WALL(static_friction_coeff / 2.);
 
-    gpu_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
-    gpu_sys.SetFixedStepSize(timestep);
+    dem_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
+    dem_sys.SetFixedStepSize(timestep);
     filesystem::create_directory(filesystem::path(output_dir));
-    gpu_sys.SetBDFixed(true);
+    dem_sys.SetBDFixed(true);
 }
 
-void setCommonMeshParameters(ChSystemGpuMesh& gpu_sys) {
-    gpu_sys.SetKn_SPH2MESH(normalStiffness_S2M);
-    gpu_sys.SetGn_SPH2MESH(normalDampS2M);
-    gpu_sys.SetKt_SPH2MESH(tangentStiffness_S2M);
-    gpu_sys.SetGt_SPH2MESH(tangentDampS2M);
+void setCommonMeshParameters(ChSystemDemMesh& dem_sys) {
+    dem_sys.SetKn_SPH2MESH(normalStiffness_S2M);
+    dem_sys.SetGn_SPH2MESH(normalDampS2M);
+    dem_sys.SetKt_SPH2MESH(tangentStiffness_S2M);
+    dem_sys.SetGt_SPH2MESH(tangentDampS2M);
 }
 
-void writeGranFile(ChSystemGpu& gpu_sys) {
+void writeGranFile(ChSystemDem& dem_sys) {
     printf("rendering frame %u\n", currframe);
     char filename[100];
     sprintf(filename, "%s/step%06d", output_dir.c_str(), ++currframe);
-    gpu_sys.WriteParticleFile(std::string(filename));
+    dem_sys.WriteParticleFile(std::string(filename));
 }
 
-void advanceGranSim(ChSystemGpu& gpu_sys) {
-    gpu_sys.AdvanceSimulation(frame_step);
+void advanceGranSim(ChSystemDem& dem_sys) {
+    dem_sys.AdvanceSimulation(frame_step);
     curr_time += frame_step;
 }
 
 void run_ROTF() {
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
-    setCommonParameters(gpu_sys);
+    ChSystemDemMesh dem_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
+    setCommonParameters(dem_sys);
 
     float ramp_angle = (float)CH_PI / 4;
     // ramp normal is 45 degrees about y
@@ -147,20 +147,20 @@ void run_ROTF() {
     // start at far-x wall, halfway up
     ChVector3f sphere_pos(-box_X / 2.f + 2.f * sphere_radius, 0, 2 * sphere_radius);
     points.push_back(sphere_pos);
-    gpu_sys.SetParticles(points);
+    dem_sys.SetParticles(points);
 
     printf("Plane pos: (%f, %f, %f)\n", plane_pos.x(), plane_pos.y(), plane_pos.z());
 
-    size_t slope_plane_id = gpu_sys.CreateBCPlane(plane_pos, plane_normal, true);
+    size_t slope_plane_id = dem_sys.CreateBCPlane(plane_pos, plane_normal, true);
     // add bottom plane to capture bottom forces
     ChVector3d bot_plane_pos(0, 0, -box_Z / 2 + 2 * sphere_radius);
     ChVector3f bot_plane_normal(0, 0, 1);
-    size_t bottom_plane_id = gpu_sys.CreateBCPlane(bot_plane_pos, bot_plane_normal, true);
+    size_t bottom_plane_id = dem_sys.CreateBCPlane(bot_plane_pos, bot_plane_normal, true);
     // Finalize settings and Initialize for runtime
 
-    gpu_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
-    gpu_sys.SetRollingMode(CHGPU_ROLLING_MODE::NO_RESISTANCE);
-    gpu_sys.Initialize();
+    dem_sys.SetFrictionMode(CHDEM_FRICTION_MODE::MULTI_STEP);
+    dem_sys.SetRollingMode(CHDEM_ROLLING_MODE::NO_RESISTANCE);
+    dem_sys.Initialize();
 
     ChVector3f reaction_forces;
 
@@ -171,7 +171,7 @@ void run_ROTF() {
 
     // Run settling experiments
     while (curr_time < timeEnd) {
-        bool success = gpu_sys.GetBCReactionForces(slope_plane_id, reaction_forces);
+        bool success = dem_sys.GetBCReactionForces(slope_plane_id, reaction_forces);
         if (!success) {
             printf("ERROR! Get contact forces for plane failed\n");
         } else {
@@ -179,24 +179,24 @@ void run_ROTF() {
                    reaction_forces.x(), reaction_forces.z());
         }
 
-        success = gpu_sys.GetBCReactionForces(bottom_plane_id, reaction_forces);
+        success = dem_sys.GetBCReactionForces(bottom_plane_id, reaction_forces);
         if (!success) {
             printf("ERROR! Get contact forces for plane failed\n");
         } else {
             printf("curr time is %f, bottom plane force is (%f, %f, %f) Newtons\n", curr_time, reaction_forces.x(),
                    reaction_forces.y(), reaction_forces.z());
         }
-        writeGranFile(gpu_sys);
-        advanceGranSim(gpu_sys);
+        writeGranFile(dem_sys);
+        advanceGranSim(dem_sys);
     }
 }
 
 void run_ROTF_MESH() {
     // overwrite olds system
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
-    setCommonParameters(gpu_sys);
+    ChSystemDemMesh dem_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
+    setCommonParameters(dem_sys);
 
-    setCommonMeshParameters(gpu_sys);
+    setCommonMeshParameters(dem_sys);
 
     // place so that plane intersects wall near z = 0
     ChVector3d plane_pos(-box_X / 2.f, 0.f, 0.);
@@ -205,7 +205,7 @@ void run_ROTF_MESH() {
     // start at far-x wall, halfway up
     ChVector3f sphere_pos(-box_X / 2.f + 2.f * sphere_radius, 0, 2 * sphere_radius);
     points.push_back(sphere_pos);
-    gpu_sys.SetParticles(points);
+    dem_sys.SetParticles(points);
 
     printf("Plane pos: (%f, %f, %f)\n", plane_pos.x(), plane_pos.y(), plane_pos.z());
 
@@ -221,24 +221,24 @@ void run_ROTF_MESH() {
     ChMatrix33<float> mesh_scaling(ChVector3f(100, 100, 100));
 
     // make two plane meshes, one for ramp and one for bottom
-    mesh_filenames.push_back(GetProjectsDataFile("gpu/meshes/testsuite/square_plane_fine.obj"));
+    mesh_filenames.push_back(GetProjectsDataFile("dem/meshes/testsuite/square_plane_fine.obj"));
     mesh_rotscales.push_back(mesh_scaling);
     mesh_translations.push_back(ChVector3f(0, 0, 0));
     mesh_masses.push_back(10.f);
 
-    mesh_filenames.push_back(GetProjectsDataFile("gpu/meshes/testsuite/square_plane_fine.obj"));
+    mesh_filenames.push_back(GetProjectsDataFile("dem/meshes/testsuite/square_plane_fine.obj"));
     mesh_rotscales.push_back(mesh_scaling);
     mesh_translations.push_back(ChVector3f(0, 0, 0));
     mesh_masses.push_back(10.f);
 
-    gpu_sys.AddMeshes(mesh_filenames, mesh_translations, mesh_rotscales, mesh_masses);
+    dem_sys.AddMeshes(mesh_filenames, mesh_translations, mesh_rotscales, mesh_masses);
 
     // Finalize settings and Initialize for runtime
-    gpu_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
-    gpu_sys.SetRollingMode(CHGPU_ROLLING_MODE::NO_RESISTANCE);
-    gpu_sys.Initialize();
+    dem_sys.SetFrictionMode(CHDEM_FRICTION_MODE::MULTI_STEP);
+    dem_sys.SetRollingMode(CHDEM_ROLLING_MODE::NO_RESISTANCE);
+    dem_sys.Initialize();
 
-    unsigned int nSoupFamilies = gpu_sys.GetNumMeshes();
+    unsigned int nSoupFamilies = dem_sys.GetNumMeshes();
     printf("%u soup families\n", nSoupFamilies);
 
     double* meshSoupLocOri = new double[7 * nSoupFamilies];
@@ -251,17 +251,17 @@ void run_ROTF_MESH() {
 
     // Run settling experiments
     while (curr_time < timeEnd) {
-        gpu_sys.ApplyMeshMotion(0, bot_plane_pos, bot_quat, ChVector3d(0, 0, 0), ChVector3d(0, 0, 0));
-        gpu_sys.ApplyMeshMotion(1, plane_pos, rot_quat, ChVector3d(0, 0, 0), ChVector3d(0, 0, 0));
-        writeGranFile(gpu_sys);
-        advanceGranSim(gpu_sys);
+        dem_sys.ApplyMeshMotion(0, bot_plane_pos, bot_quat, ChVector3d(0, 0, 0), ChVector3d(0, 0, 0));
+        dem_sys.ApplyMeshMotion(1, plane_pos, rot_quat, ChVector3d(0, 0, 0), ChVector3d(0, 0, 0));
+        writeGranFile(dem_sys);
+        advanceGranSim(dem_sys);
     }
 }
 
 void run_PYRAMID() {
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
+    ChSystemDemMesh dem_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
 
-    setCommonParameters(gpu_sys);
+    setCommonParameters(dem_sys);
 
     timeEnd = 1;
     // slightly inflated diameter to ensure no penetration
@@ -269,10 +269,10 @@ void run_PYRAMID() {
     // add plane just below origin
     ChVector3d bot_plane_pos(0, 0, -1.02 * sphere_radius);
     ChVector3d bot_plane_normal(0, 0, 1);
-    size_t bottom_plane_id = gpu_sys.CreateBCPlane(bot_plane_pos, bot_plane_normal, true);
+    size_t bottom_plane_id = dem_sys.CreateBCPlane(bot_plane_pos, bot_plane_normal, true);
 
-    gpu_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
-    gpu_sys.SetRollingMode(CHGPU_ROLLING_MODE::NO_RESISTANCE);
+    dem_sys.SetFrictionMode(CHDEM_FRICTION_MODE::MULTI_STEP);
+    dem_sys.SetRollingMode(CHDEM_ROLLING_MODE::NO_RESISTANCE);
     ChVector3d reaction_forces;
 
     // just above origin
@@ -293,21 +293,21 @@ void run_PYRAMID() {
     points.push_back(base_sphere_2);
     points.push_back(base_sphere_3);
     points.push_back(top_sphere);
-    gpu_sys.SetParticles(points);
+    dem_sys.SetParticles(points);
 
-    gpu_sys.Initialize();
+    dem_sys.Initialize();
 
     while (curr_time < timeEnd) {
-        writeGranFile(gpu_sys);
-        advanceGranSim(gpu_sys);
+        writeGranFile(dem_sys);
+        advanceGranSim(dem_sys);
     }
 }
 
 void run_PYRAMID_MESH() {
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
-    setCommonParameters(gpu_sys);
+    ChSystemDemMesh dem_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
+    setCommonParameters(dem_sys);
 
-    setCommonMeshParameters(gpu_sys);
+    setCommonMeshParameters(dem_sys);
 
     timeEnd = 1;
     // slightly inflated diameter to ensure no penetration
@@ -317,11 +317,11 @@ void run_PYRAMID_MESH() {
     ChVector3d bot_plane_normal(0, 0, 1);
 
     // Add mesh
-    gpu_sys.AddMesh(GetProjectsDataFile("gpu/meshes/testsuite/tiny_triangle.obj"), ChVector3f(0),
+    dem_sys.AddMesh(GetProjectsDataFile("dem/meshes/testsuite/tiny_triangle.obj"), ChVector3f(0),
                     ChMatrix33<float>(ChVector3f(1, 1, 1)), 10.0f);
 
-    gpu_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
-    gpu_sys.SetRollingMode(CHGPU_ROLLING_MODE::NO_RESISTANCE);
+    dem_sys.SetFrictionMode(CHDEM_FRICTION_MODE::MULTI_STEP);
+    dem_sys.SetRollingMode(CHDEM_ROLLING_MODE::NO_RESISTANCE);
     ChVector3d reaction_forces;
 
     // just above origin
@@ -342,11 +342,11 @@ void run_PYRAMID_MESH() {
     points.push_back(base_sphere_2);
     points.push_back(base_sphere_3);
     points.push_back(top_sphere);
-    gpu_sys.SetParticles(points);
+    dem_sys.SetParticles(points);
 
-    gpu_sys.Initialize();
+    dem_sys.Initialize();
 
-    unsigned int nSoupFamilies = gpu_sys.GetNumMeshes();
+    unsigned int nSoupFamilies = dem_sys.GetNumMeshes();
     printf("%u soup families\n", nSoupFamilies);
 
     double* meshSoupLocOri = new double[7 * nSoupFamilies];
@@ -355,24 +355,24 @@ void run_PYRAMID_MESH() {
     auto quat = QuatFromAngleY(0);
 
     while (curr_time < timeEnd) {
-        gpu_sys.ApplyMeshMotion(0, bot_plane_pos, quat, ChVector3d(0, 0, 0), ChVector3d(0, 0, 0));
-        writeGranFile(gpu_sys);
+        dem_sys.ApplyMeshMotion(0, bot_plane_pos, quat, ChVector3d(0, 0, 0), ChVector3d(0, 0, 0));
+        writeGranFile(dem_sys);
         char filename[100];
 
         sprintf(filename, "%s/step%06d_meshes", output_dir.c_str(), currframe);
 
-        gpu_sys.WriteMeshes(std::string(filename));
+        dem_sys.WriteMeshes(std::string(filename));
 
-        advanceGranSim(gpu_sys);
+        advanceGranSim(dem_sys);
     }
 }
 
 void run_MESH_STEP() {
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
-    setCommonParameters(gpu_sys);
-    setCommonMeshParameters(gpu_sys);
+    ChSystemDemMesh dem_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
+    setCommonParameters(dem_sys);
+    setCommonMeshParameters(dem_sys);
 
-    gpu_sys.AddMesh(GetProjectsDataFile("gpu/meshes/testsuite/step.obj"), ChVector3f(0),
+    dem_sys.AddMesh(GetProjectsDataFile("dem/meshes/testsuite/step.obj"), ChVector3f(0),
                     ChMatrix33<float>(ChVector3f(box_X / 2, box_Y / 2, (float)step_height)), (float)step_mass);
 
     // Fill domain with particles
@@ -392,24 +392,24 @@ void run_MESH_STEP() {
 
     std::cout << "Created " << body_points.size() << " spheres" << std::endl;
 
-    gpu_sys.SetParticles(body_points);
+    dem_sys.SetParticles(body_points);
 
-    unsigned int nSoupFamilies = gpu_sys.GetNumMeshes();
+    unsigned int nSoupFamilies = dem_sys.GetNumMeshes();
     std::cout << nSoupFamilies << " soup families" << std::endl;
 
     ChVector3d meshSoupLoc(0, 0, -box_Z / 2 + 2 * sphere_radius);
     auto quat = QuatFromAngleY(0);
 
-    gpu_sys.Initialize();
+    dem_sys.Initialize();
 
     for (float t = 0; t < timeEnd; t += frame_step) {
-        gpu_sys.ApplyMeshMotion(0, meshSoupLoc, quat, ChVector3d(0, 0, 0), ChVector3d(0, 0, 0));
+        dem_sys.ApplyMeshMotion(0, meshSoupLoc, quat, ChVector3d(0, 0, 0), ChVector3d(0, 0, 0));
         std::cout << "Rendering frame " << currframe << std::endl;
         char filename[100];
         sprintf(filename, "%s/step%06u", output_dir.c_str(), currframe);
-        writeGranFile(gpu_sys);
-        gpu_sys.WriteMeshes(std::string(filename));
-        advanceGranSim(gpu_sys);
+        writeGranFile(dem_sys);
+        dem_sys.WriteMeshes(std::string(filename));
+        advanceGranSim(dem_sys);
     }
 }
 
@@ -418,9 +418,9 @@ void run_MESH_FORCE() {
     std::cout << "MESH_FORCE not implemented" << std::endl;
     return;
 
-    ChSystemGpuMesh gpu_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
-    setCommonParameters(gpu_sys);
-    setCommonMeshParameters(gpu_sys);
+    ChSystemDemMesh dem_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
+    setCommonParameters(dem_sys);
+    setCommonMeshParameters(dem_sys);
 
     utils::ChHCPSampler<float> sampler(2.1f * sphere_radius);
     auto pos = sampler.SampleBox(ChVector3d(0, 0, 26), ChVector3d(38, 38, 10));
@@ -433,45 +433,45 @@ void run_MESH_FORCE() {
     double sphere_weight = sphere_mass * std::abs(grav_Z);
     double total_weight = total_mass * std::abs(grav_Z);
 
-    gpu_sys.SetParticles(pos);
+    dem_sys.SetParticles(pos);
 
     // Add mesh
-    gpu_sys.AddMesh(GetProjectsDataFile("gpu/meshes/testsuite/square_box.obj"), ChVector3f(0),
+    dem_sys.AddMesh(GetProjectsDataFile("dem/meshes/testsuite/square_box.obj"), ChVector3f(0),
                     ChMatrix33<float>(ChVector3f(40, 40, 40)), 1.0f);
 
-    unsigned int nSoupFamilies = gpu_sys.GetNumMeshes();
+    unsigned int nSoupFamilies = dem_sys.GetNumMeshes();
     std::cout << nSoupFamilies << " soup families" << std::endl;
 
     // Triangle remains at the origin
     ChVector3d meshLoc(0, 0, 0);
     auto quat = QuatFromAngleY(0);
 
-    gpu_sys.Initialize();
+    dem_sys.Initialize();
 
     // Run a loop that is typical of co-simulation. For instance, the wheeled is moved a bit, which moves the
     // particles. Conversely, the particles impress a force and torque upon the mesh soup
     for (float t = 0; t < timeEnd; t += frame_step) {
-        gpu_sys.ApplyMeshMotion(0, meshLoc, quat, ChVector3d(0, 0, 0), ChVector3d(0, 0, 0));
+        dem_sys.ApplyMeshMotion(0, meshLoc, quat, ChVector3d(0, 0, 0), ChVector3d(0, 0, 0));
         std::cout << "Rendering frame " << currframe << std::endl;
         char filename[100];
         sprintf(filename, "%s/step%06u", output_dir.c_str(), currframe);
-        writeGranFile(gpu_sys);
-        gpu_sys.WriteMeshes(std::string(filename));
-        // gpu_sys.checkSDCounts(std::string(filename) + "SU", true, false);
+        writeGranFile(dem_sys);
+        dem_sys.WriteMeshes(std::string(filename));
+        // dem_sys.checkSDCounts(std::string(filename) + "SU", true, false);
         ChVector3d force;
         ChVector3d torque;
-        gpu_sys.CollectMeshContactForces(0, force, torque);
+        dem_sys.CollectMeshContactForces(0, force, torque);
         std::cout << "force_z: " << force.z() << "; total weight: " << total_weight << "; sphere weight "
                   << sphere_weight << std::endl;
         std::cout << "torque: " << torque.x() << ", " << torque.y() << ", " << torque.z() << std::endl;
 
-        advanceGranSim(gpu_sys);
+        advanceGranSim(dem_sys);
     }
 }
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
-        std::cout << "Usage:\n./test_GPU_testsuite <test_type>" << std::endl;
+        std::cout << "Usage:\n./test_DEM_testsuite <test_type>" << std::endl;
         std::cout << "  test_type : 0 - ROTF, 1 - PYRAMID, 2 - ROTF_MESH, 3 - PYRAMID_MESH, 4 - MESH_STEP 5:MESH_FORCE"
                   << std::endl;
         return 1;

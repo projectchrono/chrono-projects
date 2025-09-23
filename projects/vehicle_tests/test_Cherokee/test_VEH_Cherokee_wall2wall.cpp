@@ -21,10 +21,10 @@
 
 #include "chrono/utils/ChFilters.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/output/ChOutputASCII.h"
 
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
-#include "chrono_vehicle/output/ChVehicleOutputASCII.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
 
@@ -237,7 +237,7 @@ int main(int argc, char* argv[]) {
     cherokee.GetVehicle().SetChassisOutput(true);
     cherokee.GetVehicle().SetSuspensionOutput(0, true);
     cherokee.GetVehicle().SetSteeringOutput(0, true);
-    cherokee.GetVehicle().SetOutput(ChVehicleOutput::ASCII, out_dir, "output", 0.1);
+    cherokee.GetVehicle().SetOutput(ChOutput::Type::ASCII, ChOutput::Mode::FRAMES, out_dir, "output", 0.1);
 
     // Generate JSON information with available output channels
     cherokee.GetVehicle().ExportComponentList(out_dir + "/component_list.json");

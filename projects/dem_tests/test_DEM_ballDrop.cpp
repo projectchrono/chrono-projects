@@ -25,12 +25,12 @@
 
 #include "chrono_thirdparty/filesystem/path.h"
 
-#include "chrono_gpu/physics/ChSystemGpu.h"
+#include "chrono_dem/physics/ChSystemDem.h"
 
 using namespace chrono;
-using namespace chrono::gpu;
+using namespace chrono::dem;
 
-void setMaterialProperty(ChSystemGpu& gran_sys) {
+void setMaterialProperty(ChSystemDem& gran_sys) {
     double cor_p = 0.5;  // use cor_p = 0.9 for sand or glass beads
     double cor_w = 0.5;
     double youngs_modulus = 1e8;
@@ -46,10 +46,10 @@ void setMaterialProperty(ChSystemGpu& gran_sys) {
     gran_sys.SetRestitution_WALL(cor_w);
     gran_sys.SetPoissonRatio_SPH(poisson_ratio);
     gran_sys.SetPoissonRatio_WALL(poisson_ratio);
-    gran_sys.SetRollingMode(CHGPU_ROLLING_MODE::SCHWARTZ);
+    gran_sys.SetRollingMode(CHDEM_ROLLING_MODE::SCHWARTZ);
     gran_sys.SetRollingCoeff_SPH2SPH(mu_roll);
     gran_sys.SetRollingCoeff_SPH2WALL(mu_roll);
-    gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
+    gran_sys.SetFrictionMode(CHDEM_FRICTION_MODE::MULTI_STEP);
     gran_sys.SetStaticFrictionCoeff_SPH2SPH(mu_s2s);
     gran_sys.SetStaticFrictionCoeff_SPH2WALL(mu_s2w);
 }
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
     float time_impact = 0.5f;
     float time_end = time_settle + time_impact;
 
-    ChSystemGpu gran_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
+    ChSystemDem gran_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
     gran_sys.SetBDFixed(true);
 
     // create cylinder containter
@@ -101,15 +101,15 @@ int main(int argc, char* argv[]) {
     gran_sys.SetGravitationalAcceleration(ChVector3f(grav_X, grav_Y, grav_Z));
     gran_sys.SetPsiFactors(32.0f, 16.0f);
     gran_sys.SetFixedStepSize(step_size);
-    gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::FORWARD_EULER);
+    gran_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::FORWARD_EULER);
 
-    std::string out_dir = GetChronoOutputPath() + "GPU/";
+    std::string out_dir = GetChronoOutputPath() + "DEM/";
     filesystem::create_directory(filesystem::path(out_dir));
     out_dir = out_dir + "/ballDrop/";
     filesystem::create_directory(filesystem::path(out_dir));
 
     gran_sys.SetParticleOutputFlags(ABSV);
-    gran_sys.SetParticleOutputMode(CHGPU_OUTPUT_MODE::CSV);
+    gran_sys.SetParticleOutputMode(CHDEM_OUTPUT_MODE::CSV);
 
     gran_sys.Initialize();
     // Fix projectile until granular particles are settled

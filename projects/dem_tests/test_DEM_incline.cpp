@@ -18,23 +18,23 @@
 #include <iostream>
 #include <string>
 
-#include "GpuDemoUtils.h"
+#include "DemDemoUtils.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_gpu/physics/ChSystemGpu.h"
-#include "chrono_gpu/utils/ChGpuJsonParser.h"
+#include "chrono_dem/physics/ChSystemDem.h"
+#include "chrono_dem/utils/ChDemJsonParser.h"
 #include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
 using namespace chrono;
-using namespace chrono::gpu;
+using namespace chrono::dem;
 
 ChVector3f sphere_pos(0, 0, 0);
 
 enum ROLL_MODE { NONE = 0, SCHWARTZ = 1 };
 
 int main(int argc, char* argv[]) {
-    std::string inputJson = GetProjectsDataFile("gpu/Incline.json");
+    std::string inputJson = GetProjectsDataFile("dem/Incline.json");
     ROLL_MODE roll_mode = ROLL_MODE::SCHWARTZ;
     double theta = 5;
     float v_init_mag = 2;
@@ -47,12 +47,12 @@ int main(int argc, char* argv[]) {
         theta = std::stod(argv[3]);
         v_init_mag = std::stof(argv[4]);
     } else if (argc > 1) {
-        std::cout << "Usage:\n./test_GPU_incline <json_file> [<roll_mode> <angle> <vinit>]" << std::endl;
+        std::cout << "Usage:\n./test_DEM_incline <json_file> [<roll_mode> <angle> <vinit>]" << std::endl;
         std::cout << "  roll_mode: 0 - none, 1 - schwartz" << std::endl;
         return 1;
     }
 
-    ChGpuSimulationParameters params;
+    ChDemSimulationParameters params;
     if (!ParseJSON(inputJson, params)) {
         std ::cout << "ERROR: reading input file " << inputJson << std::endl;
         return 1;
@@ -63,16 +63,16 @@ int main(int argc, char* argv[]) {
     params.box_Z = 60;
 
     // Setup simulation
-    ChSystemGpu gran_sys(params.sphere_radius, params.sphere_density,
+    ChSystemDem gran_sys(params.sphere_radius, params.sphere_density,
                          ChVector3f(params.box_X, params.box_Y, params.box_Z));
     gran_sys.DisableMinLength();
 
     switch (roll_mode) {
         case ROLL_MODE::NONE:
-            gran_sys.SetRollingMode(CHGPU_ROLLING_MODE::NO_RESISTANCE);
+            gran_sys.SetRollingMode(CHDEM_ROLLING_MODE::NO_RESISTANCE);
             break;
         case ROLL_MODE::SCHWARTZ:
-            gran_sys.SetRollingMode(CHGPU_ROLLING_MODE::SCHWARTZ);
+            gran_sys.SetRollingMode(CHDEM_ROLLING_MODE::SCHWARTZ);
             gran_sys.SetRollingCoeff_SPH2SPH(params.rolling_friction_coeffS2S);
             gran_sys.SetRollingCoeff_SPH2WALL(params.rolling_friction_coeffS2W);
             break;
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
             return 1;
     }
 
-    gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
+    gran_sys.SetFrictionMode(CHDEM_FRICTION_MODE::MULTI_STEP);
     gran_sys.SetPsiFactors(params.psi_T, params.psi_L);
 
     // normal force model
@@ -122,9 +122,9 @@ int main(int argc, char* argv[]) {
 
     gran_sys.SetGravitationalAcceleration(ChVector3f(params.grav_X, params.grav_Y, params.grav_Z));
     gran_sys.SetParticleOutputMode(params.write_mode);
-    gran_sys.SetParticleOutputFlags(CHGPU_OUTPUT_FLAGS::VEL_COMPONENTS | CHGPU_OUTPUT_FLAGS::ANG_VEL_COMPONENTS);
+    gran_sys.SetParticleOutputFlags(CHDEM_OUTPUT_FLAGS::VEL_COMPONENTS | CHDEM_OUTPUT_FLAGS::ANG_VEL_COMPONENTS);
 
-    gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
+    gran_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
 
     std::vector<ChVector3f> body_points;
     body_points.push_back(sphere_pos);

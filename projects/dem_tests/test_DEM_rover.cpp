@@ -29,14 +29,14 @@
 #include "chrono/timestepper/ChTimestepper.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_gpu/physics/ChSystemGpu.h"
-#include "chrono_gpu/utils/ChGpuJsonParser.h"
+#include "chrono_dem/physics/ChSystemDem.h"
+#include "chrono_dem/utils/ChDemJsonParser.h"
 #include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
 using namespace chrono;
-using namespace chrono::gpu;
+using namespace chrono::dem;
 
 constexpr double mars_grav_mag = 370;
 
@@ -195,10 +195,10 @@ void writeMeshFrames(std::ostringstream& outstream,
 }
 
 int main(int argc, char* argv[]) {
-    std::string inputJson = GetProjectsDataFile("gpu/Rover.json");
+    std::string inputJson = GetProjectsDataFile("dem/Rover.json");
     if (argc != 5) {
         std::cout << "Usage:" << std::endl;
-        std::cout << "./ test_GPU_rover <json_file> < run_mode> <checkpoint_file_base> <gravity_angle (deg)>"
+        std::cout << "./ test_DEM_rover <json_file> < run_mode> <checkpoint_file_base> <gravity_angle (deg)>"
                   << std::endl;
         std::cout << "  run_mode: 0 - settling, 1 - running " << std::endl;
         return 1;
@@ -209,14 +209,14 @@ int main(int argc, char* argv[]) {
     std::string checkpoint_file_base = std::string(argv[3]);
     double input_grav_angle_deg = std::stod(argv[4]);
 
-    ChGpuSimulationParameters params;
+    ChDemSimulationParameters params;
     if (!ParseJSON(inputJson, params)) {
         std ::cout << "ERROR: reading input file " << inputJson << std::endl;
         return 1;
     }
 
-    std::string chassis_filename = GetProjectsDataFile("gpu/meshes/rover/MER_body.obj");  // For output only
-    std::string wheel_filename = GetProjectsDataFile("gpu/meshes/rover/wheel_scaled.obj");
+    std::string chassis_filename = GetProjectsDataFile("dem/meshes/rover/MER_body.obj");  // For output only
+    std::string wheel_filename = GetProjectsDataFile("dem/meshes/rover/wheel_scaled.obj");
 
     // Rotates gravity about +Y axis
     double grav_angle = 2.0 * CH_PI * input_grav_angle_deg / 360.0;
@@ -229,7 +229,7 @@ int main(int argc, char* argv[]) {
     double iteration_step = params.step_size;
 
     // Setup granular simulation
-    ChSystemGpuMesh gpu_sys(params.sphere_radius, params.sphere_density,
+    ChSystemDemMesh dem_sys(params.sphere_radius, params.sphere_density,
                             ChVector3f(params.box_X, params.box_Y, params.box_Z));
 
     double fill_bottom = 0;  // TODO
@@ -246,37 +246,37 @@ int main(int argc, char* argv[]) {
         body_points = loadCheckpointFile(checkpoint_file_base + ".csv");
     }
 
-    gpu_sys.SetParticles(body_points);
+    dem_sys.SetParticles(body_points);
 
-    gpu_sys.SetBDFixed(true);
+    dem_sys.SetBDFixed(true);
 
-    gpu_sys.SetKn_SPH2SPH(params.normalStiffS2S);
-    gpu_sys.SetKn_SPH2WALL(params.normalStiffS2W);
-    gpu_sys.SetKn_SPH2MESH(params.normalStiffS2M);
+    dem_sys.SetKn_SPH2SPH(params.normalStiffS2S);
+    dem_sys.SetKn_SPH2WALL(params.normalStiffS2W);
+    dem_sys.SetKn_SPH2MESH(params.normalStiffS2M);
 
-    gpu_sys.SetGn_SPH2SPH(params.normalDampS2S);
-    gpu_sys.SetGn_SPH2WALL(params.normalDampS2W);
-    gpu_sys.SetGn_SPH2MESH(params.normalDampS2M);
+    dem_sys.SetGn_SPH2SPH(params.normalDampS2S);
+    dem_sys.SetGn_SPH2WALL(params.normalDampS2W);
+    dem_sys.SetGn_SPH2MESH(params.normalDampS2M);
 
-    gpu_sys.SetKt_SPH2SPH(params.tangentStiffS2S);
-    gpu_sys.SetKt_SPH2WALL(params.tangentStiffS2W);
-    gpu_sys.SetKt_SPH2MESH(params.tangentStiffS2M);
+    dem_sys.SetKt_SPH2SPH(params.tangentStiffS2S);
+    dem_sys.SetKt_SPH2WALL(params.tangentStiffS2W);
+    dem_sys.SetKt_SPH2MESH(params.tangentStiffS2M);
 
-    gpu_sys.SetGt_SPH2SPH(params.tangentDampS2S);
-    gpu_sys.SetGt_SPH2WALL(params.tangentDampS2W);
-    gpu_sys.SetGt_SPH2MESH(params.tangentDampS2M);
+    dem_sys.SetGt_SPH2SPH(params.tangentDampS2S);
+    dem_sys.SetGt_SPH2WALL(params.tangentDampS2W);
+    dem_sys.SetGt_SPH2MESH(params.tangentDampS2M);
 
-    gpu_sys.SetCohesionRatio(params.cohesion_ratio);
-    gpu_sys.SetAdhesionRatio_SPH2MESH(params.adhesion_ratio_s2m);
-    gpu_sys.SetAdhesionRatio_SPH2WALL(params.adhesion_ratio_s2w);
-    gpu_sys.SetGravitationalAcceleration(ChVector3d(Gx, Gy, Gz));
+    dem_sys.SetCohesionRatio(params.cohesion_ratio);
+    dem_sys.SetAdhesionRatio_SPH2MESH(params.adhesion_ratio_s2m);
+    dem_sys.SetAdhesionRatio_SPH2WALL(params.adhesion_ratio_s2w);
+    dem_sys.SetGravitationalAcceleration(ChVector3d(Gx, Gy, Gz));
 
-    gpu_sys.SetFixedStepSize(params.step_size);
-    gpu_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
-    gpu_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
-    gpu_sys.SetStaticFrictionCoeff_SPH2SPH(params.static_friction_coeffS2S);
-    gpu_sys.SetStaticFrictionCoeff_SPH2WALL(params.static_friction_coeffS2W);
-    gpu_sys.SetStaticFrictionCoeff_SPH2MESH(params.static_friction_coeffS2M);
+    dem_sys.SetFixedStepSize(params.step_size);
+    dem_sys.SetFrictionMode(CHDEM_FRICTION_MODE::MULTI_STEP);
+    dem_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
+    dem_sys.SetStaticFrictionCoeff_SPH2SPH(params.static_friction_coeffS2S);
+    dem_sys.SetStaticFrictionCoeff_SPH2WALL(params.static_friction_coeffS2W);
+    dem_sys.SetStaticFrictionCoeff_SPH2MESH(params.static_friction_coeffS2M);
 
     // Create rigid wheel simulation
     ChSystemNSC rover_sys;
@@ -325,17 +325,17 @@ int main(int argc, char* argv[]) {
     addWheelBody(rover_sys, chassis_body, wheel_filename,
                  ChVector3d(rear_wheel_offset_x, -rear_wheel_offset_y, wheel_offset_z));
 
-    // Add collision mesh to GPU system
-    gpu_sys.AddMesh(wheel_filename, ChVector3f(0), wheel_scaling, wheel_mass);
+    // Add collision mesh to DEM system
+    dem_sys.AddMesh(wheel_filename, ChVector3f(0), wheel_scaling, wheel_mass);
 
-    gpu_sys.SetParticleOutputMode(params.write_mode);
-    gpu_sys.SetVerbosity(params.verbose);
+    dem_sys.SetParticleOutputMode(params.write_mode);
+    dem_sys.SetVerbosity(params.verbose);
     filesystem::create_directory(filesystem::path(params.output_dir));
 
-    unsigned int nSoupFamilies = gpu_sys.GetNumMeshes();
+    unsigned int nSoupFamilies = dem_sys.GetNumMeshes();
     std::cout << nSoupFamilies << " soup families" << std::endl;
 
-    gpu_sys.Initialize();
+    dem_sys.Initialize();
 
     std::cout << "Rendering at " << out_fps << "FPS" << std::endl;
 
@@ -345,10 +345,10 @@ int main(int argc, char* argv[]) {
     unsigned int curr_step = 0;
 
     if (run_mode == RUN_MODE::SETTLING) {
-        gpu_sys.EnableMeshCollision(false);
+        dem_sys.EnableMeshCollision(false);
         params.time_end = time_settling;
     } else if (run_mode == RUN_MODE::TESTING) {
-        gpu_sys.EnableMeshCollision(true);
+        dem_sys.EnableMeshCollision(true);
         params.time_end = time_running;
     }
 
@@ -361,7 +361,7 @@ int main(int argc, char* argv[]) {
             printf("Setting wheel free!\n");
             chassis_fixed = false;
             chassis_body->SetFixed(false);
-            double max_terrain_z = gpu_sys.GetMaxParticleZ();
+            double max_terrain_z = dem_sys.GetMaxParticleZ();
             printf("terrain max is %f\n", max_terrain_z);
             // put terrain just below bottom of wheels
             terrain_height_offset = max_terrain_z + height_offset_chassis_to_bottom;
@@ -371,11 +371,11 @@ int main(int argc, char* argv[]) {
 
             curr_body->AddAccumulator();
 
-            gpu_sys.ApplyMeshMotion(i, curr_body->GetPos(), curr_body->GetRot(), curr_body->GetLinVel(),
+            dem_sys.ApplyMeshMotion(i, curr_body->GetPos(), curr_body->GetRot(), curr_body->GetLinVel(),
                                     curr_body->GetAngVelParent());
         }
 
-        gpu_sys.AdvanceSimulation(iteration_step);
+        dem_sys.AdvanceSimulation(iteration_step);
         rover_sys.DoStepDynamics(iteration_step);
 
         ChVector3d wheel_force;
@@ -383,7 +383,7 @@ int main(int argc, char* argv[]) {
         for (unsigned int i = 0; i < wheel_bodies.size(); i++) {
             auto curr_body = wheel_bodies.at(i);
 
-            gpu_sys.CollectMeshContactForces(i, wheel_force, wheel_torque);
+            dem_sys.CollectMeshContactForces(i, wheel_force, wheel_torque);
 
             curr_body->EmptyAccumulator(0);
             curr_body->AccumulateForce(0, wheel_force, curr_body->GetPos(), false);
@@ -396,7 +396,7 @@ int main(int argc, char* argv[]) {
             printf("Wheel torques: %f, %f, %f\n", wheel_torque.x(), wheel_torque.y(), wheel_torque.z());
             char filename[100];
             sprintf(filename, "%s/step%06d", params.output_dir.c_str(), currframe++);
-            gpu_sys.WriteParticleFile(std::string(filename));
+            dem_sys.WriteParticleFile(std::string(filename));
             std::string mesh_output = std::string(filename) + "_meshframes.csv";
             std::ofstream meshfile(mesh_output);
             std::ostringstream outstream;
@@ -415,9 +415,9 @@ int main(int argc, char* argv[]) {
     }
 
     if (run_mode == RUN_MODE::SETTLING) {
-        gpu_sys.SetParticleOutputMode(CHGPU_OUTPUT_MODE::CSV);
+        dem_sys.SetParticleOutputMode(CHDEM_OUTPUT_MODE::CSV);
 
-        gpu_sys.WriteParticleFile(checkpoint_file_base);
+        dem_sys.WriteParticleFile(checkpoint_file_base);
     }
 
     clock_t end = std::clock();

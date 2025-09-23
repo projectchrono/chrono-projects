@@ -23,14 +23,14 @@
 #include "chrono/physics/ChBody.h"
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_gpu/physics/ChSystemGpu.h"
-#include "chrono_gpu/utils/ChGpuJsonParser.h"
+#include "chrono_dem/physics/ChSystemDem.h"
+#include "chrono_dem/utils/ChDemJsonParser.h"
 #include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
 using namespace chrono;
-using namespace chrono::gpu;
+using namespace chrono::dem;
 
 // Normal stress values for four tests (units in cgs 3.1e4 N/cm^2 = 3.1kPa)
 double normal_stresses[] = {3.1e4, 6.4e4, 12.5e4, 24.2e4};
@@ -76,7 +76,7 @@ double getVoidRatio(double top_plate_pos, int nb, double sphere_radius) {
     return voidRatio;
 }
 
-double CalcKE(ChSystemGpuMesh& gpu_sys, double sphere_radius, double sphere_density, int nb) {
+double CalcKE(ChSystemDemMesh& dem_sys, double sphere_radius, double sphere_density, int nb) {
     double vol_sphere = 4.0f / 3.0f * chrono::CH_PI * std::pow(sphere_radius, 3);
     double mass_sphere = vol_sphere * sphere_density;
     double inertia_sphere = 0.4f * mass_sphere * sphere_radius * sphere_radius;
@@ -84,14 +84,14 @@ double CalcKE(ChSystemGpuMesh& gpu_sys, double sphere_radius, double sphere_dens
     ChVector3f lin_velo;
     double KE = 0;
     for (int i = 0; i < nb; i++) {
-        lin_velo = gpu_sys.GetParticleVelocity(i);
-        ang_velo = gpu_sys.GetParticleAngVelocity(i);
+        lin_velo = dem_sys.GetParticleVelocity(i);
+        ang_velo = dem_sys.GetParticleAngVelocity(i);
         KE = 0.5f * mass_sphere * lin_velo.Length2() + 0.5f * inertia_sphere * ang_velo.Length2();
     }
     return KE;
 }
 
-void SetupGranSystem(ChSystemGpuMesh& gpu_sys) {
+void SetupGranSystem(ChSystemDemMesh& dem_sys) {
     double cor_p = 0.87;
     double cor_w = 0.5;
     double youngs_modulus = 4e8;  // 40Mpa = 4e7Pa = 4e8 g/(cms^2)
@@ -99,36 +99,36 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys) {
     double mu_s2s = 0.18;
     double mu_s2w = 0.40;  // tune this
 
-    gpu_sys.UseMaterialBasedModel(true);
+    dem_sys.UseMaterialBasedModel(true);
 
-    gpu_sys.SetYoungModulus_SPH(youngs_modulus);
-    gpu_sys.SetYoungModulus_WALL(youngs_modulus);
-    gpu_sys.SetYoungModulus_MESH(youngs_modulus);
+    dem_sys.SetYoungModulus_SPH(youngs_modulus);
+    dem_sys.SetYoungModulus_WALL(youngs_modulus);
+    dem_sys.SetYoungModulus_MESH(youngs_modulus);
 
-    gpu_sys.SetRestitution_SPH(cor_p);
-    gpu_sys.SetRestitution_WALL(cor_w);
-    gpu_sys.SetRestitution_MESH(cor_w);
+    dem_sys.SetRestitution_SPH(cor_p);
+    dem_sys.SetRestitution_WALL(cor_w);
+    dem_sys.SetRestitution_MESH(cor_w);
 
-    gpu_sys.SetPoissonRatio_SPH(poisson_ratio);
-    gpu_sys.SetPoissonRatio_WALL(poisson_ratio);
-    gpu_sys.SetPoissonRatio_MESH(poisson_ratio);
-    gpu_sys.SetGravitationalAcceleration(ChVector3f(grav_X, grav_Y, grav_Z));
+    dem_sys.SetPoissonRatio_SPH(poisson_ratio);
+    dem_sys.SetPoissonRatio_WALL(poisson_ratio);
+    dem_sys.SetPoissonRatio_MESH(poisson_ratio);
+    dem_sys.SetGravitationalAcceleration(ChVector3f(grav_X, grav_Y, grav_Z));
 
-    gpu_sys.SetFrictionMode(chrono::gpu::CHGPU_FRICTION_MODE::MULTI_STEP);
-    gpu_sys.SetStaticFrictionCoeff_SPH2SPH(mu_s2s);
-    gpu_sys.SetStaticFrictionCoeff_SPH2WALL(mu_s2w);
-    gpu_sys.SetStaticFrictionCoeff_SPH2MESH(mu_s2w);
+    dem_sys.SetFrictionMode(chrono::dem::CHDEM_FRICTION_MODE::MULTI_STEP);
+    dem_sys.SetStaticFrictionCoeff_SPH2SPH(mu_s2s);
+    dem_sys.SetStaticFrictionCoeff_SPH2WALL(mu_s2w);
+    dem_sys.SetStaticFrictionCoeff_SPH2MESH(mu_s2w);
 
-    gpu_sys.SetParticleOutputMode(CHGPU_OUTPUT_MODE::CSV);
-    gpu_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
-    gpu_sys.SetFixedStepSize(step_size);
-    gpu_sys.SetBDFixed(true);
+    dem_sys.SetParticleOutputMode(CHDEM_OUTPUT_MODE::CSV);
+    dem_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
+    dem_sys.SetFixedStepSize(step_size);
+    dem_sys.SetBDFixed(true);
 
     // start outside BD by 10 cm
     ChVector3f plane_pos(0.0f, 0.0f, fill_bottom);
     ChVector3f plane_normal(0, 0, 1.0f);
 
-    size_t plane_bc_id = gpu_sys.CreateBCPlane(plane_pos, plane_normal, false);
+    size_t plane_bc_id = dem_sys.CreateBCPlane(plane_pos, plane_normal, false);
 
     double spacing = 2.001 * sphere_radius;
 
@@ -151,14 +151,14 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys) {
 
     std::cout << "Created " << body_points.size() << " spheres" << std::endl;
 
-    gpu_sys.SetParticles(body_points);
+    dem_sys.SetParticles(body_points);
 
     // Mesh values
     std::vector<std::string> mesh_filenames;
 
-    mesh_filenames.push_back(std::string(GetProjectsDataFile("gpu/meshes/directshear/shear_bottom.obj")));
-    mesh_filenames.push_back(std::string(GetProjectsDataFile("gpu/meshes/directshear/shear_top.obj")));
-    mesh_filenames.push_back(std::string(GetProjectsDataFile("gpu/meshes/directshear/downward_square.obj")));
+    mesh_filenames.push_back(std::string(GetProjectsDataFile("dem/meshes/directshear/shear_bottom.obj")));
+    mesh_filenames.push_back(std::string(GetProjectsDataFile("dem/meshes/directshear/shear_top.obj")));
+    mesh_filenames.push_back(std::string(GetProjectsDataFile("dem/meshes/directshear/downward_square.obj")));
 
     ChMatrix33<float> scale(ChVector3f(box_r, box_r, box_r));
     std::vector<ChMatrix33<float>> mesh_rotscales = {scale, scale, scale};
@@ -166,10 +166,10 @@ void SetupGranSystem(ChSystemGpuMesh& gpu_sys) {
                                                       ChVector3f(0, 0, 0)};
     std::vector<float> mesh_masses = {1000, 1000, (float)plate_mass};
 
-    gpu_sys.AddMeshes(mesh_filenames, mesh_translations, mesh_rotscales, mesh_masses);
+    dem_sys.AddMeshes(mesh_filenames, mesh_translations, mesh_rotscales, mesh_masses);
 }
 
-void SetInitialMeshes(ChSystemGpuMesh& gpu_sys, const std::shared_ptr<ChBody> plate) {
+void SetInitialMeshes(ChSystemDemMesh& dem_sys, const std::shared_ptr<ChBody> plate) {
     // initial positions and velocity
     ChVector3f mesh_pos(0, 0, 0);
     ChQuaternion<float> mesh_rot(1, 0, 0, 0);
@@ -177,25 +177,25 @@ void SetInitialMeshes(ChSystemGpuMesh& gpu_sys, const std::shared_ptr<ChBody> pl
     ChVector3f mesh_ang_vel(0, 0, 0);
 
     // Bottom bin
-    gpu_sys.ApplyMeshMotion(bottom_i, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
+    dem_sys.ApplyMeshMotion(bottom_i, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
 
     // Top bin
-    gpu_sys.ApplyMeshMotion(top_i, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
+    dem_sys.ApplyMeshMotion(top_i, mesh_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
 
     // Plate
     ChVector3f plate_pos(0, 0, box_Z / 2.0f);
-    gpu_sys.ApplyMeshMotion(plate_i, plate_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
+    dem_sys.ApplyMeshMotion(plate_i, plate_pos, mesh_rot, mesh_lin_vel, mesh_ang_vel);
 }
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
-        std::cout << "usage: ./test_GPU_directshear <normal_stress_index>" << std::endl;
+        std::cout << "usage: ./test_DEM_directshear <normal_stress_index>" << std::endl;
         return 1;
     }
 
     int normal_stress_id = std::atoi(argv[1]);
 
-    ChSystemGpuMesh gran_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
+    ChSystemDemMesh gran_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
 
     std::string out_dir = GetChronoOutputPath() + "shear/";
     filesystem::create_directory(filesystem::path(out_dir));

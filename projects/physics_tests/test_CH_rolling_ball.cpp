@@ -41,19 +41,20 @@ using namespace chrono;
 // Callback functor for contact reporting
 // -----------------------------------------------------------------------------
 class ContactManager : public ChContactContainer::ReportContactCallback {
-public:
+  public:
     const ChVector3d& GetForce() const { return m_force; }
 
   private:
     virtual bool OnReportContact(const ChVector3d& pA,
                                  const ChVector3d& pB,
                                  const ChMatrix33<>& plane_coord,
-                                 const double& distance,
-                                 const double& eff_radius,
+                                 double distance,
+                                 double eff_radius,
                                  const ChVector3d& cforce,
                                  const ChVector3d& ctorque,
                                  ChContactable* modA,
-                                 ChContactable* modB) override {
+                                 ChContactable* modB,
+                                 int constraint_offset) override {
         m_force = cforce;
         return true;
     }

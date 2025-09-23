@@ -22,14 +22,14 @@
 
 #include "chrono/core/ChGlobal.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_gpu/physics/ChSystemGpu.h"
-#include "chrono_gpu/utils/ChGpuJsonParser.h"
+#include "chrono_dem/physics/ChSystemDem.h"
+#include "chrono_dem/utils/ChDemJsonParser.h"
 #include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
 using namespace chrono;
-using namespace chrono::gpu;
+using namespace chrono::dem;
 
 void writeMeshFrames(std::ostringstream& outstream,
                      const std::string obj_name,
@@ -60,15 +60,15 @@ void writeMeshFrames(std::ostringstream& outstream,
 }
 
 int main(int argc, char* argv[]) {
-    std::string inputJson = GetProjectsDataFile("gpu/comvessels.json");
+    std::string inputJson = GetProjectsDataFile("dem/comvessels.json");
     if (argc == 2) {
         inputJson = std::string(argv[1]);
     } else if (argc > 1) {
-        std::cout << "Usage:\n./test_GPU_commvessels <json_file>" << std::endl;
+        std::cout << "Usage:\n./test_DEM_commvessels <json_file>" << std::endl;
         return 1;
     }
 
-    ChGpuSimulationParameters params;
+    ChDemSimulationParameters params;
     if (!ParseJSON(inputJson, params)) {
         std ::cout << "ERROR: reading input file " << inputJson << std::endl;
         return 1;
@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
     std::cout << "sphere_radius " << params.sphere_radius << std::endl;
     std::cout << "sphere_density " << params.sphere_density << std::endl;
 
-    ChSystemGpuMesh gran_sys(params.sphere_radius, params.sphere_density, ChVector3f(Bx, By, Bz));
+    ChSystemDemMesh gran_sys(params.sphere_radius, params.sphere_density, ChVector3f(Bx, By, Bz));
 
     gran_sys.SetVerbosity(params.verbose);
 
@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
     gran_sys.SetCohesionRatio(params.cohesion_ratio);
     gran_sys.SetAdhesionRatio_SPH2MESH(params.adhesion_ratio_s2m);
     gran_sys.SetAdhesionRatio_SPH2WALL(params.adhesion_ratio_s2w);
-    gran_sys.SetFrictionMode(chrono::gpu::CHGPU_FRICTION_MODE::FRICTIONLESS);
+    gran_sys.SetFrictionMode(chrono::dem::CHDEM_FRICTION_MODE::FRICTIONLESS);
 
     gran_sys.SetStaticFrictionCoeff_SPH2SPH(params.static_friction_coeffS2S);
     gran_sys.SetStaticFrictionCoeff_SPH2WALL(params.static_friction_coeffS2W);
@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
 
     gran_sys.SetParticleOutputMode(params.write_mode);
     filesystem::create_directory(filesystem::path(params.output_dir));
-    gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
+    gran_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
 
     gran_sys.SetFixedStepSize(params.step_size);
 
@@ -152,7 +152,7 @@ int main(int argc, char* argv[]) {
     gran_sys.SetParticles(body_points);
 
     // Add mesh
-    std::string mesh_filename(GetProjectsDataFile("gpu/meshes/cylinder_refined.obj"));
+    std::string mesh_filename(GetProjectsDataFile("dem/meshes/cylinder_refined.obj"));
     gran_sys.AddMesh(mesh_filename, ChVector3f(0), ChMatrix33<float>(scaling), 10.0f);
 
     gran_sys.Initialize();

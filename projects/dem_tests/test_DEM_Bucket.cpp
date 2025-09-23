@@ -24,22 +24,22 @@
 #include "chrono/core/ChGlobal.h"
 #include "chrono/utils/ChUtilsSamplers.h"
 
-#include "chrono_gpu/physics/ChSystemGpu.h"
-#include "chrono_gpu/utils/ChGpuJsonParser.h"
+#include "chrono_dem/physics/ChSystemDem.h"
+#include "chrono_dem/utils/ChDemJsonParser.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
 using namespace chrono;
-using namespace chrono::gpu;
+using namespace chrono::dem;
 
 int currcapture = 0;
 int currframe = 0;
 
-ChGpuSimulationParameters params;
+ChDemSimulationParameters params;
 
-std::string box_filename = GetProjectsDataFile("gpu/meshes/BD_Box.obj");
+std::string box_filename = GetProjectsDataFile("dem/meshes/BD_Box.obj");
 
 // Take a ChBody and write its
 void writeBoxMesh(std::ostringstream& outstream) {
@@ -80,7 +80,7 @@ std::vector<std::string> bc_names;
 constexpr float F_CGS_TO_SI = 1e-5f;
 constexpr float M_CGS_TO_SI = 1e-3f;
 
-void writeForcesFile(ChSystemGpu& gran_sys) {
+void writeForcesFile(ChSystemDem& gran_sys) {
     char forcefile[100];
     sprintf(forcefile, "%s/force%06d.csv", (params.output_dir + "/forces").c_str(), currcapture++);
     printf("force file is %s\n", forcefile);
@@ -108,22 +108,22 @@ void writeForcesFile(ChSystemGpu& gran_sys) {
 }
 
 int main(int argc, char* argv[]) {
-    std::string inputJson = GetProjectsDataFile("gpu/Bucket.json");
+    std::string inputJson = GetProjectsDataFile("dem/Bucket.json");
     if (argc == 2) {
         inputJson = std::string(argv[1]);
     } else if (argc > 1) {
-        std::cout << "Usage:\n./test_GPU_Bucket <json_file>" << std::endl;
+        std::cout << "Usage:\n./test_DEM_Bucket <json_file>" << std::endl;
         return 1;
     }
 
-    ChGpuSimulationParameters params;
+    ChDemSimulationParameters params;
     if (!ParseJSON(inputJson, params)) {
         std ::cout << "ERROR: reading input file " << inputJson << std::endl;
         return 1;
     }
 
     // Setup simulation
-    ChSystemGpu gran_sys(params.sphere_radius, params.sphere_density,
+    ChSystemDem gran_sys(params.sphere_radius, params.sphere_density,
                          ChVector3f(params.box_X, params.box_Y, params.box_Z));
     gran_sys.SetPsiFactors(params.psi_T, params.psi_L);
 
@@ -202,35 +202,35 @@ int main(int argc, char* argv[]) {
     bc_names.push_back("bottom_plane_bc_Z");
     bc_names.push_back("top_plane_bc_Z");
 
-    gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::FORWARD_EULER);
+    gran_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::FORWARD_EULER);
 
     switch (params.run_mode) {
         case run_mode::MULTI_STEP:
-            gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
-            gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::FORWARD_EULER);
+            gran_sys.SetFrictionMode(CHDEM_FRICTION_MODE::MULTI_STEP);
+            gran_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::FORWARD_EULER);
             break;
         case run_mode::ONE_STEP:
-            gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::SINGLE_STEP);
-            gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::FORWARD_EULER);
+            gran_sys.SetFrictionMode(CHDEM_FRICTION_MODE::SINGLE_STEP);
+            gran_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::FORWARD_EULER);
             break;
         case run_mode::FRICLESS_CHUNG:
-            gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::FRICTIONLESS);
-            gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CHUNG);
+            gran_sys.SetFrictionMode(CHDEM_FRICTION_MODE::FRICTIONLESS);
+            gran_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::CHUNG);
             break;
 
         case run_mode::FRICLESS_CD:
-            gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::FRICTIONLESS);
-            gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
+            gran_sys.SetFrictionMode(CHDEM_FRICTION_MODE::FRICTIONLESS);
+            gran_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
             break;
 
         case run_mode::FRICTIONLESS:
-            gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::FRICTIONLESS);
-            gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::FORWARD_EULER);
+            gran_sys.SetFrictionMode(CHDEM_FRICTION_MODE::FRICTIONLESS);
+            gran_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::FORWARD_EULER);
             break;
 
         default:
             // fall through to frictionless as default
-            gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::FRICTIONLESS);
+            gran_sys.SetFrictionMode(CHDEM_FRICTION_MODE::FRICTIONLESS);
     }
 
     gran_sys.SetFixedStepSize(params.step_size);

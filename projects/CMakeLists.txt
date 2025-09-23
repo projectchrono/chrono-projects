@@ -9,7 +9,7 @@ if(ENABLE_PROJECTS)
   mark_as_advanced(CLEAR ENABLE_PROJECTS_MBS_TESTS)
   mark_as_advanced(CLEAR ENABLE_PROJECTS_FEA_TESTS)
   mark_as_advanced(CLEAR ENABLE_PROJECTS_COSIMULATION)
-  mark_as_advanced(CLEAR ENABLE_PROJECTS_GPU_TESTS)
+  mark_as_advanced(CLEAR ENABLE_PROJECTS_DEM_TESTS)
   mark_as_advanced(CLEAR ENABLE_PROJECTS_SYN_HIGHWAY)
 else()
   mark_as_advanced(FORCE ENABLE_PROJECTS_DEM_VALIDATION)
@@ -21,7 +21,7 @@ else()
   mark_as_advanced(FORCE ENABLE_PROJECTS_MBS_TESTS)
   mark_as_advanced(FORCE ENABLE_PROJECTS_FEA_TESTS)
   mark_as_advanced(FORCE ENABLE_PROJECTS_COSIMULATION)
-  mark_as_advanced(FORCE ENABLE_PROJECTS_GPU_TESTS)
+  mark_as_advanced(FORCE ENABLE_PROJECTS_DEM_TESTS)
   mark_as_advanced(FORCE ENABLE_PROJECTS_SYN_HIGHWAY)
   return()
 endif()
@@ -57,8 +57,8 @@ cmake_dependent_option(ENABLE_PROJECTS_FEA_TESTS
 cmake_dependent_option(ENABLE_PROJECTS_COSIMULATION 
 	"Enable projects for Chrono::Vehicle cosimulation" ON
 	"ENABLE_PROJECTS" OFF)
-cmake_dependent_option(ENABLE_PROJECTS_GPU_TESTS 
-	"Enable projects for Chrono::GPU granular tests" ON
+cmake_dependent_option(ENABLE_PROJECTS_DEM_TESTS 
+	"Enable projects for Chrono::DEM granular tests" ON
 	"ENABLE_PROJECTS" OFF)
 cmake_dependent_option(ENABLE_PROJECTS_SYN_HIGHWAY 
 	"Enable SynChrono Highway test" OFF
@@ -92,8 +92,8 @@ if (ENABLE_PROJECTS_VEHICLE_TESTS)
   add_subdirectory(vehicle_tests)
 endif()
 
-if (ENABLE_PROJECTS_GPU_TESTS)
-  add_subdirectory(gpu_tests)
+if (ENABLE_PROJECTS_DEM_TESTS)
+  add_subdirectory(dem_tests)
 endif()
 
 if (ENABLE_PROJECTS_COSIMULATION)

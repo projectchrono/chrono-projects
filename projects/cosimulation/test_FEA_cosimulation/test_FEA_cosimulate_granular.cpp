@@ -36,10 +36,6 @@
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-#ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChVisualSystemOpenGL.h"
-#endif
-
 using namespace chrono;
 using namespace chrono::fea;
 using namespace chrono::irrlicht;
@@ -205,7 +201,6 @@ int main(int argc, char* argv[]) {
      *
     */
 
-#ifndef CHRONO_OPENGL
     auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
     vis->SetWindowSize(800, 600);
     vis->SetWindowTitle("FEA contacts");
@@ -215,7 +210,6 @@ int main(int argc, char* argv[]) {
     vis->AddCamera(ChVector3d(3, 1.4, -3.2));
     vis->AddTypicalLights();
     vis->AttachSystem(&sys);
-#endif
 
     //
     // THE SOFT-REAL-TIME CYCLE
@@ -324,13 +318,6 @@ int main(int argc, char* argv[]) {
     ChVector3d center(0, 0, 0);
     gen.CreateObjectsBox(sampler, center, hdims);
 
-#ifdef CHRONO_OPENGL
-    // Initialize OpenGL
-    opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.Initialize(1280, 720, "DEMO TTI", systemG);
-    gl_window.SetCamera(ChVector3d(1, 1.4, -1.2), ChVector3d(0, tire_rad, 0), ChVector3d(0, 1, 0));
-    gl_window.SetRenderMode(opengl::WIREFRAME);
-#endif
     // END MULTICORE SYSTEM INITIALIZATION
 
     // Begin time loop
@@ -338,21 +325,8 @@ int main(int argc, char* argv[]) {
     int timeIndex = 0;
     double time = 0;
     int frameIndex = 0;
-#ifdef CHRONO_OPENGL
-    while (true) {
-#else
     while (vis->Run()) {
-#endif
-// while (time<time_end) {
-
-// STEP 1: ADVANCE DYNAMICS OF GRANULAR SYSTEM
-#ifdef CHRONO_OPENGL
-        if (gl_window.Active()) {
-            gl_window.DoStepDynamics(time_step);
-            gl_window.Render();
-        } else
-            break;
-#else
+        // STEP 1: ADVANCE DYNAMICS OF GRANULAR SYSTEM
         systemG->DoStepDynamics(time_step);
 
         if (timeIndex % out_steps == 0 && saveData) {
@@ -364,13 +338,13 @@ int main(int argc, char* argv[]) {
             chrono::utils::ChWriterCSV csv(delim);
             csv << triangles.size() << std::endl;
             for (int i = 0; i < triangles.size(); i++) {
-                csv << systemG->GetBodies().at(i)->GetPos() << vert_pos[triangles[i].x()]
-                    << vert_pos[triangles[i].y()] << vert_pos[triangles[i].z()] << std::endl;
+                csv << systemG->GetBodies().at(i)->GetPos() << vert_pos[triangles[i].x()] << vert_pos[triangles[i].y()]
+                    << vert_pos[triangles[i].z()] << std::endl;
             }
             sprintf(filename, "../POVRAY/triangles_%d.dat", frameIndex);
             csv.WriteToFile(filename);
         }
-#endif
+
         // END STEP 1
 
         // STEP 2: APPLY CONTACT FORCES FROM GRANULAR TO TIRE SYSTEM
@@ -393,12 +367,9 @@ int main(int argc, char* argv[]) {
             vert_forces[triangles[i].z()] += ChVector3d(force.x, force.y, force.z) / 3;
         }
         mrigidmeshload->InputSimpleForces(vert_forces, vert_indexes);
-// END STEP 2
+        // END STEP 2
 
-// STEP 3: ADVANCE DYNAMICS OF TIRE SYSTEM
-#ifdef CHRONO_OPENGL
-        sys.DoStepDynamics(time_step);
-#else
+        // STEP 3: ADVANCE DYNAMICS OF TIRE SYSTEM
         vis->BeginScene();
         vis->Render();
 
@@ -408,7 +379,6 @@ int main(int argc, char* argv[]) {
             // takeScreenshot(application.GetDevice(),frameIndex);
             frameIndex++;
         }
-#endif
         // END STEP 3
 
         // STEP 4: UPDATE THE POSITION/VELOCITY OF THE TIRE GEOMETRY IN GRANULAR SYSTEM
@@ -425,7 +395,7 @@ int main(int argc, char* argv[]) {
             vel = (vert_vel[triangles[i].x()] + vert_vel[triangles[i].y()] + vert_vel[triangles[i].z()]) / 3.0;
             triBody->SetLinVel(vel);
 
-            //            // Update visual assets TODO: chrono_opengl cannot handle dynamic meshes yet
+            //            // Update visual assets
             //            for (int j = 0; j < triBody->GetAssets().size(); j++) {
             //              std::shared_ptr<ChAsset> asset = triBody->GetAssets()[j];
             //              if (std::dynamic_pointer_cast<ChVisualShapeTriangleMesh>(asset)) {
@@ -454,7 +424,6 @@ int main(int argc, char* argv[]) {
         }
         // END STEP 4
 
-#ifndef CHRONO_OPENGL
         // now, just for debugging and some fun, draw some triangles
         // (only those that have a vertex that has a force applied):
         vert_forcesVisualization.clear();
@@ -465,8 +434,7 @@ int main(int argc, char* argv[]) {
                 vert_indexesVisualization.push_back(vert_indexes[i]);
             }
         }
-        draw_affected_triangles(*vis, vert_pos, triangles, vert_indexesVisualization, vert_forcesVisualization,
-                                0.01);
+        draw_affected_triangles(*vis, vert_pos, triangles, vert_indexesVisualization, vert_forcesVisualization, 0.01);
 
         // End of cosimulation block
         // -------------------------------------------------------------------------
@@ -475,7 +443,7 @@ int main(int argc, char* argv[]) {
                         true);
 
         vis->EndScene();
-#endif
+
         timeIndex++;
         time += time_step;
         std::cout << time << std::endl;

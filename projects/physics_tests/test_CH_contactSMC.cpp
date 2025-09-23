@@ -34,8 +34,8 @@ class MyContactContainer : public ChContactContainerSMC {
 
     // Traverse the list contactlist_6_6
     void ScanContacts(std::shared_ptr<ChBody> ball) {
-        auto iter = contactlist_6_6.begin();
-        while (iter != contactlist_6_6.end()) {
+        auto iter = contacts.begin();
+        while (iter != contacts.end()) {
             ChContactable* objA = (*iter)->GetObjA();
             ChContactable* objB = (*iter)->GetObjB();
             ChVector3d pA = (*iter)->GetContactP1();

@@ -1,32 +1,32 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono::Gpu module.
+# CMake configuration file for projects requiring the Chrono::Dem module.
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
 
-message(STATUS "\n---- GPU projects\n")
+message(STATUS "\n---- DEM projects\n")
 
 #--------------------------------------------------------------
 # List of all executables
 #--------------------------------------------------------------
 
 set(TESTS
-        test_GPU_DamBreak
-        test_GPU_Bucket
-        test_GPU_rover
-        test_GPU_directshear
-        test_GPU_Coneflow
-        test_GPU_commvessels
-        test_GPU_milsettle
-        test_GPU_testsuite
-        test_GPU_normal
-        test_GPU_slide
-        test_GPU_roll
-        test_GPU_incline
-        #test_GPU_repose
-        test_GPU_soilBin
-        test_GPU_ballDrop
-        test_GPU_compression
+        test_DEM_DamBreak
+        test_DEM_Bucket
+        test_DEM_rover
+        test_DEM_directshear
+        test_DEM_Coneflow
+        test_DEM_commvessels
+        test_DEM_milsettle
+        test_DEM_testsuite
+        test_DEM_normal
+        test_DEM_slide
+        test_DEM_roll
+        test_DEM_incline
+        #test_DEM_repose
+        test_DEM_soilBin
+        test_DEM_ballDrop
+        test_DEM_compression
 )
 
 #--------------------------------------------------------------
@@ -35,14 +35,14 @@ set(TESTS
 
 # Invoke find_package in CONFIG mode
 find_package(Chrono QUIET
-             COMPONENTS Gpu
+             COMPONENTS DEM
              OPTIONAL_COMPONENTS Vehicle
              CONFIG
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
 if(NOT Chrono_FOUND)
-  message("Could not find requirements for GPU projects")
+  message("Could not find requirements for DEM projects")
   return()
 endif()
 
@@ -60,7 +60,7 @@ set(CHRONO_PACKAGE_PREFIX_DIR ${CHRONO_PACKAGE_PREFIX_DIR} PARENT_SCOPE)
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
 
-message(STATUS "Projects for Chrono::Gpu...")
+message(STATUS "Projects for Chrono::Dem...")
 
 foreach(PROGRAM ${TESTS})
   message(STATUS "...add ${PROGRAM}")

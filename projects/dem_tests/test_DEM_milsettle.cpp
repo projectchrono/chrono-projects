@@ -21,13 +21,13 @@
 
 #include "chrono/core/ChTimer.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_gpu/physics/ChSystemGpu.h"
+#include "chrono_dem/physics/ChSystemDem.h"
 #include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
 using namespace chrono;
-using namespace chrono::gpu;
+using namespace chrono::dem;
 
 std::string output_prefix = "../results";
 
@@ -44,8 +44,8 @@ float normalDampS2W = 1000;
 float adhesion_ratio_s2w = 0.0f;
 float timestep = 1e-4f;
 
-CHGPU_OUTPUT_MODE write_mode = CHGPU_OUTPUT_MODE::BINARY;
-CHGPU_VERBOSITY verbose = CHGPU_VERBOSITY::INFO;
+CHDEM_OUTPUT_MODE write_mode = CHDEM_OUTPUT_MODE::BINARY;
+CHDEM_VERBOSITY verbose = CHDEM_VERBOSITY::INFO;
 float cohesion_ratio = 0;
 
 // -----------------------------------------------------------------------------
@@ -53,37 +53,37 @@ float cohesion_ratio = 0;
 // -----------------------------------------------------------------------------
 double run_test(float box_size_X, float box_size_Y, float box_size_Z) {
     // Setup simulation
-    ChSystemGpu gpu_system(ballRadius, ballDensity, ChVector3f(box_size_X, box_size_Y, box_size_Z));
-    gpu_system.SetKn_SPH2SPH(normStiffness_S2S);
-    gpu_system.SetKn_SPH2WALL(normStiffness_S2W);
-    gpu_system.SetGn_SPH2SPH(normalDampS2S);
-    gpu_system.SetGn_SPH2WALL(normalDampS2W);
+    ChSystemDem dem_system(ballRadius, ballDensity, ChVector3f(box_size_X, box_size_Y, box_size_Z));
+    dem_system.SetKn_SPH2SPH(normStiffness_S2S);
+    dem_system.SetKn_SPH2WALL(normStiffness_S2W);
+    dem_system.SetGn_SPH2SPH(normalDampS2S);
+    dem_system.SetGn_SPH2WALL(normalDampS2W);
 
-    gpu_system.SetCohesionRatio(cohesion_ratio);
-    gpu_system.SetAdhesionRatio_SPH2WALL(adhesion_ratio_s2w);
-    gpu_system.SetGravitationalAcceleration(ChVector3d(0.f, 0.f, grav_acceleration));
-    gpu_system.SetParticleOutputMode(write_mode);
+    dem_system.SetCohesionRatio(cohesion_ratio);
+    dem_system.SetAdhesionRatio_SPH2WALL(adhesion_ratio_s2w);
+    dem_system.SetGravitationalAcceleration(ChVector3d(0.f, 0.f, grav_acceleration));
+    dem_system.SetParticleOutputMode(write_mode);
 
     // Fill the bottom half with material
     chrono::utils::ChHCPSampler<float> sampler(2.4f * ballRadius);  // Add epsilon
     ChVector3f center(0, 0, -0.25f * box_size_Z);
     ChVector3f hdims(box_size_X / 2 - ballRadius, box_size_X / 2 - ballRadius, box_size_Z / 4 - ballRadius);
     std::vector<ChVector3f> body_points = sampler.SampleBox(center, hdims);
-    gpu_system.SetParticles(body_points);
+    dem_system.SetParticles(body_points);
 
     filesystem::create_directory(filesystem::path(output_prefix));
 
-    gpu_system.SetBDFixed(true);
-    gpu_system.SetFrictionMode(CHGPU_FRICTION_MODE::FRICTIONLESS);
-    gpu_system.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::EXTENDED_TAYLOR);
-    gpu_system.SetVerbosity(verbose);
+    dem_system.SetBDFixed(true);
+    dem_system.SetFrictionMode(CHDEM_FRICTION_MODE::FRICTIONLESS);
+    dem_system.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::EXTENDED_TAYLOR);
+    dem_system.SetVerbosity(verbose);
 
-    gpu_system.SetFixedStepSize(timestep);
+    dem_system.SetFixedStepSize(timestep);
     ChTimer timer;
 
     // Run wavetank experiment and time it
     timer.start();
-    gpu_system.Initialize();
+    dem_system.Initialize();
     int fps = 50;
     // assume we run for at least one frame
     float frame_step = 1.0f / fps;
@@ -92,12 +92,12 @@ double run_test(float box_size_X, float box_size_Y, float box_size_Z) {
 
     // Run settling experiments
     while (curr_time < timeEnd) {
-        gpu_system.AdvanceSimulation(frame_step);
+        dem_system.AdvanceSimulation(frame_step);
         curr_time += frame_step;
         printf("rendering frame %u\n", currframe);
         char filename[100];
         sprintf(filename, "%s/step%06d", output_prefix.c_str(), currframe++);
-        gpu_system.WriteParticleFile(filename);
+        dem_system.WriteParticleFile(filename);
     }
     timer.stop();
     return timer.GetTimeSeconds();
@@ -105,7 +105,7 @@ double run_test(float box_size_X, float box_size_Y, float box_size_Z) {
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
-        std::cout << "Usage:\n./test_GPU_milsettle <results_log_file>" << std::endl;
+        std::cout << "Usage:\n./test_DEM_milsettle <results_log_file>" << std::endl;
     }
 
     // up to one million bodies

@@ -19,16 +19,16 @@
 
 #include "chrono/core/ChGlobal.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_gpu/physics/ChSystemGpu.h"
-#include "chrono_gpu/utils/ChGpuJsonParser.h"
+#include "chrono_dem/physics/ChSystemDem.h"
+#include "chrono_dem/utils/ChDemJsonParser.h"
 #include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
 using namespace chrono;
-using namespace chrono::gpu;
+using namespace chrono::dem;
 
-std::string cyl_filename = GetProjectsDataFile("gpu/meshes/Gran_cylinder_transparent.obj");
+std::string cyl_filename = GetProjectsDataFile("dem/meshes/Gran_cylinder_transparent.obj");
 
 // Take a ChBody and write its
 void writeZCylinderMesh(std::ostringstream& outstream, ChVector3d pos, float rad, float height) {
@@ -91,7 +91,7 @@ void writeZConeMesh(std::ostringstream& outstream, ChVector3d pos, std::string m
 }
 
 int main(int argc, char* argv[]) {
-    std::string inputJson = GetProjectsDataFile("gpu/Coneflow.json");
+    std::string inputJson = GetProjectsDataFile("dem/Coneflow.json");
     float aperture_diameter = 16.f;
     if (argc == 2) {
         inputJson = std::string(argv[1]);
@@ -99,18 +99,18 @@ int main(int argc, char* argv[]) {
         inputJson = std::string(argv[1]);
         aperture_diameter = (float)std::atof(argv[2]);
     } else if (argc > 1) {
-        std::cout << "Usage:\n./test_GPU_Coneflow <json_file> [<aperture_diameter>]" << std::endl;
+        std::cout << "Usage:\n./test_DEM_Coneflow <json_file> [<aperture_diameter>]" << std::endl;
         return 1;
     }
 
-    ChGpuSimulationParameters params;
+    ChDemSimulationParameters params;
     if (!ParseJSON(inputJson, params)) {
         std ::cout << "ERROR: reading input file " << inputJson << std::endl;
         return 1;
     }
 
     // Setup simulation
-    ChSystemGpu gran_sys(params.sphere_radius, params.sphere_density,
+    ChSystemDem gran_sys(params.sphere_radius, params.sphere_density,
                          ChVector3f(params.box_X, params.box_Y, params.box_Z));
     // normal force model
     gran_sys.SetKn_SPH2SPH(params.normalStiffS2S);
@@ -179,11 +179,11 @@ int main(int argc, char* argv[]) {
     printf("%d spheres with mass %f \n", (int)body_points.size(), body_points.size() * sphere_mass);
 
     // set time integrator
-    gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
+    gran_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
     gran_sys.SetFixedStepSize(params.step_size);
 
     // set friction mode
-    gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
+    gran_sys.SetFrictionMode(CHDEM_FRICTION_MODE::MULTI_STEP);
 
     filesystem::create_directory(filesystem::path(params.output_dir));
 
@@ -210,7 +210,7 @@ int main(int argc, char* argv[]) {
         std::ofstream meshfile{params.output_dir + "/" + meshes_file};
         std::ostringstream outstream;
         outstream << "mesh_name,dx,dy,dz,x1,x2,x3,y1,y2,y3,z1,z2,z3\n";
-        writeZConeMesh(outstream, cone_top_pos, GetProjectsDataFile("gpu/meshes/gran_zcone.obj"));
+        writeZConeMesh(outstream, cone_top_pos, GetProjectsDataFile("dem/meshes/gran_zcone.obj"));
         writeZCylinderMesh(outstream, zvec, cyl_rad, params.box_Z);
 
         meshfile << outstream.str();

@@ -20,24 +20,24 @@
 
 #include "chrono/core/ChGlobal.h"
 #include "chrono/utils/ChUtilsSamplers.h"
-#include "chrono_gpu/physics/ChSystemGpu.h"
-#include "chrono_gpu/utils/ChGpuJsonParser.h"
+#include "chrono_dem/physics/ChSystemDem.h"
+#include "chrono_dem/utils/ChDemJsonParser.h"
 #include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
 using namespace chrono;
-using namespace chrono::gpu;
+using namespace chrono::dem;
 
 enum run_mode { FRICTIONLESS_NOCYL = 0, FRICTIONLESS_WITHCYL = 1, MULTI_STEP_NOCYL = 2, MULTI_STEP_WITHCYL = 3 };
 
 // whether or not to have a cylinder blocking the flow. Set by run_mode.
 bool use_cylinder = false;
 
-std::string box_filename = GetProjectsDataFile("gpu/meshes/BD_Box.obj");
-std::string cyl_filename = GetProjectsDataFile("gpu/meshes/Gran_cylinder.obj");
+std::string box_filename = GetProjectsDataFile("dem/meshes/BD_Box.obj");
+std::string cyl_filename = GetProjectsDataFile("dem/meshes/Gran_cylinder.obj");
 
-ChGpuSimulationParameters params;
+ChDemSimulationParameters params;
 
 void writeBoxMesh(std::ostringstream& outstream) {
     ChVector3d pos(0, 0, 0);
@@ -99,7 +99,7 @@ void writeZCylinderMesh(std::ostringstream& outstream, ChVector3d pos, float rad
 }
 
 int main(int argc, char* argv[]) {
-    std::string inputJson = GetProjectsDataFile("gpu/DamBreak.json");
+    std::string inputJson = GetProjectsDataFile("dem/DamBreak.json");
     int run_mode = 0;
     if (argc == 2) {
         inputJson = std::string(argv[1]);
@@ -107,13 +107,13 @@ int main(int argc, char* argv[]) {
         inputJson = std::string(argv[1]);
         run_mode = std::atoi(argv[2]);
     } else if (argc > 1) {
-        std::cout << "Usage:\n./test_GPU_DamBreak <json_file> [run_mode]" << std::endl;
+        std::cout << "Usage:\n./test_DEM_DamBreak <json_file> [run_mode]" << std::endl;
         std::cout << "run_mode:  0-FRICTIONLESS_NOCYL, 1-FRICTIONLESS_WITHCYL, 2-MULTI_STEP_NOCYL, 3-MULTI_STEP_WITHCYL"
                   << std::endl;
         return 1;
     }
 
-    ChGpuSimulationParameters params;
+    ChDemSimulationParameters params;
     if (!ParseJSON(inputJson, params)) {
         std ::cout << "ERROR: reading input file " << inputJson << std::endl;
         return 1;
@@ -125,7 +125,7 @@ int main(int argc, char* argv[]) {
     std::cout << "output_dir " << params.output_dir << std::endl;
 
     // Setup simulation
-    ChSystemGpu gran_sys(params.sphere_radius, params.sphere_density,
+    ChSystemDem gran_sys(params.sphere_radius, params.sphere_density,
                          ChVector3f(params.box_X, params.box_Y, params.box_Z));
 
     // normal force model
@@ -148,7 +148,7 @@ int main(int argc, char* argv[]) {
     gran_sys.SetGravitationalAcceleration(ChVector3f(params.grav_X, params.grav_Y, params.grav_Z));
     gran_sys.SetParticleOutputMode(params.write_mode);
 
-    gran_sys.SetTimeIntegrator(CHGPU_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
+    gran_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
     gran_sys.SetFixedStepSize(params.step_size);
     gran_sys.SetVerbosity(params.verbose);
 
@@ -156,19 +156,19 @@ int main(int argc, char* argv[]) {
 
     switch (run_mode) {
         case run_mode::MULTI_STEP_WITHCYL:
-            gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
+            gran_sys.SetFrictionMode(CHDEM_FRICTION_MODE::MULTI_STEP);
             use_cylinder = true;
             break;
         case run_mode::MULTI_STEP_NOCYL:
-            gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::MULTI_STEP);
+            gran_sys.SetFrictionMode(CHDEM_FRICTION_MODE::MULTI_STEP);
             use_cylinder = false;
             break;
         case run_mode::FRICTIONLESS_WITHCYL:
-            gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::FRICTIONLESS);
+            gran_sys.SetFrictionMode(CHDEM_FRICTION_MODE::FRICTIONLESS);
             use_cylinder = true;
             break;
         case run_mode::FRICTIONLESS_NOCYL:
-            gran_sys.SetFrictionMode(CHGPU_FRICTION_MODE::FRICTIONLESS);
+            gran_sys.SetFrictionMode(CHDEM_FRICTION_MODE::FRICTIONLESS);
             use_cylinder = false;
             break;
         default:
