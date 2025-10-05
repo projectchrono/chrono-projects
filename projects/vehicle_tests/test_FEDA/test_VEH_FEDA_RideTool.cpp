@@ -22,7 +22,7 @@
 
 #include "chrono/physics/ChSystemSMC.h"
 
-#include "chrono_vehicle/ChVehicleModelData.h"
+#include "chrono_vehicle/ChVehicleDataPath.h"
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 #include "chrono_vehicle/terrain/CRGTerrain.h"
 
@@ -367,7 +367,7 @@ void RunTest(double speed,
 int main(int argc, char* argv[]) {
     // Set path to Chrono and Chrono::Vehicle data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
-    vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
+    SetVehicleDataPath(CHRONO_VEHICLE_DATA_DIR);
 
     ChCLI cli(argv[0]);
 
@@ -400,7 +400,7 @@ int main(int argc, char* argv[]) {
             cli.Help();
             return 1;
     }
-    crg_road_file = vehicle::GetDataFile(cli.GetAsType<std::string>("roadfile"));
+    crg_road_file = GetVehicleDataFile(cli.GetAsType<std::string>("roadfile"));
 
     double speed_start = cli.GetAsType<double>("speed");
     double speed_inc = cli.GetAsType<double>("increment");

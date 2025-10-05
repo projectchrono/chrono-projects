@@ -20,7 +20,7 @@
 ////#include <float.h>
 ////unsigned int fp_control_state = _controlfp(_EM_INEXACT, _MCW_EM);
 
-#include "chrono_parsers/ChParserYAML.h"
+#include "chrono_parsers/yaml/ChParserMbsYAML.h"
 
 #include "chrono/assets/ChVisualSystem.h"
 #include "chrono/core/ChRealtimeStep.h"
@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Simulation YAML file:   " << sim_yaml_filename << std::endl;
 
     // Create YAML parser object
-    parsers::ChParserYAML parser;
+    parsers::ChParserMbsYAML parser;
     parser.SetVerbose(true);
 
     // Load the YAML simulation file and create a Chrono system based on its content
@@ -201,7 +201,7 @@ int main(int argc, char* argv[]) {
 
         if (output_type != ChOutput::Type::NONE) {
             if (time >= output_frame / output_fps) {
-                parser.Output(*sys, output_frame);
+                parser.SaveOutput(*sys, output_frame);
                 output_frame++;
             }
         }

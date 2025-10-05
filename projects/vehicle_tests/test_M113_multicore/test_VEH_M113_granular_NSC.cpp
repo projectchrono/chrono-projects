@@ -37,7 +37,7 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 // Chrono vehicle header files
-#include "chrono_vehicle/ChVehicleModelData.h"
+#include "chrono_vehicle/ChVehicleDataPath.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 
@@ -217,7 +217,7 @@ int main(int argc, char* argv[]) {
     // -------------------------------------------------------
 
     SetChronoDataPath(CHRONO_DATA_DIR);
-    vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
+    SetVehicleDataPath(CHRONO_VEHICLE_DATA_DIR);
 
     // ---------------------------------
     // Create system and modify settings
@@ -334,9 +334,9 @@ int main(int argc, char* argv[]) {
     MyDriver driver_speed(*vehicle, 0.5);
     driver_speed.Initialize();
 
-    auto path = ChBezierCurve::Read(vehicle::GetDataFile(path_file));
-    ChPathFollowerDriver driver_steering(*vehicle, vehicle::GetDataFile(steering_controller_file),
-                                         vehicle::GetDataFile(speed_controller_file), path, "my_path", 0.0);
+    auto path = ChBezierCurve::Read(GetVehicleDataFile(path_file));
+    ChPathFollowerDriver driver_steering(*vehicle, GetVehicleDataFile(steering_controller_file),
+                                         GetVehicleDataFile(speed_controller_file), path, "my_path", 0.0);
     driver_steering.Initialize();
 
     // ------------------------------------

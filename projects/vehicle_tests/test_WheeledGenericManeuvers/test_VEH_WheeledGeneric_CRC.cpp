@@ -26,7 +26,7 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono_vehicle/ChConfigVehicle.h"
-#include "chrono_vehicle/ChVehicleModelData.h"
+#include "chrono_vehicle/ChVehicleDataPath.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 
 #include "chrono_models/vehicle/generic/Generic_Vehicle.h"
@@ -161,7 +161,7 @@ void CalcControlPoints(double run,
 int main(int argc, char* argv[]) {
     // Set path to Chrono and Chrono::Vehicle data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
-    vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
+    SetVehicleDataPath(CHRONO_VEHICLE_DATA_DIR);
 
     double initFwdSpd = 30.0 / 3.6;  // kph to m/s
     double finalFwdSpd = 100.0 / 3.6;  // kph to m/s
@@ -211,7 +211,7 @@ int main(int argc, char* argv[]) {
     auto patch =
         terrain.AddPatch(patch_mat, ChCoordsys<>(ChVector3d(0, 0, terrainHeight), QUNIT), terrainLength, terrainWidth);
     patch->SetColor(ChColor(0.5f, 0.8f, 0.5f));
-    patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 600, 600);
+    patch->SetTexture(GetVehicleDataFile("terrain/textures/tile4.jpg"), 600, 600);
     terrain.Initialize();
 
     // Create and initialize the powertrain system
@@ -241,8 +241,8 @@ int main(int argc, char* argv[]) {
     CalcControlPoints(run, cornerRadius, nturns, points, inCV, outCV);
     auto path = chrono_types::make_shared<ChBezierCurve>(points, inCV, outCV);
 
-    ChPathFollowerDriver driver(vehicle, vehicle::GetDataFile(steering_controller_file),
-                                vehicle::GetDataFile(speed_controller_file), path, "my_path", initFwdSpd);
+    ChPathFollowerDriver driver(vehicle, GetVehicleDataFile(steering_controller_file),
+                                GetVehicleDataFile(speed_controller_file), path, "my_path", initFwdSpd);
     driver.Initialize();
 
     // Report out the mass of the entire vehicle to the screen

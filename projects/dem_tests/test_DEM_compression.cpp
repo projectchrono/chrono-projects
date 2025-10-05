@@ -19,7 +19,7 @@
 #include <string>
 #include <cmath>
 
-#include "chrono/core/ChGlobal.h"
+#include "chrono/core/ChDataPath.h"
 #include "chrono/core/ChVector3.h"
 #include "chrono/utils/ChUtilsSamplers.h"
 

@@ -24,7 +24,7 @@
 #include "chrono/output/ChOutputASCII.h"
 
 #include "chrono_vehicle/ChConfigVehicle.h"
-#include "chrono_vehicle/ChVehicleModelData.h"
+#include "chrono_vehicle/ChVehicleDataPath.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 
 #include "chrono_models/vehicle/feda/FEDA.h"
@@ -125,7 +125,7 @@ double t_end = t_hold + t_acc + 60.0;
 int main(int argc, char* argv[]) {
     // Set path to Chrono and Chrono::Vehicle data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
-    vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
+    SetVehicleDataPath(CHRONO_VEHICLE_DATA_DIR);
 
     ChFunctionInterp steeringGear;
     steeringGear.AddPoint(-1.0, -648.0);
@@ -218,7 +218,7 @@ int main(int argc, char* argv[]) {
     auto patch_mat = minfo.CreateMaterial(contact_method);
 
     auto patch = terrain.AddPatch(patch_mat, CSYSNORM, 200.0, 200.0);
-    patch->SetTexture(vehicle::GetDataFile("terrain/textures/dirt.jpg"), 200, 200);
+    patch->SetTexture(GetVehicleDataFile("terrain/textures/dirt.jpg"), 200, 200);
     patch->SetColor(ChColor(0.8f, 0.8f, 0.5f));
 
     terrain.Initialize();

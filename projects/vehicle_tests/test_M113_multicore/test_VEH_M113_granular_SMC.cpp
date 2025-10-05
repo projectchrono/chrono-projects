@@ -37,7 +37,7 @@
 #include "chrono/utils/ChUtilsInputOutput.h"
 
 // Chrono vehicle header files
-#include "chrono_vehicle/ChVehicleModelData.h"
+#include "chrono_vehicle/ChVehicleDataPath.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
 
 // M113 model header files
@@ -212,7 +212,7 @@ int main(int argc, char* argv[]) {
     // -------------------------------------------------------
 
     SetChronoDataPath(CHRONO_DATA_DIR);
-    vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
+    SetVehicleDataPath(CHRONO_VEHICLE_DATA_DIR);
 
     // ---------------------------------
     // Create system and modify settings

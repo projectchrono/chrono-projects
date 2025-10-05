@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "chrono_vehicle/ChVehicleModelData.h"
+#include "chrono_vehicle/ChVehicleDataPath.h"
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 #include "chrono_vehicle/wheeled_vehicle/ChWheeledVehicleVisualSystemIrrlicht.h"
@@ -98,7 +98,7 @@ void CalcControlPoints(double run,
 int main(int argc, char* argv[]) {
     // Set path to Chrono and Chrono::Vehicle data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
-    vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
+    SetVehicleDataPath(CHRONO_VEHICLE_DATA_DIR);
 
     // -------------------------------
     // Parameters for the Bezier curve
@@ -177,7 +177,7 @@ int main(int argc, char* argv[]) {
     auto patch =
         terrain.AddPatch(patch_mat, ChCoordsys<>(ChVector3d(0, 0, terrainHeight), QUNIT), terrainLength, terrainWidth);
     patch->SetColor(ChColor(1, 1, 1));
-    patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 100, 50);
+    patch->SetTexture(GetVehicleDataFile("terrain/textures/tile4.jpg"), 100, 50);
     terrain.Initialize();
 
     // ----------------------------------------------------------

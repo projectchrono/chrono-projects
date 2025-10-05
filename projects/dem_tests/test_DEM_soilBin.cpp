@@ -20,7 +20,7 @@
 #include <cmath>
 #include <chrono>
 
-#include "chrono/core/ChGlobal.h"
+#include "chrono/core/ChDataPath.h"
 #include "chrono/utils/ChUtilsSamplers.h"
 
 #include "chrono_dem/physics/ChSystemDem.h"

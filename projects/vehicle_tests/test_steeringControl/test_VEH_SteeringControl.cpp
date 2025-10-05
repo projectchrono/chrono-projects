@@ -28,7 +28,7 @@
 #include "chrono/assets/ChVisualShapeLine.h"
 #include "chrono/utils/ChUtilsInputOutput.h"
 
-#include "chrono_vehicle/ChVehicleModelData.h"
+#include "chrono_vehicle/ChVehicleDataPath.h"
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
 #include "chrono_vehicle/wheeled_vehicle/tire/RigidTire.h"
 #include "chrono_vehicle/wheeled_vehicle/tire/FialaTire.h"
@@ -109,18 +109,18 @@ void processData(const utils::ChWriterCSV& csv, const Data& data);
 int main(int argc, char* argv[]) {
     // Set path to Chrono and Chrono::Vehicle data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
-    vehicle::SetDataPath(CHRONO_VEHICLE_DATA_DIR);
+    SetVehicleDataPath(CHRONO_VEHICLE_DATA_DIR);
 
     // Create and initialize the vehicle system
-    WheeledVehicle vehicle(vehicle::GetDataFile(vehicle_file));
+    WheeledVehicle vehicle(GetVehicleDataFile(vehicle_file));
     vehicle.Initialize(ChCoordsys<>(initLoc, initRot));
 
     // Create the terrain
-    RigidTerrain terrain(vehicle.GetSystem(), vehicle::GetDataFile(rigidterrain_file));
+    RigidTerrain terrain(vehicle.GetSystem(), GetVehicleDataFile(rigidterrain_file));
 
     // Create and initialize the powertrain system
-    auto engine = chrono_types::make_shared<EngineSimple>(vehicle::GetDataFile(engine_file));
-    auto transmission = chrono_types::make_shared<AutomaticTransmissionSimpleMap>(vehicle::GetDataFile(transmission_file));
+    auto engine = chrono_types::make_shared<EngineSimple>(GetVehicleDataFile(engine_file));
+    auto transmission = chrono_types::make_shared<AutomaticTransmissionSimpleMap>(GetVehicleDataFile(transmission_file));
     auto powertrain = chrono_types::make_shared<ChPowertrainAssembly>(engine, transmission);
     vehicle.InitializePowertrain(powertrain);
 
@@ -129,15 +129,15 @@ int main(int argc, char* argv[]) {
         switch (tire_model) {
             default:
             case TireModelType::RIGID: {
-                auto tireL = chrono_types::make_shared<RigidTire>(vehicle::GetDataFile(rigidtire_file));
-                auto tireR = chrono_types::make_shared<RigidTire>(vehicle::GetDataFile(rigidtire_file));
+                auto tireL = chrono_types::make_shared<RigidTire>(GetVehicleDataFile(rigidtire_file));
+                auto tireR = chrono_types::make_shared<RigidTire>(GetVehicleDataFile(rigidtire_file));
                 vehicle.InitializeTire(tireL, axle->m_wheels[0], VisualizationType::MESH);
                 vehicle.InitializeTire(tireR, axle->m_wheels[1], VisualizationType::MESH);
                 break;
             }
             case TireModelType::FIALA: {
-                auto tireL = chrono_types::make_shared<FialaTire>(vehicle::GetDataFile(fialatire_file));
-                auto tireR = chrono_types::make_shared<FialaTire>(vehicle::GetDataFile(fialatire_file));
+                auto tireL = chrono_types::make_shared<FialaTire>(GetVehicleDataFile(fialatire_file));
+                auto tireR = chrono_types::make_shared<FialaTire>(GetVehicleDataFile(fialatire_file));
                 vehicle.InitializeTire(tireL, axle->m_wheels[0], VisualizationType::MESH);
                 vehicle.InitializeTire(tireR, axle->m_wheels[1], VisualizationType::MESH);
                 break;
@@ -146,9 +146,9 @@ int main(int argc, char* argv[]) {
     }
 
     // Create the driver system
-    auto path = ChBezierCurve::Read(vehicle::GetDataFile(path_file));
-    ChPathFollowerDriver driver(vehicle, vehicle::GetDataFile(steering_controller_file),
-                                vehicle::GetDataFile(speed_controller_file), path, "my_path", target_speed);
+    auto path = ChBezierCurve::Read(GetVehicleDataFile(path_file));
+    ChPathFollowerDriver driver(vehicle, GetVehicleDataFile(steering_controller_file),
+                                GetVehicleDataFile(speed_controller_file), path, "my_path", target_speed);
 
     // Create a path tracker to keep track of the error in vehicle location.
     ChBezierCurveTracker tracker(path);
