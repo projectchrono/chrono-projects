@@ -11,7 +11,7 @@ message(STATUS "\n---- DEM configuration test\n")
 #--------------------------------------------------------------
 
 set(DEMOS
-    demo_DEM_ballcosim
+    demo_DEM_ballCosim
 )
 
 #--------------------------------------------------------------
