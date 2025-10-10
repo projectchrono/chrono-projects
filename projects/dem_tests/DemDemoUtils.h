@@ -30,7 +30,7 @@ std::vector<chrono::ChVector3<T>> loadPositionCheckpoint(std::string infile) {
     while (ptFile.good()) {
         std::vector<float> line_data;
         tokenizeCSVLine(ptFile, line_data);
-        chrono::ChVector<> curr_pos(line_data.at(0), line_data.at(1), line_data.at(2));
+        chrono::ChVector3d curr_pos(line_data.at(0), line_data.at(1), line_data.at(2));
         sphere_positions.push_back(curr_pos);
     }
 

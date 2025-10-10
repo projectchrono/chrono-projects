@@ -65,8 +65,8 @@ message(STATUS "Projects for Chrono::Dem...")
 foreach(PROGRAM ${TESTS})
   message(STATUS "...add ${PROGRAM}")
 
-  add_executable(${PROGRAM}  "${PROGRAM}.cpp")
-  source_group(""  FILES "${PROGRAM}.cpp")
+  add_executable(${PROGRAM} ${PROGRAM}.cpp DemDemoUtils.h)
+  source_group(""  FILES ${PROGRAM}.cpp DemDemoUtils.h)
 
   set_property(TARGET ${PROGRAM} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${PROGRAM}>")
 
