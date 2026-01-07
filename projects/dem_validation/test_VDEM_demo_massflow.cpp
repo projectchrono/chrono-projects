@@ -29,7 +29,7 @@
 #include "chrono/ChConfig.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 #include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
@@ -371,7 +371,7 @@ int main(int argc, char* argv[]) {
         case DROPPING:
             time_end = time_dropping_max;
             out_fps = out_fps_dropping;
-            utils::ReadCheckpoint(sys, checkpoint_file);
+            utils::ReadBodyShapesCheckpoint(sys, checkpoint_file);
             insert = FindBodyByTag(sys, tag_insert);
             break;
     }
@@ -438,7 +438,7 @@ int main(int argc, char* argv[]) {
             switch (problem) {
                 case SETTLING:
                     // Create a checkpoint from the current state.
-                    utils::WriteCheckpoint(sys, checkpoint_file);
+                    utils::WriteBodyShapesCheckpoint(sys, checkpoint_file);
                     cout << "             Checkpoint:     " << sys->GetBodies().size() << " bodies" << endl;
                     break;
                 case DROPPING:
@@ -496,7 +496,7 @@ int main(int argc, char* argv[]) {
     // Create a checkpoint from the last state
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
-        utils::WriteCheckpoint(sys, checkpoint_file);
+        utils::WriteBodyShapesCheckpoint(sys, checkpoint_file);
         cout << "  done.  Wrote " << sys->GetBodies().size() << " bodies." << endl;
     }
 

@@ -940,6 +940,7 @@ int main(int argc, char* argv[]) {
 
     // Create a Chrono physical system
     ChSystemNSC sys;
+    sys.SetGravityY();
 
     // ** user input
     double wheelMass = 5.0;  // mass of wheel
@@ -970,6 +971,7 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
+    vis->SetCameraVertical(CameraVerticalDir::Y);
     vis->AddCamera(ChVector3d(3.5, 2.5, -2.4));
     vis->AddLight(ChVector3d(20, 30, 25), 290, ChColor(0.7f, 0.7f, 0.7f));
     vis->AddLight(ChVector3d(25, 25, -25), 190, ChColor(0.7f, 0.8f, 0.8f));

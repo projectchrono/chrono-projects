@@ -20,7 +20,7 @@ set(DEMOS
 
 # Invoke find_package in CONFIG mode
 find_package(Chrono
-             COMPONENTS FSI 
+             COMPONENTS FSI_SPH
              OPTIONAL_COMPONENTS VSG
              CONFIG
 )

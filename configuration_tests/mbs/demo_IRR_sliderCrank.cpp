@@ -113,6 +113,7 @@ int main(int   argc,
   //    Specify the gravitational acceleration vector, consistent with the
   //    global reference frame having Z up.
   ChSystem system;
+  system.SetGravitY();
   system.Set_G_acc(ChVector<>(0, 0, -gravity));
 
   // 2. Create the rigid bodies of the slider-crank mechanical system.

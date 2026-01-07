@@ -140,6 +140,7 @@ int main(int argc, char* argv[]) {
 
     // Create the physical system
     ChSystemNSC sys;
+    sys.SetGravityY();
     sys.SetCollisionSystemType(collision_type);
 
     // Settings specific to Chrono multicore collision system
@@ -170,6 +171,7 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
+    vis->SetCameraVertical(CameraVerticalDir::Y);
     vis->AddCamera(ChVector3d(0, 14, -20));
     vis->AddTypicalLights();
 

@@ -104,6 +104,7 @@ void checkGenerators() {
 
   // Create system
   ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
+  msystem->SetGravityY();
 
   // Create a material for the balls
   ChSharedPtr<ChMaterialSurfaceDEM> ballMat;

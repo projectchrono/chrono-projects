@@ -29,7 +29,7 @@
 #include "chrono/ChConfig.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 #include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
@@ -482,7 +482,7 @@ int main(int argc, char* argv[]) {
 
         // Create the granular material and the container from the checkpoint file.
         cout << "Read checkpoint data from " << checkpoint_file;
-        utils::ReadCheckpoint(sys, checkpoint_file);
+        utils::ReadBodyShapesCheckpoint(sys, checkpoint_file);
         cout << "  done.  Read " << sys->GetBodies().size() << " bodies." << endl;
         obj = CreatePenetrator(sys);
     }
@@ -548,7 +548,7 @@ int main(int argc, char* argv[]) {
             // Create a checkpoint from the current state.
             if (problem == SETTLING) {
                 cout << "     Write checkpoint data " << flush;
-//                utils::WriteCheckpoint(sys, checkpoint_file);
+//                utils::WriteBodyShapesCheckpoint(sys, checkpoint_file);
                 cout << sys->GetBodies().size() << " bodies" << endl;
             }
 
@@ -596,7 +596,7 @@ int main(int argc, char* argv[]) {
     // Create a checkpoint from the last state
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
-        utils::WriteCheckpoint(sys, checkpoint_file);
+        utils::WriteBodyShapesCheckpoint(sys, checkpoint_file);
         cout << "  done.  Wrote " << sys->GetBodies().size() << " bodies." << endl;
     }
 

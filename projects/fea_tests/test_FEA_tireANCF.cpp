@@ -22,8 +22,9 @@
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/solver/ChIterativeSolverLS.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
-#include "chrono/utils/ChUtilsValidation.h"
+#include "chrono/input_output/ChWriterCSV.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
+#include "chrono/utils/ChValidation.h"
 #include "chrono/utils/ChOpenMP.h"
 
 #include "chrono/fea/ChElementShellANCF_3423.h"
@@ -512,7 +513,7 @@ int main(int argc, char* argv[]) {
 
     // Definition of the model
     ChSystemNSC my_system;
-    utils::ChWriterCSV out("\t");
+    ChWriterCSV out("\t");
     out.Stream().setf(std::ios::scientific | std::ios::showpos);
     out.Stream().precision(7);
 
@@ -612,7 +613,7 @@ int main(int argc, char* argv[]) {
     mystepper->SetAlpha(-0.2);  // Important for convergence
     mystepper->SetMaxIters(16);
     mystepper->SetAbsTolerances(6e-2, 0.8);
-    mystepper->SetModifiedNewton(false);
+    mystepper->SetJacobianUpdateMethod(ChTimestepperImplicit::JacobianUpdate::EVERY_ITERATION);
     mystepper->SetVerbose(true);
     mystepper->SetRequiredSuccessfulSteps(2);
     mystepper->SetMaxItersSuccess(7);

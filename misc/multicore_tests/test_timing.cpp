@@ -92,6 +92,7 @@ int main(int argc, char* argv[]) {
   // -------------
 
   ChSystemParallelDEM* msystem = new ChSystemParallelDEM();
+  msystem->SetGravityY();
 
   // Set number of threads.
   int max_threads = omp_get_num_procs();

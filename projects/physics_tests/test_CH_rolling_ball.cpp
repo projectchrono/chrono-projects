@@ -33,7 +33,7 @@
 #include "chrono/physics/ChSystemNSC.h"
 
 #include "chrono/utils/ChUtilsCreators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 
 using namespace chrono;
 

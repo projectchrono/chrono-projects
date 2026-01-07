@@ -15,14 +15,15 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/core/ChTimer.h"
-#include "chrono/solver/ChIterativeSolverLS.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
+#include "chrono/input_output/ChWriterCSV.h"
 #include "chrono/physics/ChSystemNSC.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/utils/ChOpenMP.h"
 
 #include "chrono/fea/ChElementShellANCF_3423.h"
-#include "chrono/fea/ChLinkNodeSlopeFrame.h"
 #include "chrono/fea/ChLinkNodeFrame.h"
+#include "chrono/fea/ChLinkNodeSlopeFrame.h"
 #include "chrono/fea/ChMesh.h"
 
 #include "chrono_thirdparty/filesystem/path.h"
@@ -55,19 +56,19 @@ int skip_steps = 0;       // initial number of steps excluded from timing
 
 int numDiv_x = 100;  // mesh divisions in X direction
 int numDiv_y = 100;  // mesh divisions in Y direction
-int numDiv_z = 1;   // mesh divisions in Z direction
+int numDiv_z = 1;    // mesh divisions in Z direction
 
 std::string out_dir = "../TEST_SHELL_ANCF";  // name of output directory
-bool output = true;                         // generate output file?
+bool output = true;                          // generate output file?
 bool verbose = true;                         // verbose output?
 
 // -----------------------------------------------------------------------------
 
-void RunModel(int nthreads,              // number of OpenMP threads
-              ChSolver::Type solver,     // linear solver type
-              bool use_adaptiveStep,     // allow step size reduction
-              bool use_modifiedNewton,   // use modified Newton method
-              const std::string& suffix  // output filename suffix
+void RunModel(int nthreads,                                           // number of OpenMP threads
+              ChSolver::Type solver,                                  // linear solver type
+              bool use_adaptiveStep,                                  // allow step size reduction
+              ChTimestepperImplicit::JacobianUpdate jacobian_update,  // Jacobian update strategy
+              const std::string& suffix                               // output filename suffix
 ) {
     cout << endl;
     cout << "===================================================================" << endl;
@@ -87,7 +88,6 @@ void RunModel(int nthreads,              // number of OpenMP threads
     }
     cout << endl;
     cout << "Adaptive step:   " << (use_adaptiveStep ? "Yes" : "No") << endl;
-    cout << "Modified Newton: " << (use_modifiedNewton ? "Yes" : "No") << endl;
     cout << endl;
     cout << "Mesh divisions:  " << numDiv_x << " x " << numDiv_y << endl;
     cout << endl;
@@ -129,7 +129,8 @@ void RunModel(int nthreads,              // number of OpenMP threads
         double dir_z = 1;
 
         // Create the node
-        auto node = chrono_types::make_shared<ChNodeFEAxyzD>(ChVector3d(loc_x, loc_y, loc_z), ChVector3d(dir_x, dir_y, dir_z));
+        auto node =
+            chrono_types::make_shared<ChNodeFEAxyzD>(ChVector3d(loc_x, loc_y, loc_z), ChVector3d(dir_x, dir_y, dir_z));
         node->SetMass(0);
         // Fix all nodes along the axis X=0
         if (i % (numDiv_x + 1) == 0)
@@ -149,10 +150,10 @@ void RunModel(int nthreads,              // number of OpenMP threads
     // Create the elements
     for (int i = 0; i < TotalNumElements; i++) {
         // Definition of nodes forming an element
-        int node0 = (i / (numDiv_x)) * (N_x)+i % numDiv_x;
-        int node1 = (i / (numDiv_x)) * (N_x)+i % numDiv_x + 1;
-        int node2 = (i / (numDiv_x)) * (N_x)+i % numDiv_x + 1 + N_x;
-        int node3 = (i / (numDiv_x)) * (N_x)+i % numDiv_x + N_x;
+        int node0 = (i / (numDiv_x)) * (N_x) + i % numDiv_x;
+        int node1 = (i / (numDiv_x)) * (N_x) + i % numDiv_x + 1;
+        int node2 = (i / (numDiv_x)) * (N_x) + i % numDiv_x + 1 + N_x;
+        int node3 = (i / (numDiv_x)) * (N_x) + i % numDiv_x + N_x;
 
         // Create the element and set its nodes.
         auto element = chrono_types::make_shared<ChElementShellANCF_3423>();
@@ -164,7 +165,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
         // Element length is a fixed number in both direction. (uniform distribution of nodes in both directions)
         element->SetDimensions(dx, dy);
         element->AddLayer(dz, 0 * CH_DEG_TO_RAD, mat);  // Single layer; Thickness: dy;  Ply angle: 0.
-        element->SetAlphaDamp(0.0);                       // Structural damping for this
+        element->SetAlphaDamp(0.0);                     // Structural damping for this
         my_mesh->AddElement(element);
     }
 
@@ -181,7 +182,6 @@ void RunModel(int nthreads,              // number of OpenMP threads
 #ifdef CHRONO_MUMPS
     std::shared_ptr<ChSolverMumps> mumps_solver;
 #endif
-
 
     // Set up solver
     switch (solver) {
@@ -221,11 +221,11 @@ void RunModel(int nthreads,              // number of OpenMP threads
     mystepper->SetMaxIters(100);
     mystepper->SetAbsTolerances(1e-3);
     mystepper->SetStepControl(use_adaptiveStep);
-    mystepper->SetModifiedNewton(use_modifiedNewton);
+    mystepper->SetJacobianUpdateMethod(jacobian_update);
     mystepper->SetVerbose(verbose);
 
     // Initialize the output stream and set precision.
-    utils::ChWriterCSV out("\t");
+    ChWriterCSV out("\t");
     out.Stream().setf(std::ios::scientific | std::ios::showpos);
     out.Stream().precision(6);
 
@@ -272,8 +272,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
 
         my_system.DoStepDynamics(step_size);
 
-        if (istep == 3 && solver == ChSolver::Type::PARDISO_MKL)
-        {
+        if (istep == 3 && solver == ChSolver::Type::PARDISO_MKL) {
 #ifdef CHRONO_PARDISO_MKL
             mkl_solver->LockSparsityPattern(true);
 #endif
@@ -343,7 +342,7 @@ void RunModel(int nthreads,              // number of OpenMP threads
 #ifdef CHRONO_PARDISO_MKL
             if (solver == ChSolver::Type::PARDISO_MKL) {
                 cout << "  [assembly: " << mkl_solver->GetTimeSetup_Assembly();
-                cout << "  pardiso: " << mkl_solver->GetTimeSetup_SolverCall() <<"]";
+                cout << "  pardiso: " << mkl_solver->GetTimeSetup_SolverCall() << "]";
             }
 #endif
             cout << endl;
@@ -377,22 +376,22 @@ void RunModel(int nthreads,              // number of OpenMP threads
     cout << "  Setup:    " << time_setup << "\t (" << (time_setup / time_total) * 100 << "%)" << endl;
     if (solver == ChSolver::Type::PARDISO_MKL || solver == ChSolver::Type::MUMPS) {
         cout << "    Assembly: " << time_setup_assembly << "\t (" << (time_setup_assembly / time_setup) * 100
-            << "% setup)" << endl;
+             << "% setup)" << endl;
         cout << "    SolverCall:  " << time_setup_solvercall << "\t (" << (time_setup_solvercall / time_setup) * 100
-            << "% setup)" << endl;
+             << "% setup)" << endl;
     }
     cout << "  Solve:    " << time_solve << "\t (" << (time_solve / time_total) * 100 << "%)" << endl;
     if (solver == ChSolver::Type::PARDISO_MKL || solver == ChSolver::Type::MUMPS) {
         cout << "    Assembly: " << time_solve_assembly << "\t (" << (time_solve_assembly / time_solve) * 100
-            << "% solve)" << endl;
+             << "% solve)" << endl;
         cout << "    SolverCall:  " << time_solve_solvercall << "\t (" << (time_solve_solvercall / time_solve) * 100
-            << "% solve)" << endl;
+             << "% solve)" << endl;
     }
     if (solver == ChSolver::Type::PARDISO_MKL || solver == ChSolver::Type::MUMPS) {
-        cout << "  [TOT Assembly: " << time_setup_assembly+time_solve_assembly << "\t (" << ((time_setup_assembly + time_solve_assembly) / time_total) * 100
-            << "% total)]" << endl;
-        cout << "  [TOT SolverCall:  " << time_setup_solvercall + time_solve_solvercall << "\t (" << ((time_setup_solvercall + time_solve_solvercall) / time_total) * 100
-            << "% total)]" << endl;
+        cout << "  [TOT Assembly: " << time_setup_assembly + time_solve_assembly << "\t ("
+             << ((time_setup_assembly + time_solve_assembly) / time_total) * 100 << "% total)]" << endl;
+        cout << "  [TOT SolverCall:  " << time_setup_solvercall + time_solve_solvercall << "\t ("
+             << ((time_setup_solvercall + time_solve_solvercall) / time_total) * 100 << "% total)]" << endl;
     }
     cout << "  Forces:   " << time_force << "\t (" << (time_force / time_total) * 100 << "%)" << endl;
     cout << "  Jacobian: " << time_jacobian << "\t (" << (time_jacobian / time_total) * 100 << "%)" << endl;
@@ -433,17 +432,23 @@ int main(int argc, char* argv[]) {
 
     // Run simulations.
 #ifdef CHRONO_PARDISO_MKL
-    RunModel(num_threads, ChSolver::Type::PARDISO_MKL, true, false, "PardisoMKL_adaptive_full");
-    RunModel(num_threads, ChSolver::Type::PARDISO_MKL, true, true, "PardisoMKL_adaptive_modified");
+    RunModel(num_threads, ChSolver::Type::PARDISO_MKL, true, ChTimestepperImplicit::JacobianUpdate::EVERY_ITERATION,
+             "PardisoMKL_adaptive_full");
+    RunModel(num_threads, ChSolver::Type::PARDISO_MKL, true, ChTimestepperImplicit::JacobianUpdate::EVERY_STEP,
+             "PardisoMKL_adaptive_modified");
 #endif
 
 #ifdef CHRONO_MUMPS
-    RunModel(num_threads, ChSolver::Type::MUMPS, true, false, "MUMPS_adaptive_full"); 
-    RunModel(num_threads, ChSolver::Type::MUMPS, true, true, "MUMPS_adaptive_modified");
+    RunModel(num_threads, ChSolver::Type::MUMPS, true, ChTimestepperImplicit::JacobianUpdate::EVERY_ITERATION,
+             "MUMPS_adaptive_full");
+    RunModel(num_threads, ChSolver::Type::MUMPS, true, ChTimestepperImplicit::JacobianUpdate::EVERY_STEP,
+             "MUMPS_adaptive_modified");
 #endif
 
-    RunModel(num_threads, ChSolver::Type::MINRES, true, false, "MINRES_adaptive_full");
-    RunModel(num_threads, ChSolver::Type::MINRES, true, true, "MINRES_adaptive_modified");
+    RunModel(num_threads, ChSolver::Type::MINRES, true, ChTimestepperImplicit::JacobianUpdate::EVERY_ITERATION,
+             "MINRES_adaptive_full");
+    RunModel(num_threads, ChSolver::Type::MINRES, true, ChTimestepperImplicit::JacobianUpdate::EVERY_STEP,
+             "MINRES_adaptive_modified");
 
     return 0;
 }

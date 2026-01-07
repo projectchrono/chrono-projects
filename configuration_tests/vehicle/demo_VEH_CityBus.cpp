@@ -19,7 +19,8 @@
 //
 // =============================================================================
 
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/input_output/ChWriterCSV.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleDataPath.h"
@@ -193,7 +194,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::string driver_file = out_dir + "/driver_inputs.txt";
-    utils::ChWriterCSV driver_csv(" ");
+    ChWriterCSV driver_csv(" ");
 
     // ---------------
     // Simulation loop

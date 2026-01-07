@@ -20,8 +20,8 @@
 // =============================================================================
 
 #include "chrono/utils/ChFilters.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
-#include "chrono/output/ChOutputASCII.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
+#include "chrono/input_output/ChOutputASCII.h"
 
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleDataPath.h"
@@ -213,7 +213,7 @@ int main(int argc, char* argv[]) {
 
     // Initialize output file for driver inputs
     std::string driver_file = out_dir + "/driver_inputs.txt";
-    utils::ChWriterCSV driver_csv(" ");
+    ChWriterCSV driver_csv(" ");
 
     std::string w2w_file_left = out_dir + "/w2w_left_";
     std::string w2w_file_right = out_dir + "/w2w_right_";
@@ -231,8 +231,8 @@ int main(int argc, char* argv[]) {
     }
     w2w_file_left.append(".txt");
     w2w_file_right.append(".txt");
-    utils::ChWriterCSV w2w_left_csv(" ");
-    utils::ChWriterCSV w2w_right_csv(" ");
+    ChWriterCSV w2w_left_csv(" ");
+    ChWriterCSV w2w_right_csv(" ");
 
     // Set up vehicle output
     bmw.GetVehicle().SetChassisOutput(true);

@@ -114,6 +114,7 @@ int main(int argc, char* argv[]) {
 
     // Create a Chrono physical system
     ChSystemNSC sys;
+    sys.SetGravityY();
     sys.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
 
     // Create some debris
@@ -130,6 +131,7 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
+    vis->SetCameraVertical(CameraVerticalDir::Y);
     vis->AddCamera(ChVector3d(3.5, 2.5, -2.4));
     vis->AddTypicalLights();
 

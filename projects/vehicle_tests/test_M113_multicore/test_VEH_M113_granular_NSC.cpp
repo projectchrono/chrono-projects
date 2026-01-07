@@ -20,7 +20,6 @@
 
 // Chrono::Engine header files
 #include "chrono/ChConfig.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
 
 // Chrono::Multicore header files
 #include "chrono_multicore/physics/ChSystemMulticore.h"
@@ -34,7 +33,7 @@
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsGeometry.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 
 // Chrono vehicle header files
 #include "chrono_vehicle/ChVehicleDataPath.h"
@@ -356,7 +355,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    chrono::utils::ChWriterCSV csv("\t");
+    chrono::ChWriterCSV csv("\t");
     csv.Stream().setf(std::ios::scientific | std::ios::showpos);
     csv.Stream().precision(6);
 

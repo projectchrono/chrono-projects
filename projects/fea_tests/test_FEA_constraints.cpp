@@ -23,7 +23,8 @@
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/timestepper/ChTimestepper.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/input_output/ChWriterCSV.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 
 #include "chrono/fea/ChElementCableANCF.h"
 #include "chrono/fea/ChLinkNodeSlopeFrame.h"
@@ -123,7 +124,7 @@ void test_beam(const std::string& name,  /// test name
     mystepper->SetMaxIters(100);
     mystepper->SetAbsTolerances(1e-3);
     mystepper->SetStepControl(true);
-    mystepper->SetModifiedNewton(true);
+    mystepper->SetJacobianUpdateMethod(ChTimestepperImplicit::JacobianUpdate::EVERY_STEP);
     mystepper->SetVerbose(false);
 #else
     // MINRES solver + Euler
@@ -143,7 +144,7 @@ void test_beam(const std::string& name,  /// test name
     // Simulation loop
     double step = 1e-4;
 
-    utils::ChWriterCSV csv("  ");
+    ChWriterCSV csv("  ");
     ChVector3d rforce(0);
     ChVector3d rtorque(0);
 
@@ -234,7 +235,7 @@ void test_beam(const std::string& name,  /// test name
     }
 
     {
-        utils::ChWriterCSV csv(" ");
+        ChWriterCSV csv(" ");
         for (int i = 0; i < num_points; i++)
             csv << P[i] << std::endl;
         std::string out_file = name + "_beam.out";

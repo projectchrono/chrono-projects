@@ -22,8 +22,9 @@
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChSystemNSC.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
-#include "chrono/utils/ChUtilsValidation.h"
+#include "chrono/input_output/ChWriterCSV.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
+#include "chrono/utils/ChValidation.h"
 
 #include "chrono/fea/ChElementShellANCF_3423.h"
 #include "chrono/fea/ChLinkNodeSlopeFrame.h"
@@ -1219,7 +1220,7 @@ int main(int argc, char* argv[]) {
     // of elements and their referenced nodes.
     auto my_mesh = chrono_types::make_shared<ChMesh>();
 
-    utils::ChWriterCSV out("\t");
+    ChWriterCSV out("\t");
     out.Stream().setf(std::ios::scientific | std::ios::showpos);
     out.Stream().precision(7);
 
@@ -1544,7 +1545,7 @@ int main(int argc, char* argv[]) {
     mystepper->SetAlpha(-0.2);
     mystepper->SetMaxIters(20);
     mystepper->SetAbsTolerances(4e-2, 1.0);
-    mystepper->SetModifiedNewton(false);
+    mystepper->SetJacobianUpdateMethod(ChTimestepperImplicit::JacobianUpdate::EVERY_ITERATION);
     mystepper->SetVerbose(true);
 
     // Visualization
@@ -1675,7 +1676,7 @@ int main(int argc, char* argv[]) {
         int AccuNoIterations = 0;
         double ChTime = 0.0;
 
-        // utils::ChWriterCSV out("\t");
+        // ChWriterCSV out("\t");
         //	out.Stream().setf(std::ios::scientific | std::ios::showpos);
         out.Stream().precision(7);
 

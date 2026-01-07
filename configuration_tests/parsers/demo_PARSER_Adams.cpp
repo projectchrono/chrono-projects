@@ -48,6 +48,7 @@ int main(int argc, char* argv[]) {
 
     // Make a system
     ChSystemSMC sys;
+    sys.SetGravityY();
 
     // Create parser instance and set options.
     // Use LOADED to read the ADAMS primitives
@@ -75,6 +76,7 @@ int main(int argc, char* argv[]) {
     vis->AttachSystem(&sys);
     vis->SetWindowSize(800, 600);
     vis->SetWindowTitle("Model loaded from ADAMS file");
+    vis->SetCameraVertical(CameraVerticalDir::Y);
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();

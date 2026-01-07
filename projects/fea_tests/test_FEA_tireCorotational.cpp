@@ -85,6 +85,7 @@ int main(int argc, char* argv[]) {
     // --------------------------
 
     ChSystemSMC sys;
+    sys.SetGravityY();
 
     // Set number of threads
 #ifdef CHRONO_OPENMP_ENABLED
@@ -299,6 +300,7 @@ int main(int argc, char* argv[]) {
         vis->Initialize();
         vis->AddLogo();
         vis->AddSkyBox();
+        vis->SetCameraVertical(CameraVerticalDir::Y);
         vis->AddCamera(ChVector3d(1, 1.4, -1.2), ChVector3d(0, tire_rad, 0));
         vis->AddTypicalLights();
         vis->AttachSystem(&sys);

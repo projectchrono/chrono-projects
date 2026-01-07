@@ -184,6 +184,7 @@ int main(int argc, char* argv[]) {
     // Create the Chrono physical system
     // ---------------------------------
     ChSystemNSC system;
+    system.SetGravityY();
 
     // Create the ground body
     // ----------------------
@@ -254,6 +255,7 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
+    vis->SetCameraVertical(CameraVerticalDir::Y);
     vis->AddCamera(ChVector3d(2.8f, 0, 1.8f), ChVector3d(1.2f, 0, -0.3f));
     vis->AddTypicalLights();
     vis->AttachSystem(&system);

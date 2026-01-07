@@ -24,7 +24,7 @@
 
 #include "chrono/physics/ChSystem.h"
 #include "chrono/utils/ChOpenMP.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 
 #ifdef CHRONO_PARDISO_MKL
 #include "chrono_pardisomkl/ChSolverPardisoMKL.h"
@@ -174,7 +174,7 @@ int main(int argc, char* argv[]) {
     integrator->SetMaxIters(50);
     integrator->SetAbsTolerances(5e-3, 1.8);
     integrator->SetStepControl(true);
-    integrator->SetModifiedNewton(false);
+    integrator->SetJacobianUpdateMethod(ChTimestepperImplicit::JacobianUpdate::EVERY_ITERATION);
     integrator->SetVerbose(verbose);
     integrator->SetMaxItersSuccess(5);
 

@@ -26,7 +26,7 @@
 
 #include "chrono/geometry/ChLineBezier.h"
 #include "chrono/assets/ChVisualShapeLine.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 
 #include "chrono_vehicle/ChVehicleDataPath.h"
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
@@ -101,7 +101,7 @@ int num_steps = 5000;           // number of steps for data colection
 // =============================================================================
 // Forward declarations
 
-void processData(const utils::ChWriterCSV& csv, const Data& data);
+void processData(const ChWriterCSV& csv, const Data& data);
 
 // =============================================================================
 // Main driver program
@@ -158,7 +158,7 @@ int main(int argc, char* argv[]) {
     // ---------------
 
     // Initialize data collectors
-    utils::ChWriterCSV csv("\t");
+    ChWriterCSV csv("\t");
     csv.Stream().setf(std::ios::scientific | std::ios::showpos);
     csv.Stream().precision(6);
 
@@ -218,7 +218,7 @@ int main(int argc, char* argv[]) {
 // =============================================================================
 // Simulation data post-processing
 
-void processData(const utils::ChWriterCSV& csv, const Data& data) {
+void processData(const ChWriterCSV& csv, const Data& data) {
     // Optionally, write simulation results to file for external post-processing
     csv.WriteToFile(out_file);
 

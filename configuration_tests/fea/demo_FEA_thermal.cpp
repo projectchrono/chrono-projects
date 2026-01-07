@@ -51,6 +51,7 @@ int main(int argc, char* argv[]) {
 
     // Create a Chrono::Engine physical system
     ChSystemSMC sys;
+    sys.SetGravityY();
 
     // Create a mesh, that is a container for groups
     // of elements and their referenced nodes.
@@ -153,6 +154,7 @@ int main(int argc, char* argv[]) {
     vis->AddSkyBox();
     vis->AddLight(ChVector3d(+20, 20, +20), 90, ChColor(0.5, 0.5, 0.5));
     vis->AddLight(ChVector3d(-20, 20, -20), 90, ChColor(0.7f, 0.8f, 0.8f));
+    vis->SetCameraVertical(CameraVerticalDir::Y);
     vis->AddCamera(ChVector3d(0, 0.7, -1), ChVector3d(0, 0.4, 0));
     vis->AttachSystem(&sys);
 

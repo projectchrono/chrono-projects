@@ -165,7 +165,7 @@ int main(int argc, char* argv[]) {
 
     // Create a Chrono::Engine physical system
     ChSystemSMC sys;
-
+    sys.SetGravityY();
 
     //
     // CREATE THE PHYSICAL SYSTEM
@@ -295,6 +295,7 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();
+    vis->SetCameraVertical(CameraVerticalDir::Y);
     vis->AddCamera(ChVector3d(3, 3, -4), ChVector3d(0, tire_rad, 0));
     vis->AddTypicalLights();
     vis->AttachSystem(&sys);

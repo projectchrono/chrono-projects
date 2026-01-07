@@ -29,7 +29,7 @@
 #include "chrono/ChConfig.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 #include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
@@ -512,7 +512,7 @@ int main(int argc, char* argv[]) {
 
             // Create bodies from checkpoint file.
             cout << "Read checkpoint data from " << settled_ckpnt_file;
-            utils::ReadCheckpoint(sys, settled_ckpnt_file);
+            utils::ReadBodyShapesCheckpoint(sys, settled_ckpnt_file);
             cout << "  done.  Read " << sys->GetBodies().size() << " bodies." << endl;
 
             // Grab handles to mechanism bodies (must increase ref counts)
@@ -651,9 +651,9 @@ int main(int argc, char* argv[]) {
             if (problem == SETTLING || problem == PRESSING) {
                 cout << "             Write checkpoint data " << flush;
                 if (problem == SETTLING)
-                    utils::WriteCheckpoint(sys, settled_ckpnt_file);
+                    utils::WriteBodyShapesCheckpoint(sys, settled_ckpnt_file);
                 else
-                    utils::WriteCheckpoint(sys, pressed_ckpnt_file);
+                    utils::WriteBodyShapesCheckpoint(sys, pressed_ckpnt_file);
                 cout << sys->GetBodies().size() << " bodies" << endl;
             }
 
@@ -759,9 +759,9 @@ int main(int argc, char* argv[]) {
     if (problem == SETTLING || problem == PRESSING) {
         cout << "             Write checkpoint data " << flush;
         if (problem == SETTLING)
-            utils::WriteCheckpoint(sys, settled_ckpnt_file);
+            utils::WriteBodyShapesCheckpoint(sys, settled_ckpnt_file);
         else
-            utils::WriteCheckpoint(sys, pressed_ckpnt_file);
+            utils::WriteBodyShapesCheckpoint(sys, pressed_ckpnt_file);
         cout << sys->GetBodies().size() << " bodies" << endl;
     }
 

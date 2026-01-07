@@ -24,7 +24,7 @@
 
 #include "chrono/physics/ChSystem.h"
 #include "chrono/utils/ChFilters.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 #include "chrono/solver/ChIterativeSolverLS.h"
 
 #include "chrono_vehicle/ChConfigVehicle.h"
@@ -225,7 +225,7 @@ int main(int argc, char* argv[]) {
         driver.ExportPathPovray(out_dir);
     }
 
-    utils::ChWriterCSV csv("\t");
+    ChWriterCSV csv("\t");
     csv.Stream().setf(std::ios::scientific | std::ios::showpos);
     csv.Stream().precision(6);
 

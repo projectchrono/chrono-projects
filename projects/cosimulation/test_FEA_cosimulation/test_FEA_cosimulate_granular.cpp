@@ -34,7 +34,7 @@
 #include "chrono/ChConfig.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 
 using namespace chrono;
 using namespace chrono::fea;
@@ -335,7 +335,7 @@ int main(int argc, char* argv[]) {
 
             chrono::utils::WriteVisualizationAssets(systemG, filename, false);
             std::string delim = ",";
-            chrono::utils::ChWriterCSV csv(delim);
+            chrono::ChWriterCSV csv(delim);
             csv << triangles.size() << std::endl;
             for (int i = 0; i < triangles.size(); i++) {
                 csv << systemG->GetBodies().at(i)->GetPos() << vert_pos[triangles[i].x()] << vert_pos[triangles[i].y()]

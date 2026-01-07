@@ -21,7 +21,7 @@ set(DEMOS
 
 # Invoke find_package in CONFIG mode
 find_package(Chrono
-             COMPONENTS Cascade Irrlicht
+             COMPONENTS Cascade Irrlicht VSG
              CONFIG
 )
 

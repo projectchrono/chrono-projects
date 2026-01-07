@@ -39,6 +39,7 @@ int main(int argc, char* argv[]) {
 
     // Create a Chrono system
     ChSystemNSC sys;
+    sys.SetGravityY();
     sys.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
 
     //

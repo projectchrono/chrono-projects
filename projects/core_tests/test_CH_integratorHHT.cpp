@@ -54,16 +54,16 @@ class OscillatorProblem : public ChIntegrableIIorder {
         mT = T;
     }
 
-    /// compute  dy/dt=f(y,t)
-    virtual bool StateSolveA(ChStateDelta& dvdt,                ///< result: computed accel. a=dv/dt
-                             ChVectorDynamic<>& L,              ///< result: computed lagrangian multipliers, if any
-                             const ChState& x,                  ///< current state, x
-                             const ChStateDelta& v,             ///< current state, v
-                             const double T,                    ///< current time T
-                             const double dt,                   ///< timestep (if needed)
-                             bool force_state_scatter,          ///< if false, y and T are not scattered to the system
-                             bool full_update,                  ///< if true, perform a full update during scatter
-                             ChLumpingParms* lumping = nullptr  ///<
+    // compute  dy/dt=f(y,t)
+    virtual bool StateSolveA(ChStateDelta& dvdt,                // result: computed accel. a=dv/dt
+                             ChVectorDynamic<>& L,              // result: computed lagrangian multipliers, if any
+                             const ChState& x,                  // current state, x
+                             const ChStateDelta& v,             // current state, v
+                             const double T,                    // current time T
+                             const double dt,                   // timestep (if needed)
+                             bool force_state_scatter,          // if false, y and T are not scattered to the system
+                             bool full_update,                  // if true, perform a full update during scatter
+                             ChLumpingParms* lumping = nullptr  //
                              ) override {
         if (force_state_scatter)
             StateScatter(x, v, T, full_update);
@@ -73,23 +73,22 @@ class OscillatorProblem : public ChIntegrableIIorder {
         return true;
     }
 
-    /// Compute the correction with linear system
-    ///  Dv = [ c_a*M + c_v*dF/dv + c_x*dF/dx ]^-1 * R
-    virtual bool StateSolveCorrection(
-        ChStateDelta& Dv,             ///< result: computed Dv
-        ChVectorDynamic<>& L,         ///< result: computed lagrangian multipliers, if any
-        const ChVectorDynamic<>& R,   ///< the R residual
-        const ChVectorDynamic<>& Qc,  ///< the Qc residual
-        const double c_a,             ///< the factor in c_a*M
-        const double c_v,             ///< the factor in c_v*dF/dv
-        const double c_x,             ///< the factor in c_x*dF/dv
-        const ChState& x,             ///< current state, x part
-        const ChStateDelta& v,        ///< current state, v part
-        const double T,               ///< current time T
-        bool force_state_scatter,     ///< if false, x,v and T are not scattered to the system
-        bool full_update,             ///< if true, perform a full update during scatter
-        bool force_setup              ///< if true, call the solver's Setup() function
-        ) override {
+    // Compute the correction with linear system
+    //  Dv = [ c_a*M + c_v*dF/dv + c_x*dF/dx ]^-1 * R
+    virtual bool StateSolveCorrection(ChStateDelta& Dv,             // result: computed Dv
+                                      ChVectorDynamic<>& L,         // result: computed lagrangian multipliers, if any
+                                      const ChVectorDynamic<>& R,   // the R residual
+                                      const ChVectorDynamic<>& Qc,  // the Qc residual
+                                      const double c_a,             // the factor in c_a*M
+                                      const double c_v,             // the factor in c_v*dF/dv
+                                      const double c_x,             // the factor in c_x*dF/dv
+                                      const ChState& x,             // current state, x part
+                                      const ChStateDelta& v,        // current state, v part
+                                      const double T,               // current time T
+                                      bool force_state_scatter,  // if false, x,v and T are not scattered to the system
+                                      bool full_update,          // if true, perform a full update during scatter
+                                      bool force_setup,          // if true, call the solver's Setup() function
+                                      bool call_analyze) override {
         if (force_state_scatter)
             this->StateScatter(x, v, T, full_update);
 
@@ -98,14 +97,14 @@ class OscillatorProblem : public ChIntegrableIIorder {
         return true;
     }
 
-    ///    R += c*F
+    //    R += c*F
     virtual void LoadResidual_F(ChVectorDynamic<>& R,  ///< result: the R residual, R += c*F
                                 const double c         ///< a scaling factor
                                 ) override {
         R(0) += c * (sin(mT * 20) * 0.02 - this->K * mx - this->R * mv);
     }
 
-    ///    R += c*M*w
+    //    R += c*M*w
     virtual void LoadResidual_Mv(ChVectorDynamic<>& R,        ///< result: the R residual, R += c*M*v
                                  const ChVectorDynamic<>& w,  ///< the w vector
                                  const double c               ///< a scaling factor
@@ -113,20 +112,20 @@ class OscillatorProblem : public ChIntegrableIIorder {
         R(0) += c * this->M * w(0);
     }
 
-    /// nothing to do here- no constraints
+    // nothing to do here- no constraints
     virtual void LoadResidual_CqL(ChVectorDynamic<>& R,        ///< result: the R residual, R += c*Cq'*L
                                   const ChVectorDynamic<>& L,  ///< the L vector
                                   const double c               ///< a scaling factor
                                   ) override {}
 
-    /// nothing to do here- no constraints
+    // nothing to do here- no constraints
     virtual void LoadConstraint_C(ChVectorDynamic<>& Qc,        ///< result: the Qc residual, Qc += c*C
                                   const double c,               ///< a scaling factor
                                   const bool do_clamp = false,  ///< enable optional clamping of Qc
                                   const double mclam = 1e30     ///< clamping value
                                   ) override {}
 
-    /// nothing to do here- no constraints
+    // nothing to do here- no constraints
     virtual void LoadConstraint_Ct(ChVectorDynamic<>& Qc,  ///< result: the Qc residual, Qc += c*Ct
                                    const double c          ///< a scaling factor
                                    ) override {}
@@ -210,21 +209,21 @@ class PendulumProblem : public ChIntegrableIIorder {
 
     /// Compute the correction with linear system
     ///  Dv = [ c_a*M + c_v*dF/dv + c_x*dF/dx ]^-1 * R
-    virtual bool StateSolveCorrection(
-        ChStateDelta& Dv,             ///< result: computed Dv
-        ChVectorDynamic<>& L,         ///< result: computed lagrangian multipliers, if any
-        const ChVectorDynamic<>& R,   ///< the R residual
-        const ChVectorDynamic<>& Qc,  ///< the Qc residual
-        const double c_a,             ///< the factor in c_a*M
-        const double c_v,             ///< the factor in c_v*dF/dv
-        const double c_x,             ///< the factor in c_x*dF/dv
-        const ChState& x,             ///< current state, x part
-        const ChStateDelta& v,        ///< current state, v part
-        const double T,               ///< current time T
-        bool force_state_scatter,     ///< if false, x,v and T are not scattered to the system
-        bool full_update,             ///< if true, perform a full update during scatter
-        bool force_setup              ///< if true, call the solver's Setup() function
-        ) override {
+    virtual bool StateSolveCorrection(ChStateDelta& Dv,             // result: computed Dv
+                                      ChVectorDynamic<>& L,         // result: computed lagrangian multipliers, if any
+                                      const ChVectorDynamic<>& R,   // the R residual
+                                      const ChVectorDynamic<>& Qc,  // the Qc residual
+                                      const double c_a,             // the factor in c_a*M
+                                      const double c_v,             // the factor in c_v*dF/dv
+                                      const double c_x,             // the factor in c_x*dF/dv
+                                      const ChState& x,             // current state, x part
+                                      const ChStateDelta& v,        // current state, v part
+                                      const double T,               // current time T
+                                      bool force_state_scatter,  // if false, x,v and T are not scattered to the system
+                                      bool full_update,          // if true, perform a full update during scatter
+                                      bool call_setup,           // if true, call the solver's Setup() function
+                                      bool call_analysis         // if true, call the solver's Setup analyze phase
+                                      ) override {
         if (force_state_scatter)
             this->StateScatter(x, v, T, full_update);
 
@@ -380,7 +379,7 @@ void RigidPendulums() {
     double step = 1e-3;
     int num_steps = 100;
     bool step_control = true;
-    bool modified_Newton = true;
+    auto jacobian_update = ChTimestepperImplicit::JacobianUpdate::EVERY_STEP;
 
     ChSystemNSC system;
     system.SetGravitationalAcceleration(ChVector3d(0, -g, 0));
@@ -426,7 +425,7 @@ void RigidPendulums() {
     system.SetTimestepperType(ChTimestepper::Type::HHT);
     auto integrator = std::static_pointer_cast<ChTimestepperHHT>(system.GetTimestepper());
     integrator->SetStepControl(step_control);
-    integrator->SetModifiedNewton(modified_Newton);
+    integrator->SetJacobianUpdateMethod(jacobian_update);
     integrator->SetVerbose(true);
     integrator->SetAlpha(-0.2);
     integrator->SetMaxIters(20);

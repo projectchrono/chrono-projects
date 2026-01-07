@@ -19,9 +19,9 @@
 //
 // =============================================================================
 
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 #include "chrono/utils/ChFilters.h"
-#include "chrono/output/ChOutputASCII.h"
+#include "chrono/input_output/ChOutputASCII.h"
 
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleDataPath.h"
@@ -237,7 +237,7 @@ int main(int argc, char* argv[]) {
 
     // Initialize output file for driver inputs
     std::string driver_file = out_dir + "/driver_inputs.txt";
-    utils::ChWriterCSV driver_csv(" ");
+    ChWriterCSV driver_csv(" ");
 
     std::string ssc_file = out_dir + "/ssc_";
     if (turn_direction_left) {
@@ -255,7 +255,7 @@ int main(int argc, char* argv[]) {
         ssc_file.append("tmeasy");
     }
     ssc_file.append(".txt");
-    utils::ChWriterCSV ssc_csv(" ");
+    ChWriterCSV ssc_csv(" ");
 
     // Set up vehicle output
     feda.GetVehicle().SetChassisOutput(true);

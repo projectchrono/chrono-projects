@@ -495,6 +495,7 @@ int main(int argc, char* argv[])
 
   //cout << "Create DVI system" << endl;
   ChSystemParallelDVI* msystem = new ChSystemParallelDVI();
+  msystem->SetGravityY();
   msystem->Set_G_acc(ChVector<>(0, gravity, 0));
 
   // Create the shear box (with no shearing motion and the cieling locked)
