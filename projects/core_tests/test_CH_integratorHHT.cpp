@@ -1,5 +1,5 @@
-#include <cmath>
 #include <stdio.h>
+#include <cmath>
 
 #include "chrono/ChConfig.h"
 #include "chrono/physics/ChSystemNSC.h"
@@ -48,7 +48,10 @@ class OscillatorProblem : public ChIntegrableIIorder {
     }
 
     /// state -> system
-    virtual void StateScatter(const ChState& x, const ChStateDelta& v, const double T, bool full_update) override {
+    virtual void StateScatter(const ChState& x,
+                              const ChStateDelta& v,
+                              const double T,
+                              UpdateFlags update_flags) override {
         mx = x(0);
         mv = v(0);
         mT = T;
@@ -62,11 +65,11 @@ class OscillatorProblem : public ChIntegrableIIorder {
                              const double T,                    // current time T
                              const double dt,                   // timestep (if needed)
                              bool force_state_scatter,          // if false, y and T are not scattered to the system
-                             bool full_update,                  // if true, perform a full update during scatter
+                             UpdateFlags update_flags,          // if true, perform a full update during scatter
                              ChLumpingParms* lumping = nullptr  //
                              ) override {
         if (force_state_scatter)
-            StateScatter(x, v, T, full_update);
+            StateScatter(x, v, T, update_flags);
         double F = sin(mT * 20) * 0.02;
         dvdt(0) = (1. / M) * (F - K * mx - R * mv);
 
@@ -86,11 +89,11 @@ class OscillatorProblem : public ChIntegrableIIorder {
                                       const ChStateDelta& v,        // current state, v part
                                       const double T,               // current time T
                                       bool force_state_scatter,  // if false, x,v and T are not scattered to the system
-                                      bool full_update,          // if true, perform a full update during scatter
+                                      UpdateFlags update_flags,  // update type
                                       bool force_setup,          // if true, call the solver's Setup() function
                                       bool call_analyze) override {
         if (force_state_scatter)
-            this->StateScatter(x, v, T, full_update);
+            this->StateScatter(x, v, T, update_flags);
 
         Dv(0) = R(0) * 1.0 / (c_a * this->M + c_v * (-this->R) + c_x * (-this->K));
 
@@ -195,7 +198,10 @@ class PendulumProblem : public ChIntegrableIIorder {
     }
 
     /// state -> system
-    virtual void StateScatter(const ChState& x, const ChStateDelta& v, const double T, bool full_update) override {
+    virtual void StateScatter(const ChState& x,
+                              const ChStateDelta& v,
+                              const double T,
+                              UpdateFlags update_flags) override {
         mpx = x(0);
         mpy = x(1);
         mvx = v(0);
@@ -220,12 +226,12 @@ class PendulumProblem : public ChIntegrableIIorder {
                                       const ChStateDelta& v,        // current state, v part
                                       const double T,               // current time T
                                       bool force_state_scatter,  // if false, x,v and T are not scattered to the system
-                                      bool full_update,          // if true, perform a full update during scatter
+                                      UpdateFlags update_flags,  // update type
                                       bool call_setup,           // if true, call the solver's Setup() function
                                       bool call_analysis         // if true, call the solver's Setup analyze phase
                                       ) override {
         if (force_state_scatter)
-            this->StateScatter(x, v, T, full_update);
+            this->StateScatter(x, v, T, update_flags);
 
         ChVector3d dirpend(-mpx, -mpy, 0);
         dirpend.Normalize();

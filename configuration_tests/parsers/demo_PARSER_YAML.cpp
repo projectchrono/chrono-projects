@@ -27,22 +27,22 @@
 #include "chrono/physics/ChSystem.h"
 
 #ifdef CHRONO_IRRLICHT
-    #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
+#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 using namespace chrono::irrlicht;
 #endif
 #ifdef CHRONO_VSG
-    #include "chrono_vsg/ChVisualSystemVSG.h"
+#include "chrono_vsg/ChVisualSystemVSG.h"
 using namespace chrono::vsg3d;
 #endif
 
-#include "chrono_thirdparty/filesystem/path.h"
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
+#include "chrono_thirdparty/filesystem/path.h"
 
 using namespace chrono;
 
 // -----------------------------------------------------------------------------
 
-bool second_instance = true;  // create a second instance of the model
+bool second_instance = false;  // create a second instance of the model
 ChFramed frame1 = second_instance ? ChFramed(ChVector3d(0, -1, 0), QUNIT) : ChFramed(ChVector3d(0, 0, 0), QUNIT);
 ChFramed frame2 = ChFramed(ChVector3d(0, +1, 0), QUNIT);
 std::string prefix1 = second_instance ? "m1_" : "";
@@ -56,42 +56,35 @@ int main(int argc, char* argv[]) {
     std::cout << "Copyright (c) 2025 projectchrono.org\nChrono version: " << CHRONO_VERSION << std::endl;
 
     // Set path to Chrono data directories
-    std::cout << "Data directory: " << CHRONO_DATA_DIR << std::endl; 
+    std::cout << "Data directory: " << CHRONO_DATA_DIR << std::endl;
     SetChronoDataPath(CHRONO_DATA_DIR);
 
-    // Extract filenames from command-line arguments
-    std::string model_yaml_filename = GetChronoDataFile("yaml/models/slider_crank.yaml");
-    std::string sim_yaml_filename = GetChronoDataFile("yaml/simulations/basic_mbs.yaml");
+    // Extract filename from command-line arguments
+    std::string yaml_filename = GetChronoDataFile("yaml/mbs/mbs.yaml");
 
     ChCLI cli(argv[0], "");
-    cli.AddOption<std::string>("", "m,model_file", "model specification YAML file", model_yaml_filename);
-    cli.AddOption<std::string>("", "s,sim_file", "simulation specification YAML file", sim_yaml_filename);
-
+    cli.AddOption<std::string>("", "s,simulation_file", "MBS simulation specification YAML file", yaml_filename);
     if (!cli.Parse(argc, argv, true))
         return 1;
-
     if (argc == 1) {
         cli.Help();
-        std::cout << "Using default YAML model and simulation specification" << std::endl;
+        std::cout << "Using default YAML simulation specification" << std::endl;
     }
+    yaml_filename = cli.GetAsType<std::string>("simulation_file");
 
     std::cout << std::endl;
-    std::cout << "Model YAML file:        " << model_yaml_filename << std::endl;
-    std::cout << "Simulation YAML file:   " << sim_yaml_filename << std::endl;
+    std::cout << "YAML specification file: " << yaml_filename << std::endl;
 
-    // Create YAML parser object
-    parsers::ChParserMbsYAML parser;
-    parser.SetVerbose(true);
-
-    // Load the YAML simulation file and create a Chrono system based on its content
-    parser.LoadSimulationFile(sim_yaml_filename);
+    // Create YAML parser object, load the YAML file, then create a Chrono system and populate it
+    parsers::ChParserMbsYAML parser(yaml_filename, true);
     auto sys = parser.CreateSystem();
-
-    // Load the YAML model and populate the Chrono system
-    parser.LoadModelFile(model_yaml_filename);
     instance1 = parser.Populate(*sys, frame1, prefix1);
     if (second_instance)
         instance2 = parser.Populate(*sys, frame2, prefix2);
+
+    // Print hierarchy of modeling components in ChSystem
+    ////std::cout << "Number of moidel instances: " << parser.GetNumInstances() << std::endl;
+    ////sys->ShowHierarchy(std::cout);
 
     // Extract information from parsed YAML files
     const std::string& model_name = parser.GetName();
@@ -104,7 +97,7 @@ int main(int argc, char* argv[]) {
     const ChVector3d& camera_location = parser.GetCameraLocation();
     const ChVector3d& camera_target = parser.GetCameraTarget();
     bool enable_shadows = parser.EnableShadows();
-    ChOutput::Type output_type = parser.GetOutputType();
+    bool output = parser.Output();
     double output_fps = parser.GetOutputFPS();
 
     // Print system hierarchy
@@ -150,7 +143,6 @@ int main(int argc, char* argv[]) {
                 vis_vsg->AddCamera(camera_location, camera_target);
                 vis_vsg->SetWindowSize(1280, 800);
                 vis_vsg->SetWindowPosition(100, 100);
-                vis_vsg->SetBackgroundColor(ChColor(0.4f, 0.45f, 0.55f));
                 vis_vsg->SetCameraVertical(camera_vertical);
                 vis_vsg->SetCameraAngleDeg(40.0);
                 vis_vsg->SetLightIntensity(1.0f);
@@ -168,8 +160,13 @@ int main(int argc, char* argv[]) {
     }
 
     // Create output directory
-    if (output_type != ChOutput::Type::NONE) {
-        std::string out_dir = GetChronoOutputPath() + "YAML_TEST";
+    if (output) {
+        std::string out_dir = GetChronoOutputPath() + "YAML_MBS";
+        if (!filesystem::create_directory(filesystem::path(out_dir))) {
+            std::cout << "Error creating directory " << out_dir << std::endl;
+            return 1;
+        }
+        out_dir = out_dir + "/" + model_name;
         if (!filesystem::create_directory(filesystem::path(out_dir))) {
             std::cout << "Error creating directory " << out_dir << std::endl;
             return 1;
@@ -199,7 +196,7 @@ int main(int argc, char* argv[]) {
                 break;
         }
 
-        if (output_type != ChOutput::Type::NONE) {
+        if (output) {
             if (time >= output_frame / output_fps) {
                 parser.SaveOutput(*sys, output_frame);
                 output_frame++;

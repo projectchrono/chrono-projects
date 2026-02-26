@@ -301,7 +301,7 @@ int main(int argc, char* argv[]) {
             vis_vsg->SetChaseCamera(ChVector3d(0.0, 0.0, 1.75), 9.0, 0.5);
             vis_vsg->SetWindowSize(ChVector2i(1200, 800));
             vis_vsg->SetWindowPosition(ChVector2i(100, 300));
-            vis_vsg->EnableSkyBox(true);
+            vis_vsg->EnableSkyTexture();
             vis_vsg->SetCameraAngleDeg(40);
             vis_vsg->SetLightIntensity(1.0f);
             vis_vsg->SetLightDirection(1.5 * CH_PI_2, CH_PI_4);
