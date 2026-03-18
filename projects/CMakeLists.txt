@@ -30,39 +30,18 @@ endif()
 # Invoke CMake in subdirectories
 #-----------------------------------------------------------------------------
 
-cmake_dependent_option(ENABLE_PROJECTS_DEM_VALIDATION 
-	"Enable projects for DEM validation" ON
-	"ENABLE_PROJECTS" OFF)
-#cmake_dependent_option(ENABLE_PROJECTS_CONSTRAINT_FLUID 
-#	"Enable projects using constraint fluids, require zlib" OFF
-#	"ENABLE_PROJECTS" OFF)
-#cmake_dependent_option(ENABLE_PROJECTS_MULTICORE_TESTS 
-#	"Enable projects for Chrono::Multicore tests" ON
-#	"ENABLE_PROJECTS" OFF)
-cmake_dependent_option(ENABLE_PROJECTS_VEHICLE_TESTS 
-	"Enable projects for Chrono::Vehicle tests" ON
-	"ENABLE_PROJECTS" OFF)
-cmake_dependent_option(ENABLE_PROJECTS_CORE_TESTS 
-	"Enable projects for Chrono core tests" ON
-	"ENABLE_PROJECTS" OFF)
-cmake_dependent_option(ENABLE_PROJECTS_PHYSICS_TESTS 
-	"Enable projects for basic physics tests" ON
-	"ENABLE_PROJECTS" OFF)
-cmake_dependent_option(ENABLE_PROJECTS_MBS_TESTS
-	"Enable projects for MBS simulation" ON
-	"ENABLE_PROJECTS" OFF)
-cmake_dependent_option(ENABLE_PROJECTS_FEA_TESTS 
-	"Enable projects for Chrono::FEA tests" ON
-	"ENABLE_PROJECTS" OFF)
-cmake_dependent_option(ENABLE_PROJECTS_COSIMULATION 
-	"Enable projects for Chrono::Vehicle cosimulation" ON
-	"ENABLE_PROJECTS" OFF)
-cmake_dependent_option(ENABLE_PROJECTS_DEM_TESTS 
-	"Enable projects for Chrono::DEM granular tests" ON
-	"ENABLE_PROJECTS" OFF)
-cmake_dependent_option(ENABLE_PROJECTS_SYN_HIGHWAY 
-	"Enable SynChrono Highway test" OFF
-	"ENABLE_PROJECTS" OFF)
+cmake_dependent_option(ENABLE_PROJECTS_DEM_VALIDATION  "Enable projects for DEM validation"               ON  "ENABLE_PROJECTS" OFF)
+cmake_dependent_option(ENABLE_PROJECTS_VEHICLE_TESTS   "Enable projects for Chrono::Vehicle tests"        ON  "ENABLE_PROJECTS" OFF)
+cmake_dependent_option(ENABLE_PROJECTS_CORE_TESTS      "Enable projects for Chrono core tests"            ON  "ENABLE_PROJECTS" OFF)
+cmake_dependent_option(ENABLE_PROJECTS_PHYSICS_TESTS   "Enable projects for basic physics tests"          ON  "ENABLE_PROJECTS" OFF)
+cmake_dependent_option(ENABLE_PROJECTS_MBS_TESTS       "Enable projects for MBS simulation"               ON  "ENABLE_PROJECTS" OFF)
+cmake_dependent_option(ENABLE_PROJECTS_FEA_TESTS       "Enable projects for Chrono::FEA tests"            ON  "ENABLE_PROJECTS" OFF)
+cmake_dependent_option(ENABLE_PROJECTS_COSIMULATION    "Enable projects for Chrono::Vehicle cosimulation" ON  "ENABLE_PROJECTS" OFF)
+cmake_dependent_option(ENABLE_PROJECTS_DEM_TESTS       "Enable projects for Chrono::DEM granular tests"   ON  "ENABLE_PROJECTS" OFF)
+cmake_dependent_option(ENABLE_PROJECTS_CRM_TESTS       "Enable projects for Chrono::FSI-SPH CRM tests"    ON  "ENABLE_PROJECTS" OFF)
+cmake_dependent_option(ENABLE_PROJECTS_SYN_HIGHWAY     "Enable SynChrono Highway test"                    OFF "ENABLE_PROJECTS" OFF)
+#cmake_dependent_option(ENABLE_PROJECTS_CONSTRAINT_FLUID "Enable projects using constraint fluids"         OFF "ENABLE_PROJECTS" OFF)
+#cmake_dependent_option(ENABLE_PROJECTS_MULTICORE_TESTS  "Enable projects for Chrono::Multicore tests"     ON  "ENABLE_PROJECTS" OFF)
 
 if (ENABLE_PROJECTS_CORE_TESTS)
   add_subdirectory(core_tests)
@@ -94,6 +73,10 @@ endif()
 
 if (ENABLE_PROJECTS_DEM_TESTS)
   add_subdirectory(dem_tests)
+endif()
+
+if (ENABLE_PROJECTS_CRM_TESTS)
+  add_subdirectory(crm_tests)
 endif()
 
 if (ENABLE_PROJECTS_COSIMULATION)
