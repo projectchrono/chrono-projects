@@ -38,6 +38,7 @@ cmake_dependent_option(ENABLE_PROJECTS_MBS_TESTS       "Enable projects for MBS 
 cmake_dependent_option(ENABLE_PROJECTS_FEA_TESTS       "Enable projects for Chrono::FEA tests"            ON  "ENABLE_PROJECTS" OFF)
 cmake_dependent_option(ENABLE_PROJECTS_COSIMULATION    "Enable projects for Chrono::Vehicle cosimulation" ON  "ENABLE_PROJECTS" OFF)
 cmake_dependent_option(ENABLE_PROJECTS_DEM_TESTS       "Enable projects for Chrono::DEM granular tests"   ON  "ENABLE_PROJECTS" OFF)
+cmake_dependent_option(ENABLE_PROJECTS_SPH_TESTS       "Enable projects for Chrono::FSI-SPH tests"        ON  "ENABLE_PROJECTS" OFF)
 cmake_dependent_option(ENABLE_PROJECTS_CRM_TESTS       "Enable projects for Chrono::FSI-SPH CRM tests"    ON  "ENABLE_PROJECTS" OFF)
 cmake_dependent_option(ENABLE_PROJECTS_SYN_HIGHWAY     "Enable SynChrono Highway test"                    OFF "ENABLE_PROJECTS" OFF)
 #cmake_dependent_option(ENABLE_PROJECTS_CONSTRAINT_FLUID "Enable projects using constraint fluids"         OFF "ENABLE_PROJECTS" OFF)
@@ -73,6 +74,10 @@ endif()
 
 if (ENABLE_PROJECTS_DEM_TESTS)
   add_subdirectory(dem_tests)
+endif()
+
+if (ENABLE_PROJECTS_SPH_TESTS)
+  add_subdirectory(sph_tests)
 endif()
 
 if (ENABLE_PROJECTS_CRM_TESTS)
