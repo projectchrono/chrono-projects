@@ -11,7 +11,9 @@ message(STATUS "\n---- CRM projects\n")
 #--------------------------------------------------------------
 
 set(TESTS
-        test_FSI-SPH_ConePenetrometer
+    test_FSI-SPH_ConePenetrometer
+    test_FSI-SPH_Cratering
+    test_FSI-SPH_NormalBevameter
 )
 
 #--------------------------------------------------------------
