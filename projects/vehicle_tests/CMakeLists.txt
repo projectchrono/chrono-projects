@@ -12,7 +12,7 @@ message(STATUS "\n---- VEHICLE projects\n")
 # Invoke find_package in CONFIG mode
 find_package(Chrono QUIET
              COMPONENTS Vehicle 
-             OPTIONAL_COMPONENTS Irrlicht PardisoMKL Multicore VSG
+             OPTIONAL_COMPONENTS VSG Irrlicht Postprocess PardisoMKL Multicore
              CONFIG
 )
 
@@ -42,14 +42,19 @@ add_subdirectory(test_FEDA)
 add_subdirectory(test_BMW_E90)
 add_subdirectory(test_Cherokee)
 
-if (CHRONO_IRRLICHT_FOUND)
+if(CHRONO_IRRLICHT_FOUND)
   message(STATUS "Programs using Chrono::Irrlicht...")
   add_subdirectory(test_sprocket)
   add_subdirectory(test_WheeledGenericManeuvers)
   add_subdirectory(test_HMMWV)
 endif()
 
-if (CHRONO_MULTICORE_FOUND)
+if(CHRONO_VSG_FOUND)
+  message(STATUS "Programs using Chrono::VSG...")
+  add_subdirectory(test_checkpoint)
+endif()
+
+if(CHRONO_MULTICORE_FOUND)
   message(STATUS "Programs using Chrono::Multicore...")
   add_subdirectory(test_M113_multicore)
 endif()
