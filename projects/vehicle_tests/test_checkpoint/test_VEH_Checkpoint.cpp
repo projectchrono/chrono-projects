@@ -24,28 +24,34 @@
 #include "chrono/physics/ChSystemSMC.h"
 
 #include "chrono/functions/ChFunction.h"
-#include "chrono/utils/ChUtils.h"
 #include "chrono/input_output/ChWriterCSV.h"
 #include "chrono/solver/ChSolverBB.h"
+#include "chrono/utils/ChUtils.h"
 
+#include "chrono_vehicle/ChConfigVehicle.h"
+#include "chrono_vehicle/ChVehicleDataPath.h"
+#include "chrono_vehicle/ChVehicleVisualSystem.h"
 #include "chrono_vehicle/ChWorldFrame.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
-#include "chrono_vehicle/ChVehicleVisualSystem.h"
+
+#include "chrono_models/vehicle/hmmwv/HMMWV.h"
 
 #ifdef CHRONO_VSG
-    #include "chrono_vehicle/wheeled_vehicle/ChWheeledVehicleVisualSystemVSG.h"
+#include "chrono_vehicle/wheeled_vehicle/ChWheeledVehicleVisualSystemVSG.h"
 #endif
 
 #ifdef CHRONO_POSTPROCESS
-    #include "chrono_postprocess/ChGnuPlot.h"
+#include "chrono_postprocess/ChGnuPlot.h"
 #endif
 
 #include "chrono_thirdparty/filesystem/path.h"
 
-#include "demos/vehicle/WheeledVehicleModels.h"
+using namespace chrono;
+using namespace chrono::vehicle;
+using namespace chrono::vehicle::hmmwv;
 
-using std::cout;
 using std::cerr;
+using std::cout;
 using std::endl;
 
 // =============================================================================
@@ -95,75 +101,106 @@ RigidTerrain CreateTerrain(ChSystem* sys, double height) {
 
 // =============================================================================
 
-// Create a vehicle in the given system from the specified model at the origin with no rotation.
-ChWheeledVehicle& CreateVehicle(ChSystem* sys, std::shared_ptr<WheeledVehicleModel> vehicle_model) {
-    vehicle_model->Create(sys, ChCoordsysd(ChVector3d(0, 0, 0.5), QUNIT), false);
-    return vehicle_model->GetVehicle();
-}
+class MyVehicle {
+  public:
+    MyVehicle(ChSystem* system) : system(system) { hmmwv_full = chrono_types::make_unique<HMMWV_Full>(system); }
 
-// Create a vehicle in the given system from the specified model, and initialize its state from checkpoint files.
-// The position of all new bodies is offset by the specified amount.
-ChWheeledVehicle& CreateVehicle(ChSystem* sys, std::shared_ptr<WheeledVehicleModel> vehicle_model, const std::string& out_dir, const ChVector2d& offset) {
-    // Cache all bodies in the system
-    std::set<ChBody*> pre_existing;
-    for (auto& body : sys->GetBodies())
-        pre_existing.insert(body.get());
+    void SetChassisVisualizationType(VisualizationType type) { chassis_visualization_type = type; }
+    void SetChassisCollisionType(CollisionType type) { chassis_collision_type = type; }
 
-    // Create the vehicle from the specified model
-    auto& vehicle = CreateVehicle(sys, vehicle_model);
+    void Construct(const ChCoordsys<>& init_pos) {
+        hmmwv_full->SetChassisCollisionType(chassis_collision_type);
+        hmmwv_full->SetChassisFixed(false);
+        hmmwv_full->SetInitPosition(init_pos);
+        hmmwv_full->SetEngineType(EngineModelType::SIMPLE_MAP);
+        hmmwv_full->SetTransmissionType(TransmissionModelType::AUTOMATIC_SIMPLE_CVT);
+        hmmwv_full->SetDriveType(DrivelineTypeWV::AWD);
+        hmmwv_full->UseTierodBodies(true);
+        hmmwv_full->SetSteeringType(SteeringTypeWV::PITMAN_ARM);
+        hmmwv_full->SetBrakeType(BrakeType::SHAFTS);
+        hmmwv_full->SetTireType(TireModelType::TMEASY);
+        hmmwv_full->SetTireCollisionType(ChTire::CollisionType::SINGLE_POINT);
+        hmmwv_full->Initialize();
+        hmmwv_full->SetChassisVisualizationType(chassis_visualization_type);
+        hmmwv_full->SetSuspensionVisualizationType(VisualizationType::PRIMITIVES);
+        hmmwv_full->SetSteeringVisualizationType(VisualizationType::PRIMITIVES);
+        hmmwv_full->SetWheelVisualizationType(VisualizationType::MESH);
+        hmmwv_full->SetTireVisualizationType(VisualizationType::MESH);
+    }
 
-    // Initialize vehicle and tires from checkpoint files
-    vehicle.ImportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/vehicle_checkpoint.txt");
-    int tire_id = 0;
-    for (const auto& a : vehicle.GetAxles()) {
-        for (const auto& w : a->GetWheels()) {
-            if (w->GetTire()) {
-                w->GetTire()->ImportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/tire_" + std::to_string(tire_id++) + "_checkpoint.txt");
+    void Construct(const std::string& out_dir, const ChVector2d& xy_pos, double yaw_angle) {
+        // Cache all bodies in the system
+        std::set<ChBody*> pre_existing;
+        for (auto& body : system->GetBodies())
+            pre_existing.insert(body.get());
+
+        hmmwv_full = chrono_types::make_unique<HMMWV_Full>(system);
+        Construct(ChCoordsysd());
+        auto& vehicle = hmmwv_full->GetVehicle();
+
+        // Initialize vehicle and tires from checkpoint files
+        vehicle.ImportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/vehicle_checkpoint.txt");
+        int tire_id = 0;
+        for (const auto& a : vehicle.GetAxles()) {
+            for (const auto& w : a->GetWheels()) {
+                if (w->GetTire()) {
+                    w->GetTire()->ImportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/tire_" + std::to_string(tire_id++) + "_checkpoint.txt");
+                }
             }
         }
+
+        // Execute the function 'fn' for all new bodies in the system
+        auto for_vehicle_bodies = [&](auto fn) {
+            for (auto& body : system->GetBodies())
+                if (pre_existing.find(body.get()) == pre_existing.end())
+                    fn(body);
+        };
+
+        // Modify (translate and rotate) states for all new bodies
+        auto old_veh_pos = vehicle.GetPos();
+        auto old_veh_rot = vehicle.GetRot();
+        auto old_veh_yaw = vehicle.GetRot().GetCardanAnglesZYX().z();
+        auto new_veh_pos = ChVector3d(xy_pos.x(), xy_pos.y(), old_veh_pos.z());
+        auto new_veh_rot = QuatFromAngleZ(yaw_angle - old_veh_yaw) * old_veh_rot;
+
+        auto old_X_GV = vehicle.GetRefFrame();
+        auto old_X_VG = old_X_GV.GetInverse();
+        auto new_X_GV = ChFrameMoving<>(new_veh_pos, new_veh_rot);
+
+        for_vehicle_bodies([&](auto& body) {
+            ////std::cout << body->GetName() << std::endl;
+            ////cout << "  old pos: " << body->GetPos() << std::endl;
+            ////cout << "  old rot: " << body->GetRot().GetCardanAnglesZYX() * CH_RAD_TO_DEG << std::endl;
+
+            auto old_X_GB = body->GetFrameCOMToAbs();  // (old) global -> body COM
+            auto X_VB = old_X_VG * old_X_GB;           // vehicle -> body COM
+            auto new_X_GB = new_X_GV * X_VB;           // (new) global -> body COM
+
+            body->SetPos(new_X_GB.GetPos());
+            body->SetRot(new_X_GB.GetRot());
+            body->SetPosDt(new_X_GB.GetPosDt());
+            body->SetRotDt(new_X_GB.GetRotDt());
+
+            ////cout << "  new pos: " << body->GetPos() << std::endl;
+            ////cout << "  new rot: " << body->GetRot().GetCardanAnglesZYX() * CH_RAD_TO_DEG << std::endl;
+        });
     }
 
-    // Find new bodies in the system
-    auto for_vehicle_bodies = [&](auto fn) {
-        for (auto& body : sys->GetBodies())
-            if (pre_existing.find(body.get()) == pre_existing.end())
-                fn(body);
-    };
-
-    // Offset position of all new bodies
-    ChVector3d old_pos = vehicle.GetPos();
-    if (offset.Length() > 1e-6) {
-        for_vehicle_bodies([&](auto& body) { body->SetPos(body->GetPos() + ChVector3d(offset.x(), offset.y(), 0)); });
-    }
-
-    return vehicle;
-}
-
-// =============================================================================
-
-// Driver system that uses specified functions for throttle, braking, and steering inputs.
-class FunctionDriver : public ChDriver {
-  public:
-    FunctionDriver(ChVehicle& vehicle) : ChDriver(vehicle), m_throttle_fun(nullptr), m_braking_fun(nullptr), m_steering_fun(nullptr) {}
-
-    void SetFunctions(std::shared_ptr<ChFunction> throttle, std::shared_ptr<ChFunction> braking, std::shared_ptr<ChFunction> steering) {
-        m_throttle_fun = throttle;
-        m_braking_fun = braking;
-        m_steering_fun = steering;
-    }
-
-    virtual void Synchronize(double time) override {
-        DriverInputs driver_inputs = GetInputs();
-        m_throttle = m_throttle_fun->GetVal(time);
-        m_braking = m_braking_fun->GetVal(time);
-        m_steering = m_steering_fun->GetVal(time);
-    }
+    ChWheeledVehicle& GetVehicle() { return hmmwv_full->GetVehicle(); }
+    void Synchronize(double time, const DriverInputs& driver_inputs, const ChTerrain& terrain) { hmmwv_full->Synchronize(time, driver_inputs, terrain); }
+    void Advance(double step) { hmmwv_full->Advance(step); }
+    ChVector3d TrackPoint() const { return ChVector3d(0, 0, 1.75); }
+    double CameraDistance() const { return 8.0; }
+    double CameraHeight() const { return 0.5; }
 
   private:
-    std::shared_ptr<ChFunction> m_throttle_fun;
-    std::shared_ptr<ChFunction> m_braking_fun;
-    std::shared_ptr<ChFunction> m_steering_fun;
+    ChSystem* system;
+    std::unique_ptr<HMMWV_Full> hmmwv_full;
+    VisualizationType chassis_visualization_type = VisualizationType::NONE;
+    CollisionType chassis_collision_type = CollisionType::NONE;
 };
+
+// =============================================================================
 
 // Steering function that starts at zero and then follows a cosine wave after a specified delay.
 class FunctionCosineSteering : public ChFunction {
@@ -179,46 +216,60 @@ class FunctionCosineSteering : public ChFunction {
             return 0;
         return 0.5 + 0.5 * std::cos(CH_2PI * frequency * (time - delay) + CH_PI);
     }
+
   private:
     double delay;
     double frequency;
 };
 
-// Create a driver that uses the specified functions for throttle, braking, and steering inputs.
-FunctionDriver& CreateDriver(ChVehicle& vehicle, std::shared_ptr<ChFunction> throttle_fun, std::shared_ptr<ChFunction> braking_fun, std::shared_ptr<ChFunction> steering_fun) {
-    auto* driver = new FunctionDriver(vehicle);
-    driver->SetFunctions(throttle_fun, braking_fun, steering_fun);
-    driver->Initialize();
-    return *driver;
-}
+struct DriverFunctions {
+    DriverFunctions(std::shared_ptr<ChFunction> throttle, std::shared_ptr<ChFunction> braking, std::shared_ptr<ChFunction> steering)
+        : throttle(throttle), braking(braking), steering(steering) {}
 
-// Create a driver and initialize its state from a checkpoint file.
-// The driver inputs are kept constant at the checkpoint values.
-FunctionDriver& CreateDriver(ChVehicle& vehicle, const std::string& out_dir) {
-    auto* driver = new FunctionDriver(vehicle);
-    driver->ImportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/driver_checkpoint.txt");
+    bool HasFunctions() const { return throttle && braking && steering; }
 
-    // Keep driver inputs constant at the checkpoint values
-    auto throttle_fun = chrono_types::make_shared<ChFunctionConst>(driver->GetThrottle());
-    auto braking_fun = chrono_types::make_shared<ChFunctionConst>(driver->GetBraking());
-    auto steering_fun = chrono_types::make_shared<ChFunctionConst>(driver->GetSteering());
-    driver->SetFunctions(throttle_fun, braking_fun, steering_fun);
+    std::shared_ptr<ChFunction> throttle;
+    std::shared_ptr<ChFunction> braking;
+    std::shared_ptr<ChFunction> steering;
+};
 
-    driver->Initialize();
-    return *driver;
-}
+// Driver system using specified functions
+class MyDriver : public ChDriver {
+  public:
+    MyDriver(ChVehicle& vehicle, const DriverFunctions& functions)
+        : ChDriver(vehicle), m_throttle_fun(functions.throttle), m_braking_fun(functions.braking), m_steering_fun(functions.steering) {}
+
+    MyDriver(ChVehicle& vehicle, const std::string& out_dir) : ChDriver(vehicle) {
+        ImportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/driver_checkpoint.txt");
+        m_throttle_fun = chrono_types::make_shared<ChFunctionConst>(GetThrottle());
+        m_braking_fun = chrono_types::make_shared<ChFunctionConst>(GetBraking());
+        m_steering_fun = chrono_types::make_shared<ChFunctionConst>(GetSteering());
+    }
+
+    virtual void Synchronize(double time) override {
+        DriverInputs driver_inputs = GetInputs();
+        m_throttle = m_throttle_fun->GetVal(time);
+        m_braking = m_braking_fun->GetVal(time);
+        m_steering = m_steering_fun->GetVal(time);
+    }
+
+  private:
+    std::shared_ptr<ChFunction> m_throttle_fun;
+    std::shared_ptr<ChFunction> m_braking_fun;
+    std::shared_ptr<ChFunction> m_steering_fun;
+};
 
 // =============================================================================
 
 #ifdef CHRONO_VSG
 
 // Create a VSG visualization system for the specified vehicle and driver.
-std::shared_ptr<ChWheeledVehicleVisualSystemVSG> CreateVisualization(ChVehicle& vehicle, ChDriver& driver, std::shared_ptr<WheeledVehicleModel> vehicle_model) {
+std::shared_ptr<ChWheeledVehicleVisualSystemVSG> CreateVisualization(MyVehicle& my_vehicle, MyDriver& my_driver) {
+    auto& vehicle = my_vehicle.GetVehicle();
     auto vis = chrono_types::make_shared<ChWheeledVehicleVisualSystemVSG>();
-    vis->SetWindowTitle(vehicle_model->ModelName());
     vis->AttachVehicle(&vehicle);
-    vis->AttachDriver(&driver);
-    vis->SetChaseCamera(vehicle_model->TrackPoint(), vehicle_model->CameraDistance(), vehicle_model->CameraHeight());
+    vis->AttachDriver(&my_driver);
+    vis->SetChaseCamera(my_vehicle.TrackPoint(), my_vehicle.CameraDistance(), my_vehicle.CameraHeight());
     vis->SetWindowSize(1280, 800);
     vis->EnableSkyTexture(SkyMode::DOME);
     vis->SetCameraAngleDeg(40);
@@ -252,30 +303,29 @@ bool RenderVisualization(std::shared_ptr<ChWheeledVehicleVisualSystemVSG> vis, d
 
 // =============================================================================
 
-// Simulate a single vehicle from the specified model for the specified duration, and save final checkpoint.
-void SimulateSingle(std::shared_ptr<WheeledVehicleModel> vehicle_model, double time_end, const std::string& out_dir) {
-    cout << "Simulate single vehicle: " << vehicle_model->ModelName() << endl;
+// Simulate a single vehicle
+// - use the specified driver functions
+// - stop simulation when reaching the end time or the target speed
+// - save final checkpoint in the specified directory
+void SimulateSingle(double time_end, double target_speed, const DriverFunctions& functions, const std::string& out_dir) {
+    cout << "Simulate single vehicle" << endl;
 
     // Create the containing Chrono system
     auto sys = CreateSystem();
     double step_size = 2e-3;
 
-    // Create the vehicle model
-    auto& vehicle = CreateVehicle(sys.get(), vehicle_model);
+    // Create the vehicle model, terrain, and driver system
+    MyVehicle my_vehicle(sys.get());
+    my_vehicle.Construct(ChCoordsysd(ChVector3d(0, 0, 0.5), QUNIT));
+    auto& vehicle = my_vehicle.GetVehicle();
     vehicle.EnableRealtime(true);
 
-    // Create the terrain
     RigidTerrain terrain = CreateTerrain(sys.get(), 0.0);
-
-    // Create the driver system
-    auto throttle_fun = chrono_types::make_shared<ChFunctionConst>(0.5);
-    auto braking_fun = chrono_types::make_shared<ChFunctionConst>(0.0);
-    auto steering_fun = chrono_types::make_shared<FunctionCosineSteering>(1.0, 0.5);
-    auto& driver = CreateDriver(vehicle, throttle_fun, braking_fun, steering_fun);
+    MyDriver my_driver(vehicle, functions);
 
     // Create the vehicle run-time visualization
 #ifdef CHRONO_VSG
-    auto vis = CreateVisualization(vehicle, driver, vehicle_model);
+    auto vis = CreateVisualization(my_vehicle, my_driver);
 #endif
 
     // Simulation loop
@@ -290,20 +340,21 @@ void SimulateSingle(std::shared_ptr<WheeledVehicleModel> vehicle_model, double t
 #endif
         if (time > time_end)
             break;
+        if (vehicle.GetSpeed() >= target_speed)
+            break;
 
         // Synchronize subsystems
-        DriverInputs driver_inputs = driver.GetInputs();
-        driver.Synchronize(time);
+        my_driver.Synchronize(time);
         terrain.Synchronize(time);
-        vehicle_model->Synchronize(time, driver_inputs, terrain);
+        my_vehicle.Synchronize(time, my_driver.GetInputs(), terrain);
 #ifdef CHRONO_VSG
-        vis->Synchronize(time, driver_inputs);
+        vis->Synchronize(time, my_driver.GetInputs());
 #endif
 
         // Advance simulation
-        driver.Advance(step_size);
+        my_driver.Advance(step_size);
         terrain.Advance(step_size);
-        vehicle_model->Advance(step_size);
+        my_vehicle.Advance(step_size);
 #ifdef CHRONO_VSG
         vis->Advance(step_size);
 #endif
@@ -319,7 +370,7 @@ void SimulateSingle(std::shared_ptr<WheeledVehicleModel> vehicle_model, double t
     cout << endl;
 
     vehicle.ExportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/vehicle_checkpoint.txt");
-    driver.ExportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/driver_checkpoint.txt");
+    my_driver.ExportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/driver_checkpoint.txt");
     int tire_id = 0;
     for (const auto& a : vehicle.GetAxles()) {
         for (const auto& w : a->GetWheels()) {
@@ -332,35 +383,36 @@ void SimulateSingle(std::shared_ptr<WheeledVehicleModel> vehicle_model, double t
 
 // =============================================================================
 
-// Simulate multiple vehicles from the specified model, initialized from the same checkpoint, and offset in space by the specified amounts.
-void SimulateMultiple(std::shared_ptr<WheeledVehicleModel> vehicle_model, const std::vector<ChVector2d>& offsets, const std::string& out_dir) {
-    cout << "Simulate multiple vehicles: " << vehicle_model->ModelName() << endl;
+// Simulate multiple vehicles
+// - initialize from the checkpoint in the specified directory
+// - place vehicles at the given x-y locations and orient with the given yaw angles
+// - create a driver with specified functions
+// - if no driver functions, maintain constant driver inputs (from checkpoint)
+void SimulateMultiple(const std::vector<std::pair<ChVector2d, double>>& positions, const DriverFunctions& functions, const std::string& out_dir) {
+    cout << "Simulate multiple vehicles" << endl;
 
     // Create the containing Chrono system
     double step_size = 2e-3;
     auto sys = CreateSystem();
 
-    // Create driver input functions
-    auto throttle_fun = chrono_types::make_shared<ChFunctionConst>(0.5);
-    auto braking_fun = chrono_types::make_shared<ChFunctionConst>(0.0);
-    auto steering_fun = chrono_types::make_shared<ChFunctionConst>(0.0);
-
     // Create the vehicle models and associated driver systems
-    std::vector<ChWheeledVehicle*> vehicles;
-    std::vector<ChDriver*> drivers;
-    std::vector<DriverInputs> driver_inputs;
+    std::vector<std::shared_ptr<MyVehicle>> my_vehicles;
+    std::vector<std::shared_ptr<MyDriver>> my_drivers;
     std::vector<ChWriterCSV> csv_writers;
-    for (auto offset : offsets) {
-        // Create the vehicle, initialize from checkpoint, and apply offset
-        auto& vehicle = CreateVehicle(sys.get(), vehicle_model, out_dir, offset);
+    for (const auto& pos : positions) {
+        auto my_vehicle = chrono_types::make_shared<MyVehicle>(sys.get());
+        my_vehicle->SetChassisVisualizationType(VisualizationType::MESH);
+        my_vehicle->Construct(out_dir, pos.first, pos.second);
+        auto& vehicle = my_vehicle->GetVehicle();
         vehicle.EnableRealtime(true);
 
-        // Create the driver system and initialize from checkpoint
-        auto& driver = CreateDriver(vehicle, out_dir);
+        // Create the driver system
+        if (functions.HasFunctions())
+            my_drivers.push_back(chrono_types::make_shared<MyDriver>(vehicle, functions));
+        else
+            my_drivers.push_back(chrono_types::make_shared<MyDriver>(vehicle, out_dir));
 
-        vehicles.push_back(&vehicle);
-        drivers.push_back(&driver);
-        driver_inputs.push_back(DriverInputs());
+        my_vehicles.push_back(my_vehicle);
         csv_writers.push_back(ChWriterCSV(" "));
     }
 
@@ -369,7 +421,7 @@ void SimulateMultiple(std::shared_ptr<WheeledVehicleModel> vehicle_model, const 
 
     // Create the vehicle run-time visualization
 #ifdef CHRONO_VSG
-    auto vis = CreateVisualization(*vehicles[0], *drivers[0], vehicle_model);
+    auto vis = CreateVisualization(*my_vehicles[0], *my_drivers[0]);
 #else
     double time_end = 50;
 #endif
@@ -380,11 +432,12 @@ void SimulateMultiple(std::shared_ptr<WheeledVehicleModel> vehicle_model, const 
     while (true) {
         double time = sys->GetChTime();
 
-        for (int i = 0; i < vehicles.size(); i++) {
-            csv_writers[i] << time << vehicles[i]->GetPos();
-            csv_writers[i] << vehicles[i]->GetSpindlePos(0, VehicleSide::LEFT) << vehicles[i]->GetSpindlePos(0, VehicleSide::RIGHT);
-            csv_writers[i] << vehicles[i]->GetSpindlePos(1, VehicleSide::LEFT) << vehicles[i]->GetSpindlePos(1, VehicleSide::RIGHT);
-            csv_writers[i] << std::endl; 
+        for (int i = 0; i < my_vehicles.size(); i++) {
+            auto& vehicle = my_vehicles[i]->GetVehicle();
+            csv_writers[i] << time << vehicle.GetPos();
+            csv_writers[i] << vehicle.GetSpindlePos(0, VehicleSide::LEFT) << vehicle.GetSpindlePos(0, VehicleSide::RIGHT);
+            csv_writers[i] << vehicle.GetSpindlePos(1, VehicleSide::LEFT) << vehicle.GetSpindlePos(1, VehicleSide::RIGHT);
+            csv_writers[i] << std::endl;
         }
 
 #ifdef CHRONO_VSG
@@ -396,20 +449,19 @@ void SimulateMultiple(std::shared_ptr<WheeledVehicleModel> vehicle_model, const 
 #endif
 
         // Synchronize subsystems
-        for (int i = 0; i < vehicles.size(); i++) {
-            driver_inputs[i] = drivers[i]->GetInputs();
-            drivers[i]->Synchronize(time);
-            vehicles[i]->Synchronize(time, driver_inputs[i], terrain);
+        for (int i = 0; i < my_vehicles.size(); i++) {
+            my_drivers[i]->Synchronize(time);
+            my_vehicles[i]->Synchronize(time, my_drivers[i]->GetInputs(), terrain);
         }
         terrain.Synchronize(time);
 #ifdef CHRONO_VSG
-        vis->Synchronize(time, driver_inputs[0]);
+        vis->Synchronize(time, my_drivers[0]->GetInputs());
 #endif
 
         // Advance simulation
-        for (int i = 0; i < vehicles.size(); i++) {
-            drivers[i]->Advance(step_size);
-            vehicles[i]->Advance(step_size);
+        for (int i = 0; i < my_vehicles.size(); i++) {
+            my_drivers[i]->Advance(step_size);
+            my_vehicles[i]->Advance(step_size);
         }
         terrain.Advance(step_size);
 #ifdef CHRONO_VSG
@@ -421,34 +473,28 @@ void SimulateMultiple(std::shared_ptr<WheeledVehicleModel> vehicle_model, const 
     }
 
 #ifdef CHRONO_POSTPROCESS
-    for (int i = 0; i < vehicles.size(); i++) {
+    for (int i = 0; i < my_vehicles.size(); i++) {
         csv_writers[i].WriteToFile(out_dir + "/vehicle_" + std::to_string(i) + ".csv");
     }
 
     // Plot trajectories of all vehicles
-    {
-        postprocess::ChGnuPlot gplot_traj(out_dir + "/vehicle_traj.gpl");
-        for (int i = 0; i < vehicles.size(); i++) {
-            gplot_traj.Plot(out_dir + "/vehicle_" + std::to_string(i) + ".csv", 3, 2, "vehicle " + std::to_string(i), "with lines lw 2");
-        }
-        gplot_traj.SetTitle("Vehicle Trajectories");
-        gplot_traj.SetLabelX("Y [m]");
-        gplot_traj.SetLabelY("X [m]");
-        gplot_traj.SetAxesEqual(true);
+    postprocess::ChGnuPlot gplot_traj(out_dir + "/vehicle_traj.gpl");
+    for (int i = 0; i < my_vehicles.size(); i++) {
+        gplot_traj.Plot(out_dir + "/vehicle_" + std::to_string(i) + ".csv", 3, 2, "vehicle " + std::to_string(i), "with lines lw 2");
     }
+    gplot_traj.SetTitle("Vehicle Trajectories");
+    gplot_traj.SetLabelX("Y [m]");
+    gplot_traj.SetLabelY("X [m]");
+    gplot_traj.SetAspectRatio(-1);
 
     // Plot front-left spindle vertical positions for all vehicles
-    {
-        postprocess::ChGnuPlot gplot_fl(out_dir + "/vehicle_fl_spindle.gpl");
-        for (int i = 0; i < vehicles.size(); i++) {
-            gplot_fl.Plot(out_dir + "/vehicle_" + std::to_string(i) + ".csv", 1, 7, "vehicle " + std::to_string(i), "with lines lw 2");
-        }
-        gplot_fl.SetTitle("Front-left spindle vertical position");
-        gplot_fl.SetLabelX("t [s]");
-        gplot_fl.SetLabelY("Z [m]");
-        gplot_fl.SetAxesEqual(true);
+    postprocess::ChGnuPlot gplot_fl(out_dir + "/vehicle_fl_spindle.gpl");
+    for (int i = 0; i < my_vehicles.size(); i++) {
+        gplot_fl.Plot(out_dir + "/vehicle_" + std::to_string(i) + ".csv", 1, 7, "vehicle " + std::to_string(i), "with lines lw 2");
     }
-
+    gplot_fl.SetTitle("Front-left spindle vertical position");
+    gplot_fl.SetLabelX("t [s]");
+    gplot_fl.SetLabelY("Z [m]");
 #endif
 }
 
@@ -459,9 +505,6 @@ int main(int argc, char* argv[]) {
     SetChronoDataPath(CHRONO_DATA_DIR);
     SetVehicleDataPath(CHRONO_VEHICLE_DATA_DIR);
 
-    // Vehicle model
-    auto v = chrono_types::make_shared<HMMWV_Model>();
-
     // Create output directories
     std::string out_dir = GetChronoOutputPath() + "VEHICLE_CHECKPOINT_1";
     if (!filesystem::create_directory(filesystem::path(out_dir))) {
@@ -469,11 +512,36 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Simulate vehicle for specified duration
-    SimulateSingle(v, 3.5, out_dir);
+    // Various driver input functions
+    DriverFunctions functions_wave(chrono_types::make_shared<ChFunctionConst>(0.5),             //
+                                   chrono_types::make_shared<ChFunctionConst>(0.0),             //
+                                   chrono_types::make_shared<FunctionCosineSteering>(1.0, 0.5)  //
+    );
+    DriverFunctions functions_acc(chrono_types::make_shared<ChFunctionConst>(0.5),  //
+                                  chrono_types::make_shared<ChFunctionConst>(0.0),  //
+                                  chrono_types::make_shared<ChFunctionConst>(0.0)   //
+    );
+    DriverFunctions functions_null(nullptr, nullptr, nullptr);
 
-    // Create multiple vehicles initialized from the same checkpoint and offset in space
-    SimulateMultiple(v, {ChVector2d(0, -2), ChVector2d(0, +2)}, out_dir);
+    {
+        // Test 1:
+        // - Simulate vehicle for specified duration and save checkpoint
+        // - Simulate two vehicles initialized from checkpoint maintaining driver inputs
+        double time_end = 3.5;
+        double target_speed = 1000;
+        SimulateSingle(time_end, target_speed, functions_wave, out_dir);
+        SimulateMultiple({{ChVector2d(0, -2), 0.0}, {ChVector2d(0, +2), 0.0}}, functions_null, out_dir);
+    }
+
+    //{
+    //    // Test 2:
+    //    // - Simulate vehicle accelerating in straight line until reaching target speed
+    //    // - Simulate two vehicles on a head-on collision
+    //    double time_end = 1000;
+    //    double target_speed = 10;
+    //    SimulateSingle(time_end, target_speed, functions_acc, out_dir);
+    //    SimulateMultiple({{ChVector2d(0, 0), 0.0}, {ChVector2d(100, 0), CH_PI}}, functions_acc, out_dir);
+    //}
 
     return 0;
 }
