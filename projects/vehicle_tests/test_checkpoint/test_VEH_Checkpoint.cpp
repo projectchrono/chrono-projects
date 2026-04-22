@@ -12,7 +12,8 @@
 // Authors: Radu Serban
 // =============================================================================
 //
-// Demonstration of using checkpoints with Chrono::Vehicle simulations.
+// Demonstration of colliding two vehicles initialized from the same checkpoint
+// file and relocated on a collision course.
 //
 // The vehicle reference frame has Z up, X towards the front of the vehicle, and
 // Y pointing to the left.
@@ -53,6 +54,12 @@ using namespace chrono::vehicle::hmmwv;
 using std::cerr;
 using std::cout;
 using std::endl;
+
+// =============================================================================
+
+enum class ChassisCollisionGeometry { SPHERE_PRIM, SPHERE_MESH, TRIMESH };
+
+ChassisCollisionGeometry geometry_type = ChassisCollisionGeometry::SPHERE_PRIM;
 
 // =============================================================================
 
@@ -107,8 +114,9 @@ class MyVehicle {
 
     void SetChassisVisualizationType(VisualizationType type) { chassis_visualization_type = type; }
     void SetChassisCollisionType(CollisionType type) { chassis_collision_type = type; }
+    void SetChassisCollisionGeometry(const utils::ChBodyGeometry& geometry) { hmmwv_full->SetChassisCollisionGeometry(geometry); }
 
-    void Construct(const ChCoordsys<>& init_pos) {
+    void Initialize(const ChCoordsys<>& init_pos) {
         hmmwv_full->SetChassisCollisionType(chassis_collision_type);
         hmmwv_full->SetChassisFixed(false);
         hmmwv_full->SetInitPosition(init_pos);
@@ -128,17 +136,12 @@ class MyVehicle {
         hmmwv_full->SetTireVisualizationType(VisualizationType::MESH);
     }
 
-    void Construct(const std::string& out_dir, const ChVector2d& xy_pos, double yaw_angle) {
-        // Cache all bodies in the system
-        std::set<ChBody*> pre_existing;
-        for (auto& body : system->GetBodies())
-            pre_existing.insert(body.get());
-
-        hmmwv_full = chrono_types::make_unique<HMMWV_Full>(system);
-        Construct(ChCoordsysd());
+    void Initialize(const std::string& out_dir, const ChVector2d& xy_pos, double yaw_angle) {
+        // Initialize vehicle
+        Initialize(ChCoordsysd());
         auto& vehicle = hmmwv_full->GetVehicle();
 
-        // Initialize vehicle and tires from checkpoint files
+        // Overwrite vehicle states with information from checkpoint files
         vehicle.ImportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/vehicle_checkpoint.txt");
         int tire_id = 0;
         for (const auto& a : vehicle.GetAxles()) {
@@ -149,48 +152,15 @@ class MyVehicle {
             }
         }
 
-        // Execute the function 'fn' for all new bodies in the system
-        auto for_vehicle_bodies = [&](auto fn) {
-            for (auto& body : system->GetBodies())
-                if (pre_existing.find(body.get()) == pre_existing.end())
-                    fn(body);
-        };
-
-        // Modify (translate and rotate) states for all new bodies
-        auto old_veh_pos = vehicle.GetPos();
-        auto old_veh_rot = vehicle.GetRot();
-        auto old_veh_yaw = vehicle.GetRot().GetCardanAnglesZYX().z();
-        auto new_veh_pos = ChVector3d(xy_pos.x(), xy_pos.y(), old_veh_pos.z());
-        auto new_veh_rot = QuatFromAngleZ(yaw_angle - old_veh_yaw) * old_veh_rot;
-
-        auto old_X_GV = vehicle.GetRefFrame();
-        auto old_X_VG = old_X_GV.GetInverse();
-        auto new_X_GV = ChFrameMoving<>(new_veh_pos, new_veh_rot);
-
-        for_vehicle_bodies([&](auto& body) {
-            ////std::cout << body->GetName() << std::endl;
-            ////cout << "  old pos: " << body->GetPos() << std::endl;
-            ////cout << "  old rot: " << body->GetRot().GetCardanAnglesZYX() * CH_RAD_TO_DEG << std::endl;
-
-            auto old_X_GB = body->GetFrameCOMToAbs();  // (old) global -> body COM
-            auto X_VB = old_X_VG * old_X_GB;           // vehicle -> body COM
-            auto new_X_GB = new_X_GV * X_VB;           // (new) global -> body COM
-
-            body->SetPos(new_X_GB.GetPos());
-            body->SetRot(new_X_GB.GetRot());
-            body->SetPosDt(new_X_GB.GetPosDt());
-            body->SetRotDt(new_X_GB.GetRotDt());
-
-            ////cout << "  new pos: " << body->GetPos() << std::endl;
-            ////cout << "  new rot: " << body->GetRot().GetCardanAnglesZYX() * CH_RAD_TO_DEG << std::endl;
-        });
+        // Relocate and reorient vehicle
+        vehicle.Relocate(xy_pos, yaw_angle);
     }
 
     ChWheeledVehicle& GetVehicle() { return hmmwv_full->GetVehicle(); }
     void Synchronize(double time, const DriverInputs& driver_inputs, const ChTerrain& terrain) { hmmwv_full->Synchronize(time, driver_inputs, terrain); }
     void Advance(double step) { hmmwv_full->Advance(step); }
     ChVector3d TrackPoint() const { return ChVector3d(0, 0, 1.75); }
-    double CameraDistance() const { return 8.0; }
+    double CameraDistance() const { return 10.0; }
     double CameraHeight() const { return 0.5; }
 
   private:
@@ -315,8 +285,9 @@ void SimulateSingle(double time_end, double target_speed, const DriverFunctions&
     double step_size = 2e-3;
 
     // Create the vehicle model, terrain, and driver system
+    // The vehicle is created with no chassis visualization or collision
     MyVehicle my_vehicle(sys.get());
-    my_vehicle.Construct(ChCoordsysd(ChVector3d(0, 0, 0.5), QUNIT));
+    my_vehicle.Initialize(ChCoordsysd(ChVector3d(0, 0, 0.5), QUNIT));
     auto& vehicle = my_vehicle.GetVehicle();
     vehicle.EnableRealtime(true);
 
@@ -392,7 +363,6 @@ void SimulateMultiple(const std::vector<std::pair<ChVector2d, double>>& position
     cout << "Simulate multiple vehicles" << endl;
 
     // Create the containing Chrono system
-    double step_size = 2e-3;
     auto sys = CreateSystem();
 
     // Create the vehicle models and associated driver systems
@@ -402,7 +372,7 @@ void SimulateMultiple(const std::vector<std::pair<ChVector2d, double>>& position
     for (const auto& pos : positions) {
         auto my_vehicle = chrono_types::make_shared<MyVehicle>(sys.get());
         my_vehicle->SetChassisVisualizationType(VisualizationType::MESH);
-        my_vehicle->Construct(out_dir, pos.first, pos.second);
+        my_vehicle->Initialize(out_dir, pos.first, pos.second);
         auto& vehicle = my_vehicle->GetVehicle();
         vehicle.EnableRealtime(true);
 
@@ -427,6 +397,8 @@ void SimulateMultiple(const std::vector<std::pair<ChVector2d, double>>& position
 #endif
 
     // Simulation loop
+
+    double step_size = 1e-3;
     double render_fps = 50;
 
     while (true) {
@@ -434,10 +406,7 @@ void SimulateMultiple(const std::vector<std::pair<ChVector2d, double>>& position
 
         for (int i = 0; i < my_vehicles.size(); i++) {
             auto& vehicle = my_vehicles[i]->GetVehicle();
-            csv_writers[i] << time << vehicle.GetPos();
-            csv_writers[i] << vehicle.GetSpindlePos(0, VehicleSide::LEFT) << vehicle.GetSpindlePos(0, VehicleSide::RIGHT);
-            csv_writers[i] << vehicle.GetSpindlePos(1, VehicleSide::LEFT) << vehicle.GetSpindlePos(1, VehicleSide::RIGHT);
-            csv_writers[i] << std::endl;
+            csv_writers[i] << time << vehicle.GetPos() << vehicle.GetSpeed() << std::endl;
         }
 
 #ifdef CHRONO_VSG
@@ -487,14 +456,14 @@ void SimulateMultiple(const std::vector<std::pair<ChVector2d, double>>& position
     gplot_traj.SetLabelY("X [m]");
     gplot_traj.SetAspectRatio(-1);
 
-    // Plot front-left spindle vertical positions for all vehicles
-    postprocess::ChGnuPlot gplot_fl(out_dir + "/vehicle_fl_spindle.gpl");
+    // Plot speeds of all vehicles
+    postprocess::ChGnuPlot gplot_speed(out_dir + "/vehicle_speed.gpl");
     for (int i = 0; i < my_vehicles.size(); i++) {
-        gplot_fl.Plot(out_dir + "/vehicle_" + std::to_string(i) + ".csv", 1, 7, "vehicle " + std::to_string(i), "with lines lw 2");
+        gplot_speed.Plot(out_dir + "/vehicle_" + std::to_string(i) + ".csv", 1, 5, "vehicle " + std::to_string(i), "with lines lw 2");
     }
-    gplot_fl.SetTitle("Front-left spindle vertical position");
-    gplot_fl.SetLabelX("t [s]");
-    gplot_fl.SetLabelY("Z [m]");
+    gplot_speed.SetTitle("Vehicle Speeds");
+    gplot_speed.SetLabelX("t [s]");
+    gplot_speed.SetLabelY("v [m/s]");
 #endif
 }
 
@@ -530,7 +499,7 @@ int main(int argc, char* argv[]) {
         double time_end = 3.5;
         double target_speed = 1000;
         SimulateSingle(time_end, target_speed, functions_wave, out_dir);
-        SimulateMultiple({{ChVector2d(0, -2), 0.0}, {ChVector2d(0, +2), 0.0}}, functions_null, out_dir);
+        SimulateMultiple({{ChVector2d(0, -2.5), 0.0}, {ChVector2d(0, +2.5), 0.0}}, functions_null, out_dir);
     }
 
     //{
