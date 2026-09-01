@@ -45,3 +45,9 @@ Implementation of BiCGStab and GMRES for ISPH
 - Retired on 29 January 2025
 
 
+### Chrono::Matlab module
+
+Limited interface to Matlab
+
+- Retired on 01 September 2026
+ 
