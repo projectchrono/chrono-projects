@@ -21,18 +21,9 @@ set(DEMOS
 #--------------------------------------------------------------
 
 # Invoke find_package in CONFIG mode.
-set(ZLIB_ROOT "" CACHE PATH "Where is ZLIB located?")
-find_package(ZLIB REQUIRED)
-
-if (ZLIB_FOUND)
-  message(STATUS "ZLIB library: ${ZLIB_LIBRARIES}")
-else()
-  mark_as_advanced(CLEAR ZLIB_ROOT)
-endif()
-
 find_package(Chrono QUIET
              COMPONENTS Multicore Vehicle
-             OPTIONAL_COMPONENTS OpenGL  
+             OPTIONAL_COMPONENTS VSG
              CONFIG
 )
 
@@ -68,6 +59,5 @@ foreach(PROGRAM ${DEMOS})
 
   target_compile_definitions(${PROGRAM} PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
   target_link_libraries(${PROGRAM} PRIVATE ${CHRONO_TARGETS})
-  target_link_libraries(${PROGRAM} ${ZLIB_LIBRARIES})
 endforeach()
 

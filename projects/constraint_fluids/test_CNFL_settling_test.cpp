@@ -5,23 +5,26 @@
 #include "chrono_multicore/solver/ChIterativeSolverMulticore.h"
 
 #include "chrono/ChConfig.h"
+#include "chrono/core/ChDataPath.h"
 #include "chrono/utils/ChUtilsCreators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 
 #include "chrono_multicore/physics/Ch3DOFContainer.h"
 
-#ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChOpenGLWindow.h"
+// Control use of VSG run-time rendering
+// Note: CHRONO_VSG is defined in ChConfig.h
+#undef CHRONO_VSG
+
+#ifdef CHRONO_VSG
+    #include "chrono_vsg/ChVisualSystemVSG.h"
 #endif
 
 using namespace chrono;
-using namespace chrono::collision;
 
 double timestep = 1e-3;
 int solver_type = 2;
-ChFluidContainer* fluid_container;
+std::shared_ptr<ChFluidContainer> fluid_container;
 std::ofstream ofile;
 
 
@@ -36,7 +39,7 @@ int mult = scale[setup];
 double kernel_radius = .016 * 2;
 double thickness = 0.05;
 
-ChVector<> hdim(kernel_radius * 7, kernel_radius * 7, kernel_radius * 7 * mult);
+ChVector3d hdim(kernel_radius * 7, kernel_radius * 7, kernel_radius * 7 * mult);
 
 //std::string tolerance_str = tol_string[2];
 
@@ -80,8 +83,8 @@ void WriteData(ChSystemMulticoreNSC* msystem, uint i) {
 		avg_pressure += pressure[i];
 		//marker_height[i] = msystem->data_manager->host_data.pos_3dof[i].z;
 		//force_length[i] = Length(force[i]);
-		KE += .5 * fluid_container->mass * Pow(Length(msystem->data_manager->host_data.vel_3dof[i]), 2);
-	}
+        KE += .5 * fluid_container->mass * Length2(msystem->data_manager->host_data.vel_3dof[i]);
+    }
 	avg_density = avg_density / density.size();
 	avg_pressure = avg_pressure / pressure.size();
 	double SOLVER = msystem->GetTimerLSsolve();
@@ -122,17 +125,16 @@ void WriteData(ChSystemMulticoreNSC* msystem, uint i) {
 
 void AddContainer(ChSystemMulticoreNSC* sys) {
 	// Create a common material
-	auto mat = chrono_types::make_shared<ChMaterialSurfaceNSC>();
-	mat->SetFriction(1.0);
-	utils::CreateBoxContainer(sys, 0, mat, hdim + ChVector<>(0, 0, kernel_radius * 4), thickness, Vector(0, 0, -hdim.z()- kernel_radius), QUNIT, true, false, true,
-		true);
+    auto mat = chrono_types::make_shared<ChContactMaterialNSC>();
+    mat->SetFriction(1.0);
+    utils::CreateBoxContainer(sys, mat, 2.0 * (hdim + ChVector3d(0, 0, kernel_radius * 4)), 2.0 * thickness, ChVector3d(0, 0, -hdim.z() - kernel_radius), QUNIT, true, true, true);
 }
 
 // -----------------------------------------------------------------------------
 // Create the fluid in the shape of a sphere.
 // -----------------------------------------------------------------------------
 void AddFluid(ChSystemMulticoreNSC* sys) {
-    auto fluid_container = chrono_types::make_shared<ChFluidContainer>();
+    fluid_container = chrono_types::make_shared<ChFluidContainer>();
     sys->Add3DOFContainer(fluid_container);
 
 	fluid_container->tau = timestep * 2;
@@ -164,12 +166,12 @@ void AddFluid(ChSystemMulticoreNSC* sys) {
 	std::vector<real3> vel_fluid;
 
 	double dist = fluid_container->kernel_radius * .9;
-	utils::HCPSampler<> sampler(dist);
-	vol = dist * dist * dist * .6;
+    utils::ChHCPSampler<> sampler(dist);
+    vol = dist * dist * dist * .6;
 
-	utils::Generator::PointVector points = sampler.SampleBox(ChVector<>(0, 0, 0), hdim );
+    utils::ChGenerator::PointVector points = sampler.SampleBox(ChVector3d(0, 0, 0), hdim);
 
-	pos_fluid.resize(points.size());
+    pos_fluid.resize(points.size());
 	vel_fluid.resize(points.size());
 	for (int i = 0; i < points.size(); i++) {
 		pos_fluid[i] = real3(points[i].x(), points[i].y(), points[i].z()) + origin;
@@ -198,14 +200,20 @@ int main(int argc, char* argv[]) {
 		 mult = scale[setup];
 	}
 
-	// Create system
+    if (!CreateOutputDirectory(std::string("data_fluid_test"))) {
+        std::cout << "Error creating directory data_fluid_test" << std::endl;
+        return 1;
+    }
+
+    // Create system
 	// -------------
 
 	ChSystemMulticoreNSC msystem;
-	// Set gravitational acceleration
-	msystem.Set_G_acc(ChVector<>(0, 0, -9.81));
+    msystem.SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
+    // Set gravitational acceleration
+    msystem.SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
 
-	// Set solver parameters
+    // Set solver parameters
 	msystem.GetSettings()->solver.solver_mode = SolverMode::SLIDING;
 	msystem.GetSettings()->solver.max_iteration_normal = 0;
 	msystem.GetSettings()->solver.max_iteration_sliding = max_iteration;
@@ -247,33 +255,27 @@ int main(int argc, char* argv[]) {
 	AddFluid(&msystem);
 
 	msystem.GetSettings()->collision.collision_envelope = (fluid_container->kernel_radius * .05);
-	msystem.GetSettings()->collision.bins_per_axis = vec3(2, 2, 2);
-	msystem.SetLoggingLevel(LoggingLevel::LOG_TRACE, true);
-	msystem.SetLoggingLevel(LoggingLevel::LOG_INFO, true);
-	// Create the fixed and moving bodies
+    msystem.GetSettings()->collision.bins_per_axis = vec3(2, 2, 2);
+    // Create the fixed and moving bodies
 	// ----------------------------------
 	AddContainer(&msystem);
 
 	// Perform the simulation
 	// ----------------------
-	
-#if 0
-	opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-	gl_window.Initialize(1280, 720, "fluid_settling_test", &msystem);
-	gl_window.SetCamera(ChVector<>(0, -2, 0), ChVector<>(0, 0, 0), ChVector<>(0, 0, 1), .2);
-	gl_window.Pause();
 
-	while (true) {
-		if (gl_window.Active()) {
-			if (gl_window.DoStepDynamics(timestep)) {
+#ifdef CHRONO_VSG
+    auto vis = chrono_types::make_shared<vsg3d::ChVisualSystemVSG>();
+    vis->AttachSystem(&msystem);
+    vis->SetWindowTitle("fluid_settling_test");
+    vis->SetWindowSize(1280, 720);
+    vis->AddCamera(ChVector3d(0, -2, 0), ChVector3d(0, 0, 0));
+    vis->SetCameraVertical(CameraVerticalDir::Z);
+    vis->Initialize();
 
-			}
-			gl_window.Render();
-		}
-		else {
-			break;
-		}
-	}
+    while (vis->Run()) {
+        msystem.DoStepDynamics(timestep);
+        vis->Render();
+    }
 #else
 	double exec_time = 0;
 	int num_steps = time_end / timestep;

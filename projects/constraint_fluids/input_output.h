@@ -1,44 +1,88 @@
 #pragma once
 
+#include <cstdint>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <cstring>
 #include <thread>
-#include <zlib.h>
 
-#include "chrono/assets/ChVisualization.h"
-#include "chrono/assets/ChSphereShape.h"
-#include "chrono/assets/ChEllipsoidShape.h"
-#include "chrono/assets/ChBoxShape.h"
-#include "chrono/assets/ChConeShape.h"
-#include "chrono/assets/ChCylinderShape.h"
+#include "chrono/assets/ChVisualShapeSphere.h"
+#include "chrono/assets/ChVisualShapeEllipsoid.h"
+#include "chrono/assets/ChVisualShapeBox.h"
+#include "chrono/assets/ChVisualShapeCone.h"
+#include "chrono/assets/ChVisualShapeCylinder.h"
+#include "chrono/collision/ChCollisionShape.h"
 
 #include "chrono/utils/ChUtilsGeometry.h"
 #include "chrono/utils/ChUtilsCreators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 
+// Use the zlib compressor from stb_image_write (bundled with Chrono) to write gzip files
+#define STB_IMAGE_WRITE_STATIC
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STBI_WRITE_NO_STDIO
+#include "chrono_thirdparty/stb/stb_image_write.h"
+
 using namespace chrono;
-using namespace chrono::collision;
 using std::cout;
 using std::endl;
+
+// CRC-32 checksum, as required in the gzip trailer.
+static uint32_t Crc32(const std::string& data) {
+    uint32_t crc = 0xffffffffu;
+    for (unsigned char c : data) {
+        crc ^= c;
+        for (int k = 0; k < 8; k++)
+            crc = (crc >> 1) ^ (0xedb88320u & (0u - (crc & 1u)));
+    }
+    return ~crc;
+}
+
+// Write the given data to a gzip file (RFC 1952).
+// The deflate stream from stbi_zlib_compress is wrapped in a zlib header and Adler-32 trailer, which are replaced with
+// the gzip header and trailer.
+static bool WriteGzipFile(const std::string& filename, const std::string& data) {
+    int zlen = 0;
+    unsigned char* zdata = stbi_zlib_compress((unsigned char*)data.data(), (int)data.size(), &zlen, 8);
+    if (!zdata)
+        return false;
+
+    std::ofstream ofile(filename, std::ios::out | std::ios::binary);
+    const unsigned char header[10] = {0x1f, 0x8b, 8, 0, 0, 0, 0, 0, 0, 255};  // deflate, no flags, unknown OS
+    ofile.write((const char*)header, sizeof(header));
+    ofile.write((const char*)zdata + 2, zlen - 6);
+    free(zdata);
+
+    uint32_t crc = Crc32(data);
+    uint32_t size = (uint32_t)data.size();
+    unsigned char trailer[8];
+    for (int i = 0; i < 4; i++) {
+        trailer[i] = (unsigned char)(crc >> (8 * i));
+        trailer[4 + i] = (unsigned char)(size >> (8 * i));
+    }
+    ofile.write((const char*)trailer, sizeof(trailer));
+
+    return ofile.good();
+}
 
 class CSVGen {
 public:
 	CSVGen() {
 		delim = ",";
-		binary = false;
-		gz_file = 0;
-	}
+        binary = false;
+    }
 	~CSVGen() {}
 
-	void OpenFile(std::string filename, bool bin = false) {
+    // Open the output file. In binary mode, the output is a gzip file containing the size of the text (uint64_t),
+    // followed by the text.
+    void OpenFile(std::string filename, bool bin = false) {
 		if (bin) {
 			binary = true;
-			gz_file = gzopen(filename.c_str(), "wb");
-		}
+            gz_filename = filename;
+        }
 		else {
 			ofile.open(filename.c_str(), std::ios::out);
 		}
@@ -46,12 +90,14 @@ public:
 
 	void CloseFile() {
 		if (binary) {
-			unsigned long int file_size = sizeof(char) * ss.str().size();
+            std::string text = ss.str();
+            uint64_t file_size = text.size();
 
-			gzwrite(gz_file, (void*)&file_size, sizeof(file_size));  // writing size of file
-			gzwrite(gz_file, (void*)(ss.str().data()), file_size);
-			gzclose(gz_file);
-		}
+            std::string data((const char*)&file_size, sizeof(file_size));  // size of file
+            data += text;
+            if (!WriteGzipFile(gz_filename, data))
+                std::cerr << "Error writing " << gz_filename << std::endl;
+        }
 		else {
 			ofile << ss.str();
 			ofile.close();
@@ -61,25 +107,25 @@ public:
 	void operator<<(const T& token) {
 		WriteToken(token);
 	}
-	void WriteToken(real token) { ss << token << delim; }
-	void WriteToken(real2 token) { ss << token.x << delim << token.y << delim; }
+    void WriteToken(int token) { ss << token << delim; }
+    void WriteToken(float token) { ss << token << delim; }
+    void WriteToken(double token) { ss << token << delim; }
+    void WriteToken(real2 token) { ss << token.x << delim << token.y << delim; }
 	void WriteToken(real3 token) { ss << token.x << delim << token.y << delim << token.z << delim; }
 	void WriteToken(real4 token) { ss << token.x << delim << token.y << delim << token.z << delim << token.w << delim; }
 	void WriteToken(quaternion token) {
 		ss << token.w << delim << token.x << delim << token.y << delim << token.z << delim;
 	}
-	void WriteToken(ChVector<> token) { ss << token.x() << delim << token.y() << delim << token.z() << delim; }
-	void WriteToken(ChQuaternion<> token) {
-		ss << token.e0() << delim << token.e1() << delim << token.e2() << delim << token.e3() << delim;
-	}
-	void WriteToken(std::string token) { ss << token << delim; }
+    void WriteToken(ChVector3d token) { ss << token.x() << delim << token.y() << delim << token.z() << delim; }
+    void WriteToken(ChQuaterniond token) { ss << token.e0() << delim << token.e1() << delim << token.e2() << delim << token.e3() << delim; }
+    void WriteToken(std::string token) { ss << token << delim; }
 	void endline() { ss << std::endl; }
 
 	std::string delim;
 	std::ofstream ofile;
 	std::stringstream ss;
-	gzFile gz_file;
-	bool binary;
+    std::string gz_filename;
+    bool binary;
 };
 
 
@@ -120,8 +166,8 @@ void static WriteLocalData(const std::string&& filename,
 void static DumpFluidData(chrono::ChSystemMulticoreNSC* system, std::string filename, bool binary = true) {
 	std::vector<real3> pos_particle;
 	std::vector<real3> vel_particle;
-	int num_particles = system->data_manager->num_fluid_bodies;
-	if (num_particles <= 0) {
+    int num_particles = system->data_manager->num_particles;
+    if (num_particles <= 0) {
 		std::cout << "No fluid to write!!\n";
 		return;
 	}
@@ -139,104 +185,71 @@ void static DumpFluidData(chrono::ChSystemMulticoreNSC* system, std::string file
 	}
 }
 
+// Wait for all pending fluid data output to be written.
+void static FinishFluidDataOutput() {
+    for (std::thread& t : writethreads)
+        t.join();
+    writethreads.clear();
+}
 
+// Write one line for each visual shape in the system: absolute position and orientation of the shape, body velocity,
+// shape type (a ChCollisionShape::Type value, -1 for unsupported shapes), and shape dimensions: radius for spheres,
+// semiaxes for ellipsoids, half-lengths for boxes, and radius and height for cylinders and cones. Cylinders and cones
+// are reported with their axis along the Y axis of the shape frame.
 void static DumpAllObjectsWithGeometryPovray(ChSystem* mSys, std::string filename, bool binary = false) {
-	CSVGen csv_output;
+    CSVGen csv_output;
     csv_output.OpenFile(filename.c_str(), binary);
 
-    for (int i = 0; i < mSys->Get_bodylist().size(); i++) {
-        auto abody = mSys->Get_bodylist().at(i);  // Get body
-        const Vector pos = abody->GetFrame_REF_to_abs().GetPos();
-        const Vector vel = abody->GetPos_dt();  // Get velocity
-        Quaternion rot = abody->GetFrame_REF_to_abs().GetRot();
-        Vector pos_final, rad_final;
-        ChCollisionShape::Type type = ChCollisionShape::Type::SPHERE;
-        // Get each asset
-        for (int j = 0; j < abody->GetAssets().size(); j++) {
-            auto asset = abody->GetAssets().at(j);
-            if (!std::dynamic_pointer_cast<ChVisualization>(asset)) {
-                continue;
-            }
-            ChVisualization* visual_asset = ((ChVisualization*)(asset.get()));
-            Vector center = visual_asset->Pos;
-            center = rot.Rotate(center);
-            pos_final = pos + center;
-            Quaternion lrot = visual_asset->Rot.Get_A_quaternion();
-            lrot = rot * lrot;
-            lrot.Normalize();
-			if (std::dynamic_pointer_cast<ChSphereShape>(asset)) {
-				ChSphereShape* sphere_shape = ((ChSphereShape*)(asset.get()));
-				real radius = sphere_shape->GetSphereGeometry().rad;
-				rad_final.x() = radius;
-				rad_final.y() = radius;
-				rad_final.z() = radius;
+    for (const auto& body : mSys->GetBodies()) {
+        auto vis_model = body->GetVisualModel();
+        if (!vis_model)
+            continue;
+
+        ChFramed body_frame = body->GetVisualModelFrame();
+        ChVector3d vel = body->GetPosDt();
+
+        for (const auto& instance : vis_model->GetShapeInstances()) {
+            ChFramed frame = body_frame.TransformLocalToParent(instance.frame);
+            ChQuaterniond rot = frame.GetRot();
+
+            int type = -1;
+            int num_dims = 0;
+            ChVector3d dims;
+            if (auto sphere = std::dynamic_pointer_cast<ChVisualShapeSphere>(instance.shape)) {
                 type = ChCollisionShape::Type::SPHERE;
-			}
-
-			else if (std::dynamic_pointer_cast<ChEllipsoidShape>(asset)) {
-				ChEllipsoidShape* ellipsoid_shape = ((ChEllipsoidShape*)(asset.get()));
-				rad_final = ellipsoid_shape->GetEllipsoidGeometry().rad;
+                num_dims = 1;
+                dims = ChVector3d(sphere->GetRadius());
+            } else if (auto ellipsoid = std::dynamic_pointer_cast<ChVisualShapeEllipsoid>(instance.shape)) {
                 type = ChCollisionShape::Type::ELLIPSOID;
-			}
-			else if (std::dynamic_pointer_cast<ChBoxShape>(asset)) {
-				ChBoxShape* box_shape = ((ChBoxShape*)(asset.get()));
-				rad_final = box_shape->GetBoxGeometry().Size;
+                num_dims = 3;
+                dims = ellipsoid->GetSemiaxes();
+            } else if (auto box = std::dynamic_pointer_cast<ChVisualShapeBox>(instance.shape)) {
                 type = ChCollisionShape::Type::BOX;
-			}
-			else if (std::dynamic_pointer_cast<ChCylinderShape>(asset)) {
-				ChCylinderShape* cylinder_shape = ((ChCylinderShape*)(asset.get()));
-				double rad = cylinder_shape->GetCylinderGeometry().rad;
-				double height = cylinder_shape->GetCylinderGeometry().p1.y() - cylinder_shape->GetCylinderGeometry().p2.y();
-				rad_final.x() = rad;
-				rad_final.y() = height;
-				rad_final.z() = rad;
+                num_dims = 3;
+                dims = box->GetHalflengths();
+            } else if (auto cylinder = std::dynamic_pointer_cast<ChVisualShapeCylinder>(instance.shape)) {
                 type = ChCollisionShape::Type::CYLINDER;
-			}
-			else if (std::dynamic_pointer_cast<ChConeShape>(asset)) {
-				ChConeShape* cone_shape = ((ChConeShape*)(asset.get()));
-				rad_final.x() = cone_shape->GetConeGeometry().rad.x();
-				rad_final.y() = cone_shape->GetConeGeometry().rad.y();
-				rad_final.z() = cone_shape->GetConeGeometry().rad.z();
+                num_dims = 2;
+                dims = ChVector3d(cylinder->GetRadius(), cylinder->GetHeight(), 0);
+                rot = rot * Q_ROTATE_Y_TO_Z;
+            } else if (auto cone = std::dynamic_pointer_cast<ChVisualShapeCone>(instance.shape)) {
                 type = ChCollisionShape::Type::CONE;
-			}
+                num_dims = 2;
+                dims = ChVector3d(cone->GetRadius(), cone->GetHeight(), 0);
+                rot = rot * Q_ROTATE_Y_TO_Z;
+            }
 
-			csv_output << pos_final;
-			csv_output << lrot;
-			csv_output << vel;
+            csv_output << frame.GetPos();
+            csv_output << rot;
+            csv_output << vel;
+            csv_output << type;
+            for (int i = 0; i < num_dims; i++)
+                csv_output << dims[i];
+            csv_output.endline();
+        }
+    }
 
-			if (std::dynamic_pointer_cast<ChSphereShape>(asset)) {
-				csv_output << type;
-				csv_output << rad_final.x();
-				csv_output.endline();
-			}
-			else if (std::dynamic_pointer_cast<ChEllipsoidShape>(asset)) {
-				csv_output << type;
-				csv_output << real3(rad_final.x(), rad_final.y(), rad_final.z());
-				csv_output.endline();
-			}
-			else if (std::dynamic_pointer_cast<ChBoxShape>(asset)) {
-				csv_output << type;
-				csv_output << real3(rad_final.x(), rad_final.y(), rad_final.z());
-				csv_output.endline();
-			}
-			else if (std::dynamic_pointer_cast<ChCylinderShape>(asset)) {
-				csv_output << type;
-				csv_output << real2(rad_final.x(), rad_final.y());
-				csv_output.endline();
-			}
-			else if (std::dynamic_pointer_cast<ChConeShape>(asset)) {
-				csv_output << type;
-				csv_output << real2(rad_final.x(), rad_final.y());
-				csv_output.endline();
-			}
-			else {
-				csv_output << -1;
-				csv_output.endline();
-			}
-		}
-	}
-
-	csv_output.CloseFile();
+    csv_output.CloseFile();
 }
 
 

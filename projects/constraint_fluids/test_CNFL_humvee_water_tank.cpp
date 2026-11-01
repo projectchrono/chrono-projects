@@ -12,39 +12,38 @@
 // Authors: Hammad Mazhar
 // =============================================================================
 
-#include "chrono/core/ChRealtimeStep.h"
-#include "chrono/core/ChStream.h"
+#include <cmath>
+#include <filesystem>
+
+#include "chrono/ChConfig.h"
+#include "chrono/core/ChDataPath.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 #include "chrono/utils/ChUtilsGeometry.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
-
-#include "chrono/collision/ChCollisionSystemChrono.h"
-#include "chrono/collision/ChCollisionModelChrono.h"
 
 #include "chrono_models/vehicle/hmmwv/HMMWV.h"
 
 #include "chrono_vehicle/ChConfigVehicle.h"
-#include "chrono_vehicle/ChVehicleModelData.h"
-#include "chrono_vehicle/driver/ChDataDriver.h"
+#include "chrono_vehicle/ChVehicleDataPath.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 
 #include "chrono_vehicle/wheeled_vehicle/suspension/ChDoubleWishbone.h"
 
 // Chrono::Multicore header files
 #include "chrono_multicore/physics/ChSystemMulticore.h"
-#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 #include "input_output.h"
 
-#undef CHRONO_OPENGL
-#ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChOpenGLWindow.h"
+// Control use of VSG run-time rendering
+// Note: CHRONO_VSG is defined in ChConfig.h
+#undef CHRONO_VSG
+
+#ifdef CHRONO_VSG
+    #include "chrono_vsg/ChVisualSystemVSG.h"
 #endif
 
 using namespace chrono;
-using namespace chrono::collision;
 using namespace chrono::vehicle;
 using namespace chrono::vehicle::hmmwv;
 using namespace chrono::utils;
@@ -54,12 +53,12 @@ enum SimModes { TURN, LANE_CHANGE, GRAVEL };
 
 SimModes simulation_mode = GRAVEL;
 // Initial vehicle location and orientation
-ChVector<> initLoc(0, 0, .6);
-ChQuaternion<> initRot(1, 0, 0, 0);
-// ChQuaternion<> initRot(0.866025, 0, 0, 0.5);
-// ChQuaternion<> initRot(0.7071068, 0, 0, 0.7071068);
-// ChQuaternion<> initRot(0.25882, 0, 0, 0.965926);
-// ChQuaternion<> initRot(0, 0, 0, 1);
+ChVector3d initLoc(0, 0, .6);
+ChQuaterniond initRot(1, 0, 0, 0);
+// ChQuaterniond initRot(0.866025, 0, 0, 0.5);
+// ChQuaterniond initRot(0.7071068, 0, 0, 0.7071068);
+// ChQuaterniond initRot(0.25882, 0, 0, 0.965926);
+// ChQuaterniond initRot(0, 0, 0, 1);
 
 double mph_to_m_s = 0.44704;
 double target_speed = 35 * mph_to_m_s;  // 35 mph
@@ -70,8 +69,11 @@ VisualizationType suspension_vis_type = VisualizationType::PRIMITIVES;
 VisualizationType steering_vis_type = VisualizationType::PRIMITIVES;
 VisualizationType wheel_vis_type = VisualizationType::PRIMITIVES;
 VisualizationType tire_vis_type = VisualizationType::PRIMITIVES;
-// Type of powertrain model (SHAFTS, SIMPLE)
-PowertrainModelType powertrain_model = PowertrainModelType::SHAFTS;
+// Type of engine model (SHAFTS, SIMPLE, SIMPLE_MAP)
+EngineModelType engine_model = EngineModelType::SHAFTS;
+
+// Type of transmission model (SHAFTS, SIMPLE_MAP)
+TransmissionModelType transmission_model = TransmissionModelType::AUTOMATIC_SHAFTS;
 
 // Drive type (FWD, RWD, or AWD)
 DrivelineTypeWV drive_type = DrivelineTypeWV::AWD;
@@ -80,7 +82,7 @@ DrivelineTypeWV drive_type = DrivelineTypeWV::AWD;
 TireModelType tire_model = TireModelType::RIGID;
 
 // Point on chassis tracked by the camera
-ChVector<> trackPoint(0.0, 0.0, 1.75);
+ChVector3d trackPoint(0.0, 0.0, 1.75);
 
 // Contact method
 ChContactMethod contact_method = ChContactMethod::NSC;
@@ -115,16 +117,14 @@ double fluid_r = 0.016;
 
 real container_friction = 1.0;
 
+// Driver paths and controllers (the circle path is not part of the Chrono vehicle data)
 std::string circle_file("humvee_input/circlepath_100ft_radius.txt");
-std::string lane_change_file("humvee_input/ISO_double_lane_change.txt");
-std::string gravel_driver_file("humvee_input/straightOrigin.txt");
-std::string steering_controller_file("humvee_input/SteeringController.json");
-std::string speed_controller_file("humvee_input/SpeedController.json");
+std::string lane_change_file("paths/ISO_double_lane_change.txt");
+std::string gravel_driver_file("paths/straightOrigin.txt");
+std::string steering_controller_file("hmmwv/SteeringController.json");
+std::string speed_controller_file("hmmwv/SpeedController.json");
 
 std::string data_output_path = "";
-
-#define ERASE_MACRO(x, y) x.erase(x.begin() + y);
-#define ERASE_MACRO_LEN(x, y, z) x.erase(x.begin() + y, x.begin() + y + z);
 
 double hdimX = 4;
 double hdimY = 1.5;
@@ -136,17 +136,13 @@ double r_g = 0.02;
 double rho_g = 2500;
 double vol_g = (4.0 / 3) * CH_PI * r_g * r_g * r_g;
 double mass_g = rho_g * vol_g;
-ChVector<> inertia_g = 0.4 * mass_g * r_g * r_g * ChVector<>(1, 1, 1);
+ChVector3d inertia_g = 0.4 * mass_g * r_g * r_g * ChVector3d(1, 1, 1);
 
 float mu_g = 1.0f;
 std::vector<real3> forces;
 std::vector<real3> torques;
 
-void static WriteVehicleData(hmmwv::HMMWV_Full& my_hmmwv,
-                             ChDriver::Inputs driver_inputs,
-                             std::vector<real3> forces,
-                             std::vector<real3> torques,
-                             std::string filename) {
+void static WriteVehicleData(hmmwv::HMMWV_Full& my_hmmwv, DriverInputs driver_inputs, std::vector<real3> forces, std::vector<real3> torques, std::string filename) {
     CSVGen csv_output;
     csv_output.OpenFile(filename.c_str(), false);
 
@@ -155,11 +151,11 @@ void static WriteVehicleData(hmmwv::HMMWV_Full& my_hmmwv,
     auto m_suspension_back = std::dynamic_pointer_cast<ChDoubleWishbone>(my_hmmwv.GetVehicle().GetSuspension(1));
 
     csv_output << my_hmmwv.GetVehicle().GetChassis()->GetPos();
-    csv_output << my_hmmwv.GetVehicle().GetVehicleSpeed();
-    csv_output << m_driveline->GetDriveshaftSpeed();
-    csv_output << my_hmmwv.GetPowertrain()->GetMotorTorque();
-    csv_output << my_hmmwv.GetPowertrain()->GetMotorSpeed();
-    csv_output << my_hmmwv.GetPowertrain()->GetOutputTorque();
+    csv_output << my_hmmwv.GetVehicle().GetSpeed();
+    csv_output << m_driveline->GetOutputDriveshaftSpeed();
+    csv_output << my_hmmwv.GetVehicle().GetEngine()->GetOutputMotorshaftTorque();
+    csv_output << my_hmmwv.GetVehicle().GetEngine()->GetMotorSpeed();
+    csv_output << my_hmmwv.GetVehicle().GetTransmission()->GetOutputDriveshaftTorque();
 
     csv_output << driver_inputs.m_throttle;
     csv_output << driver_inputs.m_braking;
@@ -218,92 +214,6 @@ void static WriteVehicleData(hmmwv::HMMWV_Full& my_hmmwv,
     csv_output.CloseFile();
 }
 
-void RemoveCollisionModel(ChSystemMulticoreNSC* system, ChCollisionModel* model) {
-    ChMulticoreDataManager* data_manager = system->data_manager;
-#if 1
-    ChCollisionModelChrono* pmodel = static_cast<ChCollisionModelChrono*>(model);
-    int body_id = pmodel->GetBody()->GetId();
-    // loop over the models we nned to remove
-    // std::cout << "removing: " << pmodel->GetNObjects() << " objects" << std::endl;
-    for (int j = 0; j < pmodel->GetNumShapes(); j++) {
-        // find a model to remove
-        bool removed = false;
-        int index = -1;
-        for (int i = 0; i < data_manager->cd_data->shape_data.id_rigid.size(); i++) {
-            if (data_manager->cd_data->shape_data.id_rigid[i] == body_id) {
-                index = i;
-                data_manager->cd_data->num_rigid_shapes--;
-
-                int start = data_manager->cd_data->shape_data.start_rigid[index];
-                int length = data_manager->cd_data->shape_data.length_rigid[index];
-                int type = data_manager->cd_data->shape_data.typ_rigid[index];
-
-                // std::cout << "removing: type " << type << " " << start<< " " <<j << std::endl;
-
-                switch (type) {
-                    case ChCollisionShape::Type::SPHERE:
-                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.sphere_rigid, start, length);
-                        break;
-                    case ChCollisionShape::Type::ELLIPSOID:
-                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.box_like_rigid, start, length);
-                        break;
-                    case ChCollisionShape::Type::BOX:
-                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.box_like_rigid, start, length);
-                        break;
-                    case ChCollisionShape::Type::CYLINDER:
-                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.box_like_rigid, start, length);
-                        break;
-                    case ChCollisionShape::Type::CONE:
-                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.box_like_rigid, start, length);
-                        break;
-                    case ChCollisionShape::Type::CAPSULE:
-                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.capsule_rigid, start, length);
-                        break;
-                    case ChCollisionShape::Type::ROUNDEDBOX:
-                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.rbox_like_rigid, start, length);
-                        break;
-                    case ChCollisionShape::Type::ROUNDEDCYL:
-                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.rbox_like_rigid, start, length);
-                        break;
-                    case ChCollisionShape::Type::ROUNDEDCONE:
-                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.rbox_like_rigid, start, length);
-                        break;
-                    case ChCollisionShape::Type::CONVEX:
-                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.convex_rigid, start, length);
-                        break;
-                    case ChCollisionShape::Type::TRIANGLE:
-                        ERASE_MACRO_LEN(data_manager->cd_data->shape_data.convex_rigid, start, 3);
-                        break;
-                }
-
-                ERASE_MACRO(data_manager->cd_data->shape_data.ObA_rigid, index);
-                ERASE_MACRO(data_manager->cd_data->shape_data.ObR_rigid, index);
-                ERASE_MACRO(data_manager->cd_data->shape_data.start_rigid, index);
-                ERASE_MACRO(data_manager->cd_data->shape_data.length_rigid, index);
-
-                ERASE_MACRO(data_manager->cd_data->shape_data.fam_rigid, index);
-                ERASE_MACRO(data_manager->cd_data->shape_data.typ_rigid, index);
-                ERASE_MACRO(data_manager->cd_data->shape_data.id_rigid, index);
-                removed = true;
-                break;
-            }
-        }
-        // std::cout << "decrement start "<< std::endl;
-        if (removed) {
-            // we removed a model, all of the starts are off by one for indices past the index removed, decrement all
-            // starts before removing a second model
-            for (int i = index; i < data_manager->cd_data->shape_data.start_rigid.size(); i++) {
-                if (data_manager->cd_data->shape_data.start_rigid[i] != 0) {
-                    data_manager->cd_data->shape_data.start_rigid[i] -= 1;
-                }
-            }
-        }
-    }
-#endif
-}
-
-ChFluidContainer* fluid_container;
-
 void CreateFluid(ChSystemMulticoreNSC* system) {
     auto fluid_container = chrono_types::make_shared<ChFluidContainer>();
     system->Add3DOFContainer(fluid_container);
@@ -331,9 +241,8 @@ void CreateFluid(ChSystemMulticoreNSC* system) {
 
     real dist = fluid_container->kernel_radius * .9;
 
-    utils::HCPSampler<> sampler(dist);
-    utils::Generator::PointVector points =
-        sampler.SampleCylinderY(initLoc + ChVector<>(-1.9306 + .24, .025, 1.2), .4, .5);
+    utils::ChHCPSampler<> sampler(dist);
+    utils::ChGenerator::PointVector points = sampler.SampleCylinderY(initLoc + ChVector3d(-1.9306 + .24, .025, 1.2), .4, .5);
     // sampler.SampleSphere(initLoc + ChVector<>(-1.93344,0 , 1.29964), .4);
     std::vector<real3> pos_fluid;
     std::vector<real3> vel_fluid;
@@ -350,97 +259,121 @@ void CreateFluid(ChSystemMulticoreNSC* system) {
 std::shared_ptr<ChBody> bottom_plate;
 // =============================================================================
 void CreateBase(ChSystemMulticoreNSC* system) {
-    Vector c_pos = Vector(0, 0, 0);
+    ChVector3d c_pos = ChVector3d(0, 0, 0);
 
-    bottom_plate = chrono_types::make_shared<ChBody>(ChCollisionSystemType::CHRONO);
+    bottom_plate = chrono_types::make_shared<ChBody>();
     bottom_plate->SetMass(1);
-    bottom_plate->SetPos(Vector(0, 0, 0) + c_pos);
-    bottom_plate->SetRot(Quaternion(1, 0, 0, 0));
-    bottom_plate->SetCollide(true);
-    bottom_plate->SetBodyFixed(true);
+    bottom_plate->SetPos(ChVector3d(0, 0, 0) + c_pos);
+    bottom_plate->SetRot(QUNIT);
+    bottom_plate->EnableCollision(true);
+    bottom_plate->SetFixed(true);
 
-    auto material = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto material = chrono_types::make_shared<ChContactMaterialNSC>();
     material->SetFriction(container_friction);
     material->SetCompliance(1e-9);
     material->SetCohesion(0);
 
-    bottom_plate->GetCollisionModel()->ClearModel();
-    bottom_plate->GetCollisionModel()->SetFamily(2);
-    bottom_plate->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(2);
-
+    // Box dimensions below are half-lengths
     if (simulation_mode == TURN) {
-        AddBoxGeometry(bottom_plate.get(), material, Vector(4, 4, .1), Vector(0, 0, 0), Quaternion(1, 0, 0, 0));
+        AddBoxGeometry(bottom_plate.get(), material, 2.0 * ChVector3d(4, 4, .1), ChVector3d(0, 0, 0), QUNIT);
     } else if (simulation_mode == LANE_CHANGE) {
-        AddBoxGeometry(bottom_plate.get(), material, Vector(4, 3, .1), Vector(0, 0, 0), Quaternion(1, 0, 0, 0));
+        AddBoxGeometry(bottom_plate.get(), material, 2.0 * ChVector3d(4, 3, .1), ChVector3d(0, 0, 0), QUNIT);
     } else if (simulation_mode == GRAVEL) {
+        AddBoxGeometry(bottom_plate.get(), material, 2.0 * ChVector3d(4, 2, .1), ChVector3d(0, 0, 0), QUNIT);
 
-        AddBoxGeometry(bottom_plate.get(), material, Vector(4, 2, .1), Vector(0, 0, 0), Quaternion(1, 0, 0, 0));
-
-        AddBoxGeometry(bottom_plate.get(), material, Vector(10, 2, .1), Vector(4 + hdimX * 2 + 10.0, 0, 0),
-                       Quaternion(1, 0, 0, 0));
+        AddBoxGeometry(bottom_plate.get(), material, 2.0 * ChVector3d(10, 2, .1), ChVector3d(4 + hdimX * 2 + 10.0, 0, 0), QUNIT);
 
         // extra side plates
-        AddBoxGeometry(bottom_plate.get(), material, Vector(12.5, .1, 2), Vector(4 + hdimX, -hdimY - .1, 2 - .1),
-                       Quaternion(1, 0, 0, 0));
-        AddBoxGeometry(bottom_plate.get(), material, Vector(12.5, .1, 2), Vector(4 + hdimX, hdimY + .1, 2 - .1),
-                       Quaternion(1, 0, 0, 0));
+        AddBoxGeometry(bottom_plate.get(), material, 2.0 * ChVector3d(12.5, .1, 2), ChVector3d(4 + hdimX, -hdimY - .1, 2 - .1), QUNIT);
+        AddBoxGeometry(bottom_plate.get(), material, 2.0 * ChVector3d(12.5, .1, 2), ChVector3d(4 + hdimX, hdimY + .1, 2 - .1), QUNIT);
         // Top
-        AddBoxGeometry(bottom_plate.get(), material, Vector(12.5, 2 + .1 * 2, .1), Vector(4 + hdimX, 0, 4 - .1),
-                       Quaternion(1, 0, 0, 0));
+        AddBoxGeometry(bottom_plate.get(), material, 2.0 * ChVector3d(12.5, 2 + .1 * 2, .1), ChVector3d(4 + hdimX, 0, 4 - .1), QUNIT);
     }
 
-    bottom_plate->GetCollisionModel()->BuildModel();
+    bottom_plate->GetCollisionModel()->SetFamily(2);
+    bottom_plate->GetCollisionModel()->DisallowCollisionsWith(2);
     system->AddBody(bottom_plate);
 
     if (simulation_mode == GRAVEL) {
-        CreateBoxContainer(system, 1, material, ChVector<>(hdimX, hdimY, hdimZ), hthick,
-                           ChVector<>(4 + hdimX, 0, -hdimZ * 2 - hthick));
+        CreateBoxContainer(system, material, 2.0 * ChVector3d(hdimX, hdimY, hdimZ), 2.0 * hthick, ChVector3d(4 + hdimX, 0, -hdimZ * 2 - hthick));
     }
 }
 
+// Volume of a bisphere (two overlapping spheres with centers at distance c_dist along the Y axis).
+double CalcBiSphereVolume(double radius, double c_dist) {
+    double delta = 2 * radius - c_dist;
+    double cos_theta = (radius - 0.5 * delta) / radius;
+    return (4.0 / 3.0) * CH_PI * radius * radius * radius * (1 + cos_theta);
+}
+
+// Principal radii of gyration (squared) of a bisphere.
+ChVector3d CalcBiSphereGyration(double radius, double c_dist) {
+    double delta = 2 * radius - c_dist;
+    double cos_theta = (radius - 0.5 * delta) / radius;
+    double z_prim = radius - 0.5 * delta;
+
+    double comp1 = 0.4 * radius * radius * (1 + cos_theta);
+    double comp2 = -0.2 * radius * radius * (1. / 3. * (-cos_theta * cos_theta * cos_theta - 1) + (1 + cos_theta));
+    double comp3 = 2. / 3. * z_prim * z_prim * (1 + cos_theta);
+    double comp4 = 0.5 * radius * z_prim * std::sqrt(1 - cos_theta * cos_theta);
+    double numerator = 2 * (comp1 + comp2 + comp3 + comp4);
+    double denominator = 4. / 3. * (1 + cos_theta);
+    double Jxx = numerator / denominator;
+    double Jyy = 0.6 * radius * radius * (1. / 3. * (-cos_theta * cos_theta * cos_theta - 1) + (1 + cos_theta)) / (1 + cos_theta);
+
+    return ChVector3d(Jxx, Jyy, Jxx);
+}
+
+// Create bisphere gravel particles (two spheres of radius r_g, with centers at a distance r_g).
 void CreateGravel(ChSystemMulticoreNSC* system) {
-    auto mat_g = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto mat_g = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_g->SetFriction(mu_g);
 
-    double r = 1.01 * r_g;
-    utils::PDSampler<double> sampler(3 * r);
-    utils::Generator gen(system);
-    std::shared_ptr<utils::MixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::BISPHERE, 1.0);
-    // std::shared_ptr<utils::MixtureIngredient> m2 = gen.AddMixtureIngredient(utils::MixtureType::CYLINDER, 1.0);
-    // std::shared_ptr<utils::MixtureIngredient> m3 = gen.AddMixtureIngredient(utils::MixtureType::BOX, 1.0);
+    double mass = rho_g * CalcBiSphereVolume(r_g, r_g);
+    ChVector3d inertia = mass * CalcBiSphereGyration(r_g, r_g);
 
-    m1->setDefaultMaterial(mat_g);
-    m1->setDefaultDensity(rho_g);
-    m1->setDefaultSize(r_g);
-    // m1->setDistributionSize(r_g, r_g, r_g, 1.5 * r_g);
-    // Set starting value for body identifiers
-    gen.setBodyIdentifier(Id_g);
+    double r = 1.01 * r_g;
+    utils::ChPDSampler<double> sampler(3 * r);
 
     // Create particles in layers until reaching the desired number of particles
-    ChVector<> hdims(hdimX - r * 3, hdimY - r * 3, 0);
-    ChVector<> center(4 + hdimX, 0, -.2);
+    ChVector3d hdims(hdimX - r * 3, hdimY - r * 3, 0);
+    ChVector3d center(4 + hdimX, 0, -.2);
 
-    while (gen.getTotalNumBodies() < 100000) {
-        gen.CreateObjectsBox(sampler, center, hdims);
+    int num_particles = 0;
+    while (num_particles < 100000) {
+        for (const auto& pos : sampler.SampleBox(center, hdims)) {
+            auto body = chrono_types::make_shared<ChBody>();
+            body->SetTag(Id_g + num_particles++);
+            body->SetPos(pos);
+            body->SetMass(mass);
+            body->SetInertiaXX(inertia);
+            utils::AddBiSphereGeometry(body.get(), mat_g, r_g, r_g);
+            body->EnableCollision(true);
+            system->AddBody(body);
+        }
         center.z() += 2 * r;
     }
 
-    std::cout << "Created " << gen.getTotalNumBodies() << " particles." << std::endl;
-
-    // return center.z();
+    std::cout << "Created " << num_particles << " particles." << std::endl;
 }
 
 int main(int argc, char* argv[]) {
+    SetChronoDataPath(CHRONO_DATA_DIR);
+    SetVehicleDataPath(CHRONO_VEHICLE_DATA_DIR);
+
+    int target_speed_mph = 35;
     if (argc == 3) {
         simulation_mode = SimModes(atoi(argv[1]));
-        target_speed = atoi(argv[2]) * mph_to_m_s;
+        target_speed_mph = atoi(argv[2]);
     }
+    target_speed = target_speed_mph * mph_to_m_s;
 
     // --------------
     // Create systems
     // --------------
     ChSystemMulticoreNSC* system = new ChSystemMulticoreNSC();
-    system->Set_G_acc(ChVector<>(0, 0, -9.81));
+    system->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
+    system->SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
     system->SetNumThreads(threads);
 
     // ---------------------
@@ -459,8 +392,6 @@ int main(int argc, char* argv[]) {
     system->GetSettings()->solver.contact_recovery_speed = contact_recovery_speed;
     system->GetSettings()->solver.bilateral_clamp_speed = 1e8;
     system->ChangeSolverType(SolverType::BB);
-    system->SetLoggingLevel(LoggingLevel::LOG_INFO);
-    system->SetLoggingLevel(LoggingLevel::LOG_TRACE);
 
     system->GetSettings()->collision.collision_envelope = 0.1 * fluid_r;
 
@@ -470,32 +401,40 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<ChBezierCurve> path;
 
     if (simulation_mode == TURN) {
-        initLoc = ChVector<>(0, 30.48, .6);
-        path = ChBezierCurve::read(circle_file);
-        data_output_path = "humvee_tank_turn_" + std::to_string(atoi(argv[2])) + "/";
+        if (!std::filesystem::exists(circle_file)) {
+            std::cout << "Missing path file " << circle_file << std::endl;
+            return 1;
+        }
+        initLoc = ChVector3d(0, 30.48, .6);
+        path = ChBezierCurve::Read(circle_file);
+        data_output_path = "humvee_tank_turn_" + std::to_string(target_speed_mph) + "/";
         system->GetSettings()->collision.bins_per_axis = vec3(100, 40, 50);
     } else if (simulation_mode == LANE_CHANGE) {
-        initLoc = ChVector<>(-50, -125, .6);
-        path = ChBezierCurve::read(lane_change_file);
-        data_output_path = "humvee_tank_dlc_" + std::to_string(atoi(argv[2])) + "/";
+        initLoc = ChVector3d(-50, -125, .6);
+        path = ChBezierCurve::Read(GetVehicleDataFile(lane_change_file));
+        data_output_path = "humvee_tank_dlc_" + std::to_string(target_speed_mph) + "/";
         system->GetSettings()->collision.bins_per_axis = vec3(100, 40, 50);
     } else if (simulation_mode == GRAVEL) {
         //		target_speed = 15 * mph_to_m_s;
-        path = ChBezierCurve::read(gravel_driver_file);
-        data_output_path = "humvee_tank_gravel_" + std::to_string(atoi(argv[2])) + "/";
+        path = ChBezierCurve::Read(GetVehicleDataFile(gravel_driver_file));
+        data_output_path = "humvee_tank_gravel_" + std::to_string(target_speed_mph) + "/";
         system->GetSettings()->collision.bins_per_axis = vec3(300, 40, 50);
     }
 
     std::cout << "writing data to: " << data_output_path << std::endl;
+    if (!CreateOutputDirectory(data_output_path)) {
+        std::cout << "Error creating directory " << data_output_path << std::endl;
+        return 1;
+    }
     CreateBase(system);
     CreateFluid(system);
 
     // Create the HMMWV vehicle, set parameters, and initialize
     HMMWV_Full my_hmmwv(system);
-    my_hmmwv.SetContactMethod(contact_method);
     my_hmmwv.SetChassisFixed(false);
     my_hmmwv.SetInitPosition(ChCoordsys<>(initLoc, initRot));
-    my_hmmwv.SetPowertrainType(powertrain_model);
+    my_hmmwv.SetEngineType(engine_model);
+    my_hmmwv.SetTransmissionType(transmission_model);
     my_hmmwv.SetDriveType(drive_type);
     my_hmmwv.SetTireType(tire_model);
     my_hmmwv.SetTireStepSize(tire_step_size);
@@ -508,36 +447,29 @@ int main(int argc, char* argv[]) {
     my_hmmwv.SetWheelVisualizationType(wheel_vis_type);
     my_hmmwv.SetTireVisualizationType(tire_vis_type);
 
-    RemoveCollisionModel(system, my_hmmwv.GetChassisBody()->GetCollisionModel().get());
-    my_hmmwv.GetChassisBody()->GetCollisionModel()->ClearModel();
-    my_hmmwv.GetChassisBody()->GetAssets().clear();
-
+    // The chassis has no collision shapes of its own (chassis collision type NONE). Attach the water tank to the
+    // chassis. Collision shapes added before the first step are included when the collision system is initialized.
     std::shared_ptr<ChBodyAuxRef> m_chassis = my_hmmwv.GetChassisBody();
 
-    auto material = chrono_types::make_shared<ChMaterialSurfaceNSC>();
+    auto material = chrono_types::make_shared<ChContactMaterialNSC>();
 
     // add sphere to center to mark chassis pos
-    utils::AddSphereGeometry(m_chassis.get(), material, 0.115, ChVector<>(0, 0, 0), QUNIT);
+    utils::AddSphereGeometry(m_chassis.get(), material, 0.115, ChVector3d(0, 0, 0), QUNIT);
 
-    ChVector<> hdim(.1, .6, .05);
-
-    for (int i = 0; i < m_chassis->GetAssets().size(); i++) {
-        ((ChVisualization*)m_chassis->GetAssets().at(i).get())->Pos = ChVector<>(0);
-    }
+    ChVector3d hdim(.1, .6, .05);
 
     for (int j = 0; j < 30; j++) {
-        ChQuaternion<> qq = Q_from_AngAxis(j * 12 * CH_DEG_TO_RAD, VECT_Y);
-        ChVector<> ppp = ChVector<>(sin(12 * CH_DEG_TO_RAD * j), 0, cos(12 * CH_DEG_TO_RAD * j)) * .6;
+        ChQuaterniond qq = QuatFromAngleY(j * 12 * CH_DEG_TO_RAD);
+        ChVector3d ppp = ChVector3d(sin(12 * CH_DEG_TO_RAD * j), 0, cos(12 * CH_DEG_TO_RAD * j)) * .6;
 
-        utils::AddBoxGeometry(m_chassis.get(), material, hdim, ppp + ChVector<>(-1.9306 + .24, 0, 1.3011), qq);
+        utils::AddBoxGeometry(m_chassis.get(), material, 2.0 * hdim, ppp + ChVector3d(-1.9306 + .24, 0, 1.3011), qq);
     }
-    utils::AddCylinderGeometry(m_chassis.get(), material, .6, .05, ChVector<>(-1.9306 + .24, -.6, 1.3011), QUNIT);
-    utils::AddCylinderGeometry(m_chassis.get(), material, .6, .05, ChVector<>(-1.9306 + .24, .6, 1.3011), QUNIT);
+    // End caps: cylinders of half-length .05 along the Y axis
+    utils::AddCylinderGeometry(m_chassis.get(), material, .6, ChVector3d(-1.9306 + .24, -.65, 1.3011), ChVector3d(-1.9306 + .24, -.55, 1.3011));
+    utils::AddCylinderGeometry(m_chassis.get(), material, .6, ChVector3d(-1.9306 + .24, .55, 1.3011), ChVector3d(-1.9306 + .24, .65, 1.3011));
 
-    my_hmmwv.GetChassisBody()->SetCollide(true);
-    my_hmmwv.GetChassisBody()->GetCollisionModel()->BuildModel();
-    auto collision_system = std::static_pointer_cast<ChCollisionSystemChrono>(system->GetCollisionSystem());
-    collision_system->Add(my_hmmwv.GetChassisBody()->GetCollisionModel().get());
+    m_chassis->GetCollisionModel()->SetFamily(VehicleCollisionFamily::CHASSIS_FAMILY);
+    m_chassis->EnableCollision(true);
 
     RigidTerrain terrain(my_hmmwv.GetSystem());
 
@@ -549,8 +481,7 @@ int main(int argc, char* argv[]) {
     // Create the driver system
     // ------------------------
 
-    ChPathFollowerDriver driver(my_hmmwv.GetVehicle(), steering_controller_file, speed_controller_file, path, "my_path",
-                                target_speed, true);
+    ChPathFollowerDriver driver(my_hmmwv.GetVehicle(), GetVehicleDataFile(steering_controller_file), GetVehicleDataFile(speed_controller_file), path, "my_path", target_speed);
     driver.Initialize();
 
     // ---------------
@@ -564,28 +495,27 @@ int main(int argc, char* argv[]) {
 
     int out_steps = std::ceil((1.0 / time_step) / out_fps);
 
-#ifdef CHRONO_OPENGL
-    opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-    gl_window.Initialize(1280, 720, "Humvee", system);
-
-    gl_window.SetCamera(ChVector<>(0, -10, 0) + initLoc, initLoc, ChVector<>(0, 0, 1));
-
-    gl_window.SetRenderMode(opengl::WIREFRAME);
-
-    gl_window.Pause();
+#ifdef CHRONO_VSG
+    // Create the run-time visualization system
+    auto vis = chrono_types::make_shared<vsg3d::ChVisualSystemVSG>();
+    vis->AttachSystem(system);
+    vis->SetWindowTitle("Humvee");
+    vis->SetWindowSize(1280, 720);
+    vis->AddCamera(ChVector3d(0, -10, 0) + initLoc, initLoc);
+    vis->SetCameraVertical(CameraVerticalDir::Z);
+    vis->Initialize();
 #endif
 
-    ChVector<> driver_pos = my_hmmwv.GetVehicle().GetChassis()->GetLocalDriverCoordsys().pos;
+    ChVector3d driver_pos = my_hmmwv.GetVehicle().GetChassis()->GetLocalDriverCoordsys().pos;
 
     while (time < time_end) {
         if (simulation_mode != GRAVEL) {
-            bottom_plate->SetPos(ChVector<>(my_hmmwv.GetChassis()->GetBody()->GetPos().x(),
-                                            my_hmmwv.GetChassis()->GetBody()->GetPos().y(), 0));
+            bottom_plate->SetPos(ChVector3d(my_hmmwv.GetChassis()->GetBody()->GetPos().x(), my_hmmwv.GetChassis()->GetBody()->GetPos().y(), 0));
         }
 
-        ChDriver::Inputs driver_inputs = driver.GetInputs();
+        DriverInputs driver_inputs = driver.GetInputs();
 
-        ChVector<> com_pos = my_hmmwv.GetChassis()->GetCOMPos();
+        ChVector3d com_pos = my_hmmwv.GetChassisBody()->GetPos();
         printf("Chassis: %f %f %f\n", com_pos.x(), com_pos.y(), com_pos.z());
         if (simulation_mode == LANE_CHANGE) {
             if (com_pos.x() > 30) {
@@ -606,19 +536,12 @@ int main(int argc, char* argv[]) {
 
         driver.Advance(time_step);
 
-#ifdef CHRONO_OPENGL
-        if (gl_window.Active()) {
-            if (gl_window.DoStepDynamics(time_step)) {
-                // Update counters.
-                time += time_step;
-                sim_frame++;
-                exec_time += system->GetTimerStep();
-            }
-            gl_window.Render();
-        } else {
+#ifdef CHRONO_VSG
+        if (!vis->Run())
             break;
-        }
-#else
+        vis->Render();
+#endif
+
         system->DoStepDynamics(time_step);
 
         forces.resize(10);
@@ -642,9 +565,10 @@ int main(int argc, char* argv[]) {
         time += time_step;
         sim_frame++;
         exec_time += system->GetTimerStep();
-
-#endif
     }
+
+    FinishFluidDataOutput();
+
     cout << "==================================" << endl;
     cout << "Simulation time:   " << exec_time << endl;
     return 0;
