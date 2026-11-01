@@ -109,8 +109,11 @@ int SpawnParticles() {
 
 // ========================================================================
 int main(int argc, char* argv[]) {
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     // Create system
     ChSystemMulticoreSMC* sys = new ChSystemMulticoreSMC();
+    sys->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Set number of threads.
     int max_threads = omp_get_num_procs();
@@ -146,7 +149,7 @@ int main(int argc, char* argv[]) {
     mat_c->SetAdhesion(cohesion_c);
 
     // Create the containing bin
-    utils::CreateBoxContainer(sys, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(sys, mat_c, 2.0 * ChVector3d(hDimX, hDimY, hDimZ), 2.0 * hThickness);
 
     // Create a mixture entirely made out of spheres
     double vol_g = (4.0 / 3) * CH_PI * r_g * r_g * r_g;
@@ -199,7 +202,18 @@ int main(int argc, char* argv[]) {
         int numParticles = (int)sys->GetBodies().size() - 1;
 
         if (numParticles < maxNumParticles && sim_frame % gen_steps == 0) {
+            size_t num_bodies = sys->GetBodies().size();
             SpawnParticles();
+
+            // Particles created after the first step must be bound explicitly
+            if (sim_frame > 0) {
+                for (size_t i = num_bodies; i < sys->GetBodies().size(); i++) {
+                    sys->GetCollisionSystem()->BindItem(sys->GetBodies()[i]);
+#ifdef CHRONO_VSG
+                    vis->BindItem(sys->GetBodies()[i]);
+#endif
+                }
+            }
         }
 
         if (sim_frame % out_steps == 0) {
