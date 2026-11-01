@@ -453,7 +453,7 @@ int main(int argc, char* argv[]) {
 #ifndef USE_SMC
             sys->CalculateContactForces();
 #endif
-            force = sys->GetBodyContactForce(0);
+            force = sys->GetBodyContactForce(bin);
 
             forceStream << sys->GetChTime() << "\t" << plate->GetPos().y() - bin->GetPos().y() << "\t"
                         << bin->GetPos().x() << "\t" << bin->GetPos().y() << "\t" << bin->GetPos().z() << "\t" << force.x
