@@ -24,10 +24,6 @@ set(TESTS_MKL_IRR
     test_FEA_abaqus_wheels
 )
 
-set(TESTS_MATLAB_IRR
-    test_FEA_miniature
-)
-
 #--------------------------------------------------------------
 # Find the Chrono package with required components
 #--------------------------------------------------------------
@@ -35,7 +31,7 @@ set(TESTS_MATLAB_IRR
 # Invoke find_package in CONFIG mode
 find_package(Chrono QUIET
              COMPONENTS
-             OPTIONAL_COMPONENTS Irrlicht Postprocess PardisoMKL Matlab
+             OPTIONAL_COMPONENTS Irrlicht Postprocess PardisoMKL
              CONFIG
 )
 
@@ -48,10 +44,6 @@ endif()
 # If the Chrono::Irrlicht and Chrono::PardisoMKL are available.
 if(CHRONO_IRRLICHT_FOUND AND CHRONO_PARDISOMKL_FOUND)
   list(APPEND TESTS ${TESTS_MKL_IRR})
-endif()
-
-if (CHRONO_IRRLICHT_FOUND AND CHRONO_MATLAB_FOUND)
-	list(APPEND TESTS ${TESTS_MATLAB_IRR})
 endif()
 
 #--------------------------------------------------------------

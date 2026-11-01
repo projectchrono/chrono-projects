@@ -18,7 +18,6 @@ set(TESTS
     test_VDEM_directShear
     test_VDEM_pressureSinkage
     test_VDEM_singleWheel
-    #test_VDEM_shear
 )
 
 #--------------------------------------------------------------
