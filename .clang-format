@@ -5,5 +5,8 @@ ColumnLimit: 180
 
 # Increase indentation
 IndentWidth: 4
+IndentPPDirectives: BeforeHash
 TabWidth: 4
 AccessModifierOffset: -2
+SortUsingDeclarations: false
+SortIncludes: false
