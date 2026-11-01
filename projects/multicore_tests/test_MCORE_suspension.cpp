@@ -144,7 +144,7 @@ class MySimpleCar {
         truss->SetPos(ChVector3d(0, 0.52349, 0.055765));
         truss->SetRot(ChQuaternion<>(1, 0, 0, 0));
         truss->SetInertiaXX(ChVector3d(3570.20377, 1078.52344, 2955.66050));
-        utils::AddBoxGeometry(truss.get(), mat, ChVector3d(0.7, 0.5, 3) * 0.5, ChVector3d(0, 0, 0));
+        utils::AddBoxGeometry(truss.get(), mat, ChVector3d(0.7, 0.5, 3), ChVector3d(0, 0, 0));
         truss->EnableCollision(false);
         truss->SetFixed(false);
         my_system->AddBody(truss);
@@ -157,7 +157,7 @@ class MySimpleCar {
         spindleRF->SetPos(ChVector3d(0.751, -0.026, 1.648965));
         spindleRF->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleRF->SetInertiaXX(ChVector3d(0.07352, 0.04117, 0.04117));
-        utils::AddBoxGeometry(spindleRF.get(), mat, ChVector3d(0.1, 0.4, 0.4) * 0.5, ChVector3d(0, 0, 0));
+        utils::AddBoxGeometry(spindleRF.get(), mat, ChVector3d(0.1, 0.4, 0.4), ChVector3d(0, 0, 0));
         spindleRF->EnableCollision(false);
         my_system->AddBody(spindleRF);
 
@@ -170,7 +170,7 @@ class MySimpleCar {
         if (useSpheres) {
             utils::AddSphereGeometry(wheelRF.get(), mat, 0.45, ChVector3d(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelRF.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
+            utils::AddCylinderGeometry(wheelRF.get(), mat, 0.45, 0.4, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
         }
         wheelRF->EnableCollision(true);
         my_system->AddBody(wheelRF);
@@ -226,7 +226,7 @@ class MySimpleCar {
         spindleLF->SetPos(ChVector3d(-0.751, -0.026, 1.648965));
         spindleLF->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleLF->SetInertiaXX(ChVector3d(0.07352, 0.04117, 0.04117));
-        utils::AddBoxGeometry(spindleLF.get(), mat, ChVector3d(0.1, 0.4, 0.4) * 0.5, ChVector3d(0, 0, 0));
+        utils::AddBoxGeometry(spindleLF.get(), mat, ChVector3d(0.1, 0.4, 0.4), ChVector3d(0, 0, 0));
         spindleLF->EnableCollision(false);
         my_system->AddBody(spindleLF);
 
@@ -239,7 +239,7 @@ class MySimpleCar {
         if (useSpheres) {
             utils::AddSphereGeometry(wheelLF.get(), mat, 0.45, ChVector3d(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelLF.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
+            utils::AddCylinderGeometry(wheelLF.get(), mat, 0.45, 0.4, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
         }
         wheelLF->EnableCollision(true);
         my_system->AddBody(wheelLF);
@@ -295,7 +295,7 @@ class MySimpleCar {
         spindleRB->SetPos(ChVector3d(0.751, -0.026, -1.652965));
         spindleRB->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleRB->SetInertiaXX(ChVector3d(4, 2, 2));
-        utils::AddBoxGeometry(spindleRB.get(), mat, ChVector3d(0.1, 0.4, 0.4) * 0.5, ChVector3d(0, 0, 0));
+        utils::AddBoxGeometry(spindleRB.get(), mat, ChVector3d(0.1, 0.4, 0.4), ChVector3d(0, 0, 0));
         spindleRB->EnableCollision(false);
         my_system->AddBody(spindleRB);
 
@@ -308,7 +308,7 @@ class MySimpleCar {
         if (useSpheres) {
             utils::AddSphereGeometry(wheelRB.get(), mat, 0.45, ChVector3d(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelRB.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
+            utils::AddCylinderGeometry(wheelRB.get(), mat, 0.45, 0.4, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
         }
         wheelRB->EnableCollision(true);
         my_system->AddBody(wheelRB);
@@ -372,7 +372,7 @@ class MySimpleCar {
         spindleLB->SetPos(ChVector3d(-0.751, -0.026, -1.652965));
         spindleLB->SetRot(ChQuaternion<>(1, 0, 0, 0));
         spindleLB->SetInertiaXX(ChVector3d(4, 2, 2));
-        utils::AddBoxGeometry(spindleLB.get(), mat, ChVector3d(0.1, 0.4, 0.4) * 0.5, ChVector3d(0, 0, 0));
+        utils::AddBoxGeometry(spindleLB.get(), mat, ChVector3d(0.1, 0.4, 0.4), ChVector3d(0, 0, 0));
         spindleLB->EnableCollision(false);
         my_system->AddBody(spindleLB);
 
@@ -385,7 +385,7 @@ class MySimpleCar {
         if (useSpheres) {
             utils::AddSphereGeometry(wheelLB.get(), mat, 0.45, ChVector3d(0, 0, 0));
         } else {
-            utils::AddCylinderGeometry(wheelLB.get(), mat, 0.45, 0.2, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
+            utils::AddCylinderGeometry(wheelLB.get(), mat, 0.45, 0.4, ChVector3d(0, 0, 0), QuatFromAngleZ(CH_PI_2));
         }
         wheelLB->EnableCollision(true);
         my_system->AddBody(wheelLB);
@@ -607,8 +607,7 @@ void AddGround(ChSystemMulticoreNSC* sys) {
     ground->EnableCollision(true);
     ground->SetFixed(true);
 
-    utils::AddBoxGeometry(ground.get(), mat, ChVector3d(groundWidth / 2, thickness, 10 * pitLocation_z / 2),
-                          ChVector3d(0, -thickness, 0));
+    utils::AddBoxGeometry(ground.get(), mat, ChVector3d(groundWidth, 2 * thickness, 10 * pitLocation_z), ChVector3d(0, -thickness, 0));
 
     sys->AddBody(ground);
 

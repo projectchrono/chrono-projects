@@ -167,7 +167,7 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     insert->EnableCollision(true);
     insert->SetFixed(true);
 
-    utils::AddBoxGeometry(insert.get(), mat_b, ChVector3d(thickness * 0.5, width * 0.5, height_insert * 0.5));
+    utils::AddBoxGeometry(insert.get(), mat_b, ChVector3d(thickness, width, height_insert));
 
     system->AddBody(insert);
 
@@ -181,7 +181,7 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     slot->EnableCollision(true);
     slot->SetFixed(true);
 
-    utils::AddBoxGeometry(slot.get(), mat_b, ChVector3d(thickness / 2, width / 2, height / 2), ChVector3d(0, 0, 0));
+    utils::AddBoxGeometry(slot.get(), mat_b, ChVector3d(thickness, width, height), ChVector3d(0, 0, 0));
 
     system->AddBody(slot);
 
@@ -195,22 +195,16 @@ ChBody* CreateMechanism(ChSystemMulticore* system) {
     wall->EnableCollision(true);
     wall->SetFixed(true);
 
-    utils::AddBoxGeometry(wall.get(), mat_b, ChVector3d(3 * height / 2, thickness / 2, height),
-                          ChVector3d(0, width / 2 + thickness / 2, height / 2));
-    utils::AddBoxGeometry(wall.get(), mat_b, ChVector3d(3 * height / 2, thickness / 2, height),
-                          ChVector3d(0, -width / 2 - thickness / 2, height / 2));
+    utils::AddBoxGeometry(wall.get(), mat_b, ChVector3d(3 * height, thickness, 2 * height), ChVector3d(0, width / 2 + thickness / 2, height / 2));
+    utils::AddBoxGeometry(wall.get(), mat_b, ChVector3d(3 * height, thickness, 2 * height), ChVector3d(0, -width / 2 - thickness / 2, height / 2));
 
     system->AddBody(wall);
 
 // Containing bin
 #ifdef USE_SMC
-    utils::CreateBoxContainer(system, mat_b,
-                              ChVector3d(size_collector / 2, size_collector / 2, height_collector / 2), thickness / 2,
-                              ChVector3d(0, 0, -pos_collector));
+    utils::CreateBoxContainer(system, mat_b, ChVector3d(size_collector, size_collector, height_collector), thickness, ChVector3d(0, 0, -pos_collector));
 #else
-    utils::CreateBoxContainer(system, -3, mat_b,
-                              ChVector3d(size_collector / 2, size_collector / 2, height_collector / 2), thickness / 2,
-                              ChVector3d(0, 0, -pos_collector));
+    utils::CreateBoxContainer(system, mat_b, ChVector3d(size_collector, size_collector, height_collector), thickness, ChVector3d(0, 0, -pos_collector));
 #endif
 
     // Return the angled insert body

@@ -120,7 +120,7 @@ void AddWall(std::shared_ptr<ChBody>& body,
              const ChVector3d& dim,
              const ChVector3d& loc,
              bool visible) {
-    auto ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(mat, dim);
+    auto ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(mat, 2.0 * dim);
     body->AddCollisionShape(ct_shape, ChFrame<>(loc, QUNIT));
 
     if (visible == true) {

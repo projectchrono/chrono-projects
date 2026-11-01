@@ -170,12 +170,12 @@ int CreateObjects(ChSystemMulticore* sys) {
     mat_c->SetFriction(mu_c);
     mat_c->SetRestitution(cr_c);
 
-    utils::CreateBoxContainer(sys, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(sys, mat_c, 2.0 * ChVector3d(hDimX, hDimY, hDimZ), 2.0 * hThickness);
 #else
     auto mat_c = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_c->SetFriction(mu_c);
 
-    utils::CreateBoxContainer(sys, binId, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(sys, mat_c, 2.0 * ChVector3d(hDimX, hDimY, hDimZ), 2.0 * hThickness);
 #endif
 
 // Create a material for the granular material

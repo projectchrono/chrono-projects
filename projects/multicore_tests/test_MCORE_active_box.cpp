@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
     ground->SetPos(ChVector3d(0, 0, 0));
     ground->SetFixed(true);
     ground->EnableCollision(true);
-    utils::AddBoxGeometry(ground.get(), material_g, ChVector3d(1, 1, 0.1), ChVector3d(0, 0, -0.1));
+    utils::AddBoxGeometry(ground.get(), material_g, ChVector3d(2, 2, 0.2), ChVector3d(0, 0, -0.1));
     system->AddBody(ground);
 
     // Create ball body

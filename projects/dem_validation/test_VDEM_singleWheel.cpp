@@ -209,11 +209,11 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     // Attach geometry of the containing bin.  Disable contact ground-shearBox
     // and ground-loadPlate.
-    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hdimX, hdimY, hthick), ChVector3d(0, 0, -hthick));
-    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hthick, hdimY, hdimZ), ChVector3d(-hdimX - hthick, 0, hdimZ));
-    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hthick, hdimY, hdimZ), ChVector3d(hdimX + hthick, 0, hdimZ));
-    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hdimX, hthick, hdimZ), ChVector3d(0, -hdimY - hthick, hdimZ));
-    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hdimX, hthick, hdimZ), ChVector3d(0, hdimY + hthick, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, 2.0 * ChVector3d(hdimX, hdimY, hthick), ChVector3d(0, 0, -hthick));
+    utils::AddBoxGeometry(ground.get(), mat_walls, 2.0 * ChVector3d(hthick, hdimY, hdimZ), ChVector3d(-hdimX - hthick, 0, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, 2.0 * ChVector3d(hthick, hdimY, hdimZ), ChVector3d(hdimX + hthick, 0, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, 2.0 * ChVector3d(hdimX, hthick, hdimZ), ChVector3d(0, -hdimY - hthick, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, 2.0 * ChVector3d(hdimX, hthick, hdimZ), ChVector3d(0, hdimY + hthick, hdimZ));
 
     system->AddBody(ground);
 
@@ -234,7 +234,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     wheel->SetFixed(true);
 
     // Add geometry of the wheel.
-    utils::AddCylinderGeometry(wheel.get(), mat_walls, wheelRadius, wheelWidth / 2, ChVector3d(0, 0, 0), QUNIT);
+    utils::AddCylinderGeometry(wheel.get(), mat_walls, wheelRadius, wheelWidth, ChVector3d(0, 0, 0), QUNIT);
 
     system->AddBody(wheel);
 

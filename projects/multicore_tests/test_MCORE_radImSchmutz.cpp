@@ -228,11 +228,10 @@ Mechanism::Mechanism(ChSystemMulticore* system, double h) {
 
     switch (wheel_shape) {
         case ChCollisionShape::Type::CYLINDER:
-            utils::AddCylinderGeometry(m_wheel.get(), mat_w, r_w, w_w / 2, ChVector3d(c, 0, -b), QuatFromAngleY(CH_PI_2));
+            utils::AddCylinderGeometry(m_wheel.get(), mat_w, r_w, w_w, ChVector3d(c, 0, -b), QuatFromAngleY(CH_PI_2));
             break;
         case ChCollisionShape::Type::ROUNDEDCYL:
-            utils::AddRoundedCylinderGeometry(m_wheel.get(), mat_w, r_w - s_w, w_w / 2 - s_w, s_w, ChVector3d(c, 0, -b),
-                                              QuatFromAngleY(CH_PI_2));
+            utils::AddRoundedCylinderGeometry(m_wheel.get(), mat_w, r_w - s_w, w_w - 2 * s_w, s_w, ChVector3d(c, 0, -b), QuatFromAngleY(CH_PI_2));
             break;
     }
 
@@ -286,12 +285,12 @@ void CreateContainer(ChSystemMulticore* system) {
     mat_c->SetFriction(0.4f);
     mat_c->SetRestitution(0.1f);
 
-    utils::CreateBoxContainer(system, mat_c, ChVector3d(L / 2, W / 2, H / 2), thickness / 2);
+    utils::CreateBoxContainer(system, mat_c, ChVector3d(L, W, H), thickness);
 #else
     auto mat_c = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_c->SetFriction(0.4f);
 
-    utils::CreateBoxContainer(system, id_c, mat_c, ChVector3d(L / 2, W / 2, H / 2), thickness / 2);
+    utils::CreateBoxContainer(system, mat_c, ChVector3d(L, W, H), thickness);
 
 #endif
 }

@@ -168,7 +168,7 @@ int CreateObjects(ChSystemMulticore* system) {
     cout << "total granules: " << gen.GetTotalNumBodies() << endl;
 
     // Create the containing bin
-    utils::CreateBoxContainer(system, material_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, material_c, 2.0 * ChVector3d(hDimX, hDimY, hDimZ), 2.0 * hThickness);
 
     return gen.GetTotalNumBodies();
 }

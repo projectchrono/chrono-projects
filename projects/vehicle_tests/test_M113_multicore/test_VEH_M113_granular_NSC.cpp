@@ -268,25 +268,20 @@ int main(int argc, char* argv[]) {
     ground->EnableCollision(true);
 
     // Bottom box
-    chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector3d(hdimX, hdimY, hthick), ChVector3d(0, 0, -hthick),
-                                  ChQuaternion<>(1, 0, 0, 0), true);
+    chrono::utils::AddBoxGeometry(ground.get(), mat_g, 2.0 * ChVector3d(hdimX, hdimY, hthick), ChVector3d(0, 0, -hthick), ChQuaternion<>(1, 0, 0, 0), true);
     if (terrain_type == GRANULAR_TERRAIN) {
         // Front box
-        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector3d(hthick, hdimY, hdimZ + hthick),
-                                      ChVector3d(hdimX + hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
-                                      visible_walls);
+        chrono::utils::AddBoxGeometry(ground.get(), mat_g, 2.0 * ChVector3d(hthick, hdimY, hdimZ + hthick), ChVector3d(hdimX + hthick, 0, hdimZ - hthick),
+                                      ChQuaternion<>(1, 0, 0, 0), visible_walls);
         // Rear box
-        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector3d(hthick, hdimY, hdimZ + hthick),
-                                      ChVector3d(-hdimX - hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
-                                      visible_walls);
+        chrono::utils::AddBoxGeometry(ground.get(), mat_g, 2.0 * ChVector3d(hthick, hdimY, hdimZ + hthick), ChVector3d(-hdimX - hthick, 0, hdimZ - hthick),
+                                      ChQuaternion<>(1, 0, 0, 0), visible_walls);
         // Left box
-        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector3d(hdimX, hthick, hdimZ + hthick),
-                                      ChVector3d(0, hdimY + hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
-                                      visible_walls);
+        chrono::utils::AddBoxGeometry(ground.get(), mat_g, 2.0 * ChVector3d(hdimX, hthick, hdimZ + hthick), ChVector3d(0, hdimY + hthick, hdimZ - hthick),
+                                      ChQuaternion<>(1, 0, 0, 0), visible_walls);
         // Right box
-        chrono::utils::AddBoxGeometry(ground.get(), mat_g, ChVector3d(hdimX, hthick, hdimZ + hthick),
-                                      ChVector3d(0, -hdimY - hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0),
-                                      visible_walls);
+        chrono::utils::AddBoxGeometry(ground.get(), mat_g, 2.0 * ChVector3d(hdimX, hthick, hdimZ + hthick), ChVector3d(0, -hdimY - hthick, hdimZ - hthick),
+                                      ChQuaternion<>(1, 0, 0, 0), visible_walls);
     }
 
     system.AddBody(ground);

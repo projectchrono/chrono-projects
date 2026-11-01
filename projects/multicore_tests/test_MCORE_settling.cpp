@@ -222,20 +222,19 @@ int main(int argc, char** argv) {
     container->EnableCollision(true);
 
     // Bottom box
-    utils::AddBoxGeometry(container.get(), material_terrain, ChVector3d(hdimX, hdimY, hthick), ChVector3d(0, 0, -hthick),
-                          ChQuaternion<>(1, 0, 0, 0), true);
+    utils::AddBoxGeometry(container.get(), material_terrain, 2.0 * ChVector3d(hdimX, hdimY, hthick), ChVector3d(0, 0, -hthick), ChQuaternion<>(1, 0, 0, 0), true);
     // Front box
-    utils::AddBoxGeometry(container.get(), material_terrain, ChVector3d(hthick, hdimY, hdimZ + hthick),
-                          ChVector3d(hdimX + hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
+    utils::AddBoxGeometry(container.get(), material_terrain, 2.0 * ChVector3d(hthick, hdimY, hdimZ + hthick), ChVector3d(hdimX + hthick, 0, hdimZ - hthick),
+                          ChQuaternion<>(1, 0, 0, 0), false);
     // Rear box
-    utils::AddBoxGeometry(container.get(), material_terrain, ChVector3d(hthick, hdimY, hdimZ + hthick),
-                          ChVector3d(-hdimX - hthick, 0, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
+    utils::AddBoxGeometry(container.get(), material_terrain, 2.0 * ChVector3d(hthick, hdimY, hdimZ + hthick), ChVector3d(-hdimX - hthick, 0, hdimZ - hthick),
+                          ChQuaternion<>(1, 0, 0, 0), false);
     // Left box
-    utils::AddBoxGeometry(container.get(), material_terrain, ChVector3d(hdimX, hthick, hdimZ + hthick),
-                          ChVector3d(0, hdimY + hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
+    utils::AddBoxGeometry(container.get(), material_terrain, 2.0 * ChVector3d(hdimX, hthick, hdimZ + hthick), ChVector3d(0, hdimY + hthick, hdimZ - hthick),
+                          ChQuaternion<>(1, 0, 0, 0), false);
     // Right box
-    utils::AddBoxGeometry(container.get(), material_terrain, ChVector3d(hdimX, hthick, hdimZ + hthick),
-                          ChVector3d(0, -hdimY - hthick, hdimZ - hthick), ChQuaternion<>(1, 0, 0, 0), false);
+    utils::AddBoxGeometry(container.get(), material_terrain, 2.0 * ChVector3d(hdimX, hthick, hdimZ + hthick), ChVector3d(0, -hdimY - hthick, hdimZ - hthick),
+                          ChQuaternion<>(1, 0, 0, 0), false);
 
     // ----------------
     // Create particles

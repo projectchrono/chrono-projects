@@ -125,12 +125,12 @@ void CreateContainer(ChSystemMulticore* system) {
     mat_c->SetFriction(0.4f);
     mat_c->SetRestitution(0.1f);
 
-    utils::CreateBoxContainer(system, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, mat_c, 2.0 * ChVector3d(hDimX, hDimY, hDimZ), 2.0 * hThickness);
 #else
     auto mat_c = chrono_types::make_shared<ChContactMaterialNSC>();
     mat_c->SetFriction(0.4f);
 
-    utils::CreateBoxContainer(system, id_c, mat_c, ChVector3d(hDimX, hDimY, hDimZ), hThickness);
+    utils::CreateBoxContainer(system, mat_c, 2.0 * ChVector3d(hDimX, hDimY, hDimZ), 2.0 * hThickness);
 
 #endif
 }

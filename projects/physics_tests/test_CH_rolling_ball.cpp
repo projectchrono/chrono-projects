@@ -104,12 +104,12 @@ int main(int argc, char* argv[]) {
     ground->SetFixed(true);
     ground->EnableCollision(true);
 
-    auto ground_ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(material, 4, 2, 1);
+    auto ground_ct_shape = chrono_types::make_shared<ChCollisionShapeBox>(material, 8, 4, 2);
     ground->AddCollisionShape(ground_ct_shape, ChFrame<>(ChVector3d(0, 0, -1), QUNIT));
 
     auto box = chrono_types::make_shared<ChVisualShapeBox>(8, 4, 2);
     box->SetColor(ChColor(1, 0, 0));
-    ground->AddVisualShape(box, ChFrame<>(ChVector3d(0, 0, -0.5)));
+    ground->AddVisualShape(box, ChFrame<>(ChVector3d(0, 0, -1)));
 
     // Crank
     auto ball = chrono_types::make_shared<ChBody>();

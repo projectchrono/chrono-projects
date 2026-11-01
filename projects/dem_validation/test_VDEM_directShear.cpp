@@ -221,11 +221,11 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
 
     // Attach geometry of the containing bin.  Disable contact ground-shearBox
     // and ground-loadPlate.
-    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hdimX, hdimY, hthick), ChVector3d(0, 0, -hthick));
-    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hthick, hdimY, hdimZ), ChVector3d(-hdimX - hthick, 0, hdimZ));
-    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hthick, hdimY, hdimZ), ChVector3d(hdimX + hthick, 0, hdimZ));
-    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hdimX, hthick, hdimZ), ChVector3d(0, -hdimY - hthick, hdimZ));
-    utils::AddBoxGeometry(ground.get(), mat_walls, ChVector3d(hdimX, hthick, hdimZ), ChVector3d(0, hdimY + hthick, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, 2.0 * ChVector3d(hdimX, hdimY, hthick), ChVector3d(0, 0, -hthick));
+    utils::AddBoxGeometry(ground.get(), mat_walls, 2.0 * ChVector3d(hthick, hdimY, hdimZ), ChVector3d(-hdimX - hthick, 0, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, 2.0 * ChVector3d(hthick, hdimY, hdimZ), ChVector3d(hdimX + hthick, 0, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, 2.0 * ChVector3d(hdimX, hthick, hdimZ), ChVector3d(0, -hdimY - hthick, hdimZ));
+    utils::AddBoxGeometry(ground.get(), mat_walls, 2.0 * ChVector3d(hdimX, hthick, hdimZ), ChVector3d(0, hdimY + hthick, hdimZ));
     ground->GetCollisionModel()->SetFamily(ground_coll_fam);
     ground->GetCollisionModel()->DisallowCollisionsWith(box_coll_fam);
     ground->GetCollisionModel()->DisallowCollisionsWith(plate_coll_fam);
@@ -246,14 +246,10 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     box->SetFixed(true);
 
     // Add geometry of the shear box.  Disable contact with the load plate.
-    utils::AddBoxGeometry(box.get(), mat_walls, ChVector3d(hthick, hdimY, h_scaling * hdimZ),
-                          ChVector3d(-hdimX - hthick, 0, h_scaling * hdimZ));
-    utils::AddBoxGeometry(box.get(), mat_walls, ChVector3d(hthick, hdimY, h_scaling * hdimZ),
-                          ChVector3d(hdimX + hthick, 0, h_scaling * hdimZ));
-    utils::AddBoxGeometry(box.get(), mat_walls, ChVector3d(hdimX, hthick, h_scaling * hdimZ),
-                          ChVector3d(0, -hdimY - hthick, h_scaling * hdimZ));
-    utils::AddBoxGeometry(box.get(), mat_walls, ChVector3d(hdimX, hthick, h_scaling * hdimZ),
-                          ChVector3d(0, hdimY + hthick, h_scaling * hdimZ));
+    utils::AddBoxGeometry(box.get(), mat_walls, 2.0 * ChVector3d(hthick, hdimY, h_scaling * hdimZ), ChVector3d(-hdimX - hthick, 0, h_scaling * hdimZ));
+    utils::AddBoxGeometry(box.get(), mat_walls, 2.0 * ChVector3d(hthick, hdimY, h_scaling * hdimZ), ChVector3d(hdimX + hthick, 0, h_scaling * hdimZ));
+    utils::AddBoxGeometry(box.get(), mat_walls, 2.0 * ChVector3d(hdimX, hthick, h_scaling * hdimZ), ChVector3d(0, -hdimY - hthick, h_scaling * hdimZ));
+    utils::AddBoxGeometry(box.get(), mat_walls, 2.0 * ChVector3d(hdimX, hthick, h_scaling * hdimZ), ChVector3d(0, hdimY + hthick, h_scaling * hdimZ));
     box->GetCollisionModel()->SetFamily(box_coll_fam);
     box->GetCollisionModel()->DisallowCollisionsWith(plate_coll_fam);
 
@@ -282,7 +278,7 @@ void CreateMechanismBodies(ChSystemMulticore* system) {
     plate->SetFixed(true);
 
     // Add geometry of the load plate.
-    utils::AddBoxGeometry(plate.get(), mat_walls, ChVector3d(hdimX_p, hdimY, hdimZ), ChVector3d(0, 0, hdimZ));
+    utils::AddBoxGeometry(plate.get(), mat_walls, 2.0 * ChVector3d(hdimX_p, hdimY, hdimZ), ChVector3d(0, 0, hdimZ));
     plate->GetCollisionModel()->SetFamily(plate_coll_fam);
 
     system->AddBody(plate);

@@ -152,7 +152,7 @@ void CreateGround(ChSystemMulticore* system) {
 
                 for (int ix = -3; ix < 6; ix++) {
                     ChVector3d pos(ix * spacing, 0, -bigR);
-                    utils::AddCapsuleGeometry(ground.get(), mat_g, bigR, bigH, pos, rot);
+                    utils::AddCapsuleGeometry(ground.get(), mat_g, bigR, 2 * bigH, pos, rot);
                 }
             }
             break;
@@ -164,7 +164,7 @@ void CreateGround(ChSystemMulticore* system) {
                 double bigHy = 6;
                 double bigHz = 1;
 
-                utils::AddBoxGeometry(ground.get(), mat_g, ChVector3d(bigHx, bigHy, bigHz), ChVector3d(0, 0, -bigHz));
+                utils::AddBoxGeometry(ground.get(), mat_g, 2.0 * ChVector3d(bigHx, bigHy, bigHz), ChVector3d(0, 0, -bigHz));
             }
             break;
     }
