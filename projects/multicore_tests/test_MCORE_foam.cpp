@@ -23,21 +23,18 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
-#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 
-#include "chrono_thirdparty/filesystem/path.h"
+// Control use of VSG run-time rendering
+// Note: CHRONO_VSG is defined in ChConfig.h
+// #undef CHRONO_VSG
 
-// Control use of OpenGL run-time rendering
-// Note: CHRONO_OPENGL is defined in ChConfig.h
-//#undef CHRONO_OPENGL
-
-#ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChVisualSystemOpenGL.h"
+#ifdef CHRONO_VSG
+#include "chrono_vsg/ChVisualSystemVSG.h"
 #endif
 
 #include "../utils.h"
@@ -161,7 +158,7 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<utils::ChMixtureIngredient> m1 = gen->AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
     m1->SetDefaultMaterial(mat_g);
     m1->SetDefaultDensity(rho_g);
-    m1->SetDefaultSize(r_g);
+    m1->SetDefaultSize(ChVector3d(r_g));
 
     gen->SetStartTag(tag_particles);
 
@@ -171,25 +168,24 @@ int main(int argc, char* argv[]) {
     int gen_steps = (int)std::ceil(3 * r_g / initVel / time_step);
 
     // Create output directories.
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
         cout << "Error creating directory " << out_dir << endl;
         return 1;
     }
-    if (!filesystem::create_directory(filesystem::path(pov_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(pov_dir))) {
         cout << "Error creating directory " << pov_dir << endl;
         return 1;
     }
 
-#ifdef CHRONO_OPENGL
-    // Initialize OpenGL
-    opengl::ChVisualSystemOpenGL vis;
-    vis.AttachSystem(sys);
-    vis.SetWindowTitle("Foam demo");
-    vis.SetWindowSize(1280, 720);
-    vis.SetRenderMode(opengl::WIREFRAME);
-    vis.Initialize();
-    vis.AddCamera(ChVector3d(4, -5, 4), ChVector3d(9, 0, 3));
-    vis.SetCameraVertical(CameraVerticalDir::Z);
+#ifdef CHRONO_VSG
+    // Create the run-time visualization system
+    auto vis = chrono_types::make_shared<vsg3d::ChVisualSystemVSG>();
+    vis->AttachSystem(sys);
+    vis->SetWindowTitle("Foam demo");
+    vis->SetWindowSize(1280, 720);
+    vis->AddCamera(ChVector3d(4, -5, 4), ChVector3d(9, 0, 3));
+    vis->SetCameraVertical(CameraVerticalDir::Z);
+    vis->Initialize();
 #endif
 
     // Perform the simulation
@@ -224,10 +220,10 @@ int main(int argc, char* argv[]) {
         }
 
 // Advance dynamics.
-#ifdef CHRONO_OPENGL
-        if (vis.Run()) {
+#ifdef CHRONO_VSG
+        if (vis->Run()) {
             sys->DoStepDynamics(time_step);
-            vis.Render();
+            vis->Render();
         } else
             break;
 #else

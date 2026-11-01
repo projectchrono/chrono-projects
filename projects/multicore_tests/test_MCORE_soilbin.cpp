@@ -22,15 +22,12 @@
 #include <vector>
 #include <cmath>
 
-#include "chrono/utils/ChUtilsGeometry.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/utils/ChUtilsGeometry.h"
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
-#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
-
-#include "chrono_thirdparty/filesystem/path.h"
 
 using namespace chrono;
 
@@ -161,7 +158,7 @@ void CreateParticles(ChSystemMulticore* system) {
     std::shared_ptr<utils::ChMixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
     m1->SetDefaultMaterial(mat_g);
     m1->SetDefaultDensity(rho_g);
-    m1->SetDefaultSize(r_g);
+    m1->SetDefaultSize(ChVector3d(r_g));
 
     // Create particles, one layer at a time, until the desired number is reached.
     gen.SetStartTag(tag_particles);
@@ -220,41 +217,41 @@ void CreateObject(ChSystemMulticore* system, double z) {
     switch (shape_o) {
         case ChCollisionShape::Type::SPHERE: {
             double radius = 0.5;
-            rb = ChSphere::GetBoundingSphereRadius(radius);
-            vol = ChSphere::GetVolume(radius);
-            J = ChSphere::GetGyration(radius);
+            rb = ChSphere::CalcBoundingSphereRadius(radius);
+            vol = ChSphere::CalcVolume(radius);
+            J = ChSphere::CalcGyration(radius);
             utils::AddSphereGeometry(obj.get(), mat_o, radius);
         } break;
         case ChCollisionShape::Type::BOX: {
             ChVector3d dims(0.5, 0.75, 1.0);
-            rb = ChBox::GetBoundingSphereRadius(dims);
-            vol = ChBox::GetVolume(dims);
-            J = ChBox::GetGyration(dims);
+            rb = ChBox::CalcBoundingSphereRadius(dims);
+            vol = ChBox::CalcVolume(dims);
+            J = ChBox::CalcGyration(dims);
             utils::AddBoxGeometry(obj.get(), mat_o, dims);
         } break;
         case ChCollisionShape::Type::CAPSULE: {
             double radius = 0.25;
             double len = 0.5;
-            rb = ChCapsule::GetBoundingSphereRadius(radius, len);
-            vol = ChCapsule::GetVolume(radius, len);
-            J = ChCapsule::GetGyration(radius, len);
+            rb = ChCapsule::CalcBoundingSphereRadius(radius, len);
+            vol = ChCapsule::CalcVolume(radius, len);
+            J = ChCapsule::CalcGyration(radius, len);
             utils::AddCapsuleGeometry(obj.get(), mat_o, radius, len);
         } break;
         case ChCollisionShape::Type::CYLINDER: {
             double radius = 0.25;
             double len = 0.5;
-            rb = ChCylinder::GetBoundingSphereRadius(radius, len);
-            vol = ChCylinder::GetVolume(radius, len);
-            J = ChCylinder::GetGyration(radius, len);
+            rb = ChCylinder::CalcBoundingSphereRadius(radius, len);
+            vol = ChCylinder::CalcVolume(radius, len);
+            J = ChCylinder::CalcGyration(radius, len);
             utils::AddCylinderGeometry(obj.get(), mat_o, radius, len);
         } break;
         case ChCollisionShape::Type::ROUNDEDCYL: {
             double radius = 0.25;
             double len = 0.1;
             double srad = 0.1;
-            rb = ChRoundedCylinder::GetBoundingSphereRadius(radius, len, srad);
-            vol = ChRoundedCylinder::GetVolume(radius, len, srad);
-            J = ChRoundedCylinder::GetGyration(radius, len, srad);
+            rb = ChRoundedCylinder::CalcBoundingSphereRadius(radius, len, srad);
+            vol = ChRoundedCylinder::CalcVolume(radius, len, srad);
+            J = ChRoundedCylinder::CalcGyration(radius, len, srad);
             utils::AddRoundedCylinderGeometry(obj.get(), mat_o, radius, len, srad);
         } break;
     }
@@ -312,11 +309,11 @@ int main(int argc, char* argv[]) {
     // Create output directories.
     // --------------------------
 
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
         cout << "Error creating directory " << out_dir << endl;
         return 1;
     }
-    if (!filesystem::create_directory(filesystem::path(pov_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(pov_dir))) {
         cout << "Error creating directory " << pov_dir << endl;
         return 1;
     }
@@ -391,7 +388,7 @@ int main(int argc, char* argv[]) {
 
         // Create the granular material and the container from the checkpoint file.
         cout << "Read checkpoint data from " << checkpoint_file;
-        utils::ReadCheckpoint(msystem, checkpoint_file);
+        utils::ReadBodyShapesCheckpoint(msystem, checkpoint_file);
         cout << "  done.  Read " << msystem->GetBodies().size() << " bodies." << endl;
 
         // Create the falling object just above the granular material.
@@ -433,7 +430,7 @@ int main(int argc, char* argv[]) {
             // Create a checkpoint from the current state.
             if (problem == SETTLING) {
                 cout << "             Write checkpoint data " << flush;
-                utils::WriteCheckpoint(msystem, checkpoint_file);
+                utils::WriteBodyShapesCheckpoint(msystem, checkpoint_file);
                 cout << msystem->GetBodies().size() << " bodies" << endl;
             }
 
@@ -454,7 +451,7 @@ int main(int argc, char* argv[]) {
     // Create a checkpoint from the last state
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
-        utils::WriteCheckpoint(msystem, checkpoint_file);
+        utils::WriteBodyShapesCheckpoint(msystem, checkpoint_file);
         cout << "  done.  Wrote " << msystem->GetBodies().size() << " bodies." << endl;
     }
 

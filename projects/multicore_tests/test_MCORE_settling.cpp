@@ -29,15 +29,15 @@
 
 #include "chrono/ChConfig.h"
 #include "chrono/core/ChTimer.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 #include "chrono_multicore/solver/ChIterativeSolverMulticore.h"
 
-#ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChVisualSystemOpenGL.h"
+#ifdef CHRONO_VSG
+#include "chrono_vsg/ChVisualSystemVSG.h"
 #endif
 
 using namespace chrono;
@@ -248,7 +248,7 @@ int main(int argc, char** argv) {
     std::shared_ptr<utils::ChMixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
     m1->SetDefaultMaterial(material_terrain);
     m1->SetDefaultDensity(rho_g);
-    m1->SetDefaultSize(radius_g);
+    m1->SetDefaultSize(ChVector3d(radius_g));
 
     // Set starting value for body identifiers
     gen.SetStartTag(tag_particles);
@@ -284,20 +284,19 @@ int main(int argc, char** argv) {
         outf << std::scientific;
     }
 
-#ifdef CHRONO_OPENGL
+#ifdef CHRONO_VSG
     // -------------------------------
     // Create the visualization window
     // -------------------------------
 
-    opengl::ChVisualSystemOpenGL vis;
+    auto vis = chrono_types::make_shared<vsg3d::ChVisualSystemVSG>();
     if (render) {
-        vis.AttachSystem(system);
-        vis.SetWindowTitle("Settling test");
-        vis.SetWindowSize(1280, 720);
-        vis.SetRenderMode(opengl::WIREFRAME);
-        vis.Initialize();
-        vis.AddCamera(ChVector3d(0, -1, 0), ChVector3d(0, 0, 0));
-        vis.SetCameraVertical(CameraVerticalDir::Z);
+        vis->AttachSystem(system);
+        vis->SetWindowTitle("Settling test");
+        vis->SetWindowSize(1280, 720);
+        vis->AddCamera(ChVector3d(0, -1, 0), ChVector3d(0, 0, 0));
+        vis->SetCameraVertical(CameraVerticalDir::Z);
+        vis->Initialize();
     }
 #endif
 
@@ -339,10 +338,10 @@ int main(int argc, char** argv) {
             outf << std::endl << std::flush;
         }
 
-#ifdef CHRONO_OPENGL
+#ifdef CHRONO_VSG
         if (render) {
-            if (vis.Run()) {
-                vis.Render();
+            if (vis->Run()) {
+                vis->Render();
             } else {
                 return 1;
             }

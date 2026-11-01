@@ -17,19 +17,22 @@
 #include <iostream>
 #include <string>
 
-#include "chrono/core/ChGlobal.h"
+#include "chrono/core/ChDataPath.h"
 #include "chrono/utils/ChUtilsSamplers.h"
 #include "chrono_dem/physics/ChSystemDem.h"
 #include "chrono_dem/utils/ChDemJsonParser.h"
-#include "chrono_dem/visualization/ChDemVisualizationGL.h"
-#include "chrono_thirdparty/filesystem/path.h"
+
+#include "chrono/assets/ChVisualSystem.h"
+#ifdef CHRONO_VSG
+#include "chrono_dem/visualization/ChDemVisualizationVSG.h"
+#endif
 
 #include "../utils.h"
 
 using namespace chrono;
 using namespace chrono::dem;
 
-// Enable/disable run-time visualization (if Chrono::OpenGL is available)
+// Enable/disable run-time visualization
 bool render = true;
 
 int main(int argc, char* argv[]) {
@@ -48,9 +51,9 @@ int main(int argc, char* argv[]) {
     }
 
     std::string out_dir = GetChronoOutputPath() + "DEM/";
-    filesystem::create_directory(filesystem::path(out_dir));
+    CreateOutputDirectory(std::filesystem::path(out_dir));
     out_dir = out_dir + params.output_dir;
-    filesystem::create_directory(filesystem::path(out_dir));
+    CreateOutputDirectory(std::filesystem::path(out_dir));
 
     // Setup simulation
     ChSystemDem dem_sys(params.sphere_radius, params.sphere_density,
@@ -132,13 +135,30 @@ int main(int argc, char* argv[]) {
 
     dem_sys.Initialize();
 
-    ChDemVisualizationGL dem_vis(&dem_sys);
+    // Create a run-time visualizer
+    std::shared_ptr<ChVisualSystem> vis;
+
+#ifdef CHRONO_VSG
     if (render) {
-        dem_vis.SetTitle("Chrono::Dem repose demo");
-        dem_vis.UpdateCamera(ChVector3d(0, -30, -10), ChVector3d(0, 0, -20));
-        dem_vis.SetCameraMoveScale(1.0f);
-        dem_vis.Initialize();
+        // DEM plugin
+        auto visDEM = chrono_types::make_shared<ChDemVisualizationVSG>(&dem_sys);
+
+        // VSG visual system (attach visDEM as plugin)
+        auto visVSG = chrono_types::make_shared<vsg3d::ChVisualSystemVSG>();
+        visVSG->AttachPlugin(visDEM);
+        visVSG->SetWindowTitle("Chrono::Dem repose demo");
+        visVSG->SetWindowSize(1280, 800);
+        visVSG->SetWindowPosition(100, 100);
+        visVSG->AddCamera(ChVector3d(0, -30, -10), ChVector3d(0, 0, -20));
+        visVSG->SetLightIntensity(0.9f);
+        visVSG->SetLightDirection(CH_PI_2, CH_PI / 6);
+
+        visVSG->Initialize();
+        vis = visVSG;
     }
+#else
+    render = false;
+#endif
 
     int fps = 60;
     float frame_step = 1.f / fps;
@@ -161,8 +181,11 @@ int main(int argc, char* argv[]) {
     while (curr_time < params.time_end) {
         dem_sys.AdvanceSimulation(frame_step);
 
-        if (render && dem_vis.Render())
-            break;
+        if (render) {
+            if (!vis->Run())
+                break;
+            vis->Render();
+        }
 
         printf("Output frame %u of %u\n", currframe, total_frames);
         sprintf(filename, "%s/step%06d.csv", out_dir.c_str(), currframe);

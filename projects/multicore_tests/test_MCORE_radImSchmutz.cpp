@@ -23,22 +23,19 @@
 #include "chrono/ChConfig.h"
 #include "chrono/assets/ChVisualShapeBox.h"
 #include "chrono/assets/ChVisualShapeCapsule.h"
-#include "chrono/utils/ChUtilsGeometry.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/utils/ChUtilsGeometry.h"
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
-#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 
-#include "chrono_thirdparty/filesystem/path.h"
+// Control use of VSG run-time rendering
+// Note: CHRONO_VSG is defined in ChConfig.h
+// #undef CHRONO_VSG
 
-// Control use of OpenGL run-time rendering
-// Note: CHRONO_OPENGL is defined in ChConfig.h
-//#undef CHRONO_OPENGL
-
-#ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChVisualSystemOpenGL.h"
+#ifdef CHRONO_VSG
+#include "chrono_vsg/ChVisualSystemVSG.h"
 #endif
 
 using namespace chrono;
@@ -322,7 +319,7 @@ void CreateParticles(ChSystemMulticore* system) {
     std::shared_ptr<utils::ChMixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
     m1->SetDefaultMaterial(mat_g);
     m1->SetDefaultDensity(rho_g);
-    m1->SetDefaultSize(r_g);
+    m1->SetDefaultSize(ChVector3d(r_g));
 
     // Create particles, one layer at a time, until the desired number is reached.
     gen.SetStartTag(tag_particles);
@@ -365,11 +362,11 @@ int main(int argc, char* argv[]) {
     // Create output directories.
     // --------------------------
 
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
         cout << "Error creating directory " << out_dir << endl;
         return 1;
     }
-    if (!filesystem::create_directory(filesystem::path(pov_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(pov_dir))) {
         cout << "Error creating directory " << pov_dir << endl;
         return 1;
     }
@@ -453,7 +450,7 @@ int main(int argc, char* argv[]) {
 
             // Create the granular material and the container from the checkpoint file.
             cout << "Read checkpoint data from " << checkpoint_file;
-            utils::ReadCheckpoint(sys, checkpoint_file);
+            utils::ReadBodyShapesCheckpoint(sys, checkpoint_file);
             cout << "  done.  Read " << sys->GetBodies().size() << " bodies." << endl;
 
             // Create the mechanism with the wheel just above the granular material.
@@ -494,15 +491,14 @@ int main(int argc, char* argv[]) {
     sfile.rdbuf()->pubsetbuf(0, 0);
     rfile.rdbuf()->pubsetbuf(0, 0);
 
-#ifdef CHRONO_OPENGL
-    opengl::ChVisualSystemOpenGL vis;
-    vis.AttachSystem(sys);
-    vis.SetWindowTitle("Pressure Sinkage Test");
-    vis.SetWindowSize(1280, 720);
-    vis.SetRenderMode(opengl::WIREFRAME);
-    vis.Initialize();
-    vis.AddCamera(ChVector3d(0, -8, 0), ChVector3d(0, 0, 0));
-    vis.SetCameraVertical(CameraVerticalDir::Z);
+#ifdef CHRONO_VSG
+    auto vis = chrono_types::make_shared<vsg3d::ChVisualSystemVSG>();
+    vis->AttachSystem(sys);
+    vis->SetWindowTitle("Pressure Sinkage Test");
+    vis->SetWindowSize(1280, 720);
+    vis->AddCamera(ChVector3d(0, -8, 0), ChVector3d(0, 0, 0));
+    vis->SetCameraVertical(CameraVerticalDir::Z);
+    vis->Initialize();
 #endif
 
     while (time < time_end) {
@@ -530,7 +526,7 @@ int main(int argc, char* argv[]) {
             // Create a checkpoint from the current state.
             if (problem == SETTLING) {
                 cout << "             Write checkpoint data " << flush;
-                utils::WriteCheckpoint(sys, checkpoint_file);
+                utils::WriteBodyShapesCheckpoint(sys, checkpoint_file);
                 cout << sys->GetBodies().size() << " bodies" << endl;
             }
 
@@ -540,10 +536,10 @@ int main(int argc, char* argv[]) {
         }
 
 // Advance dynamics.
-#ifdef CHRONO_OPENGL
-        if (vis.Run()) {
+#ifdef CHRONO_VSG
+        if (vis->Run()) {
             sys->DoStepDynamics(time_step);
-            vis.Render();
+            vis->Render();
         } else
             break;
 #else
@@ -566,7 +562,7 @@ int main(int argc, char* argv[]) {
     // Create a checkpoint from the last state
     if (problem == SETTLING) {
         cout << "Write checkpoint data to " << checkpoint_file;
-        utils::WriteCheckpoint(sys, checkpoint_file);
+        utils::WriteBodyShapesCheckpoint(sys, checkpoint_file);
         cout << "  done.  Wrote " << sys->GetBodies().size() << " bodies." << endl;
     }
 

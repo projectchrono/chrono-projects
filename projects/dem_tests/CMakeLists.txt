@@ -23,7 +23,7 @@ set(TESTS
         test_DEM_slide
         test_DEM_roll
         test_DEM_incline
-        #test_DEM_repose
+        test_DEM_repose
         test_DEM_soilBin
         test_DEM_ballDrop
         test_DEM_compression
@@ -36,7 +36,7 @@ set(TESTS
 # Invoke find_package in CONFIG mode
 find_package(Chrono QUIET
              COMPONENTS DEM
-             OPTIONAL_COMPONENTS Vehicle
+             OPTIONAL_COMPONENTS Vehicle VSG
              CONFIG
 )
 

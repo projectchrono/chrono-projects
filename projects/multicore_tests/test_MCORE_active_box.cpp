@@ -25,7 +25,7 @@
 #include "chrono/assets/ChVisualShapeBox.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono_multicore/physics/ChSystemMulticore.h"
-#include "chrono_opengl/ChVisualSystemOpenGL.h"
+#include "chrono_vsg/ChVisualSystemVSG.h"
 
 using namespace chrono;
 
@@ -154,20 +154,19 @@ int main(int argc, char* argv[]) {
     std::cout << "Bsize: " << bsize.x << " " << bsize.y << " " << bsize.z << std::endl;
     std::cout << "Bpos:  " << bpos.x << " " << bpos.y << " " << bpos.z << std::endl;
 
-    // Initialize OpenGL
-    opengl::ChVisualSystemOpenGL vis;
-    vis.AttachSystem(system);
-    vis.SetWindowTitle("Test AABB");
-    vis.SetWindowSize(1280, 720);
-    vis.SetRenderMode(opengl::WIREFRAME);
-    vis.Initialize();
-    vis.AddCamera(ChVector3d(0, -10, 0), ChVector3d(0, 0, 0));
-    vis.SetCameraVertical(CameraVerticalDir::Z);
+    // Create the run-time visualization system
+    auto vis = chrono_types::make_shared<vsg3d::ChVisualSystemVSG>();
+    vis->AttachSystem(system);
+    vis->SetWindowTitle("Test AABB");
+    vis->SetWindowSize(1280, 720);
+    vis->AddCamera(ChVector3d(0, -10, 0), ChVector3d(0, 0, 0));
+    vis->SetCameraVertical(CameraVerticalDir::Z);
+    vis->Initialize();
 
     // Run simulation loop
-    while (vis.Run()) {
-            system->DoStepDynamics(time_step);
-            vis.Render();
+    while (vis->Run()) {
+        system->DoStepDynamics(time_step);
+        vis->Render();
     }
 
     return 0;

@@ -23,18 +23,15 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
-#include "chrono/utils/ChUtilsGeometry.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsCreators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/utils/ChUtilsGeometry.h"
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
-#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 
-#include "chrono_thirdparty/filesystem/path.h"
-
-// Note: CHRONO_OPENGL is defined in ChConfig.h
-#ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChVisualSystemOpenGL.h"
+// Note: CHRONO_VSG is defined in ChConfig.h
+#ifdef CHRONO_VSG
+#include "chrono_vsg/ChVisualSystemVSG.h"
 #endif
 
 using namespace chrono;
@@ -216,49 +213,49 @@ void CreateObject(ChSystemMulticore* system) {
     switch (shape_o) {
         case ChCollisionShape:: Type::SPHERE : {
             double radius = 0.3;
-            rb = ChSphere::GetBoundingSphereRadius(radius);
-            vol = ChSphere::GetVolume(radius);
-            J = ChSphere::GetGyration(radius);
+            rb = ChSphere::CalcBoundingSphereRadius(radius);
+            vol = ChSphere::CalcVolume(radius);
+            J = ChSphere::CalcGyration(radius);
             utils::AddSphereGeometry(obj.get(), mat_o, radius);
         } break;
         case ChCollisionShape::Type::BOX: {
             ChVector3d dims(0.1, 0.2, 0.1);
-            rb = ChBox::GetBoundingSphereRadius(dims);
-            vol = ChBox::GetVolume(dims);
-            J = ChBox::GetGyration(dims);
+            rb = ChBox::CalcBoundingSphereRadius(dims);
+            vol = ChBox::CalcVolume(dims);
+            J = ChBox::CalcGyration(dims);
             utils::AddBoxGeometry(obj.get(), mat_o, dims);
         } break;
         case ChCollisionShape::Type::CAPSULE: {
             double radius = 0.1;
             double len = 0.2;
-            rb = ChCapsule::GetBoundingSphereRadius(radius, len);
-            vol = ChCapsule::GetVolume(radius, len);
-            J = ChCapsule::GetGyration(radius, len);
+            rb = ChCapsule::CalcBoundingSphereRadius(radius, len);
+            vol = ChCapsule::CalcVolume(radius, len);
+            J = ChCapsule::CalcGyration(radius, len);
             utils::AddCapsuleGeometry(obj.get(), mat_o, radius, len);
         } break;
         case ChCollisionShape::Type::CYLINDER: {
             double radius = 0.1;
             double len = 0.2;
-            rb = ChCylinder::GetBoundingSphereRadius(radius, len);
-            vol = ChCylinder::GetVolume(radius, len);
-            J = ChCylinder::GetGyration(radius, len);
+            rb = ChCylinder::CalcBoundingSphereRadius(radius, len);
+            vol = ChCylinder::CalcVolume(radius, len);
+            J = ChCylinder::CalcGyration(radius, len);
             utils::AddCylinderGeometry(obj.get(), mat_o, radius, len);
         } break;
         case ChCollisionShape::Type::ROUNDEDCYL: {
             double radius = 0.1;
             double len = 0.2;
             double srad = 0.05;
-            rb = ChRoundedCylinder::GetBoundingSphereRadius(radius, len, srad);
-            vol = ChRoundedCylinder::GetVolume(radius, len, srad);
-            J = ChRoundedCylinder::GetGyration(radius, len, srad);
+            rb = ChRoundedCylinder::CalcBoundingSphereRadius(radius, len, srad);
+            vol = ChRoundedCylinder::CalcVolume(radius, len, srad);
+            J = ChRoundedCylinder::CalcGyration(radius, len, srad);
             utils::AddRoundedCylinderGeometry(obj.get(), mat_o, radius, len, srad);
         } break;
         case ChCollisionShape::Type::CONE: {
             double radius = 0.2;
             double height = 0.4;
-            rb = ChCone::GetBoundingSphereRadius(radius, height);
-            vol = ChCone::GetVolume(radius, height);
-            J = ChCone::GetGyration(radius, height);
+            rb = ChCone::CalcBoundingSphereRadius(radius, height);
+            vol = ChCone::CalcVolume(radius, height);
+            J = ChCone::CalcGyration(radius, height);
             utils::AddConeGeometry(obj.get(), mat_o, radius, height);
         } break;
     }
@@ -294,11 +291,11 @@ int main(int argc, char* argv[]) {
     // Create output directories.
     // --------------------------
 
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
         cout << "Error creating directory " << out_dir << endl;
         return 1;
     }
-    if (!filesystem::create_directory(filesystem::path(pov_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(pov_dir))) {
         cout << "Error creating directory " << pov_dir << endl;
         return 1;
     }
@@ -363,16 +360,15 @@ int main(int argc, char* argv[]) {
 // Perform the simulation.
 // -----------------------
 
-#ifdef CHRONO_OPENGL
-    // Initialize OpenGL
-    opengl::ChVisualSystemOpenGL vis;
-    vis.AttachSystem(sys);
-    vis.SetWindowTitle("Mixer SMC");
-    vis.SetWindowSize(1280, 720);
-    vis.SetRenderMode(opengl::WIREFRAME);
-    vis.Initialize();
-    vis.AddCamera(ChVector3d(0, -10, 0), ChVector3d(0, 0, 0));
-    vis.SetCameraVertical(CameraVerticalDir::Z);
+#ifdef CHRONO_VSG
+    // Create the run-time visualization system
+    auto vis = chrono_types::make_shared<vsg3d::ChVisualSystemVSG>();
+    vis->AttachSystem(sys);
+    vis->SetWindowTitle("Mixer SMC");
+    vis->SetWindowSize(1280, 720);
+    vis->AddCamera(ChVector3d(0, -10, 0), ChVector3d(0, 0, 0));
+    vis->SetCameraVertical(CameraVerticalDir::Z);
+    vis->Initialize();
 #endif
 
     // Run simulation for specified time.
@@ -403,10 +399,10 @@ int main(int argc, char* argv[]) {
         }
 
 // Advance dynamics.
-#ifdef CHRONO_OPENGL
-        if (vis.Run()) {
+#ifdef CHRONO_VSG
+        if (vis->Run()) {
             sys->DoStepDynamics(time_step);
-            vis.Render();
+            vis->Render();
         } else
             break;
 #else

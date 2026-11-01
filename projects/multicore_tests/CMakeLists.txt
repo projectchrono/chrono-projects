@@ -20,7 +20,7 @@ set(TESTS
     test_MCORE_settling
 )
 
-set(TESTS_OPENGL
+set(TESTS_VSG
     test_MCORE_active_box
 )
 #--------------------------------------------------------------
@@ -30,7 +30,7 @@ set(TESTS_OPENGL
 # Invoke find_package in CONFIG mode.
 find_package(Chrono QUIET
              COMPONENTS Multicore
-             OPTIONAL_COMPONENTS OpenGL
+             OPTIONAL_COMPONENTS VSG
              CONFIG
 )
 
@@ -40,8 +40,8 @@ if(NOT Chrono_FOUND)
   return()
 endif()
 
-if (CHRONO_OPENGL_FOUND)
-    set(TESTS ${TESTS} ${TESTS_OPENGL})
+if(CHRONO_VSG_FOUND)
+  set(TESTS ${TESTS} ${TESTS_VSG})
 endif()
 
 #--------------------------------------------------------------

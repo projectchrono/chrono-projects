@@ -26,20 +26,19 @@
 #include <cmath>
 
 #include "chrono/ChConfig.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 #include "chrono/physics/ChLinkMotorRotationAngle.h"
 #include "chrono/utils/ChUtilsCreators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsGenerators.h"
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
-#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
 
-// Control use of OpenGL run-time rendering
-// Note: CHRONO_OPENGL is defined in ChConfig.h
-//#undef CHRONO_OPENGL
+// Control use of VSG run-time rendering
+// Note: CHRONO_VSG is defined in ChConfig.h
+// #undef CHRONO_VSG
 
-#ifdef CHRONO_OPENGL
-#include "chrono_opengl/ChVisualSystemOpenGL.h"
+#ifdef CHRONO_VSG
+#include "chrono_vsg/ChVisualSystemVSG.h"
 #endif
 
 using namespace chrono;
@@ -560,7 +559,7 @@ int CreateGranularMaterial(ChSystemMulticore* system,
     std::shared_ptr<utils::ChMixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
     m1->SetDefaultMaterial(mat_g);
     m1->SetDefaultDensity(rho_g);
-    m1->SetDefaultSize(r_g);
+    m1->SetDefaultSize(ChVector3d(r_g));
 
     // Ensure that all generated particle bodies will have positive IDs.
     gen.SetStartTag(tag_particles);
@@ -683,15 +682,14 @@ int main(int argc, char* argv[]) {
 // Perform the simulation
 // ----------------------
 
-#ifdef CHRONO_OPENGL
-    opengl::ChVisualSystemOpenGL vis;
-    vis.AttachSystem(&sys);
-    vis.SetWindowTitle("Suspension");
-    vis.SetWindowSize(1280, 720);
-    vis.SetRenderMode(opengl::WIREFRAME);
-    vis.Initialize();
-    vis.AddCamera(ChVector3d(0, 0, -10), ChVector3d(0, 0, 0));
-    vis.SetCameraVertical(CameraVerticalDir::Z);
+#ifdef CHRONO_VSG
+    auto vis = chrono_types::make_shared<vsg3d::ChVisualSystemVSG>();
+    vis->AttachSystem(&sys);
+    vis->SetWindowTitle("Suspension");
+    vis->SetWindowSize(1280, 720);
+    vis->AddCamera(ChVector3d(0, 0, -10), ChVector3d(0, 0, 0));
+    vis->SetCameraVertical(CameraVerticalDir::Z);
+    vis->Initialize();
 #endif
 
     // Run simulation for specified time
@@ -706,10 +704,10 @@ int main(int argc, char* argv[]) {
             out_frame++;
         }
 
-#ifdef CHRONO_OPENGL
-        if (vis.Run()) {
+#ifdef CHRONO_VSG
+        if (vis->Run()) {
             sys.DoStepDynamics(time_step);
-            vis.Render();
+            vis->Render();
         } else
             break;
 #else

@@ -22,14 +22,11 @@
 #include <vector>
 #include <cmath>
 
+#include "chrono/input_output/ChUtilsInputOutput.h"
 #include "chrono/utils/ChUtilsCreators.h"
 #include "chrono/utils/ChUtilsGenerators.h"
-#include "chrono/utils/ChUtilsInputOutput.h"
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
-#include "chrono_multicore/solver/ChSystemDescriptorMulticore.h"
-
-#include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
@@ -162,7 +159,7 @@ int CreateObjects(ChSystemMulticore* system) {
     std::shared_ptr<utils::ChMixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
     m1->SetDefaultMaterial(material_g);
     m1->SetDefaultDensity(rho_g);
-    m1->SetDefaultSize(r_g);
+    m1->SetDefaultSize(ChVector3d(r_g));
 
     gen.SetStartTag(tag_particles);
 
@@ -324,11 +321,11 @@ int main(int argc, char* argv[]) {
     omp_set_num_threads(threads);
 
     // Create output directories.
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
         cout << "Error creating directory " << out_dir << endl;
         return 1;
     }
-    if (!filesystem::create_directory(filesystem::path(pov_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(pov_dir))) {
         cout << "Error creating directory " << pov_dir << endl;
         return 1;
     }
@@ -354,7 +351,7 @@ int main(int argc, char* argv[]) {
 
             // Create the granular material bodies and the container from the checkpoint file.
             cout << "Read checkpoint data from " << checkpoint_file;
-            utils::ReadCheckpoint(system, checkpoint_file);
+            utils::ReadBodyShapesCheckpoint(system, checkpoint_file);
             cout << "  done.  Read " << system->GetBodies().size() << " bodies." << endl;
 
             // Create the wheel.
@@ -409,7 +406,7 @@ int main(int argc, char* argv[]) {
 
             // Save checkpoint during settling phase.
             if (problem == SETTLING) {
-                utils::WriteCheckpoint(system, checkpoint_file);
+                utils::WriteBodyShapesCheckpoint(system, checkpoint_file);
             }
 
             out_frame++;
@@ -426,7 +423,7 @@ int main(int argc, char* argv[]) {
 
     // Create a checkpoint from the last state
     if (problem == SETTLING)
-        utils::WriteCheckpoint(system, checkpoint_file);
+        utils::WriteBodyShapesCheckpoint(system, checkpoint_file);
 
     // Final stats
     cout << "==================================" << endl;
