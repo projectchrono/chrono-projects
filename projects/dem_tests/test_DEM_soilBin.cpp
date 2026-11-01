@@ -26,8 +26,6 @@
 #include "chrono_dem/physics/ChSystemDem.h"
 #include "chrono_dem/utils/ChDemJsonParser.h"
 
-#include "chrono_thirdparty/filesystem/path.h"
-
 #include "../utils.h"
 
 using namespace chrono;
@@ -120,9 +118,9 @@ int main(int argc, char* argv[]) {
     std::string out_dir;
     if (params.write_mode != CHDEM_OUTPUT_MODE::NONE) {
         out_dir = GetChronoOutputPath() + "DEM/";
-        filesystem::create_directory(filesystem::path(out_dir));
+        CreateOutputDirectory(std::filesystem::path(out_dir));
         out_dir = out_dir + params.output_dir;
-        filesystem::create_directory(filesystem::path(out_dir));
+        CreateOutputDirectory(std::filesystem::path(out_dir));
     }
     dem_sys.SetBDFixed(true);
 

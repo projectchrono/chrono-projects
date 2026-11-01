@@ -36,8 +36,6 @@
 #include "chrono_models/vehicle/generic/tire/Generic_FialaTire.h"
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 
-#include "chrono_thirdparty/filesystem/path.h"
-
 // Uncomment the following line to unconditionally disable Irrlicht support
 //#undef CHRONO_IRRLICHT
 
@@ -200,13 +198,13 @@ int main(int argc, char* argv[]) {
 
     // Create output directories
     if (state_output) {
-        if (!filesystem::create_directory(filesystem::path(out_dir))) {
+        if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
             std::cout << "Error creating directory " << out_dir << std::endl;
             return 1;
         }
     }
     if (povray_output) {
-        if (!filesystem::create_directory(filesystem::path(pov_dir))) {
+        if (!CreateOutputDirectory(std::filesystem::path(pov_dir))) {
             std::cout << "Error creating directory " << pov_dir << std::endl;
             return 1;
         }

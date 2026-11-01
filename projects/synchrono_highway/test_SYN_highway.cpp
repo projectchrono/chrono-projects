@@ -17,25 +17,23 @@
 //
 // =============================================================================
 
-#include "chrono/utils/ChUtilsInputOutput.h"
+#include "chrono/input_output/ChUtilsInputOutput.h"
 
 #include <irrlicht.h>
 #include "chrono_models/vehicle/hmmwv/HMMWV.h"
 #include "chrono_vehicle/ChConfigVehicle.h"
-#include "chrono_vehicle/ChVehicleModelData.h"
+#include "chrono_vehicle/ChVehicleDataPath.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
-#include "chrono_vehicle/driver/ChInteractiveDriverIRR.h"
+#include "chrono_vehicle/driver/ChInteractiveDriver.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 #include "chrono_vehicle/wheeled_vehicle/ChWheeledVehicleVisualSystemIrrlicht.h"
-
-#include "chrono_thirdparty/filesystem/path.h"
 
 #include "chrono_sensor/ChSensorManager.h"
 #include "chrono_sensor/filters/ChFilterVisualize.h"
 #include "chrono_sensor/sensors/ChCameraSensor.h"
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
-#include "chrono_vehicle/utils/ChUtilsJSON.h"
+#include "chrono_vehicle/utils/ChVehicleUtilsJSON.h"
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
 #include "extras/driver/ChCSLDriver.h"
 
@@ -170,14 +168,14 @@ int main(int argc, char* argv[]) {
     //  = cli.GetAsType<bool>("replay");
 
     SetChronoDataPath(CHRONO_DATA_DIR);
-    vehicle::SetDataPath(CHRONO_DATA_DIR + std::string("vehicle/"));
+    SetVehicleDataPath(CHRONO_DATA_DIR + std::string("vehicle/"));
 
     std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << std::endl;
 
-    std::string vehicle_file = vehicle::GetDataFile("audi/json/audi_Vehicle.json");
-    std::string engine_file = vehicle::GetDataFile("audi/json/audi_EngineSimpleMap.json");
-    std::string transmission_file = vehicle::GetDataFile("audi/json/audi_AutomaticTransmissionSimpleMap.json");
-    std::string tire_file = vehicle::GetDataFile("audi/json/audi_TMeasyTire.json");
+    std::string vehicle_file = GetVehicleDataFile("audi/json/audi_Vehicle.json");
+    std::string engine_file = GetVehicleDataFile("audi/json/audi_EngineSimpleMap.json");
+    std::string transmission_file = GetVehicleDataFile("audi/json/audi_AutomaticTransmissionSimpleMap.json");
+    std::string tire_file = GetVehicleDataFile("audi/json/audi_TMeasyTire.json");
 
     WheeledVehicle vehicle(vehicle_file, ChContactMethod::NSC);
     vehicle.Initialize(ChCoordsys<>(initLoc, initRot));
@@ -265,17 +263,16 @@ int main(int argc, char* argv[]) {
         case RigidTerrain::PatchType::BOX:
             patch = terrain.AddPatch(patch_mat, ChCoordsys<>(ChVector3d(0, 0, 0)), terrainLength, terrainWidth, 2,
                                      false, 1, false);
-            // patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 200);
+            // patch->SetTexture(GetVehicleDataFile("terrain/textures/tile4.jpg"), 200, 200);
             break;
         case RigidTerrain::PatchType::HEIGHT_MAP:
-            patch = terrain.AddPatch(patch_mat, CSYSNORM, vehicle::GetDataFile("terrain/height_maps/test64.bmp"), 128,
-                                     128, 0, 4);
-            patch->SetTexture(vehicle::GetDataFile("terrain/textures/grass.jpg"), 16, 16);
+            patch = terrain.AddPatch(patch_mat, CSYSNORM, GetVehicleDataFile("terrain/height_maps/test64.bmp"), 128, 128, 0, 4);
+            patch->SetTexture(GetVehicleDataFile("terrain/textures/grass.jpg"), 16, 16);
             break;
         case RigidTerrain::PatchType::MESH:
-            // patch = terrain.AddPatch(patch_mat, CSYSNORM, vehicle::GetDataFile("terrain/meshes/test.obj"));
+            // patch = terrain.AddPatch(patch_mat, CSYSNORM, GetVehicleDataFile("terrain/meshes/test.obj"));
             patch = terrain.AddPatch(patch_mat, CSYSNORM, demo_data_path + "/Environments/Iowa/road.obj");
-            // patch->SetTexture(vehicle::GetDataFile("terrain/textures/grass.jpg"), 100, 100);
+            // patch->SetTexture(GetVehicleDataFile("terrain/textures/grass.jpg"), 100, 100);
             break;
     }
 
@@ -302,7 +299,7 @@ int main(int argc, char* argv[]) {
     auto terrain_body = chrono_types::make_shared<ChBody>();
     terrain_body->SetPos({0, 0, -.01});
     terrain_body->AddVisualShape(terrain_shape);
-    terrain_body->SetBodyFixed(true);
+    terrain_body->SetFixed(true);
     vehicle.GetSystem()->Add(terrain_body);
 
     std::vector<std::string> environment_meshes = {"/Environments/Iowa/signs/mile_markers_inner.obj",
@@ -322,7 +319,7 @@ int main(int argc, char* argv[]) {
         auto mesh_body = chrono_types::make_shared<ChBody>();
         mesh_body->SetPos(offsets[i]);
         mesh_body->AddVisualShape(trimesh_shape);
-        mesh_body->SetBodyFixed(true);
+        mesh_body->SetFixed(true);
         vehicle.GetSystem()->Add(mesh_body);
     }
 
@@ -352,7 +349,7 @@ int main(int argc, char* argv[]) {
             mesh_body->SetPos({i * x_step + x_start, j * y_step + y_start + .2 * (i % 3), 0.0});
             // mesh_body->SetRot(QuatFromAngleZ(CH_PI_2));
             mesh_body->AddVisualShape(trimesh_shape);
-            mesh_body->SetBodyFixed(true);
+            mesh_body->SetFixed(true);
             vehicle.GetSystem()->Add(mesh_body);
         }
     }
@@ -363,7 +360,7 @@ int main(int argc, char* argv[]) {
 
     // Set up vehicle output
     vehicle.SetChassisOutput(true);
-    vehicle.SetSuspensionOutput(0, true);
+    vehicle.SetAxleOutput(0, true);
     vehicle.SetSteeringOutput(0, true);
 
     // ------------------------
@@ -400,23 +397,23 @@ int main(int argc, char* argv[]) {
     // Create the interactive driver system
     // ChCSLDriver driver(vehicle);
     // driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
-    auto IGdriver = chrono_types::make_shared<ChInteractiveDriverIRR>(app);
-    IGdriver->SetButtonCallback(6, &customButtonCallback);
+    auto IGdriver = chrono_types::make_shared<ChInteractiveDriver>(vehicle);
+    app.SetButtonCallback(6, &customButtonCallback);
     //// TODO
     ////
     ////IGdriver->SetJoystickAxes(ChIrrGuiDriver::JoystickAxes::AXIS_Z, ChIrrGuiDriver::JoystickAxes::AXIS_R,
     ////                          ChIrrGuiDriver::JoystickAxes::AXIS_X, ChIrrGuiDriver::JoystickAxes::NONE);
 
     IGdriver->Initialize();
+    app.AttachDriver(IGdriver.get());
 
     double mph_to_ms = 0.44704;
     std::string path_file = demo_data_path + "/Environments/Iowa/terrain/oval_highway_path.csv";
-    auto path = ChBezierCurve::read(path_file);
+    auto path = ChBezierCurve::Read(path_file);
     std::string steering_controller_file("hmmwv/SteeringController.json");
     std::string speed_controller_file("hmmwv/SpeedController.json");
-    auto PFdriver = chrono_types::make_shared<ChPathFollowerDriver>(
-        vehicle, vehicle::GetDataFile(steering_controller_file), vehicle::GetDataFile(speed_controller_file), path,
-        "road", 65 * mph_to_ms);
+    auto PFdriver = chrono_types::make_shared<ChPathFollowerDriver>(vehicle, GetVehicleDataFile(steering_controller_file), GetVehicleDataFile(speed_controller_file), path, "road",
+                                                                    65 * mph_to_ms);
     PFdriver->Initialize();
 
     if (!disable_joystick) {
@@ -427,9 +424,8 @@ int main(int argc, char* argv[]) {
     }
 
     // Leader Driver
-    auto lead_PFdriver = chrono_types::make_shared<ChPathFollowerDriver>(
-        vehicle, vehicle::GetDataFile(steering_controller_file), vehicle::GetDataFile(speed_controller_file), path,
-        "road", 65 * mph_to_ms);
+    auto lead_PFdriver = chrono_types::make_shared<ChPathFollowerDriver>(vehicle, GetVehicleDataFile(steering_controller_file), GetVehicleDataFile(speed_controller_file), path,
+                                                                         "road", 65 * mph_to_ms);
     lead_PFdriver->Initialize();
 
     // ---------------

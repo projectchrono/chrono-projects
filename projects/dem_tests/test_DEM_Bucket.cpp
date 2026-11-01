@@ -27,8 +27,6 @@
 #include "chrono_dem/physics/ChSystemDem.h"
 #include "chrono_dem/utils/ChDemJsonParser.h"
 
-#include "chrono_thirdparty/filesystem/path.h"
-
 #include "../utils.h"
 
 using namespace chrono;
@@ -235,8 +233,8 @@ int main(int argc, char* argv[]) {
 
     gran_sys.SetFixedStepSize(params.step_size);
 
-    filesystem::create_directory(filesystem::path(params.output_dir));
-    filesystem::create_directory(filesystem::path(params.output_dir + "/forces"));
+    CreateOutputDirectory(std::filesystem::path(params.output_dir));
+    CreateOutputDirectory(std::filesystem::path(params.output_dir + "/forces"));
 
     gran_sys.SetBDFixed(true);
 

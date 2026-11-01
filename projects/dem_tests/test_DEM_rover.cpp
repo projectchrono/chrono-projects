@@ -31,7 +31,6 @@
 #include "chrono/utils/ChUtilsSamplers.h"
 #include "chrono_dem/physics/ChSystemDem.h"
 #include "chrono_dem/utils/ChDemJsonParser.h"
-#include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
@@ -330,7 +329,7 @@ int main(int argc, char* argv[]) {
 
     dem_sys.SetParticleOutputMode(params.write_mode);
     dem_sys.SetVerbosity(params.verbose);
-    filesystem::create_directory(filesystem::path(params.output_dir));
+    CreateOutputDirectory(std::filesystem::path(params.output_dir));
 
     unsigned int nSoupFamilies = dem_sys.GetNumMeshes();
     std::cout << nSoupFamilies << " soup families" << std::endl;
@@ -407,7 +406,7 @@ int main(int argc, char* argv[]) {
                 writeMeshFrames(outstream, wheel_bodies.at(i), wheel_filename, wheel_scaling);
             }
 
-            writeMeshFrames(outstream, chassis_body, chassis_filename, {METERS_TO_CM, METERS_TO_CM, METERS_TO_CM});
+            writeMeshFrames(outstream, chassis_body, chassis_filename, ChMatrix33<float>((float)METERS_TO_CM));
 
             meshfile << outstream.str();
             // }

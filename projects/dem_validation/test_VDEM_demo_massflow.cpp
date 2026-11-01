@@ -33,8 +33,6 @@
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 
-#include "chrono_thirdparty/filesystem/path.h"
-
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChVisualSystemOpenGL.h"
 #endif
@@ -242,7 +240,7 @@ void CreateParticles(ChSystemMulticore* system) {
     std::shared_ptr<utils::ChMixtureIngredient> m1 = gen.AddMixtureIngredient(utils::MixtureType::SPHERE, 1.0);
     m1->SetDefaultMaterial(mat_g);
     m1->SetDefaultDensity(rho_g);
-    m1->SetDefaultSize(r_g);
+    m1->SetDefaultSize(ChVector3d(r_g));
 
     gen.SetStartTag(tag_particles);
 
@@ -383,11 +381,11 @@ int main(int argc, char* argv[]) {
     double zero_v = 2 * r_g;
 
     // Create output directories.
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
         cout << "Error creating directory " << out_dir << endl;
         return 1;
     }
-    if (!filesystem::create_directory(filesystem::path(pov_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(pov_dir))) {
         cout << "Error creating directory " << pov_dir << endl;
         return 1;
     }

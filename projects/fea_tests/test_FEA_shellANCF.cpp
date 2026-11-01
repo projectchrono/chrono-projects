@@ -26,8 +26,6 @@
 #include "chrono/fea/ChLinkNodeSlopeFrame.h"
 #include "chrono/fea/ChMesh.h"
 
-#include "chrono_thirdparty/filesystem/path.h"
-
 #ifdef CHRONO_PARDISO_MKL
 #include "chrono_pardisomkl/ChSolverPardisoMKL.h"
 #endif
@@ -414,7 +412,7 @@ int main(int argc, char* argv[]) {
 
     // Create output directory (if it does not already exist).
     if (output) {
-        if (!filesystem::create_directory(filesystem::path("../TEST_SHELL_ANCF"))) {
+        if (!CreateOutputDirectory(std::filesystem::path("../TEST_SHELL_ANCF"))) {
             std::cout << "Error creating directory ../TEST_SHELL_ANCF\n";
             return 1;
         }

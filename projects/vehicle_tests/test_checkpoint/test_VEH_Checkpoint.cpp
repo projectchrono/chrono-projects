@@ -45,8 +45,6 @@
 #include "chrono_postprocess/ChGnuPlot.h"
 #endif
 
-#include "chrono_thirdparty/filesystem/path.h"
-
 using namespace chrono;
 using namespace chrono::vehicle;
 using namespace chrono::vehicle::hmmwv;
@@ -142,12 +140,12 @@ class MyVehicle {
         auto& vehicle = hmmwv_full->GetVehicle();
 
         // Overwrite vehicle states with information from checkpoint files
-        vehicle.ImportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/vehicle_checkpoint.txt");
+        vehicle.ReadCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/vehicle_checkpoint.txt");
         int tire_id = 0;
         for (const auto& a : vehicle.GetAxles()) {
             for (const auto& w : a->GetWheels()) {
                 if (w->GetTire()) {
-                    w->GetTire()->ImportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/tire_" + std::to_string(tire_id++) + "_checkpoint.txt");
+                    w->GetTire()->ReadCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/tire_" + std::to_string(tire_id++) + "_checkpoint.txt");
                 }
             }
         }
@@ -210,7 +208,7 @@ class MyDriver : public ChDriver {
         : ChDriver(vehicle), m_throttle_fun(functions.throttle), m_braking_fun(functions.braking), m_steering_fun(functions.steering) {}
 
     MyDriver(ChVehicle& vehicle, const std::string& out_dir) : ChDriver(vehicle) {
-        ImportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/driver_checkpoint.txt");
+        ReadCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/driver_checkpoint.txt");
         m_throttle_fun = chrono_types::make_shared<ChFunctionConst>(GetThrottle());
         m_braking_fun = chrono_types::make_shared<ChFunctionConst>(GetBraking());
         m_steering_fun = chrono_types::make_shared<ChFunctionConst>(GetSteering());
@@ -340,13 +338,13 @@ void SimulateSingle(double time_end, double target_speed, const DriverFunctions&
     cout << "Output driver checkpoint file:  " << out_dir + "/driver_checkpoint.txt" << endl;
     cout << endl;
 
-    vehicle.ExportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/vehicle_checkpoint.txt");
-    my_driver.ExportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/driver_checkpoint.txt");
+    vehicle.WriteCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/vehicle_checkpoint.txt");
+    my_driver.WriteCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/driver_checkpoint.txt");
     int tire_id = 0;
     for (const auto& a : vehicle.GetAxles()) {
         for (const auto& w : a->GetWheels()) {
             if (w->GetTire()) {
-                w->GetTire()->ExportCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/tire_" + std::to_string(tire_id++) + "_checkpoint.txt");
+                w->GetTire()->WriteCheckpoint(ChCheckpoint::Format::ASCII, out_dir + "/tire_" + std::to_string(tire_id++) + "_checkpoint.txt");
             }
         }
     }
@@ -476,7 +474,7 @@ int main(int argc, char* argv[]) {
 
     // Create output directories
     std::string out_dir = GetChronoOutputPath() + "VEHICLE_CHECKPOINT_1";
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
         cout << "Error creating directory " << out_dir << endl;
         return 1;
     }

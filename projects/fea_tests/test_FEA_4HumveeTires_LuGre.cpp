@@ -29,8 +29,9 @@
 #include "chrono/utils/ChValidation.h"
 
 #include "chrono/fea/ChElementShellANCF_3423.h"
-#include "chrono/fea/ChLinkNodeSlopeFrame.h"
 #include "chrono/fea/ChLinkNodeFrame.h"
+#include "chrono/fea/ChLinkNodeSlopeFrame.h"
+#include "chrono/fea/ChLoaderPressure.h"
 #include "chrono/fea/ChMesh.h"
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 #include "chrono_pardisomkl/ChSolverPardisoMKL.h"

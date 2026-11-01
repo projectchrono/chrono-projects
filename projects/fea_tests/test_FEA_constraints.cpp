@@ -26,9 +26,10 @@
 #include "chrono/input_output/ChWriterCSV.h"
 #include "chrono/input_output/ChUtilsInputOutput.h"
 
+#include "chrono/fea/ChBeamSectionCableANCF.h"
 #include "chrono/fea/ChElementCableANCF.h"
-#include "chrono/fea/ChLinkNodeSlopeFrame.h"
 #include "chrono/fea/ChLinkNodeFrame.h"
+#include "chrono/fea/ChLinkNodeSlopeFrame.h"
 #include "chrono/fea/ChLoadsBeam.h"
 #include "chrono/fea/ChMesh.h"
 
@@ -78,7 +79,7 @@ void test_beam(const std::string& name,  /// test name
     const double length = 1.0;
     double diam = 5e-3;
     double rho = 1000;
-    auto msection_cable = chrono_types::make_shared<ChBeamSectionCable>();
+    auto msection_cable = chrono_types::make_shared<ChBeamSectionCableANCF>();
     msection_cable->SetDiameter(diam);
     msection_cable->SetYoungModulus(1e7);
     msection_cable->SetInertia(CH_PI / 4.0 * pow(diam / 2, 4));

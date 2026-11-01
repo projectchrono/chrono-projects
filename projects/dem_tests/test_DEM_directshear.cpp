@@ -25,7 +25,6 @@
 #include "chrono/utils/ChUtilsSamplers.h"
 #include "chrono_dem/physics/ChSystemDem.h"
 #include "chrono_dem/utils/ChDemJsonParser.h"
-#include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
@@ -198,7 +197,7 @@ int main(int argc, char* argv[]) {
     ChSystemDemMesh gran_sys(sphere_radius, sphere_density, ChVector3f(box_X, box_Y, box_Z));
 
     std::string out_dir = GetChronoOutputPath() + "shear/";
-    filesystem::create_directory(filesystem::path(out_dir));
+    CreateOutputDirectory(std::filesystem::path(out_dir));
 
     SetupGranSystem(gran_sys);
     gran_sys.Initialize();

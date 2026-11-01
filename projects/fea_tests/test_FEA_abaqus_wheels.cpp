@@ -25,13 +25,14 @@
 #include "chrono/solver/ChIterativeSolverLS.h"
 #include "chrono/core/ChRandom.h"
 
-#include "chrono/fea/ChMesh.h"
-#include "chrono/fea/ChMeshFileLoader.h"
 #include "chrono/fea/ChContactSurfaceMesh.h"
 #include "chrono/fea/ChContactSurfaceNodeCloud.h"
 #include "chrono/fea/ChLinkNodeFrame.h"
-#include "chrono_pardisomkl/ChSolverPardisoMKL.h"
+#include "chrono/fea/ChLoaderPressure.h"
+#include "chrono/fea/ChMesh.h"
+#include "chrono/fea/ChMeshFileLoader.h"
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
+#include "chrono_pardisomkl/ChSolverPardisoMKL.h"
 
 using namespace chrono;
 using namespace chrono::fea;
@@ -220,8 +221,7 @@ int main(int argc, char* argv[]) {
             ChQuaternion<> vrot;
             vrot.SetFromAngleAxis(ChRandom::Get() * CH_2PI, VECT_Y);
             mcube->Move(ChCoordsys<>(VNULL, vrot));
-            vrot.SetFromAngleAxis((ChRandom::Get() - 0.5) * 2 * CH_DEG_TO_RAD * 20,
-                                ChVector3d(ChRandom::Get() - 0.5, 0, ChRandom::Get() - 0.5).Normalize());
+            vrot.SetFromAngleAxis((ChRandom::Get() - 0.5) * 2 * CH_DEG_TO_RAD * 20, ChVector3d(ChRandom::Get() - 0.5, 0, ChRandom::Get() - 0.5).GetNormalized());
             mcube->Move(ChCoordsys<>(VNULL, vrot));
             mcube->SetPos(ChVector3d((ChRandom::Get() - 0.5) * 2.8, ChRandom::Get() * 0.1, -ChRandom::Get() * 3.2 - 1.1));
             mcube->SetFixed(true);

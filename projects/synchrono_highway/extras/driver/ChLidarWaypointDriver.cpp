@@ -145,8 +145,8 @@ void ChLidarWaypointDriver::Advance(double step) {
     double t_actual;
     double min_dist = 1e6;
     int segment = 0;
-    for (int i = 0; i < m_path->getNumPoints()-1; i++) {
-        ChVector3d loc = m_path->calcClosestPoint(curvature_location, i, t);
+    for (int i = 0; i < m_path->GetNumPoints() - 1; i++) {
+        ChVector3d loc = m_path->CalcClosestPoint(curvature_location, i, t);
         double tmp_min_dist = (loc - curvature_location).Length();
         if (tmp_min_dist < min_dist) {
             min_dist = tmp_min_dist;
@@ -155,7 +155,7 @@ void ChLidarWaypointDriver::Advance(double step) {
         }
     }
 
-    ChVector3d d = m_path->evalD(segment, t_actual);
+    ChVector3d d = m_path->EvalDer(segment, t_actual);
     d.Normalize();
     ChVector3d heading = m_vehicle.GetRot().Rotate({1, 0, 0});
     double dotangle = d.Dot(heading);

@@ -21,7 +21,6 @@
 #include "chrono/utils/ChUtilsSamplers.h"
 #include "chrono_dem/physics/ChSystemDem.h"
 #include "chrono_dem/utils/ChDemJsonParser.h"
-#include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
@@ -185,7 +184,7 @@ int main(int argc, char* argv[]) {
     // set friction mode
     gran_sys.SetFrictionMode(CHDEM_FRICTION_MODE::MULTI_STEP);
 
-    filesystem::create_directory(filesystem::path(params.output_dir));
+    CreateOutputDirectory(std::filesystem::path(params.output_dir));
 
     constexpr float cone_slope = 1.0;
 

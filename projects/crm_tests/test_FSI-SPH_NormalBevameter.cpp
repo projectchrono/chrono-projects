@@ -35,7 +35,6 @@
     #include "chrono_fsi/sph/visualization/ChSphVisualizationVSG.h"
 #endif
 
-#include "chrono_thirdparty/filesystem/path.h"
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
 
 #ifdef CHRONO_POSTPROCESS
@@ -68,7 +67,7 @@ void WriteCylinderVTK(const std::string& filename,
     // Generate a cylinder mesh
     ChTriangleMeshConnected mesh;
     std::vector<ChVector3d>& vertices = mesh.GetCoordsVertices();
-    std::vector<ChVector3i>& indices = mesh.GetIndicesVertexes();
+    std::vector<ChVector3i>& indices = mesh.GetIndicesVertices();
 
     // Create vertices for top and bottom circular caps
     ChVector3d top_center(0, 0, height / 2);
@@ -349,7 +348,7 @@ void SimulateMaterial(int i, const SimParams& params) {
 
     // -------------------------------------------------------------------------
     // Material and SPH parameters
-    ChFsiFluidSystemSPH::ElasticMaterialProperties mat_props;
+    ChFsiFluidSystemSPH::SoilProperties mat_props;
     ChFsiFluidSystemSPH::SPHParameters sph_params;
 
     mat_props.density = params.density;
@@ -371,7 +370,7 @@ void SimulateMaterial(int i, const SimParams& params) {
         mat_props.mcc_lambda = 0.02;
     }
 
-    sysSPH.SetElasticSPH(mat_props);
+    sysSPH.SetCrmSPH(mat_props);
 
     if (params.integration_scheme == "euler") {
         sph_params.integration_scheme = IntegrationScheme::EULER;
@@ -495,7 +494,7 @@ void SimulateMaterial(int i, const SimParams& params) {
     sysMBS.AddBody(plate);
 
     auto plate_bce = sysSPH.CreatePointsCylinderInterior(params.plate_diameter / 2, cyl_length, true);
-    sysFSI.AddFsiBody(plate, plate_bce, ChFrame<>(VNULL, QUNIT), false);
+    sysFSI.AddRigidBody(plate, plate_bce, ChFrame<>(VNULL, QUNIT), false);
     sysSPH.SetOutputLevel(OutputLevel::CRM_FULL);
     sysFSI.Initialize();
 
@@ -549,7 +548,7 @@ void SimulateMaterial(int i, const SimParams& params) {
         const std::string prePressureScaleStr = toString(params.pre_pressure_scale);
         base_dir = GetChronoOutputPath() + "FSI_NormalBevameter_GRC1_" + heightCmStr + "_" + rheologyModelStr + "_" +
                    prePressureScaleStr + "/";
-        if (!filesystem::create_directory(filesystem::path(base_dir))) {
+        if (!CreateOutputDirectory(std::filesystem::path(base_dir))) {
             std::cerr << "Error creating directory " << base_dir << std::endl;
             return;
         }
@@ -575,7 +574,7 @@ void SimulateMaterial(int i, const SimParams& params) {
 
         for (const auto& subdir : subdirs) {
             base_dir += subdir + "/";
-            if (!filesystem::create_directory(filesystem::path(base_dir))) {
+            if (!CreateOutputDirectory(std::filesystem::path(base_dir))) {
                 std::cerr << "Error creating directory " << base_dir << std::endl;
                 return;
             }
@@ -590,28 +589,28 @@ void SimulateMaterial(int i, const SimParams& params) {
         ss << "_av_" << params.artificial_viscosity;
         out_dir = base_dir + ss.str();
 
-        if (!filesystem::create_directory(filesystem::path(out_dir))) {
+        if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
             std::cerr << "Error creating directory " << out_dir << std::endl;
             return;
         }
 
         if (params.output) {
-            if (!filesystem::create_directory(filesystem::path(out_dir + "/particles"))) {
+            if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/particles"))) {
                 std::cerr << "Error creating directory " << out_dir + "/particles" << std::endl;
                 return;
             }
-            if (!filesystem::create_directory(filesystem::path(out_dir + "/fsi"))) {
+            if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/fsi"))) {
                 std::cerr << "Error creating directory " << out_dir + "/fsi" << std::endl;
                 return;
             }
-            if (!filesystem::create_directory(filesystem::path(out_dir + "/vtk"))) {
+            if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/vtk"))) {
                 std::cerr << "Error creating directory " << out_dir + "/vtk" << std::endl;
                 return;
             }
         }
 
         if (params.snapshots) {
-            if (!filesystem::create_directory(filesystem::path(out_dir + "/snapshots"))) {
+            if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/snapshots"))) {
                 std::cerr << "Error creating directory " << out_dir + "/snapshots" << std::endl;
                 return;
             }

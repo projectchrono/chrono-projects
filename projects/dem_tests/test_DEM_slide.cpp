@@ -22,7 +22,6 @@
 #include "chrono/utils/ChUtilsSamplers.h"
 #include "chrono_dem/physics/ChSystemDem.h"
 #include "chrono_dem/utils/ChDemJsonParser.h"
-#include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
@@ -156,7 +155,7 @@ int main(int argc, char* argv[]) {
 
     dem_sys.SetFixedStepSize(params.step_size);
 
-    filesystem::create_directory(filesystem::path(params.output_dir));
+    CreateOutputDirectory(std::filesystem::path(params.output_dir));
 
     dem_sys.SetBDFixed(true);
 

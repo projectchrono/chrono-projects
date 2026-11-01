@@ -23,8 +23,6 @@
 #include "chrono/core/ChDataPath.h"
 #include "chrono/utils/ChUtilsSamplers.h"
 
-#include "chrono_thirdparty/filesystem/path.h"
-
 #include "chrono_dem/physics/ChSystemDem.h"
 
 using namespace chrono;
@@ -104,9 +102,9 @@ int main(int argc, char* argv[]) {
     gran_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::FORWARD_EULER);
 
     std::string out_dir = GetChronoOutputPath() + "DEM/";
-    filesystem::create_directory(filesystem::path(out_dir));
+    CreateOutputDirectory(std::filesystem::path(out_dir));
     out_dir = out_dir + "/ballDrop/";
-    filesystem::create_directory(filesystem::path(out_dir));
+    CreateOutputDirectory(std::filesystem::path(out_dir));
 
     gran_sys.SetParticleOutputFlags(ABSV);
     gran_sys.SetParticleOutputMode(CHDEM_OUTPUT_MODE::CSV);

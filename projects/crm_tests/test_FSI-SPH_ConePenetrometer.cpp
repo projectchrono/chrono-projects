@@ -38,7 +38,6 @@
 #endif
 
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
-#include "chrono_thirdparty/filesystem/path.h"
 
 using namespace chrono;
 using namespace chrono::fsi;
@@ -134,7 +133,7 @@ void WriteConeVTK(const std::string& filename,
     // Generate a cone mesh
     ChTriangleMeshConnected mesh;
     std::vector<ChVector3d>& vertices = mesh.GetCoordsVertices();
-    std::vector<ChVector3i>& indices = mesh.GetIndicesVertexes();
+    std::vector<ChVector3i>& indices = mesh.GetIndicesVertices();
 
     // Add tip vertex
     vertices.push_back(ChVector3d(0, 0, -height));
@@ -207,7 +206,7 @@ void WriteCylinderVTK(const std::string& filename,
     // Generate a cylinder mesh
     ChTriangleMeshConnected mesh;
     std::vector<ChVector3d>& vertices = mesh.GetCoordsVertices();
-    std::vector<ChVector3i>& indices = mesh.GetIndicesVertexes();
+    std::vector<ChVector3i>& indices = mesh.GetIndicesVertices();
 
     // Create top and bottom circular caps
     for (int cap = 0; cap < 2; cap++) {
@@ -298,11 +297,11 @@ void WriteConePenetrometerVTK(const std::string& filename,
     // Generate meshes for both cone and cylinder
     ChTriangleMeshConnected cone_mesh;
     std::vector<ChVector3d>& cone_vertices = cone_mesh.GetCoordsVertices();
-    std::vector<ChVector3i>& cone_indices = cone_mesh.GetIndicesVertexes();
+    std::vector<ChVector3i>& cone_indices = cone_mesh.GetIndicesVertices();
 
     ChTriangleMeshConnected cyl_mesh;
     std::vector<ChVector3d>& cyl_vertices = cyl_mesh.GetCoordsVertices();
-    std::vector<ChVector3i>& cyl_indices = cyl_mesh.GetIndicesVertexes();
+    std::vector<ChVector3i>& cyl_indices = cyl_mesh.GetIndicesVertices();
 
     // Create cone mesh
     // Add tip vertex
@@ -589,7 +588,7 @@ void SimulateMaterial(int i, const SimParams& params, const ConeProperties& cone
     // -------------------------------------------------------------------------
     // Material and SPH parameters
 
-    ChFsiFluidSystemSPH::ElasticMaterialProperties mat_props;
+    ChFsiFluidSystemSPH::SoilProperties mat_props;
     ChFsiFluidSystemSPH::SPHParameters sph_params;
 
     mat_props.density = params.density;
@@ -611,7 +610,7 @@ void SimulateMaterial(int i, const SimParams& params, const ConeProperties& cone
         mat_props.mcc_lambda = 0.075;
     }
 
-    sysSPH.SetElasticSPH(mat_props);
+    sysSPH.SetCrmSPH(mat_props);
     if (params.integration_scheme == "euler") {
         sph_params.integration_scheme = IntegrationScheme::EULER;
     } else if (params.integration_scheme == "rk2") {
@@ -752,7 +751,7 @@ void SimulateMaterial(int i, const SimParams& params, const ConeProperties& cone
     double cone_tip_radius = coneProp.diameter / 2 * delta_h / coneProp.length;
     auto cone_bce = sysSPH.CreatePointsTruncatedConeInterior(coneProp.diameter / 2, cone_tip_radius,
                                                              coneProp.length - params.initial_spacing, true);
-    sysFSI.AddFsiBody(cone, cone_bce, ChFrame<>(VNULL, QUNIT), false);
+    sysFSI.AddRigidBody(cone, cone_bce, ChFrame<>(VNULL, QUNIT), false);
     // Create the linear motor to move the cone at the prescribed velocity
     auto motor = chrono_types::make_shared<ChLinkMotorLinearSpeed>();
     motor->SetSpeedFunction(chrono_types::make_shared<ChFunctionConst>(-penetration_velocity));
@@ -777,7 +776,7 @@ void SimulateMaterial(int i, const SimParams& params, const ConeProperties& cone
     cyl->GetCollisionModel()->SetSafeMargin(params.initial_spacing);
     // Register cylinder with explicit BCE points. Shorten to avoid overlap with cone
     auto cyl_bce = sysSPH.CreatePointsCylinderInterior(cyl_radius, cyl_length - 2 * params.initial_spacing, true);
-    sysFSI.AddFsiBody(cyl, cyl_bce, ChFrame<>(VNULL, QUNIT), false);
+    sysFSI.AddRigidBody(cyl, cyl_bce, ChFrame<>(VNULL, QUNIT), false);
     // Constraint cylinder to cone
     auto constraint = chrono_types::make_shared<ChLinkLockLock>();
     constraint->Initialize(cone, cyl, ChFrame<>(ChVector3d(0, 0, 0), QUNIT));
@@ -788,7 +787,7 @@ void SimulateMaterial(int i, const SimParams& params, const ConeProperties& cone
     // Output directories
     std::string out_dir = GetChronoOutputPath() + "FSI_ConePenetrometer/";
     if (params.output || params.snapshots) {
-        if (!filesystem::create_directory(filesystem::path(out_dir))) {
+        if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
             std::cerr << "Error creating directory " << out_dir << std::endl;
             return;
         }
@@ -810,7 +809,7 @@ void SimulateMaterial(int i, const SimParams& params, const ConeProperties& cone
         const std::string rheologyModelStr = params.rheology_model_crm;
         const std::string prePressureScaleStr = toString(params.pre_pressure_scale);
         out_dir = out_dir + heightCmStr + "_" + rheologyModelStr + "_" + prePressureScaleStr + "/";
-        if (!filesystem::create_directory(filesystem::path(out_dir))) {
+        if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
             std::cerr << "Error creating directory " << out_dir << std::endl;
             return;
         }
@@ -838,28 +837,28 @@ void SimulateMaterial(int i, const SimParams& params, const ConeProperties& cone
         ss << "_av_" << params.artificial_viscosity;
         out_dir = out_dir + ss.str();
 
-        if (!filesystem::create_directory(filesystem::path(out_dir))) {
+        if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
             std::cerr << "Error creating directory " << out_dir << std::endl;
             return;
         }
 
         if (params.output) {
-            if (!filesystem::create_directory(filesystem::path(out_dir + "/particles"))) {
+            if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/particles"))) {
                 std::cerr << "Error creating directory " << out_dir + "/particles" << std::endl;
                 return;
             }
-            if (!filesystem::create_directory(filesystem::path(out_dir + "/fsi"))) {
+            if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/fsi"))) {
                 std::cerr << "Error creating directory " << out_dir + "/fsi" << std::endl;
                 return;
             }
-            if (!filesystem::create_directory(filesystem::path(out_dir + "/vtk"))) {
+            if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/vtk"))) {
                 std::cerr << "Error creating directory " << out_dir + "/vtk" << std::endl;
                 return;
             }
         }
 
         if (params.snapshots) {
-            if (!filesystem::create_directory(filesystem::path(out_dir + "/snapshots"))) {
+            if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/snapshots"))) {
                 std::cerr << "Error creating directory " << out_dir + "/snapshots" << std::endl;
                 return;
             }

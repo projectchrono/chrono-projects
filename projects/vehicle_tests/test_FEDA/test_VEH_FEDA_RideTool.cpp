@@ -31,7 +31,6 @@
 #include "chrono_postprocess/ChGnuPlot.h"
 
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
-#include "chrono_thirdparty/filesystem/path.h"
 
 #ifdef CHRONO_IRRLICHT
     #include "chrono_vehicle/wheeled_vehicle/ChWheeledVehicleVisualSystemIrrlicht.h"
@@ -421,7 +420,7 @@ int main(int argc, char* argv[]) {
     // Output directory
     // ----------------
 
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
         cout << "Error creating directory " << out_dir << endl;
         return 1;
     }

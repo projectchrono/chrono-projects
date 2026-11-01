@@ -39,7 +39,6 @@
     #include "chrono_fsi/sph/visualization/ChSphVisualizationVSG.h"
 #endif
 
-#include "chrono_thirdparty/filesystem/path.h"
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
 
 using namespace chrono;
@@ -125,7 +124,7 @@ void WriteSphereVTK(const std::string& filename, std::shared_ptr<ChBody> body, d
     // Generate a sphere mesh with UV coordinates
     ChTriangleMeshConnected mesh;
     std::vector<ChVector3d>& vertices = mesh.GetCoordsVertices();
-    std::vector<ChVector3i>& indices = mesh.GetIndicesVertexes();
+    std::vector<ChVector3i>& indices = mesh.GetIndicesVertices();
 
     // Create vertices using spherical coordinates
     for (int i = 0; i <= resolution; i++) {
@@ -234,7 +233,7 @@ int main(int argc, char* argv[]) {
 
     sysFSI.SetVerbose(verbose);
 
-    ChFsiFluidSystemSPH::ElasticMaterialProperties mat_props;
+    ChFsiFluidSystemSPH::SoilProperties mat_props;
     mat_props.density = 1510;
     mat_props.Young_modulus = 1e6;
     mat_props.Poisson_ratio = 0.3;
@@ -253,7 +252,7 @@ int main(int argc, char* argv[]) {
         mat_props.mcc_kappa = kappa;
         mat_props.mcc_lambda = lambda;
     }
-    sysSPH.SetElasticSPH(mat_props);
+    sysSPH.SetCrmSPH(mat_props);
 
     ChFsiFluidSystemSPH::SPHParameters sph_params;
     sph_params.integration_scheme = IntegrationScheme::RK2;
@@ -380,7 +379,7 @@ int main(int argc, char* argv[]) {
 
     // Create body BCE particles and add the sphere as an FSI body
     auto sphere_bce = sysSPH.CreatePointsSphereInterior(sphere_radius, true);
-    sysFSI.AddFsiBody(sphere, sphere_bce, ChFrame<>(), false);
+    sysFSI.AddRigidBody(sphere, sphere_bce, ChFrame<>(), false);
 
     // Complete construction of the FSI system
     sysFSI.Initialize();
@@ -389,7 +388,7 @@ int main(int argc, char* argv[]) {
     std::string out_dir;
     if (output || snapshots) {
         out_dir = GetChronoOutputPath() + "FSI_Cratering_" + rheology_model_crm + "/";
-        if (!filesystem::create_directory(filesystem::path(out_dir))) {
+        if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
             std::cerr << "Error creating directory " << out_dir << std::endl;
             return 1;
         }
@@ -406,29 +405,28 @@ int main(int argc, char* argv[]) {
             ss << "_lambda" << lambda;
         }
         out_dir = out_dir + ss.str();
-        if (!filesystem::create_directory(filesystem::path(out_dir))) {
+        if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
             std::cerr << "Error creating directory " << out_dir << std::endl;
             return 1;
         }
 
         if (output) {
-            if (!filesystem::create_directory(filesystem::path(out_dir + "/particles"))) {
+            if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/particles"))) {
                 std::cerr << "Error creating directory " << out_dir + "/particles" << std::endl;
                 return 1;
             }
-            if (!filesystem::create_directory(filesystem::path(out_dir + "/fsi"))) {
+            if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/fsi"))) {
                 std::cerr << "Error creating directory " << out_dir + "/fsi" << std::endl;
                 return 1;
             }
-            if (!filesystem::create_directory(filesystem::path(out_dir + "/vtk"))) {
+            if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/vtk"))) {
                 std::cerr << "Error creating directory " << out_dir + "/vtk" << std::endl;
                 return 1;
             }
         }
 
         if (snapshots) {
-            if (!filesystem::create_directory(
-                    filesystem::path(out_dir + "/snapshots_" + std::to_string(pre_pressure_scale)))) {
+            if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/snapshots_" + std::to_string(pre_pressure_scale)))) {
                 std::cerr << "Error creating directory " << out_dir + "/snapshots_" + std::to_string(pre_pressure_scale)
                           << std::endl;
                 return 1;

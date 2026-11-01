@@ -24,7 +24,6 @@
 #include "chrono/utils/ChUtilsSamplers.h"
 #include "chrono_dem/physics/ChSystemDem.h"
 #include "chrono_dem/utils/ChDemJsonParser.h"
-#include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
@@ -113,7 +112,7 @@ int main(int argc, char* argv[]) {
     gran_sys.SetStaticFrictionCoeff_SPH2MESH(params.static_friction_coeffS2M);
 
     gran_sys.SetParticleOutputMode(params.write_mode);
-    filesystem::create_directory(filesystem::path(params.output_dir));
+    CreateOutputDirectory(std::filesystem::path(params.output_dir));
     gran_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
 
     gran_sys.SetFixedStepSize(params.step_size);

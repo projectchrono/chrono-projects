@@ -36,8 +36,6 @@
 
 #include "chrono_multicore/physics/ChSystemMulticore.h"
 
-#include "chrono_thirdparty/filesystem/path.h"
-
 #ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChVisualSystemOpenGL.h"
 #endif
@@ -137,11 +135,11 @@ void AddWall(std::shared_ptr<ChBody>& body,
 int main(int argc, char* argv[]) {
     // Create output directories
 
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
         cout << "Error creating directory " << out_dir << endl;
         return 1;
     }
-    if (!filesystem::create_directory(filesystem::path(pov_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(pov_dir))) {
         cout << "Error creating directory " << pov_dir << endl;
         return 1;
     }

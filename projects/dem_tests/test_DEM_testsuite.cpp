@@ -23,7 +23,6 @@
 #include "chrono/utils/ChUtilsSamplers.h"
 #include "chrono_dem/physics/ChSystemDem.h"
 #include "chrono_dem/utils/ChDemJsonParser.h"
-#include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
@@ -106,7 +105,7 @@ void setCommonParameters(ChSystemDem& dem_sys) {
 
     dem_sys.SetTimeIntegrator(CHDEM_TIME_INTEGRATOR::CENTERED_DIFFERENCE);
     dem_sys.SetFixedStepSize(timestep);
-    filesystem::create_directory(filesystem::path(output_dir));
+    CreateOutputDirectory(std::filesystem::path(output_dir));
     dem_sys.SetBDFixed(true);
 }
 

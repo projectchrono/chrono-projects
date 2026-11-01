@@ -45,7 +45,7 @@ void AddWallMesh(std::shared_ptr<ChBody> body,
 
     std::vector<ChVector3d>& vertices = trimesh->GetCoordsVertices();
     std::vector<ChVector3d>& normals = trimesh->GetCoordsNormals();
-    std::vector<ChVector3i>& idx_vertices = trimesh->GetIndicesVertexes();
+    std::vector<ChVector3i>& idx_vertices = trimesh->GetIndicesVertices();
     std::vector<ChVector3i>& idx_normals = trimesh->GetIndicesNormals();
 
     int num_vert = 8;
@@ -64,20 +64,20 @@ void AddWallMesh(std::shared_ptr<ChBody> body,
     vertices[2] = ChVector3d(+dim.x(), +dim.y(), -dim.z()) + loc;
     vertices[3] = ChVector3d(+dim.x(), -dim.y(), -dim.z()) + loc;
 
-    normals[0] = ChVector3d(-1, -1, -1).Normalize();
-    normals[1] = ChVector3d(-1, +1, -1).Normalize();
-    normals[2] = ChVector3d(+1, +1, -1).Normalize();
-    normals[3] = ChVector3d(+1, -1, -1).Normalize();
+    normals[0] = ChVector3d(-1, -1, -1).GetNormalized();
+    normals[1] = ChVector3d(-1, +1, -1).GetNormalized();
+    normals[2] = ChVector3d(+1, +1, -1).GetNormalized();
+    normals[3] = ChVector3d(+1, -1, -1).GetNormalized();
 
     vertices[4] = ChVector3d(-dim.x(), -dim.y(), +dim.z()) + loc;
     vertices[5] = ChVector3d(-dim.x(), +dim.y(), +dim.z()) + loc;
     vertices[6] = ChVector3d(+dim.x(), +dim.y(), +dim.z()) + loc;
     vertices[7] = ChVector3d(+dim.x(), -dim.y(), +dim.z()) + loc;
 
-    normals[4] = ChVector3d(-1, -1, +1).Normalize();
-    normals[5] = ChVector3d(-1, +1, +1).Normalize();
-    normals[6] = ChVector3d(+1, +1, +1).Normalize();
-    normals[7] = ChVector3d(+1, -1, +1).Normalize();
+    normals[4] = ChVector3d(-1, -1, +1).GetNormalized();
+    normals[5] = ChVector3d(-1, +1, +1).GetNormalized();
+    normals[6] = ChVector3d(+1, +1, +1).GetNormalized();
+    normals[7] = ChVector3d(+1, -1, +1).GetNormalized();
 
     for (int i = 0; i < num_vert; i++) {
         trimesh->GetCoordsColors()[i] = ChColor(0, 0, 1);

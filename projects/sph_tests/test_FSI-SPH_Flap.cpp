@@ -32,8 +32,6 @@
     #include "chrono_postprocess/ChGnuPlot.h"
 #endif
 
-#include "chrono_thirdparty/filesystem/path.h"
-
 using namespace chrono;
 using namespace chrono::fsi;
 using namespace chrono::fsi::sph;
@@ -442,28 +440,28 @@ int main(int argc, char* argv[]) {
     // Create oputput directories
     std::string out_dir =
         GetChronoOutputPath() + "FSI_Flap_pto_" + argv[2] + "_window_" + argv[1] + "_DEG" + "_waveT_" + argv[3];
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
         cerr << "Error creating directory " << out_dir << endl;
         return 1;
     }
     out_dir = out_dir + fsi.GetSphIntegrationSchemeString();
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
         cerr << "Error creating directory " << out_dir << endl;
         return 1;
     }
-    if (!filesystem::create_directory(filesystem::path(out_dir + "/particles"))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/particles"))) {
         cerr << "Error creating directory " << out_dir + "/particles" << endl;
         return 1;
     }
-    if (!filesystem::create_directory(filesystem::path(out_dir + "/fsi"))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/fsi"))) {
         cerr << "Error creating directory " << out_dir + "/fsi" << endl;
         return 1;
     }
-    if (!filesystem::create_directory(filesystem::path(out_dir + "/vtk"))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/vtk"))) {
         cerr << "Error creating directory " << out_dir + "/vtk" << endl;
         return 1;
     }
-    if (!filesystem::create_directory(filesystem::path(out_dir + "/snapshots"))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/snapshots"))) {
         cerr << "Error creating directory " << out_dir + "/snapshots" << endl;
         return 1;
     }

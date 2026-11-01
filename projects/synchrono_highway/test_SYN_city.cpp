@@ -20,10 +20,10 @@
 #include <functional>
 
 #include "chrono_vehicle/ChConfigVehicle.h"
-#include "chrono_vehicle/ChVehicleModelData.h"
-#include "chrono_vehicle/driver/ChInteractiveDriverIRR.h"
+#include "chrono_vehicle/ChVehicleDataPath.h"
+#include "chrono_vehicle/driver/ChInteractiveDriver.h"
 #include "chrono_vehicle/terrain/RigidTerrain.h"
-#include "chrono_vehicle/utils/ChUtilsJSON.h"
+#include "chrono_vehicle/utils/ChVehicleUtilsJSON.h"
 
 #include "chrono_vehicle/wheeled_vehicle/ChWheeledVehicleVisualSystemIrrlicht.h"
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
@@ -37,7 +37,7 @@
 #include "chrono_synchrono/communication/mpi/SynMPICommunicator.h"
 #include "chrono_synchrono/controller/SynControllerFunctions.h"
 #include "chrono_synchrono/controller/driver/SynMultiPathDriver.h"
-#include "chrono_synchrono/utils/SynDataLoader.h"
+#include "chrono_synchrono/utils/SynDataPath.h"
 #include "chrono_synchrono/utils/SynLog.h"
 #include "chrono_vehicle/driver/ChPathFollowerACCDriver.h"
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
@@ -308,8 +308,8 @@ int main(int argc, char* argv[]) {
 
     // all the demo data will be in user-specified location
     SetChronoDataPath(demo_data_path);
-    vehicle::SetDataPath(demo_data_path + std::string("/vehicles/"));
-    synchrono::SetDataPath(demo_data_path + std::string("/synchrono/"));
+    SetVehicleDataPath(demo_data_path + std::string("/vehicles/"));
+    SetSynchronoDataPath(demo_data_path + std::string("/synchrono/"));
 
     // Normal simulation options
     step_size = cli.GetAsType<double>("step_size");
@@ -534,7 +534,7 @@ int main(int argc, char* argv[]) {
 
     // Create the vehicle Irrlicht interface
     std::string driver_file = "driver_inputs.txt";
-    utils::CSV_writer driver_csv(" ");
+    ChWriterCSV driver_csv(" ");
 
     IrrAppWrapper app;
     std::shared_ptr<ChDriver> driver;
@@ -551,11 +551,11 @@ int main(int argc, char* argv[]) {
         temp_app->Initialize();
 
         // Create the interactive driver system
-        auto irr_driver = chrono_types::make_shared<ChInteractiveDriverIRR>(*temp_app);
+        auto irr_driver = chrono_types::make_shared<ChInteractiveDriver>(vehicle);
 
         // optionally force the gui driver to use keyboard rather than joystick
         if (cli.GetAsType<bool>("keyboard"))
-            irr_driver->SetInputMode(ChInteractiveDriverIRR::InputMode::KEYBOARD);
+            irr_driver->SetInputMode(ChInteractiveDriver::InputMode::KEYBOARD);
 
         // Set the time response for steering and throttle keyboard inputs.
         double steering_time = 1.0;  // time to go from 0 to +1 (or from 0 to -1)
@@ -565,6 +565,7 @@ int main(int argc, char* argv[]) {
         irr_driver->SetThrottleDelta(render_step_size / throttle_time);
         irr_driver->SetBrakingDelta(render_step_size / braking_time);
         irr_driver->Initialize();
+        temp_app->AttachDriver(irr_driver.get());
 
         app.Set(temp_app);
         driver = irr_driver;
@@ -573,7 +574,7 @@ int main(int argc, char* argv[]) {
         //     auto csl_driver = chrono_types::make_shared<ChCSLDriver>(vehicle);
         //     driver = csl_driver;
     } else {
-        auto path = ChBezierCurve::read(GetChronoDataFile(demo_config[node_id].path_file));
+        auto path = ChBezierCurve::Read(GetChronoDataFile(demo_config[node_id].path_file));
         double target_speed = 11.2;
         bool isPathClosed = true;
         double following_time = 4.0;
@@ -665,7 +666,7 @@ int main(int argc, char* argv[]) {
         }
     }
     if (node_id == leader && record_inputs) {
-        driver_csv.write_to_file(driver_file);
+        driver_csv.WriteToFile(driver_file);
     }
 
     // Properly shuts down other ranks when one rank ends early
@@ -729,56 +730,56 @@ void GetVehicleModelFiles(VehicleType type,
                           double& cam_distance) {
     switch (type) {
         case VehicleType::SEDAN:
-            vehicle = vehicle::GetDataFile("sedan/vehicle/Sedan_Vehicle.json");
-            engine = vehicle::GetDataFile("sedan/powertrain/Sedan_EngineSimpleMap.json");
-            transmission = vehicle::GetDataFile("sedan/powertrain/Sedan_AutomaticTransmissionSimpleMap.json");
-            tire = vehicle::GetDataFile("sedan/tire/Sedan_TMeasyTire.json");
-            zombie = vehicle::GetDataFile("sedan/Sedan.json");
+            vehicle = GetVehicleDataFile("sedan/vehicle/Sedan_Vehicle.json");
+            engine = GetVehicleDataFile("sedan/powertrain/Sedan_EngineSimpleMap.json");
+            transmission = GetVehicleDataFile("sedan/powertrain/Sedan_AutomaticTransmissionSimpleMap.json");
+            tire = GetVehicleDataFile("sedan/tire/Sedan_TMeasyTire.json");
+            zombie = GetVehicleDataFile("sedan/Sedan.json");
             lidar_pos = {1.0, 0, 0.25};
             cam_distance = 6.0;
             break;
         case VehicleType::AUDI:
-            vehicle = vehicle::GetDataFile("audi/json/audi_Vehicle.json");
-            engine = vehicle::GetDataFile("audi/json/audi_EngineSimpleMap.json");
-            transmission = vehicle::GetDataFile("audi/json/audi_AutomaticTransmissionSimpleMap.json");
-            tire = vehicle::GetDataFile("audi/json/audi_TMeasyTire.json");
-            zombie = vehicle::GetDataFile("audi/json/audi.json");
+            vehicle = GetVehicleDataFile("audi/json/audi_Vehicle.json");
+            engine = GetVehicleDataFile("audi/json/audi_EngineSimpleMap.json");
+            transmission = GetVehicleDataFile("audi/json/audi_AutomaticTransmissionSimpleMap.json");
+            tire = GetVehicleDataFile("audi/json/audi_TMeasyTire.json");
+            zombie = GetVehicleDataFile("audi/json/audi.json");
             lidar_pos = {2.3, 0, .4};
             cam_distance = 6.0;
             break;
         case VehicleType::TRUCK:
-            vehicle = vehicle::GetDataFile("truck/json/truck_Vehicle.json");
-            engine = vehicle::GetDataFile("truck/json/truck_EngineSimple.json");
-            transmission = vehicle::GetDataFile("truck/json/truck_AutomaticTransmissionSimpleMap.json");
-            tire = vehicle::GetDataFile("truck/json/truck_TMeasyTire.json");
-            zombie = vehicle::GetDataFile("truck/json/truck.json");
+            vehicle = GetVehicleDataFile("truck/json/truck_Vehicle.json");
+            engine = GetVehicleDataFile("truck/json/truck_EngineSimple.json");
+            transmission = GetVehicleDataFile("truck/json/truck_AutomaticTransmissionSimpleMap.json");
+            tire = GetVehicleDataFile("truck/json/truck_TMeasyTire.json");
+            zombie = GetVehicleDataFile("truck/json/truck.json");
             lidar_pos = {1.92, 0, 0.88};
             cam_distance = 14.0;
             break;
         case VehicleType::VAN:
-            vehicle = vehicle::GetDataFile("VW_microbus/json/van_Vehicle.json");
-            engine = vehicle::GetDataFile("VW_microbus/json/van_EngineSimpleMap.json");
-            transmission = vehicle::GetDataFile("VW_microbus/json/van_AutomaticTransmissionSimpleMap.json");
-            tire = vehicle::GetDataFile("VW_microbus/json/van_Pac02Tire_extTIR.json");
-            zombie = vehicle::GetDataFile("VW_microbus/json/van.json");
+            vehicle = GetVehicleDataFile("VW_microbus/json/van_Vehicle.json");
+            engine = GetVehicleDataFile("VW_microbus/json/van_EngineSimpleMap.json");
+            transmission = GetVehicleDataFile("VW_microbus/json/van_AutomaticTransmissionSimpleMap.json");
+            tire = GetVehicleDataFile("VW_microbus/json/van_Pac02Tire_extTIR.json");
+            zombie = GetVehicleDataFile("VW_microbus/json/van.json");
             lidar_pos = {1.1, 0, 0.5};
             cam_distance = 5.0;
             break;
         case VehicleType::SUV:
-            vehicle = vehicle::GetDataFile("Nissan_Patrol/json/suv_Vehicle.json");
-            engine = vehicle::GetDataFile("Nissan_Patrol/json/suv_EngineShafts.json");
-            transmission = vehicle::GetDataFile("Nissan_Patrol/json/suv_AutomaticTransmissionShafts.json");
-            tire = vehicle::GetDataFile("Nissan_Patrol/json/suv_TMeasyTire.json");
-            zombie = vehicle::GetDataFile("Nissan_Patrol/json/suv.json");
+            vehicle = GetVehicleDataFile("Nissan_Patrol/json/suv_Vehicle.json");
+            engine = GetVehicleDataFile("Nissan_Patrol/json/suv_EngineShafts.json");
+            transmission = GetVehicleDataFile("Nissan_Patrol/json/suv_AutomaticTransmissionShafts.json");
+            tire = GetVehicleDataFile("Nissan_Patrol/json/suv_TMeasyTire.json");
+            zombie = GetVehicleDataFile("Nissan_Patrol/json/suv.json");
             lidar_pos = {.95, 0, 0.45};
             cam_distance = 6.0;
             break;
         case VehicleType::CITYBUS:
-            vehicle = vehicle::GetDataFile("citybus/vehicle/CityBus_Vehicle.json");
-            engine = vehicle::GetDataFile("citybus/powertrain/CityBus_EngineSimpleMap.json");
-            transmission = vehicle::GetDataFile("citybus/powertrain/CityBus_AutomaticTransmissionSimpleMap.json");
-            tire = vehicle::GetDataFile("citybus/tire/CityBus_TMeasyTire.json");
-            zombie = vehicle::GetDataFile("citybus/CityBus.json");
+            vehicle = GetVehicleDataFile("citybus/vehicle/CityBus_Vehicle.json");
+            engine = GetVehicleDataFile("citybus/powertrain/CityBus_EngineSimpleMap.json");
+            transmission = GetVehicleDataFile("citybus/powertrain/CityBus_AutomaticTransmissionSimpleMap.json");
+            tire = GetVehicleDataFile("citybus/tire/CityBus_TMeasyTire.json");
+            zombie = GetVehicleDataFile("citybus/CityBus.json");
             lidar_pos = {2.32, 0, 0.5};
             cam_distance = 14.0;
             break;
@@ -800,8 +801,8 @@ void AddSceneMeshes(ChSystem* chsystem, RigidTerrain* terrain) {
     std::unordered_map<std::string, std::shared_ptr<ChTriangleMeshConnected>> mesh_map;
 
     auto mesh_body = chrono_types::make_shared<ChBody>();
-    mesh_body->SetBodyFixed(true);
-    mesh_body->SetCollide(false);
+    mesh_body->SetFixed(true);
+    mesh_body->EnableCollision(false);
     chsystem->Add(mesh_body);
 
     int meshes_added = 0;

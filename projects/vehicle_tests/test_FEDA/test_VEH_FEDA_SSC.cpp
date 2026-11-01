@@ -29,8 +29,6 @@
 
 #include "chrono_models/vehicle/feda/FEDA.h"
 
-#include "chrono_thirdparty/filesystem/path.h"
-
 #include "chrono_vehicle/driver/ChPathFollowerDriver.h"
 #include "chrono_vehicle/utils/ChVehiclePath.h"
 
@@ -230,7 +228,7 @@ int main(int argc, char* argv[]) {
     const std::string out_dir = GetChronoOutputPath() + "FEDA";
     const std::string pov_dir = out_dir + "/POVRAY";
 
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
         std::cout << "Error creating directory " << out_dir << std::endl;
         return 1;
     }
@@ -259,9 +257,9 @@ int main(int argc, char* argv[]) {
 
     // Set up vehicle output
     feda.GetVehicle().SetChassisOutput(true);
-    feda.GetVehicle().SetSuspensionOutput(0, true);
+    feda.GetVehicle().SetAxleOutput(0, true);
     feda.GetVehicle().SetSteeringOutput(0, true);
-    feda.GetVehicle().SetOutput(ChOutput::Type::ASCII, ChOutput::Mode::FRAMES, out_dir, "output", 0.1);
+    feda.GetVehicle().SetOutput(ChOutput::Format::ASCII, ChOutput::Mode::FRAMES, out_dir, "output", 0.1);
 
     // Generate JSON information with available output channels
     feda.GetVehicle().ExportComponentList(out_dir + "/component_list.json");

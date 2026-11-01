@@ -22,7 +22,6 @@
 #include "chrono/core/ChTimer.h"
 #include "chrono/utils/ChUtilsSamplers.h"
 #include "chrono_dem/physics/ChSystemDem.h"
-#include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
@@ -71,7 +70,7 @@ double run_test(float box_size_X, float box_size_Y, float box_size_Z) {
     std::vector<ChVector3f> body_points = sampler.SampleBox(center, hdims);
     dem_system.SetParticles(body_points);
 
-    filesystem::create_directory(filesystem::path(output_prefix));
+    CreateOutputDirectory(std::filesystem::path(output_prefix));
 
     dem_system.SetBDFixed(true);
     dem_system.SetFrictionMode(CHDEM_FRICTION_MODE::FRICTIONLESS);

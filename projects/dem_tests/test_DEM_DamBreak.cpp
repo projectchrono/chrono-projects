@@ -22,7 +22,6 @@
 #include "chrono/utils/ChUtilsSamplers.h"
 #include "chrono_dem/physics/ChSystemDem.h"
 #include "chrono_dem/utils/ChDemJsonParser.h"
-#include "chrono_thirdparty/filesystem/path.h"
 
 #include "../utils.h"
 
@@ -217,7 +216,7 @@ int main(int argc, char* argv[]) {
         cyl_bc_id = gran_sys.CreateBCCylinderZ(cyl_center, cyl_rad, true, true);
     }
 
-    filesystem::create_directory(filesystem::path(params.output_dir));
+    CreateOutputDirectory(std::filesystem::path(params.output_dir));
 
     // Finalize settings and initialize for runtime
     gran_sys.Initialize();
