@@ -36,6 +36,8 @@ using namespace chrono::dem;
 bool render = true;
 
 int main(int argc, char* argv[]) {
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     std::string inputJson = GetProjectsDataFile("dem/Repose.json");
     if (argc == 2) {
         inputJson = std::string(argv[1]);

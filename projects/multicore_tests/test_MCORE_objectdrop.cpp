@@ -287,6 +287,8 @@ void CreateObject(ChSystemMulticore* system) {
 // =============================================================================
 // =============================================================================
 int main(int argc, char* argv[]) {
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     // --------------------------
     // Create output directories.
     // --------------------------

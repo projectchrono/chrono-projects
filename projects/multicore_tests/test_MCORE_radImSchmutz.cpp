@@ -357,6 +357,8 @@ void FindRange(ChSystem* sys, double& lowest, double& highest) {
 // =============================================================================
 // =============================================================================
 int main(int argc, char* argv[]) {
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     // --------------------------
     // Create output directories.
     // --------------------------

@@ -189,6 +189,8 @@ void AddFluid(ChSystemMulticoreNSC* sys) {
 // Create the system, specify simulation parameters, and run simulation loop.
 // -----------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
 	double time_end = 5;
 	
 	

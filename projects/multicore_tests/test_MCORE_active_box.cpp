@@ -31,6 +31,8 @@ using namespace chrono;
 
 // =============================================================================
 int main(int argc, char* argv[]) {
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     bool aabb_active = true;
     ChContactMethod method = ChContactMethod::SMC;
 

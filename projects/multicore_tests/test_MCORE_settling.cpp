@@ -78,6 +78,8 @@ void TimingOutput(chrono::ChSystem* mSys) {
 // --------------------------------------------------------------------------
 
 int main(int argc, char** argv) {
+    SetChronoDataPath(CHRONO_DATA_DIR);
+
     int num_threads = 4;
     ChContactMethod method = ChContactMethod::SMC;
     bool use_mat_properties = true;
