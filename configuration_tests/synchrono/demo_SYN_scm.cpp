@@ -44,11 +44,14 @@
 #endif
 
 #ifdef CHRONO_SENSOR
+    #include "chrono_sensor/ChConfigSensor.h"
     #include "chrono_sensor/ChSensorManager.h"
-    #include "chrono_sensor/sensors/ChCameraSensor.h"
     #include "chrono_sensor/filters/ChFilterAccess.h"
-    #include "chrono_sensor/filters/ChFilterSave.h"
-    #include "chrono_sensor/filters/ChFilterVisualize.h"
+    #ifdef CHRONO_HAS_OPTIX
+        #include "chrono_sensor/sensors/ChCameraSensor.h"
+        #include "chrono_sensor/filters/ChFilterSave.h"
+        #include "chrono_sensor/filters/ChFilterVisualize.h"
+    #endif
 using namespace chrono::sensor;
 #endif
 
@@ -135,6 +138,7 @@ int main(int argc, char* argv[]) {
 
     // Create the HMMWV
     HMMWV_Full hmmwv;
+    hmmwv.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
     hmmwv.SetContactMethod(contact_method);
     hmmwv.SetChassisFixed(false);
     hmmwv.SetInitPosition(ChCoordsys<>(initLoc, initRot));
@@ -153,7 +157,7 @@ int main(int argc, char* argv[]) {
     // Solver settings.
     hmmwv.GetSystem()->SetNumThreads(std::min(8, ChOMP::GetNumProcs()));
     hmmwv.GetSystem()->SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
-    hmmwv.GetSystem()->GetSolver()->AsIterative()->SetMaxIterations(200);
+    hmmwv.GetSystem()->GetSolver()->AsIterative()->SetMaxIterations(50);
 
     // Add vehicle as an agent
     auto vehicle_agent = chrono_types::make_shared<SynWheeledVehicleAgent>(&hmmwv.GetVehicle());
@@ -181,8 +185,7 @@ int main(int argc, char* argv[]) {
     terrain->SetPlotType(SCMTerrain::PLOT_SINKAGE, 0, 0.1);
     terrain->SetMeshWireframe(true);
 
-    // The physics do not change when you add a moving patch, you just make it much easier for the SCM
-    // implementation to do its job by restricting where it has to look for contacts
+    // Enable an active domain associated with the entire vehicle
     terrain->AddActiveDomain(hmmwv.GetVehicle().GetChassisBody(), ChVector3d(0, 0, 0), ChVector3d(5, 3, 1));
 
     if (flat_patch) {
@@ -241,7 +244,7 @@ int main(int argc, char* argv[]) {
     int render_steps = (int)std::ceil(render_step_size / step_size);
 #endif
 
-#ifdef CHRONO_SENSOR
+#if defined(CHRONO_SENSOR) && defined(CHRONO_HAS_OPTIX)
     ChSensorManager sensor_manager(hmmwv.GetSystem());
     if (cli.HasValueInVector<int>("sens", node_id)) {
         sensor_manager.scene->AddPointLight({100, 100, 100}, {1, 1, 1}, 6000);
@@ -275,7 +278,7 @@ int main(int argc, char* argv[]) {
             chrono::ChFrame<double>(camera_loc, rotation),  // offset pose
             cam_res_width,                                  // image width
             cam_res_height,                                 // image height
-            (float)CH_PI / 3                              // FOV
+            (float)CH_PI_3                                // FOV
         );
 
         overhead_camera->SetName("Overhead Cam");
@@ -347,7 +350,7 @@ int main(int argc, char* argv[]) {
             app->Advance(step_size);
 #endif
 
-#ifdef CHRONO_SENSOR
+#if defined(CHRONO_SENSOR) && defined(CHRONO_HAS_OPTIX)
         sensor_manager.Update();
 #endif
 

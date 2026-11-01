@@ -26,17 +26,12 @@
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/physics/ChSystem.h"
 
-#ifdef CHRONO_IRRLICHT
-#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
-using namespace chrono::irrlicht;
-#endif
 #ifdef CHRONO_VSG
-#include "chrono_vsg/ChVisualSystemVSG.h"
+    #include "chrono_vsg/ChVisualSystemVSG.h"
 using namespace chrono::vsg3d;
 #endif
 
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
-#include "chrono_thirdparty/filesystem/path.h"
 
 using namespace chrono;
 
@@ -56,7 +51,6 @@ int main(int argc, char* argv[]) {
     std::cout << "Copyright (c) 2025 projectchrono.org\nChrono version: " << CHRONO_VERSION << std::endl;
 
     // Set path to Chrono data directories
-    std::cout << "Data directory: " << CHRONO_DATA_DIR << std::endl;
     SetChronoDataPath(CHRONO_DATA_DIR);
 
     // Extract filename from command-line arguments
@@ -83,91 +77,61 @@ int main(int argc, char* argv[]) {
         instance2 = parser.Populate(*sys, frame2, prefix2);
 
     // Print hierarchy of modeling components in ChSystem
-    ////std::cout << "Number of moidel instances: " << parser.GetNumInstances() << std::endl;
+    ////std::cout << "Number of model instances: " << parser.GetNumInstances() << std::endl;
     ////sys->ShowHierarchy(std::cout);
 
     // Extract information from parsed YAML files
     const std::string& model_name = parser.GetName();
     double time_end = parser.GetEndtime();
     double time_step = parser.GetTimestep();
-    bool real_time = parser.EnforceRealtime();
-    bool render = parser.Render();
-    double render_fps = parser.GetRenderFPS();
+
+    bool output = parser.OutputEnabled();
+    bool render = parser.VisualizationEnabled();
+
     CameraVerticalDir camera_vertical = parser.GetCameraVerticalDir();
     const ChVector3d& camera_location = parser.GetCameraLocation();
     const ChVector3d& camera_target = parser.GetCameraTarget();
     bool enable_shadows = parser.EnableShadows();
-    bool output = parser.Output();
-    double output_fps = parser.GetOutputFPS();
 
     // Print system hierarchy
     ////sys->ShowHierarchy(std::cout);
 
     // Create the run-time visualization system
     std::shared_ptr<ChVisualSystem> vis;
-    if (render) {
-        ChVisualSystem::Type vis_type;
-
-#if defined(CHRONO_VSG)
-        vis_type = ChVisualSystem::Type::VSG;
-#elif defined(CHRONO_IRRLICHT)
-        vis_type = ChVisualSystem::Type::IRRLICHT;
-#else
-        std::cout << "No Chrono run-time visualization module enabled. Disabling visualization." << std::endl;
-        render = false;
-#endif
-
-        switch (vis_type) {
-            case ChVisualSystem::Type::IRRLICHT: {
-#ifdef CHRONO_IRRLICHT
-                auto vis_irr = chrono_types::make_shared<ChVisualSystemIrrlicht>();
-                vis_irr->SetWindowSize(800, 600);
-                vis_irr->SetWindowTitle("YAML model - " + model_name);
-                vis_irr->SetCameraVertical(camera_vertical);
-                vis_irr->Initialize();
-                vis_irr->AddLogo();
-                vis_irr->AddTypicalLights();
-                vis_irr->AddCamera(camera_location, camera_target);
-                vis_irr->AttachSystem(sys.get());
-
-                vis = vis_irr;
-#endif
-                break;
-            }
-            default:
-            case ChVisualSystem::Type::VSG: {
 #ifdef CHRONO_VSG
-                auto vis_vsg = chrono_types::make_shared<ChVisualSystemVSG>();
-                vis_vsg->AttachSystem(sys.get());
-                vis_vsg->SetWindowTitle("YAML model - " + model_name);
-                vis_vsg->AddCamera(camera_location, camera_target);
-                vis_vsg->SetWindowSize(1280, 800);
-                vis_vsg->SetWindowPosition(100, 100);
-                vis_vsg->SetCameraVertical(camera_vertical);
-                vis_vsg->SetCameraAngleDeg(40.0);
-                vis_vsg->SetLightIntensity(1.0f);
-                vis_vsg->SetLightDirection(-CH_PI_4, CH_PI_4);
-                vis_vsg->EnableShadows(enable_shadows);
-                vis_vsg->ToggleAbsFrameVisibility();
-                vis_vsg->SetAbsFrameScale(2.0);
-                vis_vsg->Initialize();
+    if (render) {
+        auto vis_vsg = chrono_types::make_shared<ChVisualSystemVSG>();
+        vis_vsg->AttachSystem(sys.get());
+        vis_vsg->SetWindowTitle("YAML model - " + model_name);
+        vis_vsg->AddCamera(camera_location, camera_target);
+        vis_vsg->SetWindowSize(1280, 800);
+        vis_vsg->SetWindowPosition(100, 100);
+        vis_vsg->SetCameraVertical(camera_vertical);
+        vis_vsg->SetCameraAngleDeg(40.0);
+        vis_vsg->SetLightIntensity(1.0f);
+        vis_vsg->SetLightDirection(-CH_PI_4, CH_PI_4);
+        vis_vsg->EnableShadows(enable_shadows);
+        vis_vsg->ToggleAbsFrameVisibility();
+        vis_vsg->SetAbsFrameScale(2.0);
+        vis_vsg->Initialize();
 
-                vis = vis_vsg;
-#endif
-                break;
-            }
-        }
+        vis = vis_vsg;
     }
+#else
+    if (render)
+        std::cout << "Chrono::VSG run-time visualization module not enabled. Disabling visualization." << std::endl;
+    render = false;
+#endif
 
     // Create output directory
     if (output) {
         std::string out_dir = GetChronoOutputPath() + "YAML_MBS";
-        if (!filesystem::create_directory(filesystem::path(out_dir))) {
+        if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
             std::cout << "Error creating directory " << out_dir << std::endl;
             return 1;
         }
         out_dir = out_dir + "/" + model_name;
-        if (!filesystem::create_directory(filesystem::path(out_dir))) {
+        if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
             std::cout << "Error creating directory " << out_dir << std::endl;
             return 1;
         }
@@ -175,37 +139,21 @@ int main(int argc, char* argv[]) {
     }
 
     // Simulation loop
-    ChRealtimeStepTimer rt_timer;
     double time = 0;
-    int render_frame = 0;
-    int output_frame = 0;
 
     while (true) {
-        if (render) {
-            if (!vis->Run())
-                break;
-            if (time >= render_frame / render_fps) {
-                vis->BeginScene();
-                vis->Render();
-                vis->EndScene();
-                render_frame++;
-            }
-        } else {
-            std::cout << "\rt = " << time;
-            if (time_end > 0 && time >= time_end)
-                break;
-        }
+        if (time_end > 0 && time > time_end)
+            break;
 
-        if (output) {
-            if (time >= output_frame / output_fps) {
-                parser.SaveOutput(*sys, output_frame);
-                output_frame++;
-            }
-        }
+        if (render && !parser.Render(*vis, time))
+            break;
 
-        sys->DoStepDynamics(time_step);
-        if (real_time)
-            rt_timer.Spin(time_step);
+        if (output)
+            parser.Output(time);
+
+        // Advance multibody system dynamics
+        parser.DoStepDynamics();
+
         time += time_step;
     }
 

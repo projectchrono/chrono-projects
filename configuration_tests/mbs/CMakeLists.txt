@@ -1,5 +1,6 @@
 #=============================================================================
 # CMake configuration file for projects requiring the Chrono Irrlicht module
+# and optionally the VSG module
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
@@ -11,9 +12,9 @@ message(STATUS "\n---- MBS configuration test\n")
 #--------------------------------------------------------------
 
 set(DEMOS
-    demo_IRR_collisionNSC
-    demo_IRR_invPendulum
-    #demo_IRR_sliderCrank
+    demo_MBS_collisionNSC
+    demo_MBS_inverted_pendulum
+    demo_MBS_crank
 )
 
 #--------------------------------------------------------------
@@ -22,7 +23,8 @@ set(DEMOS
 
 # Invoke find_package in CONFIG mode
 find_package(Chrono
-             COMPONENTS Irrlicht Multicore
+             COMPONENTS Irrlicht
+             OPTIONAL_COMPONENTS VSG
              CONFIG
 )
 

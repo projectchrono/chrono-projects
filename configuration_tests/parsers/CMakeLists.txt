@@ -42,7 +42,7 @@ endif()
 
 if(CHRONO_VSG_FOUND)
   set(DEMOS ${DEMOS}
-      demo_PARSER_YAML)
+      demo_YAML_mbs)
 endif()
 
 #--------------------------------------------------------------

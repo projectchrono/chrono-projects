@@ -2,7 +2,7 @@
 // PROJECT CHRONO - http://projectchrono.org
 //
 // Copyright (c) 2014 projectchrono.org
-// All right reserved.
+// All rights reserved.
 //
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file at the top level of the distribution and at
@@ -15,26 +15,38 @@
 // Demonstration of a user-defined PID controller in Chrono.
 //
 // The model consists of an inverted pendulum on a moving cart (which slides on
-// a horizontal prismatic joint). The SIMO controller applies a horizontal force
+// a horizontal prismatic joint). A PID controller applies a horizontal force
 // to the cart in order to maintain the pendulum vertical, while moving the cart
 // to a prescribed target location.  The target location switches periodically.
 //
-// The mechanical system eveolves in the X-Y plane (Y up).
-//
-// This version uses Irrlicht for visualization.
+// The mechanical sys evolves in the X-Y plane (Y up).
 //
 // =============================================================================
 
 #include <cmath>
 
-#include "chrono/assets/ChVisualShapes.h"
-#include "chrono/core/ChRealtimeStep.h"
 #include "chrono/physics/ChSystemNSC.h"
+#include "chrono/physics/ChSystemSMC.h"
+#include "chrono/physics/ChLoadContainer.h"
+#include "chrono/physics/ChLoadsBody.h"
+#include "chrono/core/ChRealtimeStep.h"
+#include "chrono/solver/ChDirectSolverLS.h"
 
-#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
+#include "chrono/assets/ChVisualSystem.h"
+#ifdef CHRONO_IRRLICHT
+    #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
+using namespace chrono::irrlicht;
+#endif
+#ifdef CHRONO_VSG
+    #include "chrono_vsg/ChVisualSystemVSG.h"
+using namespace chrono::vsg3d;
+#endif
 
 using namespace chrono;
-using namespace chrono::irrlicht;
+
+// =============================================================================
+
+ChVisualSystem::Type vis_type = ChVisualSystem::Type::VSG;
 
 // =============================================================================
 // MyController class
@@ -102,7 +114,7 @@ MyController::MyController(std::shared_ptr<ChBody> cart, std::shared_ptr<ChBody>
 
     // Initialize errors
     m_e_cart = 0;
-    m_ed_cart = m_cart->GetLinVel().x();
+    m_ed_cart = m_cart->GetPosDt().x();
     m_ei_cart = 0;
 
     m_e_pend = 0;
@@ -136,7 +148,7 @@ double MyController::GetCurrentCartLocation() {
 
 double MyController::GetCurrentPendAngle() {
     ChVector3d dir = m_pend->TransformDirectionLocalToParent(ChVector3d(0, 1, 0));
-    return atan2(-dir.x(), dir.y());
+    return std::atan2(-dir.x(), dir.y());
 }
 
 void MyController::Advance(double step) {
@@ -145,7 +157,7 @@ void MyController::Advance(double step) {
     double e_pend = GetCurrentPendAngle() - m_a_pend;
 
     // Calculate current error derivatives
-    m_ed_cart = m_cart->GetLinVel().x();
+    m_ed_cart = m_cart->GetPosDt().x();
     m_ed_pend = m_pend->GetAngVelLocal().z();
 
     // Calculate current error integrals (trapezoidal rule)
@@ -166,8 +178,9 @@ void MyController::Advance(double step) {
 // =============================================================================
 
 int main(int argc, char* argv[]) {
-    // Set path to Chrono data directory
-    // ---------------------------------
+    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << std::endl;
+
+    // Set path to Chrono data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
 
     // Problem parameters
@@ -181,65 +194,68 @@ int main(int argc, char* argv[]) {
     double travel_dist = 2;
     double switch_period = 20;
 
-    // Create the Chrono physical system
+    // Solver options
+    // --------------
+
+    // use_directLS = false: use default EULER_IMPLICIT_LINEARIZED timestepper with PSOR VI solver
+    // use_directLS = true:  use EULER_IMPLICIT timestepper with SparseQR solver
+    bool use_directLS = false;
+
+    // Create the Chrono physical sys
     // ---------------------------------
-    ChSystemNSC system;
-    system.SetGravityY();
+    ChSystemSMC sys;
+    sys.SetGravityY();
 
     // Create the ground body
     // ----------------------
     auto ground = chrono_types::make_shared<ChBody>();
-    system.AddBody(ground);
+    sys.AddBody(ground);
     ground->SetFixed(true);
 
     // Attach visualization assets
     auto sphere1_g = chrono_types::make_shared<ChVisualShapeSphere>(0.02);
-    sphere1_g->SetColor(ChColor(0, 0.8f, 0.8f));
-    ground->AddVisualShape(sphere1_g, ChFrame<>(ChVector3d(travel_dist, 0, 0)));
+    sphere1_g->SetColor(ChColor(1, 0, 0));
+    ground->AddVisualShape(sphere1_g, ChFrame<>(ChVector3d(+travel_dist, 0, 0), QUNIT));
 
-    auto sphere2_g = chrono_types::make_shared<ChVisualShapeSphere>(0.03);
-    sphere2_g->SetColor(ChColor(0, 0.8f, 0.8f));
-    ground->AddVisualShape(sphere2_g, ChFrame<>(ChVector3d(-travel_dist, 0, 0)));
+    auto sphere2_g = chrono_types::make_shared<ChVisualShapeSphere>(0.02);
+    sphere2_g->SetColor(ChColor(0, 0, 1));
+    ground->AddVisualShape(sphere2_g, ChFrame<>(ChVector3d(-travel_dist, 0, 0), QUNIT));
 
     // Create the cart body
     // --------------------
     auto cart = chrono_types::make_shared<ChBody>();
-    system.AddBody(cart);
+    sys.AddBody(cart);
     cart->SetMass(mass_cart);
     cart->SetInertiaXX(ChVector3d(1, 1, 1));
     cart->SetPos(ChVector3d(0, 0, 0));
 
-    cart->AddAccumulator();
-
     // Attach visualization assets.
     auto box_c = chrono_types::make_shared<ChVisualShapeBox>(0.2, 0.2, 0.2);
-    box_c->SetColor(ChColor(0, 0.6f, 0.8f));
-    cart->AddVisualShape(box_c, ChFrame<>(ChVector3d(0, -0.1, 0)));
+    cart->AddVisualShape(box_c, ChFrame<>(ChVector3d(0, -0.1, 0), QUNIT));
 
     // Create the pendulum body
     // ------------------------
     auto pend = chrono_types::make_shared<ChBody>();
-    system.AddBody(pend);
+    sys.AddBody(pend);
     pend->SetMass(mass_pend);
     pend->SetInertiaXX(ChVector3d(1, 1, J_pend));
     pend->SetPos(ChVector3d(0, hlen_pend, 0));
 
     // Attach visualization assets.
     auto cyl_p = chrono_types::make_shared<ChVisualShapeCylinder>(r_pend, 2 * hlen_pend);
-    cyl_p->SetColor(ChColor(1.0f, 0.2f, 0));
-    pend->AddVisualShape(cyl_p);
+    pend->AddVisualShape(cyl_p, ChFrame<>(VNULL, QuatFromAngleX(CH_PI_2)));
 
     // Translational joint ground-cart
     // -------------------------------
     auto prismatic = chrono_types::make_shared<ChLinkLockPrismatic>();
     prismatic->Initialize(ground, cart, ChFrame<>(ChVector3d(0, 0, 0), QuatFromAngleY(CH_PI_2)));
-    system.AddLink(prismatic);
+    sys.AddLink(prismatic);
 
     // Revolute joint cart-pendulum
     // ----------------------------
     auto revolute = chrono_types::make_shared<ChLinkLockRevolute>();
     revolute->Initialize(cart, pend, ChFrame<>(ChVector3d(0, 0, 0), QUNIT));
-    system.AddLink(revolute);
+    sys.AddLink(revolute);
 
     // Create the PID controller
     // -------------------------
@@ -247,56 +263,108 @@ int main(int argc, char* argv[]) {
     controller.SetGainsCart(5, 0, -0.5);
     controller.SetGainsPend(-150, -50, -10);
 
-    // Create Irrlicht window and camera
-    // ---------------------------------
-    auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
-    vis->SetWindowSize(800, 600);
-    vis->SetWindowTitle("Inverted Pendulum");
-    vis->Initialize();
-    vis->AddLogo();
-    vis->AddSkyBox();
-    vis->SetCameraVertical(CameraVerticalDir::Y);
-    vis->AddCamera(ChVector3d(2.8f, 0, 1.8f), ChVector3d(1.2f, 0, -0.3f));
-    vis->AddTypicalLights();
-    vis->AttachSystem(&system);
+    // Create load container and cart load
+    // -----------------------------------
+    auto load_container = chrono_types::make_shared<ChLoadContainer>();
+    auto cart_load = chrono_types::make_shared<ChLoadBodyForce>(cart, VNULL, true, VNULL, true);
+    load_container->Add(cart_load);
+    sys.Add(load_container);
+
+    // Create run-time visualization system
+    // ------------------------------------
+
+    std::shared_ptr<ChVisualSystem> vis;
+
+#ifndef CHRONO_IRRLICHT
+    if (vis_type == ChVisualSystem::Type::IRRLICHT)
+        vis_type = ChVisualSystem::Type::VSG;
+#endif
+#ifndef CHRONO_VSG
+    if (vis_type == ChVisualSystem::Type::VSG)
+        vis_type = ChVisualSystem::Type::IRRLICHT;
+#endif
+
+    switch (vis_type) {
+        case ChVisualSystem::Type::IRRLICHT: {
+#ifdef CHRONO_IRRLICHT
+            auto vis_irr = chrono_types::make_shared<ChVisualSystemIrrlicht>();
+            vis_irr->AttachSystem(&sys);
+            vis_irr->SetWindowSize(800, 600);
+            vis_irr->SetWindowTitle("Inverted Pendulum");
+            vis_irr->SetCameraVertical(CameraVerticalDir::Y);
+            vis_irr->Initialize();
+            vis_irr->AddLogo();
+            vis_irr->AddTypicalLights();
+            vis_irr->AddCamera(ChVector3d(0, 0, 5));
+
+            vis = vis_irr;
+#endif
+            break;
+        }
+        default:
+        case ChVisualSystem::Type::VSG: {
+#ifdef CHRONO_VSG
+            auto vis_vsg = chrono_types::make_shared<ChVisualSystemVSG>();
+            vis_vsg->AttachSystem(&sys);
+            vis_vsg->SetWindowTitle("Inverted Pendulum");
+            vis_vsg->SetCameraVertical(CameraVerticalDir::Y);
+            vis_vsg->AddCamera(ChVector3d(0, 1, 7));
+            vis_vsg->SetWindowSize(1280, 800);
+            vis_vsg->SetWindowPosition(100, 100);
+            vis_vsg->SetCameraVertical(CameraVerticalDir::Y);
+            vis_vsg->SetCameraAngleDeg(40.0);
+            vis_vsg->SetLightIntensity(0.7f);
+            vis_vsg->SetLightDirection(1.5 * CH_PI_2, CH_PI_4);
+            vis_vsg->Initialize();
+
+            vis = vis_vsg;
+#endif
+            break;
+        }
+    }
+
+    // (Optional) change solver and integrator
+    // ---------------------------------------
+
+    if (use_directLS) {
+        auto solver = chrono_types::make_shared<ChSolverSparseQR>();
+        sys.SetSolver(solver);
+        solver->UseSparsityPatternLearner(true);
+        solver->LockSparsityPattern(true);
+        solver->SetVerbose(false);
+
+        sys.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT);
+    }
 
     // Simulation loop
     // ---------------
-    ChRealtimeStepTimer m_realtime_timer;
-    double step = 1e-3;
+    ChRealtimeStepTimer realtime_timer;
+    double time_step = 0.001;
 
     // Initialize cart location target switching
-    int target_id = 0;
+    double travel_dir = +1;
     double switch_time = 0;
 
     while (vis->Run()) {
-        vis->BeginScene();
-        vis->Render();
-
-        // Render a grid
-        tools::drawGrid(vis.get(), 0.5, 0.5, 40, 40, CSYSNORM, ChColor(0.9f, 0.9f, 0), true);
-
-        // Render text with current time
-        char msg[40];
-        sprintf(msg, "Time = %6.2f s", system.GetChTime());
-        irr::gui::IGUIFont* font =
-            vis->GetGUIEnvironment()->getFont(chrono::GetChronoDataFile("fonts/arial8.xml").c_str());
-        font->draw(msg, irr::core::rect<irr::s32>(720, 20, 780, 40), irr::video::SColor(255, 20, 20, 20));
-
         // At a switch time, flip target for cart location
-        if (system.GetChTime() > switch_time) {
-            controller.SetTargetCartLocation(travel_dist * (1 - 2 * target_id));
-            target_id = 1 - target_id;
+        if (sys.GetChTime() > switch_time) {
+            controller.SetTargetCartLocation(travel_dist * travel_dir);
+            travel_dir *= -1;
             switch_time += switch_period;
         }
-        // Apply controller force on cart body
-        cart->EmptyAccumulator(0);
-        cart->AccumulateForce(0, ChVector3d(controller.GetForce(), 0, 0), ChVector3d(0, 0, 0), true);
-        // Advance system and controller states
-        system.DoStepDynamics(step);
-        controller.Advance(step);
 
+        // Apply controller force on cart body
+        cart_load->SetForce(ChVector3d(controller.GetForce(), 0, 0), true);
+
+        // Advance sys and controller states
+        sys.DoStepDynamics(time_step);
+        controller.Advance(time_step);
+
+        vis->BeginScene();
+        vis->Render();
         vis->EndScene();
+
+        realtime_timer.Spin(time_step);
     }
 
     return 0;

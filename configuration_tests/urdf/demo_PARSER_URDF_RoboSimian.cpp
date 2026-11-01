@@ -23,13 +23,19 @@
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/core/ChRealtimeStep.h"
-#include "chrono/assets/ChVisualShapeBox.h"
 
-#include "chrono_parsers/ChParserURDF.h"
-#include "chrono_parsers/ChRobotActuation.h"
+#include "chrono_parsers/urdf/ChParserURDF.h"
 
-#include "chrono_vsg/ChVisualSystemVSG.h"
-using namespace chrono::vsg3d;
+#include "chrono_models/robot/ChRobotActuation.h"
+
+#include "chrono/assets/ChVisualSystem.h"
+#ifdef CHRONO_IRRLICHT
+    #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
+#endif
+#ifdef CHRONO_VSG
+    #include "chrono_vsg/ChVisualSystemVSG.h"
+    #include "chrono_parsers/urdf/ChParserURDFVisualizationVSG.h"
+#endif
 
 using namespace chrono;
 using namespace chrono::parsers;
@@ -66,7 +72,7 @@ std::shared_ptr<ChBody> CreateTerrain(ChSystem& sys, double length, double width
     ground->AddCollisionShape(ct_shape);
 
     auto box = chrono_types::make_shared<ChVisualShapeBox>(length, width, 0.2);
-    box->SetTexture(GetChronoDataFile("textures/checker2.png"), (float)length, (float)width);
+    box->SetTexture(GetChronoDataFile("textures/checker2.png"), 4, 1);
     ground->AddVisualShape(box);
 
     sys.AddBody(ground);
@@ -80,47 +86,47 @@ int main(int argc, char* argv[]) {
     // Set path to Chrono data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
 
-    // Create a Chrono system
+    // Create a Chrono system and an associated collision detection system
     ChSystemSMC sys;
-    sys.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
     sys.SetGravitationalAcceleration(ChVector3d(0, 0, -9.8));
+    sys.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
 
     // Create parser instance
-    ChParserURDF robot(GetChronoDataFile("robot/robosimian/rs.urdf"));
+    ChParserURDF robotURDF(GetChronoDataFile("robot/robosimian/rs.urdf"));
 
     // Set root body pose
-    robot.SetRootInitPose(ChFrame<>(ChVector3d(0, 0, 1.5), QUNIT));
+    robotURDF.SetRootInitPose(ChFrame<>(ChVector3d(0, 0, 1.5), QUNIT));
 
     // Make all eligible joints as actuated (POSITION type) and
     // overwrite wheel motors with SPEED actuation.
-    robot.SetAllJointsActuationType(ChParserURDF::ActuationType::POSITION);
-    robot.SetJointActuationType("limb1_joint8", ChParserURDF::ActuationType::SPEED);
-    robot.SetJointActuationType("limb2_joint8", ChParserURDF::ActuationType::SPEED);
-    robot.SetJointActuationType("limb3_joint8", ChParserURDF::ActuationType::SPEED);
-    robot.SetJointActuationType("limb4_joint8", ChParserURDF::ActuationType::SPEED);
+    robotURDF.SetAllJointsActuationType(ChParserURDF::ActuationType::POSITION);
+    robotURDF.SetJointActuationType("limb1_joint8", ChParserURDF::ActuationType::SPEED);
+    robotURDF.SetJointActuationType("limb2_joint8", ChParserURDF::ActuationType::SPEED);
+    robotURDF.SetJointActuationType("limb3_joint8", ChParserURDF::ActuationType::SPEED);
+    robotURDF.SetJointActuationType("limb4_joint8", ChParserURDF::ActuationType::SPEED);
 
     // Use convex hull for the sled collision shape
-    robot.SetBodyMeshCollisionType("sled", ChParserURDF::MeshCollisionType::CONVEX_HULL);
+    robotURDF.SetBodyMeshCollisionType("sled", ChParserURDF::MeshCollisionType::CONVEX_HULL);
 
     // Optional: visualize collision shapes
-    ////robot.EnableCollisionVisualization();
+    ////robotURDF.EnableCollisionVisualization();
 
     // Report parsed elements
-    robot.PrintModelBodies();
-    robot.PrintModelJoints();
+    robotURDF.PrintModelBodies();
+    robotURDF.PrintModelJoints();
 
     // Create the Chrono model
-    robot.PopulateSystem(sys);
+    robotURDF.PopulateSystem(sys);
 
     // Get selected bodies of the robot
-    auto torso = robot.GetChBody("torso");
-    auto sled = robot.GetChBody("sled");
-    auto limb1_wheel = robot.GetChBody("limb1_link8");
-    auto limb2_wheel = robot.GetChBody("limb2_link8");
-    auto limb3_wheel = robot.GetChBody("limb3_link8");
-    auto limb4_wheel = robot.GetChBody("limb4_link8");
+    auto root = robotURDF.GetRootChBody();
+    auto sled = robotURDF.GetChBody("sled");
+    auto limb1_wheel = robotURDF.GetChBody("limb1_link8");
+    auto limb2_wheel = robotURDF.GetChBody("limb2_link8");
+    auto limb3_wheel = robotURDF.GetChBody("limb3_link8");
+    auto limb4_wheel = robotURDF.GetChBody("limb4_link8");
 
-    // Enable collsion and set contact material for selected bodies of the robot
+    // Enable collision and set contact material for selected bodies of the robot
     sled->EnableCollision(true);
     limb1_wheel->EnableCollision(true);
     limb2_wheel->EnableCollision(true);
@@ -139,7 +145,7 @@ int main(int argc, char* argv[]) {
     limb4_wheel->GetCollisionModel()->SetAllShapesMaterial(cmat);
 
     // Fix root body
-    robot.GetRootChBody()->SetFixed(true);
+    root->SetFixed(true);
 
     // Read the list of actuated motors, cache the motor links, and set their actuation function
     int num_motors = 32;
@@ -149,7 +155,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < num_motors; i++) {
         std::string name;
         ifs >> name;
-        motors[i] = robot.GetChMotor(name);
+        motors[i] = robotURDF.GetChMotor(name);
         motor_functions[i] = chrono_types::make_shared<ChFunctionSetpoint>();
         motors[i]->SetMotorFunction(motor_functions[i]);
     }
@@ -181,11 +187,11 @@ int main(int argc, char* argv[]) {
     }
 
     // Create a robot motor actuation object
-    ChRobotActuation actuator(32,              // number motors
-                              start_filename,  // start input file
-                              cycle_filename,  // cycle input file
-                              stop_filename,   // stop input file
-                              true             // repeat cycle
+    models::ChRobotActuation actuator(32,              // number motors
+                                      start_filename,  // start input file
+                                      cycle_filename,  // cycle input file
+                                      stop_filename,   // stop input file
+                                      true             // repeat cycle
     );
     double duration_pose = 1.0;          // time interval to assume initial pose
     double duration_settle_robot = 0.5;  // time interval to allow robot settling on terrain
@@ -193,22 +199,61 @@ int main(int argc, char* argv[]) {
     actuator.SetVerbose(true);
 
     // Create the visualization window
-    auto camera_lookat = torso->GetPos();
+    std::shared_ptr<ChVisualSystem> vis;
+    auto camera_lookat = root->GetPos();
     auto camera_loc = camera_lookat + ChVector3d(3, 3, 0);
+#ifndef CHRONO_IRRLICHT
+    if (vis_type == ChVisualSystem::Type::IRRLICHT)
+        vis_type = ChVisualSystem::Type::VSG;
+#endif
+#ifndef CHRONO_VSG
+    if (vis_type == ChVisualSystem::Type::VSG)
+        vis_type = ChVisualSystem::Type::IRRLICHT;
+#endif
 
-    auto vis = chrono_types::make_shared<ChVisualSystemVSG>();
-    vis->AttachSystem(&sys);
-    vis->SetCameraVertical(CameraVerticalDir::Z);
-    vis->SetWindowTitle("RoboSimian URDF demo");
-    vis->AddCamera(camera_loc, camera_lookat);
-    vis->SetWindowSize(ChVector2<int>(1200, 800));
-    vis->SetWindowPosition(ChVector2<int>(400, 100));
-    vis->SetBackgroundColor(ChColor(0.455f, 0.525f, 0.640f));
-    vis->EnableSkyBox(false);
-    vis->SetCameraAngleDeg(40.0);
-    vis->SetLightIntensity(1.0f);
-    vis->SetLightDirection(1.5 * CH_PI_2, CH_PI_4);
-    vis->Initialize();
+    switch (vis_type) {
+        case ChVisualSystem::Type::IRRLICHT: {
+#ifdef CHRONO_IRRLICHT
+            auto vis_irr = chrono_types::make_shared<irrlicht::ChVisualSystemIrrlicht>();
+            vis_irr->AttachSystem(&sys);
+            vis_irr->SetCameraVertical(CameraVerticalDir::Z);
+            vis_irr->SetWindowSize(1200, 800);
+            vis_irr->SetWindowTitle("RoboSimian URDF demo");
+            vis_irr->Initialize();
+            vis_irr->AddLogo();
+            vis_irr->AddSkyBox();
+            vis_irr->AddCamera(camera_loc, camera_lookat);
+            vis_irr->AddTypicalLights();
+
+            vis = vis_irr;
+#endif
+            break;
+        }
+        default:
+        case ChVisualSystem::Type::VSG: {
+#ifdef CHRONO_VSG
+            auto visURDF = chrono_types::make_shared<ChParserURDFVisualizationVSG>(robotURDF);
+
+            auto vis_vsg = chrono_types::make_shared<vsg3d::ChVisualSystemVSG>();
+            vis_vsg->AttachSystem(&sys);
+            vis_vsg->AttachPlugin(visURDF);
+            vis_vsg->SetCameraVertical(CameraVerticalDir::Z);
+            vis_vsg->SetWindowTitle("RoboSimian URDF demo");
+            vis_vsg->AddCamera(camera_loc, camera_lookat);
+            vis_vsg->SetWindowSize(1280, 800);
+            vis_vsg->SetWindowPosition(100, 100);
+            vis_vsg->SetBackgroundColor(ChColor(0.126f, 0.232f, 0.309f));
+            vis_vsg->SetCameraAngleDeg(40.0);
+            vis_vsg->SetLightIntensity(1.0f);
+            vis_vsg->SetLightDirection(1.5 * CH_PI_2, CH_PI_4);
+            ////vis_vsg->EnableShadows();
+            vis_vsg->Initialize();
+
+            vis = vis_vsg;
+#endif
+            break;
+        }
+    }
 
     // Solver settings
     sys.SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
@@ -237,13 +282,13 @@ int main(int argc, char* argv[]) {
             sys.GetCollisionSystem()->BindItem(ground);
 
             // Release robot
-            torso->SetFixed(false);
+            robotURDF.GetRootChBody()->SetFixed(false);
 
             terrain_created = true;
         }
 
         // Update camera location
-        camera_lookat = ChVector3d(torso->GetPos().x(), torso->GetPos().y(), camera_lookat.z());
+        camera_lookat = ChVector3d(root->GetPos().x(), root->GetPos().y(), camera_lookat.z());
         camera_loc = camera_lookat + ChVector3d(3, 3, 0);
 
         vis->BeginScene();

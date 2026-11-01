@@ -36,7 +36,7 @@ using namespace chrono::irrlicht;
 int main(int argc, char* argv[]) {
     // Set path to Chrono data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
-        
+
     // Get ADAMS input file (relative to the 'data' directory)
     std::string filename;
     if (argc > 1) {
@@ -63,12 +63,12 @@ int main(int argc, char* argv[]) {
     rep.Print();
     std::cout << "---------" << std::endl;
 
-    // Adda a ground for perspective (no collision)
+    // Add a ground for perspective (no collision)
     auto my_ground = chrono_types::make_shared<ChBodyEasyBox>(40, 2, 40, 1000, true, false);
     sys.AddBody(my_ground);
     my_ground->SetFixed(true);
     my_ground->SetPos(ChVector3d(0, -2.9, 0));
-    my_ground->SetName("ground");
+    my_ground->SetName(std::string("ground"));
     my_ground->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/concrete.jpg"));
 
     // Create the Irrlicht visualization system
@@ -76,7 +76,6 @@ int main(int argc, char* argv[]) {
     vis->AttachSystem(&sys);
     vis->SetWindowSize(800, 600);
     vis->SetWindowTitle("Model loaded from ADAMS file");
-    vis->SetCameraVertical(CameraVerticalDir::Y);
     vis->Initialize();
     vis->AddLogo();
     vis->AddSkyBox();

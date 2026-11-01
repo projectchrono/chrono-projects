@@ -1,7 +1,16 @@
 Chrono configuration tests
 ==========================
 
-Various programs to test linking against different Chrono modules.
+Programs that test building and linking against different Chrono modules. Each program is a copy of a Chrono demo,
+modified only to set the paths to the Chrono data directories.
+
+### Cascade module
+
+* demo_CAS_robot
+
+### DEM module
+
+* demo_DEM_ballCosim
 
 ### FEA module
 
@@ -10,19 +19,36 @@ Various programs to test linking against different Chrono modules.
 
 ### FSI module
 
-* demo_FSI_cylinderDrop
+* demo_FSI-SPH_ObjectDrop
 
-### Irrlicht module
+### MBS with Irrlicht module
 
-* demo_IRR_collision
-* demo_IRR_invPendulum
-* demo_IRR_sliderCrank
+* demo_MBS_collisionNSC
+* demo_MBS_crank
+* demo_MBS_inverted_pendulum
 
 ### Multicore module
 
-* demo_MCORE_mixerDEM
+* demo_MCORE_mixerSMC
 
-### Python module
+### Parsers module
 
-* demo_PY_pyparser
+* demo_PARSER_Adams
+* demo_PARSER_Python
+* demo_YAML_mbs
 
+### Parsers module with URDF support
+
+* demo_PARSER_URDF_RoboSimian
+
+### SynChrono module
+
+* demo_SYN_scm
+
+### Vehicle module
+
+* demo_VEH_WheeledGeneric
+
+### VSG module
+
+* demo_VSG_assets

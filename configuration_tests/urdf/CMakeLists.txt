@@ -21,6 +21,7 @@ set(DEMOS
 # Invoke find_package in CONFIG mode
 find_package(Chrono
              COMPONENTS Parsers VSG
+             OPTIONAL_COMPONENTS Irrlicht
              CONFIG
 )
 
@@ -31,7 +32,7 @@ if(NOT Chrono_FOUND)
 endif()
 
 # If Chrono::Parsers does not have URDF support, return now.
-if (NOT_CHRONO_PARSER_URDF)
+if(NOT CHRONO_PARSERS_URDF)
   message("Found Chrono with requested components, but URDF support not enabled.")
   return()
 endif()

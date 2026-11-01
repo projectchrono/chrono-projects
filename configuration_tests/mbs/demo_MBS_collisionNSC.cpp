@@ -18,21 +18,29 @@
 //
 // =============================================================================
 
+#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/physics/ChBodyEasy.h"
+#include "chrono/physics/ChLinkMotorRotationSpeed.h"
 #include "chrono/assets/ChTexture.h"
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/core/ChRandom.h"
-#include "chrono/physics/ChBodyEasy.h"
-#include "chrono/physics/ChLinkMotorRotationSpeed.h"
-#include "chrono/physics/ChSystemNSC.h"
 
 #ifdef CHRONO_COLLISION
-#include "chrono/collision/multicore/ChCollisionSystemMulticore.h"
+    #include "chrono/collision/multicore/ChCollisionSystemMulticore.h"
 #endif
 
-#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
+#ifdef CHRONO_IRRLICHT
+    #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
+using namespace chrono::irrlicht;
+#endif
+#ifdef CHRONO_VSG
+    #include "chrono_vsg/ChVisualSystemVSG.h"
+using namespace chrono::vsg3d;
+#endif
 
 using namespace chrono;
-using namespace chrono::irrlicht;
+
+ChVisualSystem::Type vis_type = ChVisualSystem::Type::VSG;
 
 ChCollisionSystem::Type collision_type = ChCollisionSystem::Type::BULLET;
 
@@ -62,9 +70,9 @@ void AddFallingItems(ChSystemNSC& sys) {
         sys.Add(boxBody);
 
         auto cylBody = chrono_types::make_shared<ChBodyEasyCylinder>(ChAxis::Y,  //
-                                                                     0.75, 0.5,            // radius, height
-                                                                     100,                  // density
-                                                                     cyl_mat               // contact material
+                                                                     0.75, 0.5,  // radius, height
+                                                                     100,        // density
+                                                                     cyl_mat     // contact material
         );
         cylBody->SetPos(ChVector3d(-5 + ChRandom::Get() * 10, 4 + bi * 0.05, -5 + ChRandom::Get() * 10));
         cylBody->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/pinkwhite.png"));
@@ -124,7 +132,7 @@ std::shared_ptr<ChBody> AddContainer(ChSystemNSC& sys) {
     // .. a motor between mixer and truss
 
     auto my_motor = chrono_types::make_shared<ChLinkMotorRotationSpeed>();
-    my_motor->Initialize(rotatingBody, floorBody, ChFrame<>(ChVector3d(0, 0, 0), QuatFromAngleAxis(CH_PI_2, VECT_X)));
+    my_motor->Initialize(rotatingBody, floorBody, ChFrame<>(ChVector3d(0, 0, 0), QuatFromAngleX(CH_PI_2)));
     auto mfun = chrono_types::make_shared<ChFunctionConst>(CH_PI / 4.0);  // speed 45 deg/s
     my_motor->SetSpeedFunction(mfun);
     sys.AddLink(my_motor);
@@ -133,7 +141,7 @@ std::shared_ptr<ChBody> AddContainer(ChSystemNSC& sys) {
 }
 
 int main(int argc, char* argv[]) {
-    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
+    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << std::endl;
 
     // Set path to Chrono data directories
     SetChronoDataPath(CHRONO_DATA_DIR);
@@ -164,21 +172,62 @@ int main(int argc, char* argv[]) {
     AddFallingItems(sys);
 
     // Create the run-time visualization system
-    auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
-    vis->AttachSystem(&sys);
-    vis->SetWindowSize(800, 600);
-    vis->SetWindowTitle("NSC collision demo");
-    vis->Initialize();
-    vis->AddLogo();
-    vis->AddSkyBox();
-    vis->SetCameraVertical(CameraVerticalDir::Y);
-    vis->AddCamera(ChVector3d(0, 14, -20));
-    vis->AddTypicalLights();
+#ifndef CHRONO_IRRLICHT
+    if (vis_type == ChVisualSystem::Type::IRRLICHT)
+        vis_type = ChVisualSystem::Type::VSG;
+#endif
+#ifndef CHRONO_VSG
+    if (vis_type == ChVisualSystem::Type::VSG)
+        vis_type = ChVisualSystem::Type::IRRLICHT;
+#endif
+
+    std::shared_ptr<ChVisualSystem> vis;
+    switch (vis_type) {
+        case ChVisualSystem::Type::IRRLICHT: {
+#ifdef CHRONO_IRRLICHT
+            auto vis_irr = chrono_types::make_shared<ChVisualSystemIrrlicht>();
+            vis_irr->AttachSystem(&sys);
+            vis_irr->SetWindowSize(800, 600);
+            vis_irr->SetWindowTitle("NSC collision demo");
+            vis_irr->Initialize();
+            vis_irr->AddLogo();
+            vis_irr->AddSkyBox();
+            vis_irr->AddCamera(ChVector3d(0, 14, -20));
+            vis_irr->AddTypicalLights();
+
+            vis = vis_irr;
+#endif
+            break;
+        }
+        default:
+        case ChVisualSystem::Type::VSG: {
+#ifdef CHRONO_VSG
+            auto vis_vsg = chrono_types::make_shared<ChVisualSystemVSG>();
+            vis_vsg->AttachSystem(&sys);
+            vis_vsg->SetWindowTitle("NSC collision demo");
+            vis_vsg->AddCamera(ChVector3d(0, 18, -20));
+            vis_vsg->SetWindowSize(1280, 800);
+            vis_vsg->SetWindowPosition(100, 100);
+            vis_vsg->SetBackgroundColor(ChColor(0.8f, 0.85f, 0.9f));
+            vis_vsg->EnableSkyTexture(SkyMode::BOX);
+            vis_vsg->SetCameraVertical(CameraVerticalDir::Y);
+            vis_vsg->SetCameraAngleDeg(40.0);
+            vis_vsg->SetLightIntensity(1.0f);
+            vis_vsg->SetLightDirection(1.5 * CH_PI_2, CH_PI_4);
+            vis_vsg->EnableShadows();
+            vis_vsg->Initialize();
+
+            vis = vis_vsg;
+#endif
+            break;
+        }
+    }
 
     // Modify some setting of the physical system for the simulation, if you want
     sys.SetSolverType(ChSolver::Type::PSOR);
     sys.GetSolver()->AsIterative()->SetMaxIterations(50);
-    ////sys.SetUseSleeping(true);
+
+    ////sys.SetSleepingAllowed(true);
 
     // Simulation loop
     ChRealtimeStepTimer rt;

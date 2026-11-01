@@ -1,6 +1,6 @@
 #=============================================================================
 # CMake configuration file for projects requiring the Chrono FEA module
-# and optionally the IRRLICHT module
+# and optionally the IRRLICHT and VSG modules
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
@@ -15,7 +15,7 @@ set(DEMOS_BASIC
     demo_FEA_basic
 )
 
-set(DEMOS_IRR
+set(DEMOS_VIS
     demo_FEA_thermal
 )
 
@@ -26,7 +26,7 @@ set(DEMOS_IRR
 # Invoke find_package in CONFIG mode
 find_package(Chrono
              COMPONENTS
-             OPTIONAL_COMPONENTS Irrlicht
+             OPTIONAL_COMPONENTS Irrlicht VSG
              CONFIG
 )
 
@@ -42,9 +42,9 @@ endif()
 
 set(DEMOS ${DEMOS_BASIC})
 
-# If the optional component IRRLICHT was found, append to list
-if(${CHRONO_IRRLICHT_FOUND})
-  set(DEMOS ${DEMOS} ${DEMOS_IRR})
+# If one of the optional run-time visualization components was found, append to list
+if(CHRONO_IRRLICHT_FOUND OR CHRONO_VSG_FOUND)
+  set(DEMOS ${DEMOS} ${DEMOS_VIS})
 endif()
 
 #--------------------------------------------------------------
@@ -66,8 +66,8 @@ message(STATUS "Configuration tests for FEA...")
 foreach(PROGRAM ${DEMOS})
   message(STATUS "...add ${PROGRAM}")
 
-  add_executable(${PROGRAM}  "${PROGRAM}.cpp")
-  source_group(""  FILES "${PROGRAM}.cpp")
+  add_executable(${PROGRAM}  "${PROGRAM}.cpp" FEAvisualization.h)
+  source_group(""  FILES "${PROGRAM}.cpp" FEAvisualization.h)
 
   set_property(TARGET ${PROGRAM} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${PROGRAM}>")
 

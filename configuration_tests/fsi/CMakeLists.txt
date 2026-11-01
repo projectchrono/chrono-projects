@@ -11,7 +11,7 @@ message(STATUS "\n---- FSI configuration test\n")
 #--------------------------------------------------------------
 
 set(DEMOS
-    demo_FSI_ObjectDrop
+    demo_FSI-SPH_ObjectDrop
 )
 
 #--------------------------------------------------------------
@@ -21,7 +21,7 @@ set(DEMOS
 # Invoke find_package in CONFIG mode
 find_package(Chrono
              COMPONENTS FSI_SPH
-             OPTIONAL_COMPONENTS VSG
+             OPTIONAL_COMPONENTS VSG Postprocess
              CONFIG
 )
 

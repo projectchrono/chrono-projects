@@ -35,8 +35,8 @@ using namespace fea;
 // First example: SPRING ELEMENT
 // ====================================
 void test_1() {
-    std::cout << "\n-------------------------------------------------\n";
-    std::cout << "TEST: spring element FEM  \n\n";
+    std::cout << "\n-------------------------------------------------" << std::endl;
+    std::cout << "TEST: spring element FEM\n" << std::endl;
 
     // The physical system: it contains all physical objects.
     ChSystemSMC sys;
@@ -102,11 +102,11 @@ void test_1() {
     sys.DoStaticLinear();
 
     // Output result
-    std::cout << "poss after linear static analysis: \n";
-    std::cout << "  nodeA->pos \n" << mnodeA->GetPos();
-    std::cout << "  nodeB->pos \n" << mnodeB->GetPos();
-    std::cout << "Forces after linear static analysis: \n";
-    std::cout << "  constraintA.react \n" << constraintA->GetReactionOnBody();
+    std::cout << "poss after linear static analysis:" << std::endl;
+    std::cout << "  nodeA->pos\n" << mnodeA->GetPos();
+    std::cout << "  nodeB->pos\n" << mnodeB->GetPos();
+    std::cout << "Forces after linear static analysis:" << std::endl;
+    std::cout << "  constraintA.react\n" << constraintA->GetReactionOnBody();
 }
 
 //////////////////////////////////////////////////////////////////
@@ -115,8 +115,8 @@ void test_1() {
 // Second example: LINEAR TETRAHEDRAL ELEMENT				    //
 // ============================================================ //
 void test_2() {
-    std::cout << "\n-------------------------------------------------\n";
-    std::cout << "TEST: LINEAR tetrahedral element FEM  \n\n";
+    std::cout << "\n-------------------------------------------------" << std::endl;
+    std::cout << "TEST: LINEAR tetrahedral element FEM\n" << std::endl;
 
     // The physical system: it contains all physical objects.
     ChSystemSMC sys;
@@ -171,14 +171,14 @@ void test_2() {
     auto constraint2 = chrono_types::make_shared<ChLinkNodeFrame>();
     auto constraint3 = chrono_types::make_shared<ChLinkNodeFrame>();
 
-    constraint1->Initialize(mnode1,   // node
-                            truss);   // body to be connected to
+    constraint1->Initialize(mnode1,  // node
+                            truss);  // body to be connected to
 
-    constraint2->Initialize(mnode2,  // node 
-                            truss);   // body to be connected to
+    constraint2->Initialize(mnode2,  // node
+                            truss);  // body to be connected to
 
     constraint3->Initialize(mnode4,  // node
-                            truss);   // body to be connected to
+                            truss);  // body to be connected to
 
     sys.Add(constraint1);
     sys.Add(constraint2);
@@ -198,16 +198,16 @@ void test_2() {
     sys.DoStaticLinear();
 
     // Output result
-    std::cout << "Resulting node positions:\n";
-    std::cout << mnode1->pos << "\n";
-    std::cout << mnode2->pos << "\n";
-    std::cout << mnode3->pos << "\n";
-    std::cout << mnode4->pos << "\n";
+    std::cout << "Resulting node positions:" << std::endl;
+    std::cout << mnode1->pos << std::endl;
+    std::cout << mnode2->pos << std::endl;
+    std::cout << mnode3->pos << std::endl;
+    std::cout << mnode4->pos << std::endl;
 
-    std::cout << "Resulting constraint reactions:\n";
-    std::cout << constraint1->GetReactionOnBody();
-    std::cout << constraint2->GetReactionOnBody();
-    std::cout << constraint3->GetReactionOnBody();
+    std::cout << "Resulting constraint reactions:" << std::endl;
+    std::cout << constraint1->GetReactionOnBody() << std::endl;
+    std::cout << constraint2->GetReactionOnBody() << std::endl;
+    std::cout << constraint3->GetReactionOnBody() << std::endl;
 }
 
 //////////////////////////////////////////////////////////////////
@@ -216,8 +216,8 @@ void test_2() {
 // Second example: QUADRATIC TETRAHEDRAL ELEMENT				//
 // ============================================================ //
 void test_3() {
-    std::cout << "\n-------------------------------------------------\n";
-    std::cout << "TEST: QUADRATIC tetrahedral element FEM  \n\n";
+    std::cout << "\n-------------------------------------------------" << std::endl;
+    std::cout << "TEST: QUADRATIC tetrahedral element FEM\n" << std::endl;
 
     // The physical system: it contains all physical objects.
     ChSystemSMC sys;
@@ -240,7 +240,8 @@ void test_3() {
     auto mnode2 = chrono_types::make_shared<ChNodeFEAxyz>(ChVector3d(0.001, 0, 0));
     auto mnode3 = chrono_types::make_shared<ChNodeFEAxyz>(ChVector3d(0, 0.001, 0));
     auto mnode4 = chrono_types::make_shared<ChNodeFEAxyz>(ChVector3d(0, 0, 0.001));
-    auto mnode5 = chrono_types::make_shared<ChNodeFEAxyz>((mnode1->pos + mnode2->pos) * 0.5);  //  nodes at mid length of edges
+    auto mnode5 =
+        chrono_types::make_shared<ChNodeFEAxyz>((mnode1->pos + mnode2->pos) * 0.5);  //  nodes at mid length of edges
     auto mnode6 = chrono_types::make_shared<ChNodeFEAxyz>((mnode2->pos + mnode3->pos) * 0.5);
     auto mnode7 = chrono_types::make_shared<ChNodeFEAxyz>((mnode3->pos + mnode1->pos) * 0.5);
     auto mnode8 = chrono_types::make_shared<ChNodeFEAxyz>((mnode1->pos + mnode4->pos) * 0.5);
@@ -284,14 +285,14 @@ void test_3() {
     auto constraint2 = chrono_types::make_shared<ChLinkNodeFrame>();
     auto constraint3 = chrono_types::make_shared<ChLinkNodeFrame>();
 
-    constraint1->Initialize(mnode1,  // node 
-                            truss);   // body to be connected to
+    constraint1->Initialize(mnode1,  // node
+                            truss);  // body to be connected to
 
-    constraint2->Initialize(mnode2,  // node 
-                            truss);   // body to be connected to
+    constraint2->Initialize(mnode2,  // node
+                            truss);  // body to be connected to
 
-    constraint3->Initialize(mnode4,  // node 
-                            truss);   // body to be connected to
+    constraint3->Initialize(mnode4,  // node
+                            truss);  // body to be connected to
 
     sys.Add(constraint1);
     sys.Add(constraint2);
@@ -311,13 +312,13 @@ void test_3() {
     sys.DoStaticLinear();
 
     // Output result
-    // std::cout <<melement1.GetStiffnessMatrix()<<"\n";
-    // std::cout <<melement1.GetMatrB()<<"\n";
-    std::cout << mnode1->GetPos() << "\n";
-    std::cout << mnode2->GetPos() << "\n";
-    std::cout << mnode3->GetPos() << "\n";
-    std::cout << mnode4->GetPos() << "\n";
-    std::cout << "node3 displ: " << mnode3->GetPos() - mnode3->GetX0() << "\n";
+    // std::cout <<melement1.GetStiffnessMatrix()<<"" << std::endl;
+    // std::cout <<melement1.GetMatrB()<<"" << std::endl;
+    std::cout << mnode1->GetPos() << std::endl;
+    std::cout << mnode2->GetPos() << std::endl;
+    std::cout << mnode3->GetPos() << std::endl;
+    std::cout << mnode4->GetPos() << std::endl;
+    std::cout << "node3 displ: " << mnode3->GetPos() - mnode3->GetX0() << std::endl;
 }
 
 //////////////////////////////////////////////////////////////////
@@ -326,8 +327,8 @@ void test_3() {
 // Second example: LINEAR HEXAHEDRAL ELEMENT					//
 // ============================================================ //
 void test_4() {
-    std::cout << "\n-------------------------------------------------\n";
-    std::cout << "TEST: LINEAR hexahedral element FEM  \n\n";
+    std::cout << "\n-------------------------------------------------" << std::endl;
+    std::cout << "TEST: LINEAR hexahedral element FEM\n" << std::endl;
 
     // The physical system: it contains all physical objects.
     ChSystemSMC sys;
@@ -397,17 +398,17 @@ void test_4() {
     auto constraint3 = chrono_types::make_shared<ChLinkNodeFrame>();
     auto constraint4 = chrono_types::make_shared<ChLinkNodeFrame>();
 
-    constraint1->Initialize(mnode1,   // node
-                            truss);   // body to be connected to
+    constraint1->Initialize(mnode1,  // node
+                            truss);  // body to be connected to
 
-    constraint2->Initialize(mnode2,   // node
-                            truss);   // body to be connected to
+    constraint2->Initialize(mnode2,  // node
+                            truss);  // body to be connected to
 
-    constraint3->Initialize(mnode3,   // node
-                            truss);   // body to be connected to
+    constraint3->Initialize(mnode3,  // node
+                            truss);  // body to be connected to
 
-    constraint4->Initialize(mnode4,   // node
-                            truss);   // body to be connected to
+    constraint4->Initialize(mnode4,  // node
+                            truss);  // body to be connected to
 
     sys.Add(constraint1);
     sys.Add(constraint2);
@@ -428,16 +429,16 @@ void test_4() {
     sys.DoStaticLinear();
 
     // Output result
-    // std::cout <<melement1.GetStiffnessMatrix()<<"\n";
-    // std::cout <<melement1.GetMatrB()<<"\n";
-    std::cout << mnode1->GetPos() << "\n";
-    std::cout << mnode2->GetPos() << "\n";
-    std::cout << mnode3->GetPos() << "\n";
-    std::cout << mnode4->GetPos() << "\n";
-    std::cout << "node5 displ: " << mnode5->GetPos() - mnode5->GetX0() << "\n";
-    std::cout << "node6 displ: " << mnode6->GetPos() - mnode6->GetX0() << "\n";
-    std::cout << "node7 displ: " << mnode7->GetPos() - mnode7->GetX0() << "\n";
-    std::cout << "node8 displ: " << mnode8->GetPos() - mnode8->GetX0() << "\n";
+    // std::cout <<melement1.GetStiffnessMatrix()<<"" << std::endl;
+    // std::cout <<melement1.GetMatrB()<<"" << std::endl;
+    std::cout << mnode1->GetPos() << std::endl;
+    std::cout << mnode2->GetPos() << std::endl;
+    std::cout << mnode3->GetPos() << std::endl;
+    std::cout << mnode4->GetPos() << std::endl;
+    std::cout << "node5 displ: " << mnode5->GetPos() - mnode5->GetX0() << std::endl;
+    std::cout << "node6 displ: " << mnode6->GetPos() - mnode6->GetX0() << std::endl;
+    std::cout << "node7 displ: " << mnode7->GetPos() - mnode7->GetX0() << std::endl;
+    std::cout << "node8 displ: " << mnode8->GetPos() - mnode8->GetX0() << std::endl;
 }
 
 //////////////////////////////////////////////////////////////////
@@ -446,8 +447,8 @@ void test_4() {
 // Second example: QUADRATIC HEXAHEDRAL ELEMENT					//
 // ============================================================ //
 void test_5() {
-    std::cout << "\n-------------------------------------------------\n";
-    std::cout << "TEST: QUADRATIC hexahedral element FEM  \n\n";
+    std::cout << "\n-------------------------------------------------" << std::endl;
+    std::cout << "TEST: QUADRATIC hexahedral element FEM\n" << std::endl;
 
     // The physical system: it contains all physical objects.
     ChSystemSMC sys;
@@ -550,17 +551,17 @@ void test_5() {
     auto constraint3 = chrono_types::make_shared<ChLinkNodeFrame>();
     auto constraint4 = chrono_types::make_shared<ChLinkNodeFrame>();
 
-    constraint1->Initialize(mnode1,   // node
-                            truss);   // body to be connected to
+    constraint1->Initialize(mnode1,  // node
+                            truss);  // body to be connected to
 
-    constraint2->Initialize(mnode2,   // node
-                            truss);   // body to be connected to
+    constraint2->Initialize(mnode2,  // node
+                            truss);  // body to be connected to
 
-    constraint3->Initialize(mnode3,   // node
-                            truss);   // body to be connected to
+    constraint3->Initialize(mnode3,  // node
+                            truss);  // body to be connected to
 
-    constraint4->Initialize(mnode4,   // node
-                            truss);   // body to be connected to
+    constraint4->Initialize(mnode4,  // node
+                            truss);  // body to be connected to
 
     sys.Add(constraint1);
     sys.Add(constraint2);
@@ -581,22 +582,25 @@ void test_5() {
     sys.DoStaticLinear();
 
     // Output some results
-    std::cout << "node5 displ: " << mnode5->GetPos() - mnode5->GetX0() << "\n";
-    std::cout << "node6 displ: " << mnode6->GetPos() - mnode6->GetX0() << "\n";
-    std::cout << "node7 displ: " << mnode7->GetPos() - mnode7->GetX0() << "\n";
-    std::cout << "node8 displ: " << mnode8->GetPos() - mnode8->GetX0() << "\n";
-    std::cout << "Element volume" << melement1->GetVolume() << "\n";
+    std::cout << "node5 displ: " << mnode5->GetPos() - mnode5->GetX0() << std::endl;
+    std::cout << "node6 displ: " << mnode6->GetPos() - mnode6->GetX0() << std::endl;
+    std::cout << "node7 displ: " << mnode7->GetPos() - mnode7->GetX0() << std::endl;
+    std::cout << "node8 displ: " << mnode8->GetPos() - mnode8->GetX0() << std::endl;
+    std::cout << "Element volume" << melement1->GetVolume() << std::endl;
 }
 
 // Do some tests in a single run, inside the main() function.
 // Results will be simply text-formatted outputs in the console..
 
 int main(int argc, char* argv[]) {
-    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
+    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << std::endl;
 
-    std::cout << " Example: the FEM technology for finite elements \n\n\n";
+    // Set path to Chrono data directories
+    SetChronoDataPath(CHRONO_DATA_DIR);
 
-    //test_1(); //// NOT WORKING
+    std::cout << " Example: the FEM technology for finite elements\n" << std::endl;
+
+    // test_1(); //// NOT WORKING
     test_2();
     test_3();
     test_4();

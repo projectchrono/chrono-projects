@@ -1,6 +1,6 @@
 #=============================================================================
-# CMake configuration file for projects requiring the Chrono Vehicle and 
-# Irrlicht modules
+# CMake configuration file for projects requiring the Chrono Vehicle and
+# VSG modules
 # 
 # Cannot be used stand-alone (but is mostly self-contained).
 #=============================================================================
@@ -12,7 +12,7 @@ message(STATUS "\n---- VEHICLE configuration test\n")
 #--------------------------------------------------------------
 
 set(DEMOS
-    demo_VEH_CityBus
+    demo_VEH_WheeledGeneric
 )
 
 #--------------------------------------------------------------
@@ -21,7 +21,7 @@ set(DEMOS
 
 # Invoke find_package in CONFIG mode
 find_package(Chrono
-             COMPONENTS Vehicle Irrlicht
+             COMPONENTS Vehicle VSG
              CONFIG
 )
 

@@ -31,7 +31,6 @@
     #include "chrono_postprocess/ChGnuPlot.h"
 #endif
 
-#include "chrono_thirdparty/filesystem/path.h"
 #include "chrono_thirdparty/cxxopts/ChCLI.h"
 
 using namespace chrono;
@@ -45,7 +44,7 @@ using std::endl;
 // -----------------------------------------------------------------------------
 
 // Dimensions of fluid domain
-ChVector3d fsize(0.8, 0.8, 1.2);
+ChVector3d fsize(0.8, 0.8, 1.0);
 
 // Object type
 enum class ObjectShape { BOX_PRIMITIVE, SPHERE_PRIMITIVE, CYLINDER_PRIMITIVE, MESH };
@@ -92,8 +91,7 @@ bool GetProblemSpecs(int argc,
 
     cli.AddOption<bool>("Output", "quiet", "Disable verbose terminal output");
     std::string output_particle_data_str = output ? "true" : "false";
-    cli.AddOption<std::string>("Output", "output_particle_data", "Enable collection of output files",
-                               output_particle_data_str);
+    cli.AddOption<std::string>("Output", "output_particle_data", "Enable collection of output files", output_particle_data_str);
     cli.AddOption<double>("Output", "output_fps", "Output frequency [fps]", std::to_string(output_fps));
 
     cli.AddOption<bool>("Visualization", "no_vis", "Disable run-time visualization");
@@ -105,12 +103,9 @@ bool GetProblemSpecs(int argc,
 
     // options for boundary condition and viscosity type
     cli.AddOption<std::string>("Physics", "boundary_method", "Boundary condition type (holmes/adami)", "adami");
-    cli.AddOption<std::string>("Physics", "viscosity_method",
-                               "Viscosity type (laminar/artificial_unilateral/artificial_bilateral)",
-                               "artificial_unilateral");
+    cli.AddOption<std::string>("Physics", "viscosity_method", "Viscosity type (laminar/artificial_unilateral/artificial_bilateral)", "artificial_unilateral");
     std::string use_variable_time_step_str = use_variable_time_step ? "true" : "false";
-    cli.AddOption<std::string>("Physics", "use_variable_time_step", "true/false to use variable time step",
-                               use_variable_time_step_str);
+    cli.AddOption<std::string>("Physics", "use_variable_time_step", "true/false to use variable time step", use_variable_time_step_str);
 
     if (!cli.Parse(argc, argv)) {
         cli.Help();
@@ -139,7 +134,6 @@ bool GetProblemSpecs(int argc,
 
 int main(int argc, char* argv[]) {
     // Set path to Chrono data directories
-    std::cout << "Data directory: " << CHRONO_DATA_DIR << std::endl;
     SetChronoDataPath(CHRONO_DATA_DIR);
 
     double initial_spacing = 0.025;
@@ -158,8 +152,7 @@ int main(int argc, char* argv[]) {
     bool use_variable_time_step = true;
     std::string boundary_method = "adami";
     std::string viscosity_method = "artificial_unilateral";
-    if (!GetProblemSpecs(argc, argv, t_end, verbose, output, output_fps, render, render_fps, snapshots, ps_freq,
-                         use_variable_time_step, boundary_method, viscosity_method)) {
+    if (!GetProblemSpecs(argc, argv, t_end, verbose, output, output_fps, render, render_fps, snapshots, ps_freq, use_variable_time_step, boundary_method, viscosity_method)) {
         return 1;
     }
 
@@ -180,7 +173,7 @@ int main(int argc, char* argv[]) {
     fsi.SetStepSizeCFD(step_size);
     fsi.SetStepsizeMBD(step_size);
 
-     // Meta-step (communication interval)
+    // Meta-step (communication interval)
     double meta_time_step = 5 * step_size;
 
     // Set CFD fluid properties
@@ -267,8 +260,7 @@ int main(int argc, char* argv[]) {
             ChCylinder cylinder(radius, length);
             mass = density * cylinder.GetVolume();
             inertia = mass * cylinder.GetGyration();
-            geometry->coll_cylinders.push_back(
-                utils::ChBodyGeometry::CylinderShape(VNULL, Q_ROTATE_Z_TO_X, cylinder, 0));
+            geometry->coll_cylinders.push_back(utils::ChBodyGeometry::CylinderShape(VNULL, Q_ROTATE_Z_TO_X, cylinder, 0));
             break;
         }
         case ObjectShape::MESH: {
@@ -278,8 +270,7 @@ int main(int argc, char* argv[]) {
             mass *= density;
             inertia *= density;
             bottom_offset = mesh_bottom_offset;
-            geometry->coll_meshes.push_back(
-                utils::ChBodyGeometry::TrimeshShape(VNULL, QUNIT, mesh_obj_filename, VNULL, mesh_scale, 0.01, 0));
+            geometry->coll_meshes.push_back(utils::ChBodyGeometry::TrimeshShape(VNULL, QUNIT, mesh_obj_filename, VNULL, mesh_scale, 0.01, 0));
             break;
         }
     }
@@ -325,38 +316,37 @@ int main(int argc, char* argv[]) {
 
     // Output directories
     std::string out_dir = GetChronoOutputPath() + "FSI_Object_Drop/";
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
         cerr << "Error creating directory " << out_dir << endl;
         return 1;
     }
 
-    out_dir = out_dir + fsi.GetSphIntegrationSchemeString() + "_" + viscosity_method + "_" + boundary_method + "_ps" +
-              std::to_string(ps_freq);
-    if (!filesystem::create_directory(filesystem::path(out_dir))) {
+    out_dir = out_dir + fsi.GetSphIntegrationSchemeString() + "_" + viscosity_method + "_" + boundary_method + "_ps" + std::to_string(ps_freq);
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir))) {
         cerr << "Error creating directory " << out_dir << endl;
         return 1;
     }
 
     if (output) {
-        if (!filesystem::create_directory(filesystem::path(out_dir + "/particles"))) {
+        if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/particles"))) {
             cerr << "Error creating directory " << out_dir + "/particles" << endl;
             return 1;
         }
-        if (!filesystem::create_directory(filesystem::path(out_dir + "/fsi"))) {
+        if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/fsi"))) {
             cerr << "Error creating directory " << out_dir + "/fsi" << endl;
             return 1;
         }
-        if (!filesystem::create_directory(filesystem::path(out_dir + "/vtk"))) {
+        if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/vtk"))) {
             cerr << "Error creating directory " << out_dir + "/vtk" << endl;
             return 1;
         }
     }
 
-    if (!filesystem::create_directory(filesystem::path(out_dir + "/snapshots"))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/snapshots"))) {
         cerr << "Error creating directory " << out_dir + "/snapshots" << endl;
         return 1;
     }
-    if (!filesystem::create_directory(filesystem::path(out_dir + "/meshes"))) {
+    if (!CreateOutputDirectory(std::filesystem::path(out_dir + "/meshes"))) {
         cerr << "Error creating directory " << out_dir + "/meshes" << endl;
         return 1;
     }
@@ -396,8 +386,7 @@ int main(int argc, char* argv[]) {
         visVSG->SetWindowTitle("Object Drop");
         visVSG->SetWindowSize(1280, 800);
         visVSG->SetWindowPosition(100, 100);
-        visVSG->AddCamera(ChVector3d(2.5 * fsize.x(), 2.5 * fsize.y(), 1.5 * fsize.z()),
-                          ChVector3d(0, 0, 0.5 * fsize.z()));
+        visVSG->AddCamera(ChVector3d(2.5 * fsize.x(), 2.5 * fsize.y(), 1.5 * fsize.z()), ChVector3d(0, 0, 0.5 * fsize.z()));
         visVSG->SetLightIntensity(0.9f);
         visVSG->SetLightDirection(CH_PI_2, CH_PI / 6);
 
@@ -447,8 +436,7 @@ int main(int argc, char* argv[]) {
                 if (verbose)
                     cout << " -- Snapshot frame " << render_frame << " at t = " << time << endl;
                 std::ostringstream filename;
-                filename << out_dir << "/snapshots/img_" << std::setw(5) << std::setfill('0') << render_frame + 1
-                         << ".bmp";
+                filename << out_dir << "/snapshots/img_" << std::setw(5) << std::setfill('0') << render_frame + 1 << ".bmp";
                 vis->WriteImageToFile(filename.str());
             }
 
