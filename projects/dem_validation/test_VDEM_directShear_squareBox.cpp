@@ -38,6 +38,7 @@
 //   particles/*.csv     particle snapshots (at the shear displacements in --snaps, and frames)
 //   contacts/*.csv      contact snapshots, at the same times
 //   state_shear.bin     the prepared sample at the start of shearing (with --save_state)
+//   states/*.bin        the state at each snapshot, to resume or render the run from it (with --snap_states)
 // =============================================================================
 
 #include <chrono>
@@ -120,7 +121,8 @@ struct Params {
     double frame_disp;          // shear displacement between frames, m (0: none)
     double frame_dt_prep;       // time between frames before shearing, s (0: none)
     std::string save_state;     // file for the state at the start of shearing
-    std::string load_state;     // start from a saved state (at the start of shearing)
+    std::string load_state;     // resume shearing from a saved state
+    bool snap_states;           // also save the state at each snapshot
     bool vsg;
     std::string provenance;  // JSON text added to meta.json (git state, run command)
 };
@@ -174,7 +176,8 @@ bool GetParams(int argc, char* argv[], Params& p) {
     cli.AddOption<double>("Output", "frame_disp", "Shear displacement between particle and contact frames (mm, 0: none)", "0");
     cli.AddOption<double>("Output", "frame_dt_prep", "Time between particle and contact frames before shearing (s, 0: none)", "0");
     cli.AddOption<std::string>("Output", "save_state", "Save the sample at the start of shearing to this file", "");
-    cli.AddOption<std::string>("Output", "load_state", "Start shearing from a sample saved with --save_state", "");
+    cli.AddOption<std::string>("Output", "load_state", "Resume shearing from a state saved with --save_state or --snap_states", "");
+    cli.AddOption<bool>("Output", "snap_states", "Also save the state at each snapshot (states/*.bin)");
     cli.AddOption<bool>("Output", "vsg", "Run-time visualization with Chrono::VSG");
     cli.AddOption<std::string>("Output", "provenance", "JSON text recorded in meta.json", "");
 
@@ -276,6 +279,7 @@ bool GetParams(int argc, char* argv[], Params& p) {
     p.frame_dt_prep = cli.GetAsType<double>("frame_dt_prep");
     p.save_state = cli.GetAsType<std::string>("save_state");
     p.load_state = cli.GetAsType<std::string>("load_state");
+    p.snap_states = cli.GetAsType<bool>("snap_states");
     p.vsg = cli.GetAsType<bool>("vsg");
     p.provenance = cli.GetAsType<std::string>("provenance");
 
@@ -313,7 +317,11 @@ int main(int argc, char* argv[]) {
     const std::string out_dir = p.out_dir;
     const std::string particles_dir = out_dir + "/particles";
     const std::string contacts_dir = out_dir + "/contacts";
-    for (const auto& dir : {out_dir, particles_dir, contacts_dir}) {
+    const std::string states_dir = out_dir + "/states";
+    std::vector<std::string> dirs = {out_dir, particles_dir, contacts_dir};
+    if (p.snap_states)
+        dirs.push_back(states_dir);
+    for (const auto& dir : dirs) {
         std::error_code ec;
         std::filesystem::create_directories(dir, ec);
         if (!std::filesystem::is_directory(dir)) {
@@ -489,14 +497,19 @@ int main(int argc, char* argv[]) {
     double shear_Height = 0;  // lid height at the start of shearing
     double shear_Disp = 0;    // bin position at the start of shearing
 
+    // A saved state resumes shearing, with the lid height and bin position at the start of shearing saved with it
     if (!p.load_state.empty()) {
         std::vector<double> extra;
-        if (!LoadState(*sys, p.load_state, extra)) {
+        if (!LoadState(*sys, p.load_state, extra) || extra.size() != 2) {
             std::cerr << "Cannot load state from " << p.load_state << " (missing file or different sample)" << endl;
             return 1;
         }
         plate->SetFixed(false);
         settling = false;
+        shearing = true;
+        shear_Height = extra[0];
+        shear_Disp = extra[1];
+        sys->GetSettings()->solver.tangential_displ_mode = HistoryModel(p.history_shear);
         cout << "Loaded state at t = " << sys->GetChTime() << " s from " << p.load_state << endl;
     }
 
@@ -556,6 +569,7 @@ int main(int argc, char* argv[]) {
         m.Add("frame_dt_prep", p.frame_dt_prep);
         m.Add("save_state", p.save_state);
         m.Add("load_state", p.load_state);
+        m.Add("snap_states", p.snap_states);
         m.Add("first_particle_index", first_particle);
         m.AddRaw("walls",
                  "{\"bin\": {\"body\": 0, \"shapes\": {\"0\": \"floor\", \"1\": \"-x\", \"2\": \"+x\", \"3\": \"-z\", "
@@ -620,6 +634,15 @@ int main(int argc, char* argv[]) {
 
     auto shear_disp = [&]() { return shearing ? bin->GetPos().z() - shear_Disp : 0.0; };
     auto phase = [&]() { return settling ? 0 : (shearing ? 2 : 1); };
+
+    // A run resumed from a saved state skips the snapshots and frames before the loaded shear displacement
+    if (shearing) {
+        double d0 = shear_disp() - 0.5 * p.speed * p.dt;
+        while (next_snap < p.snaps.size() && p.snaps[next_snap] < d0)
+            next_snap++;
+        if (p.frame_disp > 0)
+            frame = (int)std::ceil(d0 / p.frame_disp);
+    }
 
     auto write_snapshot = [&](const std::string& name) {
         auto contacts = GetContacts(*sys);
@@ -686,6 +709,8 @@ int main(int argc, char* argv[]) {
                 char name[64];
                 snprintf(name, sizeof(name), "snap_d%05.2fmm", 1e3 * p.snaps[next_snap]);
                 write_snapshot(name);
+                if (p.snap_states && !SaveState(*sys, states_dir + "/" + name + ".bin", {shear_Height, shear_Disp}))
+                    std::cerr << "Cannot save state to " << states_dir + "/" + name + ".bin" << endl;
                 next_snap++;
             }
             if (p.frame_disp > 0 && d >= frame * p.frame_disp - 0.5 * p.speed * p.dt) {
@@ -790,7 +815,7 @@ int main(int argc, char* argv[]) {
 
     double wall = std::chrono::duration<double>(std::chrono::steady_clock::now() - wall_start).count();
     write_meta(true, wall, overflows_total, "finished");
-    cout << "Finished at t = " << sys->GetChTime() << " s, wall clock " << wall << " s, history overflows " << overflows_total << endl;
+    cout << std::setprecision(8) << "Finished at t = " << sys->GetChTime() << " s, wall clock " << wall << " s, history overflows " << overflows_total << endl;
 
     return 0;
 }
