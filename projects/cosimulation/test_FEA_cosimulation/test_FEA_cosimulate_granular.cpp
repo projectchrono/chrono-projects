@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
 
     // Create a Chrono::Engine physical system
     ChSystemSMC sys;
-    sys.SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
+    sys.SetGravityY();
 
     //
     // CREATE A FINITE ELEMENT MESH
@@ -228,6 +228,7 @@ int main(int argc, char* argv[]) {
 
     // BEGIN MULTICORE SYSTEM INITIALIZATION
     ChSystemMulticoreNSC* systemG = new ChSystemMulticoreNSC();
+    systemG->SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
 
     // Set gravitational acceleration
     systemG->SetGravitationalAcceleration(sys.GetGravitationalAcceleration());
@@ -317,6 +318,12 @@ int main(int argc, char* argv[]) {
     gen.CreateObjectsBox(sampler, center, hdims);
 
     // END MULTICORE SYSTEM INITIALIZATION
+
+    // Create the output directory
+    if (saveData && !CreateOutputDirectory(std::string("../POVRAY"))) {
+        std::cout << "Error creating directory ../POVRAY" << std::endl;
+        return 1;
+    }
 
     // Begin time loop
     int out_steps = (int)std::ceil((1.0 / time_step) / out_fps);

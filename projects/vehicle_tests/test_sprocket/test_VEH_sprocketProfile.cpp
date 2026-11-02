@@ -57,6 +57,7 @@ int main(int argc, char* argv[]) {
     SetChronoDataPath(CHRONO_DATA_DIR);
 
     ChSystemNSC system;
+    system.SetGravityY();
     system.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
 
     // Create a shared material (default properties)
