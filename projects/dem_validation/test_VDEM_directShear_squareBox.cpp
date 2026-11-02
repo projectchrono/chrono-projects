@@ -38,9 +38,20 @@
 //   particles/*.csv     particle snapshots (at the shear displacements in --snaps, and frames)
 //   contacts/*.csv      contact snapshots, at the same times
 //   state_shear.bin     the prepared sample at the start of shearing (with --save_state)
-//   states/*.bin        the state at each snapshot, to resume or render the run from it (with --snap_states)
+//   states/*.bin        the state at each snapshot or frame, to resume or render the run from it (with --snap_states
+//                       or --frame_states)
+//
+// With --render, the program renders saved states (one file, or all state files in a directory) to images with
+// Chrono::VSG and exits, without simulating. The sample options must match those of the run that saved the states.
+// The camera is fixed on the -x side, so the lower box moves to the right. Each state gives one image per layer:
+//   grains/   the grains behind the vertical mid-plane x = 0 (the cut face), light gray or in gray stripes along z
+//   network/  the contact force network in a slab behind the mid-plane; cylinder radius and color (light to dark
+//             orange) proportional to the normal force, up to 3 times a reference force
+//   ratio/    the same network colored by the Coulomb ratio |f_t| / (mu f_n), from 0 to 1 (with --render_ratio)
+//   walls/    the box walls and the lid alone (to separate the network from the walls when compositing)
 // =============================================================================
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
@@ -50,6 +61,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "chrono/ChConfig.h"
@@ -65,6 +77,7 @@
 
 #ifdef CHRONO_VSG
     #include "chrono_vsg/ChVisualSystemVSG.h"
+    #include "chrono_multicore/visualization/ChMulticoreVisualizationVSG.h"
 #endif
 
 #include "dem_utils.h"
@@ -123,8 +136,20 @@ struct Params {
     std::string save_state;     // file for the state at the start of shearing
     std::string load_state;     // resume shearing from a saved state
     bool snap_states;           // also save the state at each snapshot
+    bool frame_states;          // also save the state at each frame
     bool vsg;
     std::string provenance;  // JSON text added to meta.json (git state, run command)
+
+    // Rendering of saved states
+    std::string render;      // state file, or directory of state files, to render
+    std::string render_out;  // image directory
+    int render_width;        // image size, pixels
+    int render_height;
+    double render_slab;     // thickness of the force-network slab behind the mid-plane, m
+    double render_fref;     // reference normal force of the network, N (0: mean of the first state)
+    double render_fmin;     // contacts below this fraction of the reference force are not drawn
+    double render_stripes;  // width of the gray stripes of the grains along z, m (0: no stripes)
+    bool render_ratio;      // also render the network colored by the Coulomb ratio
 };
 
 ChSystemSMC::TangentialDisplacementModel HistoryModel(const std::string& name) {
@@ -178,8 +203,19 @@ bool GetParams(int argc, char* argv[], Params& p) {
     cli.AddOption<std::string>("Output", "save_state", "Save the sample at the start of shearing to this file", "");
     cli.AddOption<std::string>("Output", "load_state", "Resume shearing from a state saved with --save_state or --snap_states", "");
     cli.AddOption<bool>("Output", "snap_states", "Also save the state at each snapshot (states/*.bin)");
+    cli.AddOption<bool>("Output", "frame_states", "Also save the state at each frame (states/*.bin)");
     cli.AddOption<bool>("Output", "vsg", "Run-time visualization with Chrono::VSG");
     cli.AddOption<std::string>("Output", "provenance", "JSON text recorded in meta.json", "");
+
+    cli.AddOption<std::string>("Render", "render", "Render a saved state, or all states in a directory, to images and exit", "");
+    cli.AddOption<std::string>("Render", "render_out", "Image directory (default: render, in the output directory)", "");
+    cli.AddOption<int>("Render", "render_width", "Image width (pixels)", "1144");
+    cli.AddOption<int>("Render", "render_height", "Image height (pixels)", "1080");
+    cli.AddOption<double>("Render", "render_slab", "Thickness of the force-network slab behind the mid-plane (diameters)", "1.5");
+    cli.AddOption<double>("Render", "render_fref", "Reference normal force of the network (N, 0: mean of the first state)", "0");
+    cli.AddOption<double>("Render", "render_fmin", "Contacts below this fraction of the reference force are not drawn", "0.5");
+    cli.AddOption<double>("Render", "render_stripes", "Width of the gray stripes of the grains along z, at the first state (mm, 0: none)", "0");
+    cli.AddOption<bool>("Render", "render_ratio", "Also render the network colored by the Coulomb ratio");
 
     if (!cli.Parse(argc, argv, true))
         return false;
@@ -280,8 +316,21 @@ bool GetParams(int argc, char* argv[], Params& p) {
     p.save_state = cli.GetAsType<std::string>("save_state");
     p.load_state = cli.GetAsType<std::string>("load_state");
     p.snap_states = cli.GetAsType<bool>("snap_states");
+    p.frame_states = cli.GetAsType<bool>("frame_states");
     p.vsg = cli.GetAsType<bool>("vsg");
     p.provenance = cli.GetAsType<std::string>("provenance");
+
+    p.render = cli.GetAsType<std::string>("render");
+    p.render_out = cli.GetAsType<std::string>("render_out");
+    if (p.render_out.empty())
+        p.render_out = p.out_dir + "/render";
+    p.render_width = cli.GetAsType<int>("render_width");
+    p.render_height = cli.GetAsType<int>("render_height");
+    p.render_slab = 2 * p.radius * cli.GetAsType<double>("render_slab");
+    p.render_fref = cli.GetAsType<double>("render_fref");
+    p.render_fmin = cli.GetAsType<double>("render_fmin");
+    p.render_stripes = 1e-3 * cli.GetAsType<double>("render_stripes");
+    p.render_ratio = cli.GetAsType<bool>("render_ratio");
 
     return true;
 }
@@ -305,6 +354,181 @@ void AddWall(std::shared_ptr<ChBody>& body,
     }
 }
 
+#ifdef CHRONO_VSG
+
+// -----------------------------------------------------------------------------
+// Rendering of saved states (--render)
+// -----------------------------------------------------------------------------
+
+// Grain colors: light gray, or alternating light and medium gray stripes set from the grain positions at the first
+// rendered state (the stripes then move with the grains, which shows the shear band)
+class GrainColors : public vsg3d::ChInstancedShapesVSG::ColorCallback {
+  public:
+    virtual ChColor GetColor(const ChBody& body) const override {
+        auto s = stripe.find(&body);
+        bool dark = s != stripe.end() && s->second % 2 != 0;
+        return dark ? ChColor(0.55f, 0.55f, 0.55f) : ChColor(0.9f, 0.9f, 0.9f);
+    }
+
+    std::unordered_map<const ChBody*, int> stripe;
+};
+
+// Grains behind the vertical mid-plane x = 0, seen from the -x side
+class GrainCut : public vsg3d::ChInstancedShapesVSG::VisibilityCallback {
+  public:
+    virtual bool IsVisible(const ChBody& body) const override { return body.GetPos().x() > 0; }
+};
+
+int RenderStates(const Params& p, ChSystemMulticoreSMC* sys, std::shared_ptr<ChBody> bin, std::shared_ptr<ChBody> plate, const std::vector<std::shared_ptr<ChBody>>& balls) {
+    namespace fs = std::filesystem;
+    using NetworkColoring = ChMulticoreVisualizationVSG::NetworkColoring;
+
+    // States to render: one file, or all state files in a directory, in name order
+    std::vector<fs::path> files;
+    if (fs::is_directory(p.render)) {
+        for (const auto& entry : fs::directory_iterator(p.render))
+            if (entry.path().extension() == ".bin")
+                files.push_back(entry.path());
+        std::sort(files.begin(), files.end());
+    } else if (fs::exists(p.render)) {
+        files.push_back(p.render);
+    }
+    if (files.empty()) {
+        std::cerr << "No state files in " << p.render << endl;
+        return 1;
+    }
+
+    std::vector<std::string> layers = {"grains", "network", "walls"};
+    if (p.render_ratio)
+        layers.push_back("ratio");
+    for (const auto& layer : layers) {
+        std::error_code ec;
+        fs::create_directories(p.render_out + "/" + layer, ec);
+        if (!fs::is_directory(p.render_out + "/" + layer)) {
+            std::cerr << "Error creating directory " << p.render_out + "/" + layer << endl;
+            return 1;
+        }
+    }
+
+    std::vector<double> extra;
+    auto load = [&](const fs::path& file) {
+        if (!LoadState(*sys, file.string(), extra) || extra.size() != 2) {
+            std::cerr << "Cannot load state from " << file.string() << " (missing file or different sample)" << endl;
+            return false;
+        }
+        return true;
+    };
+
+    // The first state places the camera
+    if (!load(files[0]))
+        return 1;
+    plate->SetFixed(false);
+    sys->GetSettings()->solver.tangential_displ_mode = HistoryModel(p.history_shear);
+
+    double r = p.radius;
+    double w = p.width;
+    double h = p.height;
+    double t = p.thickness;
+
+    // Fixed camera on the -x side, looking at the mid-plane, framing the box over the whole travel (a narrow field of
+    // view keeps the perspective small)
+    double z0 = -w / 2 - 2 * t;
+    double z1 = w / 2 + 2 * t + p.travel;
+    double y0 = -h / 2 - t / 2;
+    double y1 = std::min(plate->GetPos().y() + 2 * t, h + r);
+    double aspect = (double)p.render_width / p.render_height;
+    double fov = 6;
+    double half_height = 0.54 * std::max(y1 - y0, (z1 - z0) / aspect);
+    double dist = half_height / std::tan(0.5 * fov * CH_DEG_TO_RAD);
+    ChVector3d target(0, (y0 + y1) / 2, (z0 + z1) / 2);
+
+    // Lower box, upper box (body 1), and lid in a light gray
+    for (const auto& body : {bin, sys->GetBodies()[1], plate}) {
+        for (const auto& instance : body->GetVisualModel()->GetShapeInstances())
+            instance.shape->SetColor(ChColor(0.85f, 0.85f, 0.85f));
+    }
+
+    auto colors = chrono_types::make_shared<GrainColors>();
+
+    auto mcore_vis = chrono_types::make_shared<ChMulticoreVisualizationVSG>(sys);
+    mcore_vis->SetBodyColorCallback(colors);
+    mcore_vis->SetBodyVisibilityCallback(chrono_types::make_shared<GrainCut>());
+    mcore_vis->SetNetworkMode(vsg3d::ChForceNetworkVSG::Mode::CYLINDERS);
+    mcore_vis->SetNetworkColorRamp(ChColor(0.957f, 0.694f, 0.514f), ChColor(0.518f, 0.235f, 0.047f));  // #F4B183 to #843C0C
+    mcore_vis->SetRegionSlab(ChVector3d(p.render_slab / 2, 0, 0), ChVector3d(1, 0, 0), p.render_slab / 2);
+
+    auto vis = chrono_types::make_shared<vsg3d::ChVisualSystemVSG>();
+    vis->AttachPlugin(mcore_vis);
+    vis->SetWindowTitle("Direct shear, square box");
+    vis->SetWindowSize(p.render_width, p.render_height);
+    vis->SetCameraVertical(CameraVerticalDir::Y);
+    vis->AddCamera(target - ChVector3d(dist, 0, 0), target);
+    vis->SetCameraAngleDeg(fov);
+    vis->SetBackgroundColor(ChColor(1.0f, 1.0f, 1.0f));
+    vis->SetLightIntensity(1.0f);
+    vis->SetLightDirection(1.1 * CH_PI, CH_PI / 4);
+    vis->SetGuiVisibility(false);
+    vis->HideLogo();
+    vis->Initialize();
+
+    double f_ref = p.render_fref;
+    for (size_t k = 0; k < files.size(); k++) {
+        if (!vis->Run())
+            break;
+        if (!load(files[k]))
+            return 1;
+
+        // One step computes the contacts and contact forces of the saved state
+        sys->DoStepDynamics(p.dt);
+
+        double fn_sum = 0;
+        int fn_num = 0;
+        for (const auto& c : GetContacts(*sys)) {
+            if (c.fn > 0) {
+                fn_sum += c.fn;
+                fn_num++;
+            }
+        }
+        double fn_mean = fn_num > 0 ? fn_sum / fn_num : 0;
+        if (f_ref <= 0)
+            f_ref = fn_mean;
+
+        if (k == 0 && p.render_stripes > 0) {
+            for (const auto& b : balls)
+                colors->stripe[b.get()] = (int)std::floor((b->GetPos().z() + w / 2) / p.render_stripes);
+        }
+
+        mcore_vis->SetNetworkRadius(0, 0.4 * r, 0, 3 * f_ref);
+        mcore_vis->SetNetworkColoring(NetworkColoring::NORMAL_FORCE, 0, 3 * f_ref);
+        mcore_vis->SetNetworkForceThreshold(p.render_fmin * f_ref);
+
+        // An image request captures the frame of the previous Render() and is written during the next one
+        std::string stem = files[k].stem().string();
+        auto shot = [&](const std::string& layer, bool grains, bool network) {
+            mcore_vis->SetBodyVisibility(grains);
+            mcore_vis->SetNetworkVisibility(network);
+            vis->Render();
+            vis->WriteImageToFile(p.render_out + "/" + layer + "/" + stem + ".bmp");
+        };
+        shot("grains", true, false);
+        shot("network", false, true);
+        unsigned int segments = mcore_vis->GetNumNetworkSegments();
+        if (p.render_ratio) {
+            mcore_vis->SetNetworkColoring(NetworkColoring::COULOMB_RATIO, 0, 1);
+            shot("ratio", false, true);
+        }
+        shot("walls", false, false);
+        vis->Render();
+
+        cout << stem << ": t = " << sys->GetChTime() << " s, shear displacement " << 1e3 * (bin->GetPos().z() - extra[1]) << " mm, mean normal force " << fn_mean
+             << " N (reference " << f_ref << " N), " << segments << " half-segments drawn" << endl;
+    }
+
+    return 0;
+}
+
+#endif
+
 // -----------------------------------------------------------------------------
 
 int main(int argc, char* argv[]) {
@@ -319,8 +543,10 @@ int main(int argc, char* argv[]) {
     const std::string contacts_dir = out_dir + "/contacts";
     const std::string states_dir = out_dir + "/states";
     std::vector<std::string> dirs = {out_dir, particles_dir, contacts_dir};
-    if (p.snap_states)
+    if (p.snap_states || p.frame_states)
         dirs.push_back(states_dir);
+    if (!p.render.empty())
+        dirs.clear();
     for (const auto& dir : dirs) {
         std::error_code ec;
         std::filesystem::create_directories(dir, ec);
@@ -382,7 +608,10 @@ int main(int argc, char* argv[]) {
     mat_ext->SetRestitution((float)p.cor);
     mat_ext->SetFriction((float)p.mu_wall);
 
-    // Lower bin: floor (shape 0) at mid-height of its walls (shapes 1 to 4)
+    // Lower bin: floor (shape 0) at mid-height of its walls (shapes 1 to 4). The -x walls are visible only in the
+    // run-time view (from the +x side); renders are seen from the -x side.
+
+    bool back_walls = p.render.empty();
 
     auto bin = chrono_types::make_shared<ChBody>();
     bin->SetMass(1);
@@ -391,8 +620,7 @@ int main(int argc, char* argv[]) {
     bin->EnableCollision(true);
 
     AddWall(bin, mat_ext, ChVector3d(width / 2, thickness / 2, length / 2), ChVector3d(0, 0, 0), true);
-    AddWall(bin, mat_ext, ChVector3d(thickness / 2, height / 2, length / 2 + thickness),
-            ChVector3d(-width / 2 - thickness / 2, 0, 0), true);
+    AddWall(bin, mat_ext, ChVector3d(thickness / 2, height / 2, length / 2 + thickness), ChVector3d(-width / 2 - thickness / 2, 0, 0), back_walls);
     AddWall(bin, mat_ext, ChVector3d(thickness / 2, height / 2, length / 2 + thickness),
             ChVector3d(width / 2 + thickness / 2, 0, 0), false);
     AddWall(bin, mat_ext, ChVector3d(width / 2 + thickness, height / 2, thickness / 2),
@@ -414,8 +642,7 @@ int main(int argc, char* argv[]) {
     box->SetFixed(true);
     box->EnableCollision(true);
 
-    AddWall(box, mat_ext, ChVector3d(thickness / 2, height / 2, length / 2 + thickness),
-            ChVector3d(-width / 2 - thickness / 2, 0, 0), true);
+    AddWall(box, mat_ext, ChVector3d(thickness / 2, height / 2, length / 2 + thickness), ChVector3d(-width / 2 - thickness / 2, 0, 0), back_walls);
     AddWall(box, mat_ext, ChVector3d(thickness / 2, height / 2, length / 2 + thickness),
             ChVector3d(width / 2 + thickness / 2, 0, 0), false);
     AddWall(box, mat_ext, ChVector3d(width / 2 + thickness, height / 2, thickness / 2),
@@ -489,6 +716,16 @@ int main(int argc, char* argv[]) {
     prismatic_plate_box->SetName("prismatic_plate_box");
     prismatic_plate_box->Initialize(plate, box, ChFrame<>(ChVector3d(0, 0, 0), z2y));
     sys->AddLink(prismatic_plate_box);
+
+    // Rendering of saved states, instead of a run
+    if (!p.render.empty()) {
+#ifdef CHRONO_VSG
+        return RenderStates(p, sys, bin, plate, balls);
+#else
+        std::cerr << "Rendering needs Chrono::VSG" << endl;
+        return 1;
+#endif
+    }
 
     // Phase flags and shear reference values
 
@@ -570,6 +807,7 @@ int main(int argc, char* argv[]) {
         m.Add("save_state", p.save_state);
         m.Add("load_state", p.load_state);
         m.Add("snap_states", p.snap_states);
+        m.Add("frame_states", p.frame_states);
         m.Add("first_particle_index", first_particle);
         m.AddRaw("walls",
                  "{\"bin\": {\"body\": 0, \"shapes\": {\"0\": \"floor\", \"1\": \"-x\", \"2\": \"+x\", \"3\": \"-z\", "
@@ -606,8 +844,13 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_VSG
     std::shared_ptr<vsg3d::ChVisualSystemVSG> vis;
     if (p.vsg) {
+        // Grains drawn as instances; the force network can be switched on in the Multicore panel
+        auto mcore_vis = chrono_types::make_shared<ChMulticoreVisualizationVSG>(sys);
+        mcore_vis->SetNetworkColorRamp(ChColor(0.957f, 0.694f, 0.514f), ChColor(0.518f, 0.235f, 0.047f));
+
         vis = chrono_types::make_shared<vsg3d::ChVisualSystemVSG>();
         vis->AttachSystem(sys);
+        vis->AttachPlugin(mcore_vis);
         vis->SetWindowTitle("Direct shear, square box");
         vis->SetWindowSize(1280, 720);
         vis->SetCameraVertical(CameraVerticalDir::Y);
@@ -717,6 +960,8 @@ int main(int argc, char* argv[]) {
                 char name[64];
                 snprintf(name, sizeof(name), "frame_%05d", frame);
                 write_snapshot(name);
+                if (p.frame_states && !SaveState(*sys, states_dir + "/" + name + ".bin", {shear_Height, shear_Disp}))
+                    std::cerr << "Cannot save state to " << states_dir + "/" + name + ".bin" << endl;
                 frames_index << frame << "," << time << "," << d << ",2" << std::endl;
                 frame++;
             }
