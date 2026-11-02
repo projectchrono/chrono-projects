@@ -124,8 +124,8 @@ int main(int argc, char* argv[]) {
     std::map<std::string, std::vector<std::shared_ptr<ChNodeFEAbase>>> node_sets;
 
     try {
-        ChMeshFileLoader::FromAbaqusFile(my_mesh, GetChronoDataFile("fea/tractor_wheel_coarse.INP").c_str(),
-                                         mesh_material, node_sets, tire_center, tire_alignment);
+        ChMeshFileLoader::FromAbaqusFile(my_mesh, GetChronoDataFile("models/tractor_wheel/tractor_wheel_coarse.INP").c_str(), mesh_material, node_sets, tire_center,
+                                         tire_alignment);
     } catch (std::exception& myerr) {
         std::cout << myerr.what();
         return 0;
@@ -197,7 +197,7 @@ int main(int argc, char* argv[]) {
 
         if (visualization) {
             auto mobjmesh = chrono_types::make_shared<ChVisualShapeModelFile>();
-            mobjmesh->SetFilename(GetChronoDataFile("fea/tractor_wheel_rim.obj"));
+            mobjmesh->SetFilename(GetChronoDataFile("models/tractor_wheel/tractor_wheel_rim.obj"));
             wheel->AddVisualShape(mobjmesh);
         }
 

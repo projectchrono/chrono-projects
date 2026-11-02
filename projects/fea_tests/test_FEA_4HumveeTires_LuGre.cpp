@@ -644,7 +644,7 @@ int main(int argc, char* argv[]) {
     // Visualization
     /*
     auto mobjmesh = chrono_types::make_shared<ChObjShapeFile>();
-    mobjmesh->SetFilename(GetChronoDataFile("fea/tractor_wheel_rim.obj"));
+    mobjmesh->SetFilename(GetChronoDataFile("models/tractor_wheel/tractor_wheel_rim.obj"));
     Hub_1->AddAsset(mobjmesh);
     Hub_2->AddAsset(mobjmesh);
     Hub_3->AddAsset(mobjmesh);

@@ -1550,7 +1550,7 @@ int main(int argc, char* argv[]) {
 
     // Visualization
     // auto mobjmesh = chrono_types::make_shared<ChObjShapeFile>();
-    // mobjmesh->SetFilename(GetChronoDataFile("fea/tractor_wheel_rim.obj"));
+    // mobjmesh->SetFilename(GetChronoDataFile("models/tractor_wheel/tractor_wheel_rim.obj"));
     // Rim->AddAsset(mobjmesh);
 
     double start = std::clock();

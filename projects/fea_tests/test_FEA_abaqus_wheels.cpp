@@ -62,8 +62,7 @@ void MakeWheel(ChSystemSMC& sys,
     std::map<std::string, std::vector<std::shared_ptr<ChNodeFEAbase>>> node_sets;
 
     try {
-        ChMeshFileLoader::FromAbaqusFile(my_mesh, GetChronoDataFile("fea/tractor_wheel_coarse.INP").c_str(), mmaterial,
-                                         node_sets, tire_center, mscale * malign);
+        ChMeshFileLoader::FromAbaqusFile(my_mesh, GetChronoDataFile("models/tractor_wheel/tractor_wheel_coarse.INP").c_str(), mmaterial, node_sets, tire_center, mscale * malign);
     } catch (std::exception& myerr) {
         std::cout << myerr.what();
         return;
@@ -100,7 +99,7 @@ void MakeWheel(ChSystemSMC& sys,
     sys.Add(mwheel_rim);
 
     auto mobjmesh = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
-    mobjmesh->GetMesh()->LoadWavefrontMesh(GetChronoDataFile("fea/tractor_wheel_rim.obj"));
+    mobjmesh->GetMesh()->LoadWavefrontMesh(GetChronoDataFile("models/tractor_wheel/tractor_wheel_rim.obj"));
     mobjmesh->GetMesh()->Transform(VNULL, mscale);
     mwheel_rim->AddVisualShape(mobjmesh);
 

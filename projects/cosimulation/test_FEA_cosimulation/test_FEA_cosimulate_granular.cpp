@@ -127,8 +127,7 @@ int main(int argc, char* argv[]) {
     // Ex. you can generate these .INP files using Abaqus or exporting from the SolidWorks simulation tool.
     std::map<std::string, std::vector<std::shared_ptr<ChNodeFEAbase>>> node_sets;
     try {
-        ChMeshFileLoader::FromAbaqusFile(my_mesh, GetChronoDataFile("fea/tractor_wheel_coarse.INP").c_str(), mmaterial,
-                                         node_sets, tire_center, tire_alignment);
+        ChMeshFileLoader::FromAbaqusFile(my_mesh, GetChronoDataFile("models/tractor_wheel/tractor_wheel_coarse.INP").c_str(), mmaterial, node_sets, tire_center, tire_alignment);
     } catch (std::exception& myerr) {
         std::cout << myerr.what();
         return 0;
@@ -177,7 +176,7 @@ int main(int argc, char* argv[]) {
     mrigidbody->SetPos(tire_center);
 
     auto mrigidmesh = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
-    mrigidmesh->GetMesh().LoadWavefrontMesh(GetChronoDataFile("models/tractor_wheel_fine.obj"));
+    mrigidmesh->GetMesh().LoadWavefrontMesh(GetChronoDataFile("models/tractor_wheel/tractor_wheel_fine.obj"));
     mrigidmesh->GetMesh().Transform(VNULL, QuatFromAngleAxis(CH_PI, VECT_Y) );
     mrigidbody->AddAsset(mrigidmesh);
 

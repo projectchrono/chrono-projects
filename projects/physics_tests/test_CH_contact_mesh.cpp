@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
     }
 
     auto trimesh = chrono_types::make_shared<ChTriangleMeshConnected>();
-    trimesh->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_tire.obj"), true, false);
+    trimesh->LoadWavefrontMesh(GetChronoDataFile("vehicle/hmmwv/hmmwv_tire_fine.obj"), true, false);
 
     auto object_ct_shape = chrono_types::make_shared<ChCollisionShapeTriangleMesh>(object_mat, trimesh, false, false, 0.01);
     object->AddCollisionShape(object_ct_shape);
