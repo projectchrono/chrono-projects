@@ -8,11 +8,10 @@ Validation programs for granular dynamics with Chrono::Multicore
 * demo_crater -- low-speed impact validation test (DEM-C or DEM-P)
 * demo_massflow -- massflow validation test (DEM-C or DEM-P)
 * demo_penetrometer -- 
-* demo_shear -- direct shear validation test (DEM-C or DEM-P)
-* directShear -- direct shear validation test (DEM-C or DEM-P)
+* directShear_actuator -- direct shear with a shear plate driven by an actuator, run in settling, pressing and shearing phases (DEM-C or DEM-P)
+* directShear_squareBox -- direct shear of glass beads in a 12 cm square box, after the Hartl and Ooi (2008) experiment (DEM-C or DEM-P)
 * pressureSinkage -- pressure sinkage validation test (DEM-C or DEM-P)
 * single_wheel --
-* test_shear -- direct shear validation test (DEM-C)
 
 ### Multicore tests
 
