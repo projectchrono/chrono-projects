@@ -81,8 +81,9 @@ def read_timeseries(run_dir):
 
 
 def shear_part(ts):
-    """Indices of the rows in the shear phase."""
-    return [i for i, ph in enumerate(ts["phase"]) if ph == 2]
+    """Indices of the rows in the shear phase (the last phase of a run: 2 in the square box, 3 in the Jenike cell)."""
+    last = max(ts["phase"])
+    return [i for i, ph in enumerate(ts["phase"]) if ph == last]
 
 
 def median(values):

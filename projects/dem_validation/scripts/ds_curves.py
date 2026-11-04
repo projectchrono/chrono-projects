@@ -15,13 +15,16 @@
 # Shear stress against shear displacement for direct shear runs at several
 # normal stresses, on the axes of Hartl and Ooi (2008), Fig. 2 (0 to 9 mm,
 # 0 to 16 kPa), and a table of peak and residual stress ratios and initial
-# void ratios.
+# void ratios. Runs at the same normal stress (several seeds) are drawn as
+# their mean curve with a band over their range, and the table gives the mean
+# and standard deviation over them.
 #
 # Usage:
 #   python ds_curves.py --out <file without extension> <run folder> [<run folder> ...]
 #
 # Optional:
-#   --tau tau_bin|tau_upper   shear force on the lower box (2015 definition) or on the upper box and lid
+#   --tau KEY                 time series column of the shear stress (default tau_bin: square box, force on the
+#                             lower box; tau_upper: on the upper box and lid; tau: Jenike cell, on top ring and lid)
 #   --size W H                figure size in inches (default 4.47 2.98, the slot on slide 13)
 #   --dilation FILE           also plot the lid rise against shear displacement (FILE without extension)
 #
@@ -30,6 +33,8 @@
 import argparse
 import os
 import sys
+
+import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dsplot  # noqa: E402
@@ -46,21 +51,38 @@ def main():
     args = ap.parse_args()
 
     dsplot.set_style()
-    runs = []
+
+    # Runs at the same normal stress (several seeds) are one group: the mean curve, with the range of the runs as a band
+    groups = {}
     for r in args.runs:
         meta = dsplot.read_meta(r)
         ts = dsplot.read_timeseries(r)
-        runs.append((meta, ts, dsplot.summarize(ts, meta, args.tau)))
-    runs.sort(key=lambda x: x[0]["sigma"])
-    colors = dsplot.DEM_RAMP if len(runs) <= len(dsplot.DEM_RAMP) else None
+        groups.setdefault(meta["sigma"], []).append((meta, ts, dsplot.summarize(ts, meta, args.tau)))
+    sigmas = sorted(groups)
+    colors = dsplot.DEM_RAMP if len(sigmas) <= len(dsplot.DEM_RAMP) else [dsplot.DEM_ORANGE] * len(sigmas)
+
+    def curves(key, scale):
+        """Common shear displacement grid (mm) and, per group, the curves of 'key' on it."""
+        out = []
+        for sigma in sigmas:
+            runs = []
+            for meta, ts, s in groups[sigma]:
+                idx = dsplot.shear_part(ts)
+                runs.append((np.array([1e3 * ts["shear_disp"][i] for i in idx]), np.array([scale * ts[key][i] for i in idx])))
+            d_end = min(d[-1] for d, _ in runs)
+            grid = np.linspace(0, d_end, int(round(d_end / 0.01)) + 1)
+            out.append((grid, np.array([np.interp(grid, d, v) for d, v in runs])))
+        return out
+
+    def plot(ax, data):
+        for k, (sigma, (grid, values)) in enumerate(zip(sigmas, data)):
+            label = "normal stress = %.1f kPa" % (1e-3 * sigma)
+            if len(values) > 1:
+                ax.fill_between(grid, values.min(axis=0), values.max(axis=0), color=colors[k], alpha=0.25, lw=0)
+            ax.plot(grid, values.mean(axis=0), color=colors[k], lw=1.2, label=label)
 
     fig, ax = plt.subplots(figsize=args.size)
-    for k, (meta, ts, s) in enumerate(runs):
-        idx = dsplot.shear_part(ts)
-        d = [1e3 * ts["shear_disp"][i] for i in idx]
-        tau = [1e-3 * ts[args.tau][i] for i in idx]
-        c = colors[k] if colors else dsplot.DEM_ORANGE
-        ax.plot(d, tau, color=c, lw=1.2, label="normal stress = %.1f kPa" % (1e-3 * meta["sigma"]))
+    plot(ax, curves(args.tau, 1e-3))
     ax.set_xlim(0, 9)
     ax.set_ylim(0, 16)
     ax.set_xlabel("shear displacement (mm)")
@@ -71,12 +93,7 @@ def main():
 
     if args.dilation:
         fig, ax = plt.subplots(figsize=args.size)
-        for k, (meta, ts, s) in enumerate(runs):
-            idx = dsplot.shear_part(ts)
-            d = [1e3 * ts["shear_disp"][i] for i in idx]
-            dy = [1e3 * ts["dilation"][i] for i in idx]
-            c = colors[k] if colors else dsplot.DEM_ORANGE
-            ax.plot(d, dy, color=c, lw=1.2, label="normal stress = %.1f kPa" % (1e-3 * meta["sigma"]))
+        plot(ax, curves("dilation", 1e3))
         ax.set_xlim(0, 9)
         ax.set_xlabel("shear displacement (mm)")
         ax.set_ylabel("lid rise (mm)")
@@ -85,18 +102,24 @@ def main():
         fig.tight_layout()
         dsplot.save(fig, args.dilation)
 
-    # Table
-    lines = ["| normal stress (kPa) | peak tau/sigma_n | at (mm) | plateau tau/sigma_n (4 to 7.5 mm) | plateau tau (kPa) | "
-             "residual tau/sigma_n (last 2 mm) | residual tau (kPa) | initial void ratio | initial porosity | "
-             "lid rise at end (mm) | history overflows |",
-             "|---|---|---|---|---|---|---|---|---|---|---|"]
-    for meta, ts, s in runs:
-        lines.append("| %.1f | %.3f | %.2f | %.3f | %.2f | %.3f | %.2f | %.3f | %.3f | %.2f | %d |" % (
-            1e-3 * s["sigma"], s["peak_ratio"], 1e3 * s["peak_disp"], s["plateau_ratio"], 1e-3 * s["plateau_tau"],
-            s["residual_ratio"], 1e-3 * s["residual_tau"], s["e0"], s["porosity0"], 1e3 * s["dilation_end"],
-            s["overflows"]))
+    # Table: per normal stress, the mean over the runs (and the standard deviation, for several runs)
+    def stat(sigma, key, scale=1.0, digits=3):
+        v = np.array([scale * s[key] for _, _, s in groups[sigma]])
+        text = "%.*f" % (digits, v.mean())
+        return text + (" ± %.*f" % (digits, v.std(ddof=1)) if len(v) > 1 else "")
+
+    lines = ["| normal stress (kPa) | runs | peak tau/sigma_n | at (mm) | plateau tau/sigma_n (4 to 7.5 mm) | "
+             "plateau tau (kPa) | residual tau/sigma_n (last 2 mm) | residual tau (kPa) | initial void ratio | "
+             "initial porosity | lid rise at end (mm) | history overflows |",
+             "|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    for sigma in sigmas:
+        lines.append("| %.1f | %d | %s | %s | %s | %s | %s | %s | %s | %s | %s | %d |" % (
+            1e-3 * sigma, len(groups[sigma]), stat(sigma, "peak_ratio"), stat(sigma, "peak_disp", 1e3, 2),
+            stat(sigma, "plateau_ratio"), stat(sigma, "plateau_tau", 1e-3, 2), stat(sigma, "residual_ratio"),
+            stat(sigma, "residual_tau", 1e-3, 2), stat(sigma, "e0"), stat(sigma, "porosity0"),
+            stat(sigma, "dilation_end", 1e3, 2), sum(s["overflows"] for _, _, s in groups[sigma])))
     table = "\n".join(lines)
-    with open(args.out + "_table.md", "w") as f:
+    with open(args.out + "_table.md", "w", encoding="utf-8") as f:
         f.write(table + "\n")
     print(table)
 

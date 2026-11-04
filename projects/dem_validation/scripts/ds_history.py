@@ -99,7 +99,7 @@ def main():
         lines.append("| %s | %.2f | %.2f | %.2f | %.3f | %.2f | %.3f | %.3f |" % (
             mode, s["peak_ratio"], s["peak_disp"] / d, s["residual_ratio"], fs, zc, dil, dil_end))
     table = "\n".join(lines)
-    with open(args.out + "_table.md", "w") as f:
+    with open(args.out + "_table.md", "w", encoding="utf-8") as f:
         f.write(table + "\n")
     print(table)
 
