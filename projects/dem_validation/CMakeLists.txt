@@ -15,6 +15,7 @@ set(TESTS
     test_VDEM_demo_massflow
     test_VDEM_demo_penetrometer
     test_VDEM_directShear_actuator
+    test_VDEM_directShear_Jenike
     test_VDEM_directShear_squareBox
     test_VDEM_pressureSinkage
     test_VDEM_singleWheel
