@@ -192,15 +192,14 @@ inline ContactStats ComputeContactStats(const std::vector<Contact>& contacts, in
 // Snapshots
 // -----------------------------------------------------------------------------
 
-/// Write the state of the particles (one row per particle) to a CSV file.
+/// Write the state of the particles (one row per particle) to a CSV file, under the given comment line.
 inline void WriteParticles(const std::string& filename,
                            const std::vector<std::shared_ptr<chrono::ChBody>>& particles,
                            const std::vector<double>& radii,
                            const std::vector<int>& counts,
-                           double time,
-                           double shear_disp) {
+                           const std::string& comment) {
     std::ofstream f(filename);
-    f << "# time = " << std::setprecision(8) << time << " s, shear displacement = " << shear_disp << " m\n";
+    f << "# " << comment << "\n";
     f << "id,r,x,y,z,vx,vy,vz,wx,wy,wz,q0,q1,q2,q3,nc\n";
     f << std::setprecision(9);
     for (size_t i = 0; i < particles.size(); i++) {
@@ -214,10 +213,27 @@ inline void WriteParticles(const std::string& filename,
     }
 }
 
-/// Write the touching contacts (one row per contact) to a CSV file.
-inline void WriteContacts(const std::string& filename, const std::vector<Contact>& contacts, double time, double shear_disp) {
+/// Comment line of the direct shear snapshots: the time and the shear displacement.
+inline std::string ShearComment(double time, double shear_disp) {
+    std::ostringstream c;
+    c << "time = " << std::setprecision(8) << time << " s, shear displacement = " << shear_disp << " m";
+    return c.str();
+}
+
+/// Write the state of the particles (one row per particle) to a CSV file.
+inline void WriteParticles(const std::string& filename,
+                           const std::vector<std::shared_ptr<chrono::ChBody>>& particles,
+                           const std::vector<double>& radii,
+                           const std::vector<int>& counts,
+                           double time,
+                           double shear_disp) {
+    WriteParticles(filename, particles, radii, counts, ShearComment(time, shear_disp));
+}
+
+/// Write the touching contacts (one row per contact) to a CSV file, under the given comment line.
+inline void WriteContacts(const std::string& filename, const std::vector<Contact>& contacts, const std::string& comment) {
     std::ofstream f(filename);
-    f << "# time = " << std::setprecision(8) << time << " s, shear displacement = " << shear_disp << " m\n";
+    f << "# " << comment << "\n";
     f << "# forces act on body b2; n points from shape 1 to shape 2; ut is the stored tangential displacement of b2 "
          "relative to b1 (MultiStep)\n";
     f << "b1,b2,l1,l2,px,py,pz,nx,ny,nz,overlap,fn,ftx,fty,ftz,mu,ratio,utx,uty,utz,hist\n";
@@ -228,6 +244,11 @@ inline void WriteContacts(const std::string& filename, const std::vector<Contact
           << c.overlap << "," << c.fn << "," << c.ft.x() << "," << c.ft.y() << "," << c.ft.z() << "," << c.mu << "," << CoulombRatio(c) << "," << c.ut.x() << "," << c.ut.y() << ","
           << c.ut.z() << "," << (c.history ? 1 : 0) << "\n";
     }
+}
+
+/// Write the touching contacts (one row per contact) to a CSV file.
+inline void WriteContacts(const std::string& filename, const std::vector<Contact>& contacts, double time, double shear_disp) {
+    WriteContacts(filename, contacts, ShearComment(time, shear_disp));
 }
 
 // -----------------------------------------------------------------------------

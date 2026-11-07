@@ -19,6 +19,7 @@ set(TESTS
     test_VDEM_directShear_squareBox
     test_VDEM_pressureSinkage
     test_VDEM_singleWheel
+    test_VDEM_triaxial_membrane
 )
 
 #--------------------------------------------------------------
