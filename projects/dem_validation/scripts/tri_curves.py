@@ -129,7 +129,7 @@ def read_lab(path, specimen):
 
 
 def ramp(n):
-    """n colors along the deck's orange-to-brown ramp of DEM series."""
+    """n colors along the orange-to-brown ramp of DEM series (dsplot.DEM_RAMP)."""
     if n == 1:
         return [dsplot.DEM_ORANGE]
     rgb = np.array([[int(c[i:i + 2], 16) for i in (1, 3, 5)] for c in dsplot.DEM_RAMP], dtype=float)

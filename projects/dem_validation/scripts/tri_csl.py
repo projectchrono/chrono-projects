@@ -51,7 +51,7 @@ import dsplot  # noqa: E402
 import tri_curves  # noqa: E402
 from dsplot import plt  # noqa: E402
 
-BRIDGE_PURPLE = "#6B3FA0"  # a law or fit derived from DEM (the deck's bridge color)
+FIT_PURPLE = "#6B3FA0"  # laws and fits derived from the DEM results
 
 
 def end_state(ts, window):
@@ -142,7 +142,7 @@ def main():
     ax.scatter(1e-3 * p_end, 1e-3 * q_end, s=22, color=colors, edgecolor="black", linewidth=0.5, zorder=3,
                label="DEM, at %g %% axial strain" % round(100 * runs[0][4]["eps_end"]))
     pmax = 1.15 * max(1e-3 * max(ts["p"][i] for i in tri_curves.test_part(ts)) for *_, ts, _ in runs)
-    ax.plot([0, pmax], [0, M * pmax], color=BRIDGE_PURPLE, linewidth=1.4,
+    ax.plot([0, pmax], [0, M * pmax], color=FIT_PURPLE, linewidth=1.4,
             label=r"Critical state line, $M$ = %.2f ($\varphi_{cs}$ = %.1f°)" % (M, phi_cs))
     ax.set_xlim(0, pmax)
     ax.set_ylim(0, None)
@@ -189,7 +189,7 @@ def main():
     ax.scatter(1e-3 * p_end, v_end, s=22, color=colors, edgecolor="black", linewidth=0.5, zorder=3,
                label="DEM triaxial tests at %g %% axial strain" % round(100 * runs[0][4]["eps_end"]))
     pp = np.geomspace(0.8 * min(1e-3 * p_end), 1.25 * max(1e-3 * p_end), 50)
-    ax.plot(pp, gamma - lam_cs * np.log(pp), color=BRIDGE_PURPLE, linewidth=1.2,
+    ax.plot(pp, gamma - lam_cs * np.log(pp), color=FIT_PURPLE, linewidth=1.2,
             label=r"Critical state line, $\lambda_{cs}$ = %.3f" % lam_cs)
     ax.set_xscale("log")
     ticks = [t for t in (5, 10, 20, 50, 100, 200, 500) if 0.7 * min(p_iso[iso]) <= t <= 1.3 * max(p_iso[iso])]

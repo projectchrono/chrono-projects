@@ -12,8 +12,8 @@
 # Author: Radu Serban
 # =============================================================================
 #
-# Shared helpers for the direct shear post-processing scripts: reading run
-# folders (meta.json, timeseries.csv) and the figure style of the talk figures.
+# Shared helpers for the post-processing scripts: reading run folders
+# (meta.json, timeseries.csv) and a common figure style.
 #
 # =============================================================================
 
@@ -27,7 +27,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-# Colors carry roles in the talk deck: DEM orange (with an orange-to-brown ramp for several DEM series),
+# Colors carry roles: DEM results in orange (with an orange-to-brown ramp for several DEM series),
 # experiments in black and grays. Never a saturated red.
 DEM_ORANGE = "#C55A11"
 DEM_RAMP = ["#F4B183", "#E58B4C", "#C55A11", "#7F3A0B"]
@@ -37,7 +37,7 @@ LIGHT_GRAY = "#BFBFBF"
 
 
 def set_style():
-    """Plot style of the talk figures: white background, Calibri, no title."""
+    """Common figure style: white background, Calibri, no title."""
     plt.rcParams.update({
         "font.family": "Calibri",
         "font.size": 10,

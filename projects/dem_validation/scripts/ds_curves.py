@@ -25,7 +25,7 @@
 # Optional:
 #   --tau KEY                 time series column of the shear stress (default tau_bin: square box, force on the
 #                             lower box; tau_upper: on the upper box and lid; tau: Jenike cell, on top ring and lid)
-#   --size W H                figure size in inches (default 4.47 2.98, the slot on slide 13)
+#   --size W H                figure size in inches (default 4.47 2.98)
 #   --dilation FILE           also plot the lid rise against shear displacement (FILE without extension)
 #
 # =============================================================================
