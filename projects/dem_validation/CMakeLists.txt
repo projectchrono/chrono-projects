@@ -11,6 +11,7 @@ message(STATUS "\n---- DEM VALIDATION projects\n")
 #--------------------------------------------------------------
 
 set(TESTS
+    test_VDEM_annularShear
     test_VDEM_demo_crater
     test_VDEM_demo_massflow
     test_VDEM_demo_penetrometer

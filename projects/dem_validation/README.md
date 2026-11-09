@@ -5,7 +5,8 @@ Programs that replicate laboratory tests on granular materials with Chrono::Mult
 element models against measurements, and Python scripts that make figures, tables and clips from their results.
 
 - [Building](#building)
-- [Element tests](#element-tests): direct shear in a square box and in a Jenike cell, triaxial test
+- [Element tests](#element-tests): direct shear in a square box and in a Jenike cell, triaxial test, steady shear in an
+  annular cell
 - [Runs, states and outputs](#runs-states-and-outputs)
 - [Rendering](#rendering)
 - [Post-processing scripts](#post-processing-scripts)
@@ -20,10 +21,11 @@ visualization (`--vsg`) and the rendering of saved states (`--render`).
 
 ## Element tests
 
-Three programs replicate element tests of soil mechanics on spheres. They use soft-sphere (SMC) contact with Hertz
-normal forces. The tangential displacement model (`multistep`, the default, `onestep` or `none`) can be set separately
-for the preparation of the sample and for the test (`--history`, and `--history_shear` or `--history_test`). The
-programs take their parameters from the command line, in SI units; `--help` lists every option with its default.
+Three programs replicate element tests of soil mechanics on spheres, and a fourth measures the μ(I) rheology in steady
+shear. They use soft-sphere (SMC) contact with Hertz normal forces. The tangential displacement model (`multistep`, the
+default, `onestep` or `none`) is set with `--history`; the direct shear and triaxial programs can set a different one
+for the test (`--history_shear`, `--history_test`). The programs take their parameters from the command line, in SI
+units; `--help` lists every option with its default.
 
 ### Direct shear in a square box: `test_VDEM_directShear_squareBox`
 
@@ -104,6 +106,33 @@ test_VDEM_triaxial_membrane --load_fill fill_mono.bin --mu_fill 0 --test isotrop
 test_VDEM_triaxial_membrane --radii 2,2.5,3 --num_spheres 14350 --mu_fill 0 --out poly_s80
 ```
 
+### Steady shear in an annular cell: `test_VDEM_annularShear`
+
+μ(I), the friction coefficient of steady dense flow against the inertial number I, on the glass beads of the direct
+shear programs. Chrono::Multicore has no periodic boundaries, so an annulus closes the flow direction on itself: 14,400
+beads fill the ring between a frictionless inner cylinder and a frictionless outer ring (radii 0.09 and 0.15 m) and are
+sheared between two rough plates, flat disks covered with a random layer of glued spheres of the bead size. The plates
+turn about the axis in opposite directions, each at half the relative angular speed. A stress servo on the height of
+the top plate holds the normal pressure (`--pressure`): the plate moves at `--servo_gain` times the pressure error, at
+most `--servo_vmax`.
+
+The beads settle under gravity. At `--t_place`, gravity is switched off and the top plate is placed above the beads; it
+moves down until it carries a tenth of the pressure, and its servo then holds the pressure. At `--t_shear`, the plates
+start to turn. The relative angular speed follows from a nominal inertial number at the mid radius (`--I_nominal`):
+Ω = I √(p/ρ) H / (d r_m), with H the distance between the centers of the two glued layers at the start of the shear,
+d the bead diameter and r_m the mid radius. It ramps up over a nominal strain of `--strain_ramp`, and the run ends at
+the nominal strain `--strain_end`. The time series gives the pressure and the shear stress on both plates and their
+ratio (`mu_top`, `mu_bottom`); the local shear rate, stresses and solid fraction come from the particle and contact
+snapshots, by coarse-graining.
+
+One filling, and one consolidated sample at each pressure, serve every inertial number:
+
+```
+test_VDEM_annularShear --seed 1 --fill_only --save_fill fill_seed1.bin --out fill_seed1
+test_VDEM_annularShear --load_fill fill_seed1.bin --pressure 3100 --prepare_only --save_state cons_p3100.bin --out cons_p3100
+test_VDEM_annularShear --load_state cons_p3100.bin --pressure 3100 --I_nominal 0.01 --strain_ramp 0.5 --servo_gain 1e-5 --out p3100_I0.01
+```
+
 ## Runs, states and outputs
 
 Each run of an element test writes to its output directory (`--out`):
@@ -111,14 +140,14 @@ Each run of an element test writes to its output directory (`--out`):
 | File | Contents |
 |---|---|
 | `meta.json` | all parameters, run information and a summary |
-| `timeseries.csv` | one row per output interval (`--out_dt`), written as the run goes; its comment lines define the columns |
-| `particles/*.csv`, `contacts/*.csv` | particle and contact snapshots at chosen shear displacements or axial strains (`--snaps`), and frames at a fixed interval (`--frame_disp`, `--frame_strain`) |
+| `timeseries.csv` | one row per output interval (`--out_dt`; in the annular cell, every `--out_strain` of nominal strain during the shear), written as the run goes; its comment lines define the columns |
+| `particles/*.csv`, `contacts/*.csv` | particle and contact snapshots at chosen shear displacements or axial strains (`--snaps`), and frames at a fixed interval (`--frame_disp`, `--frame_strain`); in the annular cell, every `--snap_every` of nominal strain from `--snap_from` |
 | `states/*.bin` | the full state at each snapshot (`--snap_states`) or frame (`--frame_states`) |
 
-A run can start from a saved state: a filled sample (`--save_fill` and `--load_fill`, in the Jenike cell and the
-triaxial test), the sample at the start of the test (`--save_state` and `--load_state`), or a snapshot or frame state
-(`--load_state`). State files are read and written at the paths given, relative to the working directory and not to
-`--out`. A run that loads a state must use the sample options of the run that saved it.
+A run can start from a saved state: a filled sample (`--save_fill` and `--load_fill`, in the Jenike cell, the triaxial
+test and the annular cell), the sample at the start of the test (`--save_state` and `--load_state`), or a snapshot or
+frame state (`--load_state`). State files are read and written at the paths given, relative to the working directory
+and not to `--out`. A run that loads a state must use the sample options of the run that saved it.
 
 `scripts/run_case.py` launches a run in its own folder. It copies the executable there (so that later rebuilds do not
 affect the run), records in `meta.json` the commit and a fingerprint of any uncommitted changes of the Chrono and

@@ -5,6 +5,7 @@ Chrono projects
 
 Validation programs for granular dynamics with Chrono::Multicore (see [dem_validation/README.md](dem_validation/README.md))
 
+* annularShear -- steady shear of glass beads in an annular cell between counter-rotating rough plates, for the mu(I) rheology (DEM-P)
 * demo_crater -- low-speed impact validation test (DEM-C or DEM-P)
 * demo_massflow -- massflow validation test (DEM-C or DEM-P)
 * demo_penetrometer -- a sphere or a cone dropped into a bed of glass beads (DEM-C or DEM-P)
