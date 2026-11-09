@@ -123,7 +123,7 @@ start to turn. The relative angular speed follows from a nominal inertial number
 d the bead diameter and r_m the mid radius. It ramps up over a nominal strain of `--strain_ramp`, and the run ends at
 the nominal strain `--strain_end`. The time series gives the pressure and the shear stress on both plates and their
 ratio (`mu_top`, `mu_bottom`); the local shear rate, stresses and solid fraction come from the particle and contact
-snapshots, by coarse-graining.
+snapshots, by coarse-graining (`scripts/cg_annular.py`).
 
 One filling, and one consolidated sample at each pressure, serve every inertial number:
 
@@ -187,10 +187,10 @@ python ds_render.py --render images --out forcenet
 ## Post-processing scripts
 
 The scripts in `scripts/` read run folders and write figures (PNG at 300 dpi and SVG), Markdown tables and clips. They
-need Python 3 with NumPy and Matplotlib; `ds_networks.py` and `ds_render.py` also need Pillow, and `ds_render.py` needs
-FFmpeg on the PATH. The figures use the Calibri font where it is installed. `ds_curves.py`, `ds_plateau.py` and
-`tri_curves.py` draw runs that differ only in their seed as their mean, with a band over their range. The usage comment
-at the top of each script lists its options.
+need Python 3 with NumPy and Matplotlib; `ds_networks.py` and `ds_render.py` also need Pillow, `ds_render.py` needs
+FFmpeg on the PATH, and `mu_of_I.py` needs SciPy. The figures use the Calibri font where it is installed.
+`ds_curves.py`, `ds_plateau.py` and `tri_curves.py` draw runs that differ only in their seed as their mean, with a band
+over their range. The usage comment at the top of each script lists its options.
 
 | Script | Output |
 |---|---|
@@ -204,6 +204,10 @@ at the top of each script lists its options.
 | `tri_curves.py` | stress ratio, dilation, q/p or void ratio against axial strain, next to the laboratory curves; table of void ratios, peak and end values |
 | `tri_csl.py` | stress paths and end states in the (p, q) plane, the isotropic compression in the (ln p, v) plane, and the critical state line in both; table of the fitted parameters |
 | `tri_love_weber.py` | table of the Love-Weber stress of each snapshot against the platen and membrane stresses |
+| `cg.py` | coarse-graining of particle and contact snapshots with a Gaussian kernel (Goldhirsch 2010; Weinhart et al. 2012 for the contacts with walls): density, solid fraction, velocity, kinetic and contact stress; used by the two scripts below |
+| `cg_fields.py` | coarse-grained fields of a square-box direct shear snapshot at several kernel widths: maps of solid fraction, contact pressure and shear rate on the vertical mid-plane, profiles over the height, the contact and kinetic parts of the stress; table of the values at the center of the shear band |
+| `cg_annular.py` | coarse-grained fields of an annular shear run, averaged over the azimuth and over the snapshots of the steady shear, and their values in the bulk cells: pressure, shear stress, μ = τ/p, shear rate, inertial number, solid fraction |
+| `mu_of_I.py` | μ and the solid fraction against the inertial number from annular shear runs coarse-grained by `cg_annular.py`, with a fitted law (Jop et al. 2006, or its linear limit μ_s + b I); table of the fits and the points |
 | `dsplot.py` | shared helpers: reading run folders, figure style |
 | `run_case.py` | launches a run in its own folder (see above) |
 
@@ -217,6 +221,9 @@ In these examples, `<scripts>` is the `scripts/` folder, and the commands run in
 python <scripts>/ds_curves.py --out ds_curves --tau tau sigma3100_seed1 sigma6400_seed1 sigma12500_seed1 sigma24200_seed1
 python <scripts>/tri_curves.py --out tri_curves --by_specimen --area0 --lab <scripts>/data/cui2007_fig4_lab.csv --xmax 12.5 mono_s80 poly_s80
 python <scripts>/tri_csl.py --pq tri_csl_pq --lnp tri_ncl_lnp --iso iso_mono mono_s20 mono_s40 mono_s80 mono_s160 mono_s320
+python <scripts>/cg_fields.py --run hartl_3.1kPa --snap snap_d04.00mm --out cg_fields
+python <scripts>/cg_annular.py --run p3100_I0.01 --width 1 --strain_min 2
+python <scripts>/mu_of_I.py --out mu_of_I --law linear p3100_I0.001 p3100_I0.01 p3100_I0.1 p12500_I0.001 p12500_I0.01 p12500_I0.1
 ```
 
 ## Other programs
@@ -242,5 +249,10 @@ programs of the table, `TESTING` runs the mechanism with a single test ball. Res
   discrete element model", *Géotechnique* 57(10), 831-844, 2007. https://doi.org/10.1680/geot.2007.57.10.831
 - J. Fleischmann, R. Serban, D. Negrut, P. Jayakumar, "On the importance of displacement history in soft-body contact
   models", *ASME Journal of Computational and Nonlinear Dynamics* 11(4), 044502, 2016.
+- I. Goldhirsch, "Stress, stress asymmetry and couple stress: from discrete particles to continuous fields", *Granular
+  Matter* 12(3), 239-252, 2010.
 - J. Härtl, J. Y. Ooi, "Experiments and simulations of direct shear tests: porosity, contact friction and bulk
   friction", *Granular Matter* 10(4), 263-271, 2008. https://doi.org/10.1007/s10035-008-0085-3
+- P. Jop, Y. Forterre, O. Pouliquen, "A constitutive law for dense granular flows", *Nature* 441, 727-730, 2006.
+- T. Weinhart, A. R. Thornton, S. Luding, O. Bokhove, "From discrete particles to continuum fields near a boundary",
+  *Granular Matter* 14, 289-294, 2012. https://doi.org/10.1007/s10035-012-0317-4
